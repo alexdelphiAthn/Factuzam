@@ -1433,6 +1433,10 @@
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializacionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesLecturasIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesReglas.pas"/>
+        <DCCReference Include="src\Lib\inLibPedidoOcr.pas"/>
+        <DCCReference Include="src\Lib\inLibArchivosPedidoSesion.pas"/>
+        <DCCReference Include="src\Lib\inLibProcesoPedidoOcr.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPedidoOcr.pas"/>
         <DCCReference Include="src\Lib\inLibGridTallasInline.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibBusquedasCompra.pas"/>

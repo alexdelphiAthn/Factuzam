@@ -376,6 +376,7 @@
         <DCCReference Include="PruebasRestauracionCopiasConexion.pas"/>
         <DCCReference Include="PruebasFusionEfectos.pas"/>
         <DCCReference Include="PruebasImportacionPedidos.pas"/>
+        <DCCReference Include="PruebasPedidoOcr.pas"/>
         <DCCReference Include="PruebasExcepcionesAplicacion.pas"/>
         <DCCReference Include="PruebasEnvioErrores.pas"/>
         <DCCReference Include="PruebasEmisionFiscal.pas"/>

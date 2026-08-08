@@ -509,6 +509,7 @@ uses
     'PruebasRestauracionCopiasConexion.pas',
   PruebasFusionEfectos in 'PruebasFusionEfectos.pas',
   PruebasImportacionPedidos in 'PruebasImportacionPedidos.pas',
+  PruebasPedidoOcr in 'PruebasPedidoOcr.pas',
   PruebasExcepcionesAplicacion in
     'PruebasExcepcionesAplicacion.pas',
   PruebasEnvioErrores in 'PruebasEnvioErrores.pas',

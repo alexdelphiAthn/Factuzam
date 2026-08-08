@@ -1155,6 +1155,11 @@ uses
   inLibComprasSesionesLecturasIntf in
     'src\Lib\inLibComprasSesionesLecturasIntf.pas',
   inLibComprasSesionesReglas in 'src\Lib\inLibComprasSesionesReglas.pas',
+  inLibPedidoOcr in 'src\Lib\inLibPedidoOcr.pas',
+  inLibArchivosPedidoSesion in
+    'src\Lib\inLibArchivosPedidoSesion.pas',
+  inLibProcesoPedidoOcr in 'src\Lib\inLibProcesoPedidoOcr.pas',
+  UniDataPedidoOcr in 'src\DataModules\UniDataPedidoOcr.pas',
   inLibGridTallasInline in 'src\Lib\inLibGridTallasInline.pas',
   inLibColumnasDocumento in 'src\Lib\inLibColumnasDocumento.pas',
   inLibBusquedasCompra in 'src\Lib\inLibBusquedasCompra.pas',

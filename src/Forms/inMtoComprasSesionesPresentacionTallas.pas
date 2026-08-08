@@ -225,13 +225,17 @@ procedure TCoordinadorTallasSesion.ConfigurarDatos(ACabecera: TDataSet;
   ALineas: TDataSet; AFuenteLineas: TDataSource);
 var
   Configuracion: TGridTallasConfig;
+  ConexionDatos: TUniConnection;
   iColumna: Integer;
 begin
   FCabecera := ACabecera;
   FLineas := ALineas;
   FreeAndNil(FGestor);
   Configuracion := Default(TGridTallasConfig);
-  Configuracion.Conexion := FEntorno.Conexion;
+  ConexionDatos := FEntorno.Conexion;
+  if ALineas is TUniQuery then
+    ConexionDatos := TUniQuery(ALineas).Connection;
+  Configuracion.Conexion := ConexionDatos;
   Configuracion.ContextoSesion := FEntorno.ContextoSesion;
   Configuracion.Usuario := FEntorno.Usuario;
   Configuracion.Grid := FEntorno.Vista;
@@ -256,7 +260,7 @@ begin
   Configuracion.IdFilaFijo := 1;
   Configuracion.MaxColumnas := FEntorno.MaxColumnas;
   Configuracion.Persistencia := CrearPersistenciaGridTallasInline(
-    FEntorno.Conexion,
+    ConexionDatos,
     CrearConfigPersistenciaTallasInline(Configuracion));
   FGestor := TGestorGridTallas.Create(Configuracion);
   for iColumna := 0 to High(FColumnas) do

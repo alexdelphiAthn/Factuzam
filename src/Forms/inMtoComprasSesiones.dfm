@@ -1478,6 +1478,7 @@
           TabOrder = 2
           Properties.ActivePage = cxTabSheet2
           Properties.CustomButtons.Buttons = <>
+          OnChange = cxPageControl1Change
           ExplicitTop = 8
           ClientRectBottom = 293
           ClientRectLeft = 4
@@ -1873,6 +1874,106 @@
               Width = 60
             end
           end
+          object tsPedidoOriginal: TcxTabSheet
+            Caption = 'Pedido original'
+            ImageIndex = 2
+            object scrPedidoOriginal: TScrollBox
+              Left = 0
+              Top = 40
+              Width = 1082
+              Height = 225
+              HorzScrollBar.Tracking = True
+              VertScrollBar.Tracking = True
+              Align = alClient
+              BorderStyle = bsNone
+              Color = clAppWorkSpace
+              ParentColor = False
+              TabOrder = 0
+              OnMouseWheel = scrPedidoOriginalMouseWheel
+              object imgPedidoOriginal: TImage
+                Left = 0
+                Top = 0
+                Width = 32
+                Height = 32
+                Cursor = crHandPoint
+                Proportional = True
+                Stretch = True
+                OnMouseDown = imgPedidoOriginalMouseDown
+                OnMouseMove = imgPedidoOriginalMouseMove
+                OnMouseUp = imgPedidoOriginalMouseUp
+              end
+            end
+            object pnlPedidoOriginalTop: TPanel
+              Left = 0
+              Top = 0
+              Width = 1082
+              Height = 40
+              Align = alTop
+              BevelOuter = bvNone
+              TabOrder = 1
+              object btnPaginaAnteriorPedido: TcxButton
+                Left = 4
+                Top = 6
+                Width = 88
+                Height = 28
+                Caption = '< Anterior'
+                TabOrder = 0
+                OnClick = btnPaginaAnteriorPedidoClick
+              end
+              object btnPaginaSiguientePedido: TcxButton
+                Left = 98
+                Top = 6
+                Width = 88
+                Height = 28
+                Caption = 'Siguiente >'
+                TabOrder = 1
+                OnClick = btnPaginaSiguientePedidoClick
+              end
+              object btnAlejarPedido: TcxButton
+                Left = 202
+                Top = 6
+                Width = 38
+                Height = 28
+                Caption = '-'
+                TabOrder = 2
+                OnClick = btnAlejarPedidoClick
+              end
+              object btnAcercarPedido: TcxButton
+                Left = 246
+                Top = 6
+                Width = 38
+                Height = 28
+                Caption = '+'
+                TabOrder = 3
+                OnClick = btnAcercarPedidoClick
+              end
+              object btnAjustarPedido: TcxButton
+                Left = 300
+                Top = 6
+                Width = 110
+                Height = 28
+                Caption = 'Ajustar ventana'
+                TabOrder = 4
+                OnClick = btnAjustarPedidoClick
+              end
+              object btnZoomRealPedido: TcxButton
+                Left = 416
+                Top = 6
+                Width = 70
+                Height = 28
+                Caption = '100 %'
+                TabOrder = 5
+                OnClick = btnZoomRealPedidoClick
+              end
+              object lblPaginaPedido: TcxLabel
+                Left = 506
+                Top = 9
+                Caption = 'Sin páginas TIFF importadas'
+                TabOrder = 6
+                Transparent = True
+              end
+            end
+          end
         end
         object gbFotoProvisional: TcxGroupBox
           Left = 770
@@ -1984,6 +2085,20 @@
       WordWrap = True
       OnClick = btnCrearClick
     end
+    object btnImportarPedido: TcxButton
+      Left = 0
+      Top = 180
+      Width = 137
+      Height = 40
+      Caption = 'Importar pedido PDF'
+      Colors.Default = 16773096
+      Colors.Normal = 16773096
+      LookAndFeel.Kind = lfFlat
+      LookAndFeel.NativeStyle = False
+      TabOrder = 6
+      WordWrap = True
+      OnClick = btnImportarPedidoClick
+    end
     object btnRevertir: TcxButton
       Left = 0
       Top = 308
@@ -2050,6 +2165,12 @@
     Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
     Left = 920
     Top = 8
+  end
+  object dlgImportarPedido: TOpenDialog
+    Filter = 'Documento PDF (*.pdf)|*.pdf'
+    Options = [ofHideReadOnly, ofPathMustExist, ofFileMustExist, ofEnableSizing]
+    Left = 952
+    Top = 64
   end
   object alNavegacion: TActionList
     Left = 1000

@@ -159,6 +159,7 @@ type
     procedure unqrySesionCelAfterPost(DataSet: TDataSet);
   private
     FInstanteCargaSesion: TDateTime;
+    FPermitirLineasSinCodigoArticulo: Boolean;
     FTallajeDefectoActual: Integer;
                         // Sistema de tallas (ID_AC) que se propone a la
                         // siguiente linea NUEVA de la sesion. Arranca en 0
@@ -170,12 +171,16 @@ type
                         // defecto del documento", no el del proveedor.
                         // RecargarProveedorSesion lo resetea a 0 al navegar
                         // a otra sesion o proveedor.
+    function ConexionDatos: TUniConnection;
     procedure LogSes(const ATexto: string);
     procedure ConfigurarSqlCabecera;
     procedure AjustarCamposDerivadosCabecera;
     procedure CalcularTotalesLineaActual;
     procedure PersistirTotalesSesion;
   public
+    property PermitirLineasSinCodigoArticulo: Boolean
+      read FPermitirLineasSinCodigoArticulo
+      write FPermitirLineasSinCodigoArticulo;
     property TallajeDefectoActual: Integer read FTallajeDefectoActual
                                             write FTallajeDefectoActual;
     class function ResolverCodigoFamiliaConexion(AConn: TUniConnection;
@@ -220,6 +225,13 @@ uses
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+function TdmComprasSesiones.ConexionDatos: TUniConnection;
+begin
+  Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
 
 class function TdmComprasSesiones.ResolverCodigoFamiliaConexion(
   AConn: TUniConnection; const ACodigoTecleado, AUsuario: string;
@@ -702,10 +714,10 @@ begin
     if Trim(UbicacionSesion.Almacen) <> '' then
       FieldByName('CODIGO_ALM_SES').AsString := UbicacionSesion.Almacen;
     AplicarRecargoComprasEmpresa(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+      CrearLecturasImpuestos(ConexionDatos), unqryTablaG,
       'CODIGO_EMP_SES', 'ESIVA_RECARGO_COMPRAS_SES');
     AplicarPorcentajesIvaCompra(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'SES');
+      CrearLecturasImpuestos(ConexionDatos), unqryTablaG, 'SES');
     // Si solo hay una variacion definida, preseleccionarla. Es el caso
     // mayoritario (la mayoria de instalaciones solo tienen 'TC').
     if unqryVariaciones.Active and (unqryVariaciones.RecordCount = 1) then
@@ -726,7 +738,7 @@ begin
     if Trim(UbicacionSesion.Empresa) <> '' then
     begin
       var sSerieDef := ObtenerSerieDefecto(
-        ConexionPrincipal,
+        ConexionDatos,
         UbicacionSesion.Empresa,
         'SE');
       if sSerieDef <> '' then
@@ -813,7 +825,7 @@ begin
   sSerie  := unqryTablaG.FieldByName('SERIE_SES').AsString;
   sNumero := unqryTablaG.FieldByName('NUMERO_SES').AsString;
   iNuevaLinea := GetSiguienteLineaDoc(
-    CrearContadorLineasDocumento(ConexionPrincipal), CONT_SESIONES,
+    CrearContadorLineasDocumento(ConexionDatos), CONT_SESIONES,
     sSerie, sNumero);
   if iNuevaLinea = 0 then
   begin
@@ -887,8 +899,11 @@ begin
   // Linea sin articulo: cancelar silenciosamente. El cxGrid hace Post
   // automatico al navegar con flechas; si la linea es un placeholder
   // vacio, Cancel + Abort lo descarta sin molestar al usuario.
-  if Trim(unqrySesionLin.FieldByName(
-              'CODIGO_ART_TENTATIVO_SESLIN').AsString) = '' then
+  // La importacion OCR habilita temporalmente lineas sin codigo porque
+  // conserva el pedido antes de que el usuario elija la familia interna.
+  if (not FPermitirLineasSinCodigoArticulo) and
+     (Trim(unqrySesionLin.FieldByName(
+       'CODIGO_ART_TENTATIVO_SESLIN').AsString) = '') then
   begin
     LogSes('  linea sin articulo, Cancel diferido + Abort');
     TThread.ForceQueue(nil,
@@ -930,7 +945,7 @@ begin
   // numero de la serie e incrementar el contador.
   if sTecla <> '' then
   begin
-    if ResolverCodigoFamiliaConexion(ConexionPrincipal, sTecla,
+    if ResolverCodigoFamiliaConexion(ConexionDatos, sTecla,
         IdentidadSesion.Usuario, sNuevo) then
     begin
       unqrySesionLin.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString :=
@@ -1019,7 +1034,7 @@ begin
   begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionDatos;
     q.SQL.Text :=
       'SELECT COALESCE(SUM(CANTIDAD_SESCEL), 0) AS TOTAL ' +
       '  FROM fza_compras_sesiones_celdas ' +
@@ -1056,7 +1071,7 @@ begin
   // PRC_GET_NEXT_CONT('ES') -- mismo patron que UniDataEmpresas.
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionDatos;
     q.SQL.Text :=
       'SELECT COUNT(*) AS N FROM vi_empresas_series ' +
       ' WHERE TIPO_DOC_EMPSER = ''SE'' ' +
@@ -1070,7 +1085,7 @@ begin
       q.Close;
       // PK de la nueva fila: contador 'ES' (mismo que pantalla Empresas)
       sCodigoSer := ObtenerSiguienteContador(
-        ConexionPrincipal,
+        ConexionDatos,
         'ES',
         IdentidadSesion.Usuario);
       if Trim(sCodigoSer) = '' then
@@ -1171,7 +1186,7 @@ begin
          'ESVARIOS_TIPOS_IVA_SES').AsString)) = 'S') then
       sCampoTipoIvaLinea := 'TIPO_IVA_SESLIN';
     CalcularTotalesDocumentoCompra(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+      CrearLecturasImpuestos(ConexionDatos), unqryTablaG,
       unqrySesionLin, 'SES', 'TOTAL_LINEA_SESLIN',
       sCampoTipoIvaLinea, 'PORCENTAJE_IVA_SESLIN');
     if EstadoInicial <> dsInsert then
@@ -1234,7 +1249,7 @@ begin
         ' WHERE `SERIE_SES` = :SERIE AND `NUMERO_SES` = :NUMERO';
       q := TUniQuery.Create(nil);
       try
-        q.Connection := ConexionPrincipal;
+        q.Connection := ConexionDatos;
         q.SQL.Text := sSql;
         for sCampo in CAMPOS_TOTALES do
         begin
@@ -1263,7 +1278,7 @@ begin
   Result := False;
   uxTmp  := TUniQuery.Create(nil);
   try
-    uxTmp.Connection := ConexionPrincipal;
+    uxTmp.Connection := ConexionDatos;
     uxTmp.SQL.Text :=
       'SELECT INSTANTE_MODIF FROM fza_compras_sesiones ' +
       'WHERE SERIE_SES = :s AND NUMERO_SES = :n';

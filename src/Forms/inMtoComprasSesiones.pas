@@ -128,9 +128,11 @@ type
     dbcCodigoTarSes          : TcxGridDBColumn;
     dbcUsuarioAltaSes        : TcxGridDBColumn;
     dlgFoto                  : TOpenDialog;
+    dlgImportarPedido        : TOpenDialog;
     btnImprimir: TcxButton;
     btnCrear: TcxButton;
     btnRevertir: TcxButton;
+    btnImportarPedido: TcxButton;
 
     // ------------------------------------------------------------------
     // Navegacion rapida via TActionList. Los shortcuts SOLO disparan
@@ -317,6 +319,17 @@ type
     dbcFotoInstante                : TcxGridDBColumn;
     dbcFotoUsuario                 : TcxGridDBColumn;
     glFotosProvisionales           : TcxGridLevel;
+    tsPedidoOriginal               : TcxTabSheet;
+    pnlPedidoOriginalTop           : TPanel;
+    btnPaginaAnteriorPedido        : TcxButton;
+    btnPaginaSiguientePedido       : TcxButton;
+    btnAlejarPedido                : TcxButton;
+    btnAcercarPedido               : TcxButton;
+    btnAjustarPedido               : TcxButton;
+    btnZoomRealPedido              : TcxButton;
+    lblPaginaPedido                : TcxLabel;
+    scrPedidoOriginal              : TScrollBox;
+    imgPedidoOriginal              : TImage;
     cxPageControl1: TcxPageControl;
     cxTabSheet2: TcxTabSheet;
     gbCabecera: TcxGroupBox;
@@ -427,12 +440,31 @@ type
     procedure cxgrdLineasEnter(Sender: TObject);
     procedure cxgrdLineasExit(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
+    procedure cxPageControl1Change(Sender: TObject);
     procedure cxPageControl2Change(Sender: TObject);
     procedure tvFotosProvisionalesFocusedRecordChanged(
                 Sender: TcxCustomGridTableView;
                 APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
                 ANewItemRecordFocusingChanged: Boolean);
     procedure dsSesionFotosDataChange(Sender: TObject; Field: TField);
+    procedure btnImportarPedidoClick(Sender: TObject);
+    procedure btnPaginaAnteriorPedidoClick(Sender: TObject);
+    procedure btnPaginaSiguientePedidoClick(Sender: TObject);
+    procedure btnAlejarPedidoClick(Sender: TObject);
+    procedure btnAcercarPedidoClick(Sender: TObject);
+    procedure btnAjustarPedidoClick(Sender: TObject);
+    procedure btnZoomRealPedidoClick(Sender: TObject);
+    procedure imgPedidoOriginalMouseDown(Sender: TObject;
+                Button: TMouseButton; Shift: TShiftState;
+                X, Y: Integer);
+    procedure imgPedidoOriginalMouseMove(Sender: TObject;
+                Shift: TShiftState; X, Y: Integer);
+    procedure imgPedidoOriginalMouseUp(Sender: TObject;
+                Button: TMouseButton; Shift: TShiftState;
+                X, Y: Integer);
+    procedure scrPedidoOriginalMouseWheel(Sender: TObject;
+                Shift: TShiftState; WheelDelta: Integer;
+                MousePos: TPoint; var Handled: Boolean);
   private
     Dmm: TdmComprasSesiones;
     FServicioComprasSesiones: TServicioComprasSesiones;
@@ -447,6 +479,14 @@ type
     FModeloPrv: TBuscadorModeloProveedorSesion;
     FCopiaLineas: TCoordinadorCopiaLineasSesion;
     FProveedor: TCoordinadorProveedorSesion;
+    FPaginasPedidoOriginal: TArray<string>;
+    FIndicePaginaPedidoOriginal: Integer;
+    FZoomPedidoOriginal: Double;
+    FImagenPedidoOriginal: TPicture;
+    FArrastrandoPedidoOriginal: Boolean;
+    FAplicandoColorOcr: Boolean;
+    FInicioArrastrePedidoOriginal: TPoint;
+    FInicioScrollPedidoOriginal: TPoint;
     function  GestorTallas: TGestorGridTallas;
     procedure RecargarTallasVisibles;
     procedure RecargarTallasDiferido;
@@ -480,6 +520,13 @@ type
     procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinRecargarTallasHook(DataSet: TDataSet);
     procedure LogMsg(const S: string);
+    function DirectorioFotosAplicacion: string;
+    procedure CargarPaginasPedidoOriginal;
+    procedure MostrarPaginaPedidoOriginal;
+    procedure AplicarZoomPedidoOriginal(AZoom: Double);
+    procedure AjustarPedidoOriginal;
+    procedure CambiarPaginaPedidoOriginal(ADesplazamiento: Integer);
+    procedure ImportarPedidoOcr(const AFicheroJson: string);
   protected
     // Interceptamos a nivel de form (KeyPreview heredado = True) para
     // que Ctrl+Enter abra el selector de la columna editbutton enfocada
@@ -503,6 +550,7 @@ type
 implementation
 
 uses
+  System.IOUtils,
   inLibGlobalVar,
   inLibUser,
   inLibFiltroUsuario,
@@ -517,12 +565,27 @@ uses
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inLibContextoSesionIntf,
+  inLibPedidoOcr,
+  inLibArchivosPedidoSesion,
+  inLibProcesoPedidoOcr,
+  inLibComprasSesionesIntf,
+  inLibComprasSesionesReglas,
+  UniDataPedidoOcr,
   inMtoComprasSesionesPresentacionMaterializacion,
   UniDataComprasSesionesComposicion;
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+type
+  TLineaPreparadaPedidoOcr = record
+    Datos: TLineaPedidoOcr;
+    Tallas: TResolucionTallasPedidoOcr;
+    LineaSesion: Integer;
+    CodigoArticulo: string;
+  end;
+  TLineasPreparadasPedidoOcr = TArray<TLineaPreparadaPedidoOcr>;
 
 constructor TfrmMtoComprasSesiones.Create(
   AOwner: TComponent;
@@ -640,7 +703,7 @@ begin
   EntornoMaterializacion :=
     Default(TEntornoMaterializacionCompraSesion);
   EntornoMaterializacion.Propietario := Self;
-  EntornoMaterializacion.Conexion := ConexionPrincipal;
+  EntornoMaterializacion.Conexion := ConexionTrabajo;
   EntornoMaterializacion.Servicio := FServicioComprasSesiones;
   EntornoMaterializacion.Usuario := IdentidadSesion.Usuario;
   EntornoMaterializacion.Cabecera := Dmm.unqryTablaG;
@@ -704,7 +767,7 @@ begin
   FreeAndNil(FModeloPrv);
   EntornoModelo := Default(TEntornoModeloProveedorSesion);
   EntornoModelo.Propietario := Self;
-  EntornoModelo.Conexion := ConexionPrincipal;
+  EntornoModelo.Conexion := ConexionTrabajo;
   EntornoModelo.Servicio := FServicioComprasSesiones;
   EntornoModelo.Usuario := IdentidadSesion.Usuario;
   EntornoModelo.Cabecera := Dmm.unqryTablaG;
@@ -747,7 +810,7 @@ var
 begin
   FreeAndNil(FProveedor);
   EntornoProveedor := Default(TEntornoProveedorSesion);
-  EntornoProveedor.Conexion := ConexionPrincipal;
+  EntornoProveedor.Conexion := ConexionTrabajo;
   EntornoProveedor.Servicio := FServicioComprasSesiones;
   EntornoProveedor.Datos := Dmm;
   EntornoProveedor.BusquedaVisual := BusquedaVisual;
@@ -958,9 +1021,618 @@ begin
   RefrescarFotoProvisional;
 end;
 
+function TfrmMtoComprasSesiones.DirectorioFotosAplicacion: string;
+begin
+  Result := '';
+  if Assigned(ParametrosApp) then
+    Result := Trim(ParametrosApp.GetPath('appDirFotos'));
+end;
+
+procedure TfrmMtoComprasSesiones.CargarPaginasPedidoOriginal;
+var
+  sNumero: string;
+  sSerie: string;
+begin
+  FPaginasPedidoOriginal := nil;
+  FIndicePaginaPedidoOriginal := 0;
+  if Assigned(FImagenPedidoOriginal) then
+    FImagenPedidoOriginal.Assign(nil);
+  imgPedidoOriginal.Picture.Assign(nil);
+  if (Dmm <> nil) and Dmm.unqryTablaG.Active and
+     (not Dmm.unqryTablaG.IsEmpty) then
+  begin
+    sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+    FPaginasPedidoOriginal := ListarPaginasPedidoSesion(
+      DirectorioFotosAplicacion,
+      sSerie,
+      sNumero);
+  end;
+  MostrarPaginaPedidoOriginal;
+end;
+
+procedure TfrmMtoComprasSesiones.MostrarPaginaPedidoOriginal;
+var
+  oImagen: TWICImage;
+  sFichero: string;
+begin
+  imgPedidoOriginal.Picture.Assign(nil);
+  if Assigned(FImagenPedidoOriginal) then
+    FImagenPedidoOriginal.Assign(nil);
+  if (FIndicePaginaPedidoOriginal >= 0) and
+     (FIndicePaginaPedidoOriginal <= High(FPaginasPedidoOriginal)) then
+  begin
+    sFichero := FPaginasPedidoOriginal[FIndicePaginaPedidoOriginal];
+    if FileExists(sFichero) then
+    begin
+      oImagen := TWICImage.Create;
+      try
+        oImagen.LoadFromFile(sFichero);
+        FImagenPedidoOriginal.Assign(oImagen);
+        imgPedidoOriginal.Picture.Assign(FImagenPedidoOriginal);
+      finally
+        oImagen.Free;
+      end;
+      AjustarPedidoOriginal;
+    end;
+  end;
+  if Length(FPaginasPedidoOriginal) = 0 then
+    lblPaginaPedido.Caption := 'Sin páginas TIFF importadas'
+  else
+    lblPaginaPedido.Caption := Format(
+      'Página %d de %d · %.0f%%',
+      [FIndicePaginaPedidoOriginal + 1,
+       Length(FPaginasPedidoOriginal),
+       FZoomPedidoOriginal * 100]);
+  btnPaginaAnteriorPedido.Enabled := FIndicePaginaPedidoOriginal > 0;
+  btnPaginaSiguientePedido.Enabled :=
+    FIndicePaginaPedidoOriginal < High(FPaginasPedidoOriginal);
+end;
+
+procedure TfrmMtoComprasSesiones.AplicarZoomPedidoOriginal(
+  AZoom: Double);
+begin
+  if AZoom < 0.10 then
+    AZoom := 0.10;
+  if AZoom > 5 then
+    AZoom := 5;
+  FZoomPedidoOriginal := AZoom;
+  if Assigned(FImagenPedidoOriginal) and
+     Assigned(FImagenPedidoOriginal.Graphic) and
+     (not FImagenPedidoOriginal.Graphic.Empty) then
+  begin
+    imgPedidoOriginal.Width := Round(
+      FImagenPedidoOriginal.Width * FZoomPedidoOriginal);
+    imgPedidoOriginal.Height := Round(
+      FImagenPedidoOriginal.Height * FZoomPedidoOriginal);
+    if imgPedidoOriginal.Width < scrPedidoOriginal.ClientWidth then
+      imgPedidoOriginal.Left :=
+        (scrPedidoOriginal.ClientWidth - imgPedidoOriginal.Width) div 2
+    else
+      imgPedidoOriginal.Left := 0;
+    if imgPedidoOriginal.Height < scrPedidoOriginal.ClientHeight then
+      imgPedidoOriginal.Top :=
+        (scrPedidoOriginal.ClientHeight - imgPedidoOriginal.Height) div 2
+    else
+      imgPedidoOriginal.Top := 0;
+    lblPaginaPedido.Caption := Format(
+      'Página %d de %d · %.0f%%',
+      [FIndicePaginaPedidoOriginal + 1,
+       Length(FPaginasPedidoOriginal),
+       FZoomPedidoOriginal * 100]);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.AjustarPedidoOriginal;
+var
+  rAlto: Double;
+  rAncho: Double;
+  rZoom: Double;
+begin
+  if Assigned(FImagenPedidoOriginal) and
+     Assigned(FImagenPedidoOriginal.Graphic) and
+     (FImagenPedidoOriginal.Width > 0) and
+     (FImagenPedidoOriginal.Height > 0) then
+  begin
+    rAncho := (scrPedidoOriginal.ClientWidth - 16) /
+      FImagenPedidoOriginal.Width;
+    rAlto := (scrPedidoOriginal.ClientHeight - 16) /
+      FImagenPedidoOriginal.Height;
+    rZoom := rAncho;
+    if rAlto < rZoom then
+      rZoom := rAlto;
+    AplicarZoomPedidoOriginal(rZoom);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.CambiarPaginaPedidoOriginal(
+  ADesplazamiento: Integer);
+var
+  iNueva: Integer;
+begin
+  iNueva := FIndicePaginaPedidoOriginal + ADesplazamiento;
+  if (iNueva >= 0) and (iNueva <= High(FPaginasPedidoOriginal)) then
+  begin
+    FIndicePaginaPedidoOriginal := iNueva;
+    MostrarPaginaPedidoOriginal;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnPaginaAnteriorPedidoClick(
+  Sender: TObject);
+begin
+  CambiarPaginaPedidoOriginal(-1);
+end;
+
+procedure TfrmMtoComprasSesiones.btnPaginaSiguientePedidoClick(
+  Sender: TObject);
+begin
+  CambiarPaginaPedidoOriginal(1);
+end;
+
+procedure TfrmMtoComprasSesiones.btnAlejarPedidoClick(Sender: TObject);
+begin
+  AplicarZoomPedidoOriginal(FZoomPedidoOriginal / 1.20);
+end;
+
+procedure TfrmMtoComprasSesiones.btnAcercarPedidoClick(Sender: TObject);
+begin
+  AplicarZoomPedidoOriginal(FZoomPedidoOriginal * 1.20);
+end;
+
+procedure TfrmMtoComprasSesiones.btnAjustarPedidoClick(Sender: TObject);
+begin
+  AjustarPedidoOriginal;
+end;
+
+procedure TfrmMtoComprasSesiones.btnZoomRealPedidoClick(Sender: TObject);
+begin
+  AplicarZoomPedidoOriginal(1);
+end;
+
+procedure TfrmMtoComprasSesiones.imgPedidoOriginalMouseDown(
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  if Button = mbLeft then
+  begin
+    FArrastrandoPedidoOriginal := True;
+    FInicioArrastrePedidoOriginal :=
+      imgPedidoOriginal.ClientToScreen(Point(X, Y));
+    FInicioScrollPedidoOriginal := Point(
+      scrPedidoOriginal.HorzScrollBar.Position,
+      scrPedidoOriginal.VertScrollBar.Position);
+    imgPedidoOriginal.Cursor := crSizeAll;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.imgPedidoOriginalMouseMove(
+  Sender: TObject; Shift: TShiftState; X, Y: Integer);
+var
+  PuntoActual: TPoint;
+begin
+  if FArrastrandoPedidoOriginal and (ssLeft in Shift) then
+  begin
+    PuntoActual := imgPedidoOriginal.ClientToScreen(Point(X, Y));
+    scrPedidoOriginal.HorzScrollBar.Position :=
+      FInicioScrollPedidoOriginal.X -
+      (PuntoActual.X - FInicioArrastrePedidoOriginal.X);
+    scrPedidoOriginal.VertScrollBar.Position :=
+      FInicioScrollPedidoOriginal.Y -
+      (PuntoActual.Y - FInicioArrastrePedidoOriginal.Y);
+  end
+  else if FArrastrandoPedidoOriginal then
+    FArrastrandoPedidoOriginal := False;
+end;
+
+procedure TfrmMtoComprasSesiones.imgPedidoOriginalMouseUp(
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState;
+  X, Y: Integer);
+begin
+  if Button = mbLeft then
+  begin
+    FArrastrandoPedidoOriginal := False;
+    imgPedidoOriginal.Cursor := crHandPoint;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.scrPedidoOriginalMouseWheel(
+  Sender: TObject; Shift: TShiftState; WheelDelta: Integer;
+  MousePos: TPoint; var Handled: Boolean);
+begin
+  if WheelDelta > 0 then
+    AplicarZoomPedidoOriginal(FZoomPedidoOriginal * 1.10)
+  else if WheelDelta < 0 then
+    AplicarZoomPedidoOriginal(FZoomPedidoOriginal / 1.10);
+  Handled := True;
+end;
+
+procedure TfrmMtoComprasSesiones.ImportarPedidoOcr(
+  const AFicheroJson: string);
+const
+  EXTENSIONES_FOTO: array[0..5] of string = (
+    '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.avif');
+var
+  aPaginas: TArray<string>;
+  aPreparadas: TLineasPreparadasPedidoOcr;
+  bTransaccionPropia: Boolean;
+  iFoto: Integer;
+  iLinea: Integer;
+  iSinCodigo: Integer;
+  iTalla: Integer;
+  oCatalogo: TCatalogoTallasPedidoOcr;
+  oPedido: TPedidoOcr;
+  oResolucionDuplicado: TResolverDuplicadoSesion;
+  oWarnings: TStringList;
+  rPvp: Double;
+  sColorBasicoHistorico: string;
+  sDirectorioJson: string;
+  sFicheroFoto: string;
+  sMensaje: string;
+  sNumero: string;
+  sProveedor: string;
+  sSerie: string;
+
+  function ListaTallas(const ALinea: TLineaPedidoOcr): string;
+  var
+    i: Integer;
+  begin
+    Result := '';
+    for i := 0 to High(ALinea.Tallas) do
+    begin
+      if Result <> '' then
+        Result := Result + ', ';
+      Result := Result + ALinea.Tallas[i].Talla;
+    end;
+  end;
+
+  function ResolverFoto(const ACodigo: string): string;
+  var
+    i: Integer;
+    sCandidata: string;
+  begin
+    Result := '';
+    i := Low(EXTENSIONES_FOTO);
+    while (i <= High(EXTENSIONES_FOTO)) and (Result = '') do
+    begin
+      sCandidata := TPath.Combine(
+        TPath.Combine(sDirectorioJson, 'fotos'),
+        ACodigo + EXTENSIONES_FOTO[i]);
+      if TFile.Exists(sCandidata) then
+        Result := sCandidata;
+      Inc(i);
+    end;
+  end;
+
+begin
+  if (Dmm = nil) or Dmm.unqryTablaG.IsEmpty then
+    raise Exception.Create(SErrorSesionCompraNoActiva);
+  if not Dmm.unqrySesionLin.IsEmpty then
+    raise Exception.Create(
+      'La importación OCR requiere una sesión sin líneas.');
+  if not SameText(
+    Trim(Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString),
+    'BORRADOR') then
+    raise Exception.Create(
+      'Solo se puede importar sobre una sesión en borrador.');
+  sProveedor := Trim(Dmm.unqryTablaG.FieldByName(
+    'CODIGO_PRV_SES').AsString);
+  if sProveedor = '' then
+    raise Exception.Create(
+      'Selecciona el proveedor de la sesión antes de importar.');
+  if DirectorioFotosAplicacion = '' then
+    raise Exception.Create(
+      'El parámetro appDirFotos no está configurado.');
+  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+    Dmm.unqryTablaG.Post;
+  sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+  oPedido := TLectorPedidoOcr.Cargar(AFicheroJson);
+  sDirectorioJson := TPath.GetDirectoryName(oPedido.FicheroJson);
+  SetLength(aPreparadas, Length(oPedido.Lineas));
+  oCatalogo := TCatalogoTallasPedidoOcr.Create(
+    ConexionTrabajo,
+    CANT_TALLAS_MAX);
+  try
+    for iLinea := 0 to High(oPedido.Lineas) do
+    begin
+      if Trim(oPedido.Lineas[iLinea].Modelo) = '' then
+        raise Exception.CreateFmt(
+          'La línea OCR %d no tiene modelo.', [iLinea + 1]);
+      aPreparadas[iLinea].Datos := oPedido.Lineas[iLinea];
+      aPreparadas[iLinea].Tallas := oCatalogo.Resolver(
+        oPedido.Lineas[iLinea].Tallas);
+      if not aPreparadas[iLinea].Tallas.Encontrada then
+        raise Exception.CreateFmt(
+          'Ningún sistema de hasta %d posiciones contiene las tallas ' +
+          'del modelo %s: %s.',
+          [CANT_TALLAS_MAX,
+           oPedido.Lineas[iLinea].Modelo,
+           ListaTallas(oPedido.Lineas[iLinea])]);
+    end;
+  finally
+    oCatalogo.Free;
+  end;
+  aPaginas := ResolverPaginasFuentePedido(oPedido);
+  iSinCodigo := 0;
+  bTransaccionPropia := not ConexionTrabajo.InTransaction;
+  if bTransaccionPropia then
+    ConexionTrabajo.StartTransaction;
+  try
+    if oPedido.ReferenciaDocumento <> '' then
+    begin
+      Dmm.unqryTablaG.Edit;
+      Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString :=
+        oPedido.ReferenciaDocumento;
+      Dmm.unqryTablaG.Post;
+    end;
+    for iLinea := 0 to High(aPreparadas) do
+    begin
+      FAplicandoColorOcr := True;
+      Dmm.PermitirLineasSinCodigoArticulo := True;
+      try
+        Dmm.unqrySesionLin.Insert;
+        aPreparadas[iLinea].LineaSesion :=
+          Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+        oResolucionDuplicado :=
+          FServicioComprasSesiones.ResolverDuplicado(
+            aPreparadas[iLinea].Datos.Modelo,
+            sProveedor,
+            True,
+            '');
+        if not oResolucionDuplicado.Encontrado then
+          oResolucionDuplicado :=
+            FServicioComprasSesiones.ResolverDuplicadoIntraSesion(
+              sSerie,
+              sNumero,
+              aPreparadas[iLinea].LineaSesion,
+              aPreparadas[iLinea].Datos.Modelo,
+              '');
+        if oResolucionDuplicado.Encontrado then
+          FServicioComprasSesiones.AplicarDuplicadoEnLinea(
+            oResolucionDuplicado)
+        else
+          Dmm.unqrySesionLin.FieldByName(
+            'CODIGO_ART_TENTATIVO_SESLIN').AsString := '';
+        Dmm.unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString :=
+          Copy(aPreparadas[iLinea].Datos.Modelo, 1, 100);
+        Dmm.unqrySesionLin.FieldByName('DESCRIPCION_SESLIN').AsString :=
+          aPreparadas[iLinea].Datos.Descripcion;
+        Dmm.unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
+          aPreparadas[iLinea].Datos.Color;
+        Dmm.unqrySesionLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat :=
+          aPreparadas[iLinea].Datos.PrecioCompra;
+        if aPreparadas[iLinea].Datos.TienePvp then
+          rPvp := aPreparadas[iLinea].Datos.Pvp
+        else
+          rPvp := CalcularPrecioVenta(
+            aPreparadas[iLinea].Datos.PrecioCompra,
+            Dmm.unqryTablaG.FieldByName(
+              'PORCENTAJE_MARGEN_SES').AsFloat,
+            Dmm.unqryTablaG.FieldByName(
+              'MULTIPLO_REDONDEO_SES').AsFloat,
+            Dmm.unqryTablaG.FieldByName('AJUSTE_FINAL_SES').AsFloat);
+        Dmm.unqrySesionLin.FieldByName('PRECIO_VENTA_SESLIN').AsFloat :=
+          rPvp;
+        Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger :=
+          aPreparadas[iLinea].Tallas.IdAc;
+        aPreparadas[iLinea].CodigoArticulo := Trim(
+          Dmm.unqrySesionLin.FieldByName(
+            'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+        if aPreparadas[iLinea].CodigoArticulo = '' then
+          Inc(iSinCodigo);
+        sColorBasicoHistorico := '';
+        if FProveedor <> nil then
+        begin
+          if oResolucionDuplicado.Encontrado and
+             SameText(
+               SanearColorSku(oResolucionDuplicado.ColorTexto),
+               SanearColorSku(aPreparadas[iLinea].Datos.Color)) then
+            sColorBasicoHistorico := Trim(
+              oResolucionDuplicado.CodigoAtbColor);
+          if sColorBasicoHistorico = '' then
+            THistoricoColoresPedidoOcr.Resolver(
+              ConexionTrabajo,
+              sProveedor,
+              aPreparadas[iLinea].Datos.Color,
+              sColorBasicoHistorico);
+          if sColorBasicoHistorico <> '' then
+            FProveedor.AsignarColorBasicoLiteral(
+              sColorBasicoHistorico)
+          else if aPreparadas[iLinea].Datos.ColorDetectado <> '' then
+            FProveedor.AsignarColorBasicoLiteral(
+              aPreparadas[iLinea].Datos.ColorDetectado)
+          else
+            FProveedor.AsignarColorBasicoCoincidente;
+        end;
+        Dmm.unqrySesionLin.Post;
+        for iTalla := 0 to High(aPreparadas[iLinea].Datos.Tallas) do
+          GestorTallas.PersistirCantidad(
+            aPreparadas[iLinea].LineaSesion,
+            aPreparadas[iLinea].Tallas.IdsAv[iTalla],
+            aPreparadas[iLinea].Datos.Tallas[iTalla].Cantidad);
+        Dmm.unqrySesionLin.Edit;
+        Dmm.unqrySesionLin.Post;
+      finally
+        Dmm.PermitirLineasSinCodigoArticulo := False;
+        FAplicandoColorOcr := False;
+      end;
+    end;
+    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+      Dmm.unqryTablaG.Post;
+    if bTransaccionPropia and ConexionTrabajo.InTransaction then
+      ConexionTrabajo.Commit;
+  except
+    if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+      Dmm.unqrySesionLin.Cancel;
+    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+      Dmm.unqryTablaG.Cancel;
+    if bTransaccionPropia and ConexionTrabajo.InTransaction then
+      ConexionTrabajo.Rollback;
+    if Dmm.unqrySesionLin.Active then
+      Dmm.unqrySesionLin.Refresh;
+    raise;
+  end;
+  oWarnings := TStringList.Create;
+  try
+    iFoto := 0;
+    for iLinea := 0 to High(aPreparadas) do
+    begin
+      sFicheroFoto := '';
+      if aPreparadas[iLinea].Datos.CodigoFoto <> '' then
+        sFicheroFoto := ResolverFoto(
+          aPreparadas[iLinea].Datos.CodigoFoto);
+      if (aPreparadas[iLinea].Datos.CodigoFoto <> '') and
+         (sFicheroFoto = '') then
+        oWarnings.Add(Format(
+          'No se encontró la foto %s.',
+          [aPreparadas[iLinea].Datos.CodigoFoto]));
+      if (sFicheroFoto <> '') and Assigned(FotosArticulos) then
+      begin
+        try
+          FotosArticulos.GuardarSesion(
+            sSerie,
+            sNumero,
+            aPreparadas[iLinea].LineaSesion,
+            aPreparadas[iLinea].CodigoArticulo,
+            '',
+            sFicheroFoto,
+            IdentidadSesion.Usuario);
+          Inc(iFoto);
+        except
+          on E: Exception do
+            oWarnings.Add(Format(
+              'Foto del modelo %s: %s',
+              [aPreparadas[iLinea].Datos.Modelo, E.Message]));
+        end;
+      end;
+    end;
+    try
+      GuardarArchivosPedidoSesion(
+        DirectorioFotosAplicacion,
+        sSerie,
+        sNumero,
+        oPedido,
+        aPaginas);
+    except
+      on E: Exception do
+        oWarnings.Add('Pedido original: ' + E.Message);
+    end;
+    Dmm.unqrySesionLin.Refresh;
+    Dmm.RefrescarTotalesSesion;
+    RefrescarColumnasTallas;
+    RefrescarFotosProvisionales;
+    CargarPaginasPedidoOriginal;
+    cxPageControl1.ActivePage := tsPedidoOriginal;
+    cxPageControl1Change(cxPageControl1);
+    sMensaje := Format(
+      'Pedido importado: %d líneas, %d fotos y %d páginas TIFF.',
+      [Length(aPreparadas), iFoto, Length(FPaginasPedidoOriginal)]);
+    if iSinCodigo > 0 then
+      sMensaje := sMensaje + sLineBreak + Format(
+        '%d líneas quedan pendientes de familia y código interno.',
+        [iSinCodigo]);
+    if oWarnings.Count > 0 then
+      sMensaje := sMensaje + sLineBreak + sLineBreak +
+        'Advertencias:' + sLineBreak + oWarnings.Text;
+    ShowMessage(sMensaje);
+  finally
+    oWarnings.Free;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.btnImportarPedidoClick(
+  Sender: TObject);
+var
+  ResultadoOcr: TResultadoProcesoPedidoOcr;
+  sAlmacen: string;
+  sEmpresa: string;
+  sSerie: string;
+begin
+  inherited;
+  dlgImportarPedido.Filter :=
+    'Documento PDF (*.pdf)|*.pdf';
+  dlgImportarPedido.Options := dlgImportarPedido.Options +
+    [ofPathMustExist, ofFileMustExist];
+  if dlgImportarPedido.Execute then
+  begin
+    if (Dmm = nil) or Dmm.unqryTablaG.IsEmpty then
+      raise Exception.Create(SErrorSesionCompraNoActiva);
+    if not Dmm.unqrySesionLin.IsEmpty then
+      raise Exception.Create(
+        'La importación OCR requiere una sesión sin líneas.');
+    if Dmm.unqryTablaG.State = dsInsert then
+    begin
+      sEmpresa := Trim(UbicacionSesion.Empresa);
+      sAlmacen := Trim(UbicacionSesion.Almacen);
+      if sEmpresa = '' then
+        raise Exception.Create(
+          'El usuario actual no tiene empresa asignada.');
+      if sAlmacen = '' then
+        raise Exception.Create(
+          'El usuario actual no tiene almacén asignado.');
+      sSerie := ObtenerSerieDefecto(
+        ConexionTrabajo,
+        sEmpresa,
+        'SE');
+      if sSerie = '' then
+        raise Exception.CreateFmt(
+          'La empresa %s no tiene una serie de sesiones configurada.',
+          [sEmpresa]);
+      Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString :=
+        sEmpresa;
+      Dmm.unqryTablaG.FieldByName('CODIGO_ALM_SES').AsString :=
+        sAlmacen;
+      Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString := sSerie;
+      Dmm.unqryTablaG.FieldByName('NUMERO_SES').Clear;
+    end;
+    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+      btnGrabarClick(Sender);
+    Screen.Cursor := crHourGlass;
+    btnImportarPedido.Enabled := False;
+    try
+      try
+        ResultadoOcr := TProcesoPedidoOcr.Ejecutar(
+          dlgImportarPedido.FileName,
+          procedure
+          begin
+            Application.ProcessMessages;
+          end);
+        try
+          ImportarPedidoOcr(ResultadoOcr.FicheroJson);
+        finally
+          TProcesoPedidoOcr.EliminarTrabajo(
+            ResultadoOcr.DirectorioTrabajo);
+        end;
+      except
+        on E: Exception do
+          ShowMessage('No se pudo importar el pedido: ' + E.Message);
+      end;
+    finally
+      btnImportarPedido.Enabled := True;
+      Screen.Cursor := crDefault;
+    end;
+  end;
+end;
+
 procedure TfrmMtoComprasSesiones.cxPageControl2Change(Sender: TObject);
 begin
   RefrescarFotoProvisional;
+end;
+
+procedure TfrmMtoComprasSesiones.cxPageControl1Change(Sender: TObject);
+begin
+  gbFotoProvisional.Visible :=
+    cxPageControl1.ActivePage <> tsPedidoOriginal;
+  if cxPageControl1.ActivePage = tsPedidoOriginal then
+  begin
+    if Length(FPaginasPedidoOriginal) = 0 then
+      CargarPaginasPedidoOriginal
+    else
+      AjustarPedidoOriginal;
+  end
+  else
+    RefrescarFotoProvisional;
 end;
 
 procedure TfrmMtoComprasSesiones.tvFotosProvisionalesFocusedRecordChanged(
@@ -1009,7 +1681,7 @@ procedure TfrmMtoComprasSesiones.CrearServicioSesion;
 begin
   FreeAndNil(FServicioComprasSesiones);
   FServicioComprasSesiones := CrearServicioComprasSesiones(
-    ConexionPrincipal, Dmm, FotosArticulos,
+    ConexionTrabajo, Dmm, FotosArticulos,
     FDependencias.CatalogoSql,
     FDependencias.IncidenciasSql);
   pkFieldName := 'SERIE_SES;NUMERO_SES';
@@ -1149,6 +1821,7 @@ begin
   begin
     RefrescarVisibilidadTipoIva;
     RefrescarFotoProvisional;
+    CargarPaginasPedidoOriginal;
     ReconstruirTallas;
   end;
 end;
@@ -1210,6 +1883,7 @@ procedure TfrmMtoComprasSesiones.dsSesionLinDataChangeHook(
 begin
   if (Field <> nil) and
      SameText(Field.FieldName, 'COLOR_TEXTO_SESLIN') and
+     (not FAplicandoColorOcr) and
      (FProveedor <> nil) then
     FProveedor.AsignarColorBasicoCoincidente;
 end;
@@ -1219,7 +1893,7 @@ procedure TfrmMtoComprasSesiones.unqrySesionLinBeforePostHook(
 begin
   // Respaldo para cambios programaticos o controles que no hayan publicado
   // un DataChange antes de confirmar el registro.
-  if FProveedor <> nil then
+  if (FProveedor <> nil) and (not FAplicandoColorOcr) then
     FProveedor.AsignarColorBasicoCoincidente;
   Dmm.unqrySesionLinBeforePost(DataSet);
 end;
@@ -1231,11 +1905,12 @@ begin
   // tiene la cantidad correcta: lo unico que falta es volver a pintarla
   // DESPUES de que el DataController procese el re-fetch.
   TThread.ForceQueue(nil,
+    TThreadProcedure(
     procedure
     begin
       RecargarTallasVisibles;
       RefrescarVisibilidadTipoIva;
-    end);
+    end));
 end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinBeforeInsertHook(
@@ -1298,6 +1973,7 @@ end;
 procedure TfrmMtoComprasSesiones.ResetForm;
 begin
   inherited;
+  CargarPaginasPedidoOriginal;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
@@ -1310,6 +1986,8 @@ begin
   // grid dispara OnFocusedRecordChanged sobre el gestor de tallas) tiene
   // que estar creado ANTES del inherited. Las columnas de talla se crean
   // aqui: si no existen, el recalculo del gestor seria un no-op.
+  FImagenPedidoOriginal := TPicture.Create;
+  FZoomPedidoOriginal := 1;
   CrearColaboradorTallas;
   FTallas.CrearColumnas;
   inherited;
@@ -1591,6 +2269,7 @@ begin
   FreeAndNil(FProveedor);
   FreeAndNil(FTallas);
   FreeAndNil(FServicioComprasSesiones);
+  FreeAndNil(FImagenPedidoOriginal);
   inherited;
 end;
 
@@ -1720,42 +2399,49 @@ begin
     ShowMessage(SErrorLineaSesionAsignarFotoNoSeleccionada)
   else
   begin
-    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-      Dmm.unqryTablaG.Post;
-    if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-      Dmm.unqrySesionLin.Post;
-    sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-    sCodArt := Dmm.unqrySesionLin.FieldByName(
-      'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-    if not Assigned(dlgFoto) then
-      dlgFoto := TOpenDialog.Create(Self);
-    dlgFoto.Filter :=
-      'Imágenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|' +
-      '*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp';
-    dlgFoto.Options := dlgFoto.Options + [ofFileMustExist];
-    if dlgFoto.Execute then
+    sCodArt := Trim(Dmm.unqrySesionLin.FieldByName(
+      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+    if sCodArt = '' then
+      ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+    else
     begin
-      try
-        info := FotosArticulos.GuardarSesion(
-          sSerie,
-          sNumero,
-          iLinea,
-          sCodArt,
-          '',
-          dlgFoto.FileName,
-          IdentidadSesion.Usuario);
-        if info.Encontrada then
-        begin
-          RefrescarFotosProvisionales;
-          ShowMessage(Format(SInfoFotoLineaSesionAsignada, [iLinea]));
-        end
-        else
-          ShowMessage(SErrorAsignarFotoSesion);
-      except
-        on E: Exception do
-          ShowMessage(Format(SErrorGuardarFotoSesion, [E.Message]));
+      if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
+        Dmm.unqryTablaG.Post;
+      if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
+        Dmm.unqrySesionLin.Post;
+      sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+      sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
+      sCodArt := Dmm.unqrySesionLin.FieldByName(
+        'CODIGO_ART_TENTATIVO_SESLIN').AsString;
+      if not Assigned(dlgFoto) then
+        dlgFoto := TOpenDialog.Create(Self);
+      dlgFoto.Filter :=
+        'Imágenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|' +
+        '*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp';
+      dlgFoto.Options := dlgFoto.Options + [ofFileMustExist];
+      if dlgFoto.Execute then
+      begin
+        try
+          info := FotosArticulos.GuardarSesion(
+            sSerie,
+            sNumero,
+            iLinea,
+            sCodArt,
+            '',
+            dlgFoto.FileName,
+            IdentidadSesion.Usuario);
+          if info.Encontrada then
+          begin
+            RefrescarFotosProvisionales;
+            ShowMessage(Format(SInfoFotoLineaSesionAsignada, [iLinea]));
+          end
+          else
+            ShowMessage(SErrorAsignarFotoSesion);
+        except
+          on E: Exception do
+            ShowMessage(Format(SErrorGuardarFotoSesion, [E.Message]));
+        end;
       end;
     end;
   end;

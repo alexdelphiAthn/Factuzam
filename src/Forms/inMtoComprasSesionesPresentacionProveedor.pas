@@ -81,6 +81,8 @@ type
     // Si el texto libre coincide con el codigo o nombre de un basico,
     // asigna su codigo canonico a la linea actual.
     procedure AsignarColorBasicoCoincidente;
+    // Clasifica con un literal externo sin sustituir el color proveedor.
+    procedure AsignarColorBasicoLiteral(const ALiteral: string);
     // Buscador generico sobre vi_proveedores; vuelca el codigo elegido
     // en la cabecera de la sesion.
     procedure BuscarProveedor;
@@ -187,7 +189,6 @@ end;
 
 procedure TCoordinadorProveedorSesion.AsignarColorBasicoCoincidente;
 var
-  sCodigo: string;
   sLiteral: string;
   Lineas: TDataSet;
 begin
@@ -196,8 +197,22 @@ begin
      (Lineas.State in [dsEdit, dsInsert]) then
   begin
     sLiteral := Lineas.FieldByName('COLOR_TEXTO_SESLIN').AsString;
+    AsignarColorBasicoLiteral(sLiteral);
+  end;
+end;
+
+procedure TCoordinadorProveedorSesion.AsignarColorBasicoLiteral(
+  const ALiteral: string);
+var
+  sCodigo: string;
+  Lineas: TDataSet;
+begin
+  Lineas := FEntorno.Datos.unqrySesionLin;
+  if Lineas.Active and (not Lineas.IsEmpty) and
+     (Lineas.State in [dsEdit, dsInsert]) then
+  begin
     if ResolverCodigoColorBasico(
-      sLiteral, FBasicosColor, FNombresBasicosColor, sCodigo) and
+      ALiteral, FBasicosColor, FNombresBasicosColor, sCodigo) and
       (not SameText(sCodigo, Lineas.FieldByName(
         'CODIGO_ATB_COLOR_SESLIN').AsString)) then
       Lineas.FieldByName(
