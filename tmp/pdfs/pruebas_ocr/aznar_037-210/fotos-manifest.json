@@ -1,0 +1,462 @@
+[
+  {
+    "codigo_foto": "AZNAR-037-210-001",
+    "archivo": "AZNAR-037-210-001.png",
+    "modelo": "61582-0",
+    "descripcion": "CAMISOLA TIRANTES LITTLE HEARTS D",
+    "pagina": 1,
+    "recurso_pdf": "Im1",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-002",
+    "archivo": "AZNAR-037-210-002.png",
+    "modelo": "61588-0",
+    "descripcion": "CAMISOLA TIRANTES BLUE SUMMER B",
+    "pagina": 1,
+    "recurso_pdf": "Im2",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-003",
+    "archivo": "AZNAR-037-210-003.png",
+    "modelo": "61601-0",
+    "descripcion": "CAMISOLA TIRANTES COOKING WITH LOVE C",
+    "pagina": 1,
+    "recurso_pdf": "Im3",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-004",
+    "archivo": "AZNAR-037-210-004.png",
+    "modelo": "61612-0",
+    "descripcion": "CAMISOLA LADYBUG C",
+    "pagina": 1,
+    "recurso_pdf": "Im4",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-005",
+    "archivo": "AZNAR-037-210-005.png",
+    "modelo": "64398-0",
+    "descripcion": "PIJAMA M/CORTA MINNIE GIRLS TRIP",
+    "pagina": 1,
+    "recurso_pdf": "Im5",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-006",
+    "archivo": "AZNAR-037-210-006.png",
+    "modelo": "65006-0",
+    "descripcion": "PIJAMA M/ CORTA THE SECRET GARDEN A",
+    "pagina": 1,
+    "recurso_pdf": "Im6",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-007",
+    "archivo": "AZNAR-037-210-007.png",
+    "modelo": "65016-0",
+    "descripcion": "PIJAMA M/CORTA LADYBUG A",
+    "pagina": 1,
+    "recurso_pdf": "Im7",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-008",
+    "archivo": "AZNAR-037-210-008.png",
+    "modelo": "65017-0",
+    "descripcion": "PIJAMA SIN MANGAS LADYBUG B",
+    "pagina": 1,
+    "recurso_pdf": "Im8",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-009",
+    "archivo": "AZNAR-037-210-009.png",
+    "modelo": "65019-0",
+    "descripcion": "PIJAMA ABIERTO LITTLE HEARTS A",
+    "pagina": 2,
+    "recurso_pdf": "Im9",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-010",
+    "archivo": "AZNAR-037-210-010.png",
+    "modelo": "65021-0",
+    "descripcion": "PIJAMA MUJER HIPSTER GIRLA",
+    "pagina": 2,
+    "recurso_pdf": "Im10",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-011",
+    "archivo": "AZNAR-037-210-011.png",
+    "modelo": "65023-0",
+    "descripcion": "PIJAMA M/CORTA ONLY POSITIVE ENERGY A",
+    "pagina": 2,
+    "recurso_pdf": "Im11",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-012",
+    "archivo": "AZNAR-037-210-012.png",
+    "modelo": "65024-0",
+    "descripcion": "PIJAMA SIN MANGAS ONLY POSITIVE ENERGY B",
+    "pagina": 2,
+    "recurso_pdf": "Im12",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-013",
+    "archivo": "AZNAR-037-210-013.png",
+    "modelo": "65033-0",
+    "descripcion": "PIJAMA M/CORTA FREE HUGS A",
+    "pagina": 2,
+    "recurso_pdf": "Im13",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-014",
+    "archivo": "AZNAR-037-210-014.png",
+    "modelo": "65039-0",
+    "descripcion": "PIJAMA SIN MANGAS SUMMER BEAR B",
+    "pagina": 2,
+    "recurso_pdf": "Im14",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-015",
+    "archivo": "AZNAR-037-210-015.png",
+    "modelo": "65040-0",
+    "descripcion": "PIJAMA LARGO SUMMER BEAR C",
+    "pagina": 2,
+    "recurso_pdf": "Im15",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-016",
+    "archivo": "AZNAR-037-210-016.png",
+    "modelo": "65049-0",
+    "descripcion": "PIJAMA TIRANTES BLUE SUMMERA",
+    "pagina": 2,
+    "recurso_pdf": "Im16",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-017",
+    "archivo": "AZNAR-037-210-017.png",
+    "modelo": "65066-0",
+    "descripcion": "PIJAMA SIN MANGAS COOKING WITH LOVE D",
+    "pagina": 3,
+    "recurso_pdf": "Im17",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-018",
+    "archivo": "AZNAR-037-210-018.png",
+    "modelo": "65067-0",
+    "descripcion": "PIJAMA M/CORTA COOKING WITH LOVE E",
+    "pagina": 3,
+    "recurso_pdf": "Im18",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-019",
+    "archivo": "AZNAR-037-210-019.png",
+    "modelo": "65068-0",
+    "descripcion": "PIJAMA LARGO COOKING WITH LOVE F",
+    "pagina": 3,
+    "recurso_pdf": "Im19",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-020",
+    "archivo": "AZNAR-037-210-020.png",
+    "modelo": "65073-0",
+    "descripcion": "PIJAMA SIN MANGAS FREE HUGS C",
+    "pagina": 3,
+    "recurso_pdf": "Im20",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-021",
+    "archivo": "AZNAR-037-210-021.png",
+    "modelo": "65092-0",
+    "descripcion": "PIJAMA M/CORTA LOVE IS BOW C",
+    "pagina": 3,
+    "recurso_pdf": "Im21",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-022",
+    "archivo": "AZNAR-037-210-022.png",
+    "modelo": "65112-0",
+    "descripcion": "PIJAMA LARGO HIPSTER GIRL C",
+    "pagina": 3,
+    "recurso_pdf": "Im22",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-023",
+    "archivo": "AZNAR-037-210-023.png",
+    "modelo": "65121-0",
+    "descripcion": "PIJAMA ABIERTO PIRATA SWEET LOU LOUA",
+    "pagina": 3,
+    "recurso_pdf": "Im23",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-024",
+    "archivo": "AZNAR-037-210-024.png",
+    "modelo": "61482-0",
+    "descripcion": "CAMISOLA SIN MANGAS SMALL GREY DOTS A",
+    "pagina": 3,
+    "recurso_pdf": "Im24",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-025",
+    "archivo": "AZNAR-037-210-025.png",
+    "modelo": "64083-0",
+    "descripcion": "PIJAMA SIN MANGAS SMALL GREY DOTS B",
+    "pagina": 4,
+    "recurso_pdf": "Im25",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-026",
+    "archivo": "AZNAR-037-210-026.png",
+    "modelo": "64528-0",
+    "descripcion": "PIJAMA RULE THE GALAXY RED",
+    "pagina": 4,
+    "recurso_pdf": "Im26",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-027",
+    "archivo": "AZNAR-037-210-027.png",
+    "modelo": "64558-0",
+    "descripcion": "PIJAMA STORMTROOPER",
+    "pagina": 4,
+    "recurso_pdf": "Im27",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-028",
+    "archivo": "AZNAR-037-210-028.png",
+    "modelo": "64943-0",
+    "descripcion": "PIJAMA MICKEY MOUSE TENNIS CLUBA",
+    "pagina": 4,
+    "recurso_pdf": "Im28",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-029",
+    "archivo": "AZNAR-037-210-029.png",
+    "modelo": "64949-0",
+    "descripcion": "PIJAMA CALLING GRUMPY",
+    "pagina": 4,
+    "recurso_pdf": "Im29",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-030",
+    "archivo": "AZNAR-037-210-030.png",
+    "modelo": "65151-0",
+    "descripcion": "PIJAMA RAYAS WOLF B",
+    "pagina": 4,
+    "recurso_pdf": "Im30",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-031",
+    "archivo": "AZNAR-037-210-031.png",
+    "modelo": "65154-0",
+    "descripcion": "PIJAMA TAPETA CLASSY BUT CUTE B",
+    "pagina": 4,
+    "recurso_pdf": "Im31",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-032",
+    "archivo": "AZNAR-037-210-032.png",
+    "modelo": "65155-0",
+    "descripcion": "PIJAMA CHAMPIONSHIP MOD A",
+    "pagina": 4,
+    "recurso_pdf": "Im32",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-033",
+    "archivo": "AZNAR-037-210-033.png",
+    "modelo": "65157-0",
+    "descripcion": "PIJAMA HOMBRE HIPSTERA",
+    "pagina": 5,
+    "recurso_pdf": "Im33",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-034",
+    "archivo": "AZNAR-037-210-034.png",
+    "modelo": "65162-0",
+    "descripcion": "PIJAMA HOMBRE MOTOR-CROSS MODA",
+    "pagina": 5,
+    "recurso_pdf": "Im34",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-035",
+    "archivo": "AZNAR-037-210-035.png",
+    "modelo": "65168-0",
+    "descripcion": "PIJAMA EARTHLINE A",
+    "pagina": 5,
+    "recurso_pdf": "Im35",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-036",
+    "archivo": "AZNAR-037-210-036.png",
+    "modelo": "65174-0",
+    "descripcion": "PIJAMA TAPETA STABILE A",
+    "pagina": 5,
+    "recurso_pdf": "Im36",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-037",
+    "archivo": "AZNAR-037-210-037.png",
+    "modelo": "65176-0",
+    "descripcion": "PIJAMA ABIERTO STABILE C",
+    "pagina": 5,
+    "recurso_pdf": "Im37",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-038",
+    "archivo": "AZNAR-037-210-038.png",
+    "modelo": "65178-0",
+    "descripcion": "PIJAMA LARGO CHAMPIONSHIP B",
+    "pagina": 5,
+    "recurso_pdf": "Im38",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-039",
+    "archivo": "AZNAR-037-210-039.png",
+    "modelo": "65183-0",
+    "descripcion": "PIJAMA RAYAS FRENCH POLYNESIA B",
+    "pagina": 5,
+    "recurso_pdf": "Im39",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-040",
+    "archivo": "AZNAR-037-210-040.png",
+    "modelo": "65184-0",
+    "descripcion": "PIJAMA LARGO RAYAS FRENCH POLYNESIA C",
+    "pagina": 5,
+    "recurso_pdf": "Im40",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-041",
+    "archivo": "AZNAR-037-210-041.png",
+    "modelo": "65188-0",
+    "descripcion": "PIJAMA LARGO RAYAS WOLF C",
+    "pagina": 6,
+    "recurso_pdf": "Im41",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-042",
+    "archivo": "AZNAR-037-210-042.png",
+    "modelo": "65275-0",
+    "descripcion": "PIJAMA LAZY MORNINGS MOD A",
+    "pagina": 6,
+    "recurso_pdf": "Im42",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-043",
+    "archivo": "AZNAR-037-210-043.png",
+    "modelo": "65282-0",
+    "descripcion": "PIJAMA RAYAS STAYING AT HOME",
+    "pagina": 6,
+    "recurso_pdf": "Im43",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-044",
+    "archivo": "AZNAR-037-210-044.png",
+    "modelo": "65350-0",
+    "descripcion": "PIJAMA MECHANICAL A",
+    "pagina": 6,
+    "recurso_pdf": "Im44",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-045",
+    "archivo": "AZNAR-037-210-045.png",
+    "modelo": "65354-0",
+    "descripcion": "PIJAMA SPORTY A",
+    "pagina": 6,
+    "recurso_pdf": "Im45",
+    "ancho": 160,
+    "alto": 160
+  },
+  {
+    "codigo_foto": "AZNAR-037-210-046",
+    "archivo": "AZNAR-037-210-046.png",
+    "modelo": "65460-0",
+    "descripcion": "PIJAMA CORTO TRAVEL",
+    "pagina": 6,
+    "recurso_pdf": "Im46",
+    "ancho": 160,
+    "alto": 160
+  }
+]

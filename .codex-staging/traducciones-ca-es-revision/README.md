@@ -31,8 +31,9 @@ automático restante queda pendiente de revisión visual.
 
 `en-GB` versión 1 contiene las 6.961 filas inglesas. `ca-ES` versión 2 parte
 de las 7.442 filas catalanas exportadas desde la BBDD y aplica después una
-revisión lingüística incremental. Esta revisión incorpora las claves nuevas,
-conserva los saltos de línea de los mensajes y cubre los textos de rejilla sin
-datos. Ambos paquetes preparan primero la marca de descarga y aplican después
-el catálogo. Al ejecutarlos, las filas quedan marcadas para incluirse en
-futuras copias de seguridad.
+revisión lingüística incremental de 423 filas. Esta revisión incorpora 111
+resourcestring recientes, conserva los saltos de línea de los mensajes,
+corrige terminología y cubre los textos de rejilla sin datos. Ambos paquetes
+preparan primero la marca de descarga y aplican después el catálogo. Al
+ejecutarlos, las filas quedan marcadas para incluirse en futuras copias de
+seguridad.

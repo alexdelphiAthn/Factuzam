@@ -1,0 +1,113 @@
+{
+  "proveedor": {
+    "razon_social": "INDUSTRIAS VALLS 1 S.A. - PUNTO BLANCO",
+    "direccion": "Avda. Balmes, 16, 08700 Igualada, Barcelona, España",
+    "cif": "A59060491",
+    "telefono": "+34 938 035 252"
+  },
+  "referencia_doc": "1032691",
+  "fecha_pedido": "2026-07-29",
+  "fecha_tope": null,
+  "fecha_prevista_entrega": "2027-01-03",
+  "detalle": [
+    {
+      "modelo": "3372120",
+      "descripcion": "DUPLO CAMISETA SIN MANGA",
+      "color": "000 Duplo",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "48",
+          "cantidad": 18
+        },
+        {
+          "talla": "52",
+          "cantidad": 24
+        },
+        {
+          "talla": "56",
+          "cantidad": 18
+        },
+        {
+          "talla": "60",
+          "cantidad": 18
+        }
+      ],
+      "cantidad": 78,
+      "precio_unitario": 9.8,
+      "pvp": 0.0,
+      "importe": 764.4,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "3372310",
+      "descripcion": "DUPLO SLIP ABIERTO COMFORT RIB",
+      "color": "000 Duplo",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "48",
+          "cantidad": 18
+        },
+        {
+          "talla": "52",
+          "cantidad": 24
+        },
+        {
+          "talla": "56",
+          "cantidad": 18
+        },
+        {
+          "talla": "60",
+          "cantidad": 12
+        }
+      ],
+      "cantidad": 72,
+      "precio_unitario": 10.8,
+      "pvp": 0.0,
+      "importe": 777.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "3372410",
+      "descripcion": "DUPLO SLIP ABIERTO COMFORT",
+      "color": "000 Duplo",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "48",
+          "cantidad": 18
+        },
+        {
+          "talla": "52",
+          "cantidad": 24
+        },
+        {
+          "talla": "56",
+          "cantidad": 18
+        },
+        {
+          "talla": "60",
+          "cantidad": 12
+        }
+      ],
+      "cantidad": 72,
+      "precio_unitario": 7.8,
+      "pvp": 0.0,
+      "importe": 561.6,
+      "moneda": "EUR"
+    }
+  ],
+  "totales": {
+    "cantidad": 222,
+    "importe": 2103.6,
+    "moneda": "EUR"
+  },
+  "validacion": {
+    "cuadra": true,
+    "cantidad_calculada": 222,
+    "importe_calculado": 2103.6,
+    "advertencias": [
+    ]
+  }
+}

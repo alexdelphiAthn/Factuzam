@@ -826,6 +826,7 @@ resourcestring
   SCaptionColCodigoBarras = 'Cód. barras';
   SCaptionColRefProveedor = 'Ref. prov.';
   SCaptionColStock = 'Stock';
+  SCaptionSinArticulos = 'No hay artículos';
   // R07 - Movimientos de almacén
   SCaptionCargandoMovimientos = 'Cargando movimientos...';
   SCaptionCargandoMovimientosProgreso =

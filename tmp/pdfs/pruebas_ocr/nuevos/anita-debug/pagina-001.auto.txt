@@ -1,0 +1,166 @@
+Amnita
+
+SINCE 1886
+
+ROSA FAIA
+
+BEAUTYFULL
+
+Copia del pedido
+
+Direccion del cliente
+
+MONEDEROLID S.L. MONEDERO
+
+Canovas del Castillo, 14
+47002 VALLADOLID
+ES
+
+983 308 001
+
+Rose Body sin aros preformado
+
+i 3576 - 107 rosa smart
+
+u 75
+
+C 1
+
+5876 - 001 black
+
+75
+C 3
+
+Dirección de envío
+
+MONEDEROLID S.L. MONEDERO
+
+Canovas del Castillo, 14
+47002 VALLADOLID
+ES
+
+Tipo de pedido:
+
+90 95
+1 1
+
+90 95
+3 2
+
+28,31 28,31 28,31 28,31 28,31
+
+5876 - 001 black
+
+g Rose Sujetador confort preformado Tipo de pedido:
+
+FREE
+
+g Rose Sujetador confort preformado Tipo de pedido:
+
+95
+C 1
+28,31
+
+5876 - 107 rosa smart
+
+A Rose Sujetador confort preformado Tipo de pedido:
+st
+
+75
+C 3
+
+90 95
+3 2
+
+28,31 28,31 28,31 28,31 28,31
+
+5876 - 107 rosa smart
+
+FREE
+
+A Rose Sujetador confort preformado Tipo de pedido:
+st
+
+80
+C 1
+
+28,31 28,31
+
+Sita Sujetador con aros
+a, 5265 - 594 rosa agua
+
+hal 80
+C 3
+
+Tipo de pedido:
+
+P. compra
+€ 38,30
+
+P. compra
+€ 29,80
+
+P. compra
+€ 29,80
+
+P. compra
+€ 29,80
+
+P. compra
+€ 29,80
+
+P. compra
+€ 29,80
+
+Numero de pedido
+Fecha de pedido
+Numero de cliente
+Representante de ventas
+
+Descuento Red
+5% € 36,38
+
+Descuento Red
+5% € 28,31
+
+Descuento Red
+5% € 28,31
+
+Descuento Red
+5% € 28,31
+
+Descuento Red
+5% € 28,31
+
+Descuento Red
+5% € 28,31
+
+863BRZCIMVRI
+29-7-2026
+055-55080504
+ricardo.rubia@anita.net
+
+P.V.P. rec. Servicio a partir de
+€ 89,95 01-04-2027
+Cantidad Total neto
+5 € 181,92
+P.V.P. rec. Servicio a partir de
+€ 69,95 01-03-2027
+Cantidad Total neto
+16 € 452,96
+P.V.P. rec. Servicio a partir de
+€ 69,95 01-03-2027
+Cantidad Total neto
+1 € 28,31
+P.V.P. rec. Servicio a partir de
+€ 69,95 01-03-2027
+Cantidad Total neto
+16 € 452,96
+P.V.P. rec. Servicio a partir de
+€ 69,95 01-03-2027
+Cantidad Total neto
+2 € 56,62
+P.V.P. rec. Servicio a partir de
+€ 69,95 01-01-2027
+Cantidad Total neto
+12 € 339,72

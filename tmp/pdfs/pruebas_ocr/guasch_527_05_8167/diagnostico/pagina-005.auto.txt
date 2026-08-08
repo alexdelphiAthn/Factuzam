@@ -1,0 +1,44 @@
+RED POINT 004234
+
+MONEDEROLID, S.L.
+PLAZA MARCOS FERNÁNDEZ S/N
+
+47014 VALLADOLID
+VALLADOLID
+GUASCH FASHION GROUP, S.L. ESPAÑA
+Red Point & Onades
+Ctra. Caldes Km 0,2
+17240 Llagostera, Girona
+V.A.T. ES B64584857
+N° de Pedido Fecha F. Servir Pedido del cliente Ctrl Pag.
+8167 29/07/2026 01/02/2027 50 5
+Agencia Envio Seccion Sucursal Proveedor Representante
+
+- JUAN L. GUERRA DURAN
+Tipo Pago Forma Pago NIF Teléfono
+
+GIRO 60 DIAS F.F. B47486535 983303702
+
+21 1160250 DARI Clasica alta lados BOLSA 1 ud. PVPR: 17,30
+graduables
+Cod. Col. 40 42 44 46 48 50 TOTAL
+000 3 4 4 3 14
+PRECIOS 17,30 17,30 17,30 17,30 242,20
+22 1160392 DARI Cruzado foam control BOLSA 1 ud. — PVPR: 46,20
+Cod. Col. Color 40 42 44 46 48 50 52 TOTAL
+coo Copa C 3 4 4 3 14
+PRECIOS 46,20 46,20 46,20 46,20 646,80
+23 1334132 IONA Aros drapeado BOLSA 1 ud. PVPR: 21,20
+Cod. Col. Color 38 40 42 44 46 48 TOTAL
+coo Copa C 3 4 4 3 14
+PRECIOS 2120 21,20 21,20 21,20 296,80
+24 1334260 IONA Basica 6 drapeada BOLSA 1 ud. PVPR: 15,40
+Cod. Col. 38 40 42 44 46 48 TOTAL
+000 3 4 4 3 14
+PRECIOS 15,40 1540 15,40 15,40 215,60
+25 1334392 IONA Cruzado foam control BOLSA 1 ud.  PVPR: 42,30
+Cod. Col. Color 40 42 44 46 48 50 52 TOTAL
+coo Copa C 3 4 4 3 14
+
+PRECIOS 42,30 42,30 42,30 42,30 592,20
+

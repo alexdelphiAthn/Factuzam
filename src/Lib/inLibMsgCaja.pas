@@ -35,6 +35,8 @@ resourcestring
     'No se ha configurado el contexto de sesión del módulo de caja.';
   SErrorOperacionCajaSinLineas =
     'No se puede grabar una operación sin líneas.';
+  SErrorCambioIvaSoloArticuloInmaterial =
+    'Seleccione una línea de artículo inmaterial para cambiar su IVA.';
   SErrorRazonSocialClienteFacturaCajaObligatoria =
     'La factura normal necesita la razon social del cliente.';
   SErrorDocumentoFiscalClienteCajaNoValido =
@@ -360,6 +362,7 @@ resourcestring
   SCaptionNoAtender = 'No atender';
   SCaptionImprimir = 'Imprimir';
   SCaptionEmpleadoNoEncontrado = '(no encontrado)';
+  SCaptionSinStock = 'Sin stock';
   // R14 - Modales de caja: arqueo, gastos y tira
   SCaptionImporteEur = '%s EUR';
   SCaptionDesgloseEfectivo =

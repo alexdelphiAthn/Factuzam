@@ -281,7 +281,7 @@ begin
   tvVentas.OptionsData.Inserting := False;
   tvVentas.OptionsSelection.CellSelect := True;
   tvVentas.OptionsView.GroupByBox := True;
-  tvVentas.OptionsView.NoDataToDisplayInfoText := 'No hay ventas';
+  tvVentas.OptionsView.NoDataToDisplayInfoText := SCaptionSinVentas;
   lvVentas := cxgrdVentas.Levels.Add;
   lvVentas.GridView := tvVentas;
   CrearColumnas;

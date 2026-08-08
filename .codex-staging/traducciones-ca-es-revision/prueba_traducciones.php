@@ -52,6 +52,12 @@ foreach ($esperados as $idiomaEsperado => $esperado) {
         ($archivos[0]['nombre'] ?? '') ===
             '000_preparar_descarga.sql' &&
         ($archivos[$indiceCatalogo]['tamano'] ?? 0) > 1000000;
+    if ($idiomaEsperado === 'ca-ES') {
+        $valido = $valido &&
+            ($archivos[2]['nombre'] ?? '') ===
+                '002_revision_linguistica.sql' &&
+            ($archivos[2]['tamano'] ?? 0) > 100000;
+    }
     if ($abierto) {
         $zip->close();
     }

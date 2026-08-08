@@ -301,7 +301,8 @@ begin
   // aviso cuando no hay articulos.
   FView.OptionsBehavior.FocusCellOnCycle := True;
   FView.OptionsView.ColumnAutoWidth := True;
-  FView.OptionsView.NoDataToDisplayInfoText := 'No hay artículos';
+  FView.OptionsView.NoDataToDisplayInfoText :=
+    SCaptionSinArticulos;
   // dbNavigator pequeno embebido: navegar + insertar + borrar (el resto
   // oculto). Insertar/borrar lineas tambien desde aqui.
   FView.Navigator.Visible := True;

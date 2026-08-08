@@ -1,0 +1,1236 @@
+{
+  "proveedor": {
+    "razon_social": "GUASCH FASHION GROUP, S.L.",
+    "direccion": "CTRA. CALDES KM 0,2 17240 LLAGOSTERA, GIRONA",
+    "cif": "B64584857",
+    "telefono": null
+  },
+  "referencia_doc": "8167",
+  "fecha_pedido": "2026-07-29",
+  "fecha_tope": null,
+  "fecha_prevista_entrega": "2027-02-01",
+  "detalle": [
+    {
+      "modelo": "1033131",
+      "descripcion": "ANTAO Top foam",
+      "color": "B81 Copa B",
+      "codigo_foto": "GUASCH-8167-001",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 17.3,
+      "pvp": 17.3,
+      "importe": 173.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1033280",
+      "descripcion": "ANTAO Cadera 8",
+      "color": "081",
+      "codigo_foto": "GUASCH-8167-002",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 13.5,
+      "pvp": 13.5,
+      "importe": 135.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1033381",
+      "descripcion": "ANTAO Escote V",
+      "color": "B81 Copa B",
+      "codigo_foto": "GUASCH-8167-003",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 30.8,
+      "pvp": 30.8,
+      "importe": 308.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1050171",
+      "descripcion": "AROSA Bando aros foam",
+      "color": "B00 Copa B",
+      "codigo_foto": "GUASCH-8167-004",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 23.1,
+      "pvp": 23.1,
+      "importe": 231.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1050280",
+      "descripcion": "AROSA Cadera 8",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-005",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 15.4,
+      "pvp": 15.4,
+      "importe": 154.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1050352",
+      "descripcion": "AROSA Escote cuadrado foam",
+      "color": "coo Copa C",
+      "codigo_foto": "GUASCH-8167-006",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 34.6,
+      "pvp": 34.6,
+      "importe": 346.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1060101",
+      "descripcion": "BALI Aros foam balconet",
+      "color": "B00 Copa B",
+      "codigo_foto": "GUASCH-8167-007",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 13,
+      "precio_unitario": 21.2,
+      "pvp": 21.2,
+      "importe": 275.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1060280",
+      "descripcion": "BALI Cadera 8",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-008",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 13,
+      "precio_unitario": 13.5,
+      "pvp": 13.5,
+      "importe": 175.5,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1060330",
+      "descripcion": "BALI Mastectomia",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-009",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 36.5,
+      "pvp": 36.5,
+      "importe": 511.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1107121",
+      "descripcion": "BYRO Top foam especial",
+      "color": "B89 Copa B",
+      "codigo_foto": "GUASCH-8167-010",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 18.3,
+      "pvp": 18.3,
+      "importe": 183.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1107280",
+      "descripcion": "BYRO Cadera 8",
+      "color": "089",
+      "codigo_foto": "GUASCH-8167-011",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 16.7,
+      "pvp": 16.7,
+      "importe": 167.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1107321",
+      "descripcion": "BYRO Basico foam Extraible",
+      "color": "B89 Copa B",
+      "codigo_foto": "GUASCH-8167-012",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 39.95,
+      "pvp": 39.95,
+      "importe": 559.3,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1114162",
+      "descripcion": "CANCUN Aros base",
+      "color": "coo Copa C",
+      "codigo_foto": "GUASCH-8167-013",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 13,
+      "precio_unitario": 21.2,
+      "pvp": 21.2,
+      "importe": 275.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1114250",
+      "descripcion": "CANCUN Clasica alta",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-014",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 13,
+      "precio_unitario": 15.4,
+      "pvp": 15.4,
+      "importe": 200.2,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1114321",
+      "descripcion": "CANCUN Basico foam Extraible",
+      "color": "B00 Copa B",
+      "codigo_foto": "GUASCH-8167-015",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        },
+        {
+          "talla": "48",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 12,
+      "precio_unitario": 36.5,
+      "pvp": 36.5,
+      "importe": 438.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1135131",
+      "descripcion": "CONI Top foam Extraible",
+      "color": "B91 Copa B",
+      "codigo_foto": "GUASCH-8167-016",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 21.7,
+      "pvp": 21.7,
+      "importe": 217.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1135280",
+      "descripcion": "CONI Cadera 8",
+      "color": "091",
+      "codigo_foto": "GUASCH-8167-017",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 13.3,
+      "pvp": 13.3,
+      "importe": 133.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1135321",
+      "descripcion": "CONI Basico foam Extraible",
+      "color": "B91 Copa B",
+      "codigo_foto": "GUASCH-8167-018",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 36.7,
+      "pvp": 36.7,
+      "importe": 513.8,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1135500",
+      "descripcion": "CONI Camisa",
+      "color": "091",
+      "codigo_foto": "GUASCH-8167-019",
+      "tallas": [
+        {
+          "talla": "M",
+          "cantidad": 3
+        },
+        {
+          "talla": "L",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 6,
+      "precio_unitario": 23.3,
+      "pvp": 23.3,
+      "importe": 139.8,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1160103",
+      "descripcion": "DARI Aros extra suport",
+      "color": "DOO Copa D",
+      "codigo_foto": "GUASCH-8167-020",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 25.0,
+      "pvp": 25.0,
+      "importe": 350.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1160250",
+      "descripcion": "DARI Clasica alta lados",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-021",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 17.3,
+      "pvp": 17.3,
+      "importe": 242.2,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1160392",
+      "descripcion": "DARI Cruzado foam control",
+      "color": "coo Copa C",
+      "codigo_foto": "GUASCH-8167-022",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 46.2,
+      "pvp": 46.2,
+      "importe": 646.8,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1334132",
+      "descripcion": "IONA Aros drapeado",
+      "color": "coo Copa C",
+      "codigo_foto": "GUASCH-8167-023",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 21.2,
+      "pvp": 21.2,
+      "importe": 296.8,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1334260",
+      "descripcion": "IONA Basica 6 drapeada",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-024",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 15.4,
+      "pvp": 15.4,
+      "importe": 215.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1334392",
+      "descripcion": "IONA Cruzado foam control",
+      "color": "coo Copa C",
+      "codigo_foto": "GUASCH-8167-025",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 42.3,
+      "pvp": 42.3,
+      "importe": 592.2,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1340142",
+      "descripcion": "ISOLA Top foam 3D",
+      "color": "c89 Copa C",
+      "codigo_foto": "GUASCH-8167-026",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        },
+        {
+          "talla": "46",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 12,
+      "precio_unitario": 21.7,
+      "pvp": 21.7,
+      "importe": 260.4,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1340280",
+      "descripcion": "ISOLA Cadera 8",
+      "color": "089",
+      "codigo_foto": "GUASCH-8167-027",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        },
+        {
+          "talla": "46",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 12,
+      "precio_unitario": 13.3,
+      "pvp": 13.3,
+      "importe": 159.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1340321",
+      "descripcion": "ISOLA Basico foam Extraible",
+      "color": "B89 Copa B",
+      "codigo_foto": "GUASCH-8167-028",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 34.95,
+      "pvp": 34.95,
+      "importe": 489.3,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1348540",
+      "descripcion": "ROCA Pantalon",
+      "color": "091",
+      "codigo_foto": "GUASCH-8167-029",
+      "tallas": [
+        {
+          "talla": "S",
+          "cantidad": 3
+        },
+        {
+          "talla": "M",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 6,
+      "precio_unitario": 15.4,
+      "pvp": 15.4,
+      "importe": 92.4,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1380131",
+      "descripcion": "KAUAI Top foam Extraible",
+      "color": "B19 Copa B",
+      "codigo_foto": "GUASCH-8167-030",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 21.7,
+      "pvp": 21.7,
+      "importe": 303.8,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1380280",
+      "descripcion": "KAUAI Cadera 8",
+      "color": "019",
+      "codigo_foto": "GUASCH-8167-031",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 14.95,
+      "pvp": 14.95,
+      "importe": 209.3,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1380321",
+      "descripcion": "KAUAI Basico foam Extraible",
+      "color": "B19 Copa B",
+      "codigo_foto": "GUASCH-8167-032",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 39.95,
+      "pvp": 39.95,
+      "importe": 559.3,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1385132",
+      "descripcion": "KEI Top Aros",
+      "color": "coo Copa C",
+      "codigo_foto": "GUASCH-8167-033",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 21.2,
+      "pvp": 21.2,
+      "importe": 296.8,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1385250",
+      "descripcion": "KEI Clasica alta",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-034",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 15.4,
+      "pvp": 15.4,
+      "importe": 215.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1385321",
+      "descripcion": "KEI Basico foam Extraible",
+      "color": "B00 Copa B",
+      "codigo_foto": "GUASCH-8167-035",
+      "tallas": [
+        {
+          "talla": "42",
+          "cantidad": 3
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 4
+        },
+        {
+          "talla": "48",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 36.5,
+      "pvp": 36.5,
+      "importe": 511.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1385510",
+      "descripcion": "KEI Tunica",
+      "color": "000",
+      "codigo_foto": "GUASCH-8167-036",
+      "tallas": [
+        {
+          "talla": "U",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 3,
+      "precio_unitario": 21.2,
+      "pvp": 21.2,
+      "importe": 63.6,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1598131",
+      "descripcion": "NULAY Top foam Extraible",
+      "color": "B81 Copa B",
+      "codigo_foto": "GUASCH-8167-037",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 19.95,
+      "pvp": 19.95,
+      "importe": 279.3,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1598280",
+      "descripcion": "NULAY Cadera 8",
+      "color": "081",
+      "codigo_foto": "GUASCH-8167-038",
+      "tallas": [
+        {
+          "talla": "38",
+          "cantidad": 2
+        },
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 5
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 13.3,
+      "pvp": 13.3,
+      "importe": 186.2,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1598321",
+      "descripcion": "NULAY Basico foam Extraible",
+      "color": "B81 Copa B",
+      "codigo_foto": "GUASCH-8167-039",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 4
+        },
+        {
+          "talla": "46",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 33.3,
+      "pvp": 33.3,
+      "importe": 466.2,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1598510",
+      "descripcion": "NULAY Tunica",
+      "color": "081",
+      "codigo_foto": "GUASCH-8167-040",
+      "tallas": [
+        {
+          "talla": "S",
+          "cantidad": 3
+        },
+        {
+          "talla": "M",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 6,
+      "precio_unitario": 29.95,
+      "pvp": 29.95,
+      "importe": 179.7,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1750130",
+      "descripcion": "SALI Top foam Extraible 44 48",
+      "color": "B52 Copa B",
+      "codigo_foto": "GUASCH-8167-041",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 19.2,
+      "pvp": 19.2,
+      "importe": 192.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1750200",
+      "descripcion": "SALI Cadera lazos 0 44",
+      "color": "052",
+      "codigo_foto": "GUASCH-8167-042",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 13.5,
+      "pvp": 13.5,
+      "importe": 135.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1750321",
+      "descripcion": "SALI Basico foam Extraible 44 48",
+      "color": "B52 Copa B",
+      "codigo_foto": "GUASCH-8167-043",
+      "tallas": [
+        {
+          "talla": "40",
+          "cantidad": 3
+        },
+        {
+          "talla": "42",
+          "cantidad": 4
+        },
+        {
+          "talla": "44",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 10,
+      "precio_unitario": 32.7,
+      "pvp": 32.7,
+      "importe": 327.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "1598510",
+      "descripcion": "NULAY Tunica",
+      "color": "081",
+      "codigo_foto": "GUASCH-8167-044",
+      "tallas": [
+        {
+          "talla": "S",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 2,
+      "precio_unitario": 29.95,
+      "pvp": 29.95,
+      "importe": 0.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "9898003",
+      "descripcion": "PROMOCION PACK 3 ETIQUETA",
+      "color": "001",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "U",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.0,
+      "pvp": 0.0,
+      "importe": 0.0,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "9898002",
+      "descripcion": "PROMOCIÓN NEGRA PACK 2 ETIQUETA",
+      "color": "001",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "U",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 2,
+      "precio_unitario": 0.0,
+      "pvp": 0.0,
+      "importe": 0.0,
+      "moneda": "EUR"
+    }
+  ],
+  "totales": {
+    "cantidad": 510,
+    "importe": 12405.9,
+    "moneda": "EUR"
+  },
+  "validacion": {
+    "cuadra": true,
+    "cantidad_calculada": 510,
+    "importe_calculado": 12405.9,
+    "advertencias": [
+    ]
+  }
+}

@@ -640,6 +640,9 @@ uses
   inMtoModalMotivoDevolucion in
     'src\Caja\Modals\inMtoModalMotivoDevolucion.pas'
     {frmModalMotivoDevolucion},
+  inMtoModalCambioIva in
+    'src\Caja\Modals\inMtoModalCambioIva.pas'
+    {frmModalCambioIva},
   inLibFacturaExcel in 'src\Lib\inLibFacturaExcel.pas',
   inLibDocCompraExcel in 'src\Lib\inLibDocCompraExcel.pas',
   inLibExportacionCompraModelo in

@@ -1,0 +1,382 @@
+{
+  "proveedor": {
+    "razon_social": "ANITA DR. HELBIG GMBH",
+    "direccion": "Grafenstrasse 23, 83098 Brannenburg, Alemania",
+    "cif": null,
+    "telefono": null
+  },
+  "referencia_doc": "863BRZCIMVRI",
+  "fecha_pedido": "2026-07-29",
+  "fecha_tope": null,
+  "fecha_prevista_entrega": null,
+  "detalle": [
+    {
+      "modelo": "3576",
+      "descripcion": "Rose Body sin aros preformado",
+      "color": "107 rosa smart",
+      "codigo_foto": "ANITA-863BRZCIMVRI-001",
+      "tallas": [
+        {
+          "talla": "75C",
+          "cantidad": 1
+        },
+        {
+          "talla": "80C",
+          "cantidad": 1
+        },
+        {
+          "talla": "85C",
+          "cantidad": 1
+        },
+        {
+          "talla": "90C",
+          "cantidad": 1
+        },
+        {
+          "talla": "95C",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 5,
+      "precio_unitario": 36.38,
+      "pvp": 89.95,
+      "importe": 181.92,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5876",
+      "descripcion": "Rose Sujetador confort preformado",
+      "color": "001 black",
+      "codigo_foto": "ANITA-863BRZCIMVRI-002",
+      "tallas": [
+        {
+          "talla": "75C",
+          "cantidad": 3
+        },
+        {
+          "talla": "80C",
+          "cantidad": 4
+        },
+        {
+          "talla": "85C",
+          "cantidad": 4
+        },
+        {
+          "talla": "90C",
+          "cantidad": 3
+        },
+        {
+          "talla": "95C",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 16,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 452.96,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5876",
+      "descripcion": "Rose Sujetador confort preformado",
+      "color": "001 black",
+      "codigo_foto": "ANITA-863BRZCIMVRI-003",
+      "tallas": [
+        {
+          "talla": "95C",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 28.31,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5876",
+      "descripcion": "Rose Sujetador confort preformado",
+      "color": "107 rosa smart",
+      "codigo_foto": "ANITA-863BRZCIMVRI-004",
+      "tallas": [
+        {
+          "talla": "75C",
+          "cantidad": 3
+        },
+        {
+          "talla": "80C",
+          "cantidad": 4
+        },
+        {
+          "talla": "85C",
+          "cantidad": 4
+        },
+        {
+          "talla": "90C",
+          "cantidad": 3
+        },
+        {
+          "talla": "95C",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 16,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 452.96,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5876",
+      "descripcion": "Rose Sujetador confort preformado",
+      "color": "107 rosa smart",
+      "codigo_foto": "ANITA-863BRZCIMVRI-005",
+      "tallas": [
+        {
+          "talla": "80C",
+          "cantidad": 1
+        },
+        {
+          "talla": "95C",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 2,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 56.62,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5265",
+      "descripcion": "Sita Sujetador con aros",
+      "color": "594 rosa agua",
+      "codigo_foto": "ANITA-863BRZCIMVRI-006",
+      "tallas": [
+        {
+          "talla": "80C",
+          "cantidad": 3
+        },
+        {
+          "talla": "85C",
+          "cantidad": 4
+        },
+        {
+          "talla": "90C",
+          "cantidad": 3
+        },
+        {
+          "talla": "95C",
+          "cantidad": 2
+        }
+      ],
+      "cantidad": 12,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 339.72,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5265",
+      "descripcion": "Sita Sujetador con aros",
+      "color": "594 rosa agua",
+      "codigo_foto": "ANITA-863BRZCIMVRI-007",
+      "tallas": [
+        {
+          "talla": "95C",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 28.31,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5228",
+      "descripcion": "Tahiti Sujetador sin aros",
+      "color": "307 azul noche",
+      "codigo_foto": "ANITA-863BRZCIMVRI-008",
+      "tallas": [
+        {
+          "talla": "SIN_DETERMINAR",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 3,
+      "precio_unitario": 113.27,
+      "pvp": 59.95,
+      "importe": 339.81,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5229",
+      "descripcion": "Tahiti Sujetador sin aros cazoleta",
+      "color": "612 cristal",
+      "codigo_foto": "ANITA-863BRZCIMVRI-009",
+      "tallas": [
+        {
+          "talla": "75C",
+          "cantidad": 3
+        },
+        {
+          "talla": "80C",
+          "cantidad": 4
+        },
+        {
+          "talla": "85C",
+          "cantidad": 4
+        },
+        {
+          "talla": "90C",
+          "cantidad": 3
+        }
+      ],
+      "cantidad": 14,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 396.34,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "5229",
+      "descripcion": "Tahiti Sujetador sin aros cazoleta",
+      "color": "612 cristal",
+      "codigo_foto": "ANITA-863BRZCIMVRI-010",
+      "tallas": [
+        {
+          "talla": "80C",
+          "cantidad": 1
+        },
+        {
+          "talla": "85C",
+          "cantidad": 1
+        },
+        {
+          "talla": "95C",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 3,
+      "precio_unitario": 28.31,
+      "pvp": 69.95,
+      "importe": 84.93,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "V7996Y",
+      "descripcion": "AN EV-Flyer FS27 (VE30)",
+      "color": "089 sin color",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "0",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.01,
+      "pvp": 0.0,
+      "importe": 0.01,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "V7206Y",
+      "descripcion": "AN Flip Stand FS27",
+      "color": "089 sin color",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "0",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.01,
+      "pvp": 0.0,
+      "importe": 0.01,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "W727Y",
+      "descripcion": "Póster Toscana '10 3454",
+      "color": "089 sin color",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "0",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.01,
+      "pvp": 0.0,
+      "importe": 0.01,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "W129Y",
+      "descripcion": "AN Paperbag Big (VE25)",
+      "color": "089 sin color",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "0",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.01,
+      "pvp": 0.0,
+      "importe": 0.01,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "V9206Y",
+      "descripcion": "RF Flip Stand FS27",
+      "color": "089 sin color",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "0",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.01,
+      "pvp": 0.0,
+      "importe": 0.01,
+      "moneda": "EUR"
+    },
+    {
+      "modelo": "V9996Y",
+      "descripcion": "RF EV-Flyer FS27 (VE30)",
+      "color": "089 sin color",
+      "codigo_foto": null,
+      "tallas": [
+        {
+          "talla": "0",
+          "cantidad": 1
+        }
+      ],
+      "cantidad": 1,
+      "precio_unitario": 0.01,
+      "pvp": 0.0,
+      "importe": 0.01,
+      "moneda": "EUR"
+    }
+  ],
+  "totales": {
+    "cantidad": 90,
+    "importe": 2361.95,
+    "moneda": "EUR"
+  },
+  "validacion": {
+    "cuadra": false,
+    "cantidad_calculada": 79,
+    "importe_calculado": 2361.94,
+    "advertencias": [
+    ]
+  }
+}

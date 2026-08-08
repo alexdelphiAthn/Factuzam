@@ -1543,6 +1543,12 @@ begin
       SErrorAlmacenesSoloStockAddBlock);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SErrorAlmacenesVentasAddBlock',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorAlmacenesVentasAddBlock);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SInfoArticulosYaCargadosAddBlock',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -2221,6 +2227,12 @@ begin
       SCaptionColStock);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SCaptionSinArticulos',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionSinArticulos);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SCaptionCargandoMovimientos',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -2291,6 +2303,12 @@ begin
     'src/Lib/inLibMsgCaja.pas',
     @inLibMsgCaja.
       SErrorOperacionCajaSinLineas);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorCambioIvaSoloArticuloInmaterial',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorCambioIvaSoloArticuloInmaterial);
   ARegistrar(
     'inLibMsgCaja.' +
     'SErrorRazonSocialClienteFacturaCajaObligatoria',
@@ -3311,6 +3329,12 @@ begin
     'src/Lib/inLibMsgCaja.pas',
     @inLibMsgCaja.
       SCaptionEmpleadoNoEncontrado);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionSinStock',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionSinStock);
   ARegistrar(
     'inLibMsgCaja.' +
     'SCaptionImporteEur',
@@ -4987,6 +5011,18 @@ begin
       SErrorSerieEmpresa);
   ARegistrar(
     'inLibMsgComun.' +
+    'SErrorSerieTokenizadaEmpresa',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SErrorSerieTokenizadaEmpresa);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SErrorSerieTokenizadaCalendarioNoNatural',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SErrorSerieTokenizadaCalendarioNoNatural);
+  ARegistrar(
+    'inLibMsgComun.' +
     'SErrorIbanEmpresa',
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.
@@ -5893,6 +5929,18 @@ begin
       SErrorSerieDocumentoNoIndicada);
   ARegistrar(
     'inLibMsgComun.' +
+    'SErrorAlmacenSerieTokenizadaNoIndicado',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SErrorAlmacenSerieTokenizadaNoIndicado);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SErrorCajaSerieTokenizadaNoIndicada',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SErrorCajaSerieTokenizadaNoIndicada);
+  ARegistrar(
+    'inLibMsgComun.' +
     'SErrorFechaInicioDocumentoNoIndicada',
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.
@@ -6107,6 +6155,18 @@ begin
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.
       SCaptionCopiarDatos);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionSinDatosMostrar',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionSinDatosMostrar);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionSinDatos',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionSinDatos);
   ARegistrar(
     'inLibMsgComun.' +
     'SCaptionAgregarDocumentoTrabajo',
@@ -6354,113 +6414,167 @@ begin
     @inLibMsgComun.
       SCaptionCopiarPortapapeles);
   ARegistrar(
-    'inLibMsgComun.SCaptionEnviarDesarrollador',
+    'inLibMsgComun.' +
+    'SCaptionEnviarDesarrollador',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionEnviarDesarrollador);
+    @inLibMsgComun.
+      SCaptionEnviarDesarrollador);
   ARegistrar(
-    'inLibMsgComun.SCaptionActivarLogCompleto',
+    'inLibMsgComun.' +
+    'SCaptionActivarLogCompleto',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionActivarLogCompleto);
+    @inLibMsgComun.
+      SCaptionActivarLogCompleto);
   ARegistrar(
-    'inLibMsgComun.SCaptionEnviarCopiaSeguridadError',
+    'inLibMsgComun.' +
+    'SCaptionEnviarCopiaSeguridadError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionEnviarCopiaSeguridadError);
+    @inLibMsgComun.
+      SCaptionEnviarCopiaSeguridadError);
   ARegistrar(
-    'inLibMsgComun.STituloContrasenaCopiaError',
+    'inLibMsgComun.' +
+    'STituloContrasenaCopiaError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.STituloContrasenaCopiaError);
+    @inLibMsgComun.
+      STituloContrasenaCopiaError);
   ARegistrar(
-    'inLibMsgComun.SInfoContrasenaCopiaError',
+    'inLibMsgComun.' +
+    'SInfoContrasenaCopiaError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoContrasenaCopiaError);
+    @inLibMsgComun.
+      SInfoContrasenaCopiaError);
   ARegistrar(
-    'inLibMsgComun.SCaptionContrasenaCopiaError',
+    'inLibMsgComun.' +
+    'SCaptionContrasenaCopiaError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionContrasenaCopiaError);
+    @inLibMsgComun.
+      SCaptionContrasenaCopiaError);
   ARegistrar(
-    'inLibMsgComun.SCaptionRepetirContrasenaCopiaError',
+    'inLibMsgComun.' +
+    'SCaptionRepetirContrasenaCopiaError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionRepetirContrasenaCopiaError);
+    @inLibMsgComun.
+      SCaptionRepetirContrasenaCopiaError);
   ARegistrar(
-    'inLibMsgComun.SErrorContrasenaCopiaErrorVacia',
+    'inLibMsgComun.' +
+    'SErrorContrasenaCopiaErrorVacia',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SErrorContrasenaCopiaErrorVacia);
+    @inLibMsgComun.
+      SErrorContrasenaCopiaErrorVacia);
   ARegistrar(
-    'inLibMsgComun.SErrorContrasenasCopiaErrorNoCoinciden',
+    'inLibMsgComun.' +
+    'SErrorContrasenasCopiaErrorNoCoinciden',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SErrorContrasenasCopiaErrorNoCoinciden);
+    @inLibMsgComun.
+      SErrorContrasenasCopiaErrorNoCoinciden);
   ARegistrar(
-    'inLibMsgComun.SCaptionEmailContactoError',
+    'inLibMsgComun.' +
+    'SCaptionEmailContactoError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionEmailContactoError);
+    @inLibMsgComun.
+      SCaptionEmailContactoError);
   ARegistrar(
-    'inLibMsgComun.SCaptionTelefonoContactoError',
+    'inLibMsgComun.' +
+    'SCaptionTelefonoContactoError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionTelefonoContactoError);
+    @inLibMsgComun.
+      SCaptionTelefonoContactoError);
   ARegistrar(
-    'inLibMsgComun.SCaptionDescripcionError',
+    'inLibMsgComun.' +
+    'SCaptionDescripcionError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SCaptionDescripcionError);
+    @inLibMsgComun.
+      SCaptionDescripcionError);
   ARegistrar(
-    'inLibMsgComun.SInfoEvidenciasError',
+    'inLibMsgComun.' +
+    'SInfoEvidenciasError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoEvidenciasError);
+    @inLibMsgComun.
+      SInfoEvidenciasError);
   ARegistrar(
-    'inLibMsgComun.SInfoEvidenciasCopiaError',
+    'inLibMsgComun.' +
+    'SInfoEvidenciasCopiaError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoEvidenciasCopiaError);
+    @inLibMsgComun.
+      SInfoEvidenciasCopiaError);
   ARegistrar(
-    'inLibMsgComun.SInfoCopiaSeguridadError',
+    'inLibMsgComun.' +
+    'SInfoCopiaSeguridadError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoCopiaSeguridadError);
+    @inLibMsgComun.
+      SInfoCopiaSeguridadError);
   ARegistrar(
-    'inLibMsgComun.SInfoPreparandoCopiaSeguridadError',
+    'inLibMsgComun.' +
+    'SInfoPreparandoCopiaSeguridadError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoPreparandoCopiaSeguridadError);
+    @inLibMsgComun.
+      SInfoPreparandoCopiaSeguridadError);
   ARegistrar(
-    'inLibMsgComun.SErrorPrepararCopiaSeguridadError',
+    'inLibMsgComun.' +
+    'SErrorPrepararCopiaSeguridadError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SErrorPrepararCopiaSeguridadError);
+    @inLibMsgComun.
+      SErrorPrepararCopiaSeguridadError);
   ARegistrar(
-    'inLibMsgComun.SAvisoLogErrorIncompleto',
+    'inLibMsgComun.' +
+    'SAvisoLogErrorIncompleto',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SAvisoLogErrorIncompleto);
+    @inLibMsgComun.
+      SAvisoLogErrorIncompleto);
   ARegistrar(
-    'inLibMsgComun.SPreguntaActivarLogCompleto',
+    'inLibMsgComun.' +
+    'SPreguntaActivarLogCompleto',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SPreguntaActivarLogCompleto);
+    @inLibMsgComun.
+      SPreguntaActivarLogCompleto);
   ARegistrar(
-    'inLibMsgComun.SInfoLogActivadoRepetir',
+    'inLibMsgComun.' +
+    'SInfoLogActivadoRepetir',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoLogActivadoRepetir);
+    @inLibMsgComun.
+      SInfoLogActivadoRepetir);
   ARegistrar(
-    'inLibMsgComun.SInfoLogErrorCompleto',
+    'inLibMsgComun.' +
+    'SInfoLogErrorCompleto',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoLogErrorCompleto);
+    @inLibMsgComun.
+      SInfoLogErrorCompleto);
   ARegistrar(
-    'inLibMsgComun.SErrorContactoEnvioErrorNoValido',
+    'inLibMsgComun.' +
+    'SErrorContactoEnvioErrorNoValido',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SErrorContactoEnvioErrorNoValido);
+    @inLibMsgComun.
+      SErrorContactoEnvioErrorNoValido);
   ARegistrar(
-    'inLibMsgComun.SErrorNoSePudoEnviarError',
+    'inLibMsgComun.' +
+    'SErrorNoSePudoEnviarError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SErrorNoSePudoEnviarError);
+    @inLibMsgComun.
+      SErrorNoSePudoEnviarError);
   ARegistrar(
-    'inLibMsgComun.SErrorRespuestaEnvioError',
+    'inLibMsgComun.' +
+    'SErrorRespuestaEnvioError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SErrorRespuestaEnvioError);
+    @inLibMsgComun.
+      SErrorRespuestaEnvioError);
   ARegistrar(
-    'inLibMsgComun.SInfoErrorEnviado',
+    'inLibMsgComun.' +
+    'SInfoErrorEnviado',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoErrorEnviado);
+    @inLibMsgComun.
+      SInfoErrorEnviado);
   ARegistrar(
-    'inLibMsgComun.SInfoSeguimientoError',
+    'inLibMsgComun.' +
+    'SInfoSeguimientoError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoSeguimientoError);
+    @inLibMsgComun.
+      SInfoSeguimientoError);
   ARegistrar(
-    'inLibMsgComun.SInfoEnviarContrasenaCopiaError',
+    'inLibMsgComun.' +
+    'SInfoEnviarContrasenaCopiaError',
     'src/Lib/inLibMsgComun.pas',
-    @inLibMsgComun.SInfoEnviarContrasenaCopiaError);
+    @inLibMsgComun.
+      SInfoEnviarContrasenaCopiaError);
   ARegistrar(
     'inLibMsgComun.' +
     'SCaptionSinFiltrosGuardados',
@@ -10027,6 +10141,54 @@ begin
       SErrorTituloDocumentoTrabajoObligatorio);
   ARegistrar(
     'inLibMsgVentas.' +
+    'SErrorEstadoDocumentoTrabajoNoValido',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorEstadoDocumentoTrabajoNoValido);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorModificarDocumentoTrabajoNoPermitido',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorModificarDocumentoTrabajoNoPermitido);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorEnviarDocumentoTrabajoNoPermitido',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorEnviarDocumentoTrabajoNoPermitido);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorArchivarDocumentoTrabajoNoPermitido',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorArchivarDocumentoTrabajoNoPermitido);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorActualizarEstadoDocumentoTrabajoSoloPropietario',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorActualizarEstadoDocumentoTrabajoSoloPropietario);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorActualizarEstadoDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorActualizarEstadoDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SPreguntaArchivarDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SPreguntaArchivarDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoDocumentoTrabajoArchivado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoDocumentoTrabajoArchivado);
+  ARegistrar(
+    'inLibMsgVentas.' +
     'SErrorBorrarLineasDocumentoTrabajoSoloPropietario',
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
@@ -10873,6 +11035,12 @@ begin
       SPreguntaConfirmarDocumentoTrabajoAddBlock);
   ARegistrar(
     'inLibMsgVentas.' +
+    'SCaptionExcluirSkuDocumentoTrabajoAddBlock',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionExcluirSkuDocumentoTrabajoAddBlock);
+  ARegistrar(
+    'inLibMsgVentas.' +
     'SInfoLineasDocumentoTrabajoAddBlock',
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
@@ -11171,6 +11339,12 @@ begin
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
       SCaptionUltimaVenta);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionSinVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionSinVentas);
   ARegistrar(
     'inLibMsgVentas.' +
     'SCaptionCrearAlbaranDesdePedido',
@@ -12005,6 +12179,186 @@ begin
     'src/Lib/inLibMsgVerifactu.pas',
     @inLibMsgVerifactu.
       SInfoAccionFiscalSinVerifactu);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaFacturaNoSeleccionada',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaFacturaNoSeleccionada);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaSoloVentaMayor',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaSoloVentaMayor);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaNoAceptadaConErrores',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaNoAceptadaConErrores);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaSubsanacionActiva',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaSubsanacionActiva);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaMotivoObligatorio',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaMotivoObligatorio);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaClienteObligatorio',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaClienteObligatorio);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaSerieRectificativaObligatoria',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaSerieRectificativaObligatoria);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaFechaRectificativaObligatoria',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaFechaRectificativaObligatoria);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaClienteNoEncontrado',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaClienteNoEncontrado);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaClienteSinNif',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaClienteSinNif);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaRectificativaExistente',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaRectificativaExistente);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaCrearRectificativa',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaCrearRectificativa);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaEncolarSubsanacion',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaEncolarSubsanacion);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorIncidenciaEstadoCambio',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorIncidenciaEstadoCambio);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SInfoIncidenciaSubsanacionEncolada',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SInfoIncidenciaSubsanacionEncolada);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SInfoIncidenciaRectificativaCreada',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SInfoIncidenciaRectificativaCreada);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STituloResolverIncidenciaVerifactu',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STituloResolverIncidenciaVerifactu);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaSubsanar',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaSubsanar);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaRectificar',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaRectificar);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaCargarCliente',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaCargarCliente);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaResolver',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaResolver);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaCancelar',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaCancelar);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaFactura',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaFactura);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaErrorAeat',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaErrorAeat);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaDecision',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaDecision);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaMotivo',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaMotivo);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaClienteActual',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaClienteActual);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaClienteCorrecto',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaClienteCorrecto);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaSerieRectificativa',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaSerieRectificativa);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'STextoIncidenciaFechaRectificativa',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      STextoIncidenciaFechaRectificativa);
   ARegistrar(
     'inLibMsgVerifactu.' +
     'SInfoBorradorVerifactuPendiente',

@@ -899,6 +899,9 @@
         <DCCReference Include="src\Caja\Modals\inMtoModalMotivoDevolucion.pas">
             <Form>frmModalMotivoDevolucion</Form>
         </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalCambioIva.pas">
+            <Form>frmModalCambioIva</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibFacturaExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocCompraExcel.pas"/>
         <DCCReference Include="src\Lib\inLibExportacionCompraModelo.pas"/>

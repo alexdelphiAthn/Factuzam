@@ -813,7 +813,8 @@ begin
   tvDatos.OptionsData.Inserting := False;
   tvDatos.OptionsData.Deleting := False;
   tvDatos.OptionsView.GroupByBox := False;
-  tvDatos.OptionsView.NoDataToDisplayInfoText := '<No hay datos a mostrar>';
+  tvDatos.OptionsView.NoDataToDisplayInfoText :=
+    SCaptionSinDatosMostrar;
   lvDatos := grdDatos.Levels.Add;
   lvDatos.GridView := tvDatos;
   // Botonera lateral con el copiado al portapapeles, como en la pestaña fija

@@ -267,7 +267,8 @@ begin
   FConfig.View.OptionsBehavior.GoToNextCellOnEnter := True;
   FConfig.View.OptionsBehavior.FocusFirstCellOnNewRecord := True;
   FConfig.View.OptionsView.ColumnAutoWidth := True;
-  FConfig.View.OptionsView.NoDataToDisplayInfoText := 'No hay artículos';
+  FConfig.View.OptionsView.NoDataToDisplayInfoText :=
+    SCaptionSinArticulos;
 end;
 
 procedure TModoEntradaSku.CrearLookupBusqueda;

@@ -1,0 +1,27 @@
+{
+  "proveedor": {
+    "razon_social": "ALBION 1879, SL",
+    "direccion": "GRAN VIA, 1 5 DERECHA 28013 MADRID ESPAÑA",
+    "cif": "B12648531",
+    "telefono": "96 420 14 14"
+  },
+  "referencia_doc": null,
+  "fecha_pedido": null,
+  "fecha_tope": null,
+  "fecha_prevista_entrega": null,
+  "detalle": [
+  ],
+  "totales": {
+    "cantidad": 0,
+    "importe": 0.0,
+    "moneda": "EUR"
+  },
+  "validacion": {
+    "cuadra": false,
+    "cantidad_calculada": 0,
+    "importe_calculado": 0.0,
+    "advertencias": [
+      "No se reconoció ninguna línea de detalle."
+    ]
+  }
+}

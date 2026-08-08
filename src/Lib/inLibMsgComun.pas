@@ -411,6 +411,8 @@ resourcestring
   SCaptionMenuCopiar = '&Copiar';
   SCaptionMenuPegar = '&Pegar';
   SCaptionCopiarDatos = 'Copiar datos';
+  SCaptionSinDatosMostrar = '<No hay datos a mostrar>';
+  SCaptionSinDatos = 'No hay datos';
   // R08 - Menú contextual de stock
   SCaptionAgregarDocumentoTrabajo =
     'Agregar a Documento de Trabajo...';

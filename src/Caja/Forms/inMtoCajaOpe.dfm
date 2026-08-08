@@ -392,6 +392,7 @@
           Font.Style = [fsUnderline]
           Font.Quality = fqClearTypeNatural
           ParentFont = False
+          OnClick = btnF7Click
         end
         object btnF5: TcxButton
           Left = 610
@@ -513,7 +514,7 @@
           Left = 510
           Top = 68
           AutoSize = False
-          Caption = 'Ind. IVA'
+          Caption = 'Cambio IVA'
           Properties.Alignment.Horz = taCenter
           TabOrder = 14
           Transparent = True

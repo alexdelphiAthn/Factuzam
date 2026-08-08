@@ -411,7 +411,7 @@ begin
   end;
   FView.OptionsBehavior.FocusCellOnCycle := True;
   FView.OptionsView.ColumnAutoWidth := True;
-  FView.OptionsView.NoDataToDisplayInfoText := 'No hay artículos';
+  FView.OptionsView.NoDataToDisplayInfoText := SCaptionSinArticulos;
   FView.Navigator.Visible := True;
   // Columnas propias del traspaso.
   Col := FView.CreateColumn;

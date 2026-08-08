@@ -82,6 +82,7 @@ implementation
 uses
   Vcl.Clipbrd,
   inLibDevExp,
+  inLibMsgComun,
   ts.Editor.CodeFormatters,
   UniDataMetadatosBBDDRepositorio;
 
@@ -226,7 +227,7 @@ begin
   tvContenido.OptionsData.Inserting := False;
   tvContenido.OptionsView.GroupByBox := False;
   tvContenido.OptionsView.NoDataToDisplayInfoText :=
-    '<No hay datos a mostrar>';
+    SCaptionSinDatosMostrar;
   lvContenido := grdContenido.Levels.Add;
   lvContenido.GridView := tvContenido;
   pcDetalle.ActivePage := tsEstructura;

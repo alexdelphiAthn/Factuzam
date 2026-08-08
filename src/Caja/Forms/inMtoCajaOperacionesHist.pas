@@ -1303,7 +1303,7 @@ begin
   Result.OptionsData.Inserting := False;
   Result.OptionsSelection.CellSelect := False;
   Result.OptionsView.GroupByBox := False;
-  Result.OptionsView.NoDataToDisplayInfoText := 'No hay datos';
+  Result.OptionsView.NoDataToDisplayInfoText := SCaptionSinDatos;
   cxGrd.Levels.Add.GridView := Result;
 end;
 

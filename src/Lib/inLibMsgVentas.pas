@@ -458,6 +458,7 @@ resourcestring
   SCaptionUltimaVentaVacia = 'Última venta: -';
   SCaptionPrimeraVenta = 'Primera venta: %s';
   SCaptionUltimaVenta = 'Última venta: %s';
+  SCaptionSinVentas = 'No hay ventas';
   // R11 - Modales de venta: almacén y SEPA
   SCaptionCrearAlbaranDesdePedido = 'Crear albarán desde pedido %s';
   SCaptionCodigoAcreedor = 'Código acreedor';

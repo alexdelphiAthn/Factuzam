@@ -427,6 +427,7 @@ type
     procedure cxGrid1DBTableView1MouseDown(Sender: TObject;
       Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
     procedure btnF2Click(Sender: TObject);
+    procedure btnF7Click(Sender: TObject);
     procedure actCargarCtaExecute(Sender: TObject);
     procedure btnF10Click(Sender: TObject);
     procedure btnF61Click(Sender: TObject);
@@ -591,6 +592,7 @@ uses
   inMtoModalDevolucionTicket,
   inMtoModalSeleccionVentaOrigen,
   inMtoModalMotivoDevolucion,
+  inMtoModalCambioIva,
   System.StrUtils,
   inLibMsgCaja, inLibMsgVentas, inLibTraducciones;
 
@@ -3604,6 +3606,11 @@ begin
   FEntrada.Lector.KeyDown(Key, Shift);
   if (Key = VK_F5) then
     btnF5.Click;
+  if (Key = VK_F7) then
+  begin
+    btnF7.Click;
+    Key := 0;
+  end;
   // F4 -> devolución escaneando / localizando el ticket de origen
   if (Key = VK_F4) then
   begin
@@ -3616,6 +3623,48 @@ begin
     ResetearLayout(
       Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
     Key := 0;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.btnF7Click(Sender: TObject);
+var
+  bLineaInmaterial: Boolean;
+  sTipoIvaActual: string;
+  sTipoIvaNuevo: string;
+begin
+  if (tvLineasOpe.Controller.EditingController <> nil) and
+     tvLineasOpe.Controller.EditingController.IsEditing then
+    tvLineasOpe.Controller.EditingController.HideEdit(True);
+  bLineaInmaterial := Assigned(DatosCaja);
+  if bLineaInmaterial then
+    bLineaInmaterial := DatosCaja.cdsLineas.Active;
+  if bLineaInmaterial then
+    bLineaInmaterial := not DatosCaja.cdsLineas.IsEmpty;
+  if bLineaInmaterial then
+    bLineaInmaterial := SameText(
+      Trim(DatosCaja.cdsLineas.FieldByName(
+        'TIPO_ARTICULO_FACLIN').AsString),
+      'SERVICIO');
+  if not bLineaInmaterial then
+    ShowMessage(SErrorCambioIvaSoloArticuloInmaterial)
+  else
+  begin
+    sTipoIvaActual := DatosCaja.cdsLineas.FieldByName(
+      'TIPO_IVA_ARTICULO_FACLIN').AsString;
+    if TfrmModalCambioIva.Ejecutar(
+         Self, sTipoIvaActual, sTipoIvaNuevo) and
+       not SameText(sTipoIvaActual, sTipoIvaNuevo) then
+    begin
+      ActualizarLineaFactura(
+        ConexionPrincipal,
+        FLecturas.RepositorioFacturas,
+        DatosCaja.cdsLineas,
+        DatosCaja.cdsCabecera,
+        ftipiva,
+        sTipoIvaNuevo,
+        ActualizarLabelTotal);
+      tvLineasOpe.DataController.Refresh;
+    end;
   end;
 end;
 
