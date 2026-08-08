@@ -370,6 +370,7 @@ type
     chkVariosTiposIva: TcxDBCheckBox;
     lblTipoIvaDefecto: TcxLabel;
     cbbTipoIvaDefecto: TcxDBComboBox;
+    chkCopiarDescripcionFamilia: TcxDBCheckBox;
 
     // ------------------------------------------------------------------
     // Eventos

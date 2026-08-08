@@ -94,7 +94,12 @@ begin
       '   INSTANTE_MODIF, USUARIO_MODIF) ' +
       'SELECT COALESCE(L.CODIGO_ART_REUSAR_SESLIN, ' +
       'L.CODIGO_ART_TENTATIVO_SESLIN), ' +
-      '       ''S'', L.TIPO_ART_SESLIN, L.DESCRIPCION_SESLIN, ' +
+      '       ''S'', L.TIPO_ART_SESLIN, ' +
+      '       CASE WHEN IFNULL(S.ESCOPIAR_DESCRIPCION_FAM_SES, ''S'') = ' +
+      '                      ''S'' ' +
+      '            THEN COALESCE(NULLIF(F.DESCRIPCION_FAM, ''''), ' +
+      '                          L.DESCRIPCION_SESLIN) ' +
+      '            ELSE L.DESCRIPCION_SESLIN END, ' +
       '       COALESCE(L.CODIGO_FAM_SESLIN, S.CODIGO_FAM_SES), ' +
       '       CASE WHEN IFNULL(S.ESVARIOS_TIPOS_IVA_SES, ''N'') = ''S'' ' +
       '            THEN COALESCE(NULLIF(L.TIPO_IVA_SESLIN, ''''), ' +
@@ -110,6 +115,9 @@ begin
       '  FROM fza_compras_sesiones_lineas L ' +
       '  JOIN fza_compras_sesiones S ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
       '                              AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+      '  LEFT JOIN fza_articulos_familias F ' +
+      '         ON F.CODIGO_FAM_FAM = ' +
+      '            COALESCE(L.CODIGO_FAM_SESLIN, S.CODIGO_FAM_SES) ' +
       ' WHERE L.SERIE_SES_SESLIN = :s AND L.NUMERO_SES_SESLIN = :n ' +
       '   AND L.LINEA_SESLIN = :l ' +
       '   AND (L.ACCION_DUPLICADO_SESLIN <> ''REUSAR'' ' +

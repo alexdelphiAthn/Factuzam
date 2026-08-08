@@ -1873,6 +1873,18 @@
               TabOrder = 12
               Width = 60
             end
+            object chkCopiarDescripcionFamilia: TcxDBCheckBox
+              Left = 272
+              Top = 174
+              Caption = 'Copiar descripci'#243'n de la familia al art'#237'culo'
+              DataBinding.DataField = 'ESCOPIAR_DESCRIPCION_FAM_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.TransparentBorder = False
+              TabOrder = 13
+              Transparent = True
+            end
           end
           object tsPedidoOriginal: TcxTabSheet
             Caption = 'Pedido original'

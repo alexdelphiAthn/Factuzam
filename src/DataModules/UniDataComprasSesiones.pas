@@ -350,7 +350,7 @@ end;
 
 procedure TdmComprasSesiones.ConfigurarSqlCabecera;
 const
-  CAMPOS_SES: array[0..78] of string = (
+  CAMPOS_SES: array[0..79] of string = (
     'SERIE_SES',
     'NUMERO_SES',
     'FECHA_SES',
@@ -384,6 +384,7 @@ const
     'ESGENERA_PEDIDO_SES',
     'ESGENERA_ALBARAN_SES',
     'ESFORMATO_DISTRIBUIDO_SES',
+    'ESCOPIAR_DESCRIPCION_FAM_SES',
     'SERIE_PEDC_SES',
     'NUMERO_PEDC_SES',
     'SERIE_ALBC_SES',
@@ -728,6 +729,8 @@ begin
     FieldByName('ESGENERA_ALBARAN_SES').AsString  := 'N';
     if FindField('ESFORMATO_DISTRIBUIDO_SES') <> nil then
       FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString := 'N';
+    if FindField('ESCOPIAR_DESCRIPCION_FAM_SES') <> nil then
+      FieldByName('ESCOPIAR_DESCRIPCION_FAM_SES').AsString := 'S';
     // Contador de lineas: cada nueva linea hace +10 sobre este valor
     // (mismo patron que facturas/pedidos/albaranes). Arrancar en 0 => la
     // primera linea sera 10, la segunda 20, etc.
