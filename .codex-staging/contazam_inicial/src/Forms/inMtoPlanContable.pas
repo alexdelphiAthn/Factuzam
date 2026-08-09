@@ -57,13 +57,13 @@ begin
   FBtnCargarModelo.Caption := 'Cargar modelo PYMES';
   FBtnCargarModelo.OnClick := CargarModeloClick;
   FArbolCuentas := TTreeView.Create(Self);
-  FArbolCuentas.Parent := Self;
+  FArbolCuentas.Parent := PestanaLista;
   FArbolCuentas.Align := alLeft;
   FArbolCuentas.Width := 390;
   FArbolCuentas.ReadOnly := True;
   FArbolCuentas.OnChange := SeleccionarCuenta;
   FSeparador := TSplitter.Create(Self);
-  FSeparador.Parent := Self;
+  FSeparador.Parent := PestanaLista;
   FSeparador.Align := alLeft;
 end;
 

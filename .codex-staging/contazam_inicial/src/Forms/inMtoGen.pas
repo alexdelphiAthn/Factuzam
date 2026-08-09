@@ -16,9 +16,11 @@ unit inMtoGen;
 interface
 
 uses
-  System.Classes, Data.DB, Vcl.Controls, Vcl.ExtCtrls, Vcl.StdCtrls,
+  System.Classes, Data.DB, Vcl.Controls, Vcl.ExtCtrls, Vcl.Forms,
+  Vcl.StdCtrls,
   inMtoFrmBase, cxGrid, cxGridDBTableView, cxGridLevel,
-  cxDBNavigator, cxPC, inLibConfiguracion, inLibPerfilesVentana, Uni;
+  cxButtons, cxDBNavigator, cxPC, inLibConfiguracion,
+  inLibPerfilesVentana, Uni;
 
 type
   TfrmMtoGen = class(TfrmBase)
@@ -37,13 +39,18 @@ type
     FContenedorFicha: TScrollBox;
     FTemporizadorPerfil: TTimer;
     FGestorPerfiles: TGestorPerfilesVentana;
+    FBtnGrabarVentana: TcxButton;
+    FBtnResetearVentana: TcxButton;
     FFichaCreada: Boolean;
     FPerfilRestaurado: Boolean;
+    FHayPerfil: Boolean;
     procedure ActualizarClick(Sender: TObject);
     procedure CrearCampoFicha(AField: TField; var APosicionY: Integer);
     procedure CrearFicha;
     procedure MostrarFicha(Sender: TObject);
     procedure RestaurarPerfilDiferido(Sender: TObject);
+    procedure GrabarVentanaClick(Sender: TObject);
+    procedure ResetearVentanaClick(Sender: TObject);
     procedure GrabarVentana;
     procedure ResetearVentana;
   protected
@@ -96,6 +103,18 @@ begin
   FBtnActualizar.Width := 100;
   FBtnActualizar.Caption := 'Actualizar';
   FBtnActualizar.OnClick := ActualizarClick;
+  FBtnGrabarVentana := TcxButton.Create(Self);
+  FBtnGrabarVentana.Parent := FPanelSuperior;
+  FBtnGrabarVentana.SetBounds(710, 8, 178, 29);
+  FBtnGrabarVentana.Anchors := [akTop, akRight];
+  FBtnGrabarVentana.Caption := 'Grabar ventana (Alt+F12)';
+  FBtnGrabarVentana.OnClick := GrabarVentanaClick;
+  FBtnResetearVentana := TcxButton.Create(Self);
+  FBtnResetearVentana.Parent := FPanelSuperior;
+  FBtnResetearVentana.SetBounds(896, 8, 190, 29);
+  FBtnResetearVentana.Anchors := [akTop, akRight];
+  FBtnResetearVentana.Caption := 'Resetear ventana (Ctrl+F12)';
+  FBtnResetearVentana.OnClick := ResetearVentanaClick;
   FNavegador := TcxDBNavigator.Create(Self);
   FNavegador.Parent := FPanelSuperior;
   FNavegador.Left := 120;
@@ -242,6 +261,7 @@ begin
         FVistaPrincipal,
         FPaginas);
       FPerfilRestaurado := True;
+      FHayPerfil := True;
       ShowMessage('Ventana grabada. Se aplicará al volver a abrirla.');
     except
       on E: Exception do
@@ -260,6 +280,11 @@ begin
       end;
     end;
   end;
+end;
+
+procedure TfrmMtoGen.GrabarVentanaClick(Sender: TObject);
+begin
+  GrabarVentana;
 end;
 
 procedure TfrmMtoGen.Inicializar(
@@ -316,6 +341,7 @@ begin
         FVistaPrincipal);
       FPaginas.ActivePage := FPestanaLista;
       FPerfilRestaurado := True;
+      FHayPerfil := False;
       ShowMessage('Ventana reseteada.');
     except
       on E: Exception do
@@ -336,13 +362,18 @@ begin
   end;
 end;
 
+procedure TfrmMtoGen.ResetearVentanaClick(Sender: TObject);
+begin
+  ResetearVentana;
+end;
+
 procedure TfrmMtoGen.RestaurarPerfilDiferido(Sender: TObject);
 begin
   FTemporizadorPerfil.Enabled := False;
   if (FGestorPerfiles <> nil) and not FPerfilRestaurado then
   begin
     try
-      FGestorPerfiles.Restaurar(
+      FHayPerfil := FGestorPerfiles.Restaurar(
         Self,
         FVistaPrincipal,
         FPaginas);
@@ -386,7 +417,18 @@ procedure TfrmMtoGen.AjustarVistaPrincipal;
 begin
   if Visible then
   begin
-    AjustarColumnasContazam(FVistaPrincipal);
+    if FPerfilRestaurado and FHayPerfil and
+      (FGestorPerfiles <> nil) then
+    begin
+      FHayPerfil := FGestorPerfiles.Restaurar(
+        Self,
+        FVistaPrincipal,
+        FPaginas);
+    end
+    else
+    begin
+      AjustarColumnasContazam(FVistaPrincipal);
+    end;
   end;
 end;
 

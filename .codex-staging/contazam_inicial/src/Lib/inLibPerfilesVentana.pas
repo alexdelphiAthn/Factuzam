@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibPerfilesVentana                                         }
 {    Tipo:       Librería                                                      }
@@ -111,15 +111,14 @@ begin
     iOrden := 0;
     for iColumna := 0 to Length(AColumnas) - 1 do
     begin
-      if SameText(AColumnas[iColumna].Grid, sGrid) and
-        AColumnas[iColumna].EsVisible then
+      if SameText(AColumnas[iColumna].Grid, sGrid) then
       begin
         oColumna := BuscarColumna(
           AVista,
           AColumnas[iColumna].Campo);
         if oColumna <> nil then
         begin
-          oColumna.Position.ColIndex := iOrden;
+          oColumna.Index := iOrden;
           Inc(iOrden);
         end;
       end;
@@ -314,7 +313,7 @@ begin
           [ftBlob, ftGraphic, ftOraBlob]);
         if oColumna.Visible then
         begin
-          oColumna.Position.ColIndex := iColumna;
+          oColumna.Index := iColumna;
         end;
       end;
     end;
