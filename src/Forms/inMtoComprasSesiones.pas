@@ -535,7 +535,8 @@ type
     procedure LogMsg(const S: string);
     function DirectorioFotosAplicacion: string;
     procedure CargarPaginasPedidoOriginal;
-    procedure MostrarPaginaPedidoOriginal;
+    procedure MostrarPaginaPedidoOriginal(
+      AConservarVista: Boolean = False);
     procedure AplicarZoomPedidoOriginal(AZoom: Double);
     procedure AjustarPedidoOriginal;
     procedure CambiarPaginaPedidoOriginal(ADesplazamiento: Integer);
@@ -1167,11 +1168,18 @@ begin
   MostrarPaginaPedidoOriginal;
 end;
 
-procedure TfrmMtoComprasSesiones.MostrarPaginaPedidoOriginal;
+procedure TfrmMtoComprasSesiones.MostrarPaginaPedidoOriginal(
+  AConservarVista: Boolean);
 var
   oImagen: TWICImage;
   sFichero: string;
+  rZoomAnterior: Double;
+  iScrollHorizontal: Integer;
+  iScrollVertical: Integer;
 begin
+  rZoomAnterior := FZoomPedidoOriginal;
+  iScrollHorizontal := scrPedidoOriginal.HorzScrollBar.Position;
+  iScrollVertical := scrPedidoOriginal.VertScrollBar.Position;
   imgPedidoOriginal.Picture.Assign(nil);
   if Assigned(FImagenPedidoOriginal) then
     FImagenPedidoOriginal.Assign(nil);
@@ -1189,7 +1197,14 @@ begin
       finally
         oImagen.Free;
       end;
-      AjustarPedidoOriginal;
+      if AConservarVista then
+      begin
+        AplicarZoomPedidoOriginal(rZoomAnterior);
+        scrPedidoOriginal.HorzScrollBar.Position := iScrollHorizontal;
+        scrPedidoOriginal.VertScrollBar.Position := iScrollVertical;
+      end
+      else
+        AjustarPedidoOriginal;
     end;
   end;
   if Length(FPaginasPedidoOriginal) = 0 then
@@ -1270,7 +1285,7 @@ begin
   if (iNueva >= 0) and (iNueva <= High(FPaginasPedidoOriginal)) then
   begin
     FIndicePaginaPedidoOriginal := iNueva;
-    MostrarPaginaPedidoOriginal;
+    MostrarPaginaPedidoOriginal(True);
   end;
 end;
 

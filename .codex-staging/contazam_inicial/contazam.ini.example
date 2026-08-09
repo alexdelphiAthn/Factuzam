@@ -1,0 +1,13 @@
+[Conexion]
+Servidor=127.0.0.1
+Puerto=3306
+Usuario=root
+Password=
+BaseDatos=alexcontazam
+BaseDatosFactuzam=factuzam
+
+[Aplicacion]
+Usuario=
+Empresa=001
+EmpresaFactuzam=001
+Ejercicio=2026

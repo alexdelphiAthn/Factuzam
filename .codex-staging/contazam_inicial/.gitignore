@@ -1,0 +1,13 @@
+Win32/
+Win64/
+build/
+__history/
+*.dcu
+*.exe
+*.identcache
+*.dsv
+*.dsk
+*.local
+*.res
+*.stat
+contazam.ini
