@@ -483,29 +483,39 @@ var
   rCantidad: Double;
   vAc: Variant;
 begin
-  colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldConjuntoPivot);
-  if colAc <> nil then
+  if (ARecordIndex >= 0) and
+     (ARecordIndex < FCfg.Grid.DataController.RecordCount) then
   begin
-    vAc := FCfg.Grid.DataController.Values[ARecordIndex, colAc.Index];
-    if not VarIsNull(vAc) and not VarIsEmpty(vAc) then
+    // Values[] es no-bound: antes de reconstruir la fila hay que borrar
+    // tambien las posiciones del sistema anterior para no desplazar tallas.
+    for i := 0 to High(FCfg.ColumnasTallas) do
+      if Assigned(FCfg.ColumnasTallas[i]) then
+        FCfg.Grid.DataController.Values[
+          ARecordIndex, FCfg.ColumnasTallas[i].Index] := 0;
+    colAc := FCfg.Grid.GetColumnByFieldName(FCfg.FieldConjuntoPivot);
+    if colAc <> nil then
     begin
-      iAc := vAc;
-      arr := GetPosicionesConjunto(iAc);
-      if Length(arr) > 0 then
+      vAc := FCfg.Grid.DataController.Values[ARecordIndex, colAc.Index];
+      if not VarIsNull(vAc) and not VarIsEmpty(vAc) then
       begin
-        aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(ALinea);
-        for i := 0 to High(arr) do
+        iAc := vAc;
+        arr := GetPosicionesConjunto(iAc);
+        if Length(arr) > 0 then
         begin
-          rCantidad := 0;
-          for iCelda := 0 to High(aCeldas) do
+          aCeldas := FCfg.Persistencia.ConsultarCeldasLinea(ALinea);
+          for i := 0 to High(arr) do
           begin
-            if aCeldas[iCelda].IdAv = arr[i].IdAv then
-              rCantidad := rCantidad + aCeldas[iCelda].Cantidad;
+            rCantidad := 0;
+            for iCelda := 0 to High(aCeldas) do
+            begin
+              if aCeldas[iCelda].IdAv = arr[i].IdAv then
+                rCantidad := rCantidad + aCeldas[iCelda].Cantidad;
+            end;
+            if (i <= High(FCfg.ColumnasTallas)) and
+               Assigned(FCfg.ColumnasTallas[i]) then
+              FCfg.Grid.DataController.Values[
+                ARecordIndex, FCfg.ColumnasTallas[i].Index] := rCantidad;
           end;
-          if (i <= High(FCfg.ColumnasTallas)) and
-             Assigned(FCfg.ColumnasTallas[i]) then
-            FCfg.Grid.DataController.Values[
-              ARecordIndex, FCfg.ColumnasTallas[i].Index] := rCantidad;
         end;
       end;
     end;

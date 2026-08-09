@@ -96,6 +96,9 @@ type
       const AUsuario: string);
     function ResolverSesion(const ASerieSes, ANumeroSes: string;
       ALinea: Integer; const ACodUnidad: string = ''): TFotoInfo;
+    function RotarSesion(const ASerieSes, ANumeroSes: string;
+      ALinea: Integer; const ACodUnidad: string;
+      AHorario: Boolean; const AUsuario: string): TFotoInfo;
     procedure EliminarSesion(const ASerieSes, ANumeroSes: string;
       ALinea: Integer; const ACodUnidad: string);
     procedure MigrarFotosSesion(const ASerieSes, ANumeroSes: string;
@@ -251,6 +254,20 @@ function TFotosArticulos.ResolverSesion(const ASerieSes,
 begin
   Result := FSesion.Resolver(
     ASerieSes, ANumeroSes, ALinea, ACodUnidad);
+end;
+
+function TFotosArticulos.RotarSesion(const ASerieSes,
+  ANumeroSes: string; ALinea: Integer;
+  const ACodUnidad: string; AHorario: Boolean;
+  const AUsuario: string): TFotoInfo;
+begin
+  Result := FSesion.Rotar(
+    ASerieSes,
+    ANumeroSes,
+    ALinea,
+    ACodUnidad,
+    AHorario,
+    AUsuario);
 end;
 
 procedure TFotosArticulos.EliminarSesion(const ASerieSes,

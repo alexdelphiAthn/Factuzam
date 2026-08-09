@@ -98,6 +98,7 @@ const
   // de un cliente con sistemas extensos (rangos de calzado largos,
   // tallas internacionales niño+adulto, etc.).
   CANT_TALLAS_MAX = 20;
+  WM_RECARGAR_TALLAS_SESION = WM_APP + 247;
 
 type
   // Los tipos TPosConjunto / TArrPosConjunto viven ahora en
@@ -488,6 +489,8 @@ type
     FAplicandoColorOcr: Boolean;
     FInicioArrastrePedidoOriginal: TPoint;
     FInicioScrollPedidoOriginal: TPoint;
+    FSplitterFotoProvisional: TcxSplitter;
+    FRecargaTallasPendiente: Boolean;
     function  GestorTallas: TGestorGridTallas;
     procedure RecargarTallasVisibles;
     procedure RecargarTallasDiferido;
@@ -505,9 +508,17 @@ type
     procedure EnlazarPestanaProveedor;
     procedure RefrescarFotoProvisional;
     procedure RefrescarFotosProvisionales;
+    procedure ConfigurarFotoProvisionalCabecera;
+    procedure ResolverFotoSesionActiva(
+      out ASerieSesion, ANumeroSesion: string;
+      out ALinea: Integer; out ACodArtTentativo,
+      ACodUnidad: string);
+    procedure actFotoSesionExecute(Sender: TObject);
+    procedure FotoSesionModificada(Sender: TObject);
     procedure LogSes(const ATexto: string);
     procedure RefrescarVisibilidadTipoIva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
+    procedure dsTablaGStateChangeHook(Sender: TObject);
     procedure GridListaGetContentStyle(Sender: TcxCustomGridTableView;
                 ARecord: TcxCustomGridRecord;
                 AItem: TcxCustomGridTableItem;
@@ -517,6 +528,7 @@ type
     procedure unqrySesionLinAfterPostHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeInsertHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterInsertHook(DataSet: TDataSet);
+    procedure unqrySesionLinAfterCancelHook(DataSet: TDataSet);
     procedure unqrySesionLinBeforeDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinRecargarTallasHook(DataSet: TDataSet);
@@ -528,6 +540,8 @@ type
     procedure AjustarPedidoOriginal;
     procedure CambiarPaginaPedidoOriginal(ADesplazamiento: Integer);
     procedure ImportarPedidoOcr(const AFicheroJson: string);
+    procedure WMRecargarTallasSesion(var AMensaje: TMessage);
+      message WM_RECARGAR_TALLAS_SESION;
   protected
     // Interceptamos a nivel de form (KeyPreview heredado = True) para
     // que Ctrl+Enter abra el selector de la columna editbutton enfocada
@@ -562,6 +576,7 @@ uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inMtoModalImpSesion,
   inLibFotosNube,
+  inMtoFotoArticulo,
   Vcl.Imaging.pngimage,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
@@ -632,11 +647,27 @@ end;
 // palabra.
 procedure TfrmMtoComprasSesiones.RecargarTallasDiferido;
 begin
-  TThread.ForceQueue(nil,
-    procedure
-    begin
-      RecargarTallasVisibles;
-    end);
+  // Un unico mensaje aplaza y agrupa los repintados que genera una misma
+  // operacion Insert/Cancel/Post. Al destruir la ventana Windows descarta
+  // el mensaje, evitando callbacks anonimos sobre un formulario liberado.
+  if not FRecargaTallasPendiente then
+  begin
+    FRecargaTallasPendiente := True;
+    PostMessage(Handle, WM_RECARGAR_TALLAS_SESION, 0, 0);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.WMRecargarTallasSesion(
+  var AMensaje: TMessage);
+begin
+  FRecargaTallasPendiente := False;
+  if not (csDestroying in ComponentState) then
+  begin
+    RecargarTallasVisibles;
+    if GestorTallas <> nil then
+      GestorTallas.ActualizarCaptionsLineaActiva;
+  end;
+  AMensaje.Result := 0;
 end;
 
 procedure TfrmMtoComprasSesiones.RefrescarColumnasTallas;
@@ -905,10 +936,8 @@ end;
 
 // La foto sigue al articulo de la linea activa de la sesion
 // (CODIGO_ART_TENTATIVO_SESLIN; las sesiones trabajan a nivel articulo,
-// sin SKU). Las fotos propias de la sesion -mientras el articulo aun no
-// se ha materializado- se asignan con el boton "Foto" y viven en
-// fza_compras_sesiones_fotos; Ctrl+F muestra la foto estandar del
-// articulo si ya existe en fza_articulos_fotos.
+// sin SKU). Las fotos propias de la sesion se guardan en
+// fza_compras_sesiones_fotos y Ctrl+F abre su visor grande editable.
 procedure TfrmMtoComprasSesiones.ResolverArtSkuActivo(out ACodArt,
                                                       ACodSku: string);
 var
@@ -920,6 +949,45 @@ begin
   begin
     ds := tvLineas.DataController.DataSource.DataSet;
     inLibFotos.LeerArtSkuDeDataSet(ds, ACodArt, ACodSku);
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.ResolverFotoSesionActiva(
+  out ASerieSesion, ANumeroSesion: string;
+  out ALinea: Integer; out ACodArtTentativo,
+  ACodUnidad: string);
+begin
+  ASerieSesion := '';
+  ANumeroSesion := '';
+  ALinea := 0;
+  ACodArtTentativo := '';
+  ACodUnidad := '';
+  if (Dmm <> nil) and Dmm.unqryTablaG.Active and
+     not Dmm.unqryTablaG.IsEmpty then
+  begin
+    ASerieSesion := Dmm.unqryTablaG.FieldByName(
+      'SERIE_SES').AsString;
+    ANumeroSesion := Dmm.unqryTablaG.FieldByName(
+      'NUMERO_SES').AsString;
+    if (cxPageControl2.ActivePage = tsFotosProvisionales) and
+       Dmm.unqrySesionFotos.Active and
+       not Dmm.unqrySesionFotos.IsEmpty then
+    begin
+      ALinea := Dmm.unqrySesionFotos.FieldByName(
+        'LINEA_CSF').AsInteger;
+      ACodArtTentativo := Dmm.unqrySesionFotos.FieldByName(
+        'CODIGO_ART_TENTATIVO_CSF').AsString;
+      ACodUnidad := Dmm.unqrySesionFotos.FieldByName(
+        'CODIGO_UNIDAD_CSF').AsString;
+    end
+    else if Dmm.unqrySesionLin.Active and
+            not Dmm.unqrySesionLin.IsEmpty then
+    begin
+      ALinea := Dmm.unqrySesionLin.FieldByName(
+        'LINEA_SESLIN').AsInteger;
+      ACodArtTentativo := Dmm.unqrySesionLin.FieldByName(
+        'CODIGO_ART_TENTATIVO_SESLIN').AsString;
+    end;
   end;
 end;
 
@@ -948,35 +1016,8 @@ begin
   imgFotoProvisional.Picture.Assign(nil);
   lblFotoProvisionalAsignacion.Caption :=
     SCaptionSeleccioneLineaSesion;
-  sSerie := '';
-  sNumero := '';
-  sCodArt := '';
-  sUnidad := '';
-  iLinea := 0;
-  if (Dmm <> nil) and Dmm.unqryTablaG.Active and
-     not Dmm.unqryTablaG.IsEmpty then
-  begin
-    sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    if (cxPageControl2.ActivePage = tsFotosProvisionales) and
-       Dmm.unqrySesionFotos.Active and
-       not Dmm.unqrySesionFotos.IsEmpty then
-    begin
-      iLinea := Dmm.unqrySesionFotos.FieldByName('LINEA_CSF').AsInteger;
-      sCodArt := Dmm.unqrySesionFotos.FieldByName(
-        'CODIGO_ART_TENTATIVO_CSF').AsString;
-      sUnidad := Dmm.unqrySesionFotos.FieldByName(
-        'CODIGO_UNIDAD_CSF').AsString;
-    end
-    else if Dmm.unqrySesionLin.Active and
-            not Dmm.unqrySesionLin.IsEmpty then
-    begin
-      iLinea := Dmm.unqrySesionLin.FieldByName(
-        'LINEA_SESLIN').AsInteger;
-      sCodArt := Dmm.unqrySesionLin.FieldByName(
-        'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-    end;
-  end;
+  ResolverFotoSesionActiva(
+    sSerie, sNumero, iLinea, sCodArt, sUnidad);
   if (sSerie <> '') and (sNumero <> '') and (iLinea > 0) and
      Assigned(FotosArticulos) then
   begin
@@ -1023,6 +1064,70 @@ begin
       Dmm.unqrySesionFotos.Open;
   end;
   RefrescarFotoProvisional;
+end;
+
+procedure TfrmMtoComprasSesiones.ConfigurarFotoProvisionalCabecera;
+begin
+  gbFotoProvisional.Parent := cxTabSheet2;
+  gbCabecera.Align := alClient;
+  gbFotoProvisional.Align := alRight;
+  gbFotoProvisional.Width := 220;
+  gbFotoProvisional.Constraints.MinWidth := 160;
+  gbFotoProvisional.Constraints.MaxWidth := 320;
+  lblFotoProvisionalAsignacion.Align := alBottom;
+  lblFotoProvisionalAsignacion.Height := 34;
+  imgFotoProvisional.Align := alClient;
+  FSplitterFotoProvisional := TcxSplitter.Create(Self);
+  FSplitterFotoProvisional.Parent := cxTabSheet2;
+  FSplitterFotoProvisional.Width := 8;
+  FSplitterFotoProvisional.AlignSplitter := salRight;
+  FSplitterFotoProvisional.Control := gbFotoProvisional;
+end;
+
+procedure TfrmMtoComprasSesiones.actFotoSesionExecute(Sender: TObject);
+var
+  sSerie   : string;
+  sNumero  : string;
+  sCodArt  : string;
+  sUnidad  : string;
+  iLinea   : Integer;
+  Formulario: TfrmFotoArticulo;
+begin
+  ResolverFotoSesionActiva(
+    sSerie, sNumero, iLinea, sCodArt, sUnidad);
+  if (sSerie = '') or (sNumero = '') then
+    ShowMessage(SErrorSesionCompraNoActiva)
+  else if iLinea <= 0 then
+    ShowMessage(SErrorLineaSesionAsignarFotoNoSeleccionada)
+  else
+  begin
+    Formulario := FotoFlotanteActual;
+    if (Formulario <> nil) and Formulario.Visible and
+       Formulario.CoincideSesion(
+         sSerie, sNumero, iLinea, sUnidad) then
+      Formulario.Hide
+    else
+    begin
+      MostrarFotoSesionFlotante(
+        Self,
+        sSerie,
+        sNumero,
+        iLinea,
+        sCodArt,
+        sUnidad);
+      Formulario := FotoFlotanteActual;
+      if Formulario <> nil then
+        Formulario.VincularSesion(
+          DataSourcesParaFoto,
+          ResolverFotoSesionActiva,
+          FotoSesionModificada);
+    end;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.FotoSesionModificada(Sender: TObject);
+begin
+  RefrescarFotosProvisionales;
 end;
 
 function TfrmMtoComprasSesiones.DirectorioFotosAplicacion: string;
@@ -1687,6 +1792,13 @@ end;
 procedure TfrmMtoComprasSesiones.cxPageControl2Change(Sender: TObject);
 begin
   RefrescarFotoProvisional;
+  if cxPageControl2.ActivePage = cxTabSheet1 then
+  begin
+    // Las tallas son columnas no-bound. Al volver a Lineas se publican
+    // de nuevo por si un cambio de estado de la cabecera limpio Values[].
+    RecargarTallasVisibles;
+    RecargarTallasDiferido;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.cxPageControl1Change(Sender: TObject);
@@ -1701,7 +1813,12 @@ begin
     // zoom y desplazamiento. Solo se reajusta al cargar o al pulsar el boton.
   end
   else
+  begin
     RefrescarFotoProvisional;
+    // Cancelar una linea puede reconstruir el DataController mientras se
+    // consulta el documento. Al volver se restauran los Values[] de tallas.
+    RecargarTallasDiferido;
+  end;
 end;
 
 procedure TfrmMtoComprasSesiones.tvFotosProvisionalesFocusedRecordChanged(
@@ -1779,6 +1896,7 @@ begin
   Dmm.unqrySesionLin.AfterPost    := unqrySesionLinAfterPostHook;
   Dmm.unqrySesionLin.BeforeInsert := unqrySesionLinBeforeInsertHook;
   Dmm.unqrySesionLin.AfterInsert  := unqrySesionLinAfterInsertHook;
+  Dmm.unqrySesionLin.AfterCancel  := unqrySesionLinAfterCancelHook;
   Dmm.unqrySesionLin.BeforeDelete := unqrySesionLinBeforeDeleteHook;
   Dmm.unqrySesionLin.AfterDelete  := unqrySesionLinAfterDeleteHook;
   // Cualquier re-fetch (Refresh explicito, master/detail, navegador)
@@ -1816,6 +1934,7 @@ begin
   // Al navegar de una sesion a otra hay que recargar las cantidades de
   // tallas: sin esto las celdas no-bound quedan vacias.
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
+  dsTablaG.OnStateChange := dsTablaGStateChangeHook;
   RefrescarColumnasTallas;
 end;
 
@@ -1892,6 +2011,21 @@ begin
     RefrescarFotoProvisional;
     CargarPaginasPedidoOriginal;
     ReconstruirTallas;
+  end;
+end;
+
+procedure TfrmMtoComprasSesiones.dsTablaGStateChangeHook(Sender: TObject);
+begin
+  // Conserva la gestion de botones y el rotulo Editando/Navegando del
+  // mantenimiento base.
+  inherited dsTablaGStateChange(Sender);
+  if (Dmm <> nil) and Dmm.unqrySesionLin.Active and
+     not Dmm.unqrySesionLin.IsEmpty then
+  begin
+    // Edit/Insert/Post del maestro resincroniza el detalle en cxGrid y
+    // borra las columnas no-bound aunque las cantidades sigan en SESCEL.
+    RecargarTallasVisibles;
+    RecargarTallasDiferido;
   end;
 end;
 
@@ -2010,6 +2144,14 @@ begin
     tvLineas.Controller.EditingController.ShowEdit;
 end;
 
+procedure TfrmMtoComprasSesiones.unqrySesionLinAfterCancelHook(
+  DataSet: TDataSet);
+begin
+  // Cancel elimina el registro de insercion y cxGrid vuelve a construir su
+  // buffer. Las cantidades persisten en SESCEL, pero hay que republicarlas.
+  RecargarTallasDiferido;
+end;
+
 procedure TfrmMtoComprasSesiones.unqrySesionLinBeforeDeleteHook(
   DataSet: TDataSet);
 var
@@ -2060,6 +2202,8 @@ begin
   CrearColaboradorTallas;
   FTallas.CrearColumnas;
   inherited;
+  ConfigurarFotoProvisionalCabecera;
+  actFotoArticulo.OnExecute := actFotoSesionExecute;
   cxPageControl2.OnChange := cxPageControl2Change;
   tvFotosProvisionales.OnFocusedRecordChanged :=
     tvFotosProvisionalesFocusedRecordChanged;

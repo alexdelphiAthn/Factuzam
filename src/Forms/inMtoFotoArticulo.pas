@@ -44,6 +44,10 @@ uses
 type
   TResolverArtSkuProc =
     procedure(out ACodArt, ACodSku: string) of object;
+  TResolverFotoSesionProc =
+    procedure(out ASerieSesion, ANumeroSesion: string;
+      out ALinea: Integer; out ACodArtTentativo,
+      ACodUnidad: string) of object;
 
   TfrmFotoArticulo = class(TfrmBase)
     pnlTop           : TPanel;
@@ -89,8 +93,16 @@ type
     // OnDataChange(Field = nil) se recarga la foto via FPadreResolver.
     FHooksDataSource        : TList<TPair<TDataSource, TDataChangeEvent>>;
     FPadreResolver          : TResolverArtSkuProc;
+    FPadreResolverSesion    : TResolverFotoSesionProc;
+    FAlCambiarFotoSesion    : TNotifyEvent;
     FGpImagen               : TGPImage;
     FRutaFotoActual         : string;
+    FModoSesion             : Boolean;
+    FSerieSesion            : string;
+    FNumeroSesion           : string;
+    FLineaSesion            : Integer;
+    FCodigoArtTentativoSesion: string;
+    FCodigoUnidadSesion     : string;
     procedure CargarFotoActual;
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
@@ -101,6 +113,11 @@ type
     procedure DescargarFotosDeNube;
     procedure PintarFotoGDIPlus;
     procedure RestaurarGeometriaGuardada;
+    procedure VincularDataSourcesInterno(
+      const ADataSources: array of TDataSource);
+    procedure NotificarCambioFotoSesion;
+    procedure PrepararControlesArticulo;
+    procedure PrepararControlesSesion(AExpandir: Boolean);
   protected
     procedure Resize; override;
     // Auto-limpieza si alguno de los DataSources hookeados se libera
@@ -128,6 +145,16 @@ type
     /// la firma vieja.
     procedure VincularMtoPadre(ADataSource: TDataSource;
                                AResolver: TResolverArtSkuProc);
+    procedure SetSesion(const ASerieSesion, ANumeroSesion: string;
+      ALinea: Integer; const ACodArtTentativo,
+      ACodUnidad: string);
+    procedure VincularSesion(
+      const ADataSources: array of TDataSource;
+      AResolver: TResolverFotoSesionProc;
+      AAlCambiarFoto: TNotifyEvent);
+    function CoincideSesion(const ASerieSesion,
+      ANumeroSesion: string; ALinea: Integer;
+      const ACodUnidad: string): Boolean;
     property CodigoArt: string read FCodigoArt;
     property CodigoSku: string read FCodigoSku;
   end;
@@ -138,11 +165,14 @@ type
 function FotoFlotanteActual: TfrmFotoArticulo;
 procedure MostrarFotoFlotante(AOwner: TComponent;
                                const ACodArt, ACodSku: string);
+procedure MostrarFotoSesionFlotante(AOwner: TComponent;
+  const ASerieSesion, ANumeroSesion: string; ALinea: Integer;
+  const ACodArtTentativo, ACodUnidad: string);
 
 implementation
 
 uses
-  inLibMsgArticulos;
+  inLibMsgArticulos, inLibMsgCompras;
 
 {$R *.dfm}
 
@@ -189,7 +219,11 @@ begin
   FUltimaInfo.Clear;
   FHooksDataSource := TList<TPair<TDataSource, TDataChangeEvent>>.Create;
   FPadreResolver   := nil;
+  FPadreResolverSesion := nil;
+  FAlCambiarFotoSesion := nil;
   FGpImagen        := nil;
+  FModoSesion      := False;
+  FLineaSesion     := 0;
   // El bitmap GDI+ ya viene al tamaño del control; que TImage NO lo reescale
   // (si no, al cambiar el area -p.ej. colapsar el panel de controles- la foto
   // sale pequeña hasta el siguiente repintado).
@@ -419,8 +453,17 @@ end;
 
 procedure TfrmFotoArticulo.SetArticuloSku(const ACodArt, ACodSku: string);
 begin
+  FModoSesion := False;
+  FPadreResolverSesion := nil;
+  FAlCambiarFotoSesion := nil;
+  FSerieSesion := '';
+  FNumeroSesion := '';
+  FLineaSesion := 0;
+  FCodigoArtTentativoSesion := '';
+  FCodigoUnidadSesion := '';
   FCodigoArt := ACodArt;
   FCodigoSku := ACodSku;
+  PrepararControlesArticulo;
   FUltimaInfo := FotosArticulos.Resolver(ACodArt, ACodSku);
   case FUltimaInfo.Origen of
     foSku        : lblOrigen.Caption :=
@@ -442,6 +485,72 @@ begin
     Self.Caption := ACodArt;
   RellenarNivelesSku;
   CargarFotoActual;
+end;
+
+procedure TfrmFotoArticulo.PrepararControlesArticulo;
+begin
+  btnDescargarNube.Visible := True;
+  btnCambiarArt.Caption := 'Cambiar foto del &artículo';
+  btnCambiarSku.Visible := True;
+end;
+
+procedure TfrmFotoArticulo.PrepararControlesSesion(AExpandir: Boolean);
+begin
+  btnDescargarNube.Visible := False;
+  btnCambiarArt.Caption := 'Cambiar foto de la &línea';
+  btnCambiarSku.Visible := False;
+  lblNivel.Visible := False;
+  cbbNivelSku.Visible := False;
+  if AExpandir and not pnlControles.Visible then
+  begin
+    pnlControles.Visible := True;
+    AjustarBotonToggle;
+  end;
+end;
+
+procedure TfrmFotoArticulo.SetSesion(const ASerieSesion,
+  ANumeroSesion: string; ALinea: Integer;
+  const ACodArtTentativo, ACodUnidad: string);
+var
+  bEntrandoModoSesion: Boolean;
+begin
+  bEntrandoModoSesion := not FModoSesion;
+  FModoSesion := True;
+  FPadreResolver := nil;
+  FSerieSesion := ASerieSesion;
+  FNumeroSesion := ANumeroSesion;
+  FLineaSesion := ALinea;
+  FCodigoArtTentativoSesion := ACodArtTentativo;
+  FCodigoUnidadSesion := ACodUnidad;
+  FCodigoArt := ACodArtTentativo;
+  FCodigoSku := ACodUnidad;
+  // Solo se despliegan al entrar inicialmente en el modo sesión. Las
+  // resincronizaciones posteriores deben respetar la elección del usuario.
+  PrepararControlesSesion(bEntrandoModoSesion);
+  FUltimaInfo := FotosArticulos.ResolverSesion(
+    ASerieSesion, ANumeroSesion, ALinea, ACodUnidad);
+  if FUltimaInfo.Encontrada then
+    lblOrigen.Caption := Format(
+      SCaptionLineaFotoDetalle,
+      [ALinea, ACodArtTentativo, SCaptionDestinoArticulo])
+  else
+    lblOrigen.Caption := Format(
+      SCaptionLineaSinFotoProvisional, [ALinea]);
+  Self.Caption := Format(
+    'Sesión %s/%s · línea %d · %s',
+    [ASerieSesion, ANumeroSesion, ALinea, ACodArtTentativo]);
+  CargarFotoActual;
+end;
+
+function TfrmFotoArticulo.CoincideSesion(
+  const ASerieSesion, ANumeroSesion: string;
+  ALinea: Integer; const ACodUnidad: string): Boolean;
+begin
+  Result := FModoSesion and
+    SameText(FSerieSesion, ASerieSesion) and
+    SameText(FNumeroSesion, ANumeroSesion) and
+    (FLineaSesion = ALinea) and
+    SameText(FCodigoUnidadSesion, ACodUnidad);
 end;
 
 procedure TfrmFotoArticulo.RellenarNivelesSku;
@@ -601,14 +710,29 @@ var
   bGuardada: Boolean;
 begin
   inherited;
-  if FCodigoArt = '' then
+  if FModoSesion and (FCodigoArtTentativoSesion = '') then
+    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+  else if (not FModoSesion) and (FCodigoArt = '') then
     ShowMessage(SErrorFotoArticuloNoActivo)
   else if dlgAbrirFoto.Execute then
   begin
     bGuardada := True;
     try
-      FotosArticulos.Guardar(FCodigoArt, '', dlgAbrirFoto.FileName,
-        IdentidadSesion.Usuario);
+      if FModoSesion then
+        FotosArticulos.GuardarSesion(
+          FSerieSesion,
+          FNumeroSesion,
+          FLineaSesion,
+          FCodigoArtTentativoSesion,
+          FCodigoUnidadSesion,
+          dlgAbrirFoto.FileName,
+          IdentidadSesion.Usuario)
+      else
+        FotosArticulos.Guardar(
+          FCodigoArt,
+          '',
+          dlgAbrirFoto.FileName,
+          IdentidadSesion.Usuario);
     except
       on E: Exception do
       begin
@@ -617,7 +741,20 @@ begin
       end;
     end;
     if bGuardada then
-      SetArticuloSku(FCodigoArt, FCodigoSku);
+    begin
+      if FModoSesion then
+      begin
+        SetSesion(
+          FSerieSesion,
+          FNumeroSesion,
+          FLineaSesion,
+          FCodigoArtTentativoSesion,
+          FCodigoUnidadSesion);
+        NotificarCambioFotoSesion;
+      end
+      else
+        SetArticuloSku(FCodigoArt, FCodigoSku);
+    end;
   end;
 end;
 
@@ -657,35 +794,111 @@ end;
 procedure TfrmFotoArticulo.btnQuitarClick(Sender: TObject);
 begin
   inherited;
-  if FUltimaInfo.Encontrada and
+  if FModoSesion and (FCodigoArtTentativoSesion = '') then
+    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+  else if FUltimaInfo.Encontrada and
      (MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
       [mbYes, mbNo], 0) = mrYes) then
   begin
-    FotosArticulos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
-    SetArticuloSku(FCodigoArt, FCodigoSku);
+    if FModoSesion then
+    begin
+      FotosArticulos.EliminarSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FUltimaInfo.ClaveResuelta);
+      SetSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FCodigoArtTentativoSesion,
+        FCodigoUnidadSesion);
+      NotificarCambioFotoSesion;
+    end
+    else
+    begin
+      FotosArticulos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
+      SetArticuloSku(FCodigoArt, FCodigoSku);
+    end;
   end;
 end;
 
 procedure TfrmFotoArticulo.btnRotarIzqClick(Sender: TObject);
 begin
   inherited;
-  if FUltimaInfo.Encontrada then
+  if FModoSesion and (FCodigoArtTentativoSesion = '') then
+    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+  else if FUltimaInfo.Encontrada then
   begin
-    FotosArticulos.Rotar(FCodigoArt, FCodigoSku, False,
-      IdentidadSesion.Usuario);
-    SetArticuloSku(FCodigoArt, FCodigoSku);
+    if FModoSesion then
+    begin
+      FotosArticulos.RotarSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FUltimaInfo.ClaveResuelta,
+        False,
+        IdentidadSesion.Usuario);
+      SetSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FCodigoArtTentativoSesion,
+        FCodigoUnidadSesion);
+      NotificarCambioFotoSesion;
+    end
+    else
+    begin
+      FotosArticulos.Rotar(
+        FCodigoArt,
+        FCodigoSku,
+        False,
+        IdentidadSesion.Usuario);
+      SetArticuloSku(FCodigoArt, FCodigoSku);
+    end;
   end;
 end;
 
 procedure TfrmFotoArticulo.btnRotarDerClick(Sender: TObject);
 begin
   inherited;
-  if FUltimaInfo.Encontrada then
+  if FModoSesion and (FCodigoArtTentativoSesion = '') then
+    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+  else if FUltimaInfo.Encontrada then
   begin
-    FotosArticulos.Rotar(FCodigoArt, FCodigoSku, True,
-      IdentidadSesion.Usuario);
-    SetArticuloSku(FCodigoArt, FCodigoSku);
+    if FModoSesion then
+    begin
+      FotosArticulos.RotarSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FUltimaInfo.ClaveResuelta,
+        True,
+        IdentidadSesion.Usuario);
+      SetSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FCodigoArtTentativoSesion,
+        FCodigoUnidadSesion);
+      NotificarCambioFotoSesion;
+    end
+    else
+    begin
+      FotosArticulos.Rotar(
+        FCodigoArt,
+        FCodigoSku,
+        True,
+        IdentidadSesion.Usuario);
+      SetArticuloSku(FCodigoArt, FCodigoSku);
+    end;
   end;
+end;
+
+procedure TfrmFotoArticulo.NotificarCambioFotoSesion;
+begin
+  if Assigned(FAlCambiarFotoSesion) then
+    FAlCambiarFotoSesion(Self);
 end;
 
 procedure TfrmFotoArticulo.btnLayoutClick(Sender: TObject);
@@ -704,11 +917,28 @@ end;
 procedure TfrmFotoArticulo.VincularDataSources(
   const ADataSources: array of TDataSource;
   AResolver: TResolverArtSkuProc);
-var
-  ds: TDataSource;
 begin
   DesengancharDataChange;
   FPadreResolver := AResolver;
+  VincularDataSourcesInterno(ADataSources);
+end;
+
+procedure TfrmFotoArticulo.VincularSesion(
+  const ADataSources: array of TDataSource;
+  AResolver: TResolverFotoSesionProc;
+  AAlCambiarFoto: TNotifyEvent);
+begin
+  DesengancharDataChange;
+  FPadreResolverSesion := AResolver;
+  FAlCambiarFotoSesion := AAlCambiarFoto;
+  VincularDataSourcesInterno(ADataSources);
+end;
+
+procedure TfrmFotoArticulo.VincularDataSourcesInterno(
+  const ADataSources: array of TDataSource);
+var
+  ds: TDataSource;
+begin
   if FHooksDataSource = nil then
     FHooksDataSource :=
       TList<TPair<TDataSource, TDataChangeEvent>>.Create;
@@ -770,12 +1000,20 @@ begin
     FHooksDataSource.Clear;
   end;
   FPadreResolver := nil;
+  FPadreResolverSesion := nil;
+  FAlCambiarFotoSesion := nil;
 end;
 
 procedure TfrmFotoArticulo.OnPadreDataChange(Sender: TObject; Field: TField);
 var
-  sArt, sSku : string;
-  pair       : TPair<TDataSource, TDataChangeEvent>;
+  sArt          : string;
+  sSku          : string;
+  sSerieSesion  : string;
+  sNumeroSesion : string;
+  sCodArtSesion : string;
+  sUnidadSesion : string;
+  iLineaSesion  : Integer;
+  pair          : TPair<TDataSource, TDataChangeEvent>;
 begin
   // Encadenamos al handler previo (si lo habia) del DataSource que
   // disparo, para no romper logica existente del Mto.
@@ -788,7 +1026,26 @@ begin
       end;
   // Solo refrescamos cuando cambia el registro activo (Field = nil),
   // no en cada cambio de columna.
-  if (Field = nil) and Assigned(FPadreResolver) then
+  if (Field = nil) and FModoSesion and
+     Assigned(FPadreResolverSesion) then
+  begin
+    FPadreResolverSesion(
+      sSerieSesion,
+      sNumeroSesion,
+      iLineaSesion,
+      sCodArtSesion,
+      sUnidadSesion);
+    if not CoincideSesion(
+      sSerieSesion, sNumeroSesion, iLineaSesion, sUnidadSesion) or
+      (sCodArtSesion <> FCodigoArtTentativoSesion) then
+      SetSesion(
+        sSerieSesion,
+        sNumeroSesion,
+        iLineaSesion,
+        sCodArtSesion,
+        sUnidadSesion);
+  end
+  else if (Field = nil) and Assigned(FPadreResolver) then
   begin
     FPadreResolver(sArt, sSku);
     if (sArt <> FCodigoArt) or (sSku <> FCodigoSku) then
@@ -832,6 +1089,35 @@ begin
   // Cuando el usuario clicka DIRECTAMENTE sobre la flotante (boton,
   // combo, radio), la activacion es normal: WM_MOUSEACTIVATE default
   // -> MA_ACTIVATE y los controles funcionan.
+  if (hwndPrev <> 0) and IsWindow(hwndPrev) and
+     (hwndPrev <> Formulario.Handle) and
+     (GetForegroundWindow = Formulario.Handle) then
+    SetForegroundWindow(hwndPrev);
+end;
+
+procedure MostrarFotoSesionFlotante(AOwner: TComponent;
+  const ASerieSesion, ANumeroSesion: string; ALinea: Integer;
+  const ACodArtTentativo, ACodUnidad: string);
+var
+  Formulario: TfrmFotoArticulo;
+  hwndPrev: HWND;
+begin
+  hwndPrev := GetForegroundWindow;
+  Formulario := FotoFlotanteActual;
+  if Formulario = nil then
+    Formulario := TfrmFotoArticulo.Create(Application);
+  Formulario.SetSesion(
+    ASerieSesion,
+    ANumeroSesion,
+    ALinea,
+    ACodArtTentativo,
+    ACodUnidad);
+  if not Formulario.Visible then
+  begin
+    Formulario.RestaurarGeometriaGuardada;
+    ShowWindow(Formulario.Handle, SW_SHOWNOACTIVATE);
+    Formulario.Visible := True;
+  end;
   if (hwndPrev <> 0) and IsWindow(hwndPrev) and
      (hwndPrev <> Formulario.Handle) and
      (GetForegroundWindow = Formulario.Handle) then

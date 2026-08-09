@@ -308,6 +308,9 @@ end;
 
 procedure TCoordinadorTallasSesion.AplicarSistemaElegido(
   ASender: TObject; AIdNuevo: Integer);
+var
+  iLinea: Integer;
+  iRegistro: Integer;
 begin
   if not (FLineas.State in [dsEdit, dsInsert]) then
     FLineas.Edit;
@@ -324,6 +327,20 @@ begin
     begin
       FGestor.RecalcularMaxColumnas;
       FGestor.ActualizarCaptionsLineaActiva;
+      // Las celdas se guardan por ID_AV, no por posicion visual. Al cambiar
+      // de conjunto se reconstruye la fila para que 37 siga siendo 37 aunque
+      // ocupe otra columna dentro del nuevo sistema.
+      iLinea := FLineas.FieldByName('LINEA_SESLIN').AsInteger;
+      iRegistro := FEntorno.Vista.Controller.FocusedRecordIndex;
+      if (iLinea > 0) and (iRegistro >= 0) then
+      begin
+        FEntorno.Vista.DataController.BeginUpdate;
+        try
+          FGestor.CargarCantidadesUnaLinea(iRegistro, iLinea);
+        finally
+          FEntorno.Vista.DataController.EndUpdate;
+        end;
+      end;
     end
     else if ASender is TcxCustomEdit then
       TcxCustomEdit(ASender).EditValue := Null;

@@ -54,6 +54,9 @@ type
       const AUsuario: string);
     function Resolver(const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer; const ACodigoUnidad: string = ''): TFotoInfo;
+    function Rotar(const ASerieSesion, ANumeroSesion: string;
+      ALinea: Integer; const ACodigoUnidad: string;
+      AHorario: Boolean; const AUsuario: string): TFotoInfo;
     procedure Eliminar(const ASerieSesion, ANumeroSesion: string;
       ALinea: Integer; const ACodigoUnidad: string);
     procedure Migrar(const ASerieSesion, ANumeroSesion: string;
@@ -285,6 +288,52 @@ begin
       Result := BuscarFoto(ASerieSesion, ANumeroSesion, ALinea,
         '', ACodigoUnidad, foArticulo);
   end;
+end;
+
+function TSesionFotos.Rotar(const ASerieSesion,
+  ANumeroSesion: string; ALinea: Integer;
+  const ACodigoUnidad: string; AHorario: Boolean;
+  const AUsuario: string): TFotoInfo;
+var
+  oMetadatos     : TMetadatosFotoSesion;
+  sClave         : string;
+  sNombreAnterior: string;
+  sNombreNuevo   : string;
+  iIndice        : Integer;
+begin
+  Result.Clear;
+  if not FRepositorioSesion.BuscarFotoSesion(
+    ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad,
+    oMetadatos) then
+    raise Exception.Create(SErrorFotoNoRegistradaParaRotar);
+  sClave := ClaveNombreSesion(
+    ASerieSesion, ANumeroSesion, ALinea, ACodigoUnidad);
+  sNombreAnterior := oMetadatos.Nombre;
+  iIndice := FAlmacenamiento.ExtraerIndice(sNombreAnterior) + 1;
+  if iIndice < 1 then
+    iIndice := 1;
+  sNombreNuevo := FAlmacenamiento.ComponerNombre(sClave, iIndice);
+  FAlmacenamiento.RotarCopias(
+    sNombreAnterior, sNombreNuevo, AHorario);
+  FRepositorioSesion.GuardarFotoSesion(
+    ASerieSesion,
+    ANumeroSesion,
+    ALinea,
+    ACodigoUnidad,
+    oMetadatos.CodigoArticuloTentativo,
+    sNombreNuevo,
+    oMetadatos.Extension,
+    AUsuario);
+  Result.Encontrada := True;
+  if ACodigoUnidad = '' then
+    Result.Origen := foArticulo
+  else
+    Result.Origen := foSku;
+  Result.CodigoArt := oMetadatos.CodigoArticuloTentativo;
+  Result.CodigoSku := ACodigoUnidad;
+  Result.ClaveResuelta := ACodigoUnidad;
+  Result.NombreBase := sNombreNuevo;
+  Result.ExtensionOrigen := oMetadatos.Extension;
 end;
 
 procedure TSesionFotos.Eliminar(const ASerieSesion,

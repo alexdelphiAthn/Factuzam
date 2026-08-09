@@ -920,6 +920,7 @@ end;
 procedure TdmComprasSesiones.unqrySesionLinBeforePost(DataSet: TDataSet);
 var
   bExiste : Boolean;
+  bLineaVacia: Boolean;
   sDescr  : string;
   sTecla  : string;
   sNuevo  : string;
@@ -932,14 +933,20 @@ begin
                  unqrySesionLin.FieldByName(
                    'CODIGO_ART_TENTATIVO_SESLIN').AsString,
                  unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString]));
-  // Linea sin articulo: cancelar silenciosamente. El cxGrid hace Post
-  // automatico al navegar con flechas; si la linea es un placeholder
-  // vacio, Cancel + Abort lo descarta sin molestar al usuario.
-  // La importacion OCR habilita temporalmente lineas sin codigo porque
-  // conserva el pedido antes de que el usuario elija la familia interna.
+  // Solo se descarta el placeholder nuevo completamente vacio. Las lineas
+  // importadas pueden no tener codigo hasta que el usuario asigne familia;
+  // deben poder postearse y navegarse sin que Cancel + Abort bloquee el grid.
+  bLineaVacia :=
+    (Trim(unqrySesionLin.FieldByName(
+      'CODIGO_ART_TENTATIVO_SESLIN').AsString) = '') and
+    (Trim(unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString) = '') and
+    (Trim(unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString) = '') and
+    (Trim(unqrySesionLin.FieldByName('DESCRIPCION_SESLIN').AsString) = '') and
+    (Trim(unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString) = '') and
+    (unqrySesionLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat = 0) and
+    (unqrySesionLin.FieldByName('TOTAL_UNIDADES_SESLIN').AsFloat = 0);
   if (not FPermitirLineasSinCodigoArticulo) and
-     (Trim(unqrySesionLin.FieldByName(
-       'CODIGO_ART_TENTATIVO_SESLIN').AsString) = '') then
+     (unqrySesionLin.State = dsInsert) and bLineaVacia then
   begin
     LogSes('  linea sin articulo, Cancel diferido + Abort');
     TThread.ForceQueue(nil,
