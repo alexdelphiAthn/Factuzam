@@ -37,12 +37,31 @@ el permiso, alcance efectivo, empresa, ejercicio, fechas, cuenta, número de
 filas y nombre del archivo. `ID_AUDITORIA_LISTADO` se obtiene de
 `cza_contadores` en el contexto `GLOBAL/0`.
 
-## Listados y Excel
+## Listados, Excel y FastReport
 
 Los listados son consultas de solo lectura, parametrizadas por empresa,
 ejercicio, fechas y prefijo de cuenta. La capa visual autoriza por separado
-`CONSULTAR` y `EXPORTAR`. El exportador genera un contenedor OOXML `.xlsx` con
-cabeceras, filtro, filas congeladas y formato numérico, sin automatización COM.
+`CONSULTAR`, `EXPORTAR` y `MODIFICAR`. El exportador genera un contenedor OOXML
+`.xlsx` con cabeceras, filtro, filas congeladas y formato numérico. La vista
+previa usa Developer Express y no automatización COM.
+
+FastReport genera el formato inicial, muestra su diálogo de vista previa y
+permite editarlo. Cada formato derivado se guarda como `LONGBLOB` en
+`cza_listados_derivados`; cada modificación crea además una fila inmutable en
+`cza_listados_derivados_versiones`. El acceso puede limitarse a usuario, grupo,
+empresa o toda la instalación. Los identificadores se obtienen de
+`cza_contadores`, sin `AUTO_INCREMENT`.
+
+Las etiquetas visibles de las consultas se resuelven mediante
+`cza_literales`. La clave estable es el recurso y el nombre técnico del campo;
+el texto se obtiene para el idioma activo, con retorno seguro a `es-ES`.
+
+## Perfiles de mantenimientos
+
+Los mantenimientos heredan las pestañas Lista/Ficha. El perfil de cada usuario,
+empresa y clase de formulario conserva posición, tamaño, pestaña activa y, por
+columna, nombre visible, orden, visibilidad y ancho. `Alt+F12` lo graba y
+`Ctrl+F12` lo elimina para recuperar el diseño predeterminado.
 
 ## Archivo documental
 

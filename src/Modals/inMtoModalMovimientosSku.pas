@@ -215,30 +215,31 @@ begin
        Handle,
        PChar(SPreguntaReconstruirStock),
        PChar(STituloReconstruirStock),
-       MB_YESNO or MB_ICONQUESTION) <> IDYES then
-    Exit;
-  Screen.Cursor := crHourGlass;
-  try
+       MB_YESNO or MB_ICONQUESTION) = IDYES then
+  begin
+    Screen.Cursor := crHourGlass;
     try
-      sMensaje := FRepositorio.ReconstruirStock;
-      FStockReconstruido := True;
-      if Trim(sMensaje) = '' then
-        sMensaje := SInfoStockReconstruido;
-      MessageBox(
-        Handle,
-        PChar(sMensaje),
-        PChar(STituloReconstruirStock),
-        MB_OK or MB_ICONINFORMATION);
-    except
-      on E: Exception do
+      try
+        sMensaje := FRepositorio.ReconstruirStock;
+        FStockReconstruido := True;
+        if Trim(sMensaje) = '' then
+          sMensaje := SInfoStockReconstruido;
         MessageBox(
           Handle,
-          PChar(Format(SErrorReconstruirStock, [E.Message])),
+          PChar(sMensaje),
           PChar(STituloReconstruirStock),
-          MB_OK or MB_ICONERROR);
+          MB_OK or MB_ICONINFORMATION);
+      except
+        on E: Exception do
+          MessageBox(
+            Handle,
+            PChar(Format(SErrorReconstruirStock, [E.Message])),
+            PChar(STituloReconstruirStock),
+            MB_OK or MB_ICONERROR);
+      end;
+    finally
+      Screen.Cursor := crDefault;
     end;
-  finally
-    Screen.Cursor := crDefault;
   end;
 end;
 

@@ -72,19 +72,27 @@ begin
     // El codigo tiene prioridad sobre el nombre si una configuracion
     // excepcional hiciera que ambos textos coincidiesen con basicos
     // distintos.
-    for i := 0 to High(ACodigos) do
+    i := 0;
+    while (i <= High(ACodigos)) and not Result do
+    begin
       if SameText(sLiteral, SanearColorSku(ACodigos[i])) then
       begin
         ACodigo := ACodigos[i];
-        Exit(True);
+        Result := True;
       end;
-    for i := 0 to High(ACodigos) do
+      Inc(i);
+    end;
+    i := 0;
+    while (i <= High(ACodigos)) and not Result do
+    begin
       if (i <= High(ANombres)) and
          SameText(sLiteral, SanearColorSku(ANombres[i])) then
       begin
         ACodigo := ACodigos[i];
-        Exit(True);
+        Result := True;
       end;
+      Inc(i);
+    end;
   end;
 end;
 

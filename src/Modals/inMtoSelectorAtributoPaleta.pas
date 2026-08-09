@@ -58,9 +58,6 @@ type
     function Ejecutar(out AValor: string): Boolean;
   end;
 
-var
-  frmSelectorAtributoPaleta: TfrmSelectorAtributoPaleta;
-
 implementation
 
 uses
@@ -253,74 +250,70 @@ var
   Top: Integer;
   HayColor: Boolean;
 begin
-  if (Index < 0) or (Index >= lstValores.Items.Count) then
-    Exit;
-
-  Av := lstValores.Items[Index];
-  if odSelected in State then
-    lstValores.Canvas.Brush.Color := clHighlight
-  else
-    lstValores.Canvas.Brush.Color := clWindow;
-  lstValores.Canvas.FillRect(ARect);
-
-  HayColor := FInfoArticulo.TryGetValue(UpperCase(Trim(Av)), Info);
-  if (not HayColor) and (Trim(FIdVa) <> '') then
-    HayColor := ObtenerInfoBasico(FConexion, FIdVa, Av, Info);
-  if not HayColor then
-    HayColor := BuscarInfoBasicoEnArticulo(
-      FConexion,
-      Av,
-      ObtenerMapaAtributosGlobal(FConexion),
-      Info);
-
-  if HayColor then
+  if (Index >= 0) and (Index < lstValores.Items.Count) then
   begin
-    Alto := ARect.Bottom - ARect.Top;
-    if Alto > LADO then
-      Top := ARect.Top + (Alto - LADO) div 2
+    Av := lstValores.Items[Index];
+    if odSelected in State then
+      lstValores.Canvas.Brush.Color := clHighlight
     else
-      Top := ARect.Top;
-    Cuadrado := Rect(
-      ARect.Left + MARGEN_IZQ,
-      Top,
-      ARect.Left + MARGEN_IZQ + LADO,
-      Top + LADO);
-    lstValores.Canvas.Brush.Style := bsSolid;
-    lstValores.Canvas.Brush.Color := Info.Color;
-    lstValores.Canvas.FillRect(Cuadrado);
+      lstValores.Canvas.Brush.Color := clWindow;
+    lstValores.Canvas.FillRect(ARect);
+    HayColor := FInfoArticulo.TryGetValue(UpperCase(Trim(Av)), Info);
+    if (not HayColor) and (Trim(FIdVa) <> '') then
+      HayColor := ObtenerInfoBasico(FConexion, FIdVa, Av, Info);
+    if not HayColor then
+      HayColor := BuscarInfoBasicoEnArticulo(
+        FConexion,
+        Av,
+        ObtenerMapaAtributosGlobal(FConexion),
+        Info);
+    if HayColor then
+    begin
+      Alto := ARect.Bottom - ARect.Top;
+      if Alto > LADO then
+        Top := ARect.Top + (Alto - LADO) div 2
+      else
+        Top := ARect.Top;
+      Cuadrado := Rect(
+        ARect.Left + MARGEN_IZQ,
+        Top,
+        ARect.Left + MARGEN_IZQ + LADO,
+        Top + LADO);
+      lstValores.Canvas.Brush.Style := bsSolid;
+      lstValores.Canvas.Brush.Color := Info.Color;
+      lstValores.Canvas.FillRect(Cuadrado);
+      lstValores.Canvas.Brush.Style := bsClear;
+      lstValores.Canvas.Pen.Color := clBlack;
+      lstValores.Canvas.Pen.Width := 1;
+      lstValores.Canvas.Rectangle(Cuadrado);
+      lstValores.Canvas.Brush.Style := bsSolid;
+      TextRect := Rect(
+        Cuadrado.Right + HUECO_TEXTO,
+        ARect.Top,
+        ARect.Right,
+        ARect.Bottom);
+    end
+    else
+      TextRect := Rect(
+        ARect.Left + MARGEN_IZQ,
+        ARect.Top,
+        ARect.Right,
+        ARect.Bottom);
+    if odSelected in State then
+      lstValores.Canvas.Font.Color := clHighlightText
+    else
+      lstValores.Canvas.Font.Color := clWindowText;
     lstValores.Canvas.Brush.Style := bsClear;
-    lstValores.Canvas.Pen.Color := clBlack;
-    lstValores.Canvas.Pen.Width := 1;
-    lstValores.Canvas.Rectangle(Cuadrado);
+    Winapi.Windows.DrawText(
+      lstValores.Canvas.Handle,
+      PChar(Av),
+      -1,
+      TextRect,
+      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
     lstValores.Canvas.Brush.Style := bsSolid;
-    TextRect := Rect(
-      Cuadrado.Right + HUECO_TEXTO,
-      ARect.Top,
-      ARect.Right,
-      ARect.Bottom);
-  end
-  else
-    TextRect := Rect(
-      ARect.Left + MARGEN_IZQ,
-      ARect.Top,
-      ARect.Right,
-      ARect.Bottom);
-
-  if odSelected in State then
-    lstValores.Canvas.Font.Color := clHighlightText
-  else
-    lstValores.Canvas.Font.Color := clWindowText;
-  lstValores.Canvas.Brush.Style := bsClear;
-  Winapi.Windows.DrawText(
-    lstValores.Canvas.Handle,
-    PChar(Av),
-    -1,
-    TextRect,
-    DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
-  lstValores.Canvas.Brush.Style := bsSolid;
-
-  if odFocused in State then
-    lstValores.Canvas.DrawFocusRect(ARect);
+    if odFocused in State then
+      lstValores.Canvas.DrawFocusRect(ARect);
+  end;
 end;
 
 procedure TfrmSelectorAtributoPaleta.lstValoresMouseDown(

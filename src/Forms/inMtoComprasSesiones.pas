@@ -1388,7 +1388,6 @@ var
   aFotos: TSolicitudesFotosSesion;
   aPaginas: TArray<string>;
   aPreparadas: TLineasPreparadasPedidoOcr;
-  bTransaccionPropia: Boolean;
   iCelda: Integer;
   iFoto: Integer;
   iLinea: Integer;
@@ -1507,9 +1506,7 @@ begin
       oPedido.Lineas);
     SetLength(aCeldas, 0);
   iSinCodigo := 0;
-  bTransaccionPropia := not ConexionTrabajo.InTransaction;
-  if bTransaccionPropia then
-    ConexionTrabajo.StartTransaction;
+  Dmm.IniciarUnidadTrabajoImportacionOcr;
   try
     if oPedido.ReferenciaDocumento <> '' then
     begin
@@ -1633,15 +1630,13 @@ begin
       Dmm.unqrySesionLin.EnableControls;
       tvLineas.EndUpdate;
     end;
-    if bTransaccionPropia and ConexionTrabajo.InTransaction then
-      ConexionTrabajo.Commit;
+    Dmm.ConfirmarUnidadTrabajoImportacionOcr;
   except
     if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
       Dmm.unqrySesionLin.Cancel;
     if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
       Dmm.unqryTablaG.Cancel;
-    if bTransaccionPropia and ConexionTrabajo.InTransaction then
-      ConexionTrabajo.Rollback;
+    Dmm.RevertirUnidadTrabajoImportacionOcr;
     if Dmm.unqrySesionLin.Active then
       Dmm.unqrySesionLin.Refresh;
     raise;

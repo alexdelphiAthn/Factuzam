@@ -516,32 +516,31 @@ var
 begin
   AEmpleado := Default(TEmpleadoCaja);
   sToken := Trim(ATexto);
-  if sToken = '' then
+  Result := sToken <> '';
+  if Result then
   begin
-    Result := False;
-    Exit;
-  end;
-  sToken := '%' + sToken + '%';
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := FConexion;
-    oConsulta.SQL.Text := ASql;
-    oConsulta.ParamByName('TOKEN').AsString := sToken;
-    oConsulta.Open;
-    ValidarCamposResultadoSql(
-      DefinicionBuscarEmpleado,
-      oConsulta);
-    Result := not oConsulta.IsEmpty;
-    if Result then
-    begin
-      AEmpleado.Codigo :=
-        oConsulta.FieldByName('CODIGO_EMPL').AsString;
-      AEmpleado.Nombre :=
-        oConsulta.FieldByName(
-          'DIMINUTIVO_TICKET_EMPL').AsString;
+    sToken := '%' + sToken + '%';
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := FConexion;
+      oConsulta.SQL.Text := ASql;
+      oConsulta.ParamByName('TOKEN').AsString := sToken;
+      oConsulta.Open;
+      ValidarCamposResultadoSql(
+        DefinicionBuscarEmpleado,
+        oConsulta);
+      Result := not oConsulta.IsEmpty;
+      if Result then
+      begin
+        AEmpleado.Codigo :=
+          oConsulta.FieldByName('CODIGO_EMPL').AsString;
+        AEmpleado.Nombre :=
+          oConsulta.FieldByName(
+            'DIMINUTIVO_TICKET_EMPL').AsString;
+      end;
+    finally
+      FreeAndNil(oConsulta);
     end;
-  finally
-    FreeAndNil(oConsulta);
   end;
 end;
 

@@ -9,5 +9,6 @@ __history/
 *.dsk
 *.local
 *.res
+!CXLOCALIZATION.res
 *.stat
 contazam.ini

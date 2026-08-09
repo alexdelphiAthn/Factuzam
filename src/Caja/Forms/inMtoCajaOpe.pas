@@ -572,7 +572,6 @@ implementation
 
 uses
   inLibGridCantidad,
-  inLibUser,
 
   inLibDevExp, inLibValoresAutomaticos,
   UniDataValoresAutomaticosRepositorio, inLibFacturas,
@@ -594,7 +593,7 @@ uses
   inMtoModalMotivoDevolucion,
   inMtoModalCambioIva,
   System.StrUtils,
-  inLibMsgCaja, inLibMsgVentas, inLibTraducciones;
+  inLibMsgCaja, inLibTraducciones;
 
 constructor TfrmMtoOpeCaja.Create(
   AOwner: TComponent;

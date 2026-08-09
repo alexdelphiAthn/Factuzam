@@ -75,7 +75,7 @@ uses
   UniDataValoresAutomaticosRepositorio,
 
   System.Diagnostics,
-  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,
+  inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}

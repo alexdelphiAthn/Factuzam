@@ -17,7 +17,7 @@ interface
 
 uses
   System.Classes, Vcl.Forms, Vcl.ExtCtrls, Uni, inLibConfiguracion,
-  inLibSeguridadIntf, inLibLogIntf;
+  cxLocalization, inLibSeguridadIntf, inLibLogIntf;
 
 type
   TfrmBase = class(TForm)
@@ -27,13 +27,17 @@ type
     FRegistroLog: IRegistroLogContazam;
     FSeguridad: IServicioSeguridadContazam;
     FTemporizadorBestFit: TTimer;
+    FLocalizadorDevExpress: TcxLocalizer;
     procedure AjustarGridsDiferido(Sender: TObject);
+    procedure ConfigurarLocalizacionDevExpress;
   protected
     property Conexion: TUniConnection read FConexion;
     property Configuracion: TConfiguracionContazam
       read FConfiguracion;
     property RegistroLog: IRegistroLogContazam read FRegistroLog;
     property Seguridad: IServicioSeguridadContazam read FSeguridad;
+    property LocalizadorDevExpress: TcxLocalizer
+      read FLocalizadorDevExpress;
     procedure ComprobarInicializacion;
     procedure DoShow; override;
   public
@@ -78,6 +82,15 @@ begin
   FSeguridad := ASeguridad;
 end;
 
+procedure TfrmBase.ConfigurarLocalizacionDevExpress;
+begin
+  FLocalizadorDevExpress.FileName := 'CXLOCALIZATION.res';
+  FLocalizadorDevExpress.StorageType := lstResource;
+  FLocalizadorDevExpress.Active := True;
+  FLocalizadorDevExpress.Locale := 1034;
+  FLocalizadorDevExpress.Translate;
+end;
+
 constructor TfrmBase.Create(AOwner: TComponent);
 begin
   inherited CreateNew(AOwner);
@@ -86,6 +99,9 @@ begin
   Font.Size := 10;
   KeyPreview := True;
   BorderIcons := [biSystemMenu, biMinimize, biMaximize];
+  FLocalizadorDevExpress := TcxLocalizer.Create(Self);
+  FLocalizadorDevExpress.Name := 'Localizer1';
+  ConfigurarLocalizacionDevExpress;
   FTemporizadorBestFit := TTimer.Create(Self);
   FTemporizadorBestFit.Enabled := False;
   FTemporizadorBestFit.Interval := 20;

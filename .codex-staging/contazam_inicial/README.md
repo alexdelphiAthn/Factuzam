@@ -19,7 +19,15 @@ separada de Factuzam y preparada para importar sus facturas sin duplicados.
 - Archivo documental PDF dentro de la BBDD, con SHA-256.
 - Bloqueo del cierre si falta el PDF de una referencia indicada.
 - Listados de balance, diario, mayor, borradores y archivo documental.
-- Exportación directa a `.xlsx` sin depender de Excel instalado.
+- Vista previa editable de `.xlsx` con Developer Express, sin depender de
+  Excel instalado.
+- Vista previa, impresión y diseñador de listados con FastReport.
+- Formatos de listado derivados guardados como BLOB en la BBDD, con versiones
+  y alcance por usuario, grupo, empresa o toda la instalación.
+- Literales de columnas configurables por idioma y con nombres sencillos.
+- Mantenimientos con pestañas Lista/Ficha y perfiles de ventana por usuario y
+  empresa. `Alt+F12` graba posición, tamaño y columnas; `Ctrl+F12` restablece
+  el diseño predeterminado.
 - Usuarios y grupos con permisos por recurso, acción y alcance.
 - Alcance `GLOBAL` o limitado a una empresa concreta.
 - Auditoría de consultas y exportaciones con usuario y grupo autorizador.
@@ -47,8 +55,10 @@ Las tablas usan el prefijo `cza_`, lo que permite alojarlas junto a tablas
 3. Copia `contazam.ini.example` como
    `%LOCALAPPDATA%\Contazam\contazam.ini`. Esa es la ubicación única de la
    configuración, con independencia de la carpeta del ejecutable.
-4. Configura servidor, puerto y usuario. La contraseña puede estar en la
-   variable `CONTAZAM_DB_PASSWORD` para no escribirla en disco.
+4. Configura servidor, puerto y usuario. La contraseña se guarda cifrada en
+   `PasswordEn`, con el mismo formato de Factuzam. Un `Password` antiguo se
+   migra automáticamente y se elimina tras comprobar el cifrado. También se
+   puede usar `CONTAZAM_DB_PASSWORD` para no escribirla en disco.
    `Aplicacion/Usuario` identifica al usuario funcional; si está vacío se usa
    el usuario de Windows.
 5. Abre `contazam.dproj` con Delphi 13 y compila para Win32.
@@ -72,6 +82,8 @@ representarlos como Base64 o hexadecimal sin alterar el documento restaurado.
   exclusivamente la base `contazam` y elimina su documento temporal.
 - Integración de listados: `tests/PruebaIntegracionListados.dpr` abre las cinco
   consultas contra `contazam`.
+- Integración FastReport: `tests/PruebaIntegracionListadosDerivados.dpr`
+  prepara una plantilla, la guarda en la BBDD y comprueba su versión y BLOB.
 - Integración de seguridad: `tests/PruebaIntegracionSeguridad.dpr` prueba los
   alcances global y de empresa, la denegación cruzada y la auditoría.
 - Esquema: ejecuta `sql/002_verificar_alexcontazam.sql`.

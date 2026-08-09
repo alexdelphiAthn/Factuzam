@@ -733,21 +733,22 @@ var
   Columna: TcxGridDBColumn;
   sTalla: string;
 begin
-  if (AButton <> mbLeft) or (FPivote = nil) or
-     (ACellViewInfo = nil) or
-     not (ACellViewInfo.Item is TcxGridDBColumn) then
-    Exit;
-  Columna := TcxGridDBColumn(ACellViewInfo.Item);
-  if TallaDeColumnaPivoteStock(
-       Columna.DataBinding.FieldName,
-       FPivote.Tallas,
-       sTalla) then
+  if (AButton = mbLeft) and (FPivote <> nil) and
+     (ACellViewInfo <> nil) and
+     (ACellViewInfo.Item is TcxGridDBColumn) then
   begin
-    // El primer clic ya enfoca la fila; fijamos tambien la columna para que
-    // el doble clic siga exactamente el mismo camino que el boton.
-    tvStock.Controller.FocusedColumn := Columna;
-    btnMovimientosClick(Sender);
-    AHandled := True;
+    Columna := TcxGridDBColumn(ACellViewInfo.Item);
+    if TallaDeColumnaPivoteStock(
+         Columna.DataBinding.FieldName,
+         FPivote.Tallas,
+         sTalla) then
+    begin
+      // El primer clic ya enfoca la fila; fijamos tambien la columna para que
+      // el doble clic siga exactamente el mismo camino que el boton.
+      tvStock.Controller.FocusedColumn := Columna;
+      btnMovimientosClick(Sender);
+      AHandled := True;
+    end;
   end;
 end;
 

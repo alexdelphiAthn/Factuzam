@@ -32,6 +32,23 @@ SELECT (SELECT COUNT(*) FROM cza_usuarios) AS USUARIOS,
        (SELECT COUNT(*) FROM cza_grupos_permisos) AS PERMISOS,
        (SELECT COUNT(*) FROM cza_auditoria_listados) AS USOS_LISTADOS;
 
+SELECT (SELECT COUNT(*) FROM cza_listados_derivados)
+         AS LISTADOS_DERIVADOS,
+       (SELECT COUNT(*) FROM cza_listados_derivados_versiones)
+         AS VERSIONES_LISTADOS;
+
+SELECT ID_LISDER,
+       RECURSO_BASE_LISDER,
+       NOMBRE_LISDER,
+       ALCANCE_LISDER,
+       CODIGO_EMP_LISDER,
+       CODIGO_GRU_LISDER,
+       CODIGO_USU_LISDER,
+       VERSION_LISDER,
+       OCTET_LENGTH(CONTENIDO_FR3_LISDER) AS BYTES_FR3
+FROM cza_listados_derivados
+ORDER BY RECURSO_BASE_LISDER, NOMBRE_LISDER;
+
 SELECT UG.*
 FROM cza_usuarios_grupos UG
 LEFT JOIN cza_usuarios U

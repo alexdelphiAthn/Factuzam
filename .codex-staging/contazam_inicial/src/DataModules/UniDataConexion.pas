@@ -35,6 +35,21 @@ implementation
 uses
   System.SysUtils, Data.DB;
 
+function OcultarContrasena(
+  const AMensaje: string;
+  const AContrasena: string): string;
+begin
+  Result := AMensaje;
+  if AContrasena <> '' then
+  begin
+    Result := StringReplace(
+      Result,
+      AContrasena,
+      '***',
+      [rfReplaceAll]);
+  end;
+end;
+
 constructor TdmConexion.Create(
   AOwner: TComponent;
   const AConfiguracion: TConfiguracionContazam);
@@ -64,7 +79,9 @@ begin
         [AConfiguracion.Servidor,
          AConfiguracion.Puerto,
          AConfiguracion.BaseDatos,
-         E.Message]);
+         OcultarContrasena(
+           E.Message,
+           AConfiguracion.Contrasena)]);
     end;
   end;
   FConexion.ExecSQL(

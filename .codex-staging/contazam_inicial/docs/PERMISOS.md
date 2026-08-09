@@ -36,9 +36,15 @@ usuarios, grupos y permisos usa además `SEGURIDAD/ADMINISTRAR`.
 | `LISTADO_BORRADORES` | Asientos pendientes y borradores |
 | `LISTADO_DOCUMENTOS` | Archivo y referencias sin PDF |
 
-Cada listado comprueba por separado las acciones `CONSULTAR` y `EXPORTAR`.
-Ambas quedan registradas en `cza_auditoria_listados`, junto con el grupo y el
-alcance que hicieron efectiva la autorización.
+Cada listado comprueba por separado las acciones `CONSULTAR`, `EXPORTAR` y
+`MODIFICAR`. Esta última permite abrir el diseñador y guardar una plantilla
+FastReport derivada. Las operaciones quedan registradas en
+`cza_auditoria_listados`, junto con el grupo y el alcance que hicieron efectiva
+la autorización.
+
+Los formatos derivados pueden ser privados del usuario, compartidos con uno
+de sus grupos, propios de la empresa o globales. Ese alcance controla quién
+puede seleccionar el formato; no sustituye el permiso del recurso contable.
 
 ## Ejemplos
 

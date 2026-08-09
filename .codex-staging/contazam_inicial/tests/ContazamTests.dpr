@@ -29,7 +29,15 @@ uses
   inLibLog in
     '..\src\Lib\inLibLog.pas',
   PruebasLog in
-    'PruebasLog.pas';
+    'PruebasLog.pas',
+  inLibLiteralesIntf in
+    '..\src\Lib\inLibLiteralesIntf.pas',
+  inLibLiterales in
+    '..\src\Lib\inLibLiterales.pas',
+  inLibLiteralesDataSet in
+    '..\src\Lib\inLibLiteralesDataSet.pas',
+  PruebasLiterales in
+    'PruebasLiterales.pas';
 
 var
   oEjecutor: ITestRunner;

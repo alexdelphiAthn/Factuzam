@@ -98,24 +98,25 @@ var
 begin
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
-  if not ProcedimientoDisponible(
+  if ProcedimientoDisponible(
     AConexion, 'PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO') then
-    Exit;
-  Procedimiento := TUniStoredProc.Create(nil);
-  try
-    Procedimiento.Connection := AConexion;
-    Procedimiento.StoredProcName :=
-      'PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO';
-    Procedimiento.Params.Clear;
-    Procedimiento.Params.CreateParam(ftString, 'p_TIPO', ptInput);
-    Procedimiento.Params.CreateParam(ftString, 'p_SERIE', ptInput);
-    Procedimiento.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
-    Procedimiento.ParamByName('p_TIPO').AsString := ATipo;
-    Procedimiento.ParamByName('p_SERIE').AsString := ASerie;
-    Procedimiento.ParamByName('p_NUMERO').AsString := ANumero;
-    Procedimiento.ExecProc;
-  finally
-    FreeAndNil(Procedimiento);
+  begin
+    Procedimiento := TUniStoredProc.Create(nil);
+    try
+      Procedimiento.Connection := AConexion;
+      Procedimiento.StoredProcName :=
+        'PRC_FZA_MOVIMIENTOS_RECALCULAR_DOCUMENTO';
+      Procedimiento.Params.Clear;
+      Procedimiento.Params.CreateParam(ftString, 'p_TIPO', ptInput);
+      Procedimiento.Params.CreateParam(ftString, 'p_SERIE', ptInput);
+      Procedimiento.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
+      Procedimiento.ParamByName('p_TIPO').AsString := ATipo;
+      Procedimiento.ParamByName('p_SERIE').AsString := ASerie;
+      Procedimiento.ParamByName('p_NUMERO').AsString := ANumero;
+      Procedimiento.ExecProc;
+    finally
+      FreeAndNil(Procedimiento);
+    end;
   end;
 end;
 
@@ -129,20 +130,21 @@ begin
     raise EArgumentNilException.Create('AConexion');
   if Trim(AOperacion) = '' then
     raise EArgumentException.Create('AOperacion');
-  if not ProcedimientoDisponible(
+  if ProcedimientoDisponible(
     AConexion, 'PRC_FZA_MOVIMIENTOS_RECALCULAR_OPERACION') then
-    Exit;
-  Procedimiento := TUniStoredProc.Create(nil);
-  try
-    Procedimiento.Connection := AConexion;
-    Procedimiento.StoredProcName :=
-      'PRC_FZA_MOVIMIENTOS_RECALCULAR_OPERACION';
-    Procedimiento.Params.Clear;
-    Procedimiento.Params.CreateParam(ftString, 'p_OPERACION', ptInput);
-    Procedimiento.ParamByName('p_OPERACION').AsString := AOperacion;
-    Procedimiento.ExecProc;
-  finally
-    FreeAndNil(Procedimiento);
+  begin
+    Procedimiento := TUniStoredProc.Create(nil);
+    try
+      Procedimiento.Connection := AConexion;
+      Procedimiento.StoredProcName :=
+        'PRC_FZA_MOVIMIENTOS_RECALCULAR_OPERACION';
+      Procedimiento.Params.Clear;
+      Procedimiento.Params.CreateParam(ftString, 'p_OPERACION', ptInput);
+      Procedimiento.ParamByName('p_OPERACION').AsString := AOperacion;
+      Procedimiento.ExecProc;
+    finally
+      FreeAndNil(Procedimiento);
+    end;
   end;
 end;
 
@@ -156,20 +158,21 @@ begin
     raise EArgumentNilException.Create('AConexion');
   if Trim(ANumeroMovimiento) = '' then
     raise EArgumentException.Create('ANumeroMovimiento');
-  if not ProcedimientoDisponible(
+  if ProcedimientoDisponible(
     AConexion, 'PRC_FZA_MOVIMIENTOS_RECALCULAR_MOVIMIENTO') then
-    Exit;
-  Procedimiento := TUniStoredProc.Create(nil);
-  try
-    Procedimiento.Connection := AConexion;
-    Procedimiento.StoredProcName :=
-      'PRC_FZA_MOVIMIENTOS_RECALCULAR_MOVIMIENTO';
-    Procedimiento.Params.Clear;
-    Procedimiento.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
-    Procedimiento.ParamByName('p_NUMERO').AsString := ANumeroMovimiento;
-    Procedimiento.ExecProc;
-  finally
-    FreeAndNil(Procedimiento);
+  begin
+    Procedimiento := TUniStoredProc.Create(nil);
+    try
+      Procedimiento.Connection := AConexion;
+      Procedimiento.StoredProcName :=
+        'PRC_FZA_MOVIMIENTOS_RECALCULAR_MOVIMIENTO';
+      Procedimiento.Params.Clear;
+      Procedimiento.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
+      Procedimiento.ParamByName('p_NUMERO').AsString := ANumeroMovimiento;
+      Procedimiento.ExecProc;
+    finally
+      FreeAndNil(Procedimiento);
+    end;
   end;
 end;
 

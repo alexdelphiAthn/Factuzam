@@ -29,6 +29,9 @@ type
     UsuarioAplicacion: string;
     RutaConfiguracion: string;
     class function Cargar: TConfiguracionContazam; static;
+    class function CargarDesdeRuta(
+      const ARuta: string;
+      const AContrasenaEntorno: string): TConfiguracionContazam; static;
   end;
 
 function EsIdentificadorMariaDBValido(
@@ -40,7 +43,12 @@ implementation
 
 uses
   System.SysUtils, System.IniFiles, System.DateUtils, System.IOUtils,
-  Vcl.Forms;
+  Vcl.Forms, inLibCifrado;
+
+const
+  SECCION_CONEXION = 'Conexion';
+  CLAVE_CONTRASENA = 'Password';
+  CLAVE_CONTRASENA_CIFRADA = 'PasswordEn';
 
 function EsIdentificadorMariaDBValido(
   const AIdentificador: string): Boolean;
@@ -75,33 +83,146 @@ begin
   Result := TPath.Combine(sDirectorio, 'contazam.ini');
 end;
 
+procedure ComprobarEscrituraCifrada(
+  const AIni: TIniFile;
+  const ACifrado: string;
+  const AContrasena: string);
+var
+  sGuardado: string;
+begin
+  sGuardado := AIni.ReadString(
+    SECCION_CONEXION,
+    CLAVE_CONTRASENA_CIFRADA,
+    '');
+  if (sGuardado <> ACifrado) or
+    not EsCifradoAESValido(sGuardado) or
+    (DescifrarAES(sGuardado) <> AContrasena) then
+  begin
+    raise EInOutError.Create(
+      'No se pudo proteger la contraseña de la base de datos en el INI.');
+  end;
+end;
+
+procedure EliminarContrasenaSinCifrar(
+  const AIni: TIniFile);
+begin
+  AIni.DeleteKey(SECCION_CONEXION, CLAVE_CONTRASENA);
+  AIni.UpdateFile;
+  if AIni.ValueExists(SECCION_CONEXION, CLAVE_CONTRASENA) then
+  begin
+    raise EInOutError.Create(
+      'No se pudo retirar la contraseña sin cifrar del INI.');
+  end;
+end;
+
+procedure MigrarContrasenaSinCifrar(
+  const AIni: TIniFile;
+  const AContrasena: string);
+var
+  sCifrado: string;
+begin
+  if AContrasena <> '' then
+  begin
+    sCifrado := CifrarAES(AContrasena);
+    AIni.WriteString(
+      SECCION_CONEXION,
+      CLAVE_CONTRASENA_CIFRADA,
+      sCifrado);
+    AIni.UpdateFile;
+    ComprobarEscrituraCifrada(AIni, sCifrado, AContrasena);
+  end;
+  EliminarContrasenaSinCifrar(AIni);
+end;
+
+function LeerContrasenaCifrada(
+  const AIni: TIniFile): string;
+var
+  sCifrado: string;
+begin
+  sCifrado := AIni.ReadString(
+    SECCION_CONEXION,
+    CLAVE_CONTRASENA_CIFRADA,
+    '');
+  if sCifrado = '' then
+  begin
+    Result := '';
+  end
+  else if EsCifradoAESValido(sCifrado) then
+  begin
+    Result := DescifrarAES(sCifrado);
+  end
+  else
+  begin
+    raise EConvertError.Create(
+      'La contraseña cifrada de la base de datos no es válida.');
+  end;
+end;
+
+function LeerContrasenaIni(
+  const AIni: TIniFile): string;
+var
+  sContrasenaSinCifrar: string;
+begin
+  if AIni.ValueExists(SECCION_CONEXION, CLAVE_CONTRASENA) then
+  begin
+    sContrasenaSinCifrar := AIni.ReadString(
+      SECCION_CONEXION,
+      CLAVE_CONTRASENA,
+      '');
+    if sContrasenaSinCifrar <> '' then
+    begin
+      MigrarContrasenaSinCifrar(AIni, sContrasenaSinCifrar);
+      Result := sContrasenaSinCifrar;
+    end
+    else
+    begin
+      EliminarContrasenaSinCifrar(AIni);
+      Result := LeerContrasenaCifrada(AIni);
+    end;
+  end
+  else
+  begin
+    Result := LeerContrasenaCifrada(AIni);
+  end;
+end;
+
 class function TConfiguracionContazam.Cargar: TConfiguracionContazam;
 var
-  oIni: TIniFile;
   sRuta: string;
 begin
-  Result := Default(TConfiguracionContazam);
   sRuta := ResolverRutaConfiguracion(
     GetEnvironmentVariable('LOCALAPPDATA'));
-  ForceDirectories(ExtractFileDir(sRuta));
-  if not FileExists(sRuta) then
+  Result := CargarDesdeRuta(
+    sRuta,
+    GetEnvironmentVariable('CONTAZAM_DB_PASSWORD'));
+end;
+
+class function TConfiguracionContazam.CargarDesdeRuta(
+  const ARuta: string;
+  const AContrasenaEntorno: string): TConfiguracionContazam;
+var
+  oIni: TIniFile;
+  sContrasenaIni: string;
+begin
+  Result := Default(TConfiguracionContazam);
+  ForceDirectories(ExtractFileDir(ARuta));
+  if not FileExists(ARuta) then
   begin
     raise EFileNotFoundException.CreateFmt(
       'No se encuentra la configuración de Contazam en %s.',
-      [sRuta]);
+      [ARuta]);
   end;
-  oIni := TIniFile.Create(sRuta);
+  oIni := TIniFile.Create(ARuta);
   try
     Result.Servidor := oIni.ReadString(
       'Conexion', 'Servidor', '127.0.0.1');
     Result.Puerto := oIni.ReadInteger('Conexion', 'Puerto', 3306);
     Result.Usuario := oIni.ReadString('Conexion', 'Usuario', 'root');
-    Result.Contrasena := GetEnvironmentVariable(
-      'CONTAZAM_DB_PASSWORD');
+    sContrasenaIni := LeerContrasenaIni(oIni);
+    Result.Contrasena := AContrasenaEntorno;
     if Result.Contrasena = '' then
     begin
-      Result.Contrasena := oIni.ReadString(
-        'Conexion', 'Password', '');
+      Result.Contrasena := sContrasenaIni;
     end;
     Result.BaseDatos := oIni.ReadString(
       'Conexion', 'BaseDatos', 'alexcontazam');
@@ -120,7 +241,7 @@ begin
     begin
       Result.UsuarioAplicacion := GetEnvironmentVariable('USERNAME');
     end;
-    Result.RutaConfiguracion := sRuta;
+    Result.RutaConfiguracion := ARuta;
   finally
     FreeAndNil(oIni);
   end;

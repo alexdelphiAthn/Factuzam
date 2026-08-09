@@ -593,7 +593,7 @@ implementation
 
 uses
   inLibWin,
-  inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas,
+  inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas,
   inLibImpuestosComun,
   inLibGenBusq,

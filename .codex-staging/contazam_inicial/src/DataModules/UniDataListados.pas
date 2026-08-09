@@ -16,19 +16,21 @@ unit UniDataListados;
 interface
 
 uses
-  System.Classes, Data.DB, Uni, UniDataGen, inLibListadosTipos;
+  System.Classes, Data.DB, Uni, UniDataGen, inLibListadosTipos,
+  inLibLiteralesIntf;
 
 type
   TdmListados = class(TdmBase)
   private
     FEmpresa: string;
     FEjercicio: Integer;
+    FLiterales: IServicioLiterales;
     procedure ConfigurarBalance;
     procedure ConfigurarBorradores;
     procedure ConfigurarDiario;
     procedure ConfigurarDocumentos;
     procedure ConfigurarMayor;
-    procedure ConfigurarEtiquetas;
+    procedure ConfigurarEtiquetas(ATipo: TTipoListadoContable);
     procedure PrepararParametros(
       AFechaDesde: TDate;
       AFechaHasta: TDate;
@@ -49,7 +51,8 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibLiterales, inLibLiteralesDataSet,
+  UniDataLiterales;
 
 constructor TdmListados.Create(
   AOwner: TComponent;
@@ -60,6 +63,9 @@ begin
   inherited Create(AOwner, AConexion, False);
   FEmpresa := AEmpresa;
   FEjercicio := AEjercicio;
+  FLiterales := CrearServicioLiterales(
+    CrearRepositorioLiterales(AConexion),
+    IDIOMA_CONTAZAM_POR_DEFECTO);
 end;
 
 procedure TdmListados.ConfigurarBalance;
@@ -157,17 +163,17 @@ begin
     'ORDER BY FECHA, REFERENCIA');
 end;
 
-procedure TdmListados.ConfigurarEtiquetas;
+procedure TdmListados.ConfigurarEtiquetas(
+  ATipo: TTipoListadoContable);
 var
   oCampo: TField;
 begin
+  AplicarEtiquetasLiterales(
+    DataSet,
+    RecursoListado(ATipo),
+    FLiterales);
   for oCampo in DataSet.Fields do
   begin
-    oCampo.DisplayLabel := StringReplace(
-      oCampo.FieldName,
-      '_',
-      ' ',
-      [rfReplaceAll]);
     if oCampo.DataType in [ftFloat, ftCurrency, ftBCD, ftFMTBcd] then
     begin
       TNumericField(oCampo).DisplayFormat := '#,##0.00;[Red]-#,##0.00';
@@ -214,7 +220,7 @@ begin
   end;
   PrepararParametros(AFechaDesde, AFechaHasta, ACuenta);
   DataSet.Open;
-  ConfigurarEtiquetas;
+  ConfigurarEtiquetas(ATipo);
 end;
 
 procedure TdmListados.PrepararParametros(

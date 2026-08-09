@@ -237,14 +237,14 @@ begin
   sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
   sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
   if (sSerie = '') or (sNumero = '') then
-  begin
-    ShowMessage(SAvisoMovimientoSinDocumento);
-    Exit;
-  end;
-  if AInvertirClave then
-    ShowMto(Self.Owner, ACall, sNumero + ',' + sSerie)
+    ShowMessage(SAvisoMovimientoSinDocumento)
   else
-    ShowMto(Self.Owner, ACall, sSerie + ',' + sNumero);
+  begin
+    if AInvertirClave then
+      ShowMto(Self.Owner, ACall, sNumero + ',' + sSerie)
+    else
+      ShowMto(Self.Owner, ACall, sSerie + ',' + sNumero);
+  end;
 end;
 
 procedure TfrmMtoMovimientosAlmacen.btnIrDocumentoClick(Sender: TObject);
@@ -257,45 +257,44 @@ begin
   inherited;
   sTipo := UpperCase(ValorCampoMovimiento('TIPO_DOC_MOV'));
   if sTipo = '' then
-  begin
-    ShowMessage(SAvisoMovimientoSinDocumento);
-    Exit;
-  end;
-
-  if EsTipoOperacionCaja(sTipo) then
-    AbrirOperacionCajaMovimiento
-  else if sTipo = 'PE' then
-    AbrirDocumentoSerieNumero('Pedidos')
-  else if sTipo = 'AV' then
-    AbrirDocumentoSerieNumero('Albaranes')
-  else if sTipo = 'FC' then
-  begin
-    sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
-    sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
-    if (sSerie = '') or (sNumero = '') then
-      ShowMessage(SAvisoMovimientoSinDocumento)
-    else
-    begin
-      sCallFactura := ResolverCallFactura(
-        CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
-        sNumero, sSerie);
-      ShowMto(Self.Owner, sCallFactura, sNumero + ',' + sSerie);
-    end;
-  end
-  else if sTipo = 'PC' then
-    AbrirDocumentoSerieNumero('PedidosCompra')
-  else if (sTipo = 'AC') or (sTipo = 'AB') or (sTipo = 'AE') then
-    AbrirDocumentoSerieNumero('AlbaranesCompra')
-  else if sTipo = 'FP' then
-    AbrirDocumentoSerieNumero('FacturasCompra')
-  else if sTipo = 'DC' then
-    AbrirDocumentoSerieNumero('DevolucionesCompra')
-  else if sTipo = 'IN' then
-    AbrirDocumentoSerieNumero('Inventarios')
-  else if sTipo = 'SE' then
-    AbrirDocumentoSerieNumero('ComprasSesiones')
+    ShowMessage(SAvisoMovimientoSinDocumento)
   else
-    ShowMessageFmt(SAvisoTipoDocumentoMovimientoNoSoportado, [sTipo]);
+  begin
+    if EsTipoOperacionCaja(sTipo) then
+      AbrirOperacionCajaMovimiento
+    else if sTipo = 'PE' then
+      AbrirDocumentoSerieNumero('Pedidos')
+    else if sTipo = 'AV' then
+      AbrirDocumentoSerieNumero('Albaranes')
+    else if sTipo = 'FC' then
+    begin
+      sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
+      sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
+      if (sSerie = '') or (sNumero = '') then
+        ShowMessage(SAvisoMovimientoSinDocumento)
+      else
+      begin
+        sCallFactura := ResolverCallFactura(
+          CrearResolutorDestinoFacturaUniDAC(ConexionPrincipal),
+          sNumero, sSerie);
+        ShowMto(Self.Owner, sCallFactura, sNumero + ',' + sSerie);
+      end;
+    end
+    else if sTipo = 'PC' then
+      AbrirDocumentoSerieNumero('PedidosCompra')
+    else if (sTipo = 'AC') or (sTipo = 'AB') or (sTipo = 'AE') then
+      AbrirDocumentoSerieNumero('AlbaranesCompra')
+    else if sTipo = 'FP' then
+      AbrirDocumentoSerieNumero('FacturasCompra')
+    else if sTipo = 'DC' then
+      AbrirDocumentoSerieNumero('DevolucionesCompra')
+    else if sTipo = 'IN' then
+      AbrirDocumentoSerieNumero('Inventarios')
+    else if sTipo = 'SE' then
+      AbrirDocumentoSerieNumero('ComprasSesiones')
+    else
+      ShowMessageFmt(SAvisoTipoDocumentoMovimientoNoSoportado, [sTipo]);
+  end;
 end;
 
 procedure TfrmMtoMovimientosAlmacen.CrearTablaPrincipal;

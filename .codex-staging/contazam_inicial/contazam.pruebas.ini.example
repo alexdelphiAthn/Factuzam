@@ -2,7 +2,7 @@
 Servidor=127.0.0.1
 Puerto=3306
 Usuario=root
-Password=
+PasswordEn=
 BaseDatos=contazam
 BaseDatosFactuzam=factuzam
 

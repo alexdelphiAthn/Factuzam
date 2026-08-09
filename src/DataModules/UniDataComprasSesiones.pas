@@ -19,6 +19,7 @@ interface
 
 uses
   inLibRegistroPantallas,
+  inLibComprasSesionesMaterializacionIntf,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   frxClass, frxDBSet,
   inLibUser, frCoreClasses;
@@ -163,6 +164,7 @@ type
     FPermitirLineasSinCodigoArticulo: Boolean;
     FProximaLineaImportacion: Integer;
     FUltimaLineaImportacion: Integer;
+    FUnidadTrabajoImportacionOcr: IUnidadTrabajoMaterializacion;
     FTallajeDefectoActual: Integer;
                         // Sistema de tallas (ID_AC) que se propone a la
                         // siguiente linea NUEVA de la sesion. Arranca en 0
@@ -193,6 +195,9 @@ type
     procedure IniciarImportacionMasiva(APrimeraLinea,
       ACantidadLineas: Integer);
     procedure FinalizarImportacionMasiva;
+    procedure IniciarUnidadTrabajoImportacionOcr;
+    procedure ConfirmarUnidadTrabajoImportacionOcr;
+    procedure RevertirUnidadTrabajoImportacionOcr;
     procedure AsegurarSerieEnEmpresasSeries(const AEmpresa, ASerie: string);
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
     procedure ChequearDuplicado(const ACodigoArt: string;
@@ -226,7 +231,8 @@ uses
   UniDataContadorLineasRepositorio,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibData, UniDataAlmacenesEmpresaRepositorio,
-  inLibMsgCompras;
+  inLibMsgCompras,
+  UniDataComprasSesionesUnidadTrabajo;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -237,6 +243,43 @@ begin
   Result := unqryTablaG.Connection;
   if not Assigned(Result) then
     Result := ConexionPrincipal;
+end;
+
+procedure TdmComprasSesiones.IniciarUnidadTrabajoImportacionOcr;
+begin
+  if Assigned(FUnidadTrabajoImportacionOcr) then
+    raise EInvalidOpException.Create(
+      'La importación OCR ya tiene una unidad de trabajo activa');
+  FUnidadTrabajoImportacionOcr :=
+    TUnidadTrabajoMaterializacionUniDAC.Create(
+      ConexionDatos);
+  try
+    FUnidadTrabajoImportacionOcr.Iniciar;
+  except
+    FUnidadTrabajoImportacionOcr := nil;
+    raise;
+  end;
+end;
+
+procedure TdmComprasSesiones.ConfirmarUnidadTrabajoImportacionOcr;
+begin
+  if not Assigned(FUnidadTrabajoImportacionOcr) then
+    raise EInvalidOpException.Create(
+      'La importación OCR no tiene una unidad de trabajo activa');
+  FUnidadTrabajoImportacionOcr.Confirmar;
+  FUnidadTrabajoImportacionOcr := nil;
+end;
+
+procedure TdmComprasSesiones.RevertirUnidadTrabajoImportacionOcr;
+begin
+  if Assigned(FUnidadTrabajoImportacionOcr) then
+  begin
+    try
+      FUnidadTrabajoImportacionOcr.Revertir;
+    finally
+      FUnidadTrabajoImportacionOcr := nil;
+    end;
+  end;
 end;
 
 procedure TdmComprasSesiones.IniciarImportacionMasiva(

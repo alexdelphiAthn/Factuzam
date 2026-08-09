@@ -1,5 +1,7 @@
 ﻿program contazam;
 
+{$R 'CXLOCALIZATION.res'}
+
 uses
   Vcl.Forms,
   System.SysUtils,
@@ -15,10 +17,16 @@ uses
     'src\Lib\inLibGridDevExpress.pas',
   inLibSeguridadIntf in 'src\Lib\inLibSeguridadIntf.pas',
   inLibListadosTipos in 'src\Lib\inLibListadosTipos.pas',
+  inLibListadosDerivadosIntf in
+    'src\Lib\inLibListadosDerivadosIntf.pas',
+  inLibListadoFastReport in
+    'src\Lib\inLibListadoFastReport.pas',
   inLibExportadorXlsx in 'src\Lib\inLibExportadorXlsx.pas',
   inLibContabilidadTipos in 'src\Lib\inLibContabilidadTipos.pas',
   inLibValidacionAsientos in 'src\Lib\inLibValidacionAsientos.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas',
+  inMtoPreviewExcelContazam in
+    'src\Core\inMtoPreviewExcelContazam.pas',
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas',
   inMtoGen in 'src\Forms\inMtoGen.pas',
   inMtoEmpresas in 'src\Forms\inMtoEmpresas.pas',
@@ -31,6 +39,8 @@ uses
   inMtoArchivoDocumental in 'src\Forms\inMtoArchivoDocumental.pas',
   inMtoListados in 'src\Forms\inMtoListados.pas',
   inMtoSeguridad in 'src\Forms\inMtoSeguridad.pas',
+  inMtoModalGuardarListado in
+    'src\Modals\inMtoModalGuardarListado.pas',
   UniDataConexion in 'src\DataModules\UniDataConexion.pas',
   UniDataGen in 'src\DataModules\UniDataGen.pas',
   UniDataEmpresas in 'src\DataModules\UniDataEmpresas.pas',
@@ -47,6 +57,8 @@ uses
   UniDataArchivoDocumental in
     'src\DataModules\UniDataArchivoDocumental.pas',
   UniDataListados in 'src\DataModules\UniDataListados.pas',
+  UniDataListadosDerivados in
+    'src\DataModules\UniDataListadosDerivados.pas',
   UniDataSeguridad in 'src\DataModules\UniDataSeguridad.pas',
   UniDataSeguridadMantenimiento in
     'src\DataModules\UniDataSeguridadMantenimiento.pas';
