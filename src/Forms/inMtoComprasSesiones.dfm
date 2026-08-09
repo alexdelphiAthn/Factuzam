@@ -1991,7 +1991,7 @@
           Left = 770
           Top = 36
           Anchors = [akTop, akRight]
-          Caption = ' Foto provisional de la l'#237'nea '
+          Caption = ' Foto de la l'#237'nea '
           TabOrder = 3
           Height = 250
           Width = 310

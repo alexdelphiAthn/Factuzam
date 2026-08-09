@@ -384,25 +384,25 @@ begin
       sCodigoUnidad := aOrigen[iFoto].CodigoUnidad;
       sNombreOrigen := aOrigen[iFoto].Nombre;
       sExtension := aOrigen[iFoto].Extension;
-      sClave := FAlmacenamiento.ClaveNombre(
-        ACodigoArticulo, sCodigoUnidad);
-      iIndice := 1;
       if FRepositorioEdicion.BuscarFotoEditable(
         ACodigoArticulo, sCodigoUnidad, oDestino) then
-        iIndice := FAlmacenamiento.ExtraerIndice(
-          oDestino.Nombre) + 1;
-      if iIndice < 1 then
+        FAlmacenamiento.BorrarCopias(sNombreOrigen)
+      else
+      begin
+        sClave := FAlmacenamiento.ClaveNombre(
+          ACodigoArticulo, sCodigoUnidad);
         iIndice := 1;
-      sNombreNuevo := FAlmacenamiento.ComponerNombre(
-        sClave, iIndice);
-      FAlmacenamiento.RenombrarCopias(
-        sNombreOrigen, sNombreNuevo);
-      FRepositorioSesion.GuardarFotoMigrada(
-        ACodigoArticulo,
-        sCodigoUnidad,
-        sNombreNuevo,
-        sExtension,
-        AUsuario);
+        sNombreNuevo := FAlmacenamiento.ComponerNombre(
+          sClave, iIndice);
+        FAlmacenamiento.RenombrarCopias(
+          sNombreOrigen, sNombreNuevo);
+        FRepositorioSesion.GuardarFotoMigrada(
+          ACodigoArticulo,
+          sCodigoUnidad,
+          sNombreNuevo,
+          sExtension,
+          AUsuario);
+      end;
     end;
     FRepositorioSesion.EliminarFotosSesionLinea(
       ASerieSesion, ANumeroSesion, ALinea);

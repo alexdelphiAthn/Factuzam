@@ -103,6 +103,7 @@ type
     FLineaSesion            : Integer;
     FCodigoArtTentativoSesion: string;
     FCodigoUnidadSesion     : string;
+    FFotoDefinitivaSesion   : Boolean;
     procedure CargarFotoActual;
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
@@ -454,6 +455,7 @@ end;
 procedure TfrmFotoArticulo.SetArticuloSku(const ACodArt, ACodSku: string);
 begin
   FModoSesion := False;
+  FFotoDefinitivaSesion := False;
   FPadreResolverSesion := nil;
   FAlCambiarFotoSesion := nil;
   FSerieSesion := '';
@@ -497,7 +499,10 @@ end;
 procedure TfrmFotoArticulo.PrepararControlesSesion(AExpandir: Boolean);
 begin
   btnDescargarNube.Visible := False;
-  btnCambiarArt.Caption := 'Cambiar foto de la &línea';
+  if FFotoDefinitivaSesion then
+    btnCambiarArt.Caption := 'Cambiar foto del &artículo'
+  else
+    btnCambiarArt.Caption := 'Cambiar foto de la &línea';
   btnCambiarSku.Visible := False;
   lblNivel.Visible := False;
   cbbNivelSku.Visible := False;
@@ -524,12 +529,21 @@ begin
   FCodigoUnidadSesion := ACodUnidad;
   FCodigoArt := ACodArtTentativo;
   FCodigoSku := ACodUnidad;
+  FUltimaInfo.Clear;
+  if ACodArtTentativo <> '' then
+    FUltimaInfo := FotosArticulos.Resolver(
+      ACodArtTentativo, ACodUnidad);
+  FFotoDefinitivaSesion := FUltimaInfo.Encontrada;
+  if not FFotoDefinitivaSesion then
+    FUltimaInfo := FotosArticulos.ResolverSesion(
+      ASerieSesion, ANumeroSesion, ALinea, ACodUnidad);
   // Solo se despliegan al entrar inicialmente en el modo sesión. Las
   // resincronizaciones posteriores deben respetar la elección del usuario.
   PrepararControlesSesion(bEntrandoModoSesion);
-  FUltimaInfo := FotosArticulos.ResolverSesion(
-    ASerieSesion, ANumeroSesion, ALinea, ACodUnidad);
-  if FUltimaInfo.Encontrada then
+  if FFotoDefinitivaSesion then
+    lblOrigen.Caption := Format(
+      SCaptionFotoHeredadaArticulo, [ACodArtTentativo])
+  else if FUltimaInfo.Encontrada then
     lblOrigen.Caption := Format(
       SCaptionLineaFotoDetalle,
       [ALinea, ACodArtTentativo, SCaptionDestinoArticulo])
@@ -718,7 +732,13 @@ begin
   begin
     bGuardada := True;
     try
-      if FModoSesion then
+      if FModoSesion and FFotoDefinitivaSesion then
+        FotosArticulos.Guardar(
+          FCodigoArtTentativoSesion,
+          FUltimaInfo.ClaveResuelta,
+          dlgAbrirFoto.FileName,
+          IdentidadSesion.Usuario)
+      else if FModoSesion then
         FotosArticulos.GuardarSesion(
           FSerieSesion,
           FNumeroSesion,
@@ -800,7 +820,20 @@ begin
      (MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
       [mbYes, mbNo], 0) = mrYes) then
   begin
-    if FModoSesion then
+    if FModoSesion and FFotoDefinitivaSesion then
+    begin
+      FotosArticulos.Eliminar(
+        FCodigoArtTentativoSesion,
+        FUltimaInfo.ClaveResuelta);
+      SetSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FCodigoArtTentativoSesion,
+        FCodigoUnidadSesion);
+      NotificarCambioFotoSesion;
+    end
+    else if FModoSesion then
     begin
       FotosArticulos.EliminarSesion(
         FSerieSesion,
@@ -830,7 +863,22 @@ begin
     ShowMessage(SErrorLineaSesionSinCodigoArticulo)
   else if FUltimaInfo.Encontrada then
   begin
-    if FModoSesion then
+    if FModoSesion and FFotoDefinitivaSesion then
+    begin
+      FotosArticulos.Rotar(
+        FCodigoArtTentativoSesion,
+        FUltimaInfo.ClaveResuelta,
+        False,
+        IdentidadSesion.Usuario);
+      SetSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FCodigoArtTentativoSesion,
+        FCodigoUnidadSesion);
+      NotificarCambioFotoSesion;
+    end
+    else if FModoSesion then
     begin
       FotosArticulos.RotarSesion(
         FSerieSesion,
@@ -866,7 +914,22 @@ begin
     ShowMessage(SErrorLineaSesionSinCodigoArticulo)
   else if FUltimaInfo.Encontrada then
   begin
-    if FModoSesion then
+    if FModoSesion and FFotoDefinitivaSesion then
+    begin
+      FotosArticulos.Rotar(
+        FCodigoArtTentativoSesion,
+        FUltimaInfo.ClaveResuelta,
+        True,
+        IdentidadSesion.Usuario);
+      SetSesion(
+        FSerieSesion,
+        FNumeroSesion,
+        FLineaSesion,
+        FCodigoArtTentativoSesion,
+        FCodigoUnidadSesion);
+      NotificarCambioFotoSesion;
+    end
+    else if FModoSesion then
     begin
       FotosArticulos.RotarSesion(
         FSerieSesion,

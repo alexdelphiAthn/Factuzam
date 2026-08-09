@@ -1012,6 +1012,7 @@ var
   iLinea   : Integer;
   info     : TFotoInfo;
   png      : TPngImage;
+  bDefinitiva: Boolean;
 begin
   imgFotoProvisional.Picture.Assign(nil);
   lblFotoProvisionalAsignacion.Caption :=
@@ -1021,11 +1022,17 @@ begin
   if (sSerie <> '') and (sNumero <> '') and (iLinea > 0) and
      Assigned(FotosArticulos) then
   begin
-    info := FotosArticulos.ResolverSesion(
-      sSerie,
-      sNumero,
-      iLinea,
-      sUnidad);
+    info.Clear;
+    bDefinitiva := sCodArt <> '';
+    if bDefinitiva then
+      info := FotosArticulos.Resolver(sCodArt, sUnidad);
+    bDefinitiva := info.Encontrada;
+    if not bDefinitiva then
+      info := FotosArticulos.ResolverSesion(
+        sSerie,
+        sNumero,
+        iLinea,
+        sUnidad);
     if info.Encontrada then
     begin
       sRuta := FotosArticulos.RutaFoto(info, frPx300);
@@ -2605,7 +2612,8 @@ begin
   // articulo padre — CODIGO_UNIDAD = ''). Ctrl+F + frmFotoArticulo
   // muestra la foto estandar del articulo de la linea (si existe en
   // fza_articulos_fotos). Al materializar, MigrarFotosSesion pasa esta
-  // foto de sesion a fza_articulos_fotos.
+  // foto de sesion a fza_articulos_fotos solo cuando el articulo aun no
+  // tiene una foto definitiva para esa clave.
   if Dmm.unqryTablaG.IsEmpty then
     ShowMessage(SErrorSesionCompraNoActiva)
   else if Dmm.unqrySesionLin.IsEmpty then
