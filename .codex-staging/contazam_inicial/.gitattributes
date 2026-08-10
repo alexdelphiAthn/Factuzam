@@ -1,7 +1,0 @@
-* text=auto
-*.pas text eol=crlf
-*.dpr text eol=crlf
-*.dproj text eol=crlf
-*.sql text eol=crlf
-*.ps1 text eol=crlf
-*.pdf binary
