@@ -1491,6 +1491,7 @@
         <DCCReference Include="src\Modals\inMtoModalSelFamilia.pas">
             <Form>frmModalSelFamilia</Form>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibFotosSesionPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibFotosPersistenciaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibFotosTipos.pas"/>
         <DCCReference Include="src\Lib\inLibFotosConsulta.pas"/>
@@ -1566,6 +1567,7 @@
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionBusquedas.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionColumnas.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionEntrada.pas"/>
+        <DCCReference Include="src\Forms\inMtoGenPresentacionFiltrosVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoStockConsultaPresentacionArticuloVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoStockConsultaPresentacionComposicion.pas"/>
         <DCCReference Include="src\Forms\inMtoStockConsultaPresentacionFiltrosVcl.pas"/>

@@ -87,27 +87,12 @@ type
     function Rotar(const ACodArt, ACodSku: string;
       AHorario: Boolean; const AUsuario: string): TFotoInfo;
     procedure Eliminar(const ACodArt, ACodUnidad: string);
-    function GuardarSesion(const ASerieSes, ANumeroSes: string;
-      ALinea: Integer; const ACodArtTentativo, ACodUnidad,
-      AFicheroOrigen, AUsuario: string): TFotoInfo;
-    procedure GuardarSesionesNuevasLote(const ASerieSes,
-      ANumeroSes: string;
-      const ASolicitudes: TSolicitudesFotosSesion;
-      const AUsuario: string);
-    function ResolverSesion(const ASerieSes, ANumeroSes: string;
-      ALinea: Integer; const ACodUnidad: string = ''): TFotoInfo;
-    function RotarSesion(const ASerieSes, ANumeroSes: string;
-      ALinea: Integer; const ACodUnidad: string;
-      AHorario: Boolean; const AUsuario: string): TFotoInfo;
-    procedure EliminarSesion(const ASerieSes, ANumeroSes: string;
-      ALinea: Integer; const ACodUnidad: string);
-    procedure MigrarFotosSesion(const ASerieSes, ANumeroSes: string;
-      ALinea: Integer; const ACodigoArt, AUsuario: string);
     procedure HandlerReportBeforePrint(
       Component: TfrxReportComponent);
     procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
       out ACodArt, ACodSku: string); override;
     property Conexion: TUniConnection read FConexion;
+    property Sesion: TSesionFotos read FSesion;
     property Validador: IArticulosValidador read FValidador;
   end;
 
@@ -225,65 +210,6 @@ procedure TFotosArticulos.Eliminar(const ACodArt,
   ACodUnidad: string);
 begin
   FEdicion.Eliminar(ACodArt, ACodUnidad);
-end;
-
-function TFotosArticulos.GuardarSesion(const ASerieSes,
-  ANumeroSes: string; ALinea: Integer;
-  const ACodArtTentativo, ACodUnidad, AFicheroOrigen,
-  AUsuario: string): TFotoInfo;
-begin
-  Result := FSesion.Guardar(ASerieSes, ANumeroSes, ALinea,
-    ACodArtTentativo, ACodUnidad, AFicheroOrigen, AUsuario);
-end;
-
-procedure TFotosArticulos.GuardarSesionesNuevasLote(
-  const ASerieSes, ANumeroSes: string;
-  const ASolicitudes: TSolicitudesFotosSesion;
-  const AUsuario: string);
-begin
-  FSesion.GuardarNuevasLote(
-    ASerieSes,
-    ANumeroSes,
-    ASolicitudes,
-    AUsuario);
-end;
-
-function TFotosArticulos.ResolverSesion(const ASerieSes,
-  ANumeroSes: string; ALinea: Integer;
-  const ACodUnidad: string): TFotoInfo;
-begin
-  Result := FSesion.Resolver(
-    ASerieSes, ANumeroSes, ALinea, ACodUnidad);
-end;
-
-function TFotosArticulos.RotarSesion(const ASerieSes,
-  ANumeroSes: string; ALinea: Integer;
-  const ACodUnidad: string; AHorario: Boolean;
-  const AUsuario: string): TFotoInfo;
-begin
-  Result := FSesion.Rotar(
-    ASerieSes,
-    ANumeroSes,
-    ALinea,
-    ACodUnidad,
-    AHorario,
-    AUsuario);
-end;
-
-procedure TFotosArticulos.EliminarSesion(const ASerieSes,
-  ANumeroSes: string; ALinea: Integer;
-  const ACodUnidad: string);
-begin
-  FSesion.Eliminar(
-    ASerieSes, ANumeroSes, ALinea, ACodUnidad);
-end;
-
-procedure TFotosArticulos.MigrarFotosSesion(const ASerieSes,
-  ANumeroSes: string; ALinea: Integer;
-  const ACodigoArt, AUsuario: string);
-begin
-  FSesion.Migrar(
-    ASerieSes, ANumeroSes, ALinea, ACodigoArt, AUsuario);
 end;
 
 procedure TFotosArticulos.HandlerReportBeforePrint(

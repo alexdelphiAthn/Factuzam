@@ -765,7 +765,7 @@ begin
       const ASolicitudes: TSolicitudesFotosSesion;
       const AUsuario: string)
     begin
-      FotosArticulos.GuardarSesionesNuevasLote(
+      FotosArticulos.Sesion.GuardarNuevasLote(
         ASerie,
         ANumero,
         ASolicitudes,

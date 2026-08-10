@@ -1220,6 +1220,8 @@ uses
   inMtoModalImportarPedidosPS in 'src\Modals\inMtoModalImportarPedidosPS.pas' {frmModalImportarPedidosPS},
   inLibPrestaImporter in 'src\Lib\inLibPrestaImporter.pas',
   inMtoModalSelFamilia in 'src\Modals\inMtoModalSelFamilia.pas' {frmModalSelFamilia},
+  inLibFotosSesionPersistenciaIntf in
+    'src\Lib\inLibFotosSesionPersistenciaIntf.pas',
   inLibFotosPersistenciaIntf in
     'src\Lib\inLibFotosPersistenciaIntf.pas',
   inLibFotosTipos in 'src\Lib\inLibFotosTipos.pas',
@@ -1313,6 +1315,8 @@ uses
     'src\Forms\inMtoInventariosPresentacionColumnas.pas',
   inMtoInventariosPresentacionEntrada in
     'src\Forms\inMtoInventariosPresentacionEntrada.pas',
+  inMtoGenPresentacionFiltrosVcl in
+    'src\Forms\inMtoGenPresentacionFiltrosVcl.pas',
   inMtoStockConsultaPresentacionArticuloVcl in
     'src\Forms\inMtoStockConsultaPresentacionArticuloVcl.pas',
   inMtoStockConsultaPresentacionComposicion in

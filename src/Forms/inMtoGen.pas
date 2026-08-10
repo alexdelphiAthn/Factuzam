@@ -57,7 +57,8 @@ uses
   inLibGestorFiltrosMto, inLibGestorPerfilesMto,
   inLibGestorGuiasGridMto, inLibGestorTareasMto,
   inLibGestorArticulosMto, inLibInteraccionDatosIntf,
-  inLibMtoGenAplicacionIntf;
+  inLibMtoGenAplicacionIntf,
+  inMtoGenPresentacionFiltrosVcl;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
@@ -181,6 +182,7 @@ type
     FGestorGuias: TGestorGuiasGridMto;
     FGestorTareas: TGestorTareasMto;
     FGestorArticulos: TGestorArticulosMto;
+    FInteraccionFiltros: TInteraccionFiltrosMtoVcl;
     procedure InicializarMantenimiento;
     procedure AjustarBarraLateral;
     procedure ConfigurarModoBusqueda;
@@ -193,10 +195,6 @@ type
       const ADescripcion: string;
       ADescripcionEditable: Boolean;
       out APermisos: string): Boolean;
-    function SolicitarDatosFiltro: TDatosGuardadoFiltroMto;
-    function EjecutarGestionFiltros(
-      const AFiltroActualBase64: string
-    ): TResultadoGestionFiltroMto;
     procedure MoverRegistroGridFiltrado(AAvanzar: Boolean);
     procedure NavegadorButtonClick(Sender: TObject;
                                    AButtonIndex: Integer;
@@ -287,8 +285,6 @@ uses inLibData,
      inLibShowMto,
 
      inMtoModalGenImpSave,
-     inMtoModalGuardarFiltro,
-     inMtoModalGestionFiltros,
      UniDataGen, uGenericIfThen,
      UniDataGuiasGridRepositorio,
      UniDataPerfilesMtoRepositorio,
@@ -1275,6 +1271,7 @@ begin
   oPerfilDic := nil;
   FreeAndNil(FGestorPerfiles);
   FreeAndNil(FGestorFiltros);
+  FreeAndNil(FInteraccionFiltros);
   FreeAndNil(FGestorGuias);
   if bTareasVivas then
   begin
@@ -1403,11 +1400,17 @@ begin
     ConfiguracionCampos, RegistroLog,
     SolicitarDestinoPerfil, RecogerPerfilesParticulares,
     ResetearGridPerfil, FGestorGuias.BorrarGuias);
+  FInteraccionFiltros := TInteraccionFiltrosMtoVcl.Create(
+    Self.Owner,
+    Self.Name,
+    cxGrdDBTabPrin.Name,
+    cxGrdDBTabPrin,
+    FiltrosDestinos);
   FGestorFiltros := TGestorFiltrosMto.Create(
     Self, cxGrdDBTabPrin, edtBusqGlobal, tmrBusqGlobal,
     pmFiltros, FiltrosLectura, FiltrosEscritura,
-    SolicitarDatosFiltro,
-    EjecutarGestionFiltros);
+    FInteraccionFiltros.SolicitarDatosFiltro,
+    FInteraccionFiltros.EjecutarGestionFiltros);
   btnCargarCaptions.Enabled := False;
   Self.HandleNeeded; //da problemas
   nvNavegador.Buttons.OnButtonClick := NavegadorButtonClick;
@@ -2072,31 +2075,6 @@ end;
 procedure TfrmMtoGen.sbFiltrosClick(Sender: TObject);
 begin
   FGestorFiltros.MostrarMenu(sbFiltros);
-end;
-
-function TfrmMtoGen.SolicitarDatosFiltro:
-  TDatosGuardadoFiltroMto;
-var
-  oResultado: TGuardarFiltroResult;
-begin
-  oResultado := TfrmModalGuardarFiltro.Ejecutar(Self);
-  Result.Aceptado := oResultado.Aceptado;
-  Result.Nombre := oResultado.Nombre;
-  Result.Descripcion := oResultado.Descripcion;
-end;
-
-function TfrmMtoGen.EjecutarGestionFiltros(
-  const AFiltroActualBase64: string):
-  TResultadoGestionFiltroMto;
-var
-  oResultado: TGestionFiltrosResult;
-begin
-  oResultado := TfrmModalGestionFiltros.Ejecutar(
-    Self, Self.Name, cxGrdDBTabPrin.Name,
-    cxGrdDBTabPrin, AFiltroActualBase64,
-    FiltrosDestinos);
-  Result.Aplicado := oResultado.Aplicado;
-  Result.FiltroBase64 := oResultado.FiltroBase64;
 end;
 
 initialization

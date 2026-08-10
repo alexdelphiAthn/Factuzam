@@ -16,7 +16,8 @@ unit inLibFotosSesion;
 interface
 
 uses
-  inLibFotosPersistenciaIntf, inLibFotosTipos,
+  inLibFotosPersistenciaIntf,
+  inLibFotosSesionPersistenciaIntf, inLibFotosTipos,
   inLibFotosAlmacenamiento;
 
 type

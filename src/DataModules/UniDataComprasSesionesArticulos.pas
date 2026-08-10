@@ -880,7 +880,7 @@ begin
     end;
     if Assigned(AFotos) then
     begin
-      AFotos.MigrarFotosSesion(
+      AFotos.Sesion.Migrar(
         sSerieSesion,
         sNumeroSesion,
         iLin,

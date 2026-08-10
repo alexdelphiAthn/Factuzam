@@ -16,7 +16,8 @@ unit inLibFotosPersistenciaIntf;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  inLibFotosSesionPersistenciaIntf;
 
 type
   TMetadatosFotoPersistida = record
@@ -25,20 +26,6 @@ type
     Nombre: string;
     Extension: string;
   end;
-  TMetadatosFotoSesion = record
-    CodigoArticuloTentativo: string;
-    CodigoUnidad: string;
-    Nombre: string;
-    Extension: string;
-  end;
-  TMetadatosFotoSesionLote = record
-    Linea: Integer;
-    CodigoArticuloTentativo: string;
-    CodigoUnidad: string;
-    Nombre: string;
-    Extension: string;
-  end;
-  TMetadatosFotosSesionLote = TArray<TMetadatosFotoSesionLote>;
   IRepositorioConsultaFotos = interface
     ['{B7EF7B91-B01C-4B36-8D89-121B2E2628AF}']
     function BuscarFotoPorUnidades(
@@ -69,36 +56,6 @@ type
       const ACodigoArticulo, ACodigoUnidad: string): string;
     procedure EliminarFoto(
       const ACodigoArticulo, ACodigoUnidad: string);
-  end;
-  IRepositorioSesionFotos = interface
-    ['{9639253C-FB16-4B89-AE95-9B90C33DA476}']
-    function BuscarFotoSesion(
-      const ASerieSesion, ANumeroSesion: string;
-      ALinea: Integer;
-      const ACodigoUnidad: string;
-      out AMetadatos: TMetadatosFotoSesion): Boolean;
-    procedure GuardarFotoSesion(
-      const ASerieSesion, ANumeroSesion: string;
-      ALinea: Integer;
-      const ACodigoUnidad, ACodigoArticuloTentativo, ANombre,
-        AExtension, AUsuario: string);
-    procedure GuardarFotosSesionLote(
-      const ASerieSesion, ANumeroSesion: string;
-      const AMetadatos: TMetadatosFotosSesionLote;
-      const AUsuario: string);
-    procedure EliminarFotoSesion(
-      const ASerieSesion, ANumeroSesion: string;
-      ALinea: Integer;
-      const ACodigoUnidad: string);
-    function BuscarFotosSesionLinea(
-      const ASerieSesion, ANumeroSesion: string;
-      ALinea: Integer): TArray<TMetadatosFotoSesion>;
-    procedure GuardarFotoMigrada(
-      const ACodigoArticulo, ACodigoUnidad, ANombre, AExtension,
-        AUsuario: string);
-    procedure EliminarFotosSesionLinea(
-      const ASerieSesion, ANumeroSesion: string;
-      ALinea: Integer);
   end;
   TRepositoriosFotos = record
     Consulta: IRepositorioConsultaFotos;

@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoComprasSesionesPresentacionFotos                         }
 {    Tipo:       Presentacion                                                  }
@@ -360,7 +360,7 @@ begin
   Definitiva := Info.Encontrada;
   if not Definitiva then
   begin
-    Info := FEntorno.Fotos.ResolverSesion(
+    Info := FEntorno.Fotos.Sesion.Resolver(
       ASeleccion.Serie,
       ASeleccion.Numero,
       ASeleccion.Linea,
@@ -556,7 +556,7 @@ begin
     if FEntorno.DialogoFoto.Execute then
     begin
       try
-        Info := FEntorno.Fotos.GuardarSesion(
+        Info := FEntorno.Fotos.Sesion.Guardar(
           Seleccion.Serie,
           Seleccion.Numero,
           Seleccion.Linea,
@@ -631,7 +631,7 @@ begin
         Fichero := ElegirFotoRepresentativa(Archivos);
         if Fichero <> '' then
         begin
-          FEntorno.Fotos.GuardarSesion(
+          FEntorno.Fotos.Sesion.Guardar(
             Seleccion.Serie,
             Seleccion.Numero,
             Seleccion.Linea,

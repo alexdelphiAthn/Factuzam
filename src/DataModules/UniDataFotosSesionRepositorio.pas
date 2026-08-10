@@ -16,7 +16,7 @@ unit UniDataFotosSesionRepositorio;
 interface
 
 uses
-  Uni, inLibFotosPersistenciaIntf;
+  Uni, inLibFotosSesionPersistenciaIntf;
 
 function CrearRepositorioSesionFotosUniDAC(
   AConexion: TUniConnection): IRepositorioSesionFotos;

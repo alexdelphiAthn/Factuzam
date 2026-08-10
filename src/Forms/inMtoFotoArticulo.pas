@@ -535,7 +535,7 @@ begin
       ACodArtTentativo, ACodUnidad);
   FFotoDefinitivaSesion := FUltimaInfo.Encontrada;
   if not FFotoDefinitivaSesion then
-    FUltimaInfo := FotosArticulos.ResolverSesion(
+    FUltimaInfo := FotosArticulos.Sesion.Resolver(
       ASerieSesion, ANumeroSesion, ALinea, ACodUnidad);
   // Solo se despliegan al entrar inicialmente en el modo sesión. Las
   // resincronizaciones posteriores deben respetar la elección del usuario.
@@ -739,7 +739,7 @@ begin
           dlgAbrirFoto.FileName,
           IdentidadSesion.Usuario)
       else if FModoSesion then
-        FotosArticulos.GuardarSesion(
+        FotosArticulos.Sesion.Guardar(
           FSerieSesion,
           FNumeroSesion,
           FLineaSesion,
@@ -835,7 +835,7 @@ begin
     end
     else if FModoSesion then
     begin
-      FotosArticulos.EliminarSesion(
+      FotosArticulos.Sesion.Eliminar(
         FSerieSesion,
         FNumeroSesion,
         FLineaSesion,
@@ -880,7 +880,7 @@ begin
     end
     else if FModoSesion then
     begin
-      FotosArticulos.RotarSesion(
+      FotosArticulos.Sesion.Rotar(
         FSerieSesion,
         FNumeroSesion,
         FLineaSesion,
@@ -931,7 +931,7 @@ begin
     end
     else if FModoSesion then
     begin
-      FotosArticulos.RotarSesion(
+      FotosArticulos.Sesion.Rotar(
         FSerieSesion,
         FNumeroSesion,
         FLineaSesion,
