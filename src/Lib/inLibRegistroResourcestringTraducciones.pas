@@ -871,54 +871,6 @@ begin
       SInfoSkusColorActualizados);
   ARegistrar(
     'inLibMsgArticulos.' +
-    'SErrorLineaSesionDescargarFotosNoSeleccionada',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorLineaSesionDescargarFotosNoSeleccionada);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorLineaSesionSinCodigoArticulo',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorLineaSesionSinCodigoArticulo);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorDescargarFotosArticulo',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorDescargarFotosArticulo);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SInfoFotosArticuloDescargadas',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SInfoFotosArticuloDescargadas);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorLineaSesionAsignarFotoNoSeleccionada',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorLineaSesionAsignarFotoNoSeleccionada);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SInfoFotoLineaSesionAsignada',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SInfoFotoLineaSesionAsignada);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorAsignarFotoSesion',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorAsignarFotoSesion);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorGuardarFotoSesion',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorGuardarFotoSesion);
-  ARegistrar(
-    'inLibMsgArticulos.' +
     'SErrorLineaSesionAsignarFamiliaNoSeleccionada',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -4841,6 +4793,54 @@ begin
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.
       SCaptionDestinoSku);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorLineaSesionDescargarFotosNoSeleccionada',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorLineaSesionDescargarFotosNoSeleccionada);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorLineaSesionSinCodigoArticulo',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorLineaSesionSinCodigoArticulo);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorDescargarFotosArticulo',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorDescargarFotosArticulo);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoFotosArticuloDescargadas',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoFotosArticuloDescargadas);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorLineaSesionAsignarFotoNoSeleccionada',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorLineaSesionAsignarFotoNoSeleccionada);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoFotoLineaSesionAsignada',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoFotoLineaSesionAsignada);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorAsignarFotoSesion',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorAsignarFotoSesion);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorGuardarFotoSesion',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorGuardarFotoSesion);
   ARegistrar(
     'inLibMsgCompras.' +
     'SCaptionModeloCompra',

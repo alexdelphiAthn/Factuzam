@@ -379,7 +379,6 @@
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
                   TabOrder = 4
-                  OnClick = btnFotoClick
                 end
                 object btnArbolFamilias: TcxButton
                   Left = 586
@@ -399,7 +398,6 @@
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
                   TabOrder = 6
-                  OnClick = btnDescargarFotosClick
                 end
                 object btnAplicarKit: TcxButton
                   Left = 848
@@ -938,7 +936,6 @@
                   LookAndFeel.Kind = lfFlat
                   LookAndFeel.NativeStyle = False
                   TabOrder = 0
-                  OnClick = btnIrADocClick
                 end
                 object lblDocsInfo: TcxLabel
                   Left = 224
@@ -959,7 +956,6 @@
                 TabOrder = 1
                 ExplicitHeight = 331
                 object tvDocs: TcxGridDBTableView
-                  OnDblClick = tvDocsDblClick
                   OptionsCustomize.ColumnHiding = True
                   OptionsData.Deleting = False
                   OptionsData.DeletingConfirmation = False
@@ -1273,7 +1269,6 @@
                     LookAndFeel.Kind = lfFlat
                     LookAndFeel.NativeStyle = False
                     TabOrder = 30
-                    OnClick = btnIrProveedorClick
                   end
                 end
               end
@@ -1508,7 +1503,6 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.CharCase = ecUpperCase
                 Properties.MaxLength = 12
-                Properties.OnInitPopup = cbbSeriePropertiesInitPopup
                 TabOrder = 1
                 Width = 70
               end
@@ -2137,7 +2131,6 @@
       LookAndFeel.NativeStyle = False
       TabOrder = 5
       WordWrap = True
-      OnClick = btnIrADocClick
     end
   end
   inherited Localizer1: TcxLocalizer
@@ -2180,22 +2173,18 @@
     object actIrArticulos: TAction
       Caption = 'Ir a Art'#237'culos'
       ShortCut = 16449
-      OnExecute = actIrArticulosExecute
     end
     object actIrAlbaranesCompra: TAction
       Caption = 'Ir a Albaranes de Compra'
       ShortCut = 24641
-      OnExecute = actIrAlbaranesCompraExecute
     end
     object actIrPedidosCompra: TAction
       Caption = 'Ir a Pedidos de Compra'
       ShortCut = 24656
-      OnExecute = actIrPedidosCompraExecute
     end
     object actIrProveedor: TAction
       Caption = 'Ir a Proveedor'
       ShortCut = 16464
-      OnExecute = actIrProveedorExecute
     end
   end
   object dsPrvFicha: TDataSource

@@ -42,6 +42,8 @@
 {      - TCoordinadorCopiaLineasSesion   "Otro color" / "Otro precio" y la     }
 {        copia diferida al repetir un modelo.                                  }
 {      - TCoordinadorProveedorSesion  ficha, defectos, kits y color basico.    }
+{      - TCoordinadorFotosProvisionalesSesion  fotos de lineas y visor.        }
+{      - TCoordinadorNavegacionComprasSesion  maestros y documentos.          }
 {      - TCoordinadorImportacionPedidoOcr  valida, importa y archiva pedidos.  }
 {      - TVisorPedidoOriginalSesion  navegacion, zoom y arrastre del TIFF.     }
 {      - IAplicacionMaterializacionCompraSesion  orquesta la materializacion.  }
@@ -88,8 +90,10 @@ uses
   inLibComprasSesionesInyeccion,
   inLibPermisosIntf,
   inMtoComprasSesionesPresentacionCopiaLineas,
+  inMtoComprasSesionesPresentacionFotos,
   inMtoComprasSesionesPresentacionImportacionOcr,
   inMtoComprasSesionesPresentacionModelo,
+  inMtoComprasSesionesPresentacionNavegacion,
   inMtoComprasSesionesPresentacionPedidoOriginal,
   inMtoComprasSesionesPresentacionProveedor,
   inMtoComprasSesionesPresentacionTallas,
@@ -386,21 +390,10 @@ type
     procedure btnDelLineaClick(Sender: TObject);
     procedure btnNuevoColorClick(Sender: TObject);
     procedure btnOtroPrecioClick(Sender: TObject);
-    procedure btnFotoClick(Sender: TObject);
     procedure btnArbolFamiliasClick(Sender: TObject);
     procedure btnCrearClick(Sender: TObject);
     procedure btnRevertirClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
-    procedure btnLogClearClick(Sender: TObject);
-    procedure btnLogCopyClick(Sender: TObject);
-    procedure btnIrADocClick(Sender: TObject);
-    procedure tvDocsDblClick(Sender: TObject);
-    procedure cbbSeriePropertiesInitPopup(Sender: TObject);
-    procedure actIrArticulosExecute(Sender: TObject);
-    procedure actIrAlbaranesCompraExecute(Sender: TObject);
-    procedure actIrPedidosCompraExecute(Sender: TObject);
-    procedure actIrProveedorExecute(Sender: TObject);
-    procedure btnDescargarFotosClick(Sender: TObject);
     procedure tvLineasEditKeyDown(
                 Sender: TcxCustomGridTableView;
                 AItem: TcxCustomGridTableItem;
@@ -430,7 +423,6 @@ type
     procedure btnAplicarKitClick(Sender: TObject);
     procedure btnAplicarKitCabClick(Sender: TObject);
     procedure btnAplicarKitProvClick(Sender: TObject);
-    procedure btnIrProveedorClick(Sender: TObject);
     procedure tvPrvKitsDblClick(Sender: TObject);
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
@@ -448,11 +440,6 @@ type
     procedure btnGrabarClick(Sender: TObject);
     procedure cxPageControl1Change(Sender: TObject);
     procedure cxPageControl2Change(Sender: TObject);
-    procedure tvFotosProvisionalesFocusedRecordChanged(
-                Sender: TcxCustomGridTableView;
-                APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
-                ANewItemRecordFocusingChanged: Boolean);
-    procedure dsSesionFotosDataChange(Sender: TObject; Field: TField);
     procedure btnImportarPedidoClick(Sender: TObject);
   private
     Dmm: TdmComprasSesiones;
@@ -468,10 +455,11 @@ type
     FModeloPrv: TBuscadorModeloProveedorSesion;
     FCopiaLineas: TCoordinadorCopiaLineasSesion;
     FProveedor: TCoordinadorProveedorSesion;
+    FFotos: TCoordinadorFotosProvisionalesSesion;
+    FNavegacion: TCoordinadorNavegacionComprasSesion;
     FImportadorOcr: TCoordinadorImportacionPedidoOcr;
     FVisorPedidoOriginal: TVisorPedidoOriginalSesion;
     FAplicandoColorOcr: Boolean;
-    FSplitterFotoProvisional: TcxSplitter;
     FRecargaTallasPendiente: Boolean;
     function  GestorTallas: TGestorGridTallas;
     procedure RecargarTallasVisibles;
@@ -488,15 +476,6 @@ type
     procedure EnlazarListasCabecera;
     procedure EnlazarDetalleSesion;
     procedure EnlazarPestanaProveedor;
-    procedure RefrescarFotoProvisional;
-    procedure RefrescarFotosProvisionales;
-    procedure ConfigurarFotoProvisionalCabecera;
-    procedure ResolverFotoSesionActiva(
-      out ASerieSesion, ANumeroSesion: string;
-      out ALinea: Integer; out ACodArtTentativo,
-      ACodUnidad: string);
-    procedure actFotoSesionExecute(Sender: TObject);
-    procedure FotoSesionModificada(Sender: TObject);
     procedure LogSes(const ATexto: string);
     procedure RefrescarVisibilidadTipoIva;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
@@ -514,7 +493,6 @@ type
     procedure unqrySesionLinBeforeDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinAfterDeleteHook(DataSet: TDataSet);
     procedure unqrySesionLinRecargarTallasHook(DataSet: TDataSet);
-    procedure LogMsg(const S: string);
     function DirectorioFotosAplicacion: string;
     procedure ImportarPedidoOcr(const AFicheroJson: string);
     procedure WMRecargarTallasSesion(var AMensaje: TMessage);
@@ -542,18 +520,13 @@ type
 implementation
 
 uses
-  inLibGlobalVar,
   inLibUser,
   inLibFiltroUsuario,
   inLibGenBusq,
   inLibShowMto,
-  Vcl.Clipbrd,
   inLibFotos,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inMtoModalImpSesion,
-  inLibFotosNube,
-  inMtoFotoArticulo,
-  Vcl.Imaging.pngimage,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inLibContextoSesionIntf,
@@ -688,8 +661,62 @@ end;
 // tallas (ya creado antes del inherited).
 procedure TfrmMtoComprasSesiones.CrearColaboradores;
 var
+  EntornoFotos: TEntornoFotosProvisionalesSesion;
   EntornoImportacion: TEntornoImportacionPedidoOcr;
+  EntornoNavegacion: TEntornoNavegacionComprasSesion;
+  ConexionSeries: TUniConnection;
 begin
+  FreeAndNil(FFotos);
+  EntornoFotos := Default(TEntornoFotosProvisionalesSesion);
+  EntornoFotos.Propietario := Self;
+  EntornoFotos.AccionFoto := actFotoArticulo;
+  EntornoFotos.BotonAsignar := btnFoto;
+  EntornoFotos.BotonDescargar := btnDescargarFotos;
+  EntornoFotos.DialogoFoto := dlgFoto;
+  EntornoFotos.GrupoCabecera := gbCabecera;
+  EntornoFotos.GrupoFoto := gbFotoProvisional;
+  EntornoFotos.Imagen := imgFotoProvisional;
+  EntornoFotos.Etiqueta := lblFotoProvisionalAsignacion;
+  EntornoFotos.PaginasFicha := cxPageControl1;
+  EntornoFotos.PaginaPedidoOriginal := tsPedidoOriginal;
+  EntornoFotos.PaginasDetalle := cxPageControl2;
+  EntornoFotos.PaginaFotos := tsFotosProvisionales;
+  EntornoFotos.VistaFotos := tvFotosProvisionales;
+  EntornoFotos.FuenteCabecera := dsTablaG;
+  EntornoFotos.FuenteLineas := Dmm.dsSesionLin;
+  EntornoFotos.FuenteFotos := Dmm.dsSesionFotos;
+  EntornoFotos.Parametros := ParametrosApp;
+  EntornoFotos.Fotos := FotosArticulos;
+  EntornoFotos.Usuario := IdentidadSesion.Usuario;
+  FFotos := TCoordinadorFotosProvisionalesSesion.Create(
+    EntornoFotos);
+  FreeAndNil(FNavegacion);
+  ConexionSeries := ConexionPrincipal;
+  EntornoNavegacion := TEntornoNavegacionComprasSesion.Crear(
+    Self.Owner,
+    actIrArticulos,
+    actIrAlbaranesCompra,
+    actIrPedidosCompra,
+    actIrProveedor,
+    btnIrADoc,
+    btnIrPedAlb,
+    btnIrProveedor,
+    tvDocs,
+    cbbSerie,
+    Dmm.unqrySesDocs,
+    Dmm.unqrySesionLin,
+    Dmm.unqryTablaG,
+    UbicacionSesion.Empresa,
+    procedure(const AEmpresa: string; AItems: TStrings)
+    begin
+      CargarSeriesEmpresa(
+        ConexionSeries,
+        AEmpresa,
+        'SE',
+        AItems);
+    end);
+  FNavegacion := TCoordinadorNavegacionComprasSesion.Create(
+    EntornoNavegacion);
   CrearColaboradorMaterializacion;
   CrearColaboradorCopiaLineas;
   CrearColaboradorModelo;
@@ -772,7 +799,8 @@ begin
   EntornoMaterializacion.RefrescarFotos :=
     procedure
     begin
-      RefrescarFotosProvisionales;
+      if FFotos <> nil then
+        FFotos.RefrescarLista;
     end;
   FAplicacionMaterializacion :=
     CrearAplicacionMaterializacionCompraSesionVcl(EntornoMaterializacion);
@@ -913,22 +941,6 @@ end;
 procedure TfrmMtoComprasSesiones.cxgrdLineasExit(Sender: TObject);
 begin
   inherited;
-
-//  bPopupAbierto := False;
-//  if (tvLineas.Controller.EditingController <> nil) and
-//     (tvLineas.Controller.EditingController.Edit <> nil) and
-// (tvLineas.Controller.EditingController.Edit is TcxCustomDropDownEdit) then
-//  begin
-// bPopupAbierto := TcxCustomDropDownEdit(
-//   tvLineas.Controller.EditingController.Edit).DroppedDown;
-//  end;
-//
-//  // Si salimos del grid porque se ha abierto el popup del combo de tallas,
-// // NO reactivamos el EnterAsTab. Así permitimos que el Enter nativo llegue al
-// combo
-//  // para confirmar la selección.
-//  if not bPopupAbierto then
-//    inLibGridTallasInline.ActivarEnterComoTab(Self, True);
 end;
 
 procedure TfrmMtoComprasSesiones.btnGrabarClick(Sender: TObject);
@@ -969,45 +981,6 @@ begin
   end;
 end;
 
-procedure TfrmMtoComprasSesiones.ResolverFotoSesionActiva(
-  out ASerieSesion, ANumeroSesion: string;
-  out ALinea: Integer; out ACodArtTentativo,
-  ACodUnidad: string);
-begin
-  ASerieSesion := '';
-  ANumeroSesion := '';
-  ALinea := 0;
-  ACodArtTentativo := '';
-  ACodUnidad := '';
-  if (Dmm <> nil) and Dmm.unqryTablaG.Active and
-     not Dmm.unqryTablaG.IsEmpty then
-  begin
-    ASerieSesion := Dmm.unqryTablaG.FieldByName(
-      'SERIE_SES').AsString;
-    ANumeroSesion := Dmm.unqryTablaG.FieldByName(
-      'NUMERO_SES').AsString;
-    if (cxPageControl2.ActivePage = tsFotosProvisionales) and
-       Dmm.unqrySesionFotos.Active and
-       not Dmm.unqrySesionFotos.IsEmpty then
-    begin
-      ALinea := Dmm.unqrySesionFotos.FieldByName(
-        'LINEA_CSF').AsInteger;
-      ACodArtTentativo := Dmm.unqrySesionFotos.FieldByName(
-        'CODIGO_ART_TENTATIVO_CSF').AsString;
-      ACodUnidad := Dmm.unqrySesionFotos.FieldByName(
-        'CODIGO_UNIDAD_CSF').AsString;
-    end
-    else if Dmm.unqrySesionLin.Active and
-            not Dmm.unqrySesionLin.IsEmpty then
-    begin
-      ALinea := Dmm.unqrySesionLin.FieldByName(
-        'LINEA_SESLIN').AsInteger;
-      ACodArtTentativo := Dmm.unqrySesionLin.FieldByName(
-        'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-    end;
-  end;
-end;
-
 // Ademas de dsTablaG (cabecera de sesion) enganchamos dsSesionLin para
 // que la foto flotante refresque al moverse entre lineas.
 function TfrmMtoComprasSesiones.DataSourcesParaFoto: TArray<TDataSource>;
@@ -1016,142 +989,6 @@ begin
     Result := [dsTablaG, dmm.dsSesionLin]
   else
     Result := [dsTablaG];
-end;
-
-procedure TfrmMtoComprasSesiones.RefrescarFotoProvisional;
-var
-  sSerie   : string;
-  sNumero  : string;
-  sCodArt  : string;
-  sUnidad  : string;
-  sDestino : string;
-  sRuta    : string;
-  iLinea   : Integer;
-  info     : TFotoInfo;
-  png      : TPngImage;
-  bDefinitiva: Boolean;
-begin
-  imgFotoProvisional.Picture.Assign(nil);
-  lblFotoProvisionalAsignacion.Caption :=
-    SCaptionSeleccioneLineaSesion;
-  ResolverFotoSesionActiva(
-    sSerie, sNumero, iLinea, sCodArt, sUnidad);
-  if (sSerie <> '') and (sNumero <> '') and (iLinea > 0) and
-     Assigned(FotosArticulos) then
-  begin
-    info.Clear;
-    bDefinitiva := sCodArt <> '';
-    if bDefinitiva then
-      info := FotosArticulos.Resolver(sCodArt, sUnidad);
-    bDefinitiva := info.Encontrada;
-    if not bDefinitiva then
-      info := FotosArticulos.ResolverSesion(
-        sSerie,
-        sNumero,
-        iLinea,
-        sUnidad);
-    if info.Encontrada then
-    begin
-      sRuta := FotosArticulos.RutaFoto(info, frPx300);
-      if sUnidad = '' then
-        sDestino := SCaptionDestinoArticulo
-      else
-        sDestino := Format(SCaptionDestinoSku, [sUnidad]);
-      lblFotoProvisionalAsignacion.Caption := Format(
-        SCaptionLineaFotoDetalle,
-        [iLinea, sCodArt, sDestino]);
-      if sRuta <> '' then
-      begin
-        png := TPngImage.Create;
-        try
-          png.LoadFromFile(sRuta);
-          imgFotoProvisional.Picture.Assign(png);
-        finally
-          FreeAndNil(png);
-        end;
-      end;
-    end
-    else
-      lblFotoProvisionalAsignacion.Caption := Format(
-        SCaptionLineaSinFotoProvisional,
-        [iLinea]);
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.RefrescarFotosProvisionales;
-begin
-  if (Dmm <> nil) and Assigned(Dmm.unqrySesionFotos) then
-  begin
-    if Dmm.unqrySesionFotos.Active then
-      Dmm.unqrySesionFotos.Refresh
-    else
-      Dmm.unqrySesionFotos.Open;
-  end;
-  RefrescarFotoProvisional;
-end;
-
-procedure TfrmMtoComprasSesiones.ConfigurarFotoProvisionalCabecera;
-begin
-  gbFotoProvisional.Parent := cxTabSheet2;
-  gbCabecera.Align := alClient;
-  gbFotoProvisional.Align := alRight;
-  gbFotoProvisional.Width := 220;
-  gbFotoProvisional.Constraints.MinWidth := 160;
-  gbFotoProvisional.Constraints.MaxWidth := 320;
-  lblFotoProvisionalAsignacion.Align := alBottom;
-  lblFotoProvisionalAsignacion.Height := 34;
-  imgFotoProvisional.Align := alClient;
-  FSplitterFotoProvisional := TcxSplitter.Create(Self);
-  FSplitterFotoProvisional.Parent := cxTabSheet2;
-  FSplitterFotoProvisional.Width := 8;
-  FSplitterFotoProvisional.AlignSplitter := salRight;
-  FSplitterFotoProvisional.Control := gbFotoProvisional;
-end;
-
-procedure TfrmMtoComprasSesiones.actFotoSesionExecute(Sender: TObject);
-var
-  sSerie   : string;
-  sNumero  : string;
-  sCodArt  : string;
-  sUnidad  : string;
-  iLinea   : Integer;
-  Formulario: TfrmFotoArticulo;
-begin
-  ResolverFotoSesionActiva(
-    sSerie, sNumero, iLinea, sCodArt, sUnidad);
-  if (sSerie = '') or (sNumero = '') then
-    ShowMessage(SErrorSesionCompraNoActiva)
-  else if iLinea <= 0 then
-    ShowMessage(SErrorLineaSesionAsignarFotoNoSeleccionada)
-  else
-  begin
-    Formulario := FotoFlotanteActual;
-    if (Formulario <> nil) and Formulario.Visible and
-       Formulario.CoincideSesion(
-         sSerie, sNumero, iLinea, sUnidad) then
-      Formulario.Hide
-    else
-    begin
-      MostrarFotoSesionFlotante(
-        Self,
-        sSerie,
-        sNumero,
-        iLinea,
-        sCodArt,
-        sUnidad);
-      Formulario := FotoFlotanteActual;
-      if Formulario <> nil then
-        Formulario.VincularSesion(
-          DataSourcesParaFoto,
-          ResolverFotoSesionActiva,
-          FotoSesionModificada);
-    end;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.FotoSesionModificada(Sender: TObject);
-begin
-  RefrescarFotosProvisionales;
 end;
 
 function TfrmMtoComprasSesiones.DirectorioFotosAplicacion: string;
@@ -1170,7 +1007,8 @@ begin
   Dmm.unqrySesionLin.Refresh;
   Dmm.RefrescarTotalesSesion;
   ReconstruirTallas;
-  RefrescarFotosProvisionales;
+  if FFotos <> nil then
+    FFotos.RefrescarLista;
   FVisorPedidoOriginal.Cargar;
   Resultado.Paginas := FVisorPedidoOriginal.CantidadPaginas;
   cxPageControl1.ActivePage := tsPedidoOriginal;
@@ -1266,7 +1104,8 @@ end;
 
 procedure TfrmMtoComprasSesiones.cxPageControl2Change(Sender: TObject);
 begin
-  RefrescarFotoProvisional;
+  if FFotos <> nil then
+    FFotos.ActualizarPaginaDetalle;
   if cxPageControl2.ActivePage = cxTabSheet1 then
   begin
     // Las tallas son columnas no-bound. Al volver a Lineas se publican
@@ -1278,8 +1117,8 @@ end;
 
 procedure TfrmMtoComprasSesiones.cxPageControl1Change(Sender: TObject);
 begin
-  gbFotoProvisional.Visible :=
-    cxPageControl1.ActivePage <> tsPedidoOriginal;
+  if FFotos <> nil then
+    FFotos.ActualizarPaginaFicha;
   if cxPageControl1.ActivePage = tsPedidoOriginal then
   begin
     FVisorPedidoOriginal.CargarSiVacio;
@@ -1288,27 +1127,10 @@ begin
   end
   else
   begin
-    RefrescarFotoProvisional;
     // Cancelar una linea puede reconstruir el DataController mientras se
     // consulta el documento. Al volver se restauran los Values[] de tallas.
     RecargarTallasDiferido;
   end;
-end;
-
-procedure TfrmMtoComprasSesiones.tvFotosProvisionalesFocusedRecordChanged(
-  Sender: TcxCustomGridTableView;
-  APrevFocusedRecord, AFocusedRecord: TcxCustomGridRecord;
-  ANewItemRecordFocusingChanged: Boolean);
-begin
-  RefrescarFotoProvisional;
-end;
-
-procedure TfrmMtoComprasSesiones.dsSesionFotosDataChange(
-  Sender: TObject;
-  Field: TField);
-begin
-  if Field = nil then
-    RefrescarFotoProvisional;
 end;
 
 function TfrmMtoComprasSesiones.SqlRestriccionUsuario: string;
@@ -1395,7 +1217,6 @@ begin
   Dmm.dsSesionLin.OnDataChange := dsSesionLinDataChangeHook;
   tvDocs.DataController.DataSource := Dmm.dsSesDocs;
   tvFotosProvisionales.DataController.DataSource := Dmm.dsSesionFotos;
-  Dmm.dsSesionFotos.OnDataChange := dsSesionFotosDataChange;
   // Las lineas son una hoja de edicion: al teclear en Modelo prov. la
   // tecla debe entrar al editor/lookup, no a la navegacion incremental.
   tvLineas.OptionsBehavior.AlwaysShowEditor := True;
@@ -1422,7 +1243,8 @@ begin
   FProveedor.ActualizarRotuloProveedor;
   FProveedor.RecargarProveedorSesion;
   RefrescarVisibilidadTipoIva;
-  RefrescarFotoProvisional;
+  if FFotos <> nil then
+    FFotos.Refrescar;
 end;
 
 procedure TfrmMtoComprasSesiones.dsTablaGDataChangeHook(Sender: TObject;
@@ -1482,7 +1304,8 @@ begin
   if Field = nil then
   begin
     RefrescarVisibilidadTipoIva;
-    RefrescarFotoProvisional;
+    if FFotos <> nil then
+      FFotos.Refrescar;
     FVisorPedidoOriginal.Cargar;
     ReconstruirTallas;
   end;
@@ -1705,11 +1528,8 @@ begin
   CrearColaboradorTallas;
   FTallas.CrearColumnas;
   inherited;
-  ConfigurarFotoProvisionalCabecera;
-  actFotoArticulo.OnExecute := actFotoSesionExecute;
+  FFotos.ConfigurarCabecera;
   cxPageControl2.OnChange := cxPageControl2Change;
-  tvFotosProvisionales.OnFocusedRecordChanged :=
-    tvFotosProvisionalesFocusedRecordChanged;
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
   FEstiloRecepcionVencida.AssignedValues := [svTextColor];
   FEstiloRecepcionVencida.TextColor := clRed;
@@ -1739,8 +1559,7 @@ begin
     FProveedor.CargarBasicosColor;
   // El contexto distribuye el log de la sesion sin estado global mutable.
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
-    GestorContexto.AsignarLogSesion(Self.LogMsg);
-  LogMsg('Form abierto. version=' + inLibGlobalVar.oVersion);
+    GestorContexto.AsignarLogSesion(nil);
 end;
 
 procedure TfrmMtoComprasSesiones.GridListaGetContentStyle(
@@ -1781,185 +1600,6 @@ begin
   end;
 end;
 
-procedure TfrmMtoComprasSesiones.LogMsg(const S: string);
-begin
-  // Vuelca al memo de la pestania 'Log'. Limite blando de 5000 lineas
-  // para que el memo no engorde indefinidamente en sesiones largas;
-  // cuando se pasa, se recorta la mitad inicial.
-//  if not Assigned(mLog) then Exit;
-//  mLog.Lines.BeginUpdate;
-//  try
-//    mLog.Lines.Add(FormatDateTime('hh:nn:ss.zzz', Now) + ' ' + S);
-//    if mLog.Lines.Count > 5000 then
-//      while mLog.Lines.Count > 2500 do
-//        mLog.Lines.Delete(0);
-//  finally
-//    mLog.Lines.EndUpdate;
-//  end;
-end;
-
-procedure TfrmMtoComprasSesiones.btnLogClearClick(Sender: TObject);
-begin
-//  if Assigned(mLog) then mLog.Lines.Clear;
-end;
-
-procedure TfrmMtoComprasSesiones.btnLogCopyClick(Sender: TObject);
-begin
-//  if Assigned(mLog) then Clipboard.AsText := mLog.Lines.Text;
-end;
-
-procedure TfrmMtoComprasSesiones.btnIrADocClick(Sender: TObject);
-var
-  sTipo, sSerie, sNumero: string;
-begin
-  // Navega al documento seleccionado en la pestania Documentos. La
-  // query unqrySesDocs es master/detail con unqryTablaG (cabecera de
-  // sesion); siempre lista los docs de la sesion enfocada. Tambien lo
-  // dispara el boton lateral "Ir a Ped / Alb" desde cualquier pestania.
-  if (Dmm.unqrySesDocs = nil) or Dmm.unqrySesDocs.IsEmpty then
-    ShowMessage(SErrorSesionSinDocumentosCreados)
-  else
-  begin
-    sTipo   := Dmm.unqrySesDocs.FieldByName('TIPO').AsString;
-    sSerie  := Dmm.unqrySesDocs.FieldByName('SERIE').AsString;
-    sNumero := Dmm.unqrySesDocs.FieldByName('NUMERO').AsString;
-    // ALBC = albaran de compra, PEDC = pedido de compra (ambos con Mto
-    // registrado en fza_winforms; la busqueda es SERIE,NUMERO).
-    if SameText(sTipo, 'ALBC') then
-      ShowMto(Application.MainForm, 'AlbaranesCompra',
-        sSerie + ',' + sNumero)
-    else if SameText(sTipo, 'PEDC') then
-      ShowMto(Application.MainForm, 'PedidosCompra',
-        sSerie + ',' + sNumero)
-    else
-      ShowMessage(Format(SErrorMantenimientoTipoDocumentoNoDisponible,
-                         [sTipo]));
-  end;
-end;
-
-// Combo de serie de la cabecera: al desplegar se recargan las series
-// 'SE' vigentes de la empresa de la sesion. Si la empresa no tiene
-// ninguna, se avisa y se ofrece ir a Empresas -> Series a crearlas.
-procedure TfrmMtoComprasSesiones.cbbSeriePropertiesInitPopup(Sender: TObject);
-var
-  sEmpresa: string;
-begin
-  sEmpresa := '';
-  if (Dmm <> nil) and Dmm.unqryTablaG.Active then
-    sEmpresa := Trim(Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
-  if sEmpresa = '' then
-    sEmpresa := Trim(UbicacionSesion.Empresa);
-  CargarSeriesEmpresa(
-    ConexionPrincipal,
-    sEmpresa,
-    'SE',
-    cbbSerie.Properties.Items);
-  if cbbSerie.Properties.Items.Count = 0 then
-  begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesSesionCompra, [sEmpresa]),
-                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-      ShowMto(Application.MainForm, 'Empresas');
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.tvDocsDblClick(Sender: TObject);
-begin
-  btnIrADocClick(Sender);
-end;
-
-procedure TfrmMtoComprasSesiones.actIrArticulosExecute(Sender: TObject);
-begin
-  // ShortCut Ctrl+A. El TActionList scope a este form garantiza que el
-  // shortcut solo se procesa cuando esta pestania esta activa; otras
-  // instancias o Mtos abiertos no reciben el evento.
-  ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
-    tvLineas.DataController.DataSet,
-    'CODIGO_ART_TENTATIVO_SESLIN');
-end;
-
-procedure TfrmMtoComprasSesiones.actIrAlbaranesCompraExecute(Sender: TObject);
-begin
-  // ShortCut Ctrl+Shift+A.
-  ShowMto(Application.MainForm, 'AlbaranesCompra');
-end;
-
-procedure TfrmMtoComprasSesiones.actIrPedidosCompraExecute(Sender: TObject);
-begin
-  // ShortCut Ctrl+Shift+P. El Mto de pedidos de compra ya existe
-  // (CALL_WINF='PedidosCompra' en fza_winforms).
-  ShowMto(Application.MainForm, 'PedidosCompra');
-end;
-
-procedure TfrmMtoComprasSesiones.actIrProveedorExecute(Sender: TObject);
-begin
-  // ShortCut Ctrl+P: abre la ficha del proveedor de la cabecera.
-  btnIrProveedorClick(Sender);
-end;
-
-procedure TfrmMtoComprasSesiones.btnDescargarFotosClick(Sender: TObject);
-var
-  sSerie, sNumero, sCodArt, sMsg, sFile: string;
-  iLinea  : Integer;
-  archivos: TArray<string>;
-  bOK     : Boolean;
-begin
-  inherited;
-  // Boton "Bajar fotos": descarga del servidor las fotos del articulo de
-  // la linea activa, las descomprime en appDirFotos y borra el ZIP.
-  // Integra ademas una foto representativa en la linea de la sesion, igual
-  // que "+ Foto" (FotosArticulos.GuardarSesion con CODIGO_UNIDAD = '').
-  // El atajo
-  // global Ctrl+F abre la foto flotante de esa misma linea.
-  if Dmm.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorSesionCompraNoActiva)
-  else if Dmm.unqrySesionLin.IsEmpty then
-    ShowMessage(SErrorLineaSesionDescargarFotosNoSeleccionada)
-  else
-  begin
-    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-      Dmm.unqryTablaG.Post;
-    if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-      Dmm.unqrySesionLin.Post;
-    sSerie  := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    iLinea  := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-    sCodArt := Trim(Dmm.unqrySesionLin.FieldByName(
-                      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
-    if sCodArt = '' then
-      ShowMessage(SErrorLineaSesionSinCodigoArticulo)
-    else
-    begin
-      Screen.Cursor := crHourGlass;
-      try
-        bOK := DescargarFotosArticulo(
-          ParametrosApp,
-          sCodArt,
-          archivos,
-          sMsg);
-      finally
-        Screen.Cursor := crDefault;
-      end;
-      if not bOK then
-        ShowMessage(Format(SErrorDescargarFotosArticulo, [sCodArt, sMsg]))
-      else
-      begin
-        sFile := ElegirFotoRepresentativa(archivos);
-        if sFile <> '' then
-        begin
-          FotosArticulos.GuardarSesion(
-            sSerie, sNumero, iLinea, sCodArt, '',
-            sFile, IdentidadSesion.Usuario);
-          RefrescarFotosProvisionales;
-        end;
-        // Borrar los PNG temporales extraidos (no dejar huerfanos).
-        LimpiarDescargaTemporal(archivos);
-        ShowMessage(Format(SInfoFotosArticuloDescargadas,
-          [Length(archivos), sCodArt]));
-      end;
-    end;
-  end;
-end;
-
 procedure TfrmMtoComprasSesiones.FormDestroy(Sender: TObject);
 var
   GestorContexto: IGestorContextoSesion;
@@ -1968,8 +1608,6 @@ begin
   begin
     if Assigned(Dmm.dsSesionLin) then
       Dmm.dsSesionLin.OnDataChange := nil;
-    if Assigned(Dmm.dsSesionFotos) then
-      Dmm.dsSesionFotos.OnDataChange := nil;
   end;
   // Desenganchar el log antes de soltar los colaboradores que lo usan.
   if Supports(ContextoSesion, IGestorContextoSesion, GestorContexto) then
@@ -1980,6 +1618,8 @@ begin
   // tallas y el servicio, despues sus proveedores. Los colaboradores
   // cierran sus propios cursores antes de que TfrmMtoGen.FormDestroy
   // libere el data module y deje la conexion inactiva.
+  FreeAndNil(FNavegacion);
+  FreeAndNil(FFotos);
   FreeAndNil(FVisorPedidoOriginal);
   FreeAndNil(FImportadorOcr);
   FreeAndNil(FCopiaLineas);
@@ -2058,13 +1698,6 @@ begin
   btnAplicarKitProvClick(Sender);
 end;
 
-procedure TfrmMtoComprasSesiones.btnIrProveedorClick(Sender: TObject);
-begin
-  inherited;
-  ShowMtoCodigoDataSet(Self.Owner, 'Proveedores',
-    Dmm.unqryTablaG, 'CODIGO_PRV_SES');
-end;
-
 // ===========================================================================
 //   Lineas — alta, baja, navegacion
 // ===========================================================================
@@ -2095,73 +1728,6 @@ begin
     // BeforeDelete limpia SESCEL, AfterDelete recalcula columnas y totales
     Dmm.unqrySesionLin.Delete;
     LogSes('btnDelLineaClick FIN');
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.btnFotoClick(Sender: TObject);
-var
-  sSerie, sNumero, sCodArt: string;
-  iLinea: Integer;
-  info  : TFotoInfo;
-begin
-  inherited;
-  // Sube una foto y la asocia a la linea activa de la sesion (a nivel
-  // articulo padre — CODIGO_UNIDAD = ''). Ctrl+F + frmFotoArticulo
-  // muestra la foto estandar del articulo de la linea (si existe en
-  // fza_articulos_fotos). Al materializar, MigrarFotosSesion pasa esta
-  // foto de sesion a fza_articulos_fotos solo cuando el articulo aun no
-  // tiene una foto definitiva para esa clave.
-  if Dmm.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorSesionCompraNoActiva)
-  else if Dmm.unqrySesionLin.IsEmpty then
-    ShowMessage(SErrorLineaSesionAsignarFotoNoSeleccionada)
-  else
-  begin
-    sCodArt := Trim(Dmm.unqrySesionLin.FieldByName(
-      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
-    if sCodArt = '' then
-      ShowMessage(SErrorLineaSesionSinCodigoArticulo)
-    else
-    begin
-      if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-        Dmm.unqryTablaG.Post;
-      if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-        Dmm.unqrySesionLin.Post;
-      sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-      sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-      iLinea := Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-      sCodArt := Dmm.unqrySesionLin.FieldByName(
-        'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-      if not Assigned(dlgFoto) then
-        dlgFoto := TOpenDialog.Create(Self);
-      dlgFoto.Filter :=
-        'Imágenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|' +
-        '*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp';
-      dlgFoto.Options := dlgFoto.Options + [ofFileMustExist];
-      if dlgFoto.Execute then
-      begin
-        try
-          info := FotosArticulos.GuardarSesion(
-            sSerie,
-            sNumero,
-            iLinea,
-            sCodArt,
-            '',
-            dlgFoto.FileName,
-            IdentidadSesion.Usuario);
-          if info.Encontrada then
-          begin
-            RefrescarFotosProvisionales;
-            ShowMessage(Format(SInfoFotoLineaSesionAsignada, [iLinea]));
-          end
-          else
-            ShowMessage(SErrorAsignarFotoSesion);
-        except
-          on E: Exception do
-            ShowMessage(Format(SErrorGuardarFotoSesion, [E.Message]));
-        end;
-      end;
-    end;
   end;
 end;
 
@@ -2337,7 +1903,8 @@ begin
   inherited;
   if GestorTallas <> nil then
     GestorTallas.ActualizarCaptionsLineaActiva;
-  RefrescarFotoProvisional;
+  if FFotos <> nil then
+    FFotos.Refrescar;
 end;
 
 // ===========================================================================

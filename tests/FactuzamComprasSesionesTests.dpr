@@ -7,8 +7,12 @@ uses
   System.SysUtils,
   DUnitX.Loggers.Console,
   DUnitX.TestFramework,
+  PruebasFotosProvisionales in
+    'PruebasFotosProvisionales.pas',
   PruebasImportacionPedidoOcr in
     'PruebasImportacionPedidoOcr.pas',
+  PruebasNavegacionComprasSesion in
+    'PruebasNavegacionComprasSesion.pas',
   PruebasVisorPedidoOriginal in
     'PruebasVisorPedidoOriginal.pas';
 

@@ -1285,12 +1285,16 @@ uses
     'src\Forms\inMtoArticulosPresentacionTarifas.pas',
   inMtoComprasSesionesPresentacionCopiaLineas in
     'src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas',
+  inMtoComprasSesionesPresentacionFotos in
+    'src\Forms\inMtoComprasSesionesPresentacionFotos.pas',
   inMtoComprasSesionesPresentacionImportacionOcr in
     'src\Forms\inMtoComprasSesionesPresentacionImportacionOcr.pas',
   inMtoComprasSesionesPresentacionMaterializacion in
     'src\Forms\inMtoComprasSesionesPresentacionMaterializacion.pas',
   inMtoComprasSesionesPresentacionModelo in
     'src\Forms\inMtoComprasSesionesPresentacionModelo.pas',
+  inMtoComprasSesionesPresentacionNavegacion in
+    'src\Forms\inMtoComprasSesionesPresentacionNavegacion.pas',
   inMtoComprasSesionesPresentacionPedidoOriginal in
     'src\Forms\inMtoComprasSesionesPresentacionPedidoOriginal.pas',
   inMtoComprasSesionesPresentacionPlanificador in
@@ -1313,6 +1317,8 @@ uses
     'src\Forms\inMtoStockConsultaPresentacionArticuloVcl.pas',
   inMtoStockConsultaPresentacionComposicion in
     'src\Forms\inMtoStockConsultaPresentacionComposicion.pas',
+  inMtoStockConsultaPresentacionFiltrosVcl in
+    'src\Forms\inMtoStockConsultaPresentacionFiltrosVcl.pas',
   inMtoStockConsultaPresentacionFotosVcl in
     'src\Forms\inMtoStockConsultaPresentacionFotosVcl.pas',
   inMtoStockConsultaPresentacionPivoteVcl in

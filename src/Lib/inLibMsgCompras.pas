@@ -538,6 +538,21 @@ resourcestring
     'Línea %d · sin foto provisional';
   SCaptionDestinoArticulo = 'artículo';
   SCaptionDestinoSku = 'SKU %s';
+  SErrorLineaSesionDescargarFotosNoSeleccionada =
+    'Selecciona o crea una linea antes de descargar fotos.';
+  SErrorLineaSesionSinCodigoArticulo =
+    'La linea activa no tiene codigo de articulo.';
+  SErrorDescargarFotosArticulo =
+    'No se pudieron descargar las fotos del articulo %s:' + sLineBreak +
+    '%s';
+  SInfoFotosArticuloDescargadas =
+    'Descargadas %d foto(s) del articulo %s.';
+  SErrorLineaSesionAsignarFotoNoSeleccionada =
+    'Selecciona o crea una linea antes de asignar foto.';
+  SInfoFotoLineaSesionAsignada =
+    'Foto asignada a la linea %d.';
+  SErrorAsignarFotoSesion = 'No se pudo asignar la foto.';
+  SErrorGuardarFotoSesion = 'Error guardando foto: %s';
   SCaptionModeloCompra = 'Modelo';
   SCaptionCodigoCompra = 'Codigo';
   // R05 - Pestaña de líneas de documentos de compra sin acelerador

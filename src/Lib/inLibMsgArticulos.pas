@@ -359,21 +359,6 @@ resourcestring
   STextoSkusColorDesactivados = 'desactivado';
   SInfoSkusColorActualizados =
     '%d SKU del color "%s" se han %s.';
-  SErrorLineaSesionDescargarFotosNoSeleccionada =
-    'Selecciona o crea una linea antes de descargar fotos.';
-  SErrorLineaSesionSinCodigoArticulo =
-    'La linea activa no tiene codigo de articulo.';
-  SErrorDescargarFotosArticulo =
-    'No se pudieron descargar las fotos del articulo %s:' + sLineBreak +
-    '%s';
-  SInfoFotosArticuloDescargadas =
-    'Descargadas %d foto(s) del articulo %s.';
-  SErrorLineaSesionAsignarFotoNoSeleccionada =
-    'Selecciona o crea una linea antes de asignar foto.';
-  SInfoFotoLineaSesionAsignada =
-    'Foto asignada a la linea %d.';
-  SErrorAsignarFotoSesion = 'No se pudo asignar la foto.';
-  SErrorGuardarFotoSesion = 'Error guardando foto: %s';
   SErrorLineaSesionAsignarFamiliaNoSeleccionada =
     'Anade una linea (o ponte sobre una) para asignarle familia.';
   SErrorContadorInventarioDocumentoTrabajo =

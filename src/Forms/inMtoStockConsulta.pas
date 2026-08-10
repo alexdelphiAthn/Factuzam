@@ -64,6 +64,7 @@ uses
   inLibStockConsultaPresentacionVista,
   inMtoStockConsultaPresentacionArticuloVcl,
   inMtoStockConsultaPresentacionComposicion,
+  inMtoStockConsultaPresentacionFiltrosVcl,
   inMtoStockConsultaPresentacionFotosVcl,
   inMtoStockConsultaPresentacionPivoteVcl;
 
@@ -132,6 +133,7 @@ type
     FHistorial: TPresentadorHistorialStock;
     FCoincidencias: TPresentadorCoincidenciasStock;
     FPropsPorColor: TPropiedadesPorColorStock;
+    FFiltrosLista: TPresentadorFiltrosListaStock;
     FPopMenuStock: TPopupMenu;
     FMenuAgregarDoc: TMenuItem;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
@@ -142,15 +144,11 @@ type
     procedure CrearPresentadores;
     procedure GuardarModoUsuario;
     function  ModoDesglosadoDeUsuario: Boolean;
-    procedure CargarAlmacenes;
-    procedure CargarColores;
     procedure CargarPropsPorColor;
     procedure ActualizarLetreroColor;
     procedure AjustarFotoCabecera;
     procedure CargarFoto(const ACodUnidad: string);
     procedure CargarInfoCabecera;
-    function  AlmacenesSeleccionadosLista: TArray<string>;
-    function  ColoresSeleccionadosLista: TArray<string>;
     function  BuscarArticulo: string;
     function  ResolverCodigoSkuDocumentoTrabajo(
               const AColor, ATalla: string;
@@ -197,12 +195,6 @@ uses
 {$R *.dfm}
 
 const
-  CAMPO_ALMACEN_CODIGO = 'CODIGO_ALM_ALM';
-  CAMPO_ALMACEN_NOMBRE = 'NOMBRE_ALM_ALM';
-  CAMPO_ALMACEN_TIPO_USO = 'TIPO_USO_ALM';
-  CAMPO_COLOR_AV = 'AV';
-  CAMPO_ES_COLOR_SKU = 'ES_COLOR_SKU';
-  SEPARADOR_ALMACEN = ' - ';
   PERFIL_STOCK_CONSULTA = NOMBRE_PANTALLA_STOCK_CONSULTA;
   PERFIL_MODO_DESGLOSADO = 'ModoDesglosado';
   LAYOUT_BUSQUEDA_ARTICULOS = 'frmMtoArtStockSearch';
@@ -318,7 +310,7 @@ begin
   FDependencias.Lector.ConsumirRafaga := True;
   FDependencias.Lector.OnCodigoLeido := LectorCodigoLeido;
   CrearPresentadores;
-  CargarAlmacenes;
+  FFiltrosLista.CargarAlmacenes;
   AjustarFotoCabecera;
 end;
 
@@ -329,6 +321,10 @@ procedure TfrmStockConsulta.CrearPresentadores;
 var
   Callbacks: TCallbacksVistaEntradaStock;
 begin
+  FFiltrosLista := TPresentadorFiltrosListaStock.Create(
+    lstAlmacenes,
+    lstColores,
+    FDependencias.Catalogos);
   FPivote := TPresentadorPivoteStock.Create(
     Self, tvStock, FDependencias.Pivote, ConexionPrincipal);
   Callbacks := Default(TCallbacksVistaEntradaStock);
@@ -440,6 +436,7 @@ begin
   FreeAndNil(FHistorial);
   FreeAndNil(FCoincidencias);
   FreeAndNil(FPropsPorColor);
+  FreeAndNil(FFiltrosLista);
   FDependencias.Liberar;
 end;
 
@@ -603,8 +600,10 @@ begin
   Estado.CodigoArticulo := FVista.CodigoArticulo;
   Estado.EstadoEsExistencias := FEstados.EstadoActual = esExistencias;
   Estado.HayColoresEnLista := lstColores.Items.Count > 0;
-  Estado.AlmacenesSeleccionados := AlmacenesSeleccionadosLista;
-  Estado.ColoresSeleccionados := ColoresSeleccionadosLista;
+  Estado.AlmacenesSeleccionados :=
+    FFiltrosLista.AlmacenesSeleccionados;
+  Estado.ColoresSeleccionados :=
+    FFiltrosLista.ColoresSeleccionados;
   FPivote.LeerCeldaEnfocada(Estado);
   Celda := ResolverCeldaStockParaDocumento(Estado);
   AMensaje := MensajeCeldaStock(Celda.Motivo);
@@ -664,7 +663,7 @@ begin
     begin
       // En vista por almacenes la celda solo identifica un SKU si el
       // filtro de colores deja uno solo, o si el articulo no tiene color.
-      Colores := ColoresSeleccionadosLista;
+      Colores := FFiltrosLista.ColoresSeleccionados;
       if Length(Colores) = 1 then
         sColor := Colores[0]
       else if (Length(Colores) = 0) and
@@ -793,121 +792,6 @@ begin
 end;
 
 // ---------------------------------------------------------------------------
-//  Almacenes y colores (listas de seleccion multiple)
-// ---------------------------------------------------------------------------
-procedure TfrmStockConsulta.CargarAlmacenes;
-var
-  bEstandar: Boolean;
-  iItem: Integer;
-  Resultado: IResultadoConsultaStock;
-  Datos: TDataSet;
-begin
-  lstAlmacenes.Items.Clear;
-  Resultado := FDependencias.Catalogos.ConsultarAlmacenes;
-  Datos := Resultado.DataSet;
-  try
-    while not Datos.Eof do
-    begin
-      iItem := lstAlmacenes.Items.Add(
-        Datos.FieldByName(CAMPO_ALMACEN_CODIGO).AsString +
-        SEPARADOR_ALMACEN +
-        Datos.FieldByName(CAMPO_ALMACEN_NOMBRE).AsString);
-      bEstandar :=
-        (Datos.FieldByName(CAMPO_ALMACEN_TIPO_USO).AsString =
-         'ESTANDAR') or
-        (Datos.FieldByName(CAMPO_ALMACEN_TIPO_USO).AsString =
-         'ESTANDARD');
-      lstAlmacenes.Selected[iItem] := bEstandar;
-      Datos.Next;
-    end;
-  finally
-    Resultado := nil;
-  end;
-end;
-
-function TfrmStockConsulta.AlmacenesSeleccionadosLista: TArray<string>;
-var
-  i: Integer;
-  iSeparador: Integer;
-  sItem: string;
-  sCodigo: string;
-begin
-  SetLength(Result, 0);
-  for i := 0 to lstAlmacenes.Items.Count - 1 do
-    if lstAlmacenes.Selected[i] then
-    begin
-      sItem := lstAlmacenes.Items[i];
-      iSeparador := Pos(SEPARADOR_ALMACEN, sItem);
-      if iSeparador > 0 then
-        sCodigo := Copy(sItem, 1, iSeparador - 1)
-      else
-        sCodigo := sItem;
-      SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := sCodigo;
-    end;
-end;
-
-// Carga los AVs distintos de color (ID_VA_AV='CO') que aparecen en los SKUs
-// activos del articulo. Si la entrada resolvio un SKU concreto, se selecciona
-// solo su color; el usuario puede anadir despues los demas. Sin SKU o si este
-// no permite resolver un color, se seleccionan todos.
-procedure TfrmStockConsulta.CargarColores;
-var
-  i: Integer;
-  iItem: Integer;
-  bFiltrarPorSku: Boolean;
-  bEsColorSku: Boolean;
-  bColorSkuEncontrado: Boolean;
-  Resultado: IResultadoConsultaStock;
-  Datos: TDataSet;
-begin
-  lstColores.Items.Clear;
-  if FVista.HayArticulo then
-  begin
-    bFiltrarPorSku := Trim(FVista.CodigoSku) <> '';
-    bColorSkuEncontrado := False;
-    Resultado := FDependencias.Catalogos.ConsultarColores(
-      FVista.CodigoArticulo,
-      FVista.CodigoSku);
-    Datos := Resultado.DataSet;
-    try
-      while not Datos.Eof do
-      begin
-        iItem := lstColores.Items.Add(
-          Datos.FieldByName(CAMPO_COLOR_AV).AsString);
-        bEsColorSku := bFiltrarPorSku and
-          (Datos.FieldByName(CAMPO_ES_COLOR_SKU).AsInteger = 1);
-        lstColores.Selected[iItem] :=
-          (not bFiltrarPorSku) or bEsColorSku;
-        if bEsColorSku then
-          bColorSkuEncontrado := True;
-        Datos.Next;
-      end;
-      if bFiltrarPorSku and (not bColorSkuEncontrado) then
-      begin
-        for i := 0 to lstColores.Items.Count - 1 do
-          lstColores.Selected[i] := True;
-      end;
-    finally
-      Resultado := nil;
-    end;
-  end;
-end;
-
-function TfrmStockConsulta.ColoresSeleccionadosLista: TArray<string>;
-var
-  i: Integer;
-begin
-  SetLength(Result, 0);
-  for i := 0 to lstColores.Items.Count - 1 do
-    if lstColores.Selected[i] then
-    begin
-      SetLength(Result, Length(Result) + 1);
-      Result[High(Result)] := lstColores.Items[i];
-    end;
-end;
-
-// ---------------------------------------------------------------------------
 //  Propiedades propias por color (nivel COLOR / SKU)
 // ---------------------------------------------------------------------------
 // Las propiedades admiten nivel COLOR y SKU (propiedades_por_unidad.md). El
@@ -1020,7 +904,9 @@ begin
   try
     CargarFoto(FVista.CodigoSku);
     CargarInfoCabecera;
-    CargarColores;
+    FFiltrosLista.CargarColores(
+      FVista.CodigoArticulo,
+      FVista.CodigoSku);
     CargarPropsPorColor;
   except
     on E: Exception do
@@ -1132,7 +1018,8 @@ begin
         SetLength(Tallas, 0);
         if FVista.HayArticulo then
           Tallas := FPivote.ListarTallas(
-            FVista.CodigoArticulo, ColoresSeleccionadosLista);
+            FVista.CodigoArticulo,
+            FFiltrosLista.ColoresSeleccionados);
         FPivote.ReconstruirColumnas(
           Tallas, bPorColor, FEstados.EstadoActual);
         Solicitud := ComponerSolicitudPivoteStock(
@@ -1142,8 +1029,8 @@ begin
           bPorColor,
           Assigned(ParametrosApp) and
             ParametrosApp.GetBool('appStockOcultarCeros', True),
-          AlmacenesSeleccionadosLista,
-          ColoresSeleccionadosLista);
+          FFiltrosLista.AlmacenesSeleccionados,
+          FFiltrosLista.ColoresSeleccionados);
         FPivote.Consultar(Solicitud, Tallas);
       except
         on E: Exception do
