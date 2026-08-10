@@ -1114,6 +1114,8 @@ uses
     'src\DataModules\UniDataComprasSesionesOperaciones.pas',
   UniDataComprasSesionesAlbaranes in
     'src\DataModules\UniDataComprasSesionesAlbaranes.pas',
+  UniDataComprasSesionesColores in
+    'src\DataModules\UniDataComprasSesionesColores.pas',
   UniDataComprasSesionesArticulos in
     'src\DataModules\UniDataComprasSesionesArticulos.pas',
   UniDataComprasSesionesComposicion in

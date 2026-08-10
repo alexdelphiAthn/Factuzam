@@ -22,12 +22,6 @@ uses
   inLibComprasSesionesMaterializacionIntf,
   UniDataComprasSesiones;
 
-function SanearColorSku(const ATexto: string): string;
-function ResolverIdAvColorLinea(
-  AConn: TUniConnection;
-  const ALecturas: ILecturasArticulosMaterializacion;
-  const AColorTexto, ACodigoAtbColor, AUsuario: string;
-  out AValor: string): Integer;
 function ResolverCodigoSku(
   const ALecturas: ILecturasArticulosMaterializacion;
   const ACodigoArt: string;
@@ -43,8 +37,8 @@ uses
   System.SysUtils,
   Data.DB, DBAccess,
   inLibEAN13,
-  inLibComprasSesionesReglas,
   UniDataValoresAutomaticosRepositorio,
+  UniDataComprasSesionesColores,
   inLibMsgCompras;
 function GenerarEAN13Local(
                            const ALecturas:
@@ -228,147 +222,6 @@ begin
     q.ExecSQL;
   finally
     FreeAndNil(q);
-  end;
-end;
-
-// Sanea un texto de color libre del proveedor para usarlo como segmento del
-// CODIGO_UNIDAD_SKU y como valor (AV) de fza_atributos_valores: mayusculas;
-// los espacios pasan a '-'; se conservan letras, digitos, '-' y '_'; el resto
-// de simbolos (/, %, EUR, ., :, ...) queda PROHIBIDO y se descarta. Sin
-// separadores repetidos ni en los extremos. '' si no queda nada utilizable.
-// IMPORTANTE: el servidor de fotos debe nombrar el token COLOR con esta MISMA
-// regla (ver SanearColorFoto en inLibFotosNube) para que la foto case.
-function SanearColorSku(const ATexto: string): string;
-begin
-  Result := inLibComprasSesionesReglas.SanearColorSku(ATexto);
-end;
-
-// Devuelve el ID_AV que debe llevar el color del SKU. Modelo de negocio: el
-// color del SKU es el TEXTO DEL PROVEEDOR (COLOR_TEXTO_SESLIN) saneado, que
-// es la identidad real del color; el color basico (CODIGO_ATB_COLOR_SESLIN)
-// es solo un helper de clasificacion que se guarda en
-// fza_atributos_valores.ID_ATB_AV (HEX, agrupacion, etiquetas). Prioridad
-// del valor que va al SKU:
-//   1. Texto del proveedor saneado.
-//   2. Si no hay texto, el codigo del basico (compatibilidad).
-// El AV se identifica por (ID_VA_AV='CO', AV=valor): si ya existe se reusa,
-// si no se crea enlazandolo al basico cuando este disponible. Devuelve 0 si
-// la linea no tiene ninguna informacion de color (el SKU sale sin color).
-// NOTA: dos proveedores con texto distinto para el mismo color basico
-// generan AV/SKU distintos (identidad por proveedor, decision de negocio).
-function ResolverIdColorBasico(
-  const ALecturas: ILecturasArticulosMaterializacion;
-  const ACodigoAtbColor: string): Integer;
-begin
-  Result := 0;
-  if Trim(ACodigoAtbColor) <> '' then
-  begin
-    Result := ALecturas.ObtenerIdColorBasico(ACodigoAtbColor);
-    if Result = 0 then
-      raise Exception.CreateFmt(
-        SErrorColorBasicoMaterializacionNoExiste,
-        [ACodigoAtbColor]);
-  end;
-end;
-
-function BuscarValorColor(
-  const ALecturas: ILecturasArticulosMaterializacion;
-  const AValor: string;
-  out ATieneColorBasico: Boolean): Integer;
-var
-  oValor: TValorColorMaterializacion;
-begin
-  oValor := ALecturas.BuscarValorColor(AValor);
-  Result := oValor.IdValor;
-  ATieneColorBasico := oValor.TieneColorBasico;
-end;
-
-procedure AsignarColorBasicoAValor(
-  AQuery: TUniQuery;
-  AIdValor, AIdColorBasico: Integer);
-begin
-  AQuery.SQL.Text :=
-    'UPDATE fza_atributos_valores ' +
-    '   SET ID_ATB_AV = :ia ' +
-    ' WHERE ID_AV = :idav';
-  AQuery.ParamByName('ia').AsInteger := AIdColorBasico;
-  AQuery.ParamByName('idav').AsInteger := AIdValor;
-  AQuery.ExecSQL;
-end;
-
-function CrearValorColor(
-  AQuery: TUniQuery;
-  const ALecturas: ILecturasArticulosMaterializacion;
-  const AValor, ADescripcion, AUsuario: string;
-  AIdColorBasico: Integer): Integer;
-var
-  oValor: TValorColorMaterializacion;
-begin
-  if AIdColorBasico > 0 then
-  begin
-    AQuery.SQL.Text :=
-      'INSERT INTO fza_atributos_valores ' +
-      '  (ID_VA_AV, AV, DESCRIPCION_AV, ID_ATB_AV, ' +
-      '   ESACTIVO_AV, ORDEN_AV, INSTANTE_ALTA, USUARIO_ALTA, ' +
-      '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (''CO'', :v, :d, :ia, ''S'', 0, ' +
-      '        NOW(), :u, NOW(), :u)';
-    AQuery.ParamByName('ia').AsInteger := AIdColorBasico;
-  end
-  else
-    AQuery.SQL.Text :=
-      'INSERT INTO fza_atributos_valores ' +
-      '  (ID_VA_AV, AV, DESCRIPCION_AV, ESACTIVO_AV, ORDEN_AV, ' +
-      '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
-      '   USUARIO_MODIF) ' +
-      'VALUES (''CO'', :v, :d, ''S'', 0, NOW(), :u, NOW(), :u)';
-  AQuery.ParamByName('v').AsString := AValor;
-  AQuery.ParamByName('d').AsString := Trim(ADescripcion);
-  AQuery.ParamByName('u').AsString := AUsuario;
-  AQuery.ExecSQL;
-  oValor := ALecturas.BuscarValorColor(AValor);
-  Result := oValor.IdValor;
-end;
-
-function ResolverIdAvColorLinea(AConn: TUniConnection;
-                                 const ALecturas:
-                                 ILecturasArticulosMaterializacion;
-                                 const AColorTexto, ACodigoAtbColor,
-                                       AUsuario: string;
-                                 out AValor: string): Integer;
-var
-  q: TUniQuery;
-  iIdColorBasico: Integer;
-  sValor: string;
-  bTieneColorBasico: Boolean;
-begin
-  Result := 0;
-  AValor := '';
-  sValor := SanearColorSku(AColorTexto);
-  if sValor = '' then
-    sValor := SanearColorSku(ACodigoAtbColor);
-  if sValor <> '' then
-  begin
-    q := TUniQuery.Create(nil);
-    try
-      q.Connection := AConn;
-      iIdColorBasico :=
-        ResolverIdColorBasico(ALecturas, ACodigoAtbColor);
-      Result := BuscarValorColor(
-        ALecturas, sValor, bTieneColorBasico);
-      if Result = 0 then
-        Result := CrearValorColor(
-          q, ALecturas, sValor, AColorTexto, AUsuario,
-          iIdColorBasico)
-      else if (not bTieneColorBasico) and
-              (iIdColorBasico > 0) then
-        AsignarColorBasicoAValor(
-          q, Result, iIdColorBasico);
-      if Result > 0 then
-        AValor := sValor;
-    finally
-      FreeAndNil(q);
-    end;
   end;
 end;
 

@@ -1396,6 +1396,7 @@
         <DCCReference Include="src\DataModules\UniDataComprasSesionesMaterializacionRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesionesOperaciones.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesionesAlbaranes.pas"/>
+        <DCCReference Include="src\DataModules\UniDataComprasSesionesColores.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesionesArticulos.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesionesComposicion.pas"/>
         <DCCReference Include="src\DataModules\UniDataComprasSesionesLecturasComposicion.pas"/>

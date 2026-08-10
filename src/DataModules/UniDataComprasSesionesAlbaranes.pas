@@ -34,7 +34,9 @@ uses
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos, inLibMsgCompras,
   UniDataValoresAutomaticosRepositorio,
-  UniDataComprasSesionesArticulos, UniDataComprasSesionesDocumentosComun,
+  UniDataComprasSesionesArticulos,
+  UniDataComprasSesionesColores,
+  UniDataComprasSesionesDocumentosComun,
   UniDataComprasSesionesOperaciones;
 procedure InsertarAlbaranCompraCabecera(AConn: TUniConnection;
                                          ADM: TdmComprasSesiones;

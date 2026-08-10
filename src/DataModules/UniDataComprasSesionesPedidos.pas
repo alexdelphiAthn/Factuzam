@@ -34,6 +34,7 @@ uses
   inLibMsgCompras,
   UniDataValoresAutomaticosRepositorio,
   UniDataComprasSesionesArticulos,
+  UniDataComprasSesionesColores,
   UniDataComprasSesionesDocumentosComun,
   UniDataComprasSesionesOperaciones;
 procedure InsertarPedidoCompraCabecera(AConn: TUniConnection;
