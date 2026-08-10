@@ -607,18 +607,12 @@ uses
   inLibGridCantidad,
   inLibArticulosResolverIntf,
   inMtoGenSearch,
-  inMtoModalFacRec,
-  inMtoModalImpRecFac,
-  inMtoModalImpFac,
-  inMtoModalRegistrarPago,
-  inMtoModalSeleccionarBanco,
   inLibVerifactu,
-  inLibVerifactuTipos,
   inLibFacturasAplicacion,
   inMtoFacturasVistaVcl,
   inMtoFacturasConsolidacionVcl,
   inMtoFacturasCobrosVcl,
-  inMtoModalFacturarTicket,
+  inMtoFacturasAccionesVcl,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
   UniDataArticulosValidadorRepositorio,
@@ -989,17 +983,11 @@ begin
     oOperacionesVista.ArchivarFactura :=
       procedure(const ASerie, ANumero: string)
       begin
-        try
-          TfrmPrintFac.ArchivarFacturaConsolidada(
-            AFormulario.dmmFacturas,
-            ASerie,
-            ANumero);
-        except
-          on E: Exception do
-            AFormulario.RegistroLog.RegistrarError(
-              'No se pudo archivar el PDF al consolidar ' +
-              ASerie + '\' + ANumero + ': ' + E.Message);
-        end;
+        ArchivarFacturaConsolidadaVcl(
+          AFormulario.dmmFacturas,
+          ASerie,
+          ANumero,
+          AFormulario.RegistroLog);
       end;
     oOperacionesVista.AplicarEstado :=
       procedure(const AEstado: TEstadoVisualFactura)
@@ -1663,53 +1651,35 @@ end;
 
 procedure TfrmMtoFacturasBase.GuardarPendienteAntesDeImprimir;
 begin
-  // En modo SIN el borrador se imprime sin consolidar: se graban antes
-  // los cambios para que la copia impresa refleje el estado actual.
   if Assigned(dmmFacturas) then
   begin
     try
-      inLibFacturas.GuardarCambiosPendientesFactura(
+      GuardarCambiosPendientesFactura(
         dmmFacturas.unqryTablaG.Connection,
         dmmFacturas.unqryTablaG,
         dmmFacturas.unqryLinFac,
         dmmFacturas.unqryRecibos);
     except
       on E: Exception do
-        raise Exception.Create(Format(SErrorGuardarFacturaAntesImprimir,
-                                      [E.Message]));
+        raise Exception.Create(Format(
+          SErrorGuardarFacturaAntesImprimir,
+          [E.Message]));
     end;
   end;
 end;
 
 procedure TfrmMtoFacturasBase.sbImprimirClick(Sender: TObject);
-var
-  form:  TfrmPrintFac;
-  sFase: string;
 begin
   inherited;
-  if not PuedeImprimir then
-    Abort;
-  if SinVerifactuActivo(ParametrosApp) then
-    GuardarPendienteAntesDeImprimir;
-  // El QR tributario nace al consolidar el registro fiscal: en BORRADOR
-  // no hay registro de facturación y no se puede imprimir.
-  sFase := dsTablaG.DataSet.FieldByName(ffasefac).AsString;
-  if ((sFase = '') or SameText(sFase, 'BORRADOR')) and
-     (dsTablaG.DataSet.FieldByName(fescon).AsString <> 'S') and
-     (ModoVerifactu(ParametrosApp) <> mvSinVerifactu) then
-  begin
-    ShowMessage(SAvisoBorradorPendienteImpresionFiscal);
-    Abort;
-  end;
-  form := TfrmPrintFac.Create(Application);  // Owner = Application
-  try
-    form.edtNroFac.Text := dsTablaG.DataSet.findField(fnrofac).AsString;
-    form.edtSerie.Text := dsTablaG.DataSet.findField(fseriefac).AsString;
-    form.dmFac := dmmFacturas;
-    form.ShowModal;
-  finally
-    FreeAndNil(form);
-  end;
+  ImprimirFacturaVcl(
+    dmmFacturas,
+    dsTablaG.DataSet,
+    ParametrosApp,
+    PuedeImprimir,
+    procedure
+    begin
+      GuardarPendienteAntesDeImprimir;
+    end);
 end;
 
 procedure TfrmMtoFacturasBase.btnReciboDevueltoClick(Sender: TObject);
@@ -1742,17 +1712,9 @@ begin
 end;
 
 procedure TfrmMtoFacturasBase.sbRectificarClick(Sender: TObject);
-var
-  form:TfrmGenFacRec;
 begin
   inherited;
-   form := TfrmGenFacRec.Create(Self);
-   try
-     form.Preparar(dmmFacturas);
-     form.ShowModal;
-   finally
-     FreeAndNil(form);
-   end;
+  RectificarFacturaVcl(Self, dmmFacturas);
 end;
 
 procedure TfrmMtoFacturasBase.cbbCanalIVAPropertiesChange(Sender: TObject);
@@ -1950,34 +1912,8 @@ begin
         'Anulación'));
 end;
 procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);
-var
-  oRes:    TFacturarTicketResult;
-  sSerie:  string;
-  sNumero: string;
 begin
-  // Factura completa F3 en sustitución del ticket seleccionado.
-  sSerie := dsTablaG.DataSet.FieldByName('SERIE_FAC').AsString;
-  sNumero := dsTablaG.DataSet.FieldByName('NUMERO_FAC').AsString;
-  if Trim(sNumero) = '' then
-    ShowMessage(SErrorBorradorListaNoSeleccionado)
-  else if not SameText(dsTablaG.DataSet.FieldByName(
-                         'TIPO_FAC').AsString, 'SIMPLIFICADA') then
-    ShowMessage(SErrorFacturarTicketRequiereSimplificado)
-  else
-  begin
-    oRes := TfrmModalFacturarTicket.Ejecutar(Self, sSerie, sNumero,
-              dsTablaG.DataSet.FieldByName('CODIGO_EMP_FAC').AsString,
-              dsTablaG.DataSet.FieldByName('CODIGO_ALM_FAC').AsString,
-              dsTablaG.DataSet.FieldByName('FECHA_FAC').AsDateTime);
-    if oRes.Aceptado then
-    begin
-      ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
-                         [oRes.SerieNueva, oRes.NumeroNueva,
-                          sSerie, sNumero,
-                          ModoVerifactuTexto(ParametrosApp)]));
-      dsTablaG.DataSet.Refresh;
-    end;
-  end;
+  FacturarTicketVcl(Self, dsTablaG.DataSet, ParametrosApp);
 end;
 function TfrmMtoFacturasBase.TipoFacturaFiltro: string;
 begin

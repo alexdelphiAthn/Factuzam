@@ -207,6 +207,8 @@ uses
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
   inMtoPrincipalAccionesVcl in
     'src\Core\inMtoPrincipalAccionesVcl.pas',
+  inMtoPrincipalCertificadosVcl in
+    'src\Core\inMtoPrincipalCertificadosVcl.pas',
   inMtoPrincipalPresentacionInicio in
     'src\Core\inMtoPrincipalPresentacionInicio.pas',
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
@@ -219,11 +221,13 @@ uses
     'src\Forms\inMtoFacturasConsolidacionVcl.pas',
   inMtoFacturasVistaVcl in 'src\Forms\inMtoFacturasVistaVcl.pas',
   inMtoFacturasCobrosVcl in 'src\Forms\inMtoFacturasCobrosVcl.pas',
+  inMtoFacturasAccionesVcl in 'src\Forms\inMtoFacturasAccionesVcl.pas',
   inMtoFacturasNormal in 'src\Forms\inMtoFacturasNormal.pas' {frmMtoFacturasNormal},
   inMtoFacturasSimplif in 'src\Forms\inMtoFacturasSimplif.pas' {frmMtoFacturasSimplif},
   inMtoArticulos in 'src\Forms\inMtoArticulos.pas' {frmMtoArticulos},
   inMtoArticulosGuardadoVcl in
     'src\Forms\inMtoArticulosGuardadoVcl.pas',
+  inMtoArticulosStockVcl in 'src\Forms\inMtoArticulosStockVcl.pas',
   inMtoClientes in 'src\Forms\inMtoClientes.pas' {frmMtoClientes},
   inMtoContadores in 'src\Forms\inMtoContadores.pas' {frmMtoContadores},
   inMtoEmpresas in 'src\Forms\inMtoEmpresas.pas' {frmMtoEmpresas},
@@ -468,6 +472,8 @@ uses
   UniDataUsuariosPerfiles in 'src\DataModules\UniDataUsuariosPerfiles.pas' {dmUsuariosPerfiles: TDataModule},
   UniDataPermisosGrupo in 'src\DataModules\UniDataPermisosGrupo.pas' {dmPermisosGrupo: TDataModule},
   UniDataFacturas in 'src\DataModules\UniDataFacturas.pas' {dmFacturas: TdmFacturas},
+  UniDataFacturasConfiguracion in
+    'src\DataModules\UniDataFacturasConfiguracion.pas',
   UniDataFacturasIncidenciaFiscal in
     'src\DataModules\UniDataFacturasIncidenciaFiscal.pas',
   UniDataGenFilter in 'src\DataModules\UniDataGenFilter.pas' {dmGenFilter: TDataModule},
@@ -512,9 +518,15 @@ uses
   inMtoCajaOperacionVclInyeccion in
     'src\Caja\Forms\inMtoCajaOperacionVclInyeccion.pas',
   inMtoTraspasoOpe in 'src\Caja\Forms\inMtoTraspasoOpe.pas' {frmMtoOpeTraspaso},
+  inMtoTraspasoSolicitudesHist in
+    'src\Caja\Forms\inMtoTraspasoSolicitudesHist.pas'
+    {frmMtoTraspasoSolicitudesHist},
   inLibTraspasoOpePersistenciaIntf in 'src\Caja\Lib\inLibTraspasoOpePersistenciaIntf.pas',
   UniDataTraspasoOpeRepositorio in 'src\Caja\DataModules\UniDataTraspasoOpeRepositorio.pas',
   UniDataTraspaso in 'src\Caja\DataModules\UniDataTraspaso.pas' {dmTraspaso: TDataModule},
+  UniDataTraspasoSolicitudesHist in
+    'src\Caja\DataModules\UniDataTraspasoSolicitudesHist.pas'
+    {dmTraspasoSolicitudesHist: TDataModule},
   inLibTraspasoTicketIntf in
     'src\Caja\Lib\inLibTraspasoTicketIntf.pas',
   UniDataTraspasoTicketRepositorio in
@@ -932,6 +944,8 @@ uses
   inMtoInventarios in 'src\Forms\inMtoInventarios.pas' {frmMtoInventarios},
   inMtoInventariosEntradaVcl in
     'src\Forms\inMtoInventariosEntradaVcl.pas',
+  inMtoInventariosImportacionVcl in
+    'src\Forms\inMtoInventariosImportacionVcl.pas',
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
   UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule},
@@ -971,8 +985,12 @@ uses
   inLibDevolucionesCompraPresentacionFlujo in
     'src\Lib\inLibDevolucionesCompraPresentacionFlujo.pas',
   inMtoDevolucionesCompra in 'src\Forms\inMtoDevolucionesCompra.pas' {frmMtoDevolucionesCompra},
+  inMtoDevolucionesCompraSeleccionVcl in
+    'src\Forms\inMtoDevolucionesCompraSeleccionVcl.pas',
   UniDataDevolucionesCompra in 'src\DataModules\UniDataDevolucionesCompra.pas' {dmDevolucionesCompra: TdmDevolucionesCompra},
   inMtoFacturasCompra in 'src\Forms\inMtoFacturasCompra.pas' {frmMtoFacturasCompra},
+  inMtoFacturasCompraPagosVcl in
+    'src\Forms\inMtoFacturasCompraPagosVcl.pas',
   UniDataFacturasCompra in 'src\DataModules\UniDataFacturasCompra.pas' {dmFacturasCompra: TdmFacturasCompra},
   inMtoEfectosCompra in 'src\Forms\inMtoEfectosCompra.pas' {frmMtoEfectosCompra},
   UniDataEfectosCompra in 'src\DataModules\UniDataEfectosCompra.pas' {dmEfectosCompra: TdmEfectosCompra},
@@ -989,6 +1007,8 @@ uses
   inMtoModalRegistrarPago in 'src\Modals\inMtoModalRegistrarPago.pas' {frmModalRegistrarPago},
   inMtoModalSepaRemesaVenta in 'src\Modals\inMtoModalSepaRemesaVenta.pas',
   inMtoPedidosCompra in 'src\Forms\inMtoPedidosCompra.pas' {frmMtoPedidosCompra},
+  inMtoPedidosCompraRecepcionVcl in
+    'src\Forms\inMtoPedidosCompraRecepcionVcl.pas',
   UniDataPedidosCompra in 'src\DataModules\UniDataPedidosCompra.pas' {dmPedidosCompra: TdmPedidosCompra},
   UniDataPedidosCompraPendientes in
     'src\DataModules\UniDataPedidosCompraPendientes.pas',
@@ -1497,6 +1517,10 @@ uses
     'src\Caja\Forms\inMtoCajaOpeBusquedaVcl.pas',
   inMtoCajaOpeEntradaVcl in
     'src\Caja\Forms\inMtoCajaOpeEntradaVcl.pas',
+  inMtoCajaEditorAtributosVcl in
+    'src\Caja\Forms\inMtoCajaEditorAtributosVcl.pas',
+  inMtoCajaOpeVentanaVcl in
+    'src\Caja\Forms\inMtoCajaOpeVentanaVcl.pas',
   inLibCajaDepositos in
     'src\Caja\Lib\inLibCajaDepositos.pas',
   inMtoPedidosPresentacionArticuloVcl in

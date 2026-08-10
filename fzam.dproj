@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{5372F570-A327-4800-98DB-9E38B75C697D}</ProjectGuid>
         <ProjectVersion>20.4</ProjectVersion>
@@ -11,6 +11,7 @@
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
     </PropertyGroup>
+    <Import Project="$(MSBuildProjectDirectory)\eng\Factuzam.Dependencias.props"/>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
@@ -73,7 +74,7 @@
         <SanitizedProjectName>Fzam</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
-        <DCC_UnitSearchPath>C:\Program Files (x86)\DevExpress\VCL\Library\RS37;C:\DISCO_DURO\Fastreport\Lib37.0\VCL\Win32;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>$(FactuzamDependenciasPlataforma);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_UsePackage>DBXSqliteDriver;dxFlowChartRS26;DBXDb2Driver;vclactnband;dxBarRS26;vclFireDAC;dxFireDACEMFRS26;FireDACADSDriver;dxRichEditCoreRS26;dxPSdxSpreadSheetLnkRS26;FireDACMSSQLDriver;vcltouch;vcldb;svn;dxPSTeeChartRS26;dxGDIPlusRS26;dxPSdxFCLnkRS26;vclib;dxCloudServiceLibraryRS26;frxTee26;office2K;dxPSLnksRS26;FireDACDBXDriver;cxGridRS26;dxPsPrVwAdvRS26;dxPDFViewerRS26;vclx;dxPScxTLLnkRS26;unidac260;RESTBackendComponents;VCLRESTComponents;fsTee26;vclie;bindengine;CloudService;dxmdsRS26;FireDACMySQLDriver;fsIBX26;dxdborRS26;frx26;DataSnapClient;bindcompdbx;DBXSybaseASEDriver;IndyIPServer;cxPivotGridRS26;IndySystem;fsADO26;frxDBX26;cxTreeListdxBarPopupMenuRS26;dsnapcon;cxTreeListRS26;dxPScxPivotGridLnkRS26;cxSchedulerRibbonStyleEventEditorRS26;dxPSCoreRS26;FireDACMSAccDriver;FireDACInfxDriver;fmxFireDAC;vclimg;dxSpreadSheetRS26;dxBarExtItemsRS26;dxPSdxGaugeControlLnkRS26;emshosting;DBXOdbcDriver;FireDACTDataDriver;dxdbtrRS26;dxRichEditControlCoreRS26;soaprtl;DbxCommonDriver;dxFlowChartAdvancedCustomizeFormRS26;crcontrols260;dxDockingRS26;xmlrtl;DataSnapNativeClient;soapmidas;fmxobj;cxLibraryRS26;rtl;emsserverresource;DbxClientDriver;DBXSybaseASADriver;dxPScxSchedulerLnkRS26;dxSpreadSheetConditionalFormattingDialogsRS26;appanalytics;dxRibbonCustomizationFormRS26;cxSchedulerGridRS26;IndyIPClient;bindcompvcl;dxFlowChartLayoutsRS26;TeeUI;dxADOEMFRS26;VclSmp;FireDACODBCDriver;dxRibbonRS26;DataSnapIndy10ServerTransport;dxPScxCommonRS26;dxRichEditDocumentModelRS26;DataSnapProviderClient;FireDACMongoDBDriver;dxFlowChartDesignerRS26;dxGanttControlRS26;dxPScxGridLnkRS26;dxSpreadSheetCoreRS26;DataSnapServerMidas;RESTComponents;DBXInterBaseDriver;dxPScxExtCommonRS26;emsclientfiredac;DataSnapFireDAC;svnui;DBXMSSQLDriver;dxRichEditControlRS26;DatasnapConnectorsFreePascal;dxGaugeControlRS26;dxorgcRS26;dxPScxVGridLnkRS26;bindcompfmx;DBXOracleDriver;dxOrgChartAdvancedCustomizeFormRS26;inetdb;dxBarDBNavRS26;emsedge;fmx;fmxdae;FireDACIBDriver;dxServerModeRS26;dxWizardControlRS26;vquery260;dxTabbedMDIRS26;dacvcl260;fs26;dxEMFRS26;dbexpress;IndyCore;dxComnRS26;frxIntIO26;dsnap;DataSnapCommon;emsclient;FireDACCommon;cxGridEMFRS26;frxcs26;DataSnapConnectors;cxSchedulerTreeBrowserRS26;soapserver;cxPivotGridOLAPRS26;cxVerticalGridRS26;dxtrmdRS26;FireDACOracleDriver;DBXMySQLDriver;cxSchedulerRS26;cxSchedulerWebServiceStorageRS26;dxPSdxLCLnkRS26;DBXFirebirdDriver;FireDACCommonODBC;FireDACCommonDriver;frxIntIOIndy26;inet;dxSpellCheckerRS26;IndyIPCommon;dxSpreadSheetCoreConditionalFormattingDialogsRS26;vcl;dxPSdxDBOCLnkRS26;frxDB26;FireDACDb2Driver;dxSpreadSheetReportDesignerRS26;dxPScxPCProdRS26;dxNavBarRS26;dxCoreRS26;fsDB26;cxExportRS26;TeeDB;FireDAC;dxPSPrVwRibbonRS26;unidacvcl260;frxe26;FireDACSqliteDriver;ibmonitor;FireDACPgDriver;FireDACASADriver;dxPSRichEditControlLnkRS26;cxPivotGridChartRS26;frxIBX26;dxPSDBTeeChartRS26;ibxpress;Tee;DataSnapServer;ibxbindings;dxPSdxDBTVLnkRS26;dac260;vclwinx;FireDACDSDriver;frxADO26;dxTileControlRS26;dxSkinsCoreRS26;CustomIPTransport;vcldsnap;SynEditDR;bindcomp;dxPSdxOCLnkRS26;DBXInformixDriver;dbxcds;adortl;dxBarExtDBItemsRS26;dsnapxml;dbrtl;IndyProtocols;inetdbxpress;dxPSdxPDFViewerLnkRS26;fmxase;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;Bde;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
@@ -87,7 +88,7 @@
         <AppDPIAwarenessMode>none</AppDPIAwarenessMode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">
-        <DCC_UnitSearchPath>C:\Program Files (x86)\DevExpress\VCL\Library\RS37\Win64;C:\DISCO_DURO\Fastreport\Lib37.0\VCL\Win64;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>$(FactuzamDependenciasPlataforma);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_UsePackage>DBXSqliteDriver;dxFlowChartRS26;DBXDb2Driver;vclactnband;dxBarRS26;vclFireDAC;dxFireDACEMFRS26;FireDACADSDriver;dxRichEditCoreRS26;dxPSdxSpreadSheetLnkRS26;FireDACMSSQLDriver;vcltouch;vcldb;dxPSTeeChartRS26;dxGDIPlusRS26;dxPSdxFCLnkRS26;vclib;dxCloudServiceLibraryRS26;office2K;dxPSLnksRS26;FireDACDBXDriver;cxGridRS26;dxPsPrVwAdvRS26;dxPDFViewerRS26;vclx;dxPScxTLLnkRS26;RESTBackendComponents;VCLRESTComponents;vclie;bindengine;CloudService;dxmdsRS26;FireDACMySQLDriver;dxdborRS26;DataSnapClient;bindcompdbx;DBXSybaseASEDriver;IndyIPServer;cxPivotGridRS26;IndySystem;cxTreeListdxBarPopupMenuRS26;dsnapcon;cxTreeListRS26;dxPScxPivotGridLnkRS26;cxSchedulerRibbonStyleEventEditorRS26;dxPSCoreRS26;FireDACMSAccDriver;FireDACInfxDriver;fmxFireDAC;vclimg;dxSpreadSheetRS26;dxBarExtItemsRS26;dxPSdxGaugeControlLnkRS26;emshosting;DBXOdbcDriver;FireDACTDataDriver;dxdbtrRS26;dxRichEditControlCoreRS26;soaprtl;DbxCommonDriver;dxFlowChartAdvancedCustomizeFormRS26;dxDockingRS26;xmlrtl;DataSnapNativeClient;soapmidas;fmxobj;cxLibraryRS26;rtl;emsserverresource;DbxClientDriver;DBXSybaseASADriver;dxPScxSchedulerLnkRS26;dxSpreadSheetConditionalFormattingDialogsRS26;appanalytics;dxRibbonCustomizationFormRS26;cxSchedulerGridRS26;IndyIPClient;bindcompvcl;dxFlowChartLayoutsRS26;TeeUI;dxADOEMFRS26;VclSmp;FireDACODBCDriver;dxRibbonRS26;DataSnapIndy10ServerTransport;dxPScxCommonRS26;dxRichEditDocumentModelRS26;DataSnapProviderClient;FireDACMongoDBDriver;dxFlowChartDesignerRS26;dxGanttControlRS26;dxPScxGridLnkRS26;dxSpreadSheetCoreRS26;DataSnapServerMidas;RESTComponents;DBXInterBaseDriver;dxPScxExtCommonRS26;emsclientfiredac;DataSnapFireDAC;DBXMSSQLDriver;dxRichEditControlRS26;DatasnapConnectorsFreePascal;dxGaugeControlRS26;dxorgcRS26;dxPScxVGridLnkRS26;bindcompfmx;DBXOracleDriver;dxOrgChartAdvancedCustomizeFormRS26;inetdb;dxBarDBNavRS26;emsedge;fmx;fmxdae;FireDACIBDriver;dxServerModeRS26;dxWizardControlRS26;dxTabbedMDIRS26;dxEMFRS26;dbexpress;IndyCore;dxComnRS26;dsnap;DataSnapCommon;emsclient;FireDACCommon;cxGridEMFRS26;DataSnapConnectors;cxSchedulerTreeBrowserRS26;soapserver;cxPivotGridOLAPRS26;cxVerticalGridRS26;dxtrmdRS26;FireDACOracleDriver;DBXMySQLDriver;cxSchedulerRS26;cxSchedulerWebServiceStorageRS26;dxPSdxLCLnkRS26;DBXFirebirdDriver;FireDACCommonODBC;FireDACCommonDriver;inet;dxSpellCheckerRS26;IndyIPCommon;dxSpreadSheetCoreConditionalFormattingDialogsRS26;vcl;dxPSdxDBOCLnkRS26;FireDACDb2Driver;dxSpreadSheetReportDesignerRS26;dxPScxPCProdRS26;dxNavBarRS26;dxCoreRS26;cxExportRS26;TeeDB;FireDAC;dxPSPrVwRibbonRS26;FireDACSqliteDriver;ibmonitor;FireDACPgDriver;FireDACASADriver;dxPSRichEditControlLnkRS26;cxPivotGridChartRS26;dxPSDBTeeChartRS26;ibxpress;Tee;DataSnapServer;ibxbindings;dxPSdxDBTVLnkRS26;vclwinx;FireDACDSDriver;dxTileControlRS26;dxSkinsCoreRS26;CustomIPTransport;vcldsnap;SynEditDR;bindcomp;dxPSdxOCLnkRS26;DBXInformixDriver;dbxcds;adortl;dxBarExtDBItemsRS26;dsnapxml;dbrtl;IndyProtocols;inetdbxpress;dxPSdxPDFViewerLnkRS26;fmxase;$(DCC_UsePackage)</DCC_UsePackage>
         <DCC_Namespace>Winapi;System.Win;Data.Win;Datasnap.Win;Web.Win;Soap.Win;Xml.Win;$(DCC_Namespace)</DCC_Namespace>
         <BT_BuildType>Debug</BT_BuildType>
@@ -321,6 +322,7 @@
             <Form>frmMtoPrincipal</Form>
         </DCCReference>
         <DCCReference Include="src\Core\inMtoPrincipalAccionesVcl.pas"/>
+        <DCCReference Include="src\Core\inMtoPrincipalCertificadosVcl.pas"/>
         <DCCReference
             Include="src\Core\inMtoPrincipalPresentacionInicio.pas"/>
         <DCCReference Include="src\Forms\inMtoGen.pas">
@@ -336,6 +338,7 @@
         <DCCReference Include="src\Forms\inMtoFacturasConsolidacionVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasVistaVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasCobrosVcl.pas"/>
+        <DCCReference Include="src\Forms\inMtoFacturasAccionesVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasNormal.pas">
             <Form>frmMtoFacturasNormal</Form>
         </DCCReference>
@@ -346,6 +349,7 @@
             <Form>frmMtoArticulos</Form>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoArticulosGuardadoVcl.pas"/>
+        <DCCReference Include="src\Forms\inMtoArticulosStockVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoClientes.pas">
             <Form>frmMtoClientes</Form>
         </DCCReference>
@@ -688,6 +692,7 @@
             <Form>dmFacturas</Form>
             <DesignClass>TdmFacturas</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataFacturasConfiguracion.pas"/>
         <DCCReference Include="src\DataModules\UniDataFacturasIncidenciaFiscal.pas"/>
         <DCCReference Include="src\DataModules\UniDataGenFilter.pas">
             <Form>dmGenFilter</Form>
@@ -747,11 +752,18 @@
         <DCCReference Include="src\Caja\Forms\inMtoTraspasoOpe.pas">
             <Form>frmMtoOpeTraspaso</Form>
         </DCCReference>
+        <DCCReference Include="src\Caja\Forms\inMtoTraspasoSolicitudesHist.pas">
+            <Form>frmMtoTraspasoSolicitudesHist</Form>
+        </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoOpePersistenciaIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataTraspasoOpeRepositorio.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataTraspaso.pas">
             <Form>dmTraspaso</Form>
             <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Caja\DataModules\UniDataTraspasoSolicitudesHist.pas">
+            <Form>dmTraspasoSolicitudesHist</Form>
+            <DesignClass>TdmTraspasoSolicitudesHist</DesignClass>
         </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoTicketIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas"/>
@@ -1131,6 +1143,7 @@
             <Form>frmMtoInventarios</Form>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoInventariosEntradaVcl.pas"/>
+        <DCCReference Include="src\Forms\inMtoInventariosImportacionVcl.pas"/>
         <DCCReference Include="src\DataModules\UniDataInventarios.pas">
             <Form>dmInventarios</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -1220,6 +1233,7 @@
         <DCCReference Include="src\Forms\inMtoDevolucionesCompra.pas">
             <Form>frmMtoDevolucionesCompra</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDevolucionesCompraSeleccionVcl.pas"/>
         <DCCReference Include="src\DataModules\UniDataDevolucionesCompra.pas">
             <Form>dmDevolucionesCompra</Form>
             <DesignClass>TdmDevolucionesCompra</DesignClass>
@@ -1227,6 +1241,7 @@
         <DCCReference Include="src\Forms\inMtoFacturasCompra.pas">
             <Form>frmMtoFacturasCompra</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoFacturasCompraPagosVcl.pas"/>
         <DCCReference Include="src\DataModules\UniDataFacturasCompra.pas">
             <Form>dmFacturasCompra</Form>
             <DesignClass>TdmFacturasCompra</DesignClass>
@@ -1276,6 +1291,7 @@
         <DCCReference Include="src\Forms\inMtoPedidosCompra.pas">
             <Form>frmMtoPedidosCompra</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPedidosCompraRecepcionVcl.pas"/>
         <DCCReference Include="src\DataModules\UniDataPedidosCompra.pas">
             <Form>dmPedidosCompra</Form>
             <DesignClass>TdmPedidosCompra</DesignClass>
@@ -1667,6 +1683,8 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Forms\inMtoCajaOpeBusquedaVcl.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaOpeEntradaVcl.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaEditorAtributosVcl.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaOpeVentanaVcl.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaDepositos.pas"/>
         <DCCReference
             Include="src\Forms\inMtoPedidosPresentacionArticuloVcl.pas"/>

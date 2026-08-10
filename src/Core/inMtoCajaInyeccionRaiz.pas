@@ -55,6 +55,8 @@ type
     function CrearTraspaso(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): ITraspasoCaja;
+    procedure MostrarHistoricoSolicitudesTraspaso(
+      const ATitulo: string);
     procedure MostrarMenu(const APermisos: IPermisosAplicacion);
     procedure MostrarParametros;
     procedure MostrarInformeOperacionesVenta;
@@ -67,7 +69,11 @@ implementation
 uses
   System.SysUtils,
   Vcl.Forms,
+  cxPC,
   inLibRegistroPantallas,
+  inLibFormManager,
+  inLibShowMto,
+  inLibVentanaEmbebidaIntf,
   inMtoFrmBase,
   inMtoCajaOpe,
   inMtoConsultaOpe,
@@ -77,6 +83,7 @@ uses
   inMtoCajaOperacionesHist,
   inMtoCajaPagosHist,
   inMtoCajaArqueosHist,
+  inMtoTraspasoSolicitudesHist,
   inMtoDepositosCliente,
   inMtoUsuarios,
   inMtoModalImpOperacionesVenta;
@@ -226,6 +233,43 @@ begin
     AOwner,
     APermisos,
     Dependencias);
+end;
+
+procedure TInyeccionCajaRaiz.MostrarHistoricoSolicitudesTraspaso(
+  const ATitulo: string);
+const
+  CLAVE_HISTORICO = 'CajaSolicitudesTraspasoHist';
+var
+  Anfitrion: IAnfitrionPantallas;
+  Gestor: TEmbeddedFormManager;
+  Formulario: TForm;
+  Mantenimiento: IMantenimientoEmbebido;
+begin
+  Anfitrion := FOwnerRaiz as IAnfitrionPantallas;
+  Anfitrion.PrepararAperturaPantalla;
+  Gestor := Anfitrion.GestorVentanas;
+  Formulario := Gestor.FormPorClave(CLAVE_HISTORICO);
+  if Assigned(Formulario) then
+  begin
+    if Formulario.Parent is TcxTabSheet then
+      TcxTabSheet(Formulario.Parent).PageControl.ActivePage :=
+        TcxTabSheet(Formulario.Parent);
+  end
+  else
+  begin
+    Formulario := TfrmMtoTraspasoSolicitudesHist.Create(
+      FOwnerRaiz,
+      FComposicion.Permisos);
+    Mantenimiento := Formulario as IMantenimientoEmbebido;
+    Formulario.Hide;
+    Gestor.EmbedForm(
+      Formulario,
+      Mantenimiento,
+      ATitulo,
+      CLAVE_HISTORICO,
+      True);
+    Mantenimiento.AbrirTablaPrincipal(False);
+  end;
 end;
 
 procedure TInyeccionCajaRaiz.MostrarMenu(

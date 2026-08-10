@@ -179,6 +179,12 @@ type
     function ConexionDatos: TUniConnection;
     procedure LogSes(const ATexto: string);
     procedure ConfigurarSqlCabecera;
+    function SqlLecturaCabecera: string;
+    procedure ConfigurarLecturasCabecera;
+    procedure ConectarConsultas;
+    procedure ConfigurarConsultaKitsProveedor;
+    procedure ConectarCatalogos;
+    procedure AbrirCatalogos;
     procedure AjustarCamposDerivadosCabecera;
     procedure CalcularTotalesLineaActual;
     procedure PersistirTotalesSesion;
@@ -526,11 +532,9 @@ begin
     ' FOR UPDATE';
 end;
 
-procedure TdmComprasSesiones.DataModuleCreate(Sender: TObject);
+function TdmComprasSesiones.SqlLecturaCabecera: string;
 begin
-  inherited;
-  ConfigurarSqlCabecera;
-  unqryTablaG.SQL.Text :=
+  Result :=
     'SELECT s.*, ' +
     '       prv.RAZON_SOCIAL_PRV AS RAZON_SOCIAL_PRV_SES, ' +
     '       prv.NOMBRE_PRV AS NOMBRE_PRV_SES, ' +
@@ -576,7 +580,12 @@ begin
     '              GROUP BY l.SERIE_PEDC_PEDCLIN, ' +
     '                       l.NUMERO_PEDC_PEDCLIN) ped ' +
     '    ON ped.SERIE_PEDC_PEDCLIN = s.SERIE_PEDC_SES ' +
-    '   AND ped.NUMERO_PEDC_PEDCLIN = s.NUMERO_PEDC_SES ' +
+    '   AND ped.NUMERO_PEDC_PEDCLIN = s.NUMERO_PEDC_SES';
+end;
+
+procedure TdmComprasSesiones.ConfigurarLecturasCabecera;
+begin
+  unqryTablaG.SQL.Text := SqlLecturaCabecera +
     ' ORDER BY s.FECHA_SES DESC, s.NUMERO_SES DESC';
   unqryTablaG.SQLRefresh.Text :=
     'SELECT s.*, ' +
@@ -627,6 +636,10 @@ begin
     '   AND ped.NUMERO_PEDC_PEDCLIN = s.NUMERO_PEDC_SES ' +
     ' WHERE s.SERIE_SES = :SERIE_SES ' +
     '   AND s.NUMERO_SES = :NUMERO_SES';
+end;
+
+procedure TdmComprasSesiones.ConectarConsultas;
+begin
   unqrySesionLin.Connection         := ConexionPrincipal;
   unqrySesDocs.Connection           := ConexionPrincipal;
   unqrySesionFil.Connection         := ConexionPrincipal;
@@ -643,6 +656,10 @@ begin
   unqryPrvKits.Connection           := ConexionPrincipal;
   unqryPrvKitsDet.Connection        := ConexionPrincipal;
   unqryPrvKitsCombo.Connection      := ConexionPrincipal;
+end;
+
+procedure TdmComprasSesiones.ConfigurarConsultaKitsProveedor;
+begin
   // Etiqueta del desplegable de kits: nombre + sistema de tallas +
   // primera y ultima talla CON cantidad>0, p.ej.
   //   "OPC A  Calzado Hombre EU 39-44  39(1)...44(2)".
@@ -676,6 +693,10 @@ begin
     'K.ID_AC_TALLAS_PRVKIT ' +
     ' WHERE K.CODIGO_PRV_PRVKIT = :prv ' +
     ' ORDER BY K.ORDEN_PRVKIT, K.CODIGO_PRVKIT';
+end;
+
+procedure TdmComprasSesiones.ConectarCatalogos;
+begin
   unqryProveedores.Connection       := ConexionPrincipal;
   unqryFamilias.Connection          := ConexionPrincipal;
   unqryVariaciones.Connection       := ConexionPrincipal;
@@ -697,6 +718,10 @@ begin
   unqryCabSesionPrint.Connection    := ConexionPrincipal;
   unqryLinSesionPrint.Connection    := ConexionPrincipal;
   unqryGuiasSesionPrint.Connection  := ConexionPrincipal;
+end;
+
+procedure TdmComprasSesiones.AbrirCatalogos;
+begin
   // unqryProveedores alimenta tanto el rotulo resuelto de la cabecera
   // (ActualizarLabelProveedor via Locate) como cbbProveedor, el combo de
   // busqueda incremental por nombre.
@@ -714,6 +739,17 @@ begin
   unqryEmpresas.Open;
   unqryFormasPago.Open;
   unqryTemporadas.Open;
+end;
+
+procedure TdmComprasSesiones.DataModuleCreate(Sender: TObject);
+begin
+  inherited;
+  ConfigurarSqlCabecera;
+  ConfigurarLecturasCabecera;
+  ConectarConsultas;
+  ConfigurarConsultaKitsProveedor;
+  ConectarCatalogos;
+  AbrirCatalogos;
 end;
 
 procedure TdmComprasSesiones.RefrescarAlmacenes(

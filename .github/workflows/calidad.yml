@@ -11,18 +11,20 @@ permissions:
 
 jobs:
   trinquetes:
-    name: Trinquetes y pruebas de scripts
+    name: Pruebas de infraestructura
     runs-on: windows-latest
     timeout-minutes: 20
     steps:
       - name: Obtener el repositorio
         uses: actions/checkout@v6
-      - name: Comprobar calidad
+      - name: Comprobar trinquetes y compilación reproducible
         shell: pwsh
-        run: .\scripts\comprobar_calidad.ps1
+        run: |
+          .\tests\arquitectura\PruebasArquitecturaS31.ps1
+          .\tests\compilacion\PruebasCompilacionS32.ps1
 
-  pruebas-delphi:
-    name: fzam y DUnitX Win32 y Win64
+  compilacion-delphi:
+    name: fzam Release Win32 y Win64
     runs-on:
       - self-hosted
       - Windows
@@ -31,6 +33,9 @@ jobs:
     steps:
       - name: Obtener el repositorio
         uses: actions/checkout@v6
-      - name: Compilar fzam y ejecutar DUnitX
+      - name: Compilar fzam
         shell: pwsh
-        run: .\scripts\ejecutar_pruebas_delphi.ps1
+        run: >-
+          .\eng\compilar.ps1
+          -Configuracion Release
+          -Plataforma Ambas

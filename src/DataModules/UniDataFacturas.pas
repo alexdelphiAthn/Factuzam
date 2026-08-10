@@ -164,14 +164,6 @@ private
     // SIMPLIFICADA siempre; NORMAL solo con el check ESMUEVE_STOCK_FAC.
     // Si no los genera, el almacen de la factura es OPCIONAL.
     function FacturaGeneraMovimientos: Boolean;
-    // True si facturas_columnas_sku.sql esta aplicado (ATTR1..5 +
-    // NUM_ATRIBUTOS en fza_facturas_lineas). Sin la migracion, los
-    // SQL de lineas se quedan como en el dfm: incluir los parametros
-    // ATTR* sin campo daba 'Not found field corresponding parameter'.
-    function ColumnasSkuLineasAplicadas: Boolean;
-    procedure PrepararCabeceraSinCamposComplejos;
-    procedure QuitarCampoComplejoCabecera(ALista: TStrings;
-                                          const ACampo: string);
 public
     procedure ConfigurarServicios(
       const AServicios: TServiciosFactura);
@@ -280,19 +272,13 @@ uses
   inLibVentasImpuestos,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
+  UniDataFacturasConfiguracion,
   inLibFacturasValidacionCabecera,
   inLibFacturasValidacionDatos,
   inLibFacturasValidacionUniDAC,
-  inLibMsgFacturas, inLibMsgVentas,
-  inLibSqlSeguro;
+  inLibMsgFacturas, inLibMsgVentas;
 
 {$R *.dfm}
-
-const
-  CAMPOS_COMPLEJOS_CABECERA: array[0..1] of string = (
-    'DOCUMENTO_FAC',
-    'XML_FAC'
-  );
 
 procedure RevertirBorradoFactura(
   const AServicio: IServicioBorradoFactura);
@@ -720,127 +706,15 @@ begin
   inherited;
   FAdvertenciasPendientes := TStringList.Create;
   unqryPerfiles.Connection := ConexionPrincipal;
-  unqryTablaG.Connection := ConexionPrincipal;
-  unqryTablaG.KeyFields := 'NUMERO_FAC;SERIE_FAC';
-  unqryTablaG.SQLDelete.Text :=
-    'DELETE FROM fza_facturas ' + sLineBreak +
-    'WHERE NUMERO_FAC = :Old_NUMERO_FAC ' + sLineBreak +
-    '  AND SERIE_FAC = :Old_SERIE_FAC';
+  ConfigurarPersistenciaCabeceraFactura(
+    ConexionPrincipal,
+    unqryTablaG);
   // Cierre de la transaccion del borrado (abierta en BeforeDelete)
   unqryTablaG.AfterDelete := unqryTablaGAfterDeleteTx;
   unqryTablaG.OnDeleteError := unqryTablaGDeleteErrorTx;
-  PrepararCabeceraSinCamposComplejos;
-  unqryLinFac.Connection := ConexionPrincipal;
-  // Contrato ColumnSKUcxGrid (facturas_columnas_sku.sql): los SQL del
-  // dfm no conocen las columnas nuevas (ATTR1..5 + NUM_ATRIBUTOS); se
-  // reescriben aqui COMPLETOS para no editar el dfm cableado (mismo
-  // criterio que TdmPedidos con fza_pedidos_lineas). SOLO si la
-  // migracion esta aplicada: sin los campos, los parametros ATTR*
-  // rompen el INSERT ('Not found field corresponding parameter').
-  if ColumnasSkuLineasAplicadas then
-  begin
-  unqryLinFac.SQLInsert.Text :=
-    'INSERT INTO fza_facturas_lineas ' +
-    ' (NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, ' +
-    '  CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, CODIGO_FAM_FACLIN, ' +
-    '  NOMBRE_FAM_FACLIN, PRECIO_ULT_COMPRA_FACLIN, CODIGO_PRV_FACLIN, ' +
-    '  RAZON_SOCIAL_PROVEEDOR_FACLIN, ESPROVEEDORPRINCIPAL_FACLIN, ' +
-    '  FECHA_ENTREGA_FACLIN, TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
-    '  ESIMP_INCL_TARIFA_FACLIN, TIPO_IVA_ARTICULO_FACLIN, ' +
-    '  DESCRIPCION_ARTICULO_FACLIN, DESCRIPCION_VARIACION_FACLIN, ' +
-    '  CODIGO_TAR_FACLIN, CANTIDAD_FACLIN, PRECIO_SALIDA_FACLIN, ' +
-    '  PORCENTAJE_DTO_FACLIN, PRECIO_DTO_FACLIN, ' +
-    '  PRECIO_VENTA_SIVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
-    '  PRECIO_VENTA_CIVA_ARTICULO_FACLIN, TOTAL_FACLIN, ' +
-    '  TOTAL_FAC_SIVA_FACLIN, ' +
-    '  ATTR1_VALOR_FACLIN, ATTR1_NOMBRE_FACLIN, ' +
-    '  ATTR2_VALOR_FACLIN, ATTR2_NOMBRE_FACLIN, ' +
-    '  ATTR3_VALOR_FACLIN, ATTR3_NOMBRE_FACLIN, ' +
-    '  ATTR4_VALOR_FACLIN, ATTR4_NOMBRE_FACLIN, ' +
-    '  ATTR5_VALOR_FACLIN, ATTR5_NOMBRE_FACLIN, ' +
-    '  NUM_ATRIBUTOS_FACLIN, ' +
-    '  INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
-    'VALUES ' +
-    ' (:NUMERO_FAC_FACLIN, :SERIE_FAC_FACLIN, :LINEA_FACLIN, ' +
-    '  :CODIGO_ART_FACLIN, :CODIGO_UNIDAD_FACLIN, :CODIGO_FAM_FACLIN, ' +
-    '  :NOMBRE_FAM_FACLIN, :PRECIO_ULT_COMPRA_FACLIN, ' +
-    '  :CODIGO_PRV_FACLIN, :RAZON_SOCIAL_PROVEEDOR_FACLIN, ' +
-    '  :ESPROVEEDORPRINCIPAL_FACLIN, :FECHA_ENTREGA_FACLIN, ' +
-    '  :TIPO_CANTIDAD_ARTICULO_FACLIN, :ESIMP_INCL_TARIFA_FACLIN, ' +
-    '  :TIPO_IVA_ARTICULO_FACLIN, :DESCRIPCION_ARTICULO_FACLIN, ' +
-    '  :DESCRIPCION_VARIACION_FACLIN, :CODIGO_TAR_FACLIN, ' +
-    '  :CANTIDAD_FACLIN, :PRECIO_SALIDA_FACLIN, :PORCENTAJE_DTO_FACLIN, ' +
-    '  :PRECIO_DTO_FACLIN, :PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
-    '  :PORCENTAJE_IVA_FACLIN, :PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
-    '  :TOTAL_FACLIN, :TOTAL_FAC_SIVA_FACLIN, ' +
-    '  :ATTR1_VALOR_FACLIN, :ATTR1_NOMBRE_FACLIN, ' +
-    '  :ATTR2_VALOR_FACLIN, :ATTR2_NOMBRE_FACLIN, ' +
-    '  :ATTR3_VALOR_FACLIN, :ATTR3_NOMBRE_FACLIN, ' +
-    '  :ATTR4_VALOR_FACLIN, :ATTR4_NOMBRE_FACLIN, ' +
-    '  :ATTR5_VALOR_FACLIN, :ATTR5_NOMBRE_FACLIN, ' +
-    '  :NUM_ATRIBUTOS_FACLIN, ' +
-    '  :INSTANTE_MODIF, :INSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)';
-  unqryLinFac.SQLUpdate.Text :=
-    'UPDATE fza_facturas_lineas SET ' +
-    '  NUMERO_FAC_FACLIN = :NUMERO_FAC_FACLIN, ' +
-    '  SERIE_FAC_FACLIN = :SERIE_FAC_FACLIN, ' +
-    '  LINEA_FACLIN = :LINEA_FACLIN, ' +
-    '  CODIGO_ART_FACLIN = :CODIGO_ART_FACLIN, ' +
-    '  CODIGO_UNIDAD_FACLIN = :CODIGO_UNIDAD_FACLIN, ' +
-    '  CODIGO_FAM_FACLIN = :CODIGO_FAM_FACLIN, ' +
-    '  NOMBRE_FAM_FACLIN = :NOMBRE_FAM_FACLIN, ' +
-    '  PRECIO_ULT_COMPRA_FACLIN = :PRECIO_ULT_COMPRA_FACLIN, ' +
-    '  CODIGO_PRV_FACLIN = :CODIGO_PRV_FACLIN, ' +
-    '  RAZON_SOCIAL_PROVEEDOR_FACLIN = :RAZON_SOCIAL_PROVEEDOR_FACLIN, ' +
-    '  ESPROVEEDORPRINCIPAL_FACLIN = :ESPROVEEDORPRINCIPAL_FACLIN, ' +
-    '  FECHA_ENTREGA_FACLIN = :FECHA_ENTREGA_FACLIN, ' +
-    '  TIPO_CANTIDAD_ARTICULO_FACLIN = :TIPO_CANTIDAD_ARTICULO_FACLIN, ' +
-    '  ESIMP_INCL_TARIFA_FACLIN = :ESIMP_INCL_TARIFA_FACLIN, ' +
-    '  TIPO_IVA_ARTICULO_FACLIN = :TIPO_IVA_ARTICULO_FACLIN, ' +
-    '  DESCRIPCION_ARTICULO_FACLIN = :DESCRIPCION_ARTICULO_FACLIN, ' +
-    '  DESCRIPCION_VARIACION_FACLIN = :DESCRIPCION_VARIACION_FACLIN, ' +
-    '  CODIGO_TAR_FACLIN = :CODIGO_TAR_FACLIN, ' +
-    '  CANTIDAD_FACLIN = :CANTIDAD_FACLIN, ' +
-    '  PRECIO_SALIDA_FACLIN = :PRECIO_SALIDA_FACLIN, ' +
-    '  PORCENTAJE_DTO_FACLIN = :PORCENTAJE_DTO_FACLIN, ' +
-    '  PRECIO_DTO_FACLIN = :PRECIO_DTO_FACLIN, ' +
-    '  PRECIO_VENTA_SIVA_ARTICULO_FACLIN = ' +
-    '    :PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
-    '  PORCENTAJE_IVA_FACLIN = :PORCENTAJE_IVA_FACLIN, ' +
-    '  PRECIO_VENTA_CIVA_ARTICULO_FACLIN = ' +
-    '    :PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
-    '  TOTAL_FACLIN = :TOTAL_FACLIN, ' +
-    '  TOTAL_FAC_SIVA_FACLIN = :TOTAL_FAC_SIVA_FACLIN, ' +
-    '  ATTR1_VALOR_FACLIN = :ATTR1_VALOR_FACLIN, ' +
-    '  ATTR1_NOMBRE_FACLIN = :ATTR1_NOMBRE_FACLIN, ' +
-    '  ATTR2_VALOR_FACLIN = :ATTR2_VALOR_FACLIN, ' +
-    '  ATTR2_NOMBRE_FACLIN = :ATTR2_NOMBRE_FACLIN, ' +
-    '  ATTR3_VALOR_FACLIN = :ATTR3_VALOR_FACLIN, ' +
-    '  ATTR3_NOMBRE_FACLIN = :ATTR3_NOMBRE_FACLIN, ' +
-    '  ATTR4_VALOR_FACLIN = :ATTR4_VALOR_FACLIN, ' +
-    '  ATTR4_NOMBRE_FACLIN = :ATTR4_NOMBRE_FACLIN, ' +
-    '  ATTR5_VALOR_FACLIN = :ATTR5_VALOR_FACLIN, ' +
-    '  ATTR5_NOMBRE_FACLIN = :ATTR5_NOMBRE_FACLIN, ' +
-    '  NUM_ATRIBUTOS_FACLIN = :NUM_ATRIBUTOS_FACLIN, ' +
-    '  INSTANTE_MODIF = :INSTANTE_MODIF, ' +
-    '  INSTANTE_ALTA = :INSTANTE_ALTA, ' +
-    '  USUARIO_ALTA = :USUARIO_ALTA, ' +
-    '  USUARIO_MODIF = :USUARIO_MODIF ' +
-    'WHERE NUMERO_FAC_FACLIN = :Old_NUMERO_FAC_FACLIN ' +
-    '  AND SERIE_FAC_FACLIN = :Old_SERIE_FAC_FACLIN ' +
-    '  AND LINEA_FACLIN = :Old_LINEA_FACLIN';
-  unqryLinFac.SQLRefresh.Text :=
-    'SELECT * FROM fza_facturas_lineas ' +
-    ' WHERE NUMERO_FAC_FACLIN = :NUMERO_FAC_FACLIN ' +
-    '   AND SERIE_FAC_FACLIN = :SERIE_FAC_FACLIN ' +
-    '   AND LINEA_FACLIN = :LINEA_FACLIN';
-  unqryLinFac.SQLLock.Text :=
-    'SELECT * FROM fza_facturas_lineas ' +
-    ' WHERE NUMERO_FAC_FACLIN = :Old_NUMERO_FAC_FACLIN ' +
-    '   AND SERIE_FAC_FACLIN = :Old_SERIE_FAC_FACLIN ' +
-    '   AND LINEA_FACLIN = :Old_LINEA_FACLIN ' +
-    ' FOR UPDATE';
-  end;
+  ConfigurarPersistenciaLineasFactura(
+    ConexionPrincipal,
+    unqryLinFac);
   unqrySeries.Connection := ConexionPrincipal;
   unqryIvas.Connection := ConexionPrincipal;
   unqryRecibos.Connection := ConexionPrincipal;
@@ -892,31 +766,6 @@ begin
   unqryMovimientosFac.MasterSource := ADataSource;
 end;
 
-procedure TdmFacturas.QuitarCampoComplejoCabecera(ALista: TStrings;
-                                                  const ACampo: string);
-var
-  sCampoSql: string;
-  sSQL: string;
-begin
-  if ALista <> nil then
-  begin
-    sCampoSql := DelimitarIdentificadorSql(
-      ACampo,
-      CAMPOS_COMPLEJOS_CABECERA);
-    sSQL := ALista.Text;
-    sSQL := StringReplace(sSQL,
-      ', ' + sCampoSql + ' = :' + sCampoSql,
-      '', [rfReplaceAll, rfIgnoreCase]);
-    sSQL := StringReplace(sSQL,
-      ', ' + sCampoSql,
-      '', [rfReplaceAll, rfIgnoreCase]);
-    sSQL := StringReplace(sSQL,
-      ', :' + sCampoSql,
-      '', [rfReplaceAll, rfIgnoreCase]);
-    ALista.Text := sSQL;
-  end;
-end;
-
 function TdmFacturas.FacturaPermiteRecalcularLineas: Boolean;
 var
   oCampoFase: TField;
@@ -931,94 +780,6 @@ begin
               (SinVerifactuActivo(ParametrosApp) and
                SameText(sFase, cFaseFacturaSinVerifactu));
   end;
-end;
-
-function TdmFacturas.ColumnasSkuLineasAplicadas: Boolean;
-var
-  qCol: TUniQuery;
-begin
-  Result := False;
-  if ConexionPrincipal <> nil then
-  begin
-    qCol := TUniQuery.Create(nil);
-    try
-      try
-        qCol.Connection := ConexionPrincipal;
-        qCol.SQL.Text :=
-          'SELECT COUNT(*) AS N ' +
-          '  FROM INFORMATION_SCHEMA.COLUMNS ' +
-          ' WHERE TABLE_SCHEMA = DATABASE() ' +
-          '   AND TABLE_NAME = ''fza_facturas_lineas'' ' +
-          '   AND COLUMN_NAME IN (''ATTR1_VALOR_FACLIN'', ' +
-          '                       ''NUM_ATRIBUTOS_FACLIN'')';
-        qCol.Open;
-        Result := qCol.FieldByName('N').AsInteger = 2;
-      except
-        // Ante cualquier fallo se asume SIN migrar: los SQL del dfm
-        // siguen funcionando y solo se pierde el desglose de atributos.
-        Result := False;
-      end;
-    finally
-      FreeAndNil(qCol);
-    end;
-  end;
-end;
-
-procedure TdmFacturas.PrepararCabeceraSinCamposComplejos;
-var
-  ColumnasPermitidas: TStringList;
-  i: Integer;
-  qCampos: TUniQuery;
-  sCampo: string;
-  sCampos: string;
-begin
-  sCampos := '';
-  if ConexionPrincipal <> nil then
-  begin
-    ColumnasPermitidas := TStringList.Create;
-    qCampos := TUniQuery.Create(nil);
-    try
-      qCampos.Connection := ConexionPrincipal;
-      qCampos.SQL.Text := 'SHOW COLUMNS FROM vi_facturas';
-      qCampos.Open;
-      while not qCampos.Eof do
-      begin
-        sCampo := qCampos.FieldByName('Field').AsString;
-        ColumnasPermitidas.Add(sCampo);
-        qCampos.Next;
-      end;
-      i := 0;
-      while i < ColumnasPermitidas.Count do
-      begin
-        sCampo := ColumnasPermitidas[i];
-        if (not SameText(sCampo, CAMPOS_COMPLEJOS_CABECERA[0])) and
-           (not SameText(sCampo, CAMPOS_COMPLEJOS_CABECERA[1])) then
-        begin
-          if sCampos <> '' then
-            sCampos := sCampos + ', ';
-          sCampos := sCampos + DelimitarIdentificadorSql(
-            sCampo,
-            ColumnasPermitidas);
-        end;
-        Inc(i);
-      end;
-    finally
-      FreeAndNil(qCampos);
-      FreeAndNil(ColumnasPermitidas);
-    end;
-    if sCampos <> '' then
-      unqryTablaG.SQL.Text :=
-        'SELECT ' + sCampos + ' FROM vi_facturas ' +
-        ' ORDER BY FECHA_FAC DESC, NUMERO_FAC DESC';
-  end;
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLInsert, 'DOCUMENTO_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLInsert, 'XML_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLUpdate, 'DOCUMENTO_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLUpdate, 'XML_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLLock, 'DOCUMENTO_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLLock, 'XML_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLRefresh, 'DOCUMENTO_FAC');
-  QuitarCampoComplejoCabecera(unqryTablaG.SQLRefresh, 'XML_FAC');
 end;
 
 procedure TdmFacturas.OpenTables;

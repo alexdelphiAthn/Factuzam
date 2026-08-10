@@ -88,6 +88,13 @@ type
     procedure UpsertCosteSku(const aSku: string;
                              aPrecioField, aFechaField: TField);
     procedure EliminarCosteSku(const aSku: string);
+    procedure ReconstruirColumnasStock(AVista: TcxGridDBTableView);
+    procedure AplicarAnchosColumnasStock(AVista: TcxGridDBTableView);
+    procedure ConfigurarFiltroStock(AVista: TcxGridDBTableView);
+    function PrepararClaveTarifa: Integer;
+    procedure AplicarEstadoTarifaPorPrecio;
+    procedure ValidarPeriodoTarifa(APk: Integer);
+    procedure SanearDescuentoTarifa;
 
   public
     procedure PoblarCdsEtiquetasArtDesdeUniQuery;
@@ -602,24 +609,93 @@ begin
   ActualizarAuditoria(DataSet);
 end;
 
-procedure TdmArticulos.unqryStockArticulosAfterScroll(DataSet: TDataSet);
+procedure TdmArticulos.ReconstruirColumnasStock(
+  AVista: TcxGridDBTableView);
+begin
+  AVista.BeginUpdate;
+  try
+    AVista.ClearItems;
+    AVista.DataController.CreateAllItems;
+  finally
+    AVista.EndUpdate;
+  end;
+end;
+
+procedure TdmArticulos.AplicarAnchosColumnasStock(
+  AVista: TcxGridDBTableView);
 const
-  // Anchos fijos en pixels. Sustituyen al ApplyBestFit por columna que
-  // se ejecutaba en este AfterScroll cada vez que el usuario cambiaba de
-  // articulo. BestFit recorria todas las filas N veces (una por columna)
-  // y era uno de los sospechosos del gap silencioso de 5s al abrir
-  // Articulos. Si necesitas reajustar valores tipicos, edita estos const.
-  ANCHO_ALMACEN = 180;  // texto largo (nombre de almacen)
-  ANCHO_COLOR   =  90;  // texto + swatch de color, ya incluido el cuadrado
-  ANCHO_TOTAL   =  80;  // numerico de cierre de fila
-  ANCHO_TALLA   =  55;  // columnas dinamicas pivotadas (tallas, variantes)
+  ANCHO_ALMACEN = 180;
+  ANCHO_COLOR = 90;
+  ANCHO_TOTAL = 80;
+  ANCHO_TALLA = 55;
+var
+  Columna: TcxGridDBColumn;
+  NombreCampo: string;
+  Indice: Integer;
+begin
+  for Indice := 0 to AVista.ColumnCount - 1 do
+  begin
+    Columna := AVista.Columns[Indice] as TcxGridDBColumn;
+    NombreCampo := Columna.DataBinding.FieldName;
+    if SameText(NombreCampo, 'Almacen') then
+      Columna.Width := ANCHO_ALMACEN
+    else if SameText(NombreCampo, 'Color') then
+      Columna.Width := ANCHO_COLOR
+    else if SameText(NombreCampo, 'Total') then
+      Columna.Width := ANCHO_TOTAL
+    else
+      Columna.Width := ANCHO_TALLA;
+  end;
+end;
+
+procedure TdmArticulos.ConfigurarFiltroStock(
+  AVista: TcxGridDBTableView);
+var
+  Columna: TcxGridDBColumn;
+  ColumnaGrupo: TcxGridDBColumn;
+  ColumnaTotal: TcxGridDBColumn;
+  OcultarCeros: Boolean;
+  NombreCampo: string;
+  Indice: Integer;
+begin
+  ColumnaGrupo := nil;
+  ColumnaTotal := nil;
+  for Indice := 0 to AVista.ColumnCount - 1 do
+  begin
+    Columna := AVista.Columns[Indice] as TcxGridDBColumn;
+    NombreCampo := Columna.DataBinding.FieldName;
+    if SameText(NombreCampo, 'Total') or
+       SameText(NombreCampo, 'Stock Total') then
+      ColumnaTotal := Columna
+    else if not SameText(NombreCampo, 'Almacen') and
+            (Columna.DataBinding.Field <> nil) and
+            (Columna.DataBinding.Field.DataType in
+              [ftString, ftWideString, ftMemo, ftWideMemo]) then
+      ColumnaGrupo := Columna;
+  end;
+  OcultarCeros := Assigned(ParametrosApp) and
+    ParametrosApp.GetBool('appStockOcultarCeros', True);
+  AVista.DataController.Filter.BeginUpdate;
+  try
+    AVista.DataController.Filter.Root.Clear;
+    AVista.DataController.Filter.Root.BoolOperatorKind := fboAnd;
+    if ColumnaGrupo <> nil then
+      AVista.DataController.Filter.Root.AddItem(
+        ColumnaGrupo as TObject, foNotEqual, '-', '-');
+    if OcultarCeros and (ColumnaTotal <> nil) then
+      AVista.DataController.Filter.Root.AddItem(
+        ColumnaTotal as TObject, foNotEqual, 0, '0');
+  finally
+    AVista.DataController.Filter.EndUpdate;
+  end;
+  AVista.DataController.Filter.Active :=
+    (ColumnaGrupo <> nil) or (OcultarCeros and (ColumnaTotal <> nil));
+end;
+
+procedure TdmArticulos.unqryStockArticulosAfterScroll(DataSet: TDataSet);
 var
   tvArticulosStock: TcxGridDBTableView;
-  col: TcxGridDBColumn;
-  colGrupo, colTotal: TcxGridDBColumn;
-  bOcultarCeros: Boolean;
-  nombre, sArt: string;
-  i: Integer;
+  sArt: string;
   swTotal, swTramo: TStopwatch;
   msSP, msRebuild, msAnchos: Int64;
 begin
@@ -643,83 +719,12 @@ begin
         unqryStockArticulos.Open;
         msSP := swTramo.ElapsedMilliseconds;
 
-//    swTramo := TStopwatch.StartNew;
-    tvArticulosStock.BeginUpdate;
-    try
-      tvArticulosStock.ClearItems;
-      tvArticulosStock.DataController.CreateAllItems;
-    finally
-      tvArticulosStock.EndUpdate;
-    end;
-//    msRebuild := swTramo.ElapsedMilliseconds;
-
+        ReconstruirColumnasStock(tvArticulosStock);
         if unqryStockArticulos.Active and
            (tvArticulosStock.ColumnCount > 0) then
         begin
-//      swTramo := TStopwatch.StartNew;
-      // Asignamos anchos fijos segun el nombre del campo. Las columnas
-      // especiales (Almacen, Color, Total) tienen su valor concreto;
-      // el resto (tallas / variantes que llegan dinamicamente del SP
-      // PRC_GET_CAJA_STOCK_PIVOTADO_WITHZ) van con ANCHO_TALLA.
-      for i := 0 to tvArticulosStock.ColumnCount - 1 do
-      begin
-        col := tvArticulosStock.Columns[i] as TcxGridDBColumn;
-        nombre := col.DataBinding.FieldName;
-        if SameText(nombre, 'Almacen') then
-          col.Width := ANCHO_ALMACEN
-        else if SameText(nombre, 'Color') then
-          col.Width := ANCHO_COLOR
-        else if SameText(nombre, 'Total') then
-          col.Width := ANCHO_TOTAL
-        else
-          col.Width := ANCHO_TALLA;
-      end;
-//      msAnchos := swTramo.ElapsedMilliseconds;
-      // Antes se llamaba a EnsancharColumnasStockParaSwatch para sumar
-      // ANCHO_SWATCH_PX a las columnas con cuadradito de color (post-
-      // proceso sobre los anchos calculados por ApplyBestFit). Como
-      // ahora ANCHO_COLOR ya incluye espacio para el swatch, no hace
-      // falta llamarlo. La funcion sigue viva por si la usas en otro
-      // sitio (la mantenemos como utilidad).
-      // Filtro de presentacion: las filas de grupo '-' (almacen sin desglose
-      // por color y el duplicado de sumatorio que devuelve el SP) se ocultan
-      // siempre. Las lineas a cero solo si el parametro general
-      // appStockOcultarCeros esta activo. El SP no se toca.
-      colGrupo := nil;
-      colTotal := nil;
-      for i := 0 to tvArticulosStock.ColumnCount - 1 do
-      begin
-        col := tvArticulosStock.Columns[i] as TcxGridDBColumn;
-        nombre := col.DataBinding.FieldName;
-        if SameText(nombre, 'Total') or SameText(nombre, 'Stock Total') then
-          colTotal := col
-        else if not SameText(nombre, 'Almacen')
-                and (col.DataBinding.Field <> nil)
-                and (col.DataBinding.Field.DataType in [ftString, ftWideString,
-                                                        ftMemo,
-                                                        ftWideMemo]) then
-          colGrupo := col;
-      end;
-      bOcultarCeros := Assigned(ParametrosApp)
-                       and ParametrosApp.GetBool(
-                         'appStockOcultarCeros',
-                         True);
-      tvArticulosStock.DataController.Filter.BeginUpdate;
-      try
-        tvArticulosStock.DataController.Filter.Root.Clear;
-        tvArticulosStock.DataController.Filter.Root.BoolOperatorKind :=
-          fboAnd;
-        if colGrupo <> nil then
-          tvArticulosStock.DataController.Filter.Root.AddItem(
-            colGrupo as TObject, foNotEqual, '-', '-');
-        if bOcultarCeros and (colTotal <> nil) then
-          tvArticulosStock.DataController.Filter.Root.AddItem(
-            colTotal as TObject, foNotEqual, 0, '0');
-      finally
-        tvArticulosStock.DataController.Filter.EndUpdate;
-      end;
-          tvArticulosStock.DataController.Filter.Active :=
-            (colGrupo <> nil) or (bOcultarCeros and (colTotal <> nil));
+          AplicarAnchosColumnasStock(tvArticulosStock);
+          ConfigurarFiltroStock(tvArticulosStock);
         end;
       end;
       RegistroLog.RegistrarRendimiento('Articulos.StockAfterScroll',
@@ -1072,134 +1077,125 @@ begin
     GetCodigoAutoArticulo;
 end;
 
+function TdmArticulos.PrepararClaveTarifa: Integer;
+begin
+  if unqryTarifasArticulos.State = dsInsert then
+  begin
+    unqryTarifasArticulos.FieldByName(
+      'CODIGO_UNICO_ARTTAR').Required := False;
+    unqryTarifasArticulos.FieldByName(
+      'CODIGO_UNICO_ARTTAR').AutoGenerateValue := arAutoInc;
+    Result := -1;
+  end
+  else
+    Result := unqryTarifasArticulos.FieldByName(
+      'CODIGO_UNICO_ARTTAR').AsInteger;
+end;
+
+procedure TdmArticulos.AplicarEstadoTarifaPorPrecio;
+var
+  PrecioAnterior: Double;
+  PrecioNuevo: Double;
+  EstaActiva: string;
+  ValorAnterior: Variant;
+begin
+  PrecioNuevo := unqryTarifasArticulos.FieldByName(
+    'PRECIO_SALIDA_ARTTAR').AsFloat;
+  EstaActiva := unqryTarifasArticulos.FieldByName(
+    'ESACTIVO_ARTTAR').AsString;
+  if unqryTarifasArticulos.State = dsInsert then
+  begin
+    if PrecioNuevo = 0 then
+      unqryTarifasArticulos.FieldByName(
+        'ESACTIVO_ARTTAR').AsString := 'N';
+  end
+  else if unqryTarifasArticulos.State = dsEdit then
+  begin
+    ValorAnterior := unqryTarifasArticulos.FieldByName(
+      'PRECIO_SALIDA_ARTTAR').OldValue;
+    if VarIsNull(ValorAnterior) or VarIsEmpty(ValorAnterior) then
+      PrecioAnterior := 0
+    else
+      PrecioAnterior := ValorAnterior;
+    if (PrecioAnterior > 0) and (PrecioNuevo = 0) and
+       (EstaActiva = 'S') and
+       SolicitarConfirmacion(SPreguntaDesactivarTarifaSinPrecio) then
+      unqryTarifasArticulos.FieldByName(
+        'ESACTIVO_ARTTAR').AsString := 'N';
+    if (PrecioAnterior = 0) and (PrecioNuevo > 0) and
+       (EstaActiva = 'N') and
+       SolicitarConfirmacion(SPreguntaActivarTarifaConPrecio) then
+      unqryTarifasArticulos.FieldByName(
+        'ESACTIVO_ARTTAR').AsString := 'S';
+  end;
+end;
+
+procedure TdmArticulos.ValidarPeriodoTarifa(APk: Integer);
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := ConexionPrincipal;
+    Consulta.SQL.Text :=
+      'SELECT * ' +
+      '  FROM fza_articulos_tarifas ' +
+      ' WHERE CODIGO_ART_ARTTAR = :CODIGO_ART_ART' +
+      '   AND CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR' +
+      '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = :CODIGO_UNIDAD' +
+      '   AND CODIGO_UNICO_ARTTAR <> :PK';
+    Consulta.ParamByName('CODIGO_ART_ART').AsString :=
+      unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    Consulta.ParamByName('CODIGO_TAR_ARTTAR').AsString :=
+      unqryTarifasArticulos.FieldByName('CODIGO_TAR_ARTTAR').AsString;
+    Consulta.ParamByName('CODIGO_UNIDAD').AsString :=
+      unqryTarifasArticulos.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString;
+    Consulta.ParamByName('PK').AsInteger := APk;
+    Consulta.Open;
+    if not ExistePeriodoUnico(
+      Consulta,
+      unqryTarifasArticulos.FieldByName('FECHA_DESDE_ARTTAR'),
+      unqryTarifasArticulos.FieldByName('FECHA_HASTA_ARTTAR')) then
+    begin
+      NotificarError(Format(
+        SErrorTarifaFechasConcurrentes,
+        [unqryTarifasArticulos.FieldByName(
+          'CODIGO_UNIDAD_ARTTAR').AsString]));
+      Abort;
+    end;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+procedure TdmArticulos.SanearDescuentoTarifa;
+begin
+  if (unqryTarifasArticulos.FieldByName(
+        'PRECIO_FINAL_ARTTAR').AsFloat >
+      unqryTarifasArticulos.FieldByName(
+        'PRECIO_SALIDA_ARTTAR').AsFloat) or
+     (unqryTarifasArticulos.FieldByName(
+        'PRECIO_DTO_ARTTAR').AsFloat < 0) or
+     (unqryTarifasArticulos.FieldByName(
+        'PORCENTAJE_DTO_ARTTAR').AsFloat < 0) then
+  begin
+    unqryTarifasArticulos.FieldByName('PRECIO_FINAL_ARTTAR').AsFloat :=
+      unqryTarifasArticulos.FieldByName('PRECIO_SALIDA_ARTTAR').AsFloat;
+    unqryTarifasArticulos.FieldByName('PRECIO_DTO_ARTTAR').AsFloat := 0;
+    unqryTarifasArticulos.FieldByName(
+      'PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
+  end;
+end;
+
 procedure TdmArticulos.unqryTarifasArticulosBeforePost(DataSet: TDataSet);
 var
-  unqrySol: TUniQuery;
-  PKValue: Integer;
-  oldPrecio, newPrecio: Double;
-  esActivo: string;
-  vOld: Variant;
-  function FieldByName(const ANombre: string): TField;
-  begin
-    Result := unqryTarifasArticulos.FieldByName(ANombre);
-  end;
-  function FindField(const ANombre: string): TField;
-  begin
-    Result := unqryTarifasArticulos.FindField(ANombre);
-  end;
+  Clave: Integer;
 begin
   inherited;
-  // 1. Averiguamos el ID del registro actual.
-    // Si estamos insertando uno nuevo, le damos un valor que no existe (-1)
-    if unqryTarifasArticulos.State = dsInsert then
-    begin
-      FieldByName('CODIGO_UNICO_ARTTAR').Required := False;
-      FieldByName('CODIGO_UNICO_ARTTAR').AutoGenerateValue := arAutoInc;
-      PKValue := -1;
-    end
-    else
-    begin
-      // Si estamos editando, cogemos su ID real
-      PKValue := FieldByName('CODIGO_UNICO_ARTTAR').AsInteger;
-    end;
-
-    // ----------------------------------------------------------------
-    // Activación / desactivación según transición del precio de salida
-    // ----------------------------------------------------------------
-    newPrecio := FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
-    esActivo  := FindField('ESACTIVO_ARTTAR').AsString;
-
-    if unqryTarifasArticulos.State = dsInsert then
-    begin
-      // En alta, si nace a 0 lo dejamos inactivo por defecto (sin preguntar).
-      // Las altas con precio>0 conservan el ESACTIVO que les haya puesto el
-      // alta masiva.
-      if newPrecio = 0 then
-        FindField('ESACTIVO_ARTTAR').AsString := 'N';
-    end
-    else if unqryTarifasArticulos.State = dsEdit then
-    begin
-      vOld := FindField('PRECIO_SALIDA_ARTTAR').OldValue;
-      if VarIsNull(vOld) or VarIsEmpty(vOld) then
-        oldPrecio := 0
-      else
-        oldPrecio := vOld;
-
-      // De >0 a 0 estando activa -> preguntar si desactivar
-      if (oldPrecio > 0) and (newPrecio = 0) and (esActivo = 'S') then
-      begin
-        if SolicitarConfirmacion(
-             SPreguntaDesactivarTarifaSinPrecio) then
-          FindField('ESACTIVO_ARTTAR').AsString := 'N';
-      end;
-
-      // De 0 a >0 estando inactiva -> preguntar si activar
-      if (oldPrecio = 0) and (newPrecio > 0) and (esActivo = 'N') then
-      begin
-        if SolicitarConfirmacion(
-             SPreguntaActivarTarifaConPrecio) then
-          FindField('ESACTIVO_ARTTAR').AsString := 'S';
-      end;
-    end;
-
-    unqrySol := TUniQuery.Create(nil);
-    try
-      unqrySol.Connection := ConexionPrincipal;
-
-      // 2. Añadimos: AND CODIGO_UNICO_ARTTAR <> :PK para que no se valide
-      // contra sí mismo
-      unqrySol.SQL.Text := 'SELECT * ' +
-                           '  FROM fza_articulos_tarifas ' +
-                           ' WHERE CODIGO_ART_ARTTAR = :CODIGO_ART_ART' +
-                           '   AND CODIGO_TAR_ARTTAR = :CODIGO_TAR_ARTTAR' +
-                           '   AND COALESCE(CODIGO_UNIDAD_ARTTAR, '''') = ' +
-                           ':CODIGO_UNIDAD' +
-                           '   AND CODIGO_UNICO_ARTTAR <> :PK';
-
-      unqrySol.ParamByName('CODIGO_ART_ART').AsString :=
-                              unqryTablaG.FindField('CODIGO_ART_ART').AsString;
-      unqrySol.ParamByName('CODIGO_TAR_ARTTAR').AsString :=
-                                            FindField(
-                                              'CODIGO_TAR_ARTTAR').AsString;
-      unqrySol.ParamByName('CODIGO_UNIDAD').AsString :=
-                                            FindField(
-                                              'CODIGO_UNIDAD_ARTTAR').AsString;
-      unqrySol.ParamByName('PK').AsInteger := PKValue;
-
-      unqrySol.Open;
-
-      if not(ExistePeriodoUnico(unqrySol,
-                                FindField('FECHA_DESDE_ARTTAR'),
-                                FindField('FECHA_HASTA_ARTTAR')))
-      then
-      begin
-        NotificarError(Format(
-          SErrorTarifaFechasConcurrentes,
-          [FindField('CODIGO_UNIDAD_ARTTAR').AsString]));
-        Abort;
-      end;
-    finally
-      // Liberamos memoria de forma segura
-      FreeAndNil(unqrySol);
-    end;
-
-    // ----------------------------------------------------------------
-    // Sanea precio final / descuento: precio_salida >= precio_final
-    // siempre. Si no, iguala (precio_final = precio_salida) y limpia
-    // los descuentos para que no haya valores negativos en ninguna
-    // factura/etiqueta posterior (anticomercial y rompe los Z).
-    // ----------------------------------------------------------------
-    if (FindField('PRECIO_FINAL_ARTTAR').AsFloat >
-        FindField('PRECIO_SALIDA_ARTTAR').AsFloat) or
-       (FindField('PRECIO_DTO_ARTTAR').AsFloat < 0) or
-       (FindField('PORCENTAJE_DTO_ARTTAR').AsFloat < 0) then
-    begin
-      FindField('PRECIO_FINAL_ARTTAR').AsFloat   :=
-                                  FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
-      FindField('PRECIO_DTO_ARTTAR').AsFloat     := 0;
-      FindField('PORCENTAJE_DTO_ARTTAR').AsFloat := 0;
-    end;
-
+  Clave := PrepararClaveTarifa;
+  AplicarEstadoTarifaPorPrecio;
+  ValidarPeriodoTarifa(Clave);
+  SanearDescuentoTarifa;
   if unqryTarifasArticulos.State in [dsInsert, dsEdit] then
     ActualizarAuditoria(DataSet);
 end;

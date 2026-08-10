@@ -120,6 +120,7 @@ type
     mnuFacturasSimplif: TMenuItem;
     mnuFacturasProforma: TMenuItem;
     mnuCajaArqueosHist: TMenuItem;
+    mnuCajaSolicitudesTraspasoHist: TMenuItem;
     mnuAlmacenInformes: TMenuItem;
     mnuBalanceAlmacenHorizontal: TMenuItem;
     mnuBalanceAlmacenSinTallas: TMenuItem;
@@ -134,6 +135,7 @@ type
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure mnuCajaParamClick(Sender: TObject);
     procedure mnuListadoOperacionesVentaClick(Sender: TObject);
+    procedure mnuCajaSolicitudesTraspasoHistClick(Sender: TObject);
     procedure mnuParmetrosdeEntornoClick(Sender: TObject);
 //    procedure mnuPropiedadesValoresClick(Sender: TObject);
     procedure mnuVerifactuDeclaracionClick(Sender: TObject);
@@ -318,7 +320,6 @@ type
     // la consulta de stock; Ctrl+E abre la consulta de articulos similares.
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
     procedure AbrirCajonDesdePresentacion;
-    procedure MostrarAvisoCaducidadCertificado;
   public
     { Public declarations }
     FormManager : TEmbeddedFormManager;
@@ -357,24 +358,18 @@ uses inLibWin,
   inLibMsgComun,
   inLibMsgConfiguracion,
   inLibDir,
-  inMtoSplash,
   inMtoCajaMenu,
   inMtoBusquedaDatos,
   inLibGenerarTicketCaja,
-  inMtoStockConsulta,
   inMtoPrincipalAccionesVcl,
   inMtoModalScriptLog,
   inMtoRestauracionCopiasVcl,
-  inMtoModalCargarEfectosRemesa,
-  inLibCertificates,
-  inLibPrincipalCertificadosIntf,
-  UniDataPrincipalCertificadosRepositorio,
   inMtoGen,
   inMtoFotoArticulo,
-  System.DateUtils,
   System.RegularExpressions,
   inMtoModalContrasenaCopia,
-  inMtoModalErrorAplicacion;
+  inMtoModalErrorAplicacion,
+  inMtoPrincipalCertificadosVcl;
 
 function CrearContextoRestauracionCopiasVcl(
   AFormulario: TfrmMtoPrincipal): TContextoRestauracionCopiasVcl;
@@ -446,102 +441,6 @@ begin
   if Assigned(FMemo) and FMemo.Visible then
     FMemo.Lines.Add(
       FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL);
-end;
-
-procedure TfrmMtoPrincipal.MostrarAvisoCaducidadCertificado;
-const
-  DIAS_AVISO_CERTIFICADO = 5;
-var
-  Avisos: TStringList;
-  Certificado: TCertificadoEmpresaActivo;
-  Certificados: TCertificadosEmpresasActivos;
-  Repositorio: IRepositorioCertificadosEmpresas;
-  sEmpresa: string;
-  sSerie: string;
-  sTitular: string;
-  sTitularReal: string;
-  sPrefijo: string;
-  dCaducidad: TDateTime;
-  iDias: Integer;
-  bHayCaducidad: Boolean;
-
-  function TextoDias(ADias: Integer): string;
-  begin
-    if ADias <= 0 then
-      Result := SCertificadoQuedaMenosUnDia
-    else if ADias = 1 then
-      Result := SCertificadoQuedaUnDia
-    else
-      Result := Format(SCertificadoQuedanDias, [ADias]);
-  end;
-
-  procedure AgregarAviso(const ATexto: string);
-  begin
-    sPrefijo := '- ' + sEmpresa + ': ';
-    if Trim(sTitularReal) <> '' then
-      sPrefijo := sPrefijo + Trim(sTitularReal) + ', ';
-    Avisos.Add(sPrefijo + ATexto);
-  end;
-
-begin
-  if ConexionPrincipal <> nil then
-  begin
-    Avisos := TStringList.Create;
-    try
-      try
-        Repositorio := CrearRepositorioCertificadosEmpresasUniDAC(
-          ConexionPrincipal);
-        Certificados := Repositorio.ListarActivos;
-        for Certificado in Certificados do
-        begin
-          sEmpresa := Trim(Certificado.Empresa);
-          if sEmpresa = '' then
-            sEmpresa := Trim(Certificado.CodigoEmpresa);
-          sSerie := Trim(Certificado.Serie);
-          sTitular := Trim(Certificado.Titular);
-          sTitularReal := sTitular;
-          bHayCaducidad := ObtenerCaducidadCertificado(sSerie, sTitular,
-                                                       dCaducidad,
-                                                       sTitularReal);
-          if (not bHayCaducidad) and Certificado.TieneFechaHasta then
-          begin
-            dCaducidad := Certificado.FechaHasta;
-            bHayCaducidad := dCaducidad > 0;
-          end;
-          if sTitularReal = '' then
-            sTitularReal := sTitular;
-          if bHayCaducidad then
-          begin
-            if dCaducidad < Now then
-            begin
-              AgregarAviso(
-                Format(SAvisoCertificadoCaducado,
-                       [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad)]));
-            end
-            else if dCaducidad < IncDay(Now, DIAS_AVISO_CERTIFICADO) then
-            begin
-              iDias := Trunc(dCaducidad - Now);
-              AgregarAviso(
-                Format(SAvisoCertificadoProximoCaducar,
-                       [FormatDateTime('dd/mm/yyyy hh:nn', dCaducidad),
-                        TextoDias(iDias)]));
-            end;
-          end;
-        end;
-        if Avisos.Count > 0 then
-        begin
-          MessageDlg(Format(SAvisoCertificadosCaducidad, [Avisos.Text]),
-                     mtWarning, [mbOK], 0);
-        end;
-      except
-        on E: Exception do
-          RegistroLog.RegistrarAviso('No se pudo comprobar la caducidad de ' +
-            'certificados al arrancar: ' + E.Message);
-      end;
-    finally
-      FreeAndNil(Avisos);
-    end;
-  end;
 end;
 
 procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;
@@ -781,7 +680,7 @@ procedure TfrmMtoPrincipal.FinalizarArranqueAplicacion;
 begin
   RegistrarInicioAplicacion;
   FPresentacionInicio.CerrarSplash(1000);
-  MostrarAvisoCaducidadCertificado;
+  MostrarAvisoCaducidadCertificados(ConexionPrincipal, RegistroLog);
 end;
 
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
@@ -1151,7 +1050,7 @@ begin
     AsignarUnidadesMedida(nil);
     AsignarTraducciones(nil);
     AsignarParametros(nil, nil);
-    DesvincularPerfilesStockConsulta;
+    DesvincularConsultaStockPrincipal;
     AsignarPerfilesUsuario(
       CrearServiciosPerfilesUsuario(nil, nil, nil));
     AsignarFiltrosGuardados(
@@ -1514,16 +1413,9 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
-var
-  frmSplash: TfrmSplash;
 begin
   inherited;
-  try
-    frmSplash := TfrmSplash.Create(Self, RegistroLog);
-    frmSplash.ShowModal;
-  finally
-    FreeAndNil(frmSplash);
-  end;
+  MostrarAcercaDe(Self, RegistroLog);
 end;
 
 procedure TfrmMtoPrincipal.mnuForoSoporteClick(Sender: TObject);
@@ -1533,32 +1425,9 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuConsultaStocksClick(Sender: TObject);
-var
-  LForm: TForm;
-  ts: TcxTabSheet;
-  sArt, sSku: string;
 begin
   if mnuConsultaStocks.Enabled then
-  begin
-    // Si el principal esta activo, el form logico es el de la pestaña activa.
-    LForm := Screen.ActiveForm;
-    if (LForm = Self) and (pcPrincipal.PageCount > 0) and
-       (pcPrincipal.ActivePageIndex >= 0) then
-    begin
-      ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
-      if (ts.ControlCount > 0) and (ts.Controls[0] is TForm) then
-      begin
-        LForm := TForm(ts.Controls[0]);
-      end;
-    end;
-    sArt := '';
-    sSku := '';
-    if LForm is TfrmBase then
-    begin
-      TfrmBase(LForm).ResolverArtSkuStock(sArt, sSku);
-    end;
-    MostrarStockConsulta(sArt, sSku);
-  end;
+    MostrarConsultaStockPrincipal(Self, pcPrincipal);
 end;
 
 procedure TfrmMtoPrincipal.mnuArticulosSimilaresClick(Sender: TObject);
@@ -1623,24 +1492,28 @@ begin
     FInyeccionCaja.MostrarInformeOperacionesVenta;
 end;
 
+procedure TfrmMtoPrincipal.mnuCajaSolicitudesTraspasoHistClick(
+  Sender: TObject);
+begin
+  inherited;
+  if mnuCajaSolicitudesTraspasoHist.Visible then
+    FInyeccionCaja.MostrarHistoricoSolicitudesTraspaso(
+      mnuCajaSolicitudesTraspasoHist.Caption);
+end;
+
 procedure TfrmMtoPrincipal.CargarEfectosVenta1Click(Sender: TObject);
-var
-  f: TfrmModalCargarEfectosRemesa;
 begin
   inherited;
   if CargarEfectosVenta1.Visible then
-  begin
-    f := TfrmModalCargarEfectosRemesa.CrearParaVenta(
+    CargarEfectosRemesaPrincipal(
       nil,
       FInyeccionConfiguracion.CrearRepositorioCargaEfectos(
-        'frmModalCargarEfectosVenta'));
-    try
-      if f.ShowModal = mrOk then
+        'frmModalCargarEfectosVenta'),
+      True,
+      procedure
+      begin
         ShowMto(Self, 'RemesasVenta');
-    finally
-      f.Free;
-    end;
-  end;
+      end);
 end;
 
 procedure TfrmMtoPrincipal.Sesiones1Click(Sender: TObject);
@@ -1658,23 +1531,18 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.CargarEfectos1Click(Sender: TObject);
-var
-  f: TfrmModalCargarEfectosRemesa;
 begin
   inherited;
   if CargarEfectos1.Visible then
-  begin
-    f := TfrmModalCargarEfectosRemesa.CrearParaCompra(
+    CargarEfectosRemesaPrincipal(
       nil,
       FInyeccionConfiguracion.CrearRepositorioCargaEfectos(
-        'frmModalCargarEfectosCompra'));
-    try
-      if f.ShowModal = mrOk then
+        'frmModalCargarEfectosCompra'),
+      False,
+      procedure
+      begin
         ShowMto(Self, 'RemesasCompra');
-    finally
-      f.Free;
-    end;
-  end;
+      end);
 end;
 
 procedure TfrmMtoPrincipal.Formasdepago2Click(Sender: TObject);

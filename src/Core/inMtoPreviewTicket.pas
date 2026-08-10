@@ -124,8 +124,8 @@ type
 const
   ANCHO_PAPEL_MM = 80;
   DPI = 203;
-  ANCHO_PAPEL_PIXELS = 576; // Estándar real de 80mm
-  ANCHO_PAPEL_PIXELS_PDF = 594;
+  ANCHO_PAPEL_PIXELS = 576; // Área imprimible del papel de 80 mm
+  PUNTOS_POR_PULGADA = 72;
   MARGEN_PIXELS = 8;
   // Tamaños de fuentes en pixels (aproximado)
   FUENTE_A_ANCHO = 12;
@@ -265,22 +265,27 @@ var
   MetaCanvas: TMetafileCanvas;
   CanvasBackup: TCanvas;
   AlturaReal: Integer;
-  MargenH: Integer;   // margen horizontal
-  MargenV: Integer;   // margen inferior
-  PageW, PageH: Integer;
+  AltoContenidoPDF: Integer;
+  AnchoContenidoPDF: Integer;
+  AnchoPaginaPDF: Integer;
+  MargenHorizontalPDF: Integer;
 begin
   AlturaReal := Image1.Picture.Bitmap.Height;
-  MargenH    := 20;   // margen izq y der en puntos PDF
-  MargenV    := 40;   // margen inferior
-  // Página = contenido + márgenes laterales
-  PageW := ANCHO_PAPEL_PIXELS_PDF + (MargenH * 2);
-  PageH := AlturaReal + MargenV;
+  // SynPDF usa puntos (1/72 de pulgada), no píxeles. Mantener la misma
+  // conversión en ambos ejes evita deformar y recortar el ticket guardado.
+  AnchoPaginaPDF := PdfCoord(ANCHO_PAPEL_MM);
+  AnchoContenidoPDF := MulDiv(
+    ANCHO_PAPEL_PIXELS, PUNTOS_POR_PULGADA, DPI);
+  AltoContenidoPDF := MulDiv(
+    AlturaReal, PUNTOS_POR_PULGADA, DPI);
+  MargenHorizontalPDF :=
+    (AnchoPaginaPDF - AnchoContenidoPDF) div 2;
   Pdf := TPdfDocumentGDI.Create;
   Metafile := TMetafile.Create;
   try
-    Metafile.Width    := ANCHO_PAPEL_PIXELS_PDF;
+    Metafile.Width    := ANCHO_PAPEL_PIXELS;
     Metafile.Height   := AlturaReal;
-    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS_PDF, 2540, DPI);
+    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS, 2540, DPI);
     Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
     MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
     CanvasBackup := FCanvas;
@@ -289,25 +294,23 @@ begin
     try
       ReiniciarEstadoTicket;
       MetaCanvas.Brush.Color := clWhite;
-      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS_PDF, AlturaReal));
+      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS, AlturaReal));
       ProcesarComandosESCPOS(Comandos);
     finally
       FRenderMetafile := False;
       FreeAndNil(MetaCanvas);
       FCanvas := CanvasBackup;
     end;
-    Pdf.DefaultPaperSize  := psUserDefined;
-    Pdf.DefaultPageWidth  := PageW;
-    Pdf.DefaultPageHeight := PageH;
+    Pdf.DefaultPaperSize := psUserDefined;
+    Pdf.DefaultPageWidth := AnchoPaginaPDF;
+    Pdf.DefaultPageHeight := AltoContenidoPDF;
     Pdf.AddPage;
-    // El contenido ocupa exactamente ANCHO_PAPEL_PIXELS_PDF,
-    // desplazado MargenH puntos desde la izquierda
     PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
                     Metafile.Handle,
-                    Rect(MargenH,           // izquierda
-                         0,                 // arriba
-                         MargenH + ANCHO_PAPEL_PIXELS_PDF,  // derecha exacta
-                         AlturaReal));      // abajo sin comprimir
+                    Rect(MargenHorizontalPDF,
+                         0,
+                         MargenHorizontalPDF + AnchoContenidoPDF,
+                         AltoContenidoPDF));
     Pdf.SaveToFile(RutaArchivo);
   finally
     FreeAndNil(Metafile);

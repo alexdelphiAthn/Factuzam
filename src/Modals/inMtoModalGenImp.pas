@@ -101,6 +101,18 @@ type
     // de PrepareReport. No se invoca en el flujo de edicion para
     // no guardar textos traducidos en el BLOB del formato.
     procedure TraducirInformeActual;
+    procedure PrepararSelectorFormato(
+      ASelector: TfrmMtoModalGenImpEle;
+      const AFormatoPredeterminado: string);
+    procedure EliminarFormatoPredeterminado;
+    procedure GuardarFormatoPredeterminado(const AFormato: string);
+    procedure ActualizarFormatoPredeterminado(
+      ASelector: TfrmMtoModalGenImpEle;
+      const AFormatoAnterior: string);
+    procedure SeleccionarFormato(
+      const AFormatoPredeterminado: string;
+      out AAccion: string);
+    procedure CargarFormatoElegido(const AAccion: string);
   protected
     function TraducirContenidoInforme: Boolean; virtual;
     procedure PdfExportado(const ARuta: string); virtual;
@@ -878,15 +890,140 @@ begin
   end;
 end;
 
+procedure TfrmPrint.PrepararSelectorFormato(
+  ASelector: TfrmMtoModalGenImpEle;
+  const AFormatoPredeterminado: string);
+var
+  Indice: Integer;
+begin
+  CargarFormatos(ASelector);
+  if AFormatoPredeterminado <> '' then
+  begin
+    ASelector.chkPredeterminado.Checked := True;
+    if AFormatoPredeterminado <> 'Predeterminado' then
+    begin
+      for Indice := 0 to ASelector.lstFormatos.Count - 1 do
+      begin
+        if ASelector.lstFormatos.Items[Indice] =
+           AFormatoPredeterminado then
+        begin
+          ASelector.lstFormatos.ItemIndex := Indice;
+          Break;
+        end;
+      end;
+    end;
+  end;
+  if ASelector.lstFormatos.Count > 0 then
+    ASelector.ShowModal
+  else
+    ASelector.sFicha := 'O';
+end;
+
+procedure TfrmPrint.EliminarFormatoPredeterminado;
+begin
+  PerfilesEscritura.EliminarPerfil(
+    IdentidadSesion.Usuario, Self.Name + '_default');
+  PerfilesEscritura.EliminarPerfil(
+    IdentidadSesion.Grupo, Self.Name + '_default');
+  PerfilesEscritura.EliminarPerfil(oAll, Self.Name + '_default');
+end;
+
+procedure TfrmPrint.GuardarFormatoPredeterminado(
+  const AFormato: string);
+var
+  Formulario: TfrmModalGenImpSave;
+  Permisos: string;
+begin
+  Formulario := TfrmModalGenImpSave.Create(Self);
+  try
+    Formulario.edtNombreOrigen.Text := Self.Name;
+    Formulario.edtDescripcion.Text := 'Predet: ' + AFormato;
+    Formulario.edtDescripcion.Enabled := False;
+    Formulario.ShowModal;
+    if Formulario.sFicha = 'S' then
+    begin
+      Permisos := Formulario.cbbPermisos.Text;
+      EliminarFormatoPredeterminado;
+      PerfilesEscritura.GrabarPerfil(
+        Permisos,
+        Self.Name + '_default',
+        AFormato,
+        AFormato);
+    end;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
+procedure TfrmPrint.ActualizarFormatoPredeterminado(
+  ASelector: TfrmMtoModalGenImpEle;
+  const AFormatoAnterior: string);
+begin
+  if (ASelector.sFicha = 'S') or (ASelector.sFicha = 'O') then
+  begin
+    if ASelector.bPredeterminado then
+    begin
+      if sElegido <> AFormatoAnterior then
+        GuardarFormatoPredeterminado(sElegido);
+    end
+    else if AFormatoAnterior <> '' then
+      EliminarFormatoPredeterminado;
+  end;
+end;
+
+procedure TfrmPrint.SeleccionarFormato(
+  const AFormatoPredeterminado: string;
+  out AAccion: string);
+var
+  Selector: TfrmMtoModalGenImpEle;
+begin
+  Selector := TfrmMtoModalGenImpEle.Create(Self, Self);
+  try
+    PrepararSelectorFormato(Selector, AFormatoPredeterminado);
+    sElegido := Selector.sElegido;
+    AAccion := Selector.sFicha;
+    ActualizarFormatoPredeterminado(
+      Selector, AFormatoPredeterminado);
+  finally
+    FreeAndNil(Selector);
+  end;
+end;
+
+procedure TfrmPrint.CargarFormatoElegido(const AAccion: string);
+var
+  Flujo: TMemoryStream;
+begin
+  if AAccion = 'S' then
+  begin
+    Flujo := TMemoryStream.Create;
+    try
+      if LeerBlobFormato(sElegido, Flujo) then
+      begin
+        frxrprt1.LoadFromStream(Flujo);
+        FInformeEsPersonalizado := True;
+      end
+      else
+      begin
+        frxrprt1.AssignAll(frxReportOrigen);
+        FInformeEsPersonalizado := False;
+      end;
+      FInformeTraducido := False;
+    finally
+      FreeAndNil(Flujo);
+    end;
+  end
+  else if AAccion = 'O' then
+  begin
+    frxrprt1.AssignAll(frxReportOrigen);
+    FInformeEsPersonalizado := False;
+    FInformeTraducido := False;
+  end;
+end;
+
 procedure TfrmPrint.Consultar_Formularios(bForzarSeleccion: Boolean = False);
 var
-  form: TfrmMtoModalGenImpEle;
-  formularioSave: TfrmModalGenImpSave;
-  sDescripcion, sPermisos: string;
-  memStream: TMemoryStream;
   sFichaAccion: string;
   sDefaultSubKey: string;
-  i: Integer;
 begin
     sElegido := '';
     sFichaAccion := '';
@@ -902,115 +1039,9 @@ begin
         sFichaAccion := 'S';
     end
     else
-    begin
-      form := TfrmMtoModalGenImpEle.Create(Self, Self);
-      try
-        CargarFormatos(form);
-        if sDefaultSubKey <> '' then
-        begin
-          form.chkPredeterminado.Checked := True; // Marcamos el check
-          if sDefaultSubKey <> 'Predeterminado' then
-          begin
-            for i := 0 to form.lstFormatos.Count - 1 do
-            begin
-              if form.lstFormatos.Items[i] = sDefaultSubKey then
-              begin
-                form.lstFormatos.ItemIndex := i;
-                Break;
-              end;
-            end;
-          end;
-        end;
-        if form.lstFormatos.Count > 0 then
-          form.ShowModal
-        else
-          form.sFicha := 'O';
-        sElegido := form.sElegido;
-        sFichaAccion := form.sFicha;
-        if (sFichaAccion = 'S') or (sFichaAccion = 'O') then
-        begin
-          if form.bPredeterminado then
-          begin
-            if sElegido <> sDefaultSubKey then
-            begin
-              formularioSave := TfrmModalGenImpSave.Create(Self);
-              try
-                formularioSave.edtNombreOrigen.Text := Self.Name;
-                formularioSave.edtDescripcion.Text := 'Predet: ' + sElegido;
-                formularioSave.edtDescripcion.Enabled := False;
-                formularioSave.ShowModal;
-                if formularioSave.sFicha = 'S' then
-                begin
-                  sPermisos := formularioSave.cbbPermisos.Text;
-                  // Borramos cualquier regla anterior para evitar duplicados
-                  PerfilesEscritura.EliminarPerfil(
-                    IdentidadSesion.Usuario,
-                    Self.Name + '_default');
-                  PerfilesEscritura.EliminarPerfil(
-                    IdentidadSesion.Grupo,
-                    Self.Name + '_default');
-                  PerfilesEscritura.EliminarPerfil(
-                    oAll,
-                    Self.Name + '_default');
-                  PerfilesEscritura.GrabarPerfil(
-                    sPermisos,
-                    Self.Name + '_default',
-                    sElegido,
-                    sElegido);
-                end;
-              finally
-                FreeAndNil(formularioSave);
-              end;
-            end;
-          end
-          else
-          begin
-            if sDefaultSubKey <> '' then
-            begin
-              PerfilesEscritura.EliminarPerfil(
-                IdentidadSesion.Usuario,
-                Self.Name + '_default');
-              PerfilesEscritura.EliminarPerfil(
-                IdentidadSesion.Grupo,
-                Self.Name + '_default');
-              PerfilesEscritura.EliminarPerfil(
-                oAll,
-                Self.Name + '_default');
-            end;
-          end;
-        end;
-      finally
-        FreeAndNil(form);
-      end;
-    end;
-    if sFichaAccion = 'S' then
-    begin
-      sDescripcion := sElegido;
-      memStream := TMemoryStream.Create;
-      try
-        // El contenido del formato se carga solo al seleccionarlo.
-        if LeerBlobFormato(sDescripcion, memStream) then
-        begin
-          frxrprt1.LoadFromStream(memStream);
-          FInformeEsPersonalizado := True;
-        end
-        else
-        begin
-          frxrprt1.AssignAll(frxReportOrigen);
-          FInformeEsPersonalizado := False;
-        end;
-        FInformeTraducido := False;
-      finally
-        FreeAndNil(memStream);
-      end;
-    end
-    else if (sFichaAccion = 'O') then
-    begin
-      frxrprt1.AssignAll(frxReportOrigen);
-      FInformeEsPersonalizado := False;
-      FInformeTraducido := False;
-    end;
-  end;
+      SeleccionarFormato(sDefaultSubKey, sFichaAccion);
+    CargarFormatoElegido(sFichaAccion);
+end;
 
 procedure TfrmPrint.DeleteForm(
   sElegido: String;

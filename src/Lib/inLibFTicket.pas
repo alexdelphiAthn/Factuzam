@@ -354,127 +354,130 @@ begin
   FComandos.Clear;
 end;
 
-procedure EnviarComandoRAW(const ANombreImpresora: string;
-                           const ADatos: string);
+procedure GuardarDepuracionEscPos(const ADatos: string);
 var
-  hPrinter: THandle;
-  DocInfo: TDocInfo1;
+  Archivo: TextFile;
+  Ruta: string;
+  Indice: Integer;
+begin
+  Ruta := ExtractFilePath(ParamStr(0)) + 'ticket_escpos_debug_' +
+    ParamStr(1) + '_' + ParamStr(2) + '_' + ParamStr(3) + '.txt';
+  AssignFile(Archivo, Ruta);
+  Rewrite(Archivo);
+  try
+    WriteLn(Archivo, '=== COMANDOS ESC/POS - DEBUG ===');
+    WriteLn(Archivo, 'Longitud total: ' +
+      IntToStr(Length(ADatos)) + ' bytes');
+    WriteLn(Archivo, '');
+    WriteLn(Archivo, '=== DUMP HEXADECIMAL ===');
+    for Indice := 1 to Length(ADatos) do
+    begin
+      Write(Archivo, IntToHex(Ord(ADatos[Indice]), 2) + ' ');
+      if Indice mod 16 = 0 then
+        WriteLn(Archivo);
+    end;
+    WriteLn(Archivo, '');
+    WriteLn(Archivo, '');
+    WriteLn(Archivo, '=== CONTENIDO LEGIBLE ===');
+    for Indice := 1 to Length(ADatos) do
+    begin
+      case ADatos[Indice] of
+        #27: Write(Archivo, '<ESC>');
+        #29: Write(Archivo, '<GS>');
+        #10: WriteLn(Archivo, '<LF>');
+        #13: Write(Archivo, '<CR>');
+        #0..#8, #11..#12, #14..#26, #28, #30..#31:
+          Write(Archivo, '<' + IntToHex(Ord(ADatos[Indice]), 2) + '>');
+      else
+        Write(Archivo, ADatos[Indice]);
+      end;
+    end;
+    WriteLn(Archivo, '');
+    WriteLn(Archivo, '=== FIN DEBUG ===');
+  finally
+    CloseFile(Archivo);
+  end;
+end;
+
+function CodificarEscPosCp858(const ADatos: string): TBytes;
+var
+  Codificacion: TEncoding;
+  Indice: Integer;
+begin
+  Codificacion := TEncoding.GetEncoding(858);
+  try
+    Result := Codificacion.GetBytes(ADatos);
+  finally
+    FreeAndNil(Codificacion);
+  end;
+  Indice := 0;
+  while Indice < Length(Result) - 4 do
+  begin
+    if (Result[Indice] = $1D) and
+       (Result[Indice + 1] = $28) and
+       (Result[Indice + 2] = $6B) then
+    begin
+      if Indice + 4 < Length(ADatos) then
+      begin
+        Result[Indice + 3] := Ord(ADatos[Indice + 4]);
+        Result[Indice + 4] := Ord(ADatos[Indice + 5]);
+      end;
+      Inc(Indice, 5);
+    end
+    else
+      Inc(Indice);
+  end;
+end;
+
+procedure EnviarDatosRawImpresora(
+  const ANombreImpresora, ADatos: string);
+var
+  Impresora: THandle;
+  Documento: TDocInfo1;
   BytesEscritos: DWORD;
   DatosRaw: TBytes;
-  F: TextFile;
-  DebugFile: string;
-  i: Integer;
-  CP858: TEncoding;
-//  CaracterStr: string;
-//  BytesChar: TBytes;
 begin
-  // === MODO DEBUG ===
-  if (ANombreImpresora = 'DEBUG') or (ANombreImpresora = '') then
-  begin
-    DebugFile := ExtractFilePath(ParamStr(0)) + 'ticket_escpos_debug_' +
-                    ParamStr(1) + '_' + ParamStr(2) + '_' + ParamStr(3) +'.txt';
-    AssignFile(F, DebugFile);
-    Rewrite(F);
-    try
-      WriteLn(F, '=== COMANDOS ESC/POS - DEBUG ===');
-      WriteLn(F, 'Longitud total: ' + IntToStr(Length(ADatos)) + ' bytes');
-      WriteLn(F, '');
-      WriteLn(F, '=== DUMP HEXADECIMAL ===');
-      for i := 1 to Length(ADatos) do
-      begin
-        Write(F, IntToHex(Ord(ADatos[i]), 2) + ' ');
-        if i mod 16 = 0 then WriteLn(F);
-      end;
-      WriteLn(F, '');
-      WriteLn(F, '');
-      WriteLn(F, '=== CONTENIDO LEGIBLE ===');
-      for i := 1 to Length(ADatos) do
-      begin
-        case ADatos[i] of
-          #27: Write(F, '<ESC>');
-          #29: Write(F, '<GS>');
-          #10: WriteLn(F, '<LF>');
-          #13: Write(F, '<CR>');
-          #0..#8, #11..#12, #14..#26, #28, #30..#31:
-            Write(F, '<' + IntToHex(Ord(ADatos[i]), 2) + '>');
-        else
-          Write(F, ADatos[i]);
-        end;
-      end;
-      WriteLn(F, '');
-      WriteLn(F, '=== FIN DEBUG ===');
-    finally
-      CloseFile(F);
-    end;
-  end;
-  // === IMPRESIÓN REAL ===
-  if (ANombreImpresora <> 'DEBUG') and (ANombreImpresora <> '') then
-  begin
-    if not OpenPrinter(PChar(ANombreImpresora), hPrinter, nil) then
-      raise Exception.CreateFmt(SErrorAbrirImpresoraTicket,
-                                [ANombreImpresora]);
-    try
-    DocInfo.pDocName := 'Ticket Fzam';
-    DocInfo.pOutputFile := nil;
-    DocInfo.pDatatype := 'RAW';
-    if (StartDocPrinter(hPrinter, 1, @DocInfo) = 0) then
+  if not OpenPrinter(PChar(ANombreImpresora), Impresora, nil) then
+    raise Exception.CreateFmt(
+      SErrorAbrirImpresoraTicket, [ANombreImpresora]);
+  try
+    Documento.pDocName := 'Ticket Fzam';
+    Documento.pOutputFile := nil;
+    Documento.pDatatype := 'RAW';
+    if StartDocPrinter(Impresora, 1, @Documento) = 0 then
       raise Exception.Create(SErrorIniciarDocumentoImpresora);
     try
-      if StartPagePrinter(hPrinter) then
+      if StartPagePrinter(Impresora) then
       begin
         try
-          CP858 := TEncoding.GetEncoding(858);
-          try
-            // Convertir el string completo a CP858 primero
-            DatosRaw := CP858.GetBytes(ADatos);
-            // Ahora CORREGIR los bytes de comandos QR que CP858 pudo alterar
-            // Recorrer buscando comandos GS ( k
-            i := 0;
-            while (i < Length(DatosRaw) - 4) do
-            begin
-              // Buscar secuencia: 1D 28 6B (GS ( k)
-              if ((DatosRaw[i] = $1D) and
-                 (DatosRaw[i+1] = $28) and
-                 (DatosRaw[i+2] = $6B)) then
-              begin
-                // Los siguientes 2 bytes son pL y pH
-                // Restaurarlos del string original
-                //(índice i+1 porque ADatos empieza en 1)
-                if i+4 < Length(ADatos) then
-                begin
-                  DatosRaw[i+3] := Ord(ADatos[i+4]); // pL
-                  DatosRaw[i+4] := Ord(ADatos[i+5]); // pH
-                end;
-                // Saltar estos bytes procesados
-                Inc(i, 5);
-              end
-              else
-                Inc(i);
-            end;
-          finally
-            FreeAndNil(CP858);
-          end;
-          if not WritePrinter(hPrinter,
-                              @DatosRaw[0],
-                              Length(DatosRaw),
-                              BytesEscritos) then
+          DatosRaw := CodificarEscPosCp858(ADatos);
+          if not WritePrinter(Impresora, @DatosRaw[0],
+            Length(DatosRaw), BytesEscritos) then
             raise Exception.Create(SErrorEscribirImpresora);
         finally
-          EndPagePrinter(hPrinter);
+          EndPagePrinter(Impresora);
         end;
       end;
-      EndDocPrinter(hPrinter);
+      EndDocPrinter(Impresora);
     except
       on E: Exception do
       begin
-        EndDocPrinter(hPrinter);
+        EndDocPrinter(Impresora);
         raise;
       end;
     end;
-    finally
-      ClosePrinter(hPrinter);
-    end;
+  finally
+    ClosePrinter(Impresora);
   end;
+end;
+
+procedure EnviarComandoRAW(const ANombreImpresora: string;
+                           const ADatos: string);
+begin
+  if (ANombreImpresora = 'DEBUG') or (ANombreImpresora = '') then
+    GuardarDepuracionEscPos(ADatos)
+  else
+    EnviarDatosRawImpresora(ANombreImpresora, ADatos);
 end;
 
 end.

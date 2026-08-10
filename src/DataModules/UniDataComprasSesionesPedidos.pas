@@ -33,8 +33,7 @@ uses
   Data.DB, DBAccess, Uni,
   inLibMsgCompras,
   UniDataValoresAutomaticosRepositorio,
-  UniDataComprasSesionesArticulos,
-  UniDataComprasSesionesColores,
+  UniDataComprasSesionesArticulos, UniDataComprasSesionesColores,
   UniDataComprasSesionesDocumentosComun,
   UniDataComprasSesionesOperaciones;
 procedure InsertarPedidoCompraCabecera(AConn: TUniConnection;

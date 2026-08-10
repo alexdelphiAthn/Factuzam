@@ -27,6 +27,9 @@ relicenciadas ni se entregan bajo la licencia de Factuzam.
 Consulta [AVISOS_DE_TERCEROS.md](AVISOS_DE_TERCEROS.md) antes de compilar,
 modificar o redistribuir el programa.
 
+La configuración del runner y los comandos para Win32 y Win64 están en
+[eng/README.md](eng/README.md).
+
 ## Licencia
 
 El código original de Factuzam se distribuye bajo la Mozilla Public License

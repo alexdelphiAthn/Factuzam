@@ -13,7 +13,11 @@ unit inMtoPrincipalAccionesVcl;
 interface
 
 uses
-  System.Classes;
+  System.Classes, Vcl.Forms, cxPC,
+  inLibLogIntf, inLibCargaEfectosRemesaPersistenciaIntf;
+
+type
+  TAccionPrincipalVcl = reference to procedure;
 
 procedure MostrarListadoVentas(AOwner: TComponent);
 procedure MostrarListadoDocumentosProveedor(AOwner: TComponent);
@@ -24,13 +28,24 @@ procedure MostrarDeclaracionVerifactu(AOwner: TComponent);
 procedure MostrarBalanceAlmacenHorizontal;
 procedure MostrarBalanceAlmacenSinTallas;
 procedure MostrarMovimientosVentasArticulos;
+procedure MostrarAcercaDe(
+  AOwner: TComponent;
+  const ARegistroLog: IRegistroLog);
+procedure MostrarConsultaStockPrincipal(
+  AFormularioPrincipal: TForm;
+  APaginas: TcxPageControl);
+procedure DesvincularConsultaStockPrincipal;
+procedure CargarEfectosRemesaPrincipal(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioCargaEfectosRemesa;
+  AEsVenta: Boolean;
+  const AAlCompletar: TAccionPrincipalVcl);
 
 implementation
 
 uses
   System.SysUtils,
   Vcl.Controls,
-  Vcl.Forms,
   inMtoModalListadoVentas,
   inMtoModalImpDocsProveedor,
   inMtoModalImpEfectosPago,
@@ -39,7 +54,10 @@ uses
   inMtoModalVerifactuDecl,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
-  inMtoModalImpMovVentasArt;
+  inMtoModalImpMovVentasArt,
+  inMtoSplash,
+  inMtoFrmBase, inMtoStockConsulta,
+  inMtoModalCargarEfectosRemesa;
 
 procedure MostrarListadoVentas(AOwner: TComponent);
 var
@@ -132,6 +150,76 @@ begin
     Formulario.ShowModal;
   finally
     FreeAndNil(Formulario);
+  end;
+end;
+
+procedure MostrarAcercaDe(
+  AOwner: TComponent;
+  const ARegistroLog: IRegistroLog);
+var
+  Formulario: TfrmSplash;
+begin
+  Formulario := TfrmSplash.Create(AOwner, ARegistroLog);
+  try
+    Formulario.ShowModal;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
+procedure MostrarConsultaStockPrincipal(
+  AFormularioPrincipal: TForm;
+  APaginas: TcxPageControl);
+var
+  FormularioActivo: TForm;
+  Pestana: TcxTabSheet;
+  Articulo: string;
+  Sku: string;
+begin
+  FormularioActivo := Screen.ActiveForm;
+  if (FormularioActivo = AFormularioPrincipal) and
+     Assigned(APaginas) and
+     (APaginas.PageCount > 0) and
+     (APaginas.ActivePageIndex >= 0) then
+  begin
+    Pestana := APaginas.Pages[APaginas.ActivePageIndex] as TcxTabSheet;
+    if (Pestana.ControlCount > 0) and
+       (Pestana.Controls[0] is TForm) then
+      FormularioActivo := TForm(Pestana.Controls[0]);
+  end;
+  Articulo := '';
+  Sku := '';
+  if FormularioActivo is TfrmBase then
+    TfrmBase(FormularioActivo).ResolverArtSkuStock(Articulo, Sku);
+  MostrarStockConsulta(Articulo, Sku);
+end;
+
+procedure DesvincularConsultaStockPrincipal;
+begin
+  DesvincularPerfilesStockConsulta;
+end;
+
+procedure CargarEfectosRemesaPrincipal(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioCargaEfectosRemesa;
+  AEsVenta: Boolean;
+  const AAlCompletar: TAccionPrincipalVcl);
+var
+  Formulario: TfrmModalCargarEfectosRemesa;
+begin
+  if AEsVenta then
+    Formulario := TfrmModalCargarEfectosRemesa.CrearParaVenta(
+      AOwner,
+      ARepositorio)
+  else
+    Formulario := TfrmModalCargarEfectosRemesa.CrearParaCompra(
+      AOwner,
+      ARepositorio);
+  try
+    if (Formulario.ShowModal = mrOk) and Assigned(AAlCompletar) then
+      AAlCompletar();
+  finally
+    Formulario.Free;
   end;
 end;
 

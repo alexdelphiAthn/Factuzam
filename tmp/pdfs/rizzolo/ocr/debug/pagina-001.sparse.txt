@@ -1,0 +1,135 @@
+SCORZZO
+
+Confirmación de pedido
+
+COLLECTION
+
+Cliente
+
+Pedido firmado
+
+HERRERAS E HIJOS S.L. MELITON
+
+Fecha: 2026-08-09 17:20:25
+
+AVDA.DE SEGOVIA N°35-37
+
+Desde la IP: 62.42.86.131
+
+47013 VALLADOLID
+
+Order
+
+Service date
+
+Value date
+
+Fecha de pedido
+
+DRSNLKWPS
+
+09/08/2026
+
+XL |}2XL
+
+Imagen
+
+Referencia
+
+Producto
+
+Cant. | Precio
+
+Total
+
+0127819 - 20
+
+Blusa Detalle Jaretas
+
+17.90
+
+107.40
+
+20
+
+0127819 - 52
+
+Blusa Detalle Jaretas
+
+17.90
+
+107.40
+
+5
+
+—
+
+0127838 - 51
+
+Bomber Bolsillos
+
+1
+
+25.90
+
+233.10
+
+5
+
+0127838 - 02
+
+Bomber Bolsillos
+
+1
+
+25.90
+
+233.10
+
+a
+
+o
+
+0127807 - 08
+
+29.90
+
+119.60
+
+Bomber Bolsillos Estampado
+
+_
+
+cory
+
+0127862 - 00
+
+Camisa Cordón Estampada
+
+19.90
+
+119.40
+
+U
+
+0127861 - 00
+
+Camiseta Estampado Posicional
+
+17.90
+
+107.40
+
+U
+
+0127646 - 08
+
+Camiseta Rayas Detalle Anudado
+
+15.90
+
+95.40
+
+_
+
+kS

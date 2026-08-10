@@ -112,10 +112,13 @@ end;
 procedure TdmFamilias.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
+  if unqrySubFamilias.Active then
+    unqrySubFamilias.Refresh;
   unqryTablaG.FindField('CODIGO_FAM_FAM').AsString := '0';
   unqryTablaG.FindField('ORDEN_FAM').AsString := '0';
   unqryTablaG.FindField('ESACTIVO_FAM').AsString := 'S';
   unqryTablaG.FindField('ESDEFAULT_FAM').AsString := 'N';
+  unqryTablaG.FindField('ESCONTADOR_ART_FAM').AsString := 'S';
   // PAD_ART_FAM es NOT NULL en BBDD; sin valor el INSERT manda NULL
   // explicito y falla (el DEFAULT solo aplica si se omite la columna)
   unqryTablaG.FindField('PAD_ART_FAM').AsInteger := 5;

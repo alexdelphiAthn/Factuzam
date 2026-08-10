@@ -49,7 +49,7 @@ uses
   inLibDestinoFacturaPersistenciaIntf,
   inLibPermisosIntf,
   inMtoArticulosPresentacionAtributos,
-  inMtoArticulosPresentacionStock,
+  inMtoArticulosStockVcl,
   inMtoArticulosPresentacionTarifas,
   inMtoArticulosPresentacionFiltros;
 
@@ -480,7 +480,6 @@ type
      // ~6s por subqueries DEPENDENT. La abrimos solo cuando el usuario
      // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
      procedure PcDetailChange(Sender: TObject);
-     procedure AsegurarStockAlDia;
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
   private
     function  ObtenerFacturaLineaActiva(out ANumero,
@@ -492,10 +491,6 @@ type
                                           const sPermisos: string); override;
     procedure TrasPrecargaAsync; override;
   private
-    // Stock: ultimo articulo para el que se cargo el grid pivotado. Asi
-    // AsegurarStockAlDia evita reejecutar el SP si el articulo no ha
-    // cambiado desde la ultima visita a la pestaña Stock.
-    FStockArticuloCargado: string;
     FGestorProp  : TGestorPropiedades;
     FArticuloCargado: string;
     FScrollProp  : TScrollBox;
@@ -507,7 +502,7 @@ type
     // Colaboradores de presentacion. Cada uno recibe solo los controles,
     // datasets y puertos que necesita; ninguno conoce el formulario.
     FPresAtributos: TPresentadorAtributosBasicosArticulo;
-    FPresStock: TPresentadorStockArticulo;
+    FStock: TCoordinadorStockArticuloVcl;
     FPresTarifas: TPresentadorTarifasArticulo;
     FPresFiltros: TPresentadorFiltrosArticulos;
     FCodigosBarras: ILecturaCodigosBarrasArticulo;
@@ -1049,42 +1044,9 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnReconstruirStockClick(Sender: TObject);
-var
-  sMensaje: string;
-  bReconstruido: Boolean;
 begin
   inherited;
-  if Application.MessageBox(
-       PChar(SPreguntaReconstruirStock),
-       PChar(STituloReconstruirStock),
-       MB_YESNO + MB_ICONQUESTION) = ID_YES then
-  begin
-    bReconstruido := True;
-    Screen.Cursor := crHourGlass;
-    try
-      try
-        sMensaje := dmmArticulos.ReconstruirStock;
-        if dmmArticulos.unqryTablaG.Active and
-           not dmmArticulos.unqryTablaG.IsEmpty then
-          dmmArticulos.unqryStockArticulosAfterScroll(
-            dmmArticulos.unqryTablaG);
-      except
-        on E: Exception do
-        begin
-          bReconstruido := False;
-          ShowMessage(Format(SErrorReconstruirStock, [E.Message]));
-        end;
-      end;
-    finally
-      Screen.Cursor := crDefault;
-    end;
-    if bReconstruido then
-    begin
-      if sMensaje = '' then
-        sMensaje := SInfoStockReconstruido;
-      ShowMessage(sMensaje);
-    end;
-  end;
+  FStock.Reconstruir(FArticuloCargado);
 end;
 
 procedure TfrmMtoArticulos.btnImprimirEtiquetasClick(Sender: TObject);
@@ -1325,6 +1287,7 @@ procedure TfrmMtoArticulos.InicializarPresentadores;
 // module (oDatos), no el formulario, salvo los dos avisos de vista.
 var
   oControlesFiltro: TControlesFiltroCargaArticulos;
+  oContextoStock: TContextoStockArticuloVcl;
   oDatos: TdmArticulos;
 begin
   oDatos := dmmArticulos;
@@ -1341,8 +1304,26 @@ begin
     begin
       Result := oDatos.ActualizarSkusColorActivo(ACodArt, AColor, AActivo);
     end);
-  FPresStock := TPresentadorStockArticulo.Create(tvStock,
-    ConexionPrincipal);
+  oContextoStock := Default(TContextoStockArticuloVcl);
+  oContextoStock.Vista := tvStock;
+  oContextoStock.Conexion := ConexionPrincipal;
+  oContextoStock.Articulos := oDatos.unqryTablaG;
+  oContextoStock.ConsultaStock := oDatos.unqryStockArticulos;
+  oContextoStock.Recargar :=
+    procedure
+    begin
+      oDatos.unqryStockArticulosAfterScroll(oDatos.unqryTablaG);
+    end;
+  oContextoStock.Reconstruir :=
+    function: string
+    begin
+      Result := oDatos.ReconstruirStock;
+    end;
+  oContextoStock.PreguntaReconstruir := SPreguntaReconstruirStock;
+  oContextoStock.TituloReconstruir := STituloReconstruirStock;
+  oContextoStock.ErrorReconstruir := SErrorReconstruirStock;
+  oContextoStock.InfoReconstruido := SInfoStockReconstruido;
+  FStock := TCoordinadorStockArticuloVcl.Create(oContextoStock);
   FPresTarifas := TPresentadorTarifasArticulo.Create(
     oDatos.unqryTarifasArticulos,
     tvTarifas,
@@ -1660,19 +1641,19 @@ begin
   // unqryStockArticulosAfterScroll: el bestfit que hace ese metodo necesita
   // saber qué columnas pintaran swatch para reservarles el ancho del
   // cuadradito.
-  if Assigned(FPresStock) then
+  if Assigned(FStock) then
   begin
     swTramo := TStopwatch.StartNew;
-    FPresStock.CargarMapaArticulo(CodArticulo);
+    FStock.CargarMapaArticulo(CodArticulo);
     msMapaAtr := swTramo.ElapsedMilliseconds;
   end;
 
   // Stock perezoso: solo recargar el SP si la pestaña Stock esta
-  // visible. AsegurarStockAlDia ademas evita reejecutar si el articulo
+  // visible. El coordinador evita reejecutar si el articulo
   // no ha cambiado.
   swTramo := TStopwatch.StartNew;
   if pcDetail.ActivePage = cxTabSheet3 then
-    AsegurarStockAlDia;
+    FStock.AsegurarAlDia(CodArticulo);
   msStockAS := swTramo.ElapsedMilliseconds;
 
   // Tarifas perezoso: si la pestaña Tarifas NO esta visible, cerrar
@@ -1805,7 +1786,7 @@ begin
     FreeAndNil(FGestorVar);
   FreeAndNil(FPresFiltros);
   FreeAndNil(FPresTarifas);
-  FreeAndNil(FPresStock);
+  FreeAndNil(FStock);
   FreeAndNil(FPresAtributos);
   dmmArticulos := nil;
 end;
@@ -1919,7 +1900,7 @@ procedure TfrmMtoArticulos.tvStockCustomDrawCell(Sender: TcxCustomGridTableView;
   ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);
 begin
-  FPresStock.PintarCelda(ACanvas, AViewInfo, ADone);
+  FStock.PintarCelda(ACanvas, AViewInfo, ADone);
 end;
 
 procedure TfrmMtoArticulos.PcDetailChange(Sender: TObject);
@@ -1935,26 +1916,7 @@ begin
       CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
     // Stock: si activan la pestaña, refrescar solo si cambio el articulo.
     if pcDetail.ActivePage = cxTabSheet3 then
-      AsegurarStockAlDia;
-  end;
-end;
-
-procedure TfrmMtoArticulos.AsegurarStockAlDia;
-var
-  bAlDia: Boolean;
-begin
-  if Assigned(dmmArticulos) and (FArticuloCargado <> '') then
-  begin
-    // Si el stock ya esta cargado para el articulo activo, nada que hacer.
-    bAlDia := (FStockArticuloCargado = FArticuloCargado) and
-              dmmArticulos.unqryStockArticulos.Active;
-    if not bAlDia then
-    begin
-      // unqryStockArticulosAfterScroll cierra, recarga el SP y reconstruye
-      // las columnas dinamicas del cxGrid tvStock.
-      dmmArticulos.unqryStockArticulosAfterScroll(dmmArticulos.unqryTablaG);
-      FStockArticuloCargado := FArticuloCargado;
-    end;
+      FStock.AsegurarAlDia(FArticuloCargado);
   end;
 end;
 
@@ -1971,7 +1933,7 @@ end;
 
 procedure TfrmMtoArticulos.EnsancharColumnasStockParaSwatch;
 begin
-  FPresStock.EnsancharColumnasParaSwatch;
+  FStock.EnsancharColumnasParaSwatch;
 end;
 
 procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
@@ -1981,7 +1943,7 @@ procedure TfrmMtoArticulos.tvStockGetCellHint(Sender: TcxCustomGridTableView;
 var
   sHint: string;
 begin
-  if FPresStock.ObtenerHint(ACellViewInfo, sHint) then
+  if FStock.ObtenerHint(ACellViewInfo, sHint) then
     AHintText := sHint;
 end;
 

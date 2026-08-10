@@ -315,14 +315,14 @@ uses
   UniDataArticulos,
   inMtoModalImpFacCompra,
   inMtoModalImpFacCompraV,
-  inLibShowMto, inMtoModalRegistrarPago,
-  inMtoModalSeleccionarBanco, inLibGenBusq,
+  inLibShowMto, inLibGenBusq,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
-  UniDataColumnasSkuServicios, UniDataModoTallas;
+  UniDataColumnasSkuServicios, UniDataModoTallas,
+  inMtoFacturasCompraPagosVcl;
 
 {$R *.dfm}
 
@@ -1422,81 +1422,52 @@ begin
 end;
 
 procedure TfrmMtoFacturasCompra.btnGenerarEfectosClick(Sender: TObject);
-var
-  iRes: Integer;
-  sEmp, sPrv, sPref: string;
-  selBanco: TSeleccionBancoResult;
 begin
   inherited;
   if Assigned(dmmFacturasCompra) then
-  begin
-    // Cuenta de la empresa (cargo) para el pago: eleccion manual, con el
-    // banco por defecto del proveedor pre-seleccionado si lo tiene.
-    sEmp  := dsTablaG.DataSet.FieldByName('CODIGO_EMP_FACC').AsString;
-    sPrv  := dsTablaG.DataSet.FieldByName('CODIGO_PRV_FACC').AsString;
-    sPref := dmmFacturasCompra.GetBancoDefectoProveedor(sPrv);
-    selBanco := TfrmModalSeleccionarBanco.Ejecutar(
+    GenerarEfectosFacturaCompraVcl(
       Self,
-      sEmp,
-      ubePago,
+      dsTablaG.DataSet,
       FRepositorioSeleccionBanco,
-      sPref);
-    if not selBanco.Aceptado then
-      ShowMessage(SInfoGeneracionEfectosPagoCancelada)
-    else
-    begin
-      iRes := dmmFacturasCompra.GenerarEfectos(selBanco.CodigoEmpban,
-                                               selBanco.Iban);
-      if iRes > 0 then
-        ShowMessage(Format(SInfoEfectosPagoGenerados, [iRes]))
-      else if iRes = 0 then
-        ShowMessage(SAvisoEfectosPagoNoGenerados)
-      else
-        ShowMessage(SErrorGenerarEfectosPagoSinBorrador);
-    end;
-  end;
+      function(const ACodigoProveedor: string): string
+      begin
+        Result := dmmFacturasCompra.GetBancoDefectoProveedor(
+          ACodigoProveedor);
+      end,
+      function(
+        const ACodigoBancoEmpresa, AIban: string): Integer
+      begin
+        Result := dmmFacturasCompra.GenerarEfectos(
+          ACodigoBancoEmpresa,
+          AIban);
+      end);
 end;
 
 procedure TfrmMtoFacturasCompra.btnRegistrarPagoClick(Sender: TObject);
 var
-  frm: TfrmModalRegistrarPago;
-  q: TDataSet;
-  iEfe, iRes: Integer;
-  fPend: Double;
+  Efectos: TDataSet;
 begin
   inherited;
-  if Assigned(dmmFacturasCompra) and
-     (dmmFacturasCompra.unqryEfectos <> nil) and
-     dmmFacturasCompra.unqryEfectos.Active and
-     (not dmmFacturasCompra.unqryEfectos.IsEmpty) then
-  begin
-    q     := dmmFacturasCompra.unqryEfectos;
-    iEfe  := q.FieldByName('NUMERO_EFEC').AsInteger;
-    fPend := q.FieldByName('IMPORTE_PENDIENTE_EFEC').AsFloat;
-    frm := TfrmModalRegistrarPago.Create(nil);
-    try
-      frm.SetDatos(
-        Format('Efecto %d - vto %s - pendiente %.2f',
-          [iEfe,
-           FormatDateTime('dd/mm/yyyy',
-             q.FieldByName('FECHA_VENCIMIENTO_EFEC').AsDateTime),
-           fPend]),
-        fPend);
-      if frm.ShowModal = mrOk then
-      begin
-        iRes := dmmFacturasCompra.RegistrarPagoEfecto(iEfe, frm.Fecha,
-                  frm.Importe, frm.Tipo, frm.Referencia);
-        if iRes > 0 then
-          ShowMessage(SInfoEfectoConciliado)
-        else
-          ShowMessage(SErrorConciliarEfecto);
-      end;
-    finally
-      frm.Free;
-    end;
-  end
-  else
-    ShowMessage(SErrorEfectoCompraNoSeleccionado);
+  Efectos := nil;
+  if Assigned(dmmFacturasCompra) then
+    Efectos := dmmFacturasCompra.unqryEfectos;
+  RegistrarPagoFacturaCompraVcl(
+    Efectos,
+    function(
+      ANumeroEfecto: Integer;
+      AFecha: TDateTime;
+      AImporte: Double;
+      const ATipo, AReferencia: string): Integer
+    begin
+      Result := dmmFacturasCompra.RegistrarPagoEfecto(
+        ANumeroEfecto,
+        AFecha,
+        AImporte,
+        ATipo,
+        AReferencia);
+    end,
+    SInfoEfectoConciliado,
+    SErrorConciliarEfecto);
 end;
 
 procedure TfrmMtoFacturasCompra.btnAnadirLineaClick(Sender: TObject);

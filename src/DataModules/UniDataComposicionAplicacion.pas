@@ -9,7 +9,10 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Raíz de composición de servicios, adaptadores y procesos de Factuzam.  }
+{    Raíz de composición de servicios, adaptadores y procesos de Factuzam.     }
+{    Su fan-out alto es intencionado porque construye implementaciones         }
+{    concretas y las expone mediante contratos estrechos; no aloja navegación  }
+{    ni lógica de pantallas. IA-S23: 47 dependencias; máximo permitido: 50.    }
 {******************************************************************************}
 unit UniDataComposicionAplicacion;
 

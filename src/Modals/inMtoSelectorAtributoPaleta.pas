@@ -1,4 +1,4 @@
-{ SPDX-License-Identifier: MPL-2.0 }
+﻿{ SPDX-License-Identifier: MPL-2.0 }
 {******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoSelectorAtributoPaleta                                   }
@@ -24,6 +24,9 @@ uses
   Vcl.StdCtrls, Uni, inMtoFrmBase, inLibAtributosPaletaIntf;
 
 type
+  TResolverInfoAtributoPaleta = reference to function(
+    const AValor: string;
+    out AInfo: TInfoBasico): Boolean;
   TfrmSelectorAtributoPaleta = class(TfrmBase)
     lstValores: TListBox;
     procedure FormShowSelector(Sender: TObject);
@@ -39,16 +42,17 @@ type
   private
     FConexion: TUniConnection;
     FLecturas: ILecturasAtributosPaleta;
-    FIdVa: string;
     FValores: TArray<string>;
     FShown: Boolean;
     FInfoArticulo: TDictionary<string, TInfoBasico>;
+    FResolverInfo: TResolverInfoAtributoPaleta;
     procedure CargarPaletaArticulo(const ACodArt, AIdVa: string);
   public
     constructor CreateConOpciones(
       AOwner: TComponent;
       AConexion: TUniConnection;
       const ALecturas: ILecturasAtributosPaleta;
+      const AResolverInfo: TResolverInfoAtributoPaleta;
       const AIdVa: string;
       const AValores: array of string;
       const AValorActual: string;
@@ -60,15 +64,13 @@ type
 
 implementation
 
-uses
-  inLibAtributosPaleta;
-
 {$R *.dfm}
 
 constructor TfrmSelectorAtributoPaleta.CreateConOpciones(
   AOwner: TComponent;
   AConexion: TUniConnection;
   const ALecturas: ILecturasAtributosPaleta;
+  const AResolverInfo: TResolverInfoAtributoPaleta;
   const AIdVa: string;
   const AValores: array of string;
   const AValorActual: string;
@@ -93,7 +95,7 @@ begin
   inherited Create(AOwner);
   FConexion := AConexion;
   FLecturas := ALecturas;
-  FIdVa := AIdVa;
+  FResolverInfo := AResolverInfo;
   FShown := False;
   FInfoArticulo := TDictionary<string, TInfoBasico>.Create;
 
@@ -259,14 +261,8 @@ begin
       lstValores.Canvas.Brush.Color := clWindow;
     lstValores.Canvas.FillRect(ARect);
     HayColor := FInfoArticulo.TryGetValue(UpperCase(Trim(Av)), Info);
-    if (not HayColor) and (Trim(FIdVa) <> '') then
-      HayColor := ObtenerInfoBasico(FConexion, FIdVa, Av, Info);
-    if not HayColor then
-      HayColor := BuscarInfoBasicoEnArticulo(
-        FConexion,
-        Av,
-        ObtenerMapaAtributosGlobal(FConexion),
-        Info);
+    if (not HayColor) and Assigned(FResolverInfo) then
+      HayColor := FResolverInfo(Av, Info);
     if HayColor then
     begin
       Alto := ARect.Bottom - ARect.Top;

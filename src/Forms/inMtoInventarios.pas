@@ -34,13 +34,13 @@ uses
   cxGroupBox, JvComponentBase, JvEnterTab, dxShellDialogs, system.UITypes,
   dxCoreGraphics, strUtils, cxCalc, Vcl.PlatformDefaultStyleActnCtrls,
   Vcl.ActnMan, System.Generics.Collections, System.Types,
-  dxSpreadSheet, dxSpreadSheetCore,
   // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
   inLibColumnasSkuIntf,
   inLibInventariosAplicacionIntf,
   inLibInventariosInyeccion,
   inLibPermisosIntf,
   inMtoFrmBase,
+  inMtoInventariosImportacionVcl,
   inMtoInventariosPresentacionColumnas,
   inMtoInventariosPresentacionEntrada;
 
@@ -244,6 +244,7 @@ type
     FModoEntradaSel: TModoColumnasSku;
     FAplicacionEntrada: IAplicacionEntradaInventario;
     FDependencias: TDependenciasInventarios;
+    FImportadorRecuento: TImportadorRecuentoInventarioVcl;
 
     // === COLUMNAS DINÁMICAS DE ATRIBUTOS ===
     procedure ActualizarColumnasDinamicas(const ArticuloPadre: string);
@@ -292,15 +293,6 @@ type
     // Guion comun de las cargas masivas: confirmar, ejecutar y refrescar.
     procedure EjecutarCargaMasiva(const APregunta: string;
                                   const ACarga: TProc);
-    // === IMPORTACIÓN DE RECUENTOS ===
-    // Lector del fichero (hoja de calculo o CSV) a lineas de importacion.
-    function LeerFicheroRecuento(
-      const AArchivo: string;
-      out ALineas: TLineasImportacionInventario;
-      out AMensaje: string): Boolean;
-    procedure ImportarRecuentoEnLineas(
-      const ALineas: TLineasImportacionInventario;
-      const AMensaje: string);
     // === CONTRATO DE ENTRADA: construccion y enganches ===
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostInventario;
@@ -344,7 +336,7 @@ uses
   inLibAtributosPaleta,
 
   inLibMsgArticulos,
-  inLibInventarioExcel, inLibHojaCalculoDevEx,
+  inLibInventarioExcel,
   inLibInventarioNube,
   inLibInventariosEntradaDataSet,
   inLibInventariosAplicacion,
@@ -490,6 +482,7 @@ end;
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 var
   emp: string;
+  MensajesImportacion: TMensajesImportacionInventario;
 begin
   FDependencias.Validar;
   dmmInventarios := nil;
@@ -532,6 +525,31 @@ begin
   InicializarEntradaInventarioVcl(
     Self,
     FDependencias.Articulos.ResolucionValidacion);
+  MensajesImportacion.ErrorInventarioCerrado :=
+    SErrorInventarioDebeEstarAbierto;
+  MensajesImportacion.ErrorArchivoNoExiste :=
+    SErrorArchivoImportacionInventarioNoExiste;
+  MensajesImportacion.ErrorSinDatos := SErrorImportacionInventarioSinDatos;
+  MensajesImportacion.InfoLineasCsv := SInfoLineasCsvInventarioLeidas;
+  MensajesImportacion.InfoResultado := SInfoImportacionInventario;
+  FreeAndNil(FImportadorRecuento);
+  FImportadorRecuento := TImportadorRecuentoInventarioVcl.Create(
+    dlgAbrir,
+    dmmInventarios.cdsLineas,
+    procedure
+    begin
+      dmmInventarios.AsegurarFechaRecuentoLinea;
+    end,
+    procedure(const ALista: TStringList)
+    begin
+      dmmInventarios.CargarDesdeListaSkus(ALista);
+    end,
+    procedure
+    begin
+      pcDetail.ActivePage := tsDetalle;
+      CargarLineasYRefrescar;
+    end,
+    MensajesImportacion);
 end;
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
 var
@@ -586,6 +604,7 @@ begin
 end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FImportadorRecuento);
   FAplicacionEntrada := nil;
   FDependencias.Liberar;
   // Contrato de entrada: soltar eventos del view y liberar el modo
@@ -1909,123 +1928,9 @@ begin
   end;
 end;
 
-function TfrmMtoInventarios.LeerFicheroRecuento(
-  const AArchivo: string;
-  out ALineas: TLineasImportacionInventario;
-  out AMensaje: string): Boolean;
-var
-  Lista: TStringList;
-  LineasExcel: TLineasImportadas;
-  Textos: TArray<string>;
-  Hoja: TdxSpreadSheet;
-  iLinea: Integer;
-begin
-  // Lector del recuento: hoja de calculo con PMP o CSV "SKU;CANTIDAD".
-  SetLength(ALineas, 0);
-  AMensaje := '';
-  Lista := nil;
-  SetLength(LineasExcel, 0);
-  try
-    if SameText(ExtractFileExt(AArchivo), '.xlsx') or
-       SameText(ExtractFileExt(AArchivo), '.xls') then
-    begin
-      Hoja := TdxSpreadSheet.Create(nil);
-      try
-        Hoja.LoadFromFile(AArchivo);
-        ImportarInventarioDesdeSheet(CrearLectorDevEx(Hoja),
-          LineasExcel, Lista, AMensaje);
-      finally
-        FreeAndNil(Hoja);
-      end;
-      SetLength(ALineas, Length(LineasExcel));
-      for iLinea := 0 to High(LineasExcel) do
-      begin
-        ALineas[iLinea].CodigoUnidad := LineasExcel[iLinea].Sku;
-        ALineas[iLinea].Cantidad := LineasExcel[iLinea].Cantidad;
-        ALineas[iLinea].PrecioMedioNuevo := LineasExcel[iLinea].PmpNuevo;
-        ALineas[iLinea].TienePrecioMedio := LineasExcel[iLinea].TienePmp;
-        ALineas[iLinea].TextoOriginal := '';
-        if (Lista <> nil) and (iLinea < Lista.Count) then
-          ALineas[iLinea].TextoOriginal := Lista[iLinea];
-      end;
-    end
-    else
-    begin
-      Lista := TStringList.Create;
-      Lista.LoadFromFile(AArchivo);
-      SetLength(Textos, Lista.Count);
-      for iLinea := 0 to Lista.Count - 1 do
-        Textos[iLinea] := Lista[iLinea];
-      ALineas := LeerLineasImportacionCsvInventario(Textos);
-      AMensaje := Format(SInfoLineasCsvInventarioLeidas, [Lista.Count]);
-    end;
-    Result := (Lista <> nil) and (Lista.Count > 0);
-  finally
-    FreeAndNil(Lista);
-  end;
-end;
-
-procedure TfrmMtoInventarios.ImportarRecuentoEnLineas(
-  const ALineas: TLineasImportacionInventario;
-  const AMensaje: string);
-var
-  ListaNuevos: TStringList;
-  Resumen: TResumenImportacionInventario;
-begin
-  // Existentes: actualizar cantidad y PMP. Nuevos: insertar via DM.
-  Screen.Cursor := crHourGlass;
-  ListaNuevos := TStringList.Create;
-  try
-    dmmInventarios.cdsLineas.DisableControls;
-    try
-      Resumen := AplicarImportacionInventario(
-        ALineas,
-        CrearOperacionesImportacionInventario(
-          dmmInventarios.cdsLineas, ListaNuevos,
-          procedure
-          begin
-            dmmInventarios.AsegurarFechaRecuentoLinea;
-          end,
-          procedure
-          begin
-            dmmInventarios.cdsLineas.ApplyUpdates(0);
-          end));
-    finally
-      dmmInventarios.cdsLineas.EnableControls;
-    end;
-    if ListaNuevos.Count > 0 then
-      dmmInventarios.CargarDesdeListaSkus(ListaNuevos);
-    pcDetail.ActivePage := tsDetalle;
-    CargarLineasYRefrescar;
-    ShowMessage(Format(SInfoImportacionInventario,
-      [AMensaje, Resumen.Actualizadas, Resumen.Nuevas]));
-  finally
-    Screen.Cursor := crDefault;
-    FreeAndNil(ListaNuevos);
-  end;
-end;
-
 procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);
-var
-  Lineas: TLineasImportacionInventario;
-  sMsg: string;
 begin
-  dlgAbrir.Filter :=
-    'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|Todos (*.*)|*.*';
-  dlgAbrir.DefaultExt := 'xlsx';
-  if not PuedeEditar then
-    ShowMessage(SErrorInventarioDebeEstarAbierto)
-  else if dlgAbrir.Execute then
-  begin
-    if not FileExists(dlgAbrir.FileName) then
-      ShowMessage(SErrorArchivoImportacionInventarioNoExiste)
-    else if LeerFicheroRecuento(dlgAbrir.FileName, Lineas, sMsg) then
-      ImportarRecuentoEnLineas(Lineas, sMsg)
-    else if sMsg <> '' then
-      ShowMessage(sMsg)
-    else
-      ShowMessage(SErrorImportacionInventarioSinDatos);
-  end;
+  FImportadorRecuento.Ejecutar(PuedeEditar);
 end;
 
 // ============================================================================

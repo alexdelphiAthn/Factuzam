@@ -616,174 +616,211 @@ end;
 procedure AnadirPaymentDetails(ASb: TStringBuilder; ACabecera: TDataSet);
   forward;
 
+procedure AnadirCabeceraFicheroFacturae(
+  ASb: TStringBuilder; ACabecera: TDataSet);
+begin
+  ASb.AppendLine('<?xml version="1.0" encoding="UTF-8"?>');
+  Linea(ASb, 0, '<fe:Facturae xmlns:fe="' + cNsFacturae + '">');
+  Linea(ASb, 1, '<fe:FileHeader>');
+  Nodo(ASb, 2, 'fe:SchemaVersion', cVersionFacturae);
+  Nodo(ASb, 2, 'fe:Modality', 'I');
+  Nodo(ASb, 2, 'fe:InvoiceIssuerType', 'EM');
+  Linea(ASb, 2, '<fe:Batch>');
+  Nodo(ASb, 3, 'fe:BatchIdentifier',
+    NormalizarNif(CampoStr(ACabecera, 'NIF_EMPRESA_FAC')) + '-' +
+    CampoStr(ACabecera, 'SERIE_FAC') + '-' +
+    CampoStr(ACabecera, 'NUMERO_FAC'));
+  Nodo(ASb, 3, 'fe:InvoicesCount', '1');
+  Linea(ASb, 3, '<fe:TotalInvoicesAmount>');
+  Nodo(ASb, 4, 'fe:TotalAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Linea(ASb, 3, '</fe:TotalInvoicesAmount>');
+  Linea(ASb, 3, '<fe:TotalOutstandingAmount>');
+  Nodo(ASb, 4, 'fe:TotalAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Linea(ASb, 3, '</fe:TotalOutstandingAmount>');
+  Linea(ASb, 3, '<fe:TotalExecutableAmount>');
+  Nodo(ASb, 4, 'fe:TotalAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Linea(ASb, 3, '</fe:TotalExecutableAmount>');
+  Nodo(ASb, 3, 'fe:InvoiceCurrencyCode', 'EUR');
+  Linea(ASb, 2, '</fe:Batch>');
+  Linea(ASb, 1, '</fe:FileHeader>');
+end;
+
+procedure AnadirPartesFacturae(
+  ASb: TStringBuilder; ACabecera: TDataSet);
+var
+  PaisEmpresa: string;
+  PaisCliente: string;
+begin
+  PaisEmpresa := CodigoPaisFacturae(
+    CampoStr(ACabecera, 'CODIGO_PAI_EMPRESA_FAC'),
+    CampoStr(ACabecera, 'NOMBRE_PAI_EMPRESA_FAC'));
+  PaisCliente := CodigoPaisFacturae(
+    CampoStr(ACabecera, 'CODIGO_PAI_CLIENTE_FAC'),
+    CampoStr(ACabecera, 'NOMBRE_PAI_CLIENTE_FAC'));
+  Linea(ASb, 1, '<fe:Parties>');
+  AnadirParte(ASb, 'SellerParty',
+    CampoStr(ACabecera, 'NIF_EMPRESA_FAC'),
+    CampoStr(ACabecera, 'RAZON_SOCIAL_EMPRESA_FAC'), '', '',
+    CampoStr(ACabecera, 'DIRECCION1_EMPRESA_FAC'),
+    CampoStr(ACabecera, 'CODIGO_POSTAL_EMPRESA_FAC'),
+    CampoStr(ACabecera, 'POBLACION_EMPRESA_FAC'),
+    CampoStr(ACabecera, 'PROVINCIA_EMPRESA_FAC'),
+    PaisEmpresa, '', '', '');
+  AnadirParte(ASb, 'BuyerParty',
+    CampoStr(ACabecera, 'NIF_CLIENTE_FAC'),
+    CampoStr(ACabecera, 'RAZON_SOCIAL_CLIENTE_FAC'),
+    CampoPersonaFisicaFacturae(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC'),
+    CampoPersonaFisicaFacturae(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC'),
+    CampoStr(ACabecera, 'DIRECCION1_CLIENTE_FAC'),
+    CampoStr(ACabecera, 'CODIGO_POSTAL_CLIENTE_FAC'),
+    CampoStr(ACabecera, 'POBLACION_CLIENTE_FAC'),
+    CampoStr(ACabecera, 'PROVINCIA_CLIENTE_FAC'), PaisCliente,
+    CampoDir3Facturae(ACabecera, 'CODIGO_OFICINA_CONTABLE_FAC',
+      cDir3RespaldoOficina),
+    CampoDir3Facturae(ACabecera, 'CODIGO_ORGANO_GESTOR_FAC',
+      cDir3RespaldoOrgano),
+    CampoDir3Facturae(ACabecera, 'CODIGO_UNIDAD_TRAMITADORA_FAC',
+      cDir3RespaldoUnidad));
+  Linea(ASb, 1, '</fe:Parties>');
+end;
+
+procedure AnadirCabeceraFacturaFacturae(
+  ASb: TStringBuilder; ACabecera: TDataSet);
+begin
+  Linea(ASb, 3, '<fe:InvoiceHeader>');
+  Nodo(ASb, 4, 'fe:InvoiceNumber', CampoStr(ACabecera, 'NUMERO_FAC'));
+  Nodo(ASb, 4, 'fe:InvoiceSeriesCode', CampoStr(ACabecera, 'SERIE_FAC'));
+  Nodo(ASb, 4, 'fe:InvoiceDocumentType', 'FC');
+  Nodo(ASb, 4, 'fe:InvoiceClass', 'OO');
+  Linea(ASb, 3, '</fe:InvoiceHeader>');
+  Linea(ASb, 3, '<fe:InvoiceIssueData>');
+  Nodo(ASb, 4, 'fe:IssueDate',
+    FormatDateTime('yyyy-mm-dd', CampoFecha(ACabecera, 'FECHA_FAC')));
+  Nodo(ASb, 4, 'fe:InvoiceCurrencyCode', 'EUR');
+  Nodo(ASb, 4, 'fe:TaxCurrencyCode', 'EUR');
+  Nodo(ASb, 4, 'fe:LanguageName', 'es');
+  Linea(ASb, 3, '</fe:InvoiceIssueData>');
+end;
+
+procedure AnadirImpuestosFacturae(
+  ASb: TStringBuilder; ACabecera: TDataSet);
+var
+  Impuestos: Integer;
+begin
+  Linea(ASb, 3, '<fe:TaxesOutputs>');
+  Impuestos := 0;
+  AnadirImpuestoCabecera(ASb, ACabecera, 'TOTAL_BASEI_IVAN_FAC',
+    'PORCENTAJE_IVAN_FAC', 'TOTAL_IVAN_FAC', 'PORCENTAJE_REN_FAC',
+    'TOTAL_REN_FAC', Impuestos);
+  AnadirImpuestoCabecera(ASb, ACabecera, 'TOTAL_BASEI_IVAR_FAC',
+    'PORCENTAJE_IVAR_FAC', 'TOTAL_IVAR_FAC', 'PORCENTAJE_RER_FAC',
+    'TOTAL_RER_FAC', Impuestos);
+  AnadirImpuestoCabecera(ASb, ACabecera, 'TOTAL_BASEI_IVAS_FAC',
+    'PORCENTAJE_IVAS_FAC', 'TOTAL_IVAS_FAC', 'PORCENTAJE_RES_FAC',
+    'TOTAL_RES_FAC', Impuestos);
+  AnadirImpuestoCabecera(ASb, ACabecera, 'TOTAL_BASEI_IVAE_FAC',
+    'PORCENTAJE_IVAE_FAC', 'TOTAL_IVAE_FAC', 'PORCENTAJE_REE_FAC',
+    'TOTAL_REE_FAC', Impuestos);
+  if Impuestos = 0 then
+    AnadirImpuesto(ASb, 5, 0, CampoFloat(ACabecera, 'TOTAL_BASES_FAC'),
+      0, 0, 0);
+  Linea(ASb, 3, '</fe:TaxesOutputs>');
+  if Abs(CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC')) > 0.000001 then
+  begin
+    Linea(ASb, 3, '<fe:TaxesWithheld>');
+    Linea(ASb, 4, '<fe:Tax>');
+    Nodo(ASb, 5, 'fe:TaxTypeCode', '04');
+    Nodo(ASb, 5, 'fe:TaxRate',
+      DecimalFacturae(CampoFloat(ACabecera, 'PORCENTAJE_RETENCION_FAC')));
+    Linea(ASb, 5, '<fe:TaxableBase>');
+    Nodo(ASb, 6, 'fe:TotalAmount',
+      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_BASES_FAC')));
+    Linea(ASb, 5, '</fe:TaxableBase>');
+    Linea(ASb, 5, '<fe:TaxAmount>');
+    Nodo(ASb, 6, 'fe:TotalAmount',
+      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC')));
+    Linea(ASb, 5, '</fe:TaxAmount>');
+    Linea(ASb, 4, '</fe:Tax>');
+    Linea(ASb, 3, '</fe:TaxesWithheld>');
+  end;
+end;
+
+procedure AnadirTotalesFacturae(
+  ASb: TStringBuilder; ACabecera: TDataSet);
+begin
+  Linea(ASb, 3, '<fe:InvoiceTotals>');
+  Nodo(ASb, 4, 'fe:TotalGrossAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_BASES_FAC')));
+  Nodo(ASb, 4, 'fe:TotalGrossAmountBeforeTaxes',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_BASES_FAC')));
+  Nodo(ASb, 4, 'fe:TotalTaxOutputs',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_IMPUESTOS_FAC')));
+  Nodo(ASb, 4, 'fe:TotalTaxesWithheld',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC')));
+  Nodo(ASb, 4, 'fe:InvoiceTotal',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Nodo(ASb, 4, 'fe:TotalOutstandingAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Nodo(ASb, 4, 'fe:TotalExecutableAmount',
+    DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
+  Linea(ASb, 3, '</fe:InvoiceTotals>');
+end;
+
+procedure AnadirLineasFacturae(
+  ASb: TStringBuilder; ACabecera, ALineas: TDataSet);
+var
+  Base: Double;
+  Iva: Double;
+  Recargo: Double;
+  PorcentajeIva: Double;
+  PorcentajeRecargo: Double;
+begin
+  Linea(ASb, 3, '<fe:Items>');
+  ALineas.First;
+  while not ALineas.Eof do
+  begin
+    Base := BaseLinea(ALineas);
+    PorcentajeIva := CampoFloat(ALineas, 'PORCENTAJE_IVA_FACLIN');
+    PorcentajeRecargo := RecargoPorIva(ACabecera, PorcentajeIva);
+    Iva := RoundTo(Base * PorcentajeIva / 100, -2);
+    Recargo := RoundTo(Base * PorcentajeRecargo / 100, -2);
+    Linea(ASb, 4, '<fe:InvoiceLine>');
+    Nodo(ASb, 5, 'fe:ItemDescription',
+      CampoStr(ALineas, 'DESCRIPCION_ARTICULO_FACLIN'));
+    Nodo(ASb, 5, 'fe:Quantity',
+      DecimalFacturae(CampoFloat(ALineas, 'CANTIDAD_FACLIN'), 6));
+    Nodo(ASb, 5, 'fe:UnitOfMeasure', '01');
+    Nodo(ASb, 5, 'fe:UnitPriceWithoutTax', DecimalFacturae(
+      CampoFloat(ALineas, 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'), 6));
+    Nodo(ASb, 5, 'fe:TotalCost', DecimalFacturae(Base));
+    Nodo(ASb, 5, 'fe:GrossAmount', DecimalFacturae(Base));
+    Linea(ASb, 5, '<fe:TaxesOutputs>');
+    AnadirImpuesto(ASb, 6, PorcentajeIva, Base, Iva,
+      PorcentajeRecargo, Recargo);
+    Linea(ASb, 5, '</fe:TaxesOutputs>');
+    Linea(ASb, 4, '</fe:InvoiceLine>');
+    ALineas.Next;
+  end;
+  Linea(ASb, 3, '</fe:Items>');
+end;
+
 function ConstruirXmlFacturae(ACabecera, ALineas: TDataSet): string;
 var
   SB: TStringBuilder;
-  iImpuestos: Integer;
-  dBase: Double;
-  dIva: Double;
-  dRe: Double;
-  dPorIva: Double;
-  dPorRe: Double;
-  sPaisEmp: string;
-  sPaisCli: string;
 begin
   SB := TStringBuilder.Create;
   try
-    sPaisEmp := CodigoPaisFacturae(CampoStr(ACabecera,
-      'CODIGO_PAI_EMPRESA_FAC'), CampoStr(ACabecera,
-      'NOMBRE_PAI_EMPRESA_FAC'));
-    sPaisCli := CodigoPaisFacturae(CampoStr(ACabecera,
-      'CODIGO_PAI_CLIENTE_FAC'), CampoStr(ACabecera,
-      'NOMBRE_PAI_CLIENTE_FAC'));
-    SB.AppendLine('<?xml version="1.0" encoding="UTF-8"?>');
-    Linea(SB, 0, '<fe:Facturae xmlns:fe="' + cNsFacturae + '">');
-    Linea(SB, 1, '<fe:FileHeader>');
-    Nodo(SB, 2, 'fe:SchemaVersion', cVersionFacturae);
-    Nodo(SB, 2, 'fe:Modality', 'I');
-    Nodo(SB, 2, 'fe:InvoiceIssuerType', 'EM');
-    Linea(SB, 2, '<fe:Batch>');
-    Nodo(SB, 3, 'fe:BatchIdentifier',
-      NormalizarNif(CampoStr(ACabecera, 'NIF_EMPRESA_FAC')) + '-' +
-      CampoStr(ACabecera, 'SERIE_FAC') + '-' +
-      CampoStr(ACabecera, 'NUMERO_FAC'));
-    Nodo(SB, 3, 'fe:InvoicesCount', '1');
-    Linea(SB, 3, '<fe:TotalInvoicesAmount>');
-    Nodo(SB, 4, 'fe:TotalAmount',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
-    Linea(SB, 3, '</fe:TotalInvoicesAmount>');
-    Linea(SB, 3, '<fe:TotalOutstandingAmount>');
-    Nodo(SB, 4, 'fe:TotalAmount',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
-    Linea(SB, 3, '</fe:TotalOutstandingAmount>');
-    Linea(SB, 3, '<fe:TotalExecutableAmount>');
-    Nodo(SB, 4, 'fe:TotalAmount',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
-    Linea(SB, 3, '</fe:TotalExecutableAmount>');
-    Nodo(SB, 3, 'fe:InvoiceCurrencyCode', 'EUR');
-    Linea(SB, 2, '</fe:Batch>');
-    Linea(SB, 1, '</fe:FileHeader>');
-    Linea(SB, 1, '<fe:Parties>');
-    AnadirParte(SB, 'SellerParty',
-      CampoStr(ACabecera, 'NIF_EMPRESA_FAC'),
-      CampoStr(ACabecera, 'RAZON_SOCIAL_EMPRESA_FAC'),
-      '', '',
-      CampoStr(ACabecera, 'DIRECCION1_EMPRESA_FAC'),
-      CampoStr(ACabecera, 'CODIGO_POSTAL_EMPRESA_FAC'),
-      CampoStr(ACabecera, 'POBLACION_EMPRESA_FAC'),
-      CampoStr(ACabecera, 'PROVINCIA_EMPRESA_FAC'), sPaisEmp, '', '', '');
-    AnadirParte(SB, 'BuyerParty',
-      CampoStr(ACabecera, 'NIF_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'RAZON_SOCIAL_CLIENTE_FAC'),
-      CampoPersonaFisicaFacturae(ACabecera, 'NOMBRE_PERSONA_CLIENTE_FAC'),
-      CampoPersonaFisicaFacturae(ACabecera, 'APELLIDOS_PERSONA_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'DIRECCION1_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'CODIGO_POSTAL_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'POBLACION_CLIENTE_FAC'),
-      CampoStr(ACabecera, 'PROVINCIA_CLIENTE_FAC'), sPaisCli,
-      CampoDir3Facturae(ACabecera, 'CODIGO_OFICINA_CONTABLE_FAC',
-        cDir3RespaldoOficina),
-      CampoDir3Facturae(ACabecera, 'CODIGO_ORGANO_GESTOR_FAC',
-        cDir3RespaldoOrgano),
-      CampoDir3Facturae(ACabecera, 'CODIGO_UNIDAD_TRAMITADORA_FAC',
-        cDir3RespaldoUnidad));
-    Linea(SB, 1, '</fe:Parties>');
+    AnadirCabeceraFicheroFacturae(SB, ACabecera);
+    AnadirPartesFacturae(SB, ACabecera);
     Linea(SB, 1, '<fe:Invoices>');
     Linea(SB, 2, '<fe:Invoice>');
-    Linea(SB, 3, '<fe:InvoiceHeader>');
-    Nodo(SB, 4, 'fe:InvoiceNumber',
-      CampoStr(ACabecera, 'NUMERO_FAC'));
-    Nodo(SB, 4, 'fe:InvoiceSeriesCode',
-      CampoStr(ACabecera, 'SERIE_FAC'));
-    Nodo(SB, 4, 'fe:InvoiceDocumentType', 'FC');
-    Nodo(SB, 4, 'fe:InvoiceClass', 'OO');
-    Linea(SB, 3, '</fe:InvoiceHeader>');
-    Linea(SB, 3, '<fe:InvoiceIssueData>');
-    Nodo(SB, 4, 'fe:IssueDate',
-      FormatDateTime('yyyy-mm-dd', CampoFecha(ACabecera, 'FECHA_FAC')));
-    Nodo(SB, 4, 'fe:InvoiceCurrencyCode', 'EUR');
-    Nodo(SB, 4, 'fe:TaxCurrencyCode', 'EUR');
-    Nodo(SB, 4, 'fe:LanguageName', 'es');
-    Linea(SB, 3, '</fe:InvoiceIssueData>');
-    Linea(SB, 3, '<fe:TaxesOutputs>');
-    iImpuestos := 0;
-    AnadirImpuestoCabecera(SB, ACabecera, 'TOTAL_BASEI_IVAN_FAC',
-      'PORCENTAJE_IVAN_FAC', 'TOTAL_IVAN_FAC', 'PORCENTAJE_REN_FAC',
-      'TOTAL_REN_FAC', iImpuestos);
-    AnadirImpuestoCabecera(SB, ACabecera, 'TOTAL_BASEI_IVAR_FAC',
-      'PORCENTAJE_IVAR_FAC', 'TOTAL_IVAR_FAC', 'PORCENTAJE_RER_FAC',
-      'TOTAL_RER_FAC', iImpuestos);
-    AnadirImpuestoCabecera(SB, ACabecera, 'TOTAL_BASEI_IVAS_FAC',
-      'PORCENTAJE_IVAS_FAC', 'TOTAL_IVAS_FAC', 'PORCENTAJE_RES_FAC',
-      'TOTAL_RES_FAC', iImpuestos);
-    AnadirImpuestoCabecera(SB, ACabecera, 'TOTAL_BASEI_IVAE_FAC',
-      'PORCENTAJE_IVAE_FAC', 'TOTAL_IVAE_FAC', 'PORCENTAJE_REE_FAC',
-      'TOTAL_REE_FAC', iImpuestos);
-    if iImpuestos = 0 then
-      AnadirImpuesto(SB, 5, 0, CampoFloat(ACabecera, 'TOTAL_BASES_FAC'),
-        0, 0, 0);
-    Linea(SB, 3, '</fe:TaxesOutputs>');
-    if Abs(CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC')) > 0.000001 then
-    begin
-      Linea(SB, 3, '<fe:TaxesWithheld>');
-      Linea(SB, 4, '<fe:Tax>');
-      Nodo(SB, 5, 'fe:TaxTypeCode', '04');
-      Nodo(SB, 5, 'fe:TaxRate',
-        DecimalFacturae(CampoFloat(ACabecera, 'PORCENTAJE_RETENCION_FAC')));
-      Linea(SB, 5, '<fe:TaxableBase>');
-      Nodo(SB, 6, 'fe:TotalAmount',
-        DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_BASES_FAC')));
-      Linea(SB, 5, '</fe:TaxableBase>');
-      Linea(SB, 5, '<fe:TaxAmount>');
-      Nodo(SB, 6, 'fe:TotalAmount',
-        DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC')));
-      Linea(SB, 5, '</fe:TaxAmount>');
-      Linea(SB, 4, '</fe:Tax>');
-      Linea(SB, 3, '</fe:TaxesWithheld>');
-    end;
-    Linea(SB, 3, '<fe:InvoiceTotals>');
-    Nodo(SB, 4, 'fe:TotalGrossAmount',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_BASES_FAC')));
-    Nodo(SB, 4, 'fe:TotalGrossAmountBeforeTaxes',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_BASES_FAC')));
-    Nodo(SB, 4, 'fe:TotalTaxOutputs',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_IMPUESTOS_FAC')));
-    Nodo(SB, 4, 'fe:TotalTaxesWithheld',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_RETENCION_FAC')));
-    Nodo(SB, 4, 'fe:InvoiceTotal',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
-    Nodo(SB, 4, 'fe:TotalOutstandingAmount',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
-    Nodo(SB, 4, 'fe:TotalExecutableAmount',
-      DecimalFacturae(CampoFloat(ACabecera, 'TOTAL_LIQUIDO_FAC')));
-    Linea(SB, 3, '</fe:InvoiceTotals>');
-    Linea(SB, 3, '<fe:Items>');
-    ALineas.First;
-    while not ALineas.Eof do
-    begin
-      dBase := BaseLinea(ALineas);
-      dPorIva := CampoFloat(ALineas, 'PORCENTAJE_IVA_FACLIN');
-      dPorRe := RecargoPorIva(ACabecera, dPorIva);
-      dIva := RoundTo(dBase * dPorIva / 100, -2);
-      dRe := RoundTo(dBase * dPorRe / 100, -2);
-      Linea(SB, 4, '<fe:InvoiceLine>');
-      Nodo(SB, 5, 'fe:ItemDescription',
-        CampoStr(ALineas, 'DESCRIPCION_ARTICULO_FACLIN'));
-      Nodo(SB, 5, 'fe:Quantity',
-        DecimalFacturae(CampoFloat(ALineas, 'CANTIDAD_FACLIN'), 6));
-      Nodo(SB, 5, 'fe:UnitOfMeasure', '01');
-      Nodo(SB, 5, 'fe:UnitPriceWithoutTax',
-        DecimalFacturae(CampoFloat(ALineas,
-        'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'), 6));
-      Nodo(SB, 5, 'fe:TotalCost', DecimalFacturae(dBase));
-      Nodo(SB, 5, 'fe:GrossAmount', DecimalFacturae(dBase));
-      Linea(SB, 5, '<fe:TaxesOutputs>');
-      AnadirImpuesto(SB, 6, dPorIva, dBase, dIva, dPorRe, dRe);
-      Linea(SB, 5, '</fe:TaxesOutputs>');
-      Linea(SB, 4, '</fe:InvoiceLine>');
-      ALineas.Next;
-    end;
-    Linea(SB, 3, '</fe:Items>');
+    AnadirCabeceraFacturaFacturae(SB, ACabecera);
+    AnadirImpuestosFacturae(SB, ACabecera);
+    AnadirTotalesFacturae(SB, ACabecera);
+    AnadirLineasFacturae(SB, ACabecera, ALineas);
     AnadirPaymentDetails(SB, ACabecera);
     Linea(SB, 2, '</fe:Invoice>');
     Linea(SB, 1, '</fe:Invoices>');

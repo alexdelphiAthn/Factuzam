@@ -763,16 +763,37 @@ function SeleccionarAvConPaleta(AConexion: TUniConnection;
 var
   F: TfrmSelectorAtributoPaleta;
   Propietario: TComponent;
+  ResolverInfo: TResolverInfoAtributoPaleta;
 begin
   AValor := '';
   Result := False;
   if Length(AAvs) > 0 then
   begin
     Propietario := Screen.ActiveForm;
+    ResolverInfo :=
+      function(
+        const AValor: string;
+        out AInfo: TInfoBasico): Boolean
+      begin
+        Result := False;
+        if Trim(AIdVa) <> '' then
+          Result := ObtenerInfoBasico(
+            AConexion,
+            AIdVa,
+            AValor,
+            AInfo);
+        if not Result then
+          Result := BuscarInfoBasicoEnArticulo(
+            AConexion,
+            AValor,
+            ObtenerMapaAtributosGlobal(AConexion),
+            AInfo);
+      end;
     F := TfrmSelectorAtributoPaleta.CreateConOpciones(
       Propietario,
       AConexion,
       GLecturasPersistencia,
+      ResolverInfo,
       AIdVa,
       AAvs,
       AValorActual,

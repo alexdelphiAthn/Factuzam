@@ -1,0 +1,59 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <FactuzamDevExpressRoot
+            Condition="'$(FactuzamDevExpressRoot)'==''">$(FACTUZAM_DEVEXPRESS_ROOT)</FactuzamDevExpressRoot>
+        <FactuzamFastReportRoot
+            Condition="'$(FactuzamFastReportRoot)'==''">$(FACTUZAM_FASTREPORT_ROOT)</FactuzamFastReportRoot>
+        <FactuzamUniDacRoot
+            Condition="'$(FactuzamUniDacRoot)'==''">$(FACTUZAM_UNIDAC_ROOT)</FactuzamUniDacRoot>
+        <FactuzamDUnitXRoot
+            Condition="'$(FactuzamDUnitXRoot)'==''">$(FACTUZAM_DUNITX_ROOT)</FactuzamDUnitXRoot>
+        <FactuzamRequiereDUnitX
+            Condition="'$(FactuzamRequiereDUnitX)'==''">false</FactuzamRequiereDUnitX>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)'=='Win32'">
+        <FactuzamDevExpressPath>$(FactuzamDevExpressRoot)</FactuzamDevExpressPath>
+        <FactuzamFastReportPath>$(FactuzamFastReportRoot)\Win32</FactuzamFastReportPath>
+        <FactuzamUniDacPath>$(FactuzamUniDacRoot)\Win32</FactuzamUniDacPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Platform)'=='Win64'">
+        <FactuzamDevExpressPath>$(FactuzamDevExpressRoot)\Win64</FactuzamDevExpressPath>
+        <FactuzamFastReportPath>$(FactuzamFastReportRoot)\Win64</FactuzamFastReportPath>
+        <FactuzamUniDacPath>$(FactuzamUniDacRoot)\Win64</FactuzamUniDacPath>
+    </PropertyGroup>
+    <PropertyGroup>
+        <FactuzamDependenciasPlataforma>$(FactuzamDevExpressPath);$(FactuzamFastReportPath);$(FactuzamUniDacPath)</FactuzamDependenciasPlataforma>
+        <FactuzamDependenciasPruebas>$(FactuzamDependenciasPlataforma);$(FactuzamDUnitXRoot)</FactuzamDependenciasPruebas>
+    </PropertyGroup>
+    <Target
+        Name="ValidarDependenciasFactuzam"
+        BeforeTargets="Build">
+        <Error
+            Condition="'$(Platform)'!='Win32' and '$(Platform)'!='Win64'"
+            Text="Plataforma no soportada: $(Platform). Use Win32 o Win64."/>
+        <Error
+            Condition="'$(FactuzamDevExpressRoot)'==''"
+            Text="Falta DevExpress. Defina FACTUZAM_DEVEXPRESS_ROOT o FactuzamDevExpressRoot. Consulte eng\README.md."/>
+        <Error
+            Condition="'$(FactuzamFastReportRoot)'==''"
+            Text="Falta FastReport. Defina FACTUZAM_FASTREPORT_ROOT o FactuzamFastReportRoot. Consulte eng\README.md."/>
+        <Error
+            Condition="'$(FactuzamUniDacRoot)'==''"
+            Text="Falta UniDAC. Defina FACTUZAM_UNIDAC_ROOT o FactuzamUniDacRoot. Consulte eng\README.md."/>
+        <Error
+            Condition="'$(FactuzamDevExpressRoot)'!='' and !Exists('$(FactuzamDevExpressPath)\cxClasses.dcu')"
+            Text="DevExpress no contiene cxClasses.dcu para $(Platform): $(FactuzamDevExpressPath)."/>
+        <Error
+            Condition="'$(FactuzamFastReportRoot)'!='' and !Exists('$(FactuzamFastReportPath)\frxClass.dcu')"
+            Text="FastReport no contiene frxClass.dcu para $(Platform): $(FactuzamFastReportPath)."/>
+        <Error
+            Condition="'$(FactuzamUniDacRoot)'!='' and !Exists('$(FactuzamUniDacPath)\Uni.dcu')"
+            Text="UniDAC no contiene Uni.dcu para $(Platform): $(FactuzamUniDacPath)."/>
+        <Error
+            Condition="'$(FactuzamRequiereDUnitX)'=='true' and '$(FactuzamDUnitXRoot)'==''"
+            Text="Falta DUnitX. Defina FACTUZAM_DUNITX_ROOT o FactuzamDUnitXRoot."/>
+        <Error
+            Condition="'$(FactuzamRequiereDUnitX)'=='true' and '$(FactuzamDUnitXRoot)'!='' and !Exists('$(FactuzamDUnitXRoot)\DUnitX.TestFramework.pas')"
+            Text="DUnitX.TestFramework.pas no existe en $(FactuzamDUnitXRoot)."/>
+    </Target>
+</Project>

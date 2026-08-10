@@ -125,6 +125,11 @@ type
     procedure ProcesarLecturaScanner(const ACodigo: string);
     function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
+    function CrearCamposGrid: TCamposGridArt;
+    procedure ConfigurarVistaGrid;
+    procedure ConstruirEntradaSku(const ACampos: TCamposGridArt);
+    procedure ConstruirEntradaDesglosada(const ACampos: TCamposGridArt);
+    procedure CrearColumnasTraspaso;
     procedure LiberarModoEntrada;
     procedure ConfigurarGridSegunModo;
     procedure AlternarModoEntrada;
@@ -155,6 +160,8 @@ type
     procedure ModalImprimirClick(Sender: TObject);
     procedure CerrarSolicitudCargada;
     procedure DenegarSolicitudCargada;
+    procedure AbrirHistoricoSolicitudes(
+      const AAlmacen, ATitulo: string);
     procedure AbrirMisPeticiones;
     procedure AplicarModo(AModo: TModoTraspaso);
     procedure CargarCombo;
@@ -164,6 +171,7 @@ type
     procedure QuitarLinea;
     procedure EjecutarTraspaso(AConTicket: Boolean);
     procedure EjecutarTraspasoInterno(AConTicket: Boolean);
+    procedure AvisarStockSolicitud(const AAlmacenOrigen: string);
     procedure EnviarSolicitud;
     function EmpleadoValido: Boolean;
     procedure BuscarEmpleado;
@@ -200,6 +208,8 @@ type
       const AEmpresa, AAlmacen, ACaja: string;
       AFecha: TDateTime;
       const ALineas: TLineasCargaTraspaso);
+    procedure MostrarHistoricoSolicitudes(
+      const AAlmacen, ATitulo: string);
   end;
 
 implementation
@@ -317,142 +327,168 @@ begin
   EnfocarSegunModo;
 end;
 
-procedure TfrmMtoOpeTraspaso.ConstruirGrid;
+function TfrmMtoOpeTraspaso.CrearCamposGrid: TCamposGridArt;
 var
-  Campos: TCamposGridArt;
-  CamposSku: TCamposColumnasSku;
-  ConfigSku: TConfigColumnasSku;
-  NombresAtributos: TArray<string>;
-  Col: TcxGridDBColumn;
-  i: Integer;
+  Indice: Integer;
 begin
-  // Los dos modos comparten el cds. Solo se reconstruye la presentacion:
-  // desglose = Articulo/Color/Talla; SKU = una columna con el codigo completo.
-  LiberarModoEntrada;
+  Result := Default(TCamposGridArt);
+  Result.CodigoArt := 'CODIGO_ART';
+  Result.CodigoUnidad := 'CODIGO_UNIDAD';
+  Result.Descripcion := 'DESCRIPCION';
+  Result.Cantidad := 'CANTIDAD';
+  Result.NumAtributos := 'NUM_ATRIBUTOS';
+  for Indice := 1 to 5 do
+  begin
+    Result.AttrValor[Indice] :=
+      'ATTR' + IntToStr(Indice) + '_VALOR';
+    Result.AttrNombre[Indice] :=
+      'ATTR' + IntToStr(Indice) + '_NOMBRE';
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConfigurarVistaGrid;
+begin
   FView.DataController.DataSource := FDatos.dsLineas;
   FView.OptionsData.Editing := True;
   FView.OptionsData.Inserting := True;
   FView.OptionsData.Deleting := True;
-  FView.OptionsView.GroupByBox := False;
-  Campos.CodigoArt := 'CODIGO_ART';
-  Campos.CodigoUnidad := 'CODIGO_UNIDAD';
-  Campos.Descripcion := 'DESCRIPCION';
-  Campos.Cantidad := 'CANTIDAD';
-  Campos.NumAtributos := 'NUM_ATRIBUTOS';
-  for i := 1 to 5 do
-  begin
-    Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR';
-    Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) + '_NOMBRE';
-  end;
-  if FModoEntradaSel = mcsSku then
-  begin
-    CamposSku := Default(TCamposColumnasSku);
-    CamposSku.CodigoArt := Campos.CodigoArt;
-    CamposSku.CodigoUnidad := Campos.CodigoUnidad;
-    CamposSku.Descripcion := Campos.Descripcion;
-    CamposSku.Cantidad := Campos.Cantidad;
-    CamposSku.NumAtributos := Campos.NumAtributos;
-    for i := 1 to 5 do
-    begin
-      CamposSku.AttrValor[i] := Campos.AttrValor[i];
-      CamposSku.AttrNombre[i] := Campos.AttrNombre[i];
-    end;
-    ConfigSku := Default(TConfigColumnasSku);
-    ConfigSku.Servicios :=
-      CrearServiciosColumnasSkuUniDAC(ConexionPrincipal);
-    ConfigSku.ContextoSesion := ContextoSesion;
-    ConfigSku.RegistroLog := RegistroLog;
-    ConfigSku.ValidadorArticulos := FValidadorArticulos;
-    ConfigSku.LookupAtributos := FLookupAtributosArticulos;
-    ConfigSku.BusquedaVisual := BusquedaVisual;
-    ConfigSku.View := FView;
-    ConfigSku.Cds := FDatos.cdsLineas;
-    ConfigSku.Campos := CamposSku;
-    ConfigSku.Modo := mcsSku;
-    ConfigSku.AlmacenStock :=
-      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-    FModoSku := TModoEntradaSku.Create(ConfigSku);
-    FModoSku.Construir(GridResuelto, nil, nil);
-  end
-  else
-  begin
-    FGridCtrl := TGridArticulosLineas.Create(
-      ConexionPrincipal,
-      FView,
-      FDatos.cdsLineas,
-      Campos,
-      ContextoSesion,
-      BusquedaVisual,
-      CrearBusquedaSkusTallas(ConexionPrincipal),
-      CrearConsultaArticulosGridUniDAC(ConexionPrincipal),
-      FValidadorArticulos,
-      FLookupAtributosArticulos,
-      RegistroLog);
-    FGridCtrl.AlmacenStock :=
-      FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-    FGridCtrl.OnResuelto := GridResuelto;
-    FGridCtrl.Construir;
-    Col := FView.GetColumnByFieldName('CODIGO_ART');
-    if Assigned(Col) then
-      Col.Caption := SCaptionColArticulo;
-    NombresAtributos := CrearColumnasDocumentoLecturas(
-      ConexionPrincipal).ListarNombresAtributosGlobales;
-    if Length(NombresAtributos) = 0 then
-      NombresAtributos := TArray<string>.Create('Color', 'Talla')
-    else if Length(NombresAtributos) = 1 then
-    begin
-      SetLength(NombresAtributos, 2);
-      NombresAtributos[1] := 'Talla';
-    end
-    else if Length(NombresAtributos) > 2 then
-      SetLength(NombresAtributos, 2);
-    AplicarNombresAtributosGlobalesDocumento(
-      FView, NombresAtributos);
-  end;
   FView.OptionsBehavior.FocusCellOnCycle := True;
+  FView.OptionsView.GroupByBox := False;
   FView.OptionsView.ColumnAutoWidth := True;
   FView.OptionsView.NoDataToDisplayInfoText := SCaptionSinArticulos;
   FView.Navigator.Visible := True;
-  // Columnas propias del traspaso.
-  Col := FView.CreateColumn;
-  Col.Caption := SCaptionColDescripcionTraspaso;
-  Col.DataBinding.FieldName := 'DESCRIPCION';
-  Col.Options.Editing := False;
-  Col.Width := 200;
-  Col := FView.CreateColumn;
-  Col.Caption := SCaptionColUdsTraspaso;
-  Col.DataBinding.FieldName := 'CANTIDAD';
-  Col.Width := 50;
-  // Al atender pasa a ser "lo que sirvo" (editable); 0 = denegar esa linea.
-  FColUds := Col;
-  Col := FView.CreateColumn;
-  Col.Caption := SCaptionColCosteTraspaso;
-  Col.DataBinding.FieldName := 'PRECIO_COSTE';
-  Col.Options.Editing := False;
-  Col.Width := 70;
-  // Oculta el coste a empleados sin permiso (el valor se sigue calculando y
-  // guardando en el movimiento; solo se oculta de la vista).
-  Col.Visible := FVerCoste;
-  Col := FView.CreateColumn;
-  Col.Caption := SCaptionColStockOrigenTraspaso;
-  Col.DataBinding.FieldName := 'STOCK_ORIGEN';
-  Col.Options.Editing := False;
-  Col.Width := 70;
-  // Columnas que solo se usan al ATENDER (ocultas en traspaso/solicitar; las
-  // muestra AplicarModo): lo pedido (referencia) y el motivo si se deniega.
-  Col := FView.CreateColumn;
-  Col.Caption := SCaptionColPedidasTraspaso;
-  Col.DataBinding.FieldName := 'CANTIDAD_PEDIDA';
-  Col.Options.Editing := False;
-  Col.Width := 60;
-  Col.Visible := False;
-  FColPedidas := Col;
-  Col := FView.CreateColumn;
-  Col.Caption := SCaptionColMotivoRechazoTraspaso;
-  Col.DataBinding.FieldName := 'MOTIVO';
-  Col.Width := 180;
-  Col.Visible := False;
-  FColMotivo := Col;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConstruirEntradaSku(
+  const ACampos: TCamposGridArt);
+var
+  CamposSku: TCamposColumnasSku;
+  Configuracion: TConfigColumnasSku;
+  Indice: Integer;
+begin
+  CamposSku := Default(TCamposColumnasSku);
+  CamposSku.CodigoArt := ACampos.CodigoArt;
+  CamposSku.CodigoUnidad := ACampos.CodigoUnidad;
+  CamposSku.Descripcion := ACampos.Descripcion;
+  CamposSku.Cantidad := ACampos.Cantidad;
+  CamposSku.NumAtributos := ACampos.NumAtributos;
+  for Indice := 1 to 5 do
+  begin
+    CamposSku.AttrValor[Indice] := ACampos.AttrValor[Indice];
+    CamposSku.AttrNombre[Indice] := ACampos.AttrNombre[Indice];
+  end;
+  Configuracion := Default(TConfigColumnasSku);
+  Configuracion.Servicios :=
+    CrearServiciosColumnasSkuUniDAC(ConexionPrincipal);
+  Configuracion.ContextoSesion := ContextoSesion;
+  Configuracion.RegistroLog := RegistroLog;
+  Configuracion.ValidadorArticulos := FValidadorArticulos;
+  Configuracion.LookupAtributos := FLookupAtributosArticulos;
+  Configuracion.BusquedaVisual := BusquedaVisual;
+  Configuracion.View := FView;
+  Configuracion.Cds := FDatos.cdsLineas;
+  Configuracion.Campos := CamposSku;
+  Configuracion.Modo := mcsSku;
+  Configuracion.AlmacenStock :=
+    FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  FModoSku := TModoEntradaSku.Create(Configuracion);
+  FModoSku.Construir(GridResuelto, nil, nil);
+end;
+
+procedure TfrmMtoOpeTraspaso.ConstruirEntradaDesglosada(
+  const ACampos: TCamposGridArt);
+var
+  Columna: TcxGridDBColumn;
+  NombresAtributos: TArray<string>;
+begin
+  FGridCtrl := TGridArticulosLineas.Create(
+    ConexionPrincipal,
+    FView,
+    FDatos.cdsLineas,
+    ACampos,
+    ContextoSesion,
+    BusquedaVisual,
+    CrearBusquedaSkusTallas(ConexionPrincipal),
+    CrearConsultaArticulosGridUniDAC(ConexionPrincipal),
+    FValidadorArticulos,
+    FLookupAtributosArticulos,
+    RegistroLog);
+  FGridCtrl.AlmacenStock :=
+    FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  FGridCtrl.OnResuelto := GridResuelto;
+  FGridCtrl.Construir;
+  Columna := FView.GetColumnByFieldName('CODIGO_ART');
+  if Assigned(Columna) then
+    Columna.Caption := SCaptionColArticulo;
+  NombresAtributos := CrearColumnasDocumentoLecturas(
+    ConexionPrincipal).ListarNombresAtributosGlobales;
+  if Length(NombresAtributos) = 0 then
+    NombresAtributos := TArray<string>.Create('Color', 'Talla')
+  else if Length(NombresAtributos) = 1 then
+  begin
+    SetLength(NombresAtributos, 2);
+    NombresAtributos[1] := 'Talla';
+  end
+  else if Length(NombresAtributos) > 2 then
+    SetLength(NombresAtributos, 2);
+  AplicarNombresAtributosGlobalesDocumento(
+    FView, NombresAtributos);
+end;
+
+procedure TfrmMtoOpeTraspaso.CrearColumnasTraspaso;
+var
+  Columna: TcxGridDBColumn;
+begin
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColDescripcionTraspaso;
+  Columna.DataBinding.FieldName := 'DESCRIPCION';
+  Columna.Options.Editing := False;
+  Columna.Width := 200;
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColUdsTraspaso;
+  Columna.DataBinding.FieldName := 'CANTIDAD';
+  Columna.Width := 50;
+  FColUds := Columna;
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColCosteTraspaso;
+  Columna.DataBinding.FieldName := 'PRECIO_COSTE';
+  Columna.Options.Editing := False;
+  Columna.Width := 70;
+  Columna.Visible := FVerCoste;
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColStockOrigenTraspaso;
+  Columna.DataBinding.FieldName := 'STOCK_ORIGEN';
+  Columna.Options.Editing := False;
+  Columna.Width := 70;
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColPedidasTraspaso;
+  Columna.DataBinding.FieldName := 'CANTIDAD_PEDIDA';
+  Columna.Options.Editing := False;
+  Columna.Width := 60;
+  Columna.Visible := False;
+  FColPedidas := Columna;
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColMotivoRechazoTraspaso;
+  Columna.DataBinding.FieldName := 'MOTIVO';
+  Columna.Width := 180;
+  Columna.Visible := False;
+  FColMotivo := Columna;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConstruirGrid;
+var
+  Campos: TCamposGridArt;
+begin
+  // Los dos modos comparten el cds. Solo se reconstruye la presentacion:
+  // desglose = Articulo/Color/Talla; SKU = una columna con el codigo completo.
+  LiberarModoEntrada;
+  ConfigurarVistaGrid;
+  Campos := CrearCamposGrid;
+  if FModoEntradaSel = mcsSku then
+    ConstruirEntradaSku(Campos)
+  else
+    ConstruirEntradaDesglosada(Campos);
+  CrearColumnasTraspaso;
   ConfigurarGridSegunModo;
 end;
 
@@ -1235,6 +1271,7 @@ procedure TfrmMtoOpeTraspaso.ConfigurarModalSolicitudes(
   ADialogo: TForm);
 begin
   ADialogo.Caption := STituloSolicitudesPendientesAtender;
+  ADialogo.Font.Assign(Font);
   ADialogo.Position := poOwnerFormCenter;
   ADialogo.BorderStyle := bsDialog;
   ADialogo.ClientWidth := 760;
@@ -1525,22 +1562,42 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.AbrirMisPeticiones;
+begin
+  AbrirHistoricoSolicitudes(FAlmacen, 'Mis peticiones');
+end;
+
+procedure TfrmMtoOpeTraspaso.AbrirHistoricoSolicitudes(
+  const AAlmacen, ATitulo: string);
 var
   Datos: TDataSet;
 begin
-  // Historico (solo consulta) de las peticiones que YO he hecho (soy el
-  // destino que pide): numero,serie,fecha,a quien pedi (origen) y estado,//
-  // para saber si se han servido/denegado. Reutiliza el buscador de
-  // solicitudes; los titulos los pone el formateador (fza_config_campos).
-  Datos := FDatos.QueryMisPeticiones(FAlmacen);
+  // Histórico de las peticiones hechas desde el almacén indicado. El mismo
+  // flujo sirve al acceso rápido F7 y a la entrada directa del menú TPV.
+  Datos := FDatos.QueryMisPeticiones(AAlmacen);
   try
     BusquedaVisual.EjecutarBusquedaDataSet(
-      'Mis peticiones',
+      ATitulo,
       Datos,
       'frmMtoSolicitudesSearch');
   finally
     FreeAndNil(Datos);
   end;
+end;
+
+procedure TfrmMtoOpeTraspaso.MostrarHistoricoSolicitudes(
+  const AAlmacen, ATitulo: string);
+begin
+  AbrirHistoricoSolicitudes(AAlmacen, ATitulo);
+end;
+
+procedure TfrmMtoOpeTraspaso.AvisarStockSolicitud(
+  const AAlmacenOrigen: string);
+var
+  sAviso: string;
+begin
+  sAviso := FDatos.ObtenerAvisoStockOrigen(AAlmacenOrigen);
+  if sAviso <> '' then
+    MessageDlg(sAviso, mtWarning, [mbOK], 0);
 end;
 
 procedure TfrmMtoOpeTraspaso.EnviarSolicitud;
@@ -1555,6 +1612,9 @@ begin
     else
     begin
       try
+        // Una peticion puede enviarse aunque el almacen solicitado no tenga
+        // stock en este momento; se informa sin impedir cerrar el ticket.
+        AvisarStockSolicitud(sOrigen);
         if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
         begin
           ShowMessage(Format(SInfoSolicitudTraspasoEnviada, [sSer, sNum]));
@@ -1704,6 +1764,7 @@ begin
         begin
           // Hay algo que servir: traspaso de lo servido; lo denegado queda
           // registrado con su motivo. Estado COMPLETADO TOTAL/PARCIAL.
+          AvisarStockSolicitud(sOrigen);
           if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
           begin
             ShowMessage(Format(SInfoSolicitudTraspasoAtendida, [sNumOp]));

@@ -80,12 +80,102 @@ type
     class procedure Ejecutar(
       const AContexto: TContextoCierreVentaCajaVcl); static;
   end;
+  TOrigenDevolucionCajaVcl = record
+    Serie: string;
+    Numero: string;
+    Empresa: string;
+    Almacen: string;
+  end;
+
+function PedirMotivoDevolucionCajaVcl(
+  AOwner: TComponent;
+  ALineas: TDataSet;
+  var AMotivo: string): Boolean;
+function SeleccionarTicketDevolucionCajaVcl(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioConsultasCaja;
+  const AEmpresa, AAlmacen, ACaja: string;
+  out ASeleccion: TOrigenDevolucionCajaVcl): Boolean;
+function SeleccionarVentaOrigenCajaVcl(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioConsultasCaja;
+  const ASku, AEmpresa: string;
+  out ASeleccion: TOrigenDevolucionCajaVcl): Boolean;
 
 implementation
 
 uses
   System.SysUtils, System.UITypes,
-  inLibCajaVentaOperacion, inLibCajaDescuentos;
+  inLibCajaVentaOperacion, inLibCajaDescuentos,
+  inMtoModalMotivoDevolucion, inMtoModalDevolucionTicket,
+  inMtoModalSeleccionVentaOrigen;
+
+function SeleccionarTicketDevolucionCajaVcl(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioConsultasCaja;
+  const AEmpresa, AAlmacen, ACaja: string;
+  out ASeleccion: TOrigenDevolucionCajaVcl): Boolean;
+var
+  SeleccionModal: TTicketDevolucionSeleccionado;
+begin
+  ASeleccion := Default(TOrigenDevolucionCajaVcl);
+  Result := TfrmModalDevolucionTicket.Ejecutar(
+    AOwner,
+    ARepositorio,
+    AEmpresa,
+    AAlmacen,
+    ACaja,
+    SeleccionModal);
+  if Result then
+  begin
+    ASeleccion.Serie := SeleccionModal.Serie;
+    ASeleccion.Numero := SeleccionModal.Numero;
+    ASeleccion.Empresa := SeleccionModal.Empresa;
+    ASeleccion.Almacen := SeleccionModal.Almacen;
+  end;
+end;
+
+function SeleccionarVentaOrigenCajaVcl(
+  AOwner: TComponent;
+  const ARepositorio: IRepositorioConsultasCaja;
+  const ASku, AEmpresa: string;
+  out ASeleccion: TOrigenDevolucionCajaVcl): Boolean;
+var
+  SeleccionModal: TVentaOrigenSeleccionada;
+begin
+  ASeleccion := Default(TOrigenDevolucionCajaVcl);
+  Result := TfrmModalSeleccionVentaOrigen.Ejecutar(
+    AOwner,
+    ARepositorio,
+    ASku,
+    AEmpresa,
+    SeleccionModal);
+  if Result then
+  begin
+    ASeleccion.Serie := SeleccionModal.Serie;
+    ASeleccion.Numero := SeleccionModal.Numero;
+    ASeleccion.Empresa := SeleccionModal.Empresa;
+    ASeleccion.Almacen := SeleccionModal.Almacen;
+  end;
+end;
+
+function PedirMotivoDevolucionCajaVcl(
+  AOwner: TComponent;
+  ALineas: TDataSet;
+  var AMotivo: string): Boolean;
+var
+  Motivo: string;
+begin
+  Result := True;
+  if HayLineasNegativasVenta(ALineas) and
+     (Trim(AMotivo) = '') then
+  begin
+    if TfrmModalMotivoDevolucion.Ejecutar(AOwner, Motivo) then
+      AMotivo := Motivo
+    else
+      Result := False;
+  end;
+end;
 
 class procedure TCoordinadorCierreVentaCajaVcl.ConfigurarFaseCobro(
   const AContexto: TContextoCierreVentaCajaVcl;

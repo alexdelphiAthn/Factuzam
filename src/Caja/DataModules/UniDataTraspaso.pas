@@ -64,6 +64,7 @@ type
     function GetIdentidadSesion: TIdentidadSesion;
     procedure ConfigurarEstructuraCabecera;
     procedure ConfigurarEstructuraLineas;
+    procedure DesempaquetarAtributosLinea(const ASku: string);
     procedure cdsLineasNewRecord(DataSet: TDataSet);
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
     // Devuelve el articulo padre del SKU activo. Vacio si no existe.
@@ -72,8 +73,8 @@ type
     // (sin articulo) y aborta con error si una linea tiene articulo pero el
     // SKU no esta cerrado (falta color/talla).
     procedure LimpiarLineasIncompletas;
-    // Aborta (raise) si alguna linea pide mas unidades de las que hay en el
-    // almacen origen. Evita traspasar sin stock (dejaria stock negativo).
+    // Aborta (raise) si un traspaso directo pide mas unidades de las que hay
+    // en el almacen origen. Las solicitudes usan el mismo detalle como aviso.
     procedure ValidarStockOrigen(const AAlmacenOrigen: string);
     // Serie del documento de traspaso (fza_empresas_series + fallback) y su
     // siguiente número (PRC_GET_NEXT_CONT_FACT_SERIE, como la factura).
@@ -128,6 +129,9 @@ type
                             ACaja: string; AFecha: TDateTime);
     function ObtenerCosteMedio(const ASku, AAlmacen: string): Currency;
     function ObtenerStock(const ASku, AAlmacen: string): Double;
+    // Devuelve el detalle de las lineas que superan el stock del almacen.
+    // Vacio indica que todas disponen de stock suficiente.
+    function ObtenerAvisoStockOrigen(const AAlmacenOrigen: string): string;
     // Graba el traspaso directo: par salida+entrada por línea + operación
     // de caja TR/AT, todo en una transacción. Devuelve el nº de operación.
     function GrabarTraspaso(const AAlmacenDestino: string;
@@ -255,6 +259,25 @@ begin
   cdsLineas.CreateDataSet;
 end;
 
+procedure TdmTraspaso.DesempaquetarAtributosLinea(const ASku: string);
+var
+  Partes: TArray<string>;
+  i: Integer;
+begin
+  Partes := ASku.Split(['/']);
+  cdsLineas.FieldByName('NUM_ATRIBUTOS').AsInteger := 0;
+  for i := 1 to 5 do
+    cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString := '';
+  if Length(Partes) > 1 then
+  begin
+    cdsLineas.FieldByName('NUM_ATRIBUTOS').AsInteger :=
+      Min(Length(Partes) - 1, 5);
+    for i := 1 to cdsLineas.FieldByName('NUM_ATRIBUTOS').AsInteger do
+      cdsLineas.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
+        Partes[i];
+  end;
+end;
+
 procedure TdmTraspaso.cdsLineasNewRecord(DataSet: TDataSet);
 begin
   DataSet.FieldByName('CANTIDAD').AsFloat := 1;
@@ -349,15 +372,15 @@ begin
   end;
 end;
 
-procedure TdmTraspaso.ValidarStockOrigen(const AAlmacenOrigen: string);
+function TdmTraspaso.ObtenerAvisoStockOrigen(
+  const AAlmacenOrigen: string): string;
 var
   sSku, sFalta: string;
   dCant, dStock: Double;
 begin
-  // No se puede traspasar mas de lo que hay en origen (dejaria stock
-  // negativo). Recorremos las lineas y acumulamos las que se pasan; si hay
-  // alguna, abortamos con un mensaje que las lista (no se mueve nada).
   sFalta := '';
+  if cdsLineas.State in [dsEdit, dsInsert] then
+    cdsLineas.Post;
   cdsLineas.First;
   while not cdsLineas.Eof do
   begin
@@ -373,8 +396,19 @@ begin
     cdsLineas.Next;
   end;
   if sFalta <> '' then
-    raise EValidacionTraspaso.CreateFmt(SErrorStockTraspasoInsuficiente,
-                                        [AAlmacenOrigen, sFalta]);
+    Result := Format(SErrorStockTraspasoInsuficiente,
+      [AAlmacenOrigen, sFalta])
+  else
+    Result := '';
+end;
+
+procedure TdmTraspaso.ValidarStockOrigen(const AAlmacenOrigen: string);
+var
+  sAviso: string;
+begin
+  sAviso := ObtenerAvisoStockOrigen(AAlmacenOrigen);
+  if sAviso <> '' then
+    raise EValidacionTraspaso.Create(sAviso);
 end;
 
 function TdmTraspaso.ValidarEmpleado(const ABusqueda: string;
@@ -659,7 +693,6 @@ begin
   Result.FechaOperacion := cdsCabecera.FieldByName('FECHA').AsDateTime;
   if SameText(Result.AlmacenOrigen, Result.AlmacenDestino) then
     raise EValidacionTraspaso.Create(SErrorAlmacenesTraspasoCoincidentes);
-  ValidarStockOrigen(Result.AlmacenOrigen);
   Result.EmpresaContra := ObtenerEmpresaAlmacen(Result.AlmacenDestino);
   if (Result.EmpresaContra = '') or
      SameText(Result.EmpresaContra, Result.Empresa) then
@@ -799,6 +832,11 @@ begin
     raise EValidacionTraspaso.Create(
       SErrorAlmacenDestinoTraspasoNoSeleccionado);
   oContexto := CrearContextoGrabacionTraspaso(AAlmacenDestino);
+  // Al atender una solicitud el stock insuficiente es solo una advertencia
+  // de la pantalla. El traspaso directo conserva el bloqueo para evitar
+  // negativos involuntarios.
+  if Trim(ANumSolicitud) = '' then
+    ValidarStockOrigen(oContexto.AlmacenOrigen);
   Result := EjecutarGrabacionTraspaso(oContexto, ANumSolicitud,
     ASerieSolicitud, ANumOperacion);
 end;
@@ -1175,6 +1213,8 @@ begin
           qryAux.FieldByName('CODIGO_ART_TRSOLLIN').AsString;
         cdsLineas.FieldByName('CODIGO_UNIDAD').AsString :=
           qryAux.FieldByName('CODIGO_UNIDAD_TRSOLLIN').AsString;
+        DesempaquetarAtributosLinea(
+          qryAux.FieldByName('CODIGO_UNIDAD_TRSOLLIN').AsString);
         cdsLineas.FieldByName('DESCRIPCION').AsString :=
           qryAux.FieldByName('DESCRIPCION_ARTICULO_TRSOLLIN').AsString;
         cdsLineas.FieldByName('CANTIDAD').AsFloat :=

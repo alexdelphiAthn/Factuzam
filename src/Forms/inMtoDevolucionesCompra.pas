@@ -341,7 +341,6 @@ uses
   inLibPresentacionDocumento,
   inLibAtributosPaleta,
   UniDataArticulos,
-  inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inMtoModalImpDevCompra,
   inMtoModalImpDevCompraV,
@@ -352,7 +351,8 @@ uses
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataGridPivoteCompraRepositorio,
   UniDataColumnasSkuServicios, UniDataModoTallas,
-  inLibDevolucionesCompraPresentacionFlujo;
+  inLibDevolucionesCompraPresentacionFlujo,
+  inMtoDevolucionesCompraSeleccionVcl;
 
 {$R *.dfm}
 
@@ -1963,31 +1963,17 @@ end;
 procedure TfrmMtoDevolucionesCompra.btnCODIGO_EMP_DEVCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  oConsulta: IConsultaComprasPantalla;
-  ds: TDataSet;
+  oContexto: TContextoSeleccionDevolucionCompra;
 begin
   inherited;
   if Assigned(dmmDevolucionesCompra) then
   begin
-    ds := dmmDevolucionesCompra.unqryTablaG;
-    if ds.IsEmpty then
-      MessageDlg(SErrorDevolucionCompraElegirEmpresaNoSeleccionada,
-                 mtInformation, [mbOk], 0)
-    else
-    begin
-      oConsulta := FBusquedaEmpresas.ConsultarEmpresas;
-      if BusquedaVisual.EjecutarBusquedaDataSet(
-        'Búsqueda de empresas',
-        oConsulta.DataSet,
-        'frmMtoEmpFacSearch',
-        Self) then
-      begin
-        if not (ds.State in [dsInsert, dsEdit]) then
-          ds.Edit;
-        ds.FieldByName('CODIGO_EMP_DEVC').AsString :=
-          oConsulta.DataSet.FieldByName('CODIGO_EMP_EMP').AsString;
-      end;
-    end;
+    oContexto := Default(TContextoSeleccionDevolucionCompra);
+    oContexto.Cabecera := dmmDevolucionesCompra.unqryTablaG;
+    oContexto.BusquedaVisual := BusquedaVisual;
+    oContexto.BusquedaEmpresas := FBusquedaEmpresas;
+    oContexto.ControlOrigen := btnCODIGO_EMP_DEVC;
+    SeleccionarEmpresaDevolucionCompra(oContexto);
   end;
 end;
 
@@ -2005,38 +1991,21 @@ end;
 procedure TfrmMtoDevolucionesCompra.cbbCODIGO_PRV_DEVCPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 var
-  oConsulta: IConsultaComprasPantalla;
-  ds: TDataSet;
+  oContexto: TContextoSeleccionDevolucionCompra;
 begin
   inherited;
   if Assigned(dmmDevolucionesCompra) then
   begin
-    ds := dmmDevolucionesCompra.unqryTablaG;
-    if ds.IsEmpty then
-      MessageDlg(SErrorDevolucionCompraElegirProveedorNoSeleccionada,
-                 mtInformation, [mbOk], 0)
-    else
-    begin
-      oConsulta := FBusquedaProveedores.ConsultarProveedores;
-      if BusquedaVisual.EjecutarBusquedaDataSet(
-        'Búsqueda de proveedores',
-        oConsulta.DataSet,
-        'frmMtoDevcProvSearch',
-        Self) then
-      begin
-        if not (ds.State in [dsInsert, dsEdit]) then
-          ds.Edit;
-        ds.FieldByName('CODIGO_PRV_DEVC').AsString :=
-          oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
-        AplicarIvaExentoIntracomunitarioProveedor(
-          CrearLecturasImpuestos(ConexionPrincipal),
-          ds,
-          'CODIGO_PRV_DEVC',
-          'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC');
-        dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-        ActualizarLabelProveedor;
-      end;
-    end;
+    oContexto := Default(TContextoSeleccionDevolucionCompra);
+    oContexto.Cabecera := dmmDevolucionesCompra.unqryTablaG;
+    oContexto.BusquedaVisual := BusquedaVisual;
+    oContexto.BusquedaProveedores := FBusquedaProveedores;
+    oContexto.Conexion := ConexionPrincipal;
+    oContexto.ControlOrigen := cbbCODIGO_PRV_DEVC;
+    oContexto.RecalcularTotales :=
+      dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+    oContexto.ActualizarProveedor := ActualizarLabelProveedor;
+    SeleccionarProveedorDevolucionCompra(oContexto);
   end;
 end;
 

@@ -1192,6 +1192,10 @@
         ShortCut = 24648
         OnClick = MenuGenericoClick
       end
+      object mnuCajaSolicitudesTraspasoHist: TMenuItem
+        Caption = 'Hist'#243'rico de Solicitudes de Traspaso'
+        OnClick = mnuCajaSolicitudesTraspasoHistClick
+      end
       object mnuFacturasSimplif: TMenuItem
         Caption = 'Borradores Simplificados'
         ShortCut = 24646

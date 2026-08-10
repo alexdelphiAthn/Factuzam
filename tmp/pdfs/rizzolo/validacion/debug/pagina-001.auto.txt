@@ -1,0 +1,37 @@
+SCORZZO
+
+COLLECTION
+
+Cliente
+
+HERRERAS E HIJOS S.L. MELITON
+AVDA.DE SEGOVIA N°35-37
+47013 VALLADOLID
+
+Confirmacion de pedido
+
+Pedido firmado
+
+Fecha: 2026-08-09 17:20:25
+Desde la IP: 62.42.86.131
+
+Order Fecha de pedido Service date Value date
+DRSNLKWPS 09/08/2026
+Imagen | Referencia Producto S | M| L | XL |2XL Cant. | Precio | Total
+0127819 - 20
+Blusa Detalle Jaretas 1 2 2 1 - - 6 17.90 107.40
+0127819 - 52
+a Blusa Detalle Jaretas 1 2 2 1 - - 6 17.90 107.40
+0127838 - 51
+Bomber Bolsillos 2 2 2 2 1 - 9 25.90 233.10
+0127838 - 02
+Po Bomber Bolsillos 2 2 2 2 1 - 9 25.90 233.10
+0127807 - 08
+C1 Bomber Bolsillos Estampado 1 1 1 1 - - 4 29.90 119.60
+y | 0127862 - 00
+y Camisa Cordón Estampada 1 2 2 1 - - 6 19.90 119.40
+0127861 - 00
+Camiseta Estampado Posicional 1 2 2 1 - - 6 17.90 107.40
+0127646 - 08
+- Camiseta Rayas Detalle Anudado 1 2 2 1 - - 6 15.90 95.40
+
