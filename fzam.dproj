@@ -1552,8 +1552,10 @@
         <DCCReference Include="src\Forms\inMtoArticulosPresentacionStock.pas"/>
         <DCCReference Include="src\Forms\inMtoArticulosPresentacionTarifas.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas"/>
+        <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionImportacionOcr.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionMaterializacion.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionModelo.pas"/>
+        <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionPedidoOriginal.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionPlanificador.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionProveedor.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionTallas.pas"/>

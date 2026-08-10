@@ -1285,10 +1285,14 @@ uses
     'src\Forms\inMtoArticulosPresentacionTarifas.pas',
   inMtoComprasSesionesPresentacionCopiaLineas in
     'src\Forms\inMtoComprasSesionesPresentacionCopiaLineas.pas',
+  inMtoComprasSesionesPresentacionImportacionOcr in
+    'src\Forms\inMtoComprasSesionesPresentacionImportacionOcr.pas',
   inMtoComprasSesionesPresentacionMaterializacion in
     'src\Forms\inMtoComprasSesionesPresentacionMaterializacion.pas',
   inMtoComprasSesionesPresentacionModelo in
     'src\Forms\inMtoComprasSesionesPresentacionModelo.pas',
+  inMtoComprasSesionesPresentacionPedidoOriginal in
+    'src\Forms\inMtoComprasSesionesPresentacionPedidoOriginal.pas',
   inMtoComprasSesionesPresentacionPlanificador in
     'src\Forms\inMtoComprasSesionesPresentacionPlanificador.pas',
   inMtoComprasSesionesPresentacionProveedor in

@@ -42,6 +42,8 @@
 {      - TCoordinadorCopiaLineasSesion   "Otro color" / "Otro precio" y la     }
 {        copia diferida al repetir un modelo.                                  }
 {      - TCoordinadorProveedorSesion  ficha, defectos, kits y color basico.    }
+{      - TCoordinadorImportacionPedidoOcr  valida, importa y archiva pedidos.  }
+{      - TVisorPedidoOriginalSesion  navegacion, zoom y arrastre del TIFF.     }
 {      - IAplicacionMaterializacionCompraSesion  orquesta la materializacion.  }
 {    Los tiempos de espera (debounce y aperturas diferidas) viven en           }
 {    IPlanificadorDiferido; aqui no queda ningun TTimer.                       }
@@ -86,7 +88,9 @@ uses
   inLibComprasSesionesInyeccion,
   inLibPermisosIntf,
   inMtoComprasSesionesPresentacionCopiaLineas,
+  inMtoComprasSesionesPresentacionImportacionOcr,
   inMtoComprasSesionesPresentacionModelo,
+  inMtoComprasSesionesPresentacionPedidoOriginal,
   inMtoComprasSesionesPresentacionProveedor,
   inMtoComprasSesionesPresentacionTallas,
   UniDataComprasSesiones, cxBlobEdit, dxShellDialogs, cxRadioGroup, Vcl.Buttons,
@@ -450,23 +454,6 @@ type
                 ANewItemRecordFocusingChanged: Boolean);
     procedure dsSesionFotosDataChange(Sender: TObject; Field: TField);
     procedure btnImportarPedidoClick(Sender: TObject);
-    procedure btnPaginaAnteriorPedidoClick(Sender: TObject);
-    procedure btnPaginaSiguientePedidoClick(Sender: TObject);
-    procedure btnAlejarPedidoClick(Sender: TObject);
-    procedure btnAcercarPedidoClick(Sender: TObject);
-    procedure btnAjustarPedidoClick(Sender: TObject);
-    procedure btnZoomRealPedidoClick(Sender: TObject);
-    procedure imgPedidoOriginalMouseDown(Sender: TObject;
-                Button: TMouseButton; Shift: TShiftState;
-                X, Y: Integer);
-    procedure imgPedidoOriginalMouseMove(Sender: TObject;
-                Shift: TShiftState; X, Y: Integer);
-    procedure imgPedidoOriginalMouseUp(Sender: TObject;
-                Button: TMouseButton; Shift: TShiftState;
-                X, Y: Integer);
-    procedure scrPedidoOriginalMouseWheel(Sender: TObject;
-                Shift: TShiftState; WheelDelta: Integer;
-                MousePos: TPoint; var Handled: Boolean);
   private
     Dmm: TdmComprasSesiones;
     FServicioComprasSesiones: TServicioComprasSesiones;
@@ -481,14 +468,9 @@ type
     FModeloPrv: TBuscadorModeloProveedorSesion;
     FCopiaLineas: TCoordinadorCopiaLineasSesion;
     FProveedor: TCoordinadorProveedorSesion;
-    FPaginasPedidoOriginal: TArray<string>;
-    FIndicePaginaPedidoOriginal: Integer;
-    FZoomPedidoOriginal: Double;
-    FImagenPedidoOriginal: TPicture;
-    FArrastrandoPedidoOriginal: Boolean;
+    FImportadorOcr: TCoordinadorImportacionPedidoOcr;
+    FVisorPedidoOriginal: TVisorPedidoOriginalSesion;
     FAplicandoColorOcr: Boolean;
-    FInicioArrastrePedidoOriginal: TPoint;
-    FInicioScrollPedidoOriginal: TPoint;
     FSplitterFotoProvisional: TcxSplitter;
     FRecargaTallasPendiente: Boolean;
     function  GestorTallas: TGestorGridTallas;
@@ -534,12 +516,6 @@ type
     procedure unqrySesionLinRecargarTallasHook(DataSet: TDataSet);
     procedure LogMsg(const S: string);
     function DirectorioFotosAplicacion: string;
-    procedure CargarPaginasPedidoOriginal;
-    procedure MostrarPaginaPedidoOriginal(
-      AConservarVista: Boolean = False);
-    procedure AplicarZoomPedidoOriginal(AZoom: Double);
-    procedure AjustarPedidoOriginal;
-    procedure CambiarPaginaPedidoOriginal(ADesplazamiento: Integer);
     procedure ImportarPedidoOcr(const AFicheroJson: string);
     procedure WMRecargarTallasSesion(var AMensaje: TMessage);
       message WM_RECARGAR_TALLAS_SESION;
@@ -566,7 +542,6 @@ type
 implementation
 
 uses
-  System.IOUtils,
   inLibGlobalVar,
   inLibUser,
   inLibFiltroUsuario,
@@ -582,14 +557,10 @@ uses
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibMsgArticulos, inLibMsgCompras,
   inLibContextoSesionIntf,
-  inLibPedidoOcr,
-  inLibArchivosPedidoSesion,
   inLibProcesoPedidoOcr,
   inLibComprasSesionesIntf,
-  inLibComprasSesionesReglas,
   inLibDatasets,
   inLibMtoGenAplicacionIntf,
-  UniDataPedidoOcr,
   UniDataGen,
   inMtoComprasSesionesPresentacionMaterializacion,
   UniDataComprasSesionesComposicion;
@@ -597,15 +568,6 @@ uses
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
-
-type
-  TLineaPreparadaPedidoOcr = record
-    Datos: TLineaPedidoOcr;
-    Tallas: TResolucionTallasPedidoOcr;
-    LineaSesion: Integer;
-    CodigoArticulo: string;
-  end;
-  TLineasPreparadasPedidoOcr = TArray<TLineaPreparadaPedidoOcr>;
 
 constructor TfrmMtoComprasSesiones.Create(
   AOwner: TComponent;
@@ -725,11 +687,65 @@ end;
 // coordinador de copia, y el de proveedor abre el distribuidor del de
 // tallas (ya creado antes del inherited).
 procedure TfrmMtoComprasSesiones.CrearColaboradores;
+var
+  EntornoImportacion: TEntornoImportacionPedidoOcr;
 begin
   CrearColaboradorMaterializacion;
   CrearColaboradorCopiaLineas;
   CrearColaboradorModelo;
   CrearColaboradorProveedor;
+  FreeAndNil(FImportadorOcr);
+  EntornoImportacion := Default(TEntornoImportacionPedidoOcr);
+  EntornoImportacion.Conexion := ConexionTrabajo;
+  EntornoImportacion.Datos := Dmm;
+  EntornoImportacion.Vista := tvLineas;
+  EntornoImportacion.Usuario := IdentidadSesion.Usuario;
+  EntornoImportacion.MaximoTallas := CANT_TALLAS_MAX;
+  EntornoImportacion.ObtenerDirectorioFotos :=
+    function: string
+    begin
+      Result := DirectorioFotosAplicacion;
+    end;
+  EntornoImportacion.AplicarDuplicado :=
+    procedure(const AResultado: TResolverDuplicadoSesion)
+    begin
+      FServicioComprasSesiones.AplicarDuplicadoEnLinea(AResultado);
+    end;
+  EntornoImportacion.CambiarEstadoColor :=
+    procedure(AAplicando: Boolean)
+    begin
+      FAplicandoColorOcr := AAplicando;
+    end;
+  EntornoImportacion.AsignarColorLiteral :=
+    procedure(const ALiteral: string)
+    begin
+      if FProveedor <> nil then
+        FProveedor.AsignarColorBasicoLiteral(ALiteral);
+    end;
+  EntornoImportacion.AsignarColorCoincidente :=
+    procedure
+    begin
+      if FProveedor <> nil then
+        FProveedor.AsignarColorBasicoCoincidente;
+    end;
+  EntornoImportacion.PuedeGuardarFotos :=
+    function: Boolean
+    begin
+      Result := Assigned(FotosArticulos);
+    end;
+  EntornoImportacion.GuardarFotos :=
+    procedure(const ASerie, ANumero: string;
+      const ASolicitudes: TSolicitudesFotosSesion;
+      const AUsuario: string)
+    begin
+      FotosArticulos.GuardarSesionesNuevasLote(
+        ASerie,
+        ANumero,
+        ASolicitudes,
+        AUsuario);
+    end;
+  FImportadorOcr := TCoordinadorImportacionPedidoOcr.Create(
+    EntornoImportacion);
 end;
 
 procedure TfrmMtoComprasSesiones.CrearColaboradorMaterializacion;
@@ -1145,580 +1161,22 @@ begin
     Result := Trim(ParametrosApp.GetPath('appDirFotos'));
 end;
 
-procedure TfrmMtoComprasSesiones.CargarPaginasPedidoOriginal;
-var
-  sNumero: string;
-  sSerie: string;
-begin
-  FPaginasPedidoOriginal := nil;
-  FIndicePaginaPedidoOriginal := 0;
-  if Assigned(FImagenPedidoOriginal) then
-    FImagenPedidoOriginal.Assign(nil);
-  imgPedidoOriginal.Picture.Assign(nil);
-  if (Dmm <> nil) and Dmm.unqryTablaG.Active and
-     (not Dmm.unqryTablaG.IsEmpty) then
-  begin
-    sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-    sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-    FPaginasPedidoOriginal := ListarPaginasPedidoSesion(
-      DirectorioFotosAplicacion,
-      sSerie,
-      sNumero);
-  end;
-  MostrarPaginaPedidoOriginal;
-end;
-
-procedure TfrmMtoComprasSesiones.MostrarPaginaPedidoOriginal(
-  AConservarVista: Boolean);
-var
-  oImagen: TWICImage;
-  sFichero: string;
-  rZoomAnterior: Double;
-  iScrollHorizontal: Integer;
-  iScrollVertical: Integer;
-begin
-  rZoomAnterior := FZoomPedidoOriginal;
-  iScrollHorizontal := scrPedidoOriginal.HorzScrollBar.Position;
-  iScrollVertical := scrPedidoOriginal.VertScrollBar.Position;
-  imgPedidoOriginal.Picture.Assign(nil);
-  if Assigned(FImagenPedidoOriginal) then
-    FImagenPedidoOriginal.Assign(nil);
-  if (FIndicePaginaPedidoOriginal >= 0) and
-     (FIndicePaginaPedidoOriginal <= High(FPaginasPedidoOriginal)) then
-  begin
-    sFichero := FPaginasPedidoOriginal[FIndicePaginaPedidoOriginal];
-    if FileExists(sFichero) then
-    begin
-      oImagen := TWICImage.Create;
-      try
-        oImagen.LoadFromFile(sFichero);
-        FImagenPedidoOriginal.Assign(oImagen);
-        imgPedidoOriginal.Picture.Assign(FImagenPedidoOriginal);
-      finally
-        oImagen.Free;
-      end;
-      if AConservarVista then
-      begin
-        AplicarZoomPedidoOriginal(rZoomAnterior);
-        scrPedidoOriginal.HorzScrollBar.Position := iScrollHorizontal;
-        scrPedidoOriginal.VertScrollBar.Position := iScrollVertical;
-      end
-      else
-        AjustarPedidoOriginal;
-    end;
-  end;
-  if Length(FPaginasPedidoOriginal) = 0 then
-    lblPaginaPedido.Caption := 'Sin páginas TIFF importadas'
-  else
-    lblPaginaPedido.Caption := Format(
-      'Página %d de %d · %.0f%%',
-      [FIndicePaginaPedidoOriginal + 1,
-       Length(FPaginasPedidoOriginal),
-       FZoomPedidoOriginal * 100]);
-  btnPaginaAnteriorPedido.Enabled := FIndicePaginaPedidoOriginal > 0;
-  btnPaginaSiguientePedido.Enabled :=
-    FIndicePaginaPedidoOriginal < High(FPaginasPedidoOriginal);
-end;
-
-procedure TfrmMtoComprasSesiones.AplicarZoomPedidoOriginal(
-  AZoom: Double);
-begin
-  if AZoom < 0.10 then
-    AZoom := 0.10;
-  if AZoom > 5 then
-    AZoom := 5;
-  FZoomPedidoOriginal := AZoom;
-  if Assigned(FImagenPedidoOriginal) and
-     Assigned(FImagenPedidoOriginal.Graphic) and
-     (not FImagenPedidoOriginal.Graphic.Empty) then
-  begin
-    imgPedidoOriginal.Width := Round(
-      FImagenPedidoOriginal.Width * FZoomPedidoOriginal);
-    imgPedidoOriginal.Height := Round(
-      FImagenPedidoOriginal.Height * FZoomPedidoOriginal);
-    if imgPedidoOriginal.Width < scrPedidoOriginal.ClientWidth then
-      imgPedidoOriginal.Left :=
-        (scrPedidoOriginal.ClientWidth - imgPedidoOriginal.Width) div 2
-    else
-      imgPedidoOriginal.Left := 0;
-    if imgPedidoOriginal.Height < scrPedidoOriginal.ClientHeight then
-      imgPedidoOriginal.Top :=
-        (scrPedidoOriginal.ClientHeight - imgPedidoOriginal.Height) div 2
-    else
-      imgPedidoOriginal.Top := 0;
-    lblPaginaPedido.Caption := Format(
-      'Página %d de %d · %.0f%%',
-      [FIndicePaginaPedidoOriginal + 1,
-       Length(FPaginasPedidoOriginal),
-       FZoomPedidoOriginal * 100]);
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.AjustarPedidoOriginal;
-var
-  rAlto: Double;
-  rAncho: Double;
-  rZoom: Double;
-begin
-  if Assigned(FImagenPedidoOriginal) and
-     Assigned(FImagenPedidoOriginal.Graphic) and
-     (FImagenPedidoOriginal.Width > 0) and
-     (FImagenPedidoOriginal.Height > 0) then
-  begin
-    rAncho := (scrPedidoOriginal.ClientWidth - 16) /
-      FImagenPedidoOriginal.Width;
-    rAlto := (scrPedidoOriginal.ClientHeight - 16) /
-      FImagenPedidoOriginal.Height;
-    rZoom := rAncho;
-    if rAlto < rZoom then
-      rZoom := rAlto;
-    AplicarZoomPedidoOriginal(rZoom);
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.CambiarPaginaPedidoOriginal(
-  ADesplazamiento: Integer);
-var
-  iNueva: Integer;
-begin
-  iNueva := FIndicePaginaPedidoOriginal + ADesplazamiento;
-  if (iNueva >= 0) and (iNueva <= High(FPaginasPedidoOriginal)) then
-  begin
-    FIndicePaginaPedidoOriginal := iNueva;
-    MostrarPaginaPedidoOriginal(True);
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.btnPaginaAnteriorPedidoClick(
-  Sender: TObject);
-begin
-  CambiarPaginaPedidoOriginal(-1);
-end;
-
-procedure TfrmMtoComprasSesiones.btnPaginaSiguientePedidoClick(
-  Sender: TObject);
-begin
-  CambiarPaginaPedidoOriginal(1);
-end;
-
-procedure TfrmMtoComprasSesiones.btnAlejarPedidoClick(Sender: TObject);
-begin
-  AplicarZoomPedidoOriginal(FZoomPedidoOriginal / 1.20);
-end;
-
-procedure TfrmMtoComprasSesiones.btnAcercarPedidoClick(Sender: TObject);
-begin
-  AplicarZoomPedidoOriginal(FZoomPedidoOriginal * 1.20);
-end;
-
-procedure TfrmMtoComprasSesiones.btnAjustarPedidoClick(Sender: TObject);
-begin
-  AjustarPedidoOriginal;
-end;
-
-procedure TfrmMtoComprasSesiones.btnZoomRealPedidoClick(Sender: TObject);
-begin
-  AplicarZoomPedidoOriginal(1);
-end;
-
-procedure TfrmMtoComprasSesiones.imgPedidoOriginalMouseDown(
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  if Button = mbLeft then
-  begin
-    FArrastrandoPedidoOriginal := True;
-    FInicioArrastrePedidoOriginal :=
-      imgPedidoOriginal.ClientToScreen(Point(X, Y));
-    FInicioScrollPedidoOriginal := Point(
-      scrPedidoOriginal.HorzScrollBar.Position,
-      scrPedidoOriginal.VertScrollBar.Position);
-    imgPedidoOriginal.Cursor := crSizeAll;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.imgPedidoOriginalMouseMove(
-  Sender: TObject; Shift: TShiftState; X, Y: Integer);
-var
-  PuntoActual: TPoint;
-begin
-  if FArrastrandoPedidoOriginal and (ssLeft in Shift) then
-  begin
-    PuntoActual := imgPedidoOriginal.ClientToScreen(Point(X, Y));
-    scrPedidoOriginal.HorzScrollBar.Position :=
-      FInicioScrollPedidoOriginal.X -
-      (PuntoActual.X - FInicioArrastrePedidoOriginal.X);
-    scrPedidoOriginal.VertScrollBar.Position :=
-      FInicioScrollPedidoOriginal.Y -
-      (PuntoActual.Y - FInicioArrastrePedidoOriginal.Y);
-  end
-  else if FArrastrandoPedidoOriginal then
-    FArrastrandoPedidoOriginal := False;
-end;
-
-procedure TfrmMtoComprasSesiones.imgPedidoOriginalMouseUp(
-  Sender: TObject; Button: TMouseButton; Shift: TShiftState;
-  X, Y: Integer);
-begin
-  if Button = mbLeft then
-  begin
-    FArrastrandoPedidoOriginal := False;
-    imgPedidoOriginal.Cursor := crHandPoint;
-  end;
-end;
-
-procedure TfrmMtoComprasSesiones.scrPedidoOriginalMouseWheel(
-  Sender: TObject; Shift: TShiftState; WheelDelta: Integer;
-  MousePos: TPoint; var Handled: Boolean);
-begin
-  if WheelDelta > 0 then
-    AplicarZoomPedidoOriginal(FZoomPedidoOriginal * 1.10)
-  else if WheelDelta < 0 then
-    AplicarZoomPedidoOriginal(FZoomPedidoOriginal / 1.10);
-  Handled := True;
-end;
-
 procedure TfrmMtoComprasSesiones.ImportarPedidoOcr(
   const AFicheroJson: string);
-const
-  EXTENSIONES_FOTO: array[0..5] of string = (
-    '.png', '.jpg', '.jpeg', '.webp', '.bmp', '.avif');
 var
-  aCeldas: TCeldasPedidoOcr;
-  aFotos: TSolicitudesFotosSesion;
-  aPaginas: TArray<string>;
-  aPreparadas: TLineasPreparadasPedidoOcr;
-  iCelda: Integer;
-  iFoto: Integer;
-  iLinea: Integer;
-  iPrimeraLinea: Integer;
-  iSinCodigo: Integer;
-  iTalla: Integer;
-  oCatalogoArticulos: TCatalogoArticulosPedidoOcr;
-  oCatalogoColores: TCatalogoColoresPedidoOcr;
-  oCatalogo: TCatalogoTallasPedidoOcr;
-  oPedido: TPedidoOcr;
-  oResolucionDuplicado: TResolverDuplicadoSesion;
-  oWarnings: TStringList;
-  rPvp: Double;
-  sColorBasicoHistorico: string;
-  sDirectorioJson: string;
-  sFicheroFoto: string;
-  sMensaje: string;
-  sNumero: string;
-  sProveedor: string;
-  sSerie: string;
-  sTarifa: string;
-
-  function ListaTallas(const ALinea: TLineaPedidoOcr): string;
-  var
-    i: Integer;
-  begin
-    Result := '';
-    for i := 0 to High(ALinea.Tallas) do
-    begin
-      if Result <> '' then
-        Result := Result + ', ';
-      Result := Result + ALinea.Tallas[i].Talla;
-    end;
-  end;
-
-  function ResolverFoto(const ACodigo: string): string;
-  var
-    i: Integer;
-    sCandidata: string;
-  begin
-    Result := '';
-    i := Low(EXTENSIONES_FOTO);
-    while (i <= High(EXTENSIONES_FOTO)) and (Result = '') do
-    begin
-      sCandidata := TPath.Combine(
-        TPath.Combine(sDirectorioJson, 'fotos'),
-        ACodigo + EXTENSIONES_FOTO[i]);
-      if TFile.Exists(sCandidata) then
-        Result := sCandidata;
-      Inc(i);
-    end;
-  end;
-
+  Resultado: TResultadoImportacionPedidoOcr;
 begin
-  if (Dmm = nil) or Dmm.unqryTablaG.IsEmpty then
-    raise Exception.Create(SErrorSesionCompraNoActiva);
-  if not Dmm.unqrySesionLin.IsEmpty then
-    raise Exception.Create(
-      'La importación OCR requiere una sesión sin líneas.');
-  if not SameText(
-    Trim(Dmm.unqryTablaG.FieldByName('ESTADO_SES').AsString),
-    'BORRADOR') then
-    raise Exception.Create(
-      'Solo se puede importar sobre una sesión en borrador.');
-  sProveedor := Trim(Dmm.unqryTablaG.FieldByName(
-    'CODIGO_PRV_SES').AsString);
-  if sProveedor = '' then
-    raise Exception.Create(
-      'Selecciona el proveedor de la sesión antes de importar.');
-  if DirectorioFotosAplicacion = '' then
-    raise Exception.Create(
-      'El parámetro appDirFotos no está configurado.');
-  if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-    Dmm.unqryTablaG.Post;
-  sSerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
-  sNumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
-  oPedido := TLectorPedidoOcr.Cargar(AFicheroJson);
-  sDirectorioJson := TPath.GetDirectoryName(oPedido.FicheroJson);
-  SetLength(aPreparadas, Length(oPedido.Lineas));
-  oCatalogo := TCatalogoTallasPedidoOcr.Create(
-    ConexionTrabajo,
-    CANT_TALLAS_MAX);
-  try
-    for iLinea := 0 to High(oPedido.Lineas) do
-    begin
-      if Trim(oPedido.Lineas[iLinea].Modelo) = '' then
-        raise Exception.CreateFmt(
-          'La línea OCR %d no tiene modelo.', [iLinea + 1]);
-      aPreparadas[iLinea].Datos := oPedido.Lineas[iLinea];
-      aPreparadas[iLinea].Tallas := oCatalogo.Resolver(
-        oPedido.Lineas[iLinea].Tallas);
-      if not aPreparadas[iLinea].Tallas.Encontrada then
-        raise Exception.CreateFmt(
-          'Ningún sistema de hasta %d posiciones contiene las tallas ' +
-          'del modelo %s: %s.',
-          [CANT_TALLAS_MAX,
-           oPedido.Lineas[iLinea].Modelo,
-           ListaTallas(oPedido.Lineas[iLinea])]);
-    end;
-  finally
-    oCatalogo.Free;
-  end;
-  aPaginas := ResolverPaginasFuentePedido(oPedido);
-  sTarifa := Trim(Dmm.unqryTablaG.FieldByName(
-    'CODIGO_TAR_SES').AsString);
-  oCatalogoArticulos := TCatalogoArticulosPedidoOcr.Create(
-    ConexionTrabajo,
-    sProveedor,
-    sTarifa,
-    oPedido.Lineas);
-  oCatalogoColores := nil;
-  try
-    oCatalogoColores := TCatalogoColoresPedidoOcr.Create(
-      ConexionTrabajo,
-      sProveedor,
-      oPedido.Lineas);
-    SetLength(aCeldas, 0);
-  iSinCodigo := 0;
-  Dmm.IniciarUnidadTrabajoImportacionOcr;
-  try
-    if oPedido.ReferenciaDocumento <> '' then
-    begin
-      Dmm.unqryTablaG.Edit;
-      Dmm.unqryTablaG.FieldByName('REF_PRV_SES').AsString :=
-        oPedido.ReferenciaDocumento;
-      Dmm.unqryTablaG.Post;
-    end;
-    iPrimeraLinea := TPersistenciaPedidoOcr.ReservarLineas(
-      ConexionTrabajo,
-      sSerie,
-      sNumero,
-      Length(aPreparadas));
-    if iPrimeraLinea <= 0 then
-      raise Exception.Create(
-        'No se pudo reservar el bloque de líneas de la sesión.');
-    Dmm.IniciarImportacionMasiva(
-      iPrimeraLinea,
-      Length(aPreparadas));
-    tvLineas.BeginUpdate;
-    Dmm.unqrySesionLin.DisableControls;
-    try
-      for iLinea := 0 to High(aPreparadas) do
-      begin
-        FAplicandoColorOcr := True;
-        Dmm.PermitirLineasSinCodigoArticulo := True;
-        try
-        Dmm.unqrySesionLin.Insert;
-        aPreparadas[iLinea].LineaSesion :=
-          Dmm.unqrySesionLin.FieldByName('LINEA_SESLIN').AsInteger;
-        oResolucionDuplicado := oCatalogoArticulos.Resolver(
-          aPreparadas[iLinea].Datos.Modelo);
-        if oResolucionDuplicado.Encontrado then
-          FServicioComprasSesiones.AplicarDuplicadoEnLinea(
-            oResolucionDuplicado)
-        else
-          Dmm.unqrySesionLin.FieldByName(
-            'CODIGO_ART_TENTATIVO_SESLIN').AsString := '';
-        Dmm.unqrySesionLin.FieldByName('REF_PRV_SESLIN').AsString :=
-          Copy(aPreparadas[iLinea].Datos.Modelo, 1, 100);
-        Dmm.unqrySesionLin.FieldByName('DESCRIPCION_SESLIN').AsString :=
-          aPreparadas[iLinea].Datos.Descripcion;
-        Dmm.unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
-          aPreparadas[iLinea].Datos.Color;
-        Dmm.unqrySesionLin.FieldByName('PRECIO_COMPRA_SESLIN').AsFloat :=
-          aPreparadas[iLinea].Datos.PrecioCompra;
-        if aPreparadas[iLinea].Datos.TienePvp then
-          rPvp := aPreparadas[iLinea].Datos.Pvp
-        else
-          rPvp := CalcularPrecioVenta(
-            aPreparadas[iLinea].Datos.PrecioCompra,
-            Dmm.unqryTablaG.FieldByName(
-              'PORCENTAJE_MARGEN_SES').AsFloat,
-            Dmm.unqryTablaG.FieldByName(
-              'MULTIPLO_REDONDEO_SES').AsFloat,
-            Dmm.unqryTablaG.FieldByName('AJUSTE_FINAL_SES').AsFloat);
-        Dmm.unqrySesionLin.FieldByName('PRECIO_VENTA_SESLIN').AsFloat :=
-          rPvp;
-        Dmm.unqrySesionLin.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger :=
-          aPreparadas[iLinea].Tallas.IdAc;
-        Dmm.unqrySesionLin.FieldByName(
-          'TOTAL_UNIDADES_SESLIN').AsFloat :=
-          aPreparadas[iLinea].Datos.Cantidad;
-        Dmm.unqrySesionLin.FieldByName('TOTAL_LINEA_SESLIN').AsFloat :=
-          aPreparadas[iLinea].Datos.Cantidad *
-          aPreparadas[iLinea].Datos.PrecioCompra;
-        aPreparadas[iLinea].CodigoArticulo := Trim(
-          Dmm.unqrySesionLin.FieldByName(
-            'CODIGO_ART_TENTATIVO_SESLIN').AsString);
-        if aPreparadas[iLinea].CodigoArticulo = '' then
-          Inc(iSinCodigo);
-        sColorBasicoHistorico := '';
-        if FProveedor <> nil then
-        begin
-          if oResolucionDuplicado.Encontrado and
-             SameText(
-               SanearColorSku(oResolucionDuplicado.ColorTexto),
-               SanearColorSku(aPreparadas[iLinea].Datos.Color)) then
-            sColorBasicoHistorico := Trim(
-              oResolucionDuplicado.CodigoAtbColor);
-          if sColorBasicoHistorico = '' then
-            oCatalogoColores.Resolver(
-              aPreparadas[iLinea].Datos.Color,
-              sColorBasicoHistorico);
-          if sColorBasicoHistorico <> '' then
-            FProveedor.AsignarColorBasicoLiteral(
-              sColorBasicoHistorico)
-          else if aPreparadas[iLinea].Datos.ColorDetectado <> '' then
-            FProveedor.AsignarColorBasicoLiteral(
-              aPreparadas[iLinea].Datos.ColorDetectado)
-          else
-            FProveedor.AsignarColorBasicoCoincidente;
-        end;
-        Dmm.unqrySesionLin.Post;
-        for iTalla := 0 to High(aPreparadas[iLinea].Datos.Tallas) do
-        begin
-          iCelda := Length(aCeldas);
-          SetLength(aCeldas, iCelda + 1);
-          aCeldas[iCelda].Linea :=
-            aPreparadas[iLinea].LineaSesion;
-          aCeldas[iCelda].IdAv :=
-            aPreparadas[iLinea].Tallas.IdsAv[iTalla];
-          aCeldas[iCelda].Cantidad :=
-            aPreparadas[iLinea].Datos.Tallas[iTalla].Cantidad;
-        end;
-        finally
-          Dmm.PermitirLineasSinCodigoArticulo := False;
-          FAplicandoColorOcr := False;
-        end;
-      end;
-      TPersistenciaPedidoOcr.GuardarCeldas(
-        ConexionTrabajo,
-        sSerie,
-        sNumero,
-        IdentidadSesion.Usuario,
-        aCeldas);
-      if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-        Dmm.unqryTablaG.Post;
-    finally
-      Dmm.FinalizarImportacionMasiva;
-      Dmm.unqrySesionLin.EnableControls;
-      tvLineas.EndUpdate;
-    end;
-    Dmm.ConfirmarUnidadTrabajoImportacionOcr;
-  except
-    if Dmm.unqrySesionLin.State in [dsEdit, dsInsert] then
-      Dmm.unqrySesionLin.Cancel;
-    if Dmm.unqryTablaG.State in [dsEdit, dsInsert] then
-      Dmm.unqryTablaG.Cancel;
-    Dmm.RevertirUnidadTrabajoImportacionOcr;
-    if Dmm.unqrySesionLin.Active then
-      Dmm.unqrySesionLin.Refresh;
-    raise;
-  end;
-  finally
-    oCatalogoColores.Free;
-    oCatalogoArticulos.Free;
-  end;
-  oWarnings := TStringList.Create;
-  try
-    SetLength(aFotos, 0);
-    for iLinea := 0 to High(aPreparadas) do
-    begin
-      sFicheroFoto := '';
-      if aPreparadas[iLinea].Datos.CodigoFoto <> '' then
-        sFicheroFoto := ResolverFoto(
-          aPreparadas[iLinea].Datos.CodigoFoto);
-      if (aPreparadas[iLinea].Datos.CodigoFoto <> '') and
-         (sFicheroFoto = '') then
-        oWarnings.Add(Format(
-          'No se encontró la foto %s.',
-          [aPreparadas[iLinea].Datos.CodigoFoto]));
-      if (sFicheroFoto <> '') and Assigned(FotosArticulos) then
-      begin
-        iFoto := Length(aFotos);
-        SetLength(aFotos, iFoto + 1);
-        aFotos[iFoto].Linea := aPreparadas[iLinea].LineaSesion;
-        aFotos[iFoto].CodigoArticuloTentativo :=
-          aPreparadas[iLinea].CodigoArticulo;
-        aFotos[iFoto].CodigoUnidad := '';
-        aFotos[iFoto].FicheroOrigen := sFicheroFoto;
-      end;
-    end;
-    iFoto := 0;
-    if (Length(aFotos) > 0) and Assigned(FotosArticulos) then
-    begin
-      try
-        FotosArticulos.GuardarSesionesNuevasLote(
-          sSerie,
-          sNumero,
-          aFotos,
-          IdentidadSesion.Usuario);
-        iFoto := Length(aFotos);
-      except
-        on E: Exception do
-          oWarnings.Add('Fotos del pedido: ' + E.Message);
-      end;
-    end;
-    try
-      GuardarArchivosPedidoSesion(
-        DirectorioFotosAplicacion,
-        sSerie,
-        sNumero,
-        oPedido,
-        aPaginas);
-    except
-      on E: Exception do
-        oWarnings.Add('Pedido original: ' + E.Message);
-    end;
-    Dmm.unqrySesionLin.Refresh;
-    Dmm.RefrescarTotalesSesion;
-    ReconstruirTallas;
-    RefrescarFotosProvisionales;
-    CargarPaginasPedidoOriginal;
-    cxPageControl1.ActivePage := tsPedidoOriginal;
-    cxPageControl1Change(cxPageControl1);
-    sMensaje := Format(
-      'Pedido importado: %d líneas, %d fotos y %d páginas TIFF.',
-      [Length(aPreparadas), iFoto, Length(FPaginasPedidoOriginal)]);
-    if iSinCodigo > 0 then
-      sMensaje := sMensaje + sLineBreak + Format(
-        '%d líneas quedan pendientes de familia y código interno.',
-        [iSinCodigo]);
-    if oWarnings.Count > 0 then
-      sMensaje := sMensaje + sLineBreak + sLineBreak +
-        'Advertencias:' + sLineBreak + oWarnings.Text;
-    ShowMessage(sMensaje);
-  finally
-    oWarnings.Free;
-  end;
+  Resultado := FImportadorOcr.Ejecutar(AFicheroJson);
+  Dmm.unqrySesionLin.Refresh;
+  Dmm.RefrescarTotalesSesion;
+  ReconstruirTallas;
+  RefrescarFotosProvisionales;
+  FVisorPedidoOriginal.Cargar;
+  Resultado.Paginas := FVisorPedidoOriginal.CantidadPaginas;
+  cxPageControl1.ActivePage := tsPedidoOriginal;
+  cxPageControl1Change(cxPageControl1);
+  ShowMessage(FormatearResultadoImportacionPedidoOcr(Resultado));
 end;
-
 procedure TfrmMtoComprasSesiones.btnImportarPedidoClick(
   Sender: TObject);
 var
@@ -1824,8 +1282,7 @@ begin
     cxPageControl1.ActivePage <> tsPedidoOriginal;
   if cxPageControl1.ActivePage = tsPedidoOriginal then
   begin
-    if Length(FPaginasPedidoOriginal) = 0 then
-      CargarPaginasPedidoOriginal;
+    FVisorPedidoOriginal.CargarSiVacio;
     // Si la imagen ya esta cargada se conserva la vista actual: pagina,
     // zoom y desplazamiento. Solo se reajusta al cargar o al pulsar el boton.
   end
@@ -2026,7 +1483,7 @@ begin
   begin
     RefrescarVisibilidadTipoIva;
     RefrescarFotoProvisional;
-    CargarPaginasPedidoOriginal;
+    FVisorPedidoOriginal.Cargar;
     ReconstruirTallas;
   end;
 end;
@@ -2201,11 +1658,12 @@ end;
 procedure TfrmMtoComprasSesiones.ResetForm;
 begin
   inherited;
-  CargarPaginasPedidoOriginal;
+  FVisorPedidoOriginal.Cargar;
 end;
 
 procedure TfrmMtoComprasSesiones.FormCreate(Sender: TObject);
 var
+  EntornoVisor: TEntornoVisorPedidoOriginalSesion;
   GestorContexto: IGestorContextoSesion;
   i, IdxBase: Integer;
 begin
@@ -2214,8 +1672,36 @@ begin
   // grid dispara OnFocusedRecordChanged sobre el gestor de tallas) tiene
   // que estar creado ANTES del inherited. Las columnas de talla se crean
   // aqui: si no existen, el recalculo del gestor seria un no-op.
-  FImagenPedidoOriginal := TPicture.Create;
-  FZoomPedidoOriginal := 1;
+  EntornoVisor := Default(TEntornoVisorPedidoOriginalSesion);
+  EntornoVisor.Contenedor := scrPedidoOriginal;
+  EntornoVisor.Imagen := imgPedidoOriginal;
+  EntornoVisor.EtiquetaPagina := lblPaginaPedido;
+  EntornoVisor.BotonAnterior := btnPaginaAnteriorPedido;
+  EntornoVisor.BotonSiguiente := btnPaginaSiguientePedido;
+  EntornoVisor.BotonAlejar := btnAlejarPedido;
+  EntornoVisor.BotonAcercar := btnAcercarPedido;
+  EntornoVisor.BotonAjustar := btnAjustarPedido;
+  EntornoVisor.BotonZoomReal := btnZoomRealPedido;
+  EntornoVisor.ObtenerDirectorio :=
+    function: string
+    begin
+      Result := DirectorioFotosAplicacion;
+    end;
+  EntornoVisor.ObtenerSesion :=
+    function(out ASerie, ANumero: string): Boolean
+    begin
+      ASerie := '';
+      ANumero := '';
+      Result := (Dmm <> nil) and Dmm.unqryTablaG.Active and
+        (not Dmm.unqryTablaG.IsEmpty);
+      if Result then
+      begin
+        ASerie := Dmm.unqryTablaG.FieldByName('SERIE_SES').AsString;
+        ANumero := Dmm.unqryTablaG.FieldByName('NUMERO_SES').AsString;
+      end;
+    end;
+  FVisorPedidoOriginal := TVisorPedidoOriginalSesion.Create(
+    EntornoVisor);
   CrearColaboradorTallas;
   FTallas.CrearColumnas;
   inherited;
@@ -2494,12 +1980,13 @@ begin
   // tallas y el servicio, despues sus proveedores. Los colaboradores
   // cierran sus propios cursores antes de que TfrmMtoGen.FormDestroy
   // libere el data module y deje la conexion inactiva.
+  FreeAndNil(FVisorPedidoOriginal);
+  FreeAndNil(FImportadorOcr);
   FreeAndNil(FCopiaLineas);
   FreeAndNil(FModeloPrv);
   FreeAndNil(FProveedor);
   FreeAndNil(FTallas);
   FreeAndNil(FServicioComprasSesiones);
-  FreeAndNil(FImagenPedidoOriginal);
   inherited;
 end;
 

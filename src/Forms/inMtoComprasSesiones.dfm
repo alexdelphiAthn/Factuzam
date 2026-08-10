@@ -1901,7 +1901,6 @@
               Color = clAppWorkSpace
               ParentColor = False
               TabOrder = 0
-              OnMouseWheel = scrPedidoOriginalMouseWheel
               object imgPedidoOriginal: TImage
                 Left = 0
                 Top = 0
@@ -1910,9 +1909,6 @@
                 Cursor = crHandPoint
                 Proportional = True
                 Stretch = True
-                OnMouseDown = imgPedidoOriginalMouseDown
-                OnMouseMove = imgPedidoOriginalMouseMove
-                OnMouseUp = imgPedidoOriginalMouseUp
               end
             end
             object pnlPedidoOriginalTop: TPanel
@@ -1930,7 +1926,6 @@
                 Height = 28
                 Caption = '< Anterior'
                 TabOrder = 0
-                OnClick = btnPaginaAnteriorPedidoClick
               end
               object btnPaginaSiguientePedido: TcxButton
                 Left = 98
@@ -1939,7 +1934,6 @@
                 Height = 28
                 Caption = 'Siguiente >'
                 TabOrder = 1
-                OnClick = btnPaginaSiguientePedidoClick
               end
               object btnAlejarPedido: TcxButton
                 Left = 202
@@ -1948,7 +1942,6 @@
                 Height = 28
                 Caption = '-'
                 TabOrder = 2
-                OnClick = btnAlejarPedidoClick
               end
               object btnAcercarPedido: TcxButton
                 Left = 246
@@ -1957,7 +1950,6 @@
                 Height = 28
                 Caption = '+'
                 TabOrder = 3
-                OnClick = btnAcercarPedidoClick
               end
               object btnAjustarPedido: TcxButton
                 Left = 300
@@ -1966,7 +1958,6 @@
                 Height = 28
                 Caption = 'Ajustar ventana'
                 TabOrder = 4
-                OnClick = btnAjustarPedidoClick
               end
               object btnZoomRealPedido: TcxButton
                 Left = 416
@@ -1975,7 +1966,6 @@
                 Height = 28
                 Caption = '100 %'
                 TabOrder = 5
-                OnClick = btnZoomRealPedidoClick
               end
               object lblPaginaPedido: TcxLabel
                 Left = 506
