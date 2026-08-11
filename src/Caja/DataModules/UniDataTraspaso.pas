@@ -69,6 +69,12 @@ type
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
     // Devuelve el articulo padre del SKU activo. Vacio si no existe.
     function ObtenerArticuloSku(const ASku: string): string;
+    function ObtenerIdColorBasicoSolicitud(const AArticulo, AColor: string;
+                             out AIdColorBasico: Integer): Boolean;
+    function BuscarSkuTcActivoUnico(const AArticulo, ATalla: string;
+                             AIdColorBasico: Integer): string;
+    function ResolverSkuSolicitudActivo(const AArticulo,
+                             ASkuSolicitado: string): string;
     // Recorre el cds antes de grabar/imprimir: descarta lineas en blanco
     // (sin articulo) y aborta con error si una linea tiene articulo pero el
     // SKU no esta cerrado (falta color/talla).
@@ -337,6 +343,139 @@ begin
   end;
 end;
 
+function TdmTraspaso.ObtenerIdColorBasicoSolicitud(
+  const AArticulo, AColor: string;
+  out AIdColorBasico: Integer): Boolean;
+var
+  bInvalido: Boolean;
+  iIdActual: Integer;
+begin
+  AIdColorBasico := 0;
+  bInvalido := False;
+  // El valor historico puede estar inactivo. Se conserva la prioridad de la
+  // vista vi_atributos_sku_basico: articulo, conjunto y valor global.
+  qryAux.SQL.Text :=
+    'SELECT CASE' +
+    '         WHEN AAB.CODIGO_ART_AAB IS NOT NULL THEN AAB.ID_ATB_AAB' +
+    '         WHEN ACD.ID_ATB_ACD IS NOT NULL THEN ACD.ID_ATB_ACD' +
+    '         ELSE AV.ID_ATB_AV' +
+    '       END AS ID_ATB' +
+    '  FROM fza_atributos_valores AV' +
+    '  LEFT JOIN fza_articulos_atributos_basicos AAB' +
+    '    ON AAB.CODIGO_ART_AAB = :ART' +
+    '   AND AAB.ID_AV_AAB = AV.ID_AV' +
+    '  LEFT JOIN fza_articulos_conjuntos_asign ACA' +
+    '    ON ACA.CODIGO_ART_ACA = :ART' +
+    '   AND ACA.ID_VA_ACA = AV.ID_VA_AV' +
+    '  LEFT JOIN fza_atributos_conjuntos_det ACD' +
+    '    ON ACD.ID_AC_ACD = ACA.ID_AC_ACA' +
+    '   AND ACD.ID_AV_ACD = AV.ID_AV' +
+    ' WHERE AV.ID_VA_AV = ''CO''' +
+    '   AND TRIM(AV.AV) = :COLOR';
+  qryAux.ParamByName('ART').AsString := AArticulo;
+  qryAux.ParamByName('COLOR').AsString := AColor;
+  qryAux.Open;
+  try
+    while not qryAux.Eof do
+    begin
+      if qryAux.FieldByName('ID_ATB').IsNull then
+        bInvalido := True
+      else
+      begin
+        iIdActual := qryAux.FieldByName('ID_ATB').AsInteger;
+        if AIdColorBasico = 0 then
+          AIdColorBasico := iIdActual
+        else if AIdColorBasico <> iIdActual then
+          bInvalido := True;
+      end;
+      qryAux.Next;
+    end;
+    Result := (AIdColorBasico > 0) and not bInvalido;
+  finally
+    qryAux.Close;
+  end;
+  if not Result then
+    AIdColorBasico := 0;
+end;
+
+function TdmTraspaso.BuscarSkuTcActivoUnico(
+  const AArticulo, ATalla: string;
+  AIdColorBasico: Integer): string;
+var
+  iCandidatos: Integer;
+  sCandidato: string;
+begin
+  Result := '';
+  iCandidatos := 0;
+  sCandidato := '';
+  qryAux.SQL.Text :=
+    'SELECT DISTINCT SK.CODIGO_UNIDAD_SKU' +
+    '  FROM fza_articulos_skus SK' +
+    '  JOIN vi_atributos_sku_basico C' +
+    '    ON C.CODIGO_UNIDAD_SKU = SK.CODIGO_UNIDAD_SKU' +
+    '   AND C.ID_VA_AV = ''CO''' +
+    '  JOIN fza_atributos_valores CAV' +
+    '    ON CAV.ID_AV = C.ID_AV AND CAV.ESACTIVO_AV = ''S''' +
+    '  JOIN fza_atributos_basicos B' +
+    '    ON B.ID_ATB = C.ID_ATB_AV AND B.ESACTIVO_ATB = ''S''' +
+    '  JOIN vi_atributos_sku_basico T' +
+    '    ON T.CODIGO_UNIDAD_SKU = SK.CODIGO_UNIDAD_SKU' +
+    '   AND T.ID_VA_AV = ''TAL''' +
+    '  JOIN fza_atributos_valores TAV' +
+    '    ON TAV.ID_AV = T.ID_AV AND TAV.ESACTIVO_AV = ''S''' +
+    ' WHERE SK.CODIGO_ART_SKU = :ART' +
+    '   AND SK.CODIGO_VAR_SKU = ''TC''' +
+    '   AND SK.ESACTIVO_SKU = ''S''' +
+    '   AND C.ID_ATB_AV = :ID_COLOR' +
+    '   AND TRIM(T.VALOR_AV) = :TALLA' +
+    ' ORDER BY SK.CODIGO_UNIDAD_SKU' +
+    ' LIMIT 2';
+  qryAux.ParamByName('ART').AsString := AArticulo;
+  qryAux.ParamByName('ID_COLOR').AsInteger := AIdColorBasico;
+  qryAux.ParamByName('TALLA').AsString := ATalla;
+  qryAux.Open;
+  try
+    while not qryAux.Eof do
+    begin
+      Inc(iCandidatos);
+      if iCandidatos = 1 then
+        sCandidato := qryAux.FieldByName('CODIGO_UNIDAD_SKU').AsString;
+      qryAux.Next;
+    end;
+    if iCandidatos = 1 then
+      Result := sCandidato;
+  finally
+    qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.ResolverSkuSolicitudActivo(
+  const AArticulo, ASkuSolicitado: string): string;
+var
+  Partes: TArray<string>;
+  iIdColorBasico: Integer;
+  sArticulo, sArticuloSku, sSku: string;
+begin
+  Result := '';
+  sArticulo := Trim(AArticulo);
+  sSku := Trim(ASkuSolicitado);
+  sArticuloSku := ObtenerArticuloSku(sSku);
+  if sArticuloSku <> '' then
+  begin
+    if SameText(sArticuloSku, sArticulo) then
+      Result := sSku;
+  end
+  else
+  begin
+    Partes := sSku.Split(['/']);
+    if (Length(Partes) = 3) and SameText(Trim(Partes[0]), sArticulo) and
+       ObtenerIdColorBasicoSolicitud(sArticulo, Trim(Partes[1]),
+                                     iIdColorBasico) then
+      Result := BuscarSkuTcActivoUnico(sArticulo, Trim(Partes[2]),
+                                       iIdColorBasico);
+  end;
+end;
+
 procedure TdmTraspaso.LimpiarLineasIncompletas;
 var
   sArt, sSku, sArtSku: string;
@@ -361,7 +500,7 @@ begin
       sArtSku := ObtenerArticuloSku(sSku);
       if sArtSku = '' then
         raise EValidacionTraspaso.CreateFmt(
-          SErrorSkuTraspasoIncompleto, [sArt, sSku])
+          SErrorSkuTraspasoNoDisponible, [sSku, sArt])
       else if not SameText(sArt, sArtSku) then
         raise EValidacionTraspaso.CreateFmt(
           SErrorArticuloSkuTraspasoNoCoincide,
@@ -853,7 +992,7 @@ begin
   cdsLineas.First;
   while not cdsLineas.Eof do
   begin
-    if Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) <> '' then
+    if Trim(cdsLineas.FieldByName('LINEA').AsString) <> '' then
     begin
       QryTrx.SQL.Text :=
         'UPDATE fza_traspasos_solicitudes_lineas' +
@@ -866,7 +1005,7 @@ begin
         '       USUARIO_MODIF = :USU' +
         ' WHERE NUMERO_TRSOL_TRSOLLIN = :NUM' +
         '   AND SERIE_TRSOL_TRSOLLIN = :SER' +
-        '   AND CODIGO_UNIDAD_TRSOLLIN = :SKU';
+        '   AND LINEA_TRSOLLIN = :LIN';
       QryTrx.ParamByName('SERV').AsFloat :=
         cdsLineas.FieldByName('CANTIDAD').AsFloat;
       QryTrx.ParamByName('MOT').AsString :=
@@ -874,9 +1013,13 @@ begin
       QryTrx.ParamByName('USU').AsString := sUsuario;
       QryTrx.ParamByName('NUM').AsString := ANumero;
       QryTrx.ParamByName('SER').AsString := ASerie;
-      QryTrx.ParamByName('SKU').AsString :=
-        cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+      QryTrx.ParamByName('LIN').AsString :=
+        cdsLineas.FieldByName('LINEA').AsString;
       QryTrx.Execute;
+      if QryTrx.RowsAffected <> 1 then
+        raise EValidacionTraspaso.CreateFmt(
+          SErrorLineaSolicitudTraspasoNoActualizada,
+          [cdsLineas.FieldByName('LINEA').AsString, ANumero, ASerie]);
     end;
     cdsLineas.Next;
   end;
@@ -948,7 +1091,8 @@ begin
         '  CODIGO_ALM_DESTINO_TRSOL, CODIGO_EMP_CONTRA_TRSOL,' +
         '  CODIGO_CAJA_TRSOL, CODIGO_EMPLEADO_TRSOL,' +
         '  USUARIO_ALTA, USUARIO_MODIF, INSTANTE_ALTA) ' +
-        'VALUES (:NUM, :SER, CURRENT_DATE, ''PENDIENTE'', :EMP, :ORI, :DES,' +
+        'VALUES (:NUM, :SER, CURRENT_TIMESTAMP, ''PENDIENTE'', :EMP, :ORI,' +
+        '  :DES,' +
         '  NULLIF(:EMPC, ''''), :CAJA, :EMPLE, :USU, :USU, NOW())';
       QryTrx.ParamByName('NUM').AsString := ANumero;
       QryTrx.ParamByName('SER').AsString := ASerie;
@@ -1158,7 +1302,7 @@ end;
 function TdmTraspaso.CargarSolicitud(const ANumero, ASerie: string): Boolean;
 var
   bExiste: Boolean;
-  sPropio, sSolicitante: string;
+  sPropio, sSkuActivo, sSkuSolicitado, sSolicitante: string;
 begin
   sPropio := '';
   sSolicitante := '';
@@ -1192,7 +1336,8 @@ begin
     cdsCabecera.Post;
     // Pase 1: volcar SKU/uds pendientes (qryAux ocupado, sin coste todavía).
     qryAux.SQL.Text :=
-      'SELECT CODIGO_ART_TRSOLLIN, CODIGO_UNIDAD_TRSOLLIN,' +
+      'SELECT LINEA_TRSOLLIN, CODIGO_ART_TRSOLLIN,' +
+      '       CODIGO_UNIDAD_TRSOLLIN,' +
       '       DESCRIPCION_ARTICULO_TRSOLLIN,' +
       '       (CANTIDAD_PEDIDA_TRSOLLIN -' +
       '        CANTIDAD_SERVIDA_TRSOLLIN) AS PENDIENTE' +
@@ -1209,6 +1354,8 @@ begin
       while not qryAux.Eof do
       begin
         cdsLineas.Append;
+        cdsLineas.FieldByName('LINEA').AsString :=
+          qryAux.FieldByName('LINEA_TRSOLLIN').AsString;
         cdsLineas.FieldByName('CODIGO_ART').AsString :=
           qryAux.FieldByName('CODIGO_ART_TRSOLLIN').AsString;
         cdsLineas.FieldByName('CODIGO_UNIDAD').AsString :=
@@ -1235,6 +1382,14 @@ begin
     while not cdsLineas.Eof do
     begin
       cdsLineas.Edit;
+      sSkuSolicitado := cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+      sSkuActivo := ResolverSkuSolicitudActivo(
+        cdsLineas.FieldByName('CODIGO_ART').AsString, sSkuSolicitado);
+      if (sSkuActivo <> '') and not SameText(sSkuActivo, sSkuSolicitado) then
+      begin
+        cdsLineas.FieldByName('CODIGO_UNIDAD').AsString := sSkuActivo;
+        DesempaquetarAtributosLinea(sSkuActivo);
+      end;
       cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
         ObtenerCosteMedio(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString,
                           sPropio);

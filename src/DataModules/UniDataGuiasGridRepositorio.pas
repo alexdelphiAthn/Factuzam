@@ -25,6 +25,7 @@ implementation
 
 uses
   System.SysUtils, System.Classes, System.Variants,
+  Data.DB,
   inLibInformesGuiasCache;
 
 const

@@ -768,6 +768,7 @@
         <DCCReference Include="src\Caja\Lib\inLibTraspasoTicketIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoTicket.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibTraspasoSolicitudesExcel.pas"/>
         <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSkuIntf.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSku.pas"/>
@@ -889,6 +890,9 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalImpOperacionesVenta.pas">
             <Form>frmPrintOperacionesVenta</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImpTraspasoSolicitudes.pas">
+            <Form>frmPrintTraspasoSolicitudes</Form>
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalImpPagos.pas">
             <Form>frmPrintPagos</Form>

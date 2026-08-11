@@ -741,7 +741,11 @@ begin
   end;
   if (CodArticulo <> '') and (TipoVariacion <> '') then
   begin
-    TfrmMtoModalGenerarSKUs.Ejecutar(CodArticulo, TipoVariacion);
+    TfrmMtoModalGenerarSKUs.Ejecutar(
+      Self,
+      CodArticulo,
+      TipoVariacion,
+      FDependencias.GeneracionSkus);
     dmmArticulos.unqrySkus.Close;
     dmmArticulos.unqrySkus.Open;
     dmmArticulos.unqryVariacionesArticulos.Close;

@@ -61,12 +61,12 @@
               Width = 191
             end
             object dbcGrdDBTabPrinCODIGO_SUBFAMILIA: TcxGridDBColumn
-              Caption = 'C'#243'digo Familia Padre'
+              Caption = 'Código familia padre'
               DataBinding.FieldName = 'CODIGO_SUBFAMILIA_FAM'
               Width = 174
             end
             object dbcGrdDBTabPrinNOMBRE_SUBFAMILIA: TcxGridDBColumn
-              Caption = 'Descripci'#243'n Familia Padre'
+              Caption = 'Nombre familia padre'
               DataBinding.FieldName = 'NOMBRE_SUBFAMILIA'
               Width = 167
             end
@@ -234,7 +234,7 @@
             Height = 382
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = cxTabSheet1
+            Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
             ClientRectBottom = 380
             ClientRectLeft = 2

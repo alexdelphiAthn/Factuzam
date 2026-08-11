@@ -294,7 +294,7 @@ destino.</p>
 </tbody>
 </table>
 <p><strong>Modos de trabajo:</strong></p>
-<ul><li><strong>F6 — Solicitar a otro almacén:</strong> crea una <strong>solicitud</strong> de género a otra tienda/almacén (pendiente de que la atiendan).</li><li><strong>F8 — Atender solicitudes:</strong> muestra las solicitudes recibidas para <strong>prepararlas y enviarlas</strong>.</li></ul>
+<ul><li><strong>F6 — Solicitar a otro almacén:</strong> crea una <strong>solicitud</strong> de género a otra tienda/almacén (pendiente de que la atiendan).</li><li><strong>F7 — Atender solicitudes:</strong> muestra las solicitudes recibidas para <strong>prepararlas y enviarlas</strong>.</li><li><strong>F8 — Borrar línea:</strong> elimina la línea seleccionada en los modos Traspaso y Solicitar. Al atender, las líneas solicitadas no se pueden borrar.</li></ul>
 <p><strong>Cierre:</strong> <strong>F12 Con ticket</strong> (imprime justificante del traspaso) o
 <strong>F11 Sin ticket</strong>.</p>
 <h3 id="traspaso-directo">Traspaso directo</h3>
@@ -313,7 +313,7 @@ central, pero todavía no se está enviando físicamente.</p>
 <p>Hasta que se atiende, esta solicitud no debe tratarse como mercancía ya
 recibida. Sirve para organizar trabajo entre tiendas y evitar llamadas o notas
 manuales.</p>
-<h3 id="atender-solicitudes-f8">Atender solicitudes (F8)</h3>
+<h3 id="atender-solicitudes-f7">Atender solicitudes (F7)</h3>
 <p>Se usa en el almacén que recibe peticiones de otras tiendas. Permite revisar
 qué han solicitado, preparar las líneas y cerrar el envío.</p>
 <p><img src="img/05-caja-atender-traspasos.png" alt="Atender solicitudes de traspaso" loading="lazy"></p>
@@ -452,7 +452,7 @@ cuadrar el datáfono.</p>
 <tr><td><strong>F11</strong></td><td><strong>Resumen</strong> / imprimir el arqueo calculado.</td></tr>
 <tr><td><strong>F7</strong></td><td><strong>Tira de Caja</strong> con detalle de tickets y movimientos.</td></tr>
 <tr><td><strong>F8</strong></td><td><strong>Histórico</strong> de arqueos anteriores.</td></tr>
-<tr><td><strong>F2</strong></td><td><strong>Grabar Arqueo y emitir justificante</strong> desde la pestaña Recuento.</td></tr>
+<tr><td><strong>F2</strong></td><td><strong>Grabar Arqueo</strong> desde la pestaña Recuento y, si está configurado, emitir el justificante.</td></tr>
 </tbody>
 </table>
 <p>El botón <strong>Resumen (F11)</strong> emite el ticket de arqueo con el periodo, las
@@ -475,7 +475,7 @@ denominación.</p>
 <tr><td><strong>Efectivo</strong></td><td>Importe total contado en el cajón.</td></tr>
 <tr><td><strong>Otras formas de pago</strong></td><td>Importe recontado de tarjeta, bono, divisa, cripto u otras formas no efectivo.</td></tr>
 <tr><td><strong>Retirada</strong></td><td>Importe retirado a banco, encargado o caja fuerte.</td></tr>
-<tr><td><strong>Dejo para mañana</strong></td><td>Efectivo que queda como cambio para la siguiente jornada.</td></tr>
+<tr><td><strong>Dejo para mañana</strong></td><td>Efectivo que queda como cambio para la siguiente jornada. Puede editarse si el parámetro correspondiente está activo; al cambiarlo se recalcula la retirada.</td></tr>
 <tr><td><strong>Observaciones</strong></td><td>Aclaraciones sobre diferencias o incidencias.</td></tr>
 <tr><td><strong>Vendedor</strong></td><td>Empleado responsable del cierre.</td></tr>
 </tbody>
@@ -707,6 +707,8 @@ de crédito.</p>
 </tr></thead>
 <tbody>
 <tr><td><strong>Niveles de familia en resumen por sección</strong> (<code>vgerArqueoNivelesFamilia</code>)</td><td><code>2</code></td><td>Define cuántos niveles de la ruta de familias aparecen en el resumen por sección del arqueo y en el ticket de arqueo. <code>1</code> muestra solo la sección raíz; <code>2</code> sección y familia; <code>3</code> añade subfamilia. El sistema sanea el valor al rango <code>1..9</code>.</td></tr>
+<tr><td><strong>Permitir editar el cambio dejado para la siguiente jornada</strong> (<code>vgerArqueoEditarCambio</code>)</td><td><code>False</code></td><td>Permite introducir directamente el importe de <strong>Dejo para mañana</strong>. La retirada se recalcula para que retirada y cambio dejado coincidan con el efectivo recontado.</td></tr>
+<tr><td><strong>Emitir justificante al grabar el cierre</strong> (<code>vgerArqueoEmitirJustificante</code>)</td><td><code>True</code></td><td>Con <code>False</code>, después de grabar el arqueo se pregunta si se desea imprimir el justificante del cierre. Los duplicados siguen disponibles desde el histórico.</td></tr>
 </tbody>
 </table>
 <p>Usa pocos niveles si el arqueo debe ser rápido y legible. Sube los niveles
@@ -883,7 +885,7 @@ para casos en los que el ticket ya se cerró.</p></blockquote>
 <hr>
 <p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 04/08/2026</footer>
+<footer>Manual de Factuzam · generado el 11/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

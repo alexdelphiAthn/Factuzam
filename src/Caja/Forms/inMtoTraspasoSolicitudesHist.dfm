@@ -10,10 +10,11 @@
         Caption = '&1_Lista'
         inherited cxGrdPrincipal: TcxGrid
           inherited cxGrdDBTabPrin: TcxGridDBTableView
+            OptionsCustomize.ColumnGrouping = False
             OptionsData.Deleting = False
             OptionsData.Editing = False
             OptionsData.Inserting = False
-            OptionsView.GroupByBox = True
+            OptionsView.GroupByBox = False
             object cxGrdDBTabPrinSERIE_TRSOL: TcxGridDBColumn
               Caption = 'Serie'
               DataBinding.FieldName = 'SERIE_TRSOL'
@@ -273,7 +274,7 @@
             Transparent = True
           end
           object txtEmpresaSolicitante: TcxDBTextEdit
-            Left = 140
+            Left = 200
             Top = 39
             DataBinding.DataField = 'CODIGO_EMP_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -282,7 +283,7 @@
             Width = 65
           end
           object txtNombreEmpresaSolicitante: TcxDBTextEdit
-            Left = 211
+            Left = 271
             Top = 39
             DataBinding.DataField = 'NOMBRE_EMPRESA_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -297,7 +298,7 @@
             Transparent = True
           end
           object txtAlmacenSolicitante: TcxDBTextEdit
-            Left = 140
+            Left = 200
             Top = 68
             DataBinding.DataField = 'CODIGO_ALM_DESTINO_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -306,7 +307,7 @@
             Width = 65
           end
           object txtNombreAlmacenSolicitante: TcxDBTextEdit
-            Left = 211
+            Left = 271
             Top = 68
             DataBinding.DataField = 'NOMBRE_ALMACEN_DESTINO_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -321,7 +322,7 @@
             Transparent = True
           end
           object txtEmpresaSolicitada: TcxDBTextEdit
-            Left = 140
+            Left = 200
             Top = 97
             DataBinding.DataField = 'CODIGO_EMP_CONTRA_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -330,7 +331,7 @@
             Width = 65
           end
           object txtNombreEmpresaSolicitada: TcxDBTextEdit
-            Left = 211
+            Left = 271
             Top = 97
             DataBinding.DataField = 'NOMBRE_EMPRESA_CONTRA_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -345,7 +346,7 @@
             Transparent = True
           end
           object txtAlmacenSolicitado: TcxDBTextEdit
-            Left = 140
+            Left = 200
             Top = 126
             DataBinding.DataField = 'CODIGO_ALM_ORIGEN_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -354,7 +355,7 @@
             Width = 65
           end
           object txtNombreAlmacenSolicitado: TcxDBTextEdit
-            Left = 211
+            Left = 271
             Top = 126
             DataBinding.DataField = 'NOMBRE_ALMACEN_ORIGEN_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -369,7 +370,7 @@
             Transparent = True
           end
           object txtCajaSolicitud: TcxDBTextEdit
-            Left = 140
+            Left = 200
             Top = 155
             DataBinding.DataField = 'CODIGO_CAJA_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -378,7 +379,7 @@
             Width = 65
           end
           object txtNombreCajaSolicitud: TcxDBTextEdit
-            Left = 211
+            Left = 271
             Top = 155
             DataBinding.DataField = 'NOMBRE_CAJA_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -393,7 +394,7 @@
             Transparent = True
           end
           object txtEmpleadoSolicitud: TcxDBTextEdit
-            Left = 140
+            Left = 200
             Top = 184
             DataBinding.DataField = 'CODIGO_EMPLEADO_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -402,7 +403,7 @@
             Width = 65
           end
           object txtNombreEmpleadoSolicitud: TcxDBTextEdit
-            Left = 211
+            Left = 271
             Top = 184
             DataBinding.DataField = 'NOMBRE_EMPLEADO_TRSOL'
             DataBinding.DataSource = dsTablaG
@@ -411,38 +412,40 @@
             Width = 260
           end
           object lblObservacionesSolicitud: TcxLabel
-            Left = 490
+            Left = 550
             Top = 42
             Caption = 'Observaciones'
             Transparent = True
           end
           object memObservacionesSolicitud: TcxDBMemo
-            Left = 590
+            Left = 690
             Top = 39
+            Anchors = [akLeft, akTop, akRight]
             DataBinding.DataField = 'OBSERVACIONES_TRSOL'
             DataBinding.DataSource = dsTablaG
             Properties.ReadOnly = True
             Properties.ScrollBars = ssVertical
             TabOrder = 18
             Height = 72
-            Width = 330
+            Width = 230
           end
           object lblMotivosRechazoSolicitud: TcxLabel
-            Left = 490
+            Left = 550
             Top = 126
             Caption = 'Motivos rechazo'
             Transparent = True
           end
           object memMotivosRechazoSolicitud: TcxDBMemo
-            Left = 590
+            Left = 690
             Top = 123
+            Anchors = [akLeft, akTop, akRight]
             DataBinding.DataField = 'MOTIVOS_RECHAZO_TRSOL'
             DataBinding.DataSource = dsTablaG
             Properties.ReadOnly = True
             Properties.ScrollBars = ssVertical
             TabOrder = 19
             Height = 82
-            Width = 330
+            Width = 230
           end
         end
         object pcDetalleSolicitud: TcxPageControl
@@ -783,6 +786,15 @@
         inherited nvNavegador: TcxDBNavigator
           Width = 240
           ExplicitWidth = 240
+        end
+        object btnListadoSolicitudes: TcxButton
+          Left = 920
+          Top = 3
+          Width = 190
+          Height = 30
+          Caption = 'Listado solicitudes'
+          TabOrder = 6
+          OnClick = btnListadoSolicitudesClick
         end
       end
     end

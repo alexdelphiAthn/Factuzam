@@ -532,6 +532,8 @@ uses
   UniDataTraspasoTicketRepositorio in
     'src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas',
   inLibTraspasoTicket in 'src\Caja\Lib\inLibTraspasoTicket.pas',
+  inLibTraspasoSolicitudesExcel in
+    'src\Caja\Lib\inLibTraspasoSolicitudesExcel.pas',
   inLibGridArticulos in 'src\Lib\inLibGridArticulos.pas',
   inLibColumnasSkuIntf in 'src\Lib\inLibColumnasSkuIntf.pas',
   inLibColumnasSku in 'src\Lib\inLibColumnasSku.pas',
@@ -639,6 +641,9 @@ uses
   UniDataCajaPagosHistRepositorio in 'src\Caja\DataModules\UniDataCajaPagosHistRepositorio.pas',
   inMtoModalImpOperaciones in 'src\Caja\Modals\inMtoModalImpOperaciones.pas' {frmPrintOperaciones},
   inMtoModalImpOperacionesVenta in 'src\Caja\Modals\inMtoModalImpOperacionesVenta.pas' {frmPrintOperacionesVenta},
+  inMtoModalImpTraspasoSolicitudes in
+    'src\Caja\Modals\inMtoModalImpTraspasoSolicitudes.pas'
+    {frmPrintTraspasoSolicitudes},
   inMtoModalImpPagos in 'src\Caja\Modals\inMtoModalImpPagos.pas' {frmPrintPagos},
   inMtoModalImpDepositos in 'src\Caja\Modals\inMtoModalImpDepositos.pas' {frmPrintDepositos},
   inMtoModalEntradaCambio in 'src\Modals\inMtoModalEntradaCambio.pas' {frmModalEntradaCambio},

@@ -19,6 +19,7 @@ uses
   inLibArticulosGuardadoIntf,
   inLibArticulosPropiedadesPersistenciaIntf,
   inLibArticulosVariacionesIntf,
+  inLibGeneracionSkusPersistenciaIntf,
   inLibMargenPersistenciaIntf;
 
 type
@@ -34,6 +35,7 @@ type
     Propiedades: TServiciosPropiedadesArticulo;
     Variaciones: IArticulosVariaciones;
     Margen: IRepositorioMargen;
+    GeneracionSkus: IRepositorioGeneracionSkus;
     class function Crear(
       const AGuardado: ICreadorGuardadoArticulo;
       const APropiedades: TServiciosPropiedadesArticulo;
@@ -44,6 +46,13 @@ type
       const APropiedades: TServiciosPropiedadesArticulo;
       const AVariaciones: IArticulosVariaciones;
       const AMargen: IRepositorioMargen
+    ): TContextoDependenciasArticulos; overload; static;
+    class function Crear(
+      const AGuardado: ICreadorGuardadoArticulo;
+      const APropiedades: TServiciosPropiedadesArticulo;
+      const AVariaciones: IArticulosVariaciones;
+      const AMargen: IRepositorioMargen;
+      const AGeneracionSkus: IRepositorioGeneracionSkus
     ): TContextoDependenciasArticulos; overload; static;
     function CrearGuardado(
       const AOperaciones: IOperacionesGuardadoArticulo
@@ -115,6 +124,18 @@ begin
   Result.Margen := AMargen;
 end;
 
+class function TContextoDependenciasArticulos.Crear(
+  const AGuardado: ICreadorGuardadoArticulo;
+  const APropiedades: TServiciosPropiedadesArticulo;
+  const AVariaciones: IArticulosVariaciones;
+  const AMargen: IRepositorioMargen;
+  const AGeneracionSkus: IRepositorioGeneracionSkus
+): TContextoDependenciasArticulos;
+begin
+  Result := Crear(AGuardado, APropiedades, AVariaciones, AMargen);
+  Result.GeneracionSkus := AGeneracionSkus;
+end;
+
 procedure TContextoDependenciasArticulos.Validar;
 begin
   if not Assigned(Guardado) then
@@ -156,6 +177,7 @@ begin
   Propiedades.Escritura := nil;
   Variaciones := nil;
   Margen := nil;
+  GeneracionSkus := nil;
 end;
 
 function CrearCreadorGuardadoArticulo: ICreadorGuardadoArticulo;

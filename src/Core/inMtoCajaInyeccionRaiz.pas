@@ -244,6 +244,7 @@ var
   Gestor: TEmbeddedFormManager;
   Formulario: TForm;
   Mantenimiento: IMantenimientoEmbebido;
+  Caja: TComposicionCajaPantalla;
 begin
   Anfitrion := FOwnerRaiz as IAnfitrionPantallas;
   Anfitrion.PrepararAperturaPantalla;
@@ -257,9 +258,11 @@ begin
   end
   else
   begin
+    Caja := Componer('frmMtoTraspasoSolicitudesHist');
     Formulario := TfrmMtoTraspasoSolicitudesHist.Create(
       FOwnerRaiz,
-      FComposicion.Permisos);
+      FComposicion.Permisos,
+      CrearDependenciasInforme(Caja));
     Mantenimiento := Formulario as IMantenimientoEmbebido;
     Formulario.Hide;
     Gestor.EmbedForm(

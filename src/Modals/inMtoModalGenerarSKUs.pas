@@ -93,12 +93,10 @@ type
                                          AIdConjunto: Integer): Integer;
   public
     // Método para llamar a esta pantalla desde el formulario principal
-    class function Ejecutar(const ACodigoArticulo,
-                            ATipoVariacion: string): Boolean; overload;
     class function Ejecutar(
       AOwner: TComponent;
       const ACodigoArticulo, ATipoVariacion: string;
-      const ARepositorio: IRepositorioGeneracionSkus): Boolean; overload;
+      const ARepositorio: IRepositorioGeneracionSkus): Boolean;
   end;
 
 implementation
@@ -166,15 +164,6 @@ begin
       GenerarCombinaciones(Nivel + 1, NuevoNombre, NuevosIds);
     end;
   end;
-end;
-
-class function TfrmMtoModalGenerarSKUS.Ejecutar(const ACodigoArticulo,
-  ATipoVariacion: string): Boolean;
-begin
-  Result := False;
-  ValidarDependenciaConfiguracion(
-    nil,
-    'generación de SKU');
 end;
 
 class function TfrmMtoModalGenerarSKUS.Ejecutar(

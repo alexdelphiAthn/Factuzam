@@ -362,8 +362,10 @@ destino.
 
 - **F6 — Solicitar a otro almacén:** crea una **solicitud** de género a
   otra tienda/almacén (pendiente de que la atiendan).
-- **F8 — Atender solicitudes:** muestra las solicitudes recibidas para
+- **F7 — Atender solicitudes:** muestra las solicitudes recibidas para
   **prepararlas y enviarlas**.
+- **F8 — Borrar línea:** elimina la línea seleccionada en los modos Traspaso
+  y Solicitar. Al atender, las líneas solicitadas no se pueden borrar.
 
 **Cierre:** **F12 Con ticket** (imprime justificante del traspaso) o
 **F11 Sin ticket**.
@@ -404,7 +406,7 @@ Hasta que se atiende, esta solicitud no debe tratarse como mercancía ya
 recibida. Sirve para organizar trabajo entre tiendas y evitar llamadas o notas
 manuales.
 
-### Atender solicitudes (F8)
+### Atender solicitudes (F7)
 
 Se usa en el almacén que recibe peticiones de otras tiendas. Permite revisar
 qué han solicitado, preparar las líneas y cerrar el envío.

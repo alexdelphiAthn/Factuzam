@@ -50,6 +50,15 @@ type
     Ubicaciones: TUbicacionesInformeCaja;
   end;
 
+  TEstadosSolicitudTraspasoCaja = TArray<string>;
+
+  TSolicitudTraspasosInformeCaja = record
+    FechaDesde: TDateTime;
+    FechaHasta: TDateTime;
+    Ubicaciones: TUbicacionesInformeCaja;
+    Estados: TEstadosSolicitudTraspasoCaja;
+  end;
+
   IResultadoInformeCaja = interface
     ['{3074F219-3940-43AE-81B2-EA6A0ED3F167}']
     function DataSet: TDataSet;
@@ -76,6 +85,11 @@ type
     function ListarUbicaciones: TUbicacionesInformeCaja;
     function ConsultarOperacionesVenta(
       const ASolicitud: TSolicitudOperacionesVentaCaja
+    ): IResultadoInformeCaja;
+    function ListarEstadosSolicitudesTraspaso:
+      TEstadosSolicitudTraspasoCaja;
+    function ConsultarSolicitudesTraspaso(
+      const ASolicitud: TSolicitudTraspasosInformeCaja
     ): IResultadoInformeCaja;
     function ConsultarArqueosHistorico(
       const AEmpresa, AAlmacen, ACaja: string

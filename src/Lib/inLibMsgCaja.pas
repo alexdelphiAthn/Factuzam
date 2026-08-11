@@ -59,6 +59,9 @@ resourcestring
     'No se ha configurado el contexto de sesión del módulo de traspasos.';
   SErrorSkuTraspasoIncompleto =
     'El artículo "%s" no tiene el SKU completo (elige color/talla). SKU: "%s"';
+  SErrorSkuTraspasoNoDisponible =
+    'El SKU "%s" del artículo "%s" no existe o está inactivo. Revisa el ' +
+    'catálogo o, si procede de una solicitud, deniega la línea.';
   SErrorArticuloSkuTraspasoNoCoincide =
     'La línea del artículo "%s" no corresponde al SKU "%s" (artículo real ' +
     '"%s"). Borra la línea y vuelve a introducirlo.';
@@ -78,6 +81,8 @@ resourcestring
     'No puedes solicitarte a ti mismo.';
   SErrorSolicitudTraspasoNoCargada =
     'No hay solicitud cargada que denegar.';
+  SErrorLineaSolicitudTraspasoNoActualizada =
+    'No se ha podido actualizar la línea "%s" de la solicitud %s/%s.';
   SErrorImpresoraTicketsCajaNoConfigurada =
     'No hay impresora de tickets configurada en parámetros ' +
     '(vgerDefPrinter); no se puede abrir el cajón.';
@@ -228,7 +233,7 @@ resourcestring
   SErrorCargarSolicitudTraspaso =
     'No se pudo cargar la solicitud.';
   SErrorSolicitudTraspasoCerrarNoCargada =
-    'Trae primero una solicitud (F8) para cerrarla.';
+    'Trae primero una solicitud (F7) para cerrarla.';
   SPreguntaCerrarSolicitudTraspaso =
     '¿Cerrar la solicitud dejando las líneas sin servir como no atendidas?';
   SInfoSolicitudTraspasoCerrada =
@@ -236,7 +241,7 @@ resourcestring
   SErrorDenegarSolicitudTraspasoModoNoValido =
     'Denegar solo aplica al atender una solicitud.';
   SErrorSolicitudTraspasoDenegarNoCargada =
-    'Trae primero una solicitud (F8) para denegarla.';
+    'Trae primero una solicitud (F7) para denegarla.';
   STituloDenegarSolicitudTraspaso =
     'Denegar petición';
   SSolicitudMotivoRechazoTraspaso =
@@ -354,7 +359,7 @@ resourcestring
     'Solicitudes pendientes de atender';
   SCaptionColNumeroSolicitud = 'Número';
   SCaptionColSerieSolicitud = 'Serie';
-  SCaptionColFechaSolicitud = 'Fecha';
+  SCaptionColFechaSolicitud = 'Fecha / hora';
   SCaptionColPideAlmacen = 'Pide (almacén)';
   SCaptionColEstadoSolicitud = 'Estado';
   SCaptionColLineasSolicitud = 'Líneas';

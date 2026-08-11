@@ -34,7 +34,7 @@ uses
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
   cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
-  cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges,
+  cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges, cxCalendar,
   dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
   inLibTraspasoOpePersistenciaIntf, inLibArticulosAtributosIntf,
   inLibTraspasoTicketIntf, inLibCajaPantallaInyeccion,
@@ -57,6 +57,7 @@ type
     pnlCentro: TPanel;
     pnlBottom: TPanel;
     lblTotal: TcxLabel;
+    btnF8: TcxButton;
     btnF11: TcxButton;
     btnF12: TcxButton;
     // Rejillas y panel de stock sacados al dfm (antes se creaban en codigo):
@@ -79,6 +80,7 @@ type
     procedure FormShow(Sender: TObject);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure btnModoClick(Sender: TObject);
+    procedure btnF8Click(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
     procedure btnF12Click(Sender: TObject);
     procedure txtEmpleadoExit(Sender: TObject);
@@ -151,6 +153,10 @@ type
     procedure CrearBotonesSolicitudes(
       ADialogo: TForm;
       APanel: TPanel);
+    procedure ModalSolicitudesKeyDown(
+      Sender: TObject;
+      var Key: Word;
+      Shift: TShiftState);
     function MostrarModalSolicitudes(
       out ANumero, ASerie: string): Integer;
     procedure PonerCantidadesSolicitudACero;
@@ -222,6 +228,26 @@ uses
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
   inLibMsgArticulos;
 
+function TextoBotonConAtajo(
+  const ACaption, AAtajo: string): string;
+var
+  iSeparador: Integer;
+  sTexto: string;
+begin
+  sTexto := Trim(ACaption);
+  if (Length(sTexto) >= 2) and
+     (UpCase(sTexto[1]) = 'F') and
+     CharInSet(sTexto[2], ['0'..'9']) then
+  begin
+    iSeparador := Pos(' ', sTexto);
+    if iSeparador > 0 then
+      Delete(sTexto, 1, iSeparador)
+    else
+      sTexto := '';
+  end;
+  Result := AAtajo + ' ' + TrimLeft(sTexto);
+end;
+
 constructor TfrmMtoOpeTraspaso.Create(AOwner: TComponent);
 begin
   ValidarDependenciaCaja(
@@ -267,6 +293,14 @@ end;
 procedure TfrmMtoOpeTraspaso.FormCreate(Sender: TObject);
 begin
   inherited;
+  // El catálogo instalado puede conservar los atajos anteriores. Se mantiene
+  // el texto traducido y se impone el mapa funcional vigente.
+  btnModoSolicitar.Caption :=
+    TextoBotonConAtajo(btnModoSolicitar.Caption, 'F6');
+  btnModoAtender.Caption :=
+    TextoBotonConAtajo(btnModoAtender.Caption, 'F7');
+  btnF8.Caption := 'F8 ' + Trim(
+    StringReplace(SCaptionMenuBorrarLinea, '&', '', [rfReplaceAll]));
   ValidarDependencias;
   KeyPreview := True;
   // Detector del lector de codigo de barras (trama STX/ETX + rafaga por
@@ -1001,6 +1035,7 @@ begin
   // buscador tras cambiar entre Traspaso, Solicitar y Atender.
   ConstruirGrid;
   btnF11.Visible := AModo <> mtSolicitar;
+  btnF8.Enabled := AModo <> mtAtender;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -1025,6 +1060,8 @@ begin
   end;
   CargarCombo;
   cboDestino.ItemIndex := -1;
+  cboDestino.Text := '';
+  cboDestino.Properties.ReadOnly := AModo = mtAtender;
   // Sin NewItemRow: dejamos una linea en blanco para teclear (estilo Excel);
   // al completar un SKU el grid anyade otra (GridResuelto). Al atender no.
   if AModo <> mtAtender then
@@ -1164,7 +1201,7 @@ procedure TfrmMtoOpeTraspaso.CargarCombo;
 begin
   cboDestino.Properties.Items.Clear;
   FComboCodigos.Clear;
-  // En Atender la solicitud se elige por el modal (F8); el desplegable solo
+  // En Atender la solicitud se elige por el modal (F7); el desplegable solo
   // lista almacenes destino en Traspaso/Solicitar.
   if FModo <> mtAtender then
     CargarAlmacenesDestino;
@@ -1263,7 +1300,7 @@ end;
 
 procedure TfrmMtoOpeTraspaso.cboDestinoPropertiesChange(Sender: TObject);
 begin
-  // En Atender la solicitud se elige en el modal (F8), no por el desplegable.
+  // En Atender la solicitud se elige en el modal (F7), no por el desplegable.
   // Aqui no se hace nada; el combo solo se usa en Traspaso/Solicitar.
 end;
 
@@ -1276,6 +1313,8 @@ begin
   ADialogo.BorderStyle := bsDialog;
   ADialogo.ClientWidth := 760;
   ADialogo.ClientHeight := 440;
+  ADialogo.KeyPreview := True;
+  ADialogo.OnKeyDown := ModalSolicitudesKeyDown;
 end;
 
 function TfrmMtoOpeTraspaso.CrearPanelBotonesSolicitudes(
@@ -1326,7 +1365,14 @@ begin
     else if SameText(sCampo, 'SERIE_TRSOL') then
       AVista.Columns[iColumna].Caption := SCaptionColSerieSolicitud
     else if SameText(sCampo, 'FECHA_TRSOL') then
-      AVista.Columns[iColumna].Caption := SCaptionColFechaSolicitud
+    begin
+      AVista.Columns[iColumna].Caption := SCaptionColFechaSolicitud;
+      AVista.Columns[iColumna].PropertiesClass := TcxDateEditProperties;
+      TcxDateEditProperties(
+        AVista.Columns[iColumna].Properties).DisplayFormat :=
+          'dd/mm/yyyy hh:nn:ss';
+      AVista.Columns[iColumna].Width := 165;
+    end
     else if SameText(sCampo, 'CODIGO_ALM_DESTINO_TRSOL') then
       AVista.Columns[iColumna].Caption := SCaptionColPideAlmacen
     else if SameText(sCampo, 'ESTADO_TRSOL') then
@@ -1348,13 +1394,13 @@ begin
   oAtender := TButton.Create(ADialogo);
   oAtender.Parent := APanel;
   oAtender.SetBounds(14, 12, 160, 36);
-  oAtender.Caption := SCaptionAtender;
+  oAtender.Caption := TextoBotonConAtajo(SCaptionAtender, 'F7');
   oAtender.ModalResult := mrYes;
   oAtender.Default := True;
   oNoAtender := TButton.Create(ADialogo);
   oNoAtender.Parent := APanel;
   oNoAtender.SetBounds(186, 12, 160, 36);
-  oNoAtender.Caption := SCaptionNoAtender;
+  oNoAtender.Caption := TextoBotonConAtajo(SCaptionNoAtender, 'F6');
   oNoAtender.ModalResult := mrNo;
   oImprimir := TButton.Create(ADialogo);
   oImprimir.Parent := APanel;
@@ -1364,9 +1410,37 @@ begin
   oSalir := TButton.Create(ADialogo);
   oSalir.Parent := APanel;
   oSalir.SetBounds(606, 12, 140, 36);
-  oSalir.Caption := SCaptionSalir;
+  oSalir.Caption := 'ESC ' + Trim(
+    StringReplace(SCaptionSalir, '&', '', [rfReplaceAll]));
   oSalir.Cancel := True;
   oSalir.ModalResult := mrCancel;
+end;
+
+procedure TfrmMtoOpeTraspaso.ModalSolicitudesKeyDown(
+  Sender: TObject;
+  var Key: Word;
+  Shift: TShiftState);
+begin
+  if Shift = [] then
+  begin
+    case Key of
+      VK_F6:
+      begin
+        Key := 0;
+        TForm(Sender).ModalResult := mrNo;
+      end;
+      VK_F7:
+      begin
+        Key := 0;
+        TForm(Sender).ModalResult := mrYes;
+      end;
+      VK_ESCAPE:
+      begin
+        Key := 0;
+        TForm(Sender).ModalResult := mrCancel;
+      end;
+    end;
+  end;
 end;
 
 function TfrmMtoOpeTraspaso.MostrarModalSolicitudes(
@@ -1425,6 +1499,8 @@ begin
     begin
       txtOrigen.Text :=
         FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+      cboDestino.Text :=
+        FDatos.cdsCabecera.FieldByName('CODIGO_ALM_DESTINO').AsString;
       if AResultadoModal = mrNo then
         PonerCantidadesSolicitudACero;
       ActualizarTotal;
@@ -1491,7 +1567,11 @@ begin
   begin
     if Trim(
       FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
-      ShowMessage(SErrorSolicitudTraspasoCerrarNoCargada)
+      ShowMessage(StringReplace(
+        SErrorSolicitudTraspasoCerrarNoCargada,
+        'F8',
+        'F7',
+        [rfReplaceAll]))
     else if MessageDlg(SPreguntaCerrarSolicitudTraspaso,
       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
@@ -1510,13 +1590,17 @@ var
 begin
   // Deniega TODA la solicitud cargada (atajo F4): pide un motivo, lo marca en
   // cada linea (servir 0) y la resuelve como DENEGADO TOTAL sin mover stock. El
-  // solicitante lo vera en su historico (F7). Para denegar solo algunas
+  // solicitante lo vera en su historico (Mayus+F7). Para denegar solo algunas
   // lineas,// sirve unas con cantidad y deja otras a 0 con su motivo,y pulsa
   // F12.
   if FModo <> mtAtender then
     ShowMessage(SErrorDenegarSolicitudTraspasoModoNoValido)
   else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
-    ShowMessage(SErrorSolicitudTraspasoDenegarNoCargada)
+    ShowMessage(StringReplace(
+      SErrorSolicitudTraspasoDenegarNoCargada,
+      'F8',
+      'F7',
+      [rfReplaceAll]))
   else
   begin
     sMotivo := '';
@@ -1572,7 +1656,7 @@ var
   Datos: TDataSet;
 begin
   // Histórico de las peticiones hechas desde el almacén indicado. El mismo
-  // flujo sirve al acceso rápido F7 y a la entrada directa del menú TPV.
+  // flujo sirve al acceso rápido Mayus+F7 y a la entrada directa del menú TPV.
   Datos := FDatos.QueryMisPeticiones(AAlmacen);
   try
     BusquedaVisual.EjecutarBusquedaDataSet(
@@ -1831,6 +1915,11 @@ begin
     EjecutarTraspaso(False);
 end;
 
+procedure TfrmMtoOpeTraspaso.btnF8Click(Sender: TObject);
+begin
+  QuitarLinea;
+end;
+
 procedure TfrmMtoOpeTraspaso.btnF12Click(Sender: TObject);
 begin
   if FModo = mtSolicitar then
@@ -1879,7 +1968,7 @@ begin
     VK_F8:
     begin
       Key := 0;
-      QuitarLinea;
+      btnF8Click(nil);
     end;
     // F9 queda reservada en caja para abrir el cajon; cerrar la solicitud
     // cargada pasa de F9 a F10.

@@ -123,7 +123,16 @@
       Left = 16
       Top = 20
       Caption = 'Importe traspaso: 0,00'
-      TabOrder = 2
+      TabOrder = 3
+    end
+    object btnF8: TcxButton
+      Left = 330
+      Top = 10
+      Width = 170
+      Height = 40
+      Caption = 'F8 Borrar l'#237'nea'
+      TabOrder = 0
+      OnClick = btnF8Click
     end
     object btnF11: TcxButton
       Left = 520
@@ -131,7 +140,7 @@
       Width = 170
       Height = 40
       Caption = 'F11 Sin ticket'
-      TabOrder = 0
+      TabOrder = 1
       OnClick = btnF11Click
     end
     object btnF12: TcxButton
@@ -140,7 +149,7 @@
       Width = 170
       Height = 40
       Caption = 'F12 Con ticket'
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnF12Click
     end
   end

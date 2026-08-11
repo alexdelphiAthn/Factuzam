@@ -2323,6 +2323,12 @@ begin
       SErrorSkuTraspasoIncompleto);
   ARegistrar(
     'inLibMsgCaja.' +
+    'SErrorSkuTraspasoNoDisponible',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorSkuTraspasoNoDisponible);
+  ARegistrar(
+    'inLibMsgCaja.' +
     'SErrorArticuloSkuTraspasoNoCoincide',
     'src/Lib/inLibMsgCaja.pas',
     @inLibMsgCaja.
@@ -2375,6 +2381,12 @@ begin
     'src/Lib/inLibMsgCaja.pas',
     @inLibMsgCaja.
       SErrorSolicitudTraspasoNoCargada);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorLineaSolicitudTraspasoNoActualizada',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorLineaSolicitudTraspasoNoActualizada);
   ARegistrar(
     'inLibMsgCaja.' +
     'SErrorImpresoraTicketsCajaNoConfigurada',

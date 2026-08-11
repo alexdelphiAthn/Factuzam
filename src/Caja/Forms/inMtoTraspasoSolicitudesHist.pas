@@ -26,6 +26,7 @@ uses
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit,
   cxNavigator, cxDBData, cxContainer, cxLabel, cxTextEdit, cxDBEdit,
   cxCheckBox, cxCalendar, cxMemo, cxCurrencyEdit, cxSplitter,
+  cxButtons,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxClasses, cxDBNavigator,
   dxDateRanges, dxCore, dxScrollbarAnnotations, dxSkinsCore,
@@ -52,7 +53,7 @@ uses
   Vcl.AppEvnts, Vcl.ActnList,
   JvComponentBase, JvEnterTab,
   inMtoGen, inLibPermisosIntf, inLibFotos, inLibRegistroPantallas,
-  UniDataTraspasoSolicitudesHist;
+  inLibCajaPantallaInyeccion, UniDataTraspasoSolicitudesHist;
 
 type
   TfrmMtoTraspasoSolicitudesHist = class(TfrmMtoGen)
@@ -168,16 +169,20 @@ type
     tvMovimientosPRECIO_MEDIO_MOV: TcxGridDBColumn;
     tvMovimientosTOTAL_COSTE_MOV: TcxGridDBColumn;
     lvMovimientosTraspaso: TcxGridLevel;
+    btnListadoSolicitudes: TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure btnListadoSolicitudesClick(Sender: TObject);
   private
     dmmTraspasoSolicitudesHist: TdmTraspasoSolicitudesHist;
     FFotoArticulo: TFotoEmbebida;
+    FDependenciasInforme: TDependenciasInformeCaja;
     FPuedeModificar: Boolean;
     FAnteriorCambioTraspasos: TDataChangeEvent;
     procedure AsegurarDataModule;
     procedure ConfigurarEdicion;
     procedure ConfigurarFuentesDetalle;
+    function DependenciasInformeDisponibles: Boolean;
     procedure ActualizarVisibilidadTraspaso;
     procedure TraspasosDataChange(Sender: TObject; Field: TField);
     procedure EditarSolicitudExecute(Sender: TObject);
@@ -185,12 +190,30 @@ type
     procedure GrabarSolicitudExecute(Sender: TObject);
     procedure GrabarSolicitudUpdate(Sender: TObject);
   public
+    constructor Create(
+      AOwner: TComponent;
+      const APermisos: IPermisosAplicacion;
+      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      overload;
     procedure CrearTablaPrincipal; override;
   end;
 
 implementation
 
+uses
+  inMtoModalImpTraspasoSolicitudes;
+
 {$R *.dfm}
+
+constructor TfrmMtoTraspasoSolicitudesHist.Create(
+  AOwner: TComponent;
+  const APermisos: IPermisosAplicacion;
+  const ADependencias: TDependenciasInformeCaja);
+begin
+  ADependencias.Validar;
+  FDependenciasInforme := ADependencias;
+  inherited Create(AOwner, APermisos);
+end;
 
 procedure TfrmMtoTraspasoSolicitudesHist.AsegurarDataModule;
 begin
@@ -256,6 +279,13 @@ begin
     TraspasosDataChange;
 end;
 
+function TfrmMtoTraspasoSolicitudesHist.
+  DependenciasInformeDisponibles: Boolean;
+begin
+  Result := Assigned(FDependenciasInforme.Repositorio) and
+    Assigned(FDependenciasInforme.CajasDefecto);
+end;
+
 procedure TfrmMtoTraspasoSolicitudesHist.CrearTablaPrincipal;
 begin
   inherited;
@@ -270,11 +300,35 @@ end;
 procedure TfrmMtoTraspasoSolicitudesHist.FormCreate(Sender: TObject);
 begin
   inherited;
+  btnListadoSolicitudes.Visible :=
+    (PuedeImprimir or PuedeExportar) and
+    DependenciasInformeDisponibles;
   FFotoArticulo := TFotoEmbebida.Create(
     FotosArticulos,
     imgFotoArticuloSolicitud,
     dmmTraspasoSolicitudesHist.dsLineas);
   ActualizarVisibilidadTraspaso;
+end;
+
+procedure TfrmMtoTraspasoSolicitudesHist.btnListadoSolicitudesClick(
+  Sender: TObject);
+var
+  oInforme: TfrmPrintTraspasoSolicitudes;
+begin
+  if (PuedeImprimir or PuedeExportar) and
+     DependenciasInformeDisponibles then
+  begin
+    oInforme := TfrmPrintTraspasoSolicitudes.Create(
+      Application,
+      FDependenciasInforme,
+      PuedeImprimir,
+      PuedeExportar);
+    try
+      oInforme.ShowModal;
+    finally
+      FreeAndNil(oInforme);
+    end;
+  end;
 end;
 
 procedure TfrmMtoTraspasoSolicitudesHist.FormDestroy(Sender: TObject);

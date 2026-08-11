@@ -260,15 +260,13 @@ end;
 procedure TFormVisualizador.ExportarAPDF(const Comandos: string;
                                          const RutaArchivo: string);
 var
-  Pdf: TPdfDocumentGDI;
-  Metafile: TMetafile;
-  MetaCanvas: TMetafileCanvas;
-  CanvasBackup: TCanvas;
+  Pdf: TPdfDocument;
   AlturaReal: Integer;
   AltoContenidoPDF: Integer;
   AnchoContenidoPDF: Integer;
   AnchoPaginaPDF: Integer;
   MargenHorizontalPDF: Integer;
+  CajaContenidoPDF: TPdfBox;
 begin
   AlturaReal := Image1.Picture.Bitmap.Height;
   // SynPDF usa puntos (1/72 de pulgada), no píxeles. Mantener la misma
@@ -280,40 +278,21 @@ begin
     AlturaReal, PUNTOS_POR_PULGADA, DPI);
   MargenHorizontalPDF :=
     (AnchoPaginaPDF - AnchoContenidoPDF) div 2;
-  Pdf := TPdfDocumentGDI.Create;
-  Metafile := TMetafile.Create;
+  Pdf := TPdfDocument.Create;
   try
-    Metafile.Width    := ANCHO_PAPEL_PIXELS;
-    Metafile.Height   := AlturaReal;
-    Metafile.MMWidth  := MulDiv(ANCHO_PAPEL_PIXELS, 2540, DPI);
-    Metafile.MMHeight := MulDiv(AlturaReal, 2540, DPI);
-    MetaCanvas := TMetafileCanvas.Create(Metafile, 0);
-    CanvasBackup := FCanvas;
-    FCanvas := MetaCanvas;
-    FRenderMetafile := True;
-    try
-      ReiniciarEstadoTicket;
-      MetaCanvas.Brush.Color := clWhite;
-      MetaCanvas.FillRect(Rect(0, 0, ANCHO_PAPEL_PIXELS, AlturaReal));
-      ProcesarComandosESCPOS(Comandos);
-    finally
-      FRenderMetafile := False;
-      FreeAndNil(MetaCanvas);
-      FCanvas := CanvasBackup;
-    end;
     Pdf.DefaultPaperSize := psUserDefined;
     Pdf.DefaultPageWidth := AnchoPaginaPDF;
     Pdf.DefaultPageHeight := AltoContenidoPDF;
     Pdf.AddPage;
-    PlayEnhMetaFile(Pdf.VCLCanvas.Handle,
-                    Metafile.Handle,
-                    Rect(MargenHorizontalPDF,
-                         0,
-                         MargenHorizontalPDF + AnchoContenidoPDF,
-                         AltoContenidoPDF));
+    // El bitmap ya está renderizado a los 203 ppp de la impresora térmica.
+    // Insertarlo con coordenadas PDF evita que el DPI de Windows vuelva a
+    // escalar el contenido respecto a la página fija de 80 mm.
+    Pdf.ForceJPEGCompression := 0;
+    CajaContenidoPDF := PdfBox(
+      MargenHorizontalPDF, 0, AnchoContenidoPDF, AltoContenidoPDF);
+    Pdf.CreateOrGetImage(Image1.Picture.Bitmap, @CajaContenidoPDF);
     Pdf.SaveToFile(RutaArchivo);
   finally
-    FreeAndNil(Metafile);
     FreeAndNil(Pdf);
   end;
 end;

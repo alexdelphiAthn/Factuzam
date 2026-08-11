@@ -89,6 +89,7 @@ uses
   System.SysUtils,
   System.Classes,
   cxGraphics,
+  dxCoreGraphics,
   cxCheckBox,
   cxTextEdit,
   inLibInventariosPresentacion;

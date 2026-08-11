@@ -48,6 +48,12 @@ type
     ): IResultadoInformeCaja;
     function ConstruirFiltroUbicaciones(
       const AUbicaciones: TUbicacionesInformeCaja): string;
+    function ConstruirFiltroUbicacionesSolicitudes(
+      const AUbicaciones: TUbicacionesInformeCaja): string;
+    function ConstruirFiltroEstadosSolicitudes(
+      const AEstados: TEstadosSolicitudTraspasoCaja): string;
+    function ConstruirSqlSolicitudesTraspaso(
+      const AFiltroUbicaciones, AFiltroEstados: string): string;
     procedure AnadirCabeceraOperacionesVenta(ALineas: TStrings);
     procedure AnadirAtributosOperacionesVenta(ALineas: TStrings);
     procedure AnadirImportesOperacionesVenta(ALineas: TStrings);
@@ -80,6 +86,11 @@ type
     function ListarUbicaciones: TUbicacionesInformeCaja;
     function ConsultarOperacionesVenta(
       const ASolicitud: TSolicitudOperacionesVentaCaja
+    ): IResultadoInformeCaja;
+    function ListarEstadosSolicitudesTraspaso:
+      TEstadosSolicitudTraspasoCaja;
+    function ConsultarSolicitudesTraspaso(
+      const ASolicitud: TSolicitudTraspasosInformeCaja
     ): IResultadoInformeCaja;
     function ConsultarArqueosHistorico(
       const AEmpresa, AAlmacen, ACaja: string
@@ -581,6 +592,214 @@ begin
       oConsulta.ParamByName('pCAJA' + sSufijo).AsString :=
         ASolicitud.Ubicaciones[iUbicacion].Caja;
     end;
+    oConsulta.Open;
+    Result := TResultadoInformeCajaUniDAC.Create(oConsulta);
+    oConsulta := nil;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioInformesCajaUniDAC.
+  ConstruirFiltroUbicacionesSolicitudes(
+  const AUbicaciones: TUbicacionesInformeCaja): string;
+var
+  iUbicacion: Integer;
+  sSufijo: string;
+begin
+  if Length(AUbicaciones) = 0 then
+    Result := '   AND 1 = 0'
+  else
+  begin
+    Result := '   AND (';
+    for iUbicacion := 0 to High(AUbicaciones) do
+    begin
+      if iUbicacion > 0 then
+        Result := Result + sLineBreak + '        OR ';
+      sSufijo := IntToStr(iUbicacion);
+      Result := Result +
+        '(s.CODIGO_EMP_TRSOL = :pEMPRESA' + sSufijo +
+        ' AND s.CODIGO_ALM_DESTINO_TRSOL = :pALMACEN' + sSufijo +
+        ' AND s.CODIGO_CAJA_TRSOL = :pCAJA' + sSufijo + ')';
+    end;
+    Result := Result + ')';
+  end;
+end;
+
+function TRepositorioInformesCajaUniDAC.
+  ConstruirFiltroEstadosSolicitudes(
+  const AEstados: TEstadosSolicitudTraspasoCaja): string;
+var
+  iEstado: Integer;
+begin
+  Result := '';
+  if Length(AEstados) > 0 then
+  begin
+    Result := '   AND s.ESTADO_TRSOL IN (';
+    for iEstado := 0 to High(AEstados) do
+    begin
+      if iEstado > 0 then
+        Result := Result + ', ';
+      Result := Result + ':pESTADO' + IntToStr(iEstado);
+    end;
+    Result := Result + ')';
+  end;
+end;
+
+function TRepositorioInformesCajaUniDAC.
+  ConstruirSqlSolicitudesTraspaso(
+  const AFiltroUbicaciones, AFiltroEstados: string): string;
+var
+  slSQL: TStringList;
+begin
+  slSQL := TStringList.Create;
+  try
+    slSQL.Add('SELECT DATE(:pDESDE) AS FECHA_DESDE,');
+    slSQL.Add('       DATE(:pHASTA) AS FECHA_HASTA,');
+    slSQL.Add('       CONCAT_WS(''|'', s.SERIE_TRSOL,');
+    slSQL.Add('         s.NUMERO_TRSOL) AS CLAVE_SOLICITUD,');
+    slSQL.Add('       s.NUMERO_TRSOL,');
+    slSQL.Add('       s.SERIE_TRSOL,');
+    slSQL.Add('       s.FECHA_TRSOL,');
+    slSQL.Add('       s.INSTANTE_ALTA,');
+    slSQL.Add('       s.ESTADO_TRSOL,');
+    slSQL.Add('       s.CODIGO_EMP_TRSOL,');
+    slSQL.Add('       ep.RAZON_SOCIAL_EMP AS NOMBRE_EMPRESA_TRSOL,');
+    slSQL.Add('       s.CODIGO_ALM_DESTINO_TRSOL,');
+    slSQL.Add('       ad.NOMBRE_ALM_ALM AS NOMBRE_ALMACEN_DESTINO_TRSOL,');
+    slSQL.Add('       s.CODIGO_CAJA_TRSOL,');
+    slSQL.Add('       c.DESCRIPCION_ALMCAJ AS NOMBRE_CAJA_TRSOL,');
+    slSQL.Add('       s.CODIGO_EMP_CONTRA_TRSOL,');
+    slSQL.Add('       ec.RAZON_SOCIAL_EMP AS NOMBRE_EMPRESA_CONTRA_TRSOL,');
+    slSQL.Add('       s.CODIGO_ALM_ORIGEN_TRSOL,');
+    slSQL.Add('       ao.NOMBRE_ALM_ALM AS NOMBRE_ALMACEN_ORIGEN_TRSOL,');
+    slSQL.Add('       s.CODIGO_EMPLEADO_TRSOL,');
+    slSQL.Add('       COALESCE(NULLIF(TRIM(e.NOMBRE_EMPL), ''''),');
+    slSQL.Add('         NULLIF(TRIM(e.DIMINUTIVO_TICKET_EMPL), ''''),');
+    slSQL.Add('         s.CODIGO_EMPLEADO_TRSOL)');
+    slSQL.Add('         AS NOMBRE_EMPLEADO_TRSOL,');
+    slSQL.Add('       s.OBSERVACIONES_TRSOL,');
+    slSQL.Add('       l.LINEA_TRSOLLIN,');
+    slSQL.Add('       l.CODIGO_ART_TRSOLLIN AS CODIGO_ART,');
+    slSQL.Add('       l.CODIGO_UNIDAD_TRSOLLIN AS SKU_UNIDAD,');
+    slSQL.Add('       CASE WHEN l.LINEA_TRSOLLIN IS NULL');
+    slSQL.Add('            THEN ''Sin líneas solicitadas''');
+    slSQL.Add('            ELSE COALESCE(');
+    slSQL.Add('              NULLIF(');
+    slSQL.Add('                TRIM(l.DESCRIPCION_ARTICULO_TRSOLLIN), ''''),');
+    slSQL.Add('              a.DESCRIPCION_ART, '''') END');
+    slSQL.Add('         AS DESCRIPCION_ART,');
+    slSQL.Add('       l.CANTIDAD_PEDIDA_TRSOLLIN,');
+    slSQL.Add('       l.CANTIDAD_SERVIDA_TRSOLLIN,');
+    slSQL.Add('       CASE WHEN l.LINEA_TRSOLLIN IS NULL THEN NULL');
+    slSQL.Add('            ELSE GREATEST(');
+    slSQL.Add('              COALESCE(l.CANTIDAD_PEDIDA_TRSOLLIN, 0) -');
+    slSQL.Add('              COALESCE(l.CANTIDAD_SERVIDA_TRSOLLIN, 0), 0)');
+    slSQL.Add('            END AS CANTIDAD_PENDIENTE_TRSOLLIN,');
+    slSQL.Add('       CASE WHEN l.LINEA_TRSOLLIN IS NULL THEN ''''');
+    slSQL.Add('            WHEN l.ESATENDIDA_TRSOLLIN = ''S''');
+    slSQL.Add('            THEN ''Sí'' ELSE ''No'' END');
+    slSQL.Add('         AS ATENDIDA_TRSOLLIN,');
+    slSQL.Add('       l.MOTIVO_RECHAZO_TRSOLLIN');
+    slSQL.Add('  FROM fza_traspasos_solicitudes s');
+    slSQL.Add('  LEFT JOIN fza_traspasos_solicitudes_lineas l');
+    slSQL.Add('    ON l.NUMERO_TRSOL_TRSOLLIN = s.NUMERO_TRSOL');
+    slSQL.Add('   AND l.SERIE_TRSOL_TRSOLLIN = s.SERIE_TRSOL');
+    slSQL.Add('  LEFT JOIN fza_articulos a');
+    slSQL.Add('    ON a.CODIGO_ART_ART = l.CODIGO_ART_TRSOLLIN');
+    slSQL.Add('  LEFT JOIN fza_empresas ep');
+    slSQL.Add('    ON ep.CODIGO_EMP_EMP = s.CODIGO_EMP_TRSOL');
+    slSQL.Add('  LEFT JOIN fza_empresas ec');
+    slSQL.Add('    ON ec.CODIGO_EMP_EMP = s.CODIGO_EMP_CONTRA_TRSOL');
+    slSQL.Add('  LEFT JOIN fza_almacenes ad');
+    slSQL.Add('    ON ad.CODIGO_ALM_ALM = s.CODIGO_ALM_DESTINO_TRSOL');
+    slSQL.Add('  LEFT JOIN fza_almacenes ao');
+    slSQL.Add('    ON ao.CODIGO_ALM_ALM = s.CODIGO_ALM_ORIGEN_TRSOL');
+    slSQL.Add('  LEFT JOIN fza_almacenes_cajas c');
+    slSQL.Add('    ON c.CODIGO_ALM_ALMCAJ = s.CODIGO_ALM_DESTINO_TRSOL');
+    slSQL.Add('   AND c.CODIGO_CAJA_ALMCAJ = s.CODIGO_CAJA_TRSOL');
+    slSQL.Add('  LEFT JOIN fza_empleados e');
+    slSQL.Add('    ON e.CODIGO_EMPL = s.CODIGO_EMPLEADO_TRSOL');
+    slSQL.Add(' WHERE s.INSTANTE_ALTA >= :pDESDE');
+    slSQL.Add('   AND s.INSTANTE_ALTA <');
+    slSQL.Add('       DATE_ADD(:pHASTA, INTERVAL 1 DAY)');
+    slSQL.Add(AFiltroUbicaciones);
+    if AFiltroEstados <> '' then
+      slSQL.Add(AFiltroEstados);
+    slSQL.Add(' ORDER BY s.INSTANTE_ALTA, s.SERIE_TRSOL,');
+    slSQL.Add('          CAST(s.NUMERO_TRSOL AS UNSIGNED),');
+    slSQL.Add('          l.LINEA_TRSOLLIN');
+    Result := slSQL.Text;
+  finally
+    FreeAndNil(slSQL);
+  end;
+end;
+
+function TRepositorioInformesCajaUniDAC.
+  ListarEstadosSolicitudesTraspaso:
+  TEstadosSolicitudTraspasoCaja;
+var
+  iEstado: Integer;
+  oConsulta: TUniQuery;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text :=
+      'SELECT DISTINCT ESTADO_TRSOL ' +
+      '  FROM fza_traspasos_solicitudes ' +
+      ' WHERE NULLIF(TRIM(ESTADO_TRSOL), '''') IS NOT NULL ' +
+      ' ORDER BY ESTADO_TRSOL';
+    oConsulta.Open;
+    SetLength(Result, oConsulta.RecordCount);
+    iEstado := 0;
+    while not oConsulta.Eof do
+    begin
+      Result[iEstado] :=
+        oConsulta.FieldByName('ESTADO_TRSOL').AsString;
+      Inc(iEstado);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioInformesCajaUniDAC.
+  ConsultarSolicitudesTraspaso(
+  const ASolicitud: TSolicitudTraspasosInformeCaja
+): IResultadoInformeCaja;
+var
+  iEstado: Integer;
+  iUbicacion: Integer;
+  oConsulta: TUniQuery;
+  sSufijo: string;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := ConstruirSqlSolicitudesTraspaso(
+      ConstruirFiltroUbicacionesSolicitudes(
+        ASolicitud.Ubicaciones),
+      ConstruirFiltroEstadosSolicitudes(ASolicitud.Estados));
+    oConsulta.ParamByName('pDESDE').AsDateTime :=
+      Trunc(ASolicitud.FechaDesde);
+    oConsulta.ParamByName('pHASTA').AsDateTime :=
+      Trunc(ASolicitud.FechaHasta);
+    for iUbicacion := 0 to High(ASolicitud.Ubicaciones) do
+    begin
+      sSufijo := IntToStr(iUbicacion);
+      oConsulta.ParamByName('pEMPRESA' + sSufijo).AsString :=
+        ASolicitud.Ubicaciones[iUbicacion].Empresa;
+      oConsulta.ParamByName('pALMACEN' + sSufijo).AsString :=
+        ASolicitud.Ubicaciones[iUbicacion].Almacen;
+      oConsulta.ParamByName('pCAJA' + sSufijo).AsString :=
+        ASolicitud.Ubicaciones[iUbicacion].Caja;
+    end;
+    for iEstado := 0 to High(ASolicitud.Estados) do
+      oConsulta.ParamByName('pESTADO' + IntToStr(iEstado)).AsString :=
+        ASolicitud.Estados[iEstado];
     oConsulta.Open;
     Result := TResultadoInformeCajaUniDAC.Create(oConsulta);
     oConsulta := nil;

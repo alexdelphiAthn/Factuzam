@@ -127,13 +127,15 @@ const
     'DESCRIPCION_ARTICULO_FACLIN, CANTIDAD_FACLIN, ' +
     'PRECIO_VENTA_SIVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
     'PRECIO_VENTA_CIVA_ARTICULO_FACLIN, TOTAL_FACLIN, ' +
+    'TOTAL_FAC_SIVA_FACLIN, ' +
     'INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
     'SELECT :NUMERO, :SERIE, LINEA_FACLIN, CODIGO_ART_FACLIN, ' +
     'TIPO_CANTIDAD_ARTICULO_FACLIN, ESIMP_INCL_TARIFA_FACLIN, ' +
     'TIPO_IVA_ARTICULO_FACLIN, DESCRIPCION_ARTICULO_FACLIN, ' +
     'CANTIDAD_FACLIN, PRECIO_VENTA_SIVA_ARTICULO_FACLIN, ' +
     'PORCENTAJE_IVA_FACLIN, PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
-    'TOTAL_FACLIN, NOW(), NOW(), :USUARIO, :USUARIO ' +
+    'TOTAL_FACLIN, TOTAL_FAC_SIVA_FACLIN, ' +
+    'NOW(), NOW(), :USUARIO, :USUARIO ' +
     'FROM fza_facturas_lineas WHERE SERIE_FAC_FACLIN = :STICKET ' +
     'AND NUMERO_FAC_FACLIN = :NTICKET';
   SQL_ENLAZAR_TICKET =
@@ -141,9 +143,6 @@ const
     'NUMERO_FAC_ABONO_FAC = :NUMERO, INSTANTE_MODIF = NOW(), ' +
     'USUARIO_MODIF = :USUARIO WHERE SERIE_FAC = :STICKET ' +
     'AND NUMERO_FAC = :NTICKET';
-  SQL_RECALCULAR_NETOS =
-    'CALL PRC_CALCULAR_FACTURA_NETOS(:SERIE, :NUMERO)';
-
 type
   TConsultaClientesFacturacionTicketUniDAC = class(
     TInterfacedObject,
@@ -367,11 +366,8 @@ begin
         SQL_ENLAZAR_TICKET,
         ASolicitud,
         Result);
-      EjecutarSqlFactura(
-        oConsulta,
-        SQL_RECALCULAR_NETOS,
-        ASolicitud,
-        Result);
+      // La sustitucion conserva exactamente los importes del ticket. La
+      // cabecera y las lineas ya copian el desglose economico original.
       ValidarRequisitosFiscalesEmision(
         FParametrosApp,
         FConexion,

@@ -325,7 +325,8 @@ begin
         CrearServiciosPropiedadesArticuloUniDAC(
           FComposicion.DmConn.conUni),
         CrearArticulosVariacionesUniDAC(FComposicion.DmConn.conUni),
-        Articulos.CrearRepositorioMargen);
+        Articulos.CrearRepositorioMargen,
+        Articulos.CrearRepositorioGeneracionSkus);
       Formulario := TfrmMtoArticulos.Create(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
