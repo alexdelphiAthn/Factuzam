@@ -91,7 +91,9 @@ type
     FCodigoArticuloBorrado: string;
     FCodigoArticuloTarifaBorrada: string;
     FCodigoArticuloSkuBorrado: string;
+    FPermitirCambiarMarcaWeb: Boolean;
     procedure AsegurarSkuBase(const ACodArt: string);
+    procedure ValidarCambioMarcaWeb(ADataSet: TDataSet);
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
     procedure UpsertCosteSku(const aSku: string;
@@ -124,6 +126,7 @@ type
     // llamadas, igual que antes el GetOwnerForm le devolvia nil.
     procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AsignarVistaStock(AVista: TcxGridDBTableView);
+    procedure AsignarPermisoCambioMarcaWeb(APermitido: Boolean);
     procedure AbrirDetalles; override;
     // En main thread tras AbrirDetalles: reactiva los TDataSource que
     // se desactivaron durante el thread y dispara manualmente el
@@ -1137,6 +1140,7 @@ end;
 
 procedure TdmArticulos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
+  ValidarCambioMarcaWeb(DataSet);
   inherited;
   // Insert vacío (accidental): cancelar sin error
   if (DataSet.State = dsInsert) and
@@ -1152,6 +1156,39 @@ begin
   end
   else
     GetCodigoAutoArticulo;
+end;
+
+procedure TdmArticulos.AsignarPermisoCambioMarcaWeb(APermitido: Boolean);
+begin
+  FPermitirCambiarMarcaWeb := APermitido;
+end;
+
+procedure TdmArticulos.ValidarCambioMarcaWeb(ADataSet: TDataSet);
+var
+  Campo: TField;
+  Cambio: Boolean;
+  EstabaMarcado: Boolean;
+  QuedaMarcado: Boolean;
+begin
+  Campo := ADataSet.FindField('ESWEB_ART');
+  if Assigned(Campo) then
+  begin
+    QuedaMarcado := SameText(Trim(Campo.AsString), 'S');
+    Cambio := False;
+    if ADataSet.State = dsInsert then
+      Cambio := QuedaMarcado
+    else if ADataSet.State = dsEdit then
+    begin
+      EstabaMarcado := SameText(
+        Trim(VarToStr(Campo.OldValue)),
+        'S');
+      Cambio := EstabaMarcado <> QuedaMarcado;
+    end;
+    if Cambio and
+       (not FPermitirCambiarMarcaWeb) then
+      raise EDatabaseError.Create(
+        SErrorPermisoCambiarMarcaWebArticulo);
+  end;
 end;
 
 function TdmArticulos.PrepararClaveTarifa: Integer;

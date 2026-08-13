@@ -31,11 +31,14 @@ procedure EncolarTodosWebPrestaShop(
   AEsPrecio, AEsStock: Boolean;
   const AUsuario: string);
 function LeerCodigoTarifaPrestaShop(
-  AConexion: TUniConnection): string;
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 function LeerCodigoEmpresaPrestaShop(
-  AConexion: TUniConnection): string;
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 function LeerGrupoIvaEmpresaPrestaShop(
-  AConexion: TUniConnection): string;
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 
 implementation
 
@@ -82,8 +85,9 @@ begin
   end;
 end;
 
-function LeerParametroGlobalPrestaShop(
+function LeerParametroPerfilPrestaShop(
   AConexion: TUniConnection;
+  const AUsuario: string;
   const AParametro, ADefecto: string): string;
 var
   oConsulta: TUniQuery;
@@ -95,12 +99,23 @@ begin
   try
     oConsulta.Connection := AConexion;
     oConsulta.SQL.Text :=
-      'SELECT MAX(VALUE_USUPER) AS VALOR ' +
-      'FROM fza_usuarios_perfiles ' +
-      'WHERE USUARIO_GRUPO_USUPER = ''Todos'' ' +
-      'AND KEY_USUPER = ''frmMtoAppParam'' ' +
-      'AND SUBKEY_USUPER = :PARAMETRO';
+      'SELECT P.VALUE_USUPER AS VALOR ' +
+      'FROM fza_usuarios_perfiles P ' +
+      'WHERE P.KEY_USUPER = ''frmMtoAppParam'' ' +
+      'AND P.SUBKEY_USUPER = :PARAMETRO ' +
+      'AND (P.USUARIO_GRUPO_USUPER = :USUARIO ' +
+      'OR P.USUARIO_GRUPO_USUPER = ''Todos'' ' +
+      'OR P.USUARIO_GRUPO_USUPER = (' +
+      'SELECT U.GRUPO_USU FROM fza_usuarios U ' +
+      'WHERE U.USUARIO_USU = :USUARIO)) ' +
+      'ORDER BY CASE ' +
+      'WHEN P.USUARIO_GRUPO_USUPER = :USUARIO THEN 1 ' +
+      'WHEN P.USUARIO_GRUPO_USUPER = (' +
+      'SELECT U.GRUPO_USU FROM fza_usuarios U ' +
+      'WHERE U.USUARIO_USU = :USUARIO) THEN 2 ELSE 3 END ' +
+      'LIMIT 1';
     oConsulta.ParamByName('PARAMETRO').AsString := AParametro;
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
     oConsulta.Open;
     if not oConsulta.FieldByName('VALOR').IsNull then
       Result := Trim(oConsulta.FieldByName('VALOR').AsString);
@@ -110,25 +125,30 @@ begin
 end;
 
 function LeerCodigoTarifaPrestaShop(
-  AConexion: TUniConnection): string;
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 begin
-  Result := LeerParametroGlobalPrestaShop(
+  Result := LeerParametroPerfilPrestaShop(
     AConexion,
+    AUsuario,
     'appPrestaShopTarifa',
     'PVP');
 end;
 
 function LeerCodigoEmpresaPrestaShop(
-  AConexion: TUniConnection): string;
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 begin
-  Result := LeerParametroGlobalPrestaShop(
+  Result := LeerParametroPerfilPrestaShop(
     AConexion,
+    AUsuario,
     'appPrestaShopEmpresa',
     '1');
 end;
 
 function LeerGrupoIvaEmpresaPrestaShop(
-  AConexion: TUniConnection): string;
+  AConexion: TUniConnection;
+  const AUsuario: string): string;
 var
   oConsulta: TUniQuery;
 begin
@@ -143,7 +163,7 @@ begin
       'FROM fza_empresas ' +
       'WHERE CODIGO_EMP_EMP = :EMPRESA';
     oConsulta.ParamByName('EMPRESA').AsString :=
-      LeerCodigoEmpresaPrestaShop(AConexion);
+      LeerCodigoEmpresaPrestaShop(AConexion, AUsuario);
     oConsulta.Open;
     if not oConsulta.IsEmpty then
       Result := Trim(

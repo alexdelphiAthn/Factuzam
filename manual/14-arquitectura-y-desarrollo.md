@@ -188,4 +188,4 @@ posterior no pueda volver a cruzar.
 
 ---
 
-[◀ Aplicaciones móviles](13-aplicaciones-moviles.md) · [Índice](README.md)
+[◀ Aplicaciones móviles](13-aplicaciones-moviles.md) · [Índice](README.md) · [Siguiente ▶ Integración con PrestaShop](15-integracion-prestashop.md)

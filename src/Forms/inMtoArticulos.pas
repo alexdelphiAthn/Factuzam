@@ -511,6 +511,7 @@ type
     FDependencias: TContextoDependenciasArticulos;
     FCodigosBarrasPersistencia: IArticulosCodigosBarrasPersistencia;
     FResolutorDestinoFactura: IResolutorDestinoFactura;
+    FPuedeCambiarMarcaWeb: Boolean;
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure InicializarPresentadores;
@@ -1236,6 +1237,13 @@ begin
   FDependencias.Validar;
   inherited;
   dmmArticulos := tdmDataModule as TdmArticulos;
+  FPuedeCambiarMarcaWeb := Assigned(Permisos) and
+    Permisos.TienePermiso(
+      PERMISO_ARTICULOS_ACTIVAR_DESACTIVAR_WEB,
+      paDenegar);
+  chkEnWeb.Properties.ReadOnly := not FPuedeCambiarMarcaWeb;
+  dmmArticulos.AsignarPermisoCambioMarcaWeb(
+    FPuedeCambiarMarcaWeb);
   FCodigosBarrasPersistencia :=
     CrearArticulosCodigosBarrasPersistenciaUniDAC(ConexionPrincipal);
   FResolutorDestinoFactura :=

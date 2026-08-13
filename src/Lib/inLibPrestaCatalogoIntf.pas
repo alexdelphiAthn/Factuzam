@@ -91,6 +91,16 @@ type
       TRespuestaHttpPresta;
   end;
 
+  // Se separa del contrato de lectura/parche para no romper dobles
+  // existentes que solo prueban la sincronización de precio y stock.
+  ITransporteAltaPresta = interface(ITransportePresta)
+    ['{C505838C-4636-4301-906F-B36893D4841D}']
+    function EjecutarPostXml(const ARecurso, AXml: string):
+      TRespuestaHttpPresta;
+    function EjecutarPostImagen(const ARecurso, ARutaImagen: string):
+      TRespuestaHttpPresta;
+  end;
+
   IClienteCatalogoPresta = interface
     ['{F286E7FB-953B-4CA4-84BA-8A5BD82FE039}']
     // Las búsquedas exigen una única coincidencia de referencia.

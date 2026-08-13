@@ -94,6 +94,8 @@ const
   PERMISO_CAJA_ABRIR_CAJON = 'caja.abrirCajon';
   PERMISO_ARQUEO_VER_RESUMEN = 'arqueo.verResumen';
   PERMISO_ARQUEO_VER_IMPORTES = 'arqueo.verImportes';
+  PERMISO_ARTICULOS_ACTIVAR_DESACTIVAR_WEB =
+    'articulos.activarDesactivarWeb';
 
 function CodigoPermisoMto(const ACall: string;
                            AAccion: TAccionPermisoMto): string;

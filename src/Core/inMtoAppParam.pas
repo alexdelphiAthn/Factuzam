@@ -47,11 +47,9 @@ type
   end;
   TCambiosAppParam = record
     ValoresPerfil: TValoresPerfilAppParam;
-    ValoresGlobales: TValoresPerfilAppParam;
     Guardados: Integer;
     Ignorados: Integer;
     CambioVerifactu: Boolean;
-    CambioPrestaShop: Boolean;
   end;
   TfrmMtoAppParam = class(TFrmBase)
     JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;
@@ -110,7 +108,8 @@ type
                 const Nombre: string): TJvCustomInspectorItem;
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
     procedure AplicarBloqueoParametros;
-    procedure EliminarValoresPrestaShopNoGlobales;
+    function ObtenerGrupoUsuario(
+      const AUsuario: string): string;
     function UsuarioPuedeEditarParametro(const ANombre: string): Boolean;
     function NombreCategoriaInspector(
       const AParametro: TParamInfo): string;
@@ -139,11 +138,6 @@ type
       AInspector: TJvInspector;
       const AValores: TValoresPerfilAppParam;
       var AValoresApi: TValoresApiHistoricos);
-    function CargarValoresPrestaShopGlobales:
-      TValoresPerfilAppParam;
-    procedure AplicarValoresPrestaShopGlobales(
-      AInspector: TJvInspector;
-      const AValores: TValoresPerfilAppParam);
     procedure AplicarValoresApiHistoricos(
       AInspector: TJvInspector;
       var AValores: TValoresApiHistoricos);
@@ -162,7 +156,8 @@ type
     procedure GuardarCambiosPerfil(
       const AAmbito: string;
       const AValores: TValoresPerfilAppParam);
-    procedure GuardarCambiosPrestaShop(
+    procedure AplicarCambiosPrestaShopGuardados(
+      const AAmbito: string;
       const AValores: TValoresPerfilAppParam);
     function AmbitoMensajeGuardado(
       const AAmbito: string;
@@ -232,13 +227,23 @@ end;
 function CambioPrestaShopRequiereReencolado(
   const ANombre: string): Boolean;
 begin
-  Result := SameText(ANombre, 'appPrestaShopActivo') or
+  Result := SameText(
+    ANombre,
+    'appPrestaShopSincronizarStockPrecios') or
+    SameText(ANombre, 'appPrestaShopCrearArticulos') or
+    SameText(ANombre, 'appPrestaShopActivo') or
     SameText(ANombre, 'appPrestaShopStockActivo') or
     SameText(ANombre, 'appPrestaShopUrl') or
     SameText(ANombre, 'appPrestaShopApiKey') or
     SameText(ANombre, 'appPrestaShopTarifa') or
+    SameText(ANombre, 'appPrestaShopReglaIvaNormal') or
+    SameText(ANombre, 'appPrestaShopReglaIvaReducido') or
+    SameText(ANombre, 'appPrestaShopReglaIvaSuperreducido') or
+    SameText(ANombre, 'appPrestaShopReglaIvaExento') or
     SameText(ANombre, 'appPrestaShopEmpresa') or
-    SameText(ANombre, 'appPrestaShopIdTienda');
+    SameText(ANombre, 'appPrestaShopIdTienda') or
+    SameText(ANombre, 'appPrestaShopIdIdioma') or
+    SameText(ANombre, 'appPrestaShopIdCategoriaRaiz');
 end;
 
 function ValoresIncluyenReencoladoPrestaShop(
@@ -252,20 +257,8 @@ begin
       CambioPrestaShopRequiereReencolado(oValor.Subclave);
 end;
 
-function StockPrestaShopActivoEnValores(
-  const AValores: TValoresPerfilAppParam;
-  AParametros: IParametrosAplicacion): Boolean;
-var
-  oValor: TValorPerfilAppParam;
-begin
-  Result := AParametros.GetBool('appPrestaShopStockActivo', False);
-  for oValor in AValores do
-  begin
-    if SameText(oValor.Subclave, 'appPrestaShopStockActivo') then
-      Result := SameText(oValor.Valor, 'True') or
-        (oValor.Valor = '1');
-  end;
-end;
+function EsAmbitoSesionParametros(
+  const AAmbito, AUsuario, AGrupo, ATodos: string): Boolean; forward;
 
 constructor TfrmMtoAppParam.Create(
   AOwner: TComponent;
@@ -277,6 +270,27 @@ begin
     FRepositorioPersistencia,
     'persistencia de parámetros de aplicación');
   inherited Create(AOwner, AContexto);
+end;
+
+function TfrmMtoAppParam.ObtenerGrupoUsuario(
+  const AUsuario: string): string;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := '';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := ConexionPrincipal;
+    oConsulta.SQL.Text :=
+      'SELECT GRUPO_USU FROM fza_usuarios ' +
+      'WHERE USUARIO_USU = :USUARIO';
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.Open;
+    if not oConsulta.Eof then
+      Result := Trim(oConsulta.FieldByName('GRUPO_USU').AsString);
+  finally
+    FreeAndNil(oConsulta);
+  end;
 end;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
@@ -310,27 +324,6 @@ begin
      EsParametroPrestaShop(ANombre) or
      SameText(ANombre, 'appRestringirEmpAlmCaja') then
     Result := SameText(IdentidadSesion.GrupoRaiz, 'S');
-end;
-
-procedure TfrmMtoAppParam.EliminarValoresPrestaShopNoGlobales;
-var
-  Consulta: TUniQuery;
-begin
-  Consulta := TUniQuery.Create(nil);
-  try
-    Consulta.Connection := ConexionPrincipal;
-    Consulta.SQL.Text :=
-      'DELETE FROM fza_usuarios_perfiles ' +
-      ' WHERE KEY_USUPER = :FORMULARIO ' +
-      '   AND SUBKEY_USUPER LIKE :PREFIJO ' +
-      '   AND USUARIO_GRUPO_USUPER <> :TODOS';
-    Consulta.ParamByName('FORMULARIO').AsString := 'frmMtoAppParam';
-    Consulta.ParamByName('PREFIJO').AsString := 'appPrestaShop%';
-    Consulta.ParamByName('TODOS').AsString := oAll;
-    Consulta.Execute;
-  finally
-    FreeAndNil(Consulta);
-  end;
 end;
 
 // -----------------------------------------------------------------------
@@ -452,8 +445,6 @@ begin
   Result := TraducirCategoriaParametro(
     'inMtoAppParam',
     AParametro.Categoria);
-  if SameText(AParametro.Categoria, 'PrestaShop') then
-    Result := Result + ' (global para toda la instalación)';
 end;
 
 function TfrmMtoAppParam.CrearItemInspector(
@@ -1027,36 +1018,10 @@ var
 begin
   for oValor in AValores do
   begin
-    if not EsParametroPrestaShop(oValor.Subclave) then
-    begin
-      RegistrarValorApiHistorico(
-        oValor.Subclave, oValor.Valor, AValoresApi);
-      AplicarValorInspector(
-        AInspector, oValor.Subclave, oValor.Valor);
-    end;
-  end;
-end;
-
-function TfrmMtoAppParam.CargarValoresPrestaShopGlobales:
-  TValoresPerfilAppParam;
-begin
-  Result := FRepositorioPersistencia.CargarValores(
-    oAll,
-    '',
-    'frmMtoAppParam');
-end;
-
-procedure TfrmMtoAppParam.AplicarValoresPrestaShopGlobales(
-  AInspector: TJvInspector;
-  const AValores: TValoresPerfilAppParam);
-var
-  oValor: TValorPerfilAppParam;
-begin
-  for oValor in AValores do
-  begin
-    if EsParametroPrestaShop(oValor.Subclave) then
-      AplicarValorInspector(
-        AInspector, oValor.Subclave, oValor.Valor);
+    RegistrarValorApiHistorico(
+      oValor.Subclave, oValor.Valor, AValoresApi);
+    AplicarValorInspector(
+      AInspector, oValor.Subclave, oValor.Valor);
   end;
 end;
 
@@ -1085,7 +1050,6 @@ procedure TfrmMtoAppParam.CargarParametros(
 var
   oValoresApi: TValoresApiHistoricos;
   aValores: TValoresPerfilAppParam;
-  aValoresGlobales: TValoresPerfilAppParam;
 begin
   FCargandoParametros := True;
   try
@@ -1094,11 +1058,9 @@ begin
     InicializarValoresApiHistoricos(oValoresApi);
     aValores := FRepositorioPersistencia.CargarValores(
       pUsuario, pGrupo, 'frmMtoAppParam');
-    aValoresGlobales := CargarValoresPrestaShopGlobales;
     Grid.BeginUpdate;
     try
       AplicarValoresPerfil(Grid, aValores, oValoresApi);
-      AplicarValoresPrestaShopGlobales(Grid, aValoresGlobales);
       AplicarValoresApiHistoricos(Grid, oValoresApi);
     finally
       Grid.EndUpdate;
@@ -1135,11 +1097,9 @@ procedure TfrmMtoAppParam.InicializarCambiosParametros(
   var ACambios: TCambiosAppParam);
 begin
   SetLength(ACambios.ValoresPerfil, 0);
-  SetLength(ACambios.ValoresGlobales, 0);
   ACambios.Guardados := 0;
   ACambios.Ignorados := 0;
   ACambios.CambioVerifactu := False;
-  ACambios.CambioPrestaShop := False;
 end;
 
 procedure TfrmMtoAppParam.ClasificarCambioParametro(
@@ -1158,27 +1118,13 @@ begin
   begin
     if UsuarioPuedeEditarParametro(AItem.Name) then
     begin
-      if EsParametroPrestaShop(AItem.Name) then
-      begin
-        SetLength(
-          ACambios.ValoresGlobales,
-          Length(ACambios.ValoresGlobales) + 1);
-        ACambios.ValoresGlobales[
-          High(ACambios.ValoresGlobales)].Subclave := AItem.Name;
-        ACambios.ValoresGlobales[
-          High(ACambios.ValoresGlobales)].Valor := sValor;
-        ACambios.CambioPrestaShop := True;
-      end
-      else
-      begin
-        SetLength(
-          ACambios.ValoresPerfil,
-          Length(ACambios.ValoresPerfil) + 1);
-        ACambios.ValoresPerfil[
-          High(ACambios.ValoresPerfil)].Subclave := AItem.Name;
-        ACambios.ValoresPerfil[
-          High(ACambios.ValoresPerfil)].Valor := sValor;
-      end;
+      SetLength(
+        ACambios.ValoresPerfil,
+        Length(ACambios.ValoresPerfil) + 1);
+      ACambios.ValoresPerfil[
+        High(ACambios.ValoresPerfil)].Subclave := AItem.Name;
+      ACambios.ValoresPerfil[
+        High(ACambios.ValoresPerfil)].Valor := sValor;
       Inc(ACambios.Guardados);
       if StartsText('appVerifactu', AItem.Name) then
         ACambios.CambioVerifactu := True;
@@ -1227,37 +1173,42 @@ begin
   end;
 end;
 
-procedure TfrmMtoAppParam.GuardarCambiosPrestaShop(
+procedure TfrmMtoAppParam.AplicarCambiosPrestaShopGuardados(
+  const AAmbito: string;
   const AValores: TValoresPerfilAppParam);
 var
-  EsStockActivo: Boolean;
-  RequiereReencolado: Boolean;
+  bCrearArticulos: Boolean;
+  bSincronizar: Boolean;
 begin
-  if Length(AValores) > 0 then
+  if ValoresIncluyenReencoladoPrestaShop(AValores) and
+     EsAmbitoSesionParametros(
+       AAmbito,
+       IdentidadSesion.Usuario,
+       IdentidadSesion.Grupo,
+       oAll) then
   begin
-    RequiereReencolado :=
-      ValoresIncluyenReencoladoPrestaShop(AValores);
-    EsStockActivo := StockPrestaShopActivoEnValores(
-      AValores, ParametrosApp);
-    FRepositorioPersistencia.GuardarValores(
-      oAll, 'frmMtoAppParam', AValores);
-    EliminarValoresPrestaShopNoGlobales;
-    if RequiereReencolado then
+    FParametrosEdicion.Recargar(
+      IdentidadSesion.Usuario,
+      IdentidadSesion.Grupo);
+    bSincronizar := ParametrosApp.GetBool(
+      'appPrestaShopSincronizarStockPrecios', False);
+    bCrearArticulos := ParametrosApp.GetBool(
+      'appPrestaShopCrearArticulos', False);
+    if bSincronizar or bCrearArticulos then
       EncolarTodosWebPrestaShop(
         ConexionPrincipal,
         True,
-        EsStockActivo,
+        bSincronizar,
         IdentidadSesion.Usuario);
-    ActualizarOriginalesParametros(AValores);
   end;
 end;
 
 function EsAmbitoSesionParametros(
   const AAmbito, AUsuario, AGrupo, ATodos: string): Boolean;
 begin
-  Result := (AAmbito = AUsuario) or
-    (AAmbito = AGrupo) or
-    (AAmbito = ATodos);
+  Result := SameText(AAmbito, AUsuario) or
+    SameText(AAmbito, AGrupo) or
+    SameText(AAmbito, ATodos);
 end;
 
 function TfrmMtoAppParam.AmbitoMensajeGuardado(
@@ -1265,13 +1216,6 @@ function TfrmMtoAppParam.AmbitoMensajeGuardado(
   const ACambios: TCambiosAppParam): string;
 begin
   Result := AAmbito;
-  if ACambios.CambioPrestaShop then
-  begin
-    if Length(ACambios.ValoresPerfil) > 0 then
-      Result := AAmbito + ' y Todos (PrestaShop global)'
-    else
-      Result := 'Todos (PrestaShop global)';
-  end;
 end;
 
 procedure TfrmMtoAppParam.RecargarParametrosGuardados(
@@ -1280,7 +1224,7 @@ procedure TfrmMtoAppParam.RecargarParametrosGuardados(
 var
   sTemaNuevo: string;
 begin
-  if ACambios.CambioPrestaShop or EsAmbitoSesionParametros(
+  if EsAmbitoSesionParametros(
        AAmbito,
        IdentidadSesion.Usuario,
        IdentidadSesion.Grupo,
@@ -1350,7 +1294,9 @@ begin
     InicializarCambiosParametros(oCambios);
     ClasificarCambiosInspector(oCambios);
     GuardarCambiosPerfil(sAmbito, oCambios.ValoresPerfil);
-    GuardarCambiosPrestaShop(oCambios.ValoresGlobales);
+    AplicarCambiosPrestaShopGuardados(
+      sAmbito,
+      oCambios.ValoresPerfil);
     MostrarResultadoGuardado(sAmbito, sTemaAnterior, oCambios);
   end;
 end;
@@ -1432,7 +1378,10 @@ begin
   cmbGrupoUsuario.Visible := True;
   cmbGrupoUsuario.ItemIndex := 0;
   btnChangeId.Visible := False;
-  CargarParametros(JvInspector1, IdentidadSesion.Usuario, '');
+  CargarParametros(
+    JvInspector1,
+    IdentidadSesion.Usuario,
+    IdentidadSesion.Grupo);
   RestaurarLayout;
   if edtBusqueda.CanFocus then
     edtBusqueda.SetFocus;
@@ -1446,7 +1395,10 @@ begin
   if cmbGrupoUsuario.ItemIndex >= 0 then
   begin
     case cmbGrupoUsuario.ItemIndex of
-      0: begin sUsuario := IdentidadSesion.Usuario;  sGrupo := '';     end;
+      0: begin
+           sUsuario := IdentidadSesion.Usuario;
+           sGrupo := IdentidadSesion.Grupo;
+         end;
       1: begin sUsuario := '';     sGrupo := IdentidadSesion.Grupo; end;
       2: begin sUsuario := '';     sGrupo := oAll;   end;
     else
@@ -1454,7 +1406,12 @@ begin
         // Sujeto del desplegable completo (solo visible a administradores):
         // se carga por su nombre tal cual.
         sUsuario := cmbGrupoUsuario.Text;
-        sGrupo   := '';
+        sGrupo := ObtenerGrupoUsuario(sUsuario);
+        if sGrupo = '' then
+        begin
+          sGrupo := sUsuario;
+          sUsuario := '';
+        end;
       end;
     end;
     CargarParametros(JvInspector1, sUsuario, sGrupo);
@@ -1565,7 +1522,10 @@ begin
           ShowMessage(Format(SErrorUsuarioNoEncontrado, [sUsuario]))
         else
         begin
-          CargarParametros(JvInspector1, sUsuario, '');
+          CargarParametros(
+            JvInspector1,
+            sUsuario,
+            ObtenerGrupoUsuario(sUsuario));
           if cmbGrupoUsuario.Properties.Items.IndexOf(sUsuario) < 0 then
             cmbGrupoUsuario.Properties.Items.Add(sUsuario);
           cmbGrupoUsuario.ItemIndex :=

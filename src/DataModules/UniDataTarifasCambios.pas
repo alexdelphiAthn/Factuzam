@@ -506,7 +506,9 @@ begin
     AConsulta.Execute;
     if SameText(
       Trim(sTarifa),
-      LeerCodigoTarifaPrestaShop(AConsulta.Connection)) then
+      LeerCodigoTarifaPrestaShop(
+        AConsulta.Connection,
+        IdentidadSesion.Usuario)) then
       EncolarTodosWebPrestaShop(
         AConsulta.Connection,
         True,

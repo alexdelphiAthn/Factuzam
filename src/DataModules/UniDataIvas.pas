@@ -141,7 +141,9 @@ function TdmIvas.GrupoIvaAfectaPrestaShop(
 var
   sGrupoPrestaShop: string;
 begin
-  sGrupoPrestaShop := LeerGrupoIvaEmpresaPrestaShop(AConexion);
+  sGrupoPrestaShop := LeerGrupoIvaEmpresaPrestaShop(
+    AConexion,
+    IdentidadSesion.Usuario);
   Result := (sGrupoPrestaShop <> '') and
     (SameText(Trim(AGrupoActual), sGrupoPrestaShop) or
      SameText(Trim(AGrupoAnterior), sGrupoPrestaShop));

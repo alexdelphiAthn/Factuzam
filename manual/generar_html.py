@@ -41,6 +41,7 @@ ORDEN = [
     ('12-cambios-y-novedades.md', '12-cambios-y-novedades.html', '12 · Cambios y novedades'),
     ('13-aplicaciones-moviles.md', '13-aplicaciones-moviles.html', '13 · Aplicaciones móviles'),
     ('14-arquitectura-y-desarrollo.md', '14-arquitectura-y-desarrollo.html', '14 · Arquitectura y desarrollo'),
+    ('15-integracion-prestashop.md', '15-integracion-prestashop.html', '15 · Integración con PrestaShop'),
 ]
 MD2HTML = {md: dst for md, dst, _ in ORDEN}
 

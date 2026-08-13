@@ -86,6 +86,12 @@ Mantiene los **almacenes** físicos o lógicos donde se ubica el stock. Cada
 movimiento de stock, inventario o documento de mercancía referencia un
 almacén.
 
+La casilla **En web** indica si un almacén estándar, activo y físico puede
+aportar stock a la tienda online de su empresa. Para cada perfil PrestaShop se
+suman únicamente los almacenes **En web** que pertenecen a la empresa
+configurada; los de otra empresa, taras y depósitos quedan fuera. Consulta
+[Integración con PrestaShop](15-integracion-prestashop.md#almacenes).
+
 Sub-pestañas de la ficha:
 
 - **Dirección física** — ubicación del almacén.
@@ -247,6 +253,21 @@ Sub-pestañas de la ficha:
 Desde la lista/ficha puedes además consultar **stock** y la **foto** del
 artículo con los botones del navegador.
 
+La casilla **En web** incorpora el artículo a la cola de sincronización. No
+lo publica automáticamente. Los productos existentes se localizan por una
+`reference` exacta y única. Si no existe correspondencia, el alta completa
+todavía no se ejecuta y se registra una incidencia; cuando se implemente,
+creará el producto inactivo hasta la revisión del administrador de
+PrestaShop. Consulta
+[Integración con PrestaShop](15-integracion-prestashop.md#articulos).
+
+Al quitar **En web** se dejan de sincronizar tanto el precio como el stock.
+No se envía stock cero ni se desactiva, elimina o modifica el producto en
+PrestaShop.
+
+Solo los usuarios con el permiso **Permisos ▸ Artículos ▸ Activar/desactivar
+web** pueden cambiar esta casilla.
+
 La gestión de fotos trabaja a nivel artículo o SKU/color. Si un SKU no
 tiene foto propia, hereda la del nivel más cercano disponible. Las fotos
 se pueden usar también en tickets, listados y balances.
@@ -272,6 +293,10 @@ artículos.
 Define las **listas de precios** (tarifa general, ofertas, mayoristas…).
 Cada tarifa contiene los precios de los artículos.
 
+La tarifa elegida en la configuración de PrestaShop proporciona el precio
+web. Los precios de SKU se convierten en impactos sobre el precio base; se
+explica en [Precios de producto y de SKU](15-integracion-prestashop.md#6-precios-de-producto-y-de-sku).
+
 - **Artículos** — precios de cada artículo/SKU en esta tarifa. Incluye
   utilidades para **añadir precios** en bloque y **calcular márgenes**.
 - **Otros** — parámetros de la tarifa (vigencia, redondeos, etc.).
@@ -293,6 +318,10 @@ destino cuando estén validadas.
 
 **Clasificación jerárquica** de los artículos (familias y subfamilias).
 Permite agrupar el catálogo para informes, filtros y precios.
+
+En el alta web futura, esta jerarquía se convertirá en categorías de
+PrestaShop sin identificarlas únicamente por el nombre visible. Consulta
+[Familias y categorías](15-integracion-prestashop.md#8-familias-y-categorias).
 
 - **Más Datos** — datos de la familia.
 - **Artículos** — artículos pertenecientes a la familia.

@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>15 · Integración con PrestaShop — Manual de Factuzam</title>
+<link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual de usuario</span></div>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li class="activo"><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+</nav>
+<main>
+<article>
+<h1 id="15-integracion-con-prestashop">15 · Integración con PrestaShop</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>La integración con <strong>PrestaShop</strong> permite que Factuzam sea el origen de los
+precios y del stock de la tienda online cuando se autoriza expresamente su
+sincronización. Los cambios se anotan en una cola y se envían en segundo plano
+mediante la API directa de PrestaShop.</p>
+<p>El diseño previsto también contempla el alta de un artículo que todavía no
+existe en la tienda: familia, producto, combinaciones de talla y color,
+precios e imágenes. Cuando se implemente, todo producto creado por Factuzam
+quedará <strong>inactivo</strong> en PrestaShop hasta que un administrador lo revise y lo
+publique manualmente.</p>
+<blockquote><p><strong>Regla de publicación:</strong> marcar <strong>En web</strong> en Factuzam hace que el artículo
+sea elegible para la integración configurada. No significa «hacer visible en
+la tienda». Las acciones dependen de los checks del perfil y Factuzam nunca
+activa automáticamente un producto nuevo ni cambia posteriormente su estado
+<code>active</code>.</p></blockquote>
+<blockquote><p><strong>Regla al quitar En web:</strong> se detiene la sincronización de <strong>precios y
+stock</strong>. No se desactiva ni borra el producto remoto, no se cambia su precio
+y no se envía stock cero. PrestaShop conserva exactamente su último estado.</p></blockquote>
+<hr>
+<h2 id="1-estado-de-la-integracion">1. Estado de la integración</h2>
+<p>Este capítulo se actualiza a medida que se completa la integración. Conviene
+distinguir lo que ya está disponible de lo que todavía requiere implantación
+y pruebas.</p>
+<table>
+<thead><tr>
+<th>Función</th>
+<th>Estado</th>
+</tr></thead>
+<tbody>
+<tr><td>Configuración por usuario, grupo o <code>Todos</code></td><td>Disponible</td></tr>
+<tr><td>Marca <strong>En web</strong> en artículos</td><td>Disponible</td></tr>
+<tr><td>Marca <strong>En web</strong> en almacenes</td><td>Disponible</td></tr>
+<tr><td>Cola por cambios de precio o stock</td><td>Disponible</td></tr>
+<tr><td>Barrido periódico de recuperación</td><td>Disponible</td></tr>
+<tr><td>Actualización del precio y la cantidad de productos y SKU existentes</td><td>Disponible; requiere <strong>Sincronizar stock y precios</strong></td></tr>
+<tr><td>Localización del producto por <code>reference</code> exacta y única</td><td>Disponible</td></tr>
+<tr><td>Incidencia inmediata ante <code>reference</code> inexistente o ambigua</td><td>Disponible; no realiza ningún <code>POST</code></td></tr>
+<tr><td>Opción <strong>Crear artículos en PrestaShop al darlos de alta</strong></td><td>Disponible, desmarcada; el motor de alta completa sigue pendiente</td></tr>
+<tr><td>Alta de productos, familias, atributos y fotos</td><td>Diseñada; pendiente de implementación y prueba local</td></tr>
+<tr><td>Sincronización con producción</td><td>Desactivada por defecto; ver <a href="#11-seguridad-del-stock">seguridad del stock</a></td></tr>
+</tbody>
+</table>
+<p>La integración actualiza el catálogo remoto, pero no importa automáticamente
+en Factuzam los cambios hechos a mano en las fichas de PrestaShop. Debe
+decidirse qué sistema es responsable de cada dato antes de activarla.</p>
+<hr>
+<h2 id="2-vision-general">2. Visión general</h2>
+<pre><code>Cambio en artículo, tarifa o stock
+               |
+               v
+      Cola de PrestaShop
+               |
+               +---- reference única ----&gt; verifica; actualiza si se autoriza
+               |
+               +---- ninguna reference --&gt; ERROR; alta completa pendiente
+               |
+               `---- varias reference ---&gt; ERROR inmediato, sin POST</code></pre>
+<p>Los checks son independientes. <strong>Sincronizar stock y precios</strong> autoriza las
+modificaciones de productos existentes. <strong>Crear artículos en PrestaShop al
+darlos de alta</strong> solicita actuar cuando falta el producto, pero hasta que esté
+disponible el alta completa Factuzam registra una incidencia explícita y no
+crea ningún recurso parcial. Una referencia ambigua siempre es una incidencia.
+En el futuro, el alta validará el conjunto completo y creará el producto
+inactivo para su revisión.</p>
+<p>Los eventos son el mecanismo principal. El barrido completo es únicamente
+una red de seguridad para recuperar un cambio que no hubiera llegado a la
+cola por una incidencia, una importación antigua o un equipo desconectado.</p>
+<p>Una fila de la cola representa el <strong>artículo completo</strong>. Si cambia el precio
+de un SKU, Factuzam vuelve a calcular el artículo y todas sus combinaciones,
+pero solo envía una modificación para los recursos cuyo valor remoto sea
+distinto.</p>
+<hr>
+<h2 id="3-configuracion-por-ambito">3. Configuración por ámbito</h2>
+<p>La configuración se encuentra en <strong>Otros ▸ Parámetros del entorno</strong>, dentro
+de <strong>PrestaShop</strong>. Se guarda como los demás parámetros: puede definirse para
+un usuario, para un grupo o para <code>Todos</code>. El valor efectivo se obtiene en este
+orden:</p>
+<ol><li>Valor específico del usuario.</li><li>Valor de su grupo, si el usuario no lo ha definido.</li><li>Valor de <code>Todos</code>, si tampoco hay un valor de grupo.</li></ol>
+<p>Un perfil más específico sustituye al general. Así, dos empresas pueden usar
+usuarios o grupos con empresas, tarifas, almacenes y tiendas PrestaShop
+diferentes. Cada sesión procesa únicamente su configuración efectiva; no
+recorre las configuraciones de los demás perfiles.</p>
+<table>
+<thead><tr>
+<th>Parámetro</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Sincronizar stock y precios</strong></td><td>Autoriza al trabajador a actualizar los productos existentes localizados por <code>reference</code> única. También autoriza la escritura de cantidades absolutas. Valor inicial: desmarcado.</td></tr>
+<tr><td><strong>Crear artículos en PrestaShop al darlos de alta</strong></td><td>Solicita el alta cuando no haya correspondencia. Es independiente del check de sincronización y comienza desmarcado. Mientras el alta completa siga pendiente, registra una incidencia sin realizar <code>POST</code>.</td></tr>
+<tr><td><strong>URL</strong></td><td>URL base de la API, terminada normalmente en <code>/api</code>. El valor inicial actual apunta a la tienda de producción y debe revisarse antes de activar.</td></tr>
+<tr><td><strong>Clave API</strong></td><td>Credencial del Webservice. Solo debe verla el administrador raíz y no debe copiarse a mensajes o registros.</td></tr>
+<tr><td><strong>Tarifa</strong></td><td>Está en <strong>Otros ▸ Parámetros del entorno ▸ PrestaShop</strong>, corresponde a la clave <code>appPrestaShopTarifa</code> y su valor inicial es <code>PVP</code>. Se hereda por usuario, grupo o <code>Todos</code>. La tarifa efectiva proporciona el precio del producto padre y de cada SKU; a partir de ellos se calculan los impactos de las combinaciones.</td></tr>
+<tr><td><strong>Empresa</strong></td><td>Empresa empleada para resolver el IVA, obtener el precio sin impuestos y seleccionar sus almacenes web.</td></tr>
+<tr><td><strong>Id. tienda</strong></td><td>Identificador de la tienda dentro de PrestaShop.</td></tr>
+<tr><td><strong>Segundos de ciclo</strong></td><td>Frecuencia con la que el trabajador atiende la cola. Valor inicial: 60.</td></tr>
+<tr><td><strong>Horas entre barridos</strong></td><td>Intervalo del barrido de recuperación. Valor inicial: 24 horas.</td></tr>
+<tr><td><strong>Máximo de intentos</strong></td><td>Reintentos antes de dejar un trabajo en <code>ERROR</code>. Valor inicial: 10.</td></tr>
+</tbody>
+</table>
+<p>Los dos checks nacen desmarcados y se pueden combinar así:</p>
+<table>
+<thead><tr>
+<th>Sincronizar</th>
+<th>Crear</th>
+<th>Producto existente</th>
+<th><code>reference</code> inexistente</th>
+</tr></thead>
+<tbody>
+<tr><td>No</td><td>No</td><td>No se envían cambios.</td><td>No se intenta crear.</td></tr>
+<tr><td>Sí</td><td>No</td><td>Se actualizan precio y stock.</td><td>Incidencia: creación no autorizada.</td></tr>
+<tr><td>No</td><td>Sí</td><td>Se localiza, pero no se modifica.</td><td>Incidencia mientras el alta completa esté pendiente.</td></tr>
+<tr><td>Sí</td><td>Sí</td><td>Se actualizan precio y stock.</td><td>Incidencia mientras el alta completa esté pendiente.</td></tr>
+</tbody>
+</table>
+<p>Antes de marcar <strong>Sincronizar stock y precios</strong>, hay que sustituir o confirmar
+expresamente la URL: el valor inicial actual apunta a producción.</p>
+<p>Las antiguas claves <code>appPrestaShopActivo</code> y <code>appPrestaShopStockActivo</code>, si
+permanecen guardadas tras actualizar una instalación, ya no gobiernan el
+trabajador ni activan nada de forma implícita. Las autorizaciones vigentes son
+los dos checks independientes descritos en la tabla anterior.</p>
+<p>La cola separa cada destino por la URL normalizada y el identificador de
+tienda. Si se cambia de una tienda de pruebas a producción, no se reutilizan
+los identificadores remotos de la instalación anterior. Para dos empresas con
+tiendas distintas deben configurarse destinos distintos.</p>
+<p>Varios perfiles activos pueden compartir la misma URL normalizada e Id. de
+tienda cuando su empresa, tarifa y los dos checks son idénticos. Si el
+trabajador detecta que alguno de esos datos es distinto, considera el destino
+contradictorio, detiene su procesamiento y registra un aviso. No se reanuda
+hasta corregir los perfiles para que sean compatibles o asignarles destinos
+diferentes.</p>
+<h3 id="permisos-de-la-clave-api">Permisos de la clave API</h3>
+<p>La clave debe tener solo los permisos necesarios:</p>
+<table>
+<thead><tr>
+<th>Recurso</th>
+<th>Lectura</th>
+<th>Alta</th>
+<th>Modificación</th>
+</tr></thead>
+<tbody>
+<tr><td><code>products</code></td><td>Sí</td><td>Sí, cuando se implemente el alta</td><td>Sí</td></tr>
+<tr><td><code>combinations</code></td><td>Sí</td><td>Sí, cuando se implemente el alta</td><td>Sí</td></tr>
+<tr><td><code>categories</code></td><td>Sí</td><td>Sí, cuando se implemente el alta</td><td>Sí</td></tr>
+<tr><td><code>product_options</code></td><td>Sí</td><td>Sí, cuando se implemente el alta</td><td>Sí</td></tr>
+<tr><td><code>product_option_values</code></td><td>Sí</td><td>Sí, cuando se implemente el alta</td><td>Sí</td></tr>
+<tr><td><code>images</code></td><td>Sí</td><td>Sí, cuando se implemente el alta</td><td>Sí</td></tr>
+<tr><td><code>stock_availables</code></td><td>Sí</td><td>No</td><td>Sí, con <strong>Sincronizar stock y precios</strong></td></tr>
+<tr><td><code>languages</code>, <code>shops</code>, <code>shop_groups</code> y reglas de IVA</td><td>Sí</td><td>No</td><td>No</td></tr>
+</tbody>
+</table>
+<p>No debe concederse permiso de borrado salvo que se diseñe y autorice una
+operación administrativa concreta. Una recuperación automática nunca debe
+borrar una categoría, talla o color compartidos con otros productos.</p>
+<hr>
+<h2 id="4-seleccion-de-articulos-y-almacenes">4. Selección de artículos y almacenes</h2>
+<h3 id="articulos">Artículos</h3>
+<p>En <strong>Archivo ▸ Artículos</strong>, la casilla <strong>En web</strong> decide si el artículo
+participa en la integración.</p>
+<ul><li>Al marcarla, se encola una comprobación completa del artículo.</li><li>Factuzam busca el producto maestro por coincidencia exacta de su <code>reference</code>.</li><li>Si existe una sola coincidencia, lo verifica y solo actualiza el producto y sus SKU cuando está marcado <strong>Sincronizar stock y precios</strong>.</li><li>Si no existe ninguna o existen varias, registra inmediatamente una incidencia <code>ERROR</code>, sin reintentos transitorios ni peticiones <code>POST</code>.</li><li>Aunque <strong>Crear artículos en PrestaShop al darlos de alta</strong> esté marcado, una referencia inexistente produce hoy una incidencia explícita: el alta completa sigue pendiente y nunca se crea una ficha parcial.</li><li>Al desmarcarla, Factuzam cancela los cambios pendientes de precio y stock y deja de mantenerlo sincronizado.</li></ul>
+<p>Cambiar <strong>En web</strong> requiere el permiso <strong>Permisos ▸ Artículos ▸
+Activar/desactivar web</strong>. Sin ese permiso la casilla queda en solo lectura y
+la grabación tampoco puede alterar la marca.</p>
+<p>Al quitar <strong>En web</strong>, no se realiza ninguna acción de retirada sobre
+PrestaShop:</p>
+<ul><li>no se envía stock cero;</li><li>no se cambia el último precio enviado;</li><li>no se desactiva ni elimina el producto;</li><li>no se eliminan combinaciones, categorías o imágenes.</li></ul>
+<p>Si el administrador desea retirarlo de la página, debe desactivarlo
+manualmente en PrestaShop. Si se vuelve a marcar <strong>En web</strong>, Factuzam encola
+una comprobación completa. El precio y el stock vigentes solo se envían cuando
+el perfil efectivo tiene marcado <strong>Sincronizar stock y precios</strong>.</p>
+<p>Un SKU de un artículo web no se borra físicamente: se marca inactivo en
+Factuzam para conservar su referencia. La integración deja de enviar su
+precio y, con la sincronización habilitada, envía cantidad cero. PrestaShop
+no ofrece un campo <code>active</code> propio en la combinación, por lo que esta
+operación no «desactiva» remotamente el SKU ni lo elimina.</p>
+<h3 id="almacenes">Almacenes</h3>
+<p>En <strong>Archivo ▸ Almacenes</strong>, la casilla <strong>En web</strong> selecciona los almacenes
+cuyo stock se suma para la tienda online. Puede marcarse uno solo o varios,
+pero cada perfil utiliza únicamente los que pertenecen a su empresa
+configurada. Un almacén marcado de otra empresa no participa en ese destino.</p>
+<p>Además de la marca, el almacén debe ser:</p>
+<ul><li>activo;</li><li>físico;</li><li>de tipo de uso <strong>ESTANDAR</strong>.</li></ul>
+<p>Los almacenes de <strong>taras</strong>, depósitos y otros usos no estándar quedan fuera
+aunque alguien intente marcarlos. Las altas de almacenes comienzan con la
+casilla desmarcada.</p>
+<p>Al marcar o desmarcar un almacén se encolan los artículos afectados para
+recalcular el total web. No es necesario recorrerlos manualmente desde la
+pantalla.</p>
+<hr>
+<h2 id="5-cola-eventos-y-barrido-de-recuperacion">5. Cola, eventos y barrido de recuperación</h2>
+<p>Los cambios de precios y de stock en los principales procesos de Factuzam
+llaman al encolador dentro de la misma unidad de trabajo siempre que es
+posible. Varias llamadas para el mismo artículo se agrupan en una sola fila.</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><code>PENDIENTE</code></td><td>Hay una versión por enviar o verificar.</td></tr>
+<tr><td><code>PROCESANDO</code></td><td>Un trabajador ha reclamado temporalmente el artículo.</td></tr>
+<tr><td><code>ENVIADA</code></td><td>La versión reclamada quedó verificada en PrestaShop.</td></tr>
+<tr><td><code>ERROR</code></td><td>Se agotaron los intentos o existe una incidencia terminal que requiere revisión. Una <code>reference</code> inexistente o ambigua llega aquí inmediatamente.</td></tr>
+</tbody>
+</table>
+<p>Si el artículo cambia mientras se está enviando, el cambio nuevo incrementa
+su versión pero no libera la reclamación en curso. Al terminar el envío
+anterior, la fila vuelve a <code>PENDIENTE</code>. Así se evita que dos trabajadores
+escriban versiones antiguas y nuevas en orden inverso.</p>
+<p>Quitar <strong>En web</strong> usa el mismo control de versión, pero deja vacíos los dos
+indicadores de cambio. Una petición que ya estuviera en curso puede terminar;
+después de ella no se reclaman ni envían nuevas versiones del artículo.</p>
+<p>El barrido periódico encola de nuevo los artículos <strong>En web</strong> con la
+frecuencia configurada. Está coordinado por base de datos para que varias
+instancias abiertas de Factuzam no dupliquen el barrido. Un fallo del barrido
+no impide que se siga procesando la cola de eventos.</p>
+<p>Cada sesión reclama solamente la cola del destino que resulta de su perfil
+efectivo. Los destinos quedan aislados por URL normalizada e identificador de
+tienda.</p>
+<p>Antes de atender cada ciclo, el trabajador vuelve a leer de la base de datos
+el perfil efectivo con la herencia usuario → grupo → <code>Todos</code>. Por tanto, un
+cambio o una desactivación guardados en el usuario, su grupo o <code>Todos</code> llegan a
+los terminales que ya están abiertos en el siguiente ciclo, sin reiniciar la
+aplicación.</p>
+<hr>
+<h2 id="6-precios-de-producto-y-de-sku">6. Precios de producto y de SKU</h2>
+<p>PrestaShop guarda los precios sin impuestos:</p>
+<ul><li><code>products.price</code> es el precio base del producto;</li><li><code>combinations.price</code> es el <strong>impacto</strong> de la combinación sobre la base;</li><li>el precio efectivo de un SKU es la suma de ambos.</li></ul>
+<p>Factuzam obtiene el precio final vigente de la tarifa y la empresa del perfil
+efectivo. Si la tarifa incluye IVA, lo divide por
+<code>1 + tipo de IVA / 100</code> antes de enviarlo.
+En los productos que ya existen, la integración actual no cambia ni valida
+<code>id_tax_rules_group</code>: el administrador debe comprobar que la regla fiscal
+remota sea correcta. El alta futura exigirá un mapeo explícito entre el IVA
+local y el grupo fiscal de PrestaShop; no bastará con que ambos muestren el
+mismo porcentaje.</p>
+<p>Ejemplo con IVA del 21 %:</p>
+<table>
+<thead><tr>
+<th>Concepto</th>
+<th>Precio con IVA</th>
+<th>Precio sin IVA enviado</th>
+</tr></thead>
+<tbody>
+<tr><td>Producto base</td><td>31,95</td><td>26,404959</td></tr>
+<tr><td>SKU con precio propio</td><td>29,95</td><td>24,752066</td></tr>
+<tr><td>Impacto de la combinación</td><td>—</td><td>-1,652893</td></tr>
+</tbody>
+</table>
+<p>No debe enviarse <code>29,95</code> directamente como <code>combinations.price</code>, porque
+PrestaShop lo sumaría otra vez al precio base.</p>
+<p>Cuando cambia únicamente un SKU, en PrestaShop 9 se puede modificar solo su
+combinación. Factuzam, aun así, recalcula y verifica todas las combinaciones
+del artículo. Si cambia el precio base, recalcula todos los impactos para
+que los precios efectivos de los demás SKU permanezcan correctos.</p>
+<p>Este comportamiento se verificó en la tienda local PrestaShop 9.1.4 con un
+producto de tres combinaciones. Al modificar únicamente un impacto, el precio
+base y las otras dos combinaciones conservaron sus valores. La prueba confirmó
+también que <code>combinations.price</code> es un impacto y no el precio final del SKU.</p>
+<hr>
+<h2 id="7-alta-de-un-articulo-inexistente">7. Alta de un artículo inexistente</h2>
+<p>El check <strong>Crear artículos en PrestaShop al darlos de alta</strong> está disponible,
+comienza desmarcado y es independiente de <strong>Sincronizar stock y precios</strong>. El
+alta completa aún no está implementada. Por ello, una <code>reference</code> inexistente
+termina actualmente en <code>ERROR</code> con una causa explícita y sin ejecutar ningún
+<code>POST</code>, aunque se haya autorizado crear. Una referencia ambigua también
+termina en <code>ERROR</code> y nunca provoca un alta.</p>
+<p>La siguiente secuencia es el <strong>diseño del alta pendiente de implementar</strong>.
+No es una sola petición, sino una operación reanudable contra varios recursos
+de PrestaShop:</p>
+<ol><li>Validar todos los datos locales sin crear nada todavía.</li><li>Resolver o crear, como inactivas, las categorías nuevas de la familia.</li><li>Resolver o crear los grupos de atributos, como <strong>Color</strong> y <strong>Talla</strong>.</li><li>Resolver o crear los valores utilizados por los SKU.</li><li>Crear el producto maestro con <code>active=0</code>.</li><li>Crear una combinación por cada SKU activo y elegir una sola combinación predeterminada de forma determinista.</li><li>Subir la fotografía general real y las fotografías por color.</li><li>Asociar cada imagen de color a sus combinaciones.</li><li>Resolver y verificar los registros de stock, si su envío está autorizado.</li><li>Leer nuevamente todo el producto y dejarlo pendiente de revisión.</li></ol>
+<p>El resultado previsto del alta es <strong>creado, completo e inactivo</strong>. El futuro
+servicio podrá seguir actualizando después precios, combinaciones e imágenes,
+pero no dispondrá de una operación para cambiar <code>active</code>.</p>
+<h3 id="validacion-previa">Validación previa</h3>
+<p>Antes del primer <code>POST</code> deben comprobarse, al menos:</p>
+<ul><li>código de artículo y referencias de SKU no vacíos ni duplicados;</li><li>artículo, familia, tarifa y atributos activos;</li><li>jerarquía de familias completa y sin ciclos;</li><li>nombre y descripción válidos para los límites de PrestaShop;</li><li>precio base vigente y precio efectivo de cada SKU;</li><li>correspondencia del IVA con un grupo fiscal remoto;</li><li>un valor válido por cada eje de variación necesario;</li><li>fotografía real registrada, existente y legible;</li><li>ausencia inequívoca del producto y de sus referencias en PrestaShop.</li></ul>
+<p>Cuando se implemente, si falta un requisito el artículo quedará en <code>ERROR</code>
+con una causa concreta y no se creará un producto incompleto.</p>
+<h3 id="revision-del-administrador">Revisión del administrador</h3>
+<p>Cuando el alta esté implementada, el administrador entrará en el back office
+de PrestaShop y comprobará:</p>
+<ol><li>Nombre, descripción y categoría.</li><li>Tipo y regla de IVA.</li><li>Tallas, colores y combinación predeterminada.</li><li>Precio final de varias combinaciones, incluidas las de impacto negativo.</li><li>Fotografía de portada e imágenes por color.</li><li>Política de stock y disponibilidad para pedidos.</li></ol>
+<p>Solo entonces activa manualmente las categorías nuevas necesarias y el
+producto. Factuzam respetará esa decisión y no modificará el estado de
+publicación.</p>
+<hr>
+<h2 id="8-familias-y-categorias">8. Familias y categorías</h2>
+<p>En el alta futura, la familia de Factuzam se transformará en una categoría de
+PrestaShop. La jerarquía se recorrerá desde la familia raíz hasta la hoja del
+artículo; los padres se crearán antes que sus hijos. Una categoría ya
+existente conservará su estado. Toda categoría creada por la integración
+quedará inactiva hasta la revisión manual, para que no aparezca una rama
+vacía en la tienda.</p>
+<p>La identidad no puede basarse solo en el nombre. Dos ramas pueden contener
+una categoría llamada igual. Se guarda una correspondencia por:</p>
+<pre><code>instalación + tienda + código de familia local -&gt; id_category remoto</code></pre>
+<p>El producto usa la familia hoja como <code>id_category_default</code> y también la
+incluye entre sus asociaciones de categorías. La categoría raíz bajo la que
+se exportan las familias debe ser configurable en cada tienda.</p>
+<hr>
+<h2 id="9-tallas-colores-y-combinaciones">9. Tallas, colores y combinaciones</h2>
+<p>Los atributos locales de una variación se convierten así:</p>
+<table>
+<thead><tr>
+<th>Factuzam</th>
+<th>PrestaShop</th>
+</tr></thead>
+<tbody>
+<tr><td>Tipo o eje <strong>Talla</strong></td><td><code>product_option</code>, tipo <code>select</code></td></tr>
+<tr><td>Valor <strong>M</strong>, <strong>L</strong>, <strong>44</strong>…</td><td><code>product_option_value</code></td></tr>
+<tr><td>Tipo o eje <strong>Color</strong></td><td><code>product_option</code>, tipo <code>color</code></td></tr>
+<tr><td>Valor <strong>Negro</strong>, <strong>Azul</strong>…</td><td><code>product_option_value</code>, con color hexadecimal cuando exista</td></tr>
+<tr><td>SKU</td><td><code>combination</code></td></tr>
+</tbody>
+</table>
+<p>Cada combinación conservará como <code>reference</code> el código exacto del SKU local y
+asociará todos sus valores, por ejemplo <strong>Color: Azul</strong> y <strong>Talla: L</strong>. Solo
+se crearán SKU activos. Después se marcará como predeterminada una única
+combinación: la primera según el orden estable de atributos y referencia.</p>
+<p>Las tallas y los colores son recursos compartidos. Se guardan sus IDs
+remotos para no crear otra talla <strong>L</strong> o color <strong>Negro</strong> por cada artículo.
+Si existen varias coincidencias remotas y no puede saberse cuál es la
+correcta, el alta se detiene para revisión en lugar de escoger una al azar.</p>
+<hr>
+<h2 id="10-fotografias-reales">10. Fotografías reales</h2>
+<p>Factuzam registra las fotos por artículo, por prefijo de SKU —habitualmente
+el color— o por SKU completo. La integración usa la resolución <strong>real</strong>:</p>
+<pre><code>&lt;appDirFotos&gt;\real\&lt;nombre registrado&gt;.png</code></pre>
+<p>La extensión de origen guardada en la base de datos es informativa. El
+fichero operativo que genera Factuzam es PNG.</p>
+<p>En el alta futura, la fotografía general se subirá como imagen del producto y
+portada. Una foto de color se subirá una sola vez y se asociará a todas las
+tallas de ese color. PrestaShop genera automáticamente los tamaños derivados
+de la imagen recibida.</p>
+<p>Para que un reintento no duplique fotografías se guarda el ID remoto y la
+huella SHA-256 del fichero. Si cambia la foto real, cambia la huella y puede
+programarse su actualización de forma controlada.</p>
+<blockquote><p>En una instalación donde <code>fza_articulos_fotos</code> esté vacía, la existencia
+de ficheros sueltos en la carpeta no basta. Primero deben relacionarse las
+fotos con sus artículos o SKU. No se adivina esa relación por el nombre del
+fichero.</p></blockquote>
+<hr>
+<h2 id="11-seguridad-del-stock">11. Seguridad del stock</h2>
+<p>El stock web se calcula sumando solo los almacenes elegibles y limitando el
+resultado mínimo a cero. El almacén de taras nunca participa.</p>
+<p>Sin embargo, el Webservice estándar de PrestaShop recibe una cantidad
+absoluta. Si una venta web todavía no está reservada automáticamente en
+Factuzam, un movimiento local posterior podría volver a escribir una
+cantidad que reponga unidades ya vendidas.</p>
+<p>Por este motivo:</p>
+<ul><li><strong>Sincronizar stock y precios</strong> permanece desmarcado de forma predeterminada;</li><li>el check vigente autoriza conjuntamente el precio y el stock: no existe una autorización separada del stock en el trabajador actual;</li><li>no debe marcarse en producción hasta disponer de ingestión o reserva automática de pedidos web y pruebas completas de concurrencia;</li><li>los servicios, taras, depósitos y almacenes no estándar quedan excluidos.</li></ul>
+<p>El stock compartido entre tiendas tampoco está soportado actualmente. El
+cliente exige una fila <code>stock_available</code> perteneciente exactamente a la
+tienda configurada y falla de forma segura si PrestaShop usa <code>id_shop=0</code> con
+un grupo de tiendas. Ese modo necesitará validar antes <code>share_stock</code> y el
+grupo efectivo.</p>
+<p>Esta cautela no impedirá el alta futura de familias, producto, combinaciones,
+precios o imágenes. El producto nuevo podrá quedar preparado e inactivo con
+stock cero hasta que el administrador revise la política.</p>
+<hr>
+<h2 id="12-reintentos-y-prevencion-de-duplicados">12. Reintentos y prevención de duplicados</h2>
+<p>La API no ofrece una transacción única para crear todo el catálogo. El diseño
+del alta futura la trata como una secuencia con puntos de control:</p>
+<pre><code>VALIDAR -&gt; CATEGORIAS -&gt; ATRIBUTOS -&gt; PRODUCTO_INACTIVO
+        -&gt; SKU -&gt; IMAGENES -&gt; VERIFICADO_INACTIVO</code></pre>
+<p>Después de cada paso se guarda el ID remoto y se verifica el recurso. Si se
+corta la red, el siguiente intento continúa desde el último punto confirmado.</p>
+<p>Reglas de seguridad:</p>
+<ul><li>una referencia ambigua nunca provoca un alta nueva;</li><li>producto y SKU se resuelven por referencia exacta y relación padre;</li><li>categorías y atributos usan correspondencias persistentes, no solo texto;</li><li>dos artículos que comparten familia o talla coordinan su creación;</li><li>una imagen se identifica además por su huella;</li><li>un fallo nunca activa el producto;</li><li>los recursos compartidos no se borran como compensación automática.</li></ul>
+<hr>
+<h2 id="13-diagnostico-de-incidencias">13. Diagnóstico de incidencias</h2>
+<table>
+<thead><tr>
+<th>Incidencia</th>
+<th>Comprobación</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>401 / 403</strong></td><td>Revisar clave API y permisos; no copiar la clave en el parte de soporte.</td></tr>
+<tr><td><strong>Producto no encontrado</strong></td><td>Se registra <code>ERROR</code> inmediato y no se realiza <code>POST</code>. Confirmar la <code>reference</code> exacta. Marcar <strong>Crear artículos en PrestaShop al darlos de alta</strong> todavía no ejecuta el alta pendiente.</td></tr>
+<tr><td><strong>Referencia ambigua</strong></td><td>Se registra <code>ERROR</code> inmediato. Corregir duplicados en PrestaShop; Factuzam no elige uno ni crea otro automáticamente.</td></tr>
+<tr><td><strong>Categoría o talla duplicada</strong></td><td>Revisar el mapeo de instalación y tienda, no solo el nombre visible.</td></tr>
+<tr><td><strong>Precio de SKU demasiado alto</strong></td><td>Comprobar que se envía un impacto y no el precio final como <code>combinations.price</code>.</td></tr>
+<tr><td><strong>Foto no encontrada</strong></td><td>Revisar <code>appDirFotos</code>, la fila de <code>fza_articulos_fotos</code> y el PNG de <code>real</code>.</td></tr>
+<tr><td><strong>Almacén no incluido</strong></td><td>Debe estar En web, activo, físico y ser de uso ESTANDAR.</td></tr>
+<tr><td><strong>Artículo nuevo no aparece en la página</strong></td><td>Actualmente no se crea: queda una incidencia explícita incluso con el check de creación marcado. Cuando se implemente el alta completa, quedará inactivo hasta que el administrador lo publique.</td></tr>
+<tr><td><strong>Artículo desmarcado sigue visible</strong></td><td>Es el comportamiento previsto: quitar En web solo detiene precio y stock. Desactívelo manualmente en PrestaShop si desea retirarlo.</td></tr>
+<tr><td><strong>Fila en ERROR</strong></td><td>Corregir la causa y reencolar. En el alta futura, el reintento continuará sin duplicar lo ya creado.</td></tr>
+</tbody>
+</table>
+<p>Los mensajes de error y los registros nunca deben incluir la clave API.</p>
+<hr>
+<h2 id="14-lista-de-comprobacion-para-una-implantacion">14. Lista de comprobación para una implantación</h2>
+<ol><li>Aplicar la migración de base de datos y comprobar las marcas <strong>En web</strong>.</li><li>Sustituir la URL inicial de producción por una tienda de pruebas de la misma versión que la tienda real.</li><li>Crear una clave API de mínimo privilegio.</li><li>Configurar el ámbito correcto —usuario, grupo o <code>Todos</code>—, URL, tienda, empresa y tarifa con ambos checks desmarcados.</li><li>Marcar únicamente los almacenes estándar que aportarán stock web.</li><li>Revisar familias, IVA, SKU, atributos, precios y fotos reales.</li><li>Probar un artículo con varios colores, tallas y precios por SKU.</li><li>Confirmar que una <code>reference</code> inexistente o ambigua deja un <code>ERROR</code> inmediato sin crear recursos.</li><li>Mantener <strong>Crear artículos en PrestaShop al darlos de alta</strong> desmarcado hasta que se implante y pruebe el alta completa.</li><li>Comprobar la reserva o ingestión automática de pedidos web antes de autorizar cantidades absolutas.</li><li>Marcar <strong>Sincronizar stock y precios</strong> únicamente después de completar todas las comprobaciones.</li><li>Cuando se implemente el alta, repetirla para confirmar que conserva IDs, no duplica recursos y deja el producto completo pero inactivo.</li></ol>
+<p>Las pruebas de desarrollo se realizan únicamente contra la instalación local
+actual de PrestaShop. No se hacen altas ni modificaciones de prueba en la
+tienda de producción.</p>
+<hr>
+<h2 id="15-referencias-tecnicas-oficiales">15. Referencias técnicas oficiales</h2>
+<ul><li><a href="https://devdocs.prestashop-project.org/9/webservice/tutorials/create-product-az/">Creación completa de un producto con Webservice</a></li><li><a href="https://devdocs.prestashop-project.org/9/webservice/resources/products/">Recurso <code>products</code></a></li><li><a href="https://devdocs.prestashop-project.org/9/webservice/resources/combinations/">Recurso <code>combinations</code></a></li><li><a href="https://devdocs.prestashop-project.org/9/webservice/resources/product_options/">Grupos de atributos</a></li><li><a href="https://devdocs.prestashop-project.org/9/webservice/resources/product_option_values/">Valores de atributos</a></li><li><a href="https://devdocs.prestashop-project.org/9/webservice/tutorials/advanced-use/image-management/">Gestión de imágenes</a></li></ul>
+<hr>
+<p><a href="14-arquitectura-y-desarrollo.html">◀ Arquitectura y desarrollo</a> · <a href="index.html">Índice</a></p>
+</article>
+<footer>Manual de Factuzam · generado el 13/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+</script>
+</body>
+</html>

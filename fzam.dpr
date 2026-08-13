@@ -871,6 +871,13 @@ uses
   inLibVentasWsCola in 'src\Lib\inLibVentasWsCola.pas',
   inLibPrestaCatalogoIntf in 'src\Lib\inLibPrestaCatalogoIntf.pas',
   inLibPrestaCatalogo in 'src\Lib\inLibPrestaCatalogo.pas',
+  inLibPrestaCatalogoAltaIntf in
+    'src\Lib\inLibPrestaCatalogoAltaIntf.pas',
+  inLibPrestaCatalogoAlta in 'src\Lib\inLibPrestaCatalogoAlta.pas',
+  inLibPrestaShopAltaArticuloIntf in
+    'src\Lib\inLibPrestaShopAltaArticuloIntf.pas',
+  UniDataPrestaShopAltaArticulo in
+    'src\DataModules\UniDataPrestaShopAltaArticulo.pas',
   inLibPrestaShopColaIntf in 'src\Lib\inLibPrestaShopColaIntf.pas',
   UniDataPrestaShopCola in
     'src\DataModules\UniDataPrestaShopCola.pas',

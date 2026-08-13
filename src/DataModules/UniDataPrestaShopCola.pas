@@ -25,7 +25,7 @@ function CrearRepositorioPrestaShopColaUniDAC(
 implementation
 
 uses
-  System.Math, System.SysUtils, Data.DB;
+  System.Math, System.StrUtils, System.SysUtils, Data.DB;
 
 type
   TRepositorioPrestaShopColaUniDAC = class(
@@ -50,11 +50,14 @@ type
       const ACodigoArticulo, ACodigoUnidad: string;
       AEsPrecio, AEsStock: Boolean;
       const AUsuario: string);
-    function LeerConfiguracionGlobal:
-      TConfiguracionGlobalPrestaShop;
+    function LeerConfiguracionPerfil(
+      const AUsuario, AGrupo: string): TConfiguracionGlobalPrestaShop;
+    function DestinoSinConflictos(
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AUsuario: string): Boolean;
     procedure ReconciliarSiProcede(
+      const AConfiguracion: TConfiguracionPrestaShopCola;
       AHoras: Integer;
-      AStockActivo: Boolean;
       const AUsuario: string);
     procedure ReencolarProcesandoCaducadas(
       const AClaveInstalacion: string;
@@ -76,6 +79,9 @@ type
       const AConfiguracion: TConfiguracionPrestaShopCola):
       TTrabajoArticuloPrestaShop;
     function RenovarReclamacion(
+      AIdCola: Int64;
+      const AToken: string): Boolean;
+    function MarcarAltaEnCurso(
       AIdCola: Int64;
       const AToken: string): Boolean;
     procedure MarcarEnviada(
@@ -330,89 +336,232 @@ begin
   end;
 end;
 
-function TRepositorioPrestaShopColaUniDAC.LeerConfiguracionGlobal:
-  TConfiguracionGlobalPrestaShop;
+function TRepositorioPrestaShopColaUniDAC.LeerConfiguracionPerfil(
+  const AUsuario, AGrupo: string): TConfiguracionGlobalPrestaShop;
 var
   oConsulta: TUniQuery;
-
-  function Valor(const ACampo, ADefecto: string): string;
-  begin
-    Result := ADefecto;
-    if not oConsulta.FieldByName(ACampo).IsNull then
-      Result := oConsulta.FieldByName(ACampo).AsString;
-  end;
-
+  sNombre: string;
+  sValor: string;
 begin
   Result := Default(TConfiguracionGlobalPrestaShop);
+  Result.UrlApi := 'https://www.martamere.com/api';
   Result.SegundosCiclo := 60;
   Result.HorasBarrido := 24;
   Result.MaxIntentos := 10;
   Result.Cola.CodigoEmpresa := '1';
   Result.Cola.CodigoTarifa := 'PVP';
   Result.Cola.IdTienda := 1;
+  Result.Cola.IdIdioma := 1;
+  Result.Cola.IdCategoriaRaiz := 2;
+  Result.Cola.IdReglaIvaNormal := 1;
+  Result.Cola.IdReglaIvaReducido := 2;
+  Result.Cola.IdReglaIvaSuperreducido := 3;
+  Result.Cola.IdReglaIvaExento := 0;
   oConsulta := NuevaConsulta;
   try
     oConsulta.SQL.Text :=
-      'SELECT ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopActivo'' ' +
-      'THEN VALUE_USUPER END) AS ACTIVO, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopStockActivo'' ' +
-      'THEN VALUE_USUPER END) AS STOCK_ACTIVO, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopUrl'' ' +
-      'THEN VALUE_USUPER END) AS URL_API, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopApiKey'' ' +
-      'THEN VALUE_USUPER END) AS CLAVE_API, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopEmpresa'' ' +
-      'THEN VALUE_USUPER END) AS EMPRESA, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopTarifa'' ' +
-      'THEN VALUE_USUPER END) AS TARIFA, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopIdTienda'' ' +
-      'THEN VALUE_USUPER END) AS TIENDA, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopSegundosCiclo'' ' +
-      'THEN VALUE_USUPER END) AS SEGUNDOS, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopHorasBarrido'' ' +
-      'THEN VALUE_USUPER END) AS HORAS_BARRIDO, ' +
-      'MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopMaxIntentos'' ' +
-      'THEN VALUE_USUPER END) AS INTENTOS ' +
-      'FROM fza_usuarios_perfiles ' +
-      'WHERE USUARIO_GRUPO_USUPER = ''Todos'' ' +
-      'AND KEY_USUPER = ''frmMtoAppParam'' ' +
-      'AND SUBKEY_USUPER LIKE ''appPrestaShop%''';
+      'CALL PRC_GETPERFILFORMULARIO(' +
+      ':USUARIO, :GRUPO, :FORMULARIO)';
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.ParamByName('GRUPO').AsString := AGrupo;
+    oConsulta.ParamByName('FORMULARIO').AsString :=
+      'frmMtoAppParam';
     oConsulta.Open;
-    Result.Activo := SameText(Valor('ACTIVO', 'False'), 'True') or
-      (Valor('ACTIVO', '0') = '1');
-    Result.Cola.StockActivo :=
-      SameText(Valor('STOCK_ACTIVO', 'False'), 'True') or
-      (Valor('STOCK_ACTIVO', '0') = '1');
-    Result.UrlApi := Trim(Valor(
-      'URL_API',
-      'https://www.martamere.com/api'));
-    Result.ClaveApi := Trim(Valor('CLAVE_API', ''));
-    Result.Cola.CodigoEmpresa := Trim(Valor('EMPRESA', '1'));
-    Result.Cola.CodigoTarifa := Trim(Valor('TARIFA', 'PVP'));
-    Result.Cola.IdTienda := StrToIntDef(Valor('TIENDA', '1'), 1);
-    Result.SegundosCiclo :=
-      StrToIntDef(Valor('SEGUNDOS', '60'), 60);
-    Result.HorasBarrido :=
-      StrToIntDef(Valor('HORAS_BARRIDO', '24'), 24);
-    Result.MaxIntentos :=
-      StrToIntDef(Valor('INTENTOS', '10'), 10);
-    if Result.SegundosCiclo < 5 then
-      Result.SegundosCiclo := 5;
-    if Result.HorasBarrido < 1 then
-      Result.HorasBarrido := 1;
-    if Result.HorasBarrido > 720 then
-      Result.HorasBarrido := 720;
-    if Result.MaxIntentos < 1 then
-      Result.MaxIntentos := 1;
+    while not oConsulta.Eof do
+    begin
+      sNombre := oConsulta.FieldByName('SUBKEY_USUPER').AsString;
+      sValor := oConsulta.FieldByName('VALUE_USUPER').AsString;
+      if SameText(
+           sNombre,
+           'appPrestaShopSincronizarStockPrecios') then
+        Result.SincronizarStockPrecios := SameText(sValor, 'True') or
+          (sValor = '1') or SameText(sValor, 'S')
+      else if SameText(sNombre, 'appPrestaShopCrearArticulos') then
+        Result.CrearArticulos := SameText(sValor, 'True') or
+          (sValor = '1') or SameText(sValor, 'S')
+      else if SameText(sNombre, 'appPrestaShopUrl') then
+        Result.UrlApi := Trim(sValor)
+      else if SameText(sNombre, 'appPrestaShopApiKey') then
+        Result.ClaveApi := Trim(sValor)
+      else if SameText(sNombre, 'appPrestaShopEmpresa') then
+        Result.Cola.CodigoEmpresa := Trim(sValor)
+      else if SameText(sNombre, 'appPrestaShopTarifa') then
+        Result.Cola.CodigoTarifa := Trim(sValor)
+      else if SameText(sNombre, 'appPrestaShopIdTienda') then
+        Result.Cola.IdTienda := StrToIntDef(sValor, 1)
+      else if SameText(sNombre, 'appPrestaShopIdIdioma') then
+        Result.Cola.IdIdioma := StrToIntDef(sValor, 1)
+      else if SameText(sNombre, 'appPrestaShopIdCategoriaRaiz') then
+        Result.Cola.IdCategoriaRaiz := StrToIntDef(sValor, 2)
+      else if SameText(sNombre, 'appPrestaShopReglaIvaNormal') then
+        Result.Cola.IdReglaIvaNormal := StrToIntDef(sValor, 1)
+      else if SameText(sNombre, 'appPrestaShopReglaIvaReducido') then
+        Result.Cola.IdReglaIvaReducido := StrToIntDef(sValor, 2)
+      else if SameText(
+                sNombre,
+                'appPrestaShopReglaIvaSuperreducido') then
+        Result.Cola.IdReglaIvaSuperreducido := StrToIntDef(sValor, 3)
+      else if SameText(sNombre, 'appPrestaShopReglaIvaExento') then
+        Result.Cola.IdReglaIvaExento := StrToIntDef(sValor, 0)
+      else if SameText(sNombre, 'appPrestaShopSegundosCiclo') then
+        Result.SegundosCiclo := StrToIntDef(sValor, 60)
+      else if SameText(sNombre, 'appPrestaShopHorasBarrido') then
+        Result.HorasBarrido := StrToIntDef(sValor, 24)
+      else if SameText(sNombre, 'appPrestaShopMaxIntentos') then
+        Result.MaxIntentos := StrToIntDef(sValor, 10);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  Result.Activo := Result.SincronizarStockPrecios or
+    Result.CrearArticulos;
+  Result.Cola.StockActivo := Result.SincronizarStockPrecios;
+  if Result.SegundosCiclo < 5 then
+    Result.SegundosCiclo := 5;
+  if Result.HorasBarrido < 1 then
+    Result.HorasBarrido := 1;
+  if Result.HorasBarrido > 720 then
+    Result.HorasBarrido := 720;
+  if Result.MaxIntentos < 1 then
+    Result.MaxIntentos := 1;
+end;
+
+function TRepositorioPrestaShopColaUniDAC.DestinoSinConflictos(
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AUsuario: string): Boolean;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      'WITH sujetos AS (' +
+      'SELECT U.USUARIO_USU AS USUARIO, U.GRUPO_USU AS GRUPO ' +
+      'FROM fza_usuarios U WHERE U.ESACTIVO_USU = ''S''), ' +
+      'candidatos AS (' +
+      'SELECT S.USUARIO, P.SUBKEY_USUPER, P.VALUE_USUPER, ' +
+      'ROW_NUMBER() OVER (PARTITION BY S.USUARIO, P.SUBKEY_USUPER ' +
+      'ORDER BY CASE ' +
+      'WHEN P.USUARIO_GRUPO_USUPER = S.USUARIO THEN 1 ' +
+      'WHEN P.USUARIO_GRUPO_USUPER = S.GRUPO THEN 2 ELSE 3 END) RN ' +
+      'FROM sujetos S JOIN fza_usuarios_perfiles P ' +
+      'ON P.USUARIO_GRUPO_USUPER IN (S.USUARIO, S.GRUPO, ''Todos'') ' +
+      'AND P.KEY_USUPER = ''frmMtoAppParam'' ' +
+      'AND P.SUBKEY_USUPER IN (' +
+      '''appPrestaShopSincronizarStockPrecios'', ' +
+      '''appPrestaShopCrearArticulos'', ''appPrestaShopUrl'', ' +
+      '''appPrestaShopApiKey'', ' +
+      '''appPrestaShopEmpresa'', ''appPrestaShopTarifa'', ' +
+      '''appPrestaShopIdTienda'', ''appPrestaShopIdIdioma'', ' +
+      '''appPrestaShopIdCategoriaRaiz'', ' +
+      '''appPrestaShopReglaIvaNormal'', ' +
+      '''appPrestaShopReglaIvaReducido'', ' +
+      '''appPrestaShopReglaIvaSuperreducido'', ' +
+      '''appPrestaShopReglaIvaExento'')), ' +
+      'efectivos AS (' +
+      'SELECT USUARIO, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopSincronizarStockPrecios'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''False'') SINCRONIZAR, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopCrearArticulos'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''False'') CREAR, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopUrl'' ' +
+      'AND RN = 1 THEN VALUE_USUPER END), ' +
+      '''https://www.martamere.com/api'') URL_API, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopApiKey'' AND RN = 1 THEN VALUE_USUPER END), ' +
+      ''''') API_KEY, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopEmpresa'' AND RN = 1 THEN VALUE_USUPER END), ' +
+      '''1'') EMPRESA, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopTarifa'' AND RN = 1 THEN VALUE_USUPER END), ' +
+      '''PVP'') TARIFA, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopIdTienda'' AND RN = 1 THEN VALUE_USUPER END), ' +
+      '''1'') TIENDA, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopIdIdioma'' AND RN = 1 THEN VALUE_USUPER END), ' +
+      '''1'') IDIOMA, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopIdCategoriaRaiz'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''2'') CATEGORIA_RAIZ, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopReglaIvaNormal'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''1'') IVA_NORMAL, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopReglaIvaReducido'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''2'') IVA_REDUCIDO, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopReglaIvaSuperreducido'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''3'') IVA_SUPERREDUCIDO, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopReglaIvaExento'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''0'') IVA_EXENTO ' +
+      'FROM candidatos GROUP BY USUARIO) ' +
+      'SELECT COUNT(*) AS CONFLICTOS FROM efectivos E ' +
+      'WHERE E.USUARIO <> :USUARIO ' +
+      'AND (UPPER(TRIM(E.SINCRONIZAR)) IN (''TRUE'', ''1'', ''S'') ' +
+      'OR UPPER(TRIM(E.CREAR)) IN (''TRUE'', ''1'', ''S'')) ' +
+      'AND NULLIF(TRIM(E.URL_API), '''') IS NOT NULL ' +
+      'AND NULLIF(TRIM(E.API_KEY), '''') IS NOT NULL ' +
+      'AND NULLIF(TRIM(E.EMPRESA), '''') IS NOT NULL ' +
+      'AND NULLIF(TRIM(E.TARIFA), '''') IS NOT NULL ' +
+      'AND UPPER(SHA2(TRIM(TRAILING ''/'' FROM TRIM(E.URL_API)), ' +
+      '256)) = :INSTALACION ' +
+      'AND CASE WHEN TRIM(E.TIENDA) REGEXP ''^[+-]?[0-9]+$'' ' +
+      'AND LENGTH(TRIM(E.TIENDA)) <= 11 ' +
+      'AND CAST(TRIM(E.TIENDA) AS SIGNED) ' +
+      'BETWEEN -2147483648 AND 2147483647 ' +
+      'THEN CAST(TRIM(E.TIENDA) AS SIGNED) ELSE 1 END = :TIENDA ' +
+      'AND (UPPER(TRIM(E.EMPRESA)) <> UPPER(TRIM(:EMPRESA)) ' +
+      'OR UPPER(TRIM(E.TARIFA)) <> UPPER(TRIM(:TARIFA)) ' +
+      'OR (TRIM(E.IDIOMA) + 0) <> :IDIOMA ' +
+      'OR (TRIM(E.CATEGORIA_RAIZ) + 0) <> :CATEGORIA_RAIZ ' +
+      'OR (TRIM(E.IVA_NORMAL) + 0) <> :IVA_NORMAL ' +
+      'OR (TRIM(E.IVA_REDUCIDO) + 0) <> :IVA_REDUCIDO ' +
+      'OR (TRIM(E.IVA_SUPERREDUCIDO) + 0) <> :IVA_SUPERREDUCIDO ' +
+      'OR (TRIM(E.IVA_EXENTO) + 0) <> :IVA_EXENTO ' +
+      'OR (UPPER(TRIM(E.SINCRONIZAR)) IN (''TRUE'', ''1'', ''S'')) ' +
+      '<> :SINCRONIZAR OR ' +
+      '(UPPER(TRIM(E.CREAR)) IN (''TRUE'', ''1'', ''S'')) <> :CREAR)';
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.ParamByName('INSTALACION').AsString :=
+      AConfiguracion.Cola.ClaveInstalacion;
+    oConsulta.ParamByName('TIENDA').AsInteger :=
+      AConfiguracion.Cola.IdTienda;
+    oConsulta.ParamByName('EMPRESA').AsString :=
+      AConfiguracion.Cola.CodigoEmpresa;
+    oConsulta.ParamByName('TARIFA').AsString :=
+      AConfiguracion.Cola.CodigoTarifa;
+    oConsulta.ParamByName('IDIOMA').AsInteger :=
+      AConfiguracion.Cola.IdIdioma;
+    oConsulta.ParamByName('CATEGORIA_RAIZ').AsInteger :=
+      AConfiguracion.Cola.IdCategoriaRaiz;
+    oConsulta.ParamByName('IVA_NORMAL').AsInteger :=
+      AConfiguracion.Cola.IdReglaIvaNormal;
+    oConsulta.ParamByName('IVA_REDUCIDO').AsInteger :=
+      AConfiguracion.Cola.IdReglaIvaReducido;
+    oConsulta.ParamByName('IVA_SUPERREDUCIDO').AsInteger :=
+      AConfiguracion.Cola.IdReglaIvaSuperreducido;
+    oConsulta.ParamByName('IVA_EXENTO').AsInteger :=
+      AConfiguracion.Cola.IdReglaIvaExento;
+    oConsulta.ParamByName('SINCRONIZAR').AsInteger :=
+      Ord(AConfiguracion.SincronizarStockPrecios);
+    oConsulta.ParamByName('CREAR').AsInteger :=
+      Ord(AConfiguracion.CrearArticulos);
+    oConsulta.Open;
+    Result := oConsulta.FieldByName('CONFLICTOS').AsInteger = 0;
   finally
     FreeAndNil(oConsulta);
   end;
 end;
 
 procedure TRepositorioPrestaShopColaUniDAC.ReconciliarSiProcede(
+  const AConfiguracion: TConfiguracionPrestaShopCola;
   AHoras: Integer;
-  AStockActivo: Boolean;
   const AUsuario: string);
 var
   oConsulta: TUniQuery;
@@ -421,9 +570,18 @@ begin
   try
     oConsulta.SQL.Text :=
       'CALL PRC_PRESTASHOP_RECONCILIAR(' +
-      ':HORAS, :STOCK, :USUARIO)';
+      ':HORAS, :INSTALACION, :TIENDA, :EMPRESA, :TARIFA, ' +
+      ':STOCK, :USUARIO)';
     oConsulta.ParamByName('HORAS').AsInteger := AHoras;
-    if AStockActivo then
+    oConsulta.ParamByName('INSTALACION').AsString :=
+      AConfiguracion.ClaveInstalacion;
+    oConsulta.ParamByName('TIENDA').AsInteger :=
+      AConfiguracion.IdTienda;
+    oConsulta.ParamByName('EMPRESA').AsString :=
+      AConfiguracion.CodigoEmpresa;
+    oConsulta.ParamByName('TARIFA').AsString :=
+      AConfiguracion.CodigoTarifa;
+    if AConfiguracion.StockActivo then
       oConsulta.ParamByName('STOCK').AsString := 'S'
     else
       oConsulta.ParamByName('STOCK').AsString := 'N';
@@ -724,7 +882,8 @@ begin
       'c.VERSION_RECLAMADA_PSCOLA, ' +
       'c.ESCAMBIO_PRECIO_RECLAMADO_PSCOLA, ' +
       'c.ESCAMBIO_STOCK_RECLAMADO_PSCOLA, ' +
-      'c.ID_RECLAMACION_PSCOLA, a.ESWEB_ART, a.TIPO_ART ' +
+      'c.ID_RECLAMACION_PSCOLA, a.ESWEB_ART, a.TIPO_ART, ' +
+      'c.MENSAJE_ERROR_PSCOLA ' +
       'FROM fza_prestashop_cola c ' +
       'LEFT JOIN fza_articulos a ' +
       'ON a.CODIGO_ART_ART = c.CODIGO_ART_PSCOLA ' +
@@ -766,6 +925,9 @@ begin
       Result.TieneStock := Result.TieneStock and
         AConfiguracion.StockActivo and
         (not Result.EsServicio);
+      Result.ReanudarAlta := StartsText(
+        CMarcaReanudacionAltaPrestaShop,
+        oConsulta.FieldByName('MENSAJE_ERROR_PSCOLA').AsString);
     end;
   finally
     FreeAndNil(oConsulta);
@@ -814,6 +976,49 @@ begin
         'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA';
       oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
       oConsulta.ParamByName('TOKEN').AsString := AToken;
+      oConsulta.Open;
+      Result := oConsulta.FieldByName('NUMERO_FILAS').AsInteger = 1;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioPrestaShopColaUniDAC.MarcarAltaEnCurso(
+  AIdCola: Int64;
+  const AToken: string): Boolean;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      'UPDATE fza_prestashop_cola ' +
+      'SET MENSAJE_ERROR_PSCOLA = :MARCA ' +
+      'WHERE ID_PSCOLA = :ID ' +
+      'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
+      'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+      'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA';
+    oConsulta.ParamByName('MARCA').AsString :=
+      CMarcaReanudacionAltaPrestaShop;
+    oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
+    oConsulta.ParamByName('TOKEN').AsString := AToken;
+    oConsulta.Execute;
+    Result := oConsulta.RowsAffected = 1;
+    if not Result then
+    begin
+      oConsulta.SQL.Text :=
+        'SELECT COUNT(*) AS NUMERO_FILAS ' +
+        'FROM fza_prestashop_cola ' +
+        'WHERE ID_PSCOLA = :ID ' +
+        'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
+        'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+        'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
+        'AND MENSAJE_ERROR_PSCOLA = :MARCA';
+      oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
+      oConsulta.ParamByName('TOKEN').AsString := AToken;
+      oConsulta.ParamByName('MARCA').AsString :=
+        CMarcaReanudacionAltaPrestaShop;
       oConsulta.Open;
       Result := oConsulta.FieldByName('NUMERO_FILAS').AsInteger = 1;
     end;
@@ -906,6 +1111,9 @@ begin
       'ELSE ''PENDIENTE'' END, ' +
       'CONTADOR_INTENTOS_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
+      'AND :ESTADO = ''ERROR'' AND :ESPERA = 0 ' +
+      'THEN CONTADOR_INTENTOS_PSCOLA ' +
+      'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
       'THEN CONTADOR_INTENTOS_PSCOLA + 1 ELSE 0 END, ' +
       'INSTANTE_PROXIMO_INTENTO_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
@@ -913,7 +1121,9 @@ begin
       'DATE_ADD(NOW(), INTERVAL :ESPERA SECOND) ELSE NULL END, ' +
       'MENSAJE_ERROR_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
-      'THEN :MENSAJE ELSE NULL END, ' +
+      'THEN :MENSAJE ' +
+      'WHEN MENSAJE_ERROR_PSCOLA LIKE :MARCA_ALTA ' +
+      'THEN MENSAJE_ERROR_PSCOLA ELSE NULL END, ' +
       'VERSION_RECLAMADA_PSCOLA = NULL, ' +
       'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
       'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
@@ -926,6 +1136,8 @@ begin
     oConsulta.ParamByName('ESTADO').AsString := AEstado;
     oConsulta.ParamByName('ESPERA').AsInteger := AEsperaSegundos;
     oConsulta.ParamByName('MENSAJE').AsMemo := AMensaje;
+    oConsulta.ParamByName('MARCA_ALTA').AsString :=
+      CMarcaReanudacionAltaPrestaShop + '%';
     oConsulta.ParamByName('USUARIO').AsString := AUsuario;
     oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
     oConsulta.ParamByName('TOKEN').AsString := AToken;

@@ -32,7 +32,8 @@ uses
   cxRadioGroup, cxDropDownEdit, cxPC, cxInplaceContainer, cxTL, cxTLData,
   dxSkinsCore, dxSkinsDefaultPainters, dxSkinsForm, dxScrollbarAnnotations,
   dxCore, dxDateRanges,
-  inMtoGen, inLibUnitForm, inLibPermisosAdmin, inLibAnfitrionMtoIntf;
+  inMtoGen, inLibUnitForm, inLibPermisosAdmin, inLibAnfitrionMtoIntf,
+  inLibPermisosIntf;
 
 type
   TfrmMtoPermisosArbol = class(TfrmMtoGen)
@@ -97,6 +98,7 @@ type
     procedure RefrescarValores;
     function  ResolverEfectivo(const ACodigo: string;
                                out AOrigen: string): Boolean;
+    function  PermitidoPorDefecto(const ACodigo: string): Boolean;
     procedure FijarPermiso(const ACodigo: string; AValor: Boolean;
                            const ADescripcion: string);
     procedure AlternarHoja(ANode: TcxTreeListNode);
@@ -316,6 +318,11 @@ begin
   NuevoNodo(AParent, 'Borrar registros',    ACall + '.borrar');
   NuevoNodo(AParent, 'Exportar a Excel',    ACall + '.excel');
   NuevoNodo(AParent, 'Imprimir informes',   ACall + '.imprimir');
+  if SameText(ACall, 'Articulos') then
+    NuevoNodo(
+      AParent,
+      'Activar/desactivar web',
+      PERMISO_ARTICULOS_ACTIVAR_DESACTIVAR_WEB);
 end;
 
 function TfrmMtoPermisosArbol.EsPantallaMto(const AUnitForm: string): Boolean;
@@ -474,8 +481,11 @@ function TfrmMtoPermisosArbol.ResolverEfectivo(const ACodigo: string;
 var
   v: string;
 begin
-  Result  := True;
-  AOrigen := 'Por defecto (permitido)';
+  Result := PermitidoPorDefecto(ACodigo);
+  if Result then
+    AOrigen := 'Por defecto (permitido)'
+  else
+    AOrigen := 'Por defecto (denegado)';
   if (FExpTodos <> nil) and FExpTodos.TryGetValue(ACodigo, v) then
   begin
     Result  := (v = 'S');
@@ -492,6 +502,14 @@ begin
     Result  := (v = 'S');
     AOrigen := 'Propio';
   end;
+end;
+
+function TfrmMtoPermisosArbol.PermitidoPorDefecto(
+  const ACodigo: string): Boolean;
+begin
+  Result := not SameText(
+    ACodigo,
+    PERMISO_ARTICULOS_ACTIVAR_DESACTIVAR_WEB);
 end;
 
 procedure TfrmMtoPermisosArbol.RefrescarValores;

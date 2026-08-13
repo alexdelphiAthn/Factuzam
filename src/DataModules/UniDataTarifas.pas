@@ -211,7 +211,9 @@ function TdmTarifas.EsTarifaPrestaShop(
 var
   sTarifa: string;
 begin
-  sTarifa := LeerCodigoTarifaPrestaShop(AConexion);
+  sTarifa := LeerCodigoTarifaPrestaShop(
+    AConexion,
+    IdentidadSesion.Usuario);
   Result := SameText(Trim(ACodigoActual), sTarifa) or
     SameText(Trim(ACodigoAnterior), sTarifa);
 end;

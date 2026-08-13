@@ -3,7 +3,7 @@
 [◀ Volver al índice](README.md)
 
 El menú **Otros** agrupa la **administración y configuración** de la
-aplicación: parámetros globales, impuestos, contadores de numeración,
+aplicación: parámetros del entorno, impuestos, contadores de numeración,
 formas de pago de documentos, seguridad (usuarios y permisos),
 copias de seguridad y herramientas
 avanzadas. Son opciones que usa principalmente el **administrador**.
@@ -38,9 +38,9 @@ Otros
 **Atajo de menú:** `[Ctrl]+[F10]`
 
 Pantalla de **Parámetros Generales de la Aplicación**. Centraliza la
-configuración global de Factuzam: comportamiento por defecto, rutas,
-opciones de impresión y de documentos, valores predeterminados de la
-empresa de trabajo, etc.
+configuración del entorno: comportamiento por defecto, rutas, opciones de
+impresión y de documentos, valores predeterminados de la empresa de trabajo,
+etc. Cada valor puede asignarse a un usuario, a un grupo o a `Todos`.
 
 Categorías habituales:
 
@@ -49,11 +49,25 @@ Categorías habituales:
 | **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y número de atributos usado en su clave. |
 | **Servicios web** | URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos. |
 | **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
+| **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola, barrido y checks **Sincronizar stock y precios** y **Crear artículos en PrestaShop al darlos de alta**. |
 | **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
 
-> Son ajustes que afectan a **toda la instalación**. Cámbialos con
-> conocimiento de causa; ante la duda, consulta con quien implantó la
-> aplicación.
+El valor efectivo se resuelve por herencia: primero el valor propio del
+**usuario**, después el de su **grupo** y, por último, el de **Todos**. Un
+valor más específico sustituye al más general. Esto permite, por ejemplo,
+que dos grupos trabajen con empresas, almacenes y tiendas PrestaShop
+diferentes. Cada sesión atiende únicamente la configuración efectiva de su
+usuario.
+
+La clave API queda oculta para los usuarios que no son administradores raíz.
+Los dos checks comienzan desmarcados y son independientes. **Sincronizar stock
+y precios** autoriza la actualización de productos existentes localizados por
+una `reference` exacta y única. **Crear artículos en PrestaShop al darlos de
+alta** solicita el alta cuando no existe esa correspondencia, pero el motor de
+creación completa todavía no está implementado: por ahora se registra una
+incidencia `ERROR` sin crear recursos. Antes de activar la sincronización,
+sigue la
+[lista de comprobación de la integración](15-integracion-prestashop.md#14-lista-de-comprobacion-para-una-implantacion).
 
 ### Idioma y traducciones
 
@@ -220,6 +234,11 @@ El árbol replica el menú real de la aplicación y permite trabajar por:
 - Copiar permisos de un sujeto a otro, combinando o reemplazando.
 - Gestionar permisos de menú y permisos de pantalla: consultar, insertar,
   modificar, borrar, exportar a Excel e imprimir.
+
+En **Artículos ▸ Activar/desactivar web**, el permiso específico controla
+quién puede cambiar la casilla **En web** de la ficha de artículos. Si el
+usuario no lo tiene concedido, la casilla queda en solo lectura y la grabación
+no puede alterar esa marca.
 
 > Los cambios de permisos se aplican en el próximo login del usuario
 > afectado.

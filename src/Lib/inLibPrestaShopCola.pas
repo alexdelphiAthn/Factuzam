@@ -40,18 +40,34 @@ implementation
 
 uses
   Winapi.ActiveX, Winapi.Windows, System.Math, System.SysUtils,
-  inLibPrestaCatalogoIntf, inLibPrestaCatalogo;
+  System.Generics.Collections, inLibPrestaCatalogoIntf,
+  inLibPrestaCatalogo, inLibPrestaCatalogoAltaIntf,
+  inLibPrestaCatalogoAlta, inLibPrestaShopAltaArticuloIntf;
 
 const
   CToleranciaPrecio = 0.000001;
   CFilasPorCiclo = 10;
   CMinutosReclamacionCaducada = 10;
+  CTipoRecursoProducto = 'product';
 
 type
+  EAltaArticuloPrestaWorker = class(Exception);
+
+  TMapeoLineaPrestaShop = record
+    IdCombinacion: Integer;
+    IdStock: Integer;
+  end;
+
+  TPlanArticuloPrestaShop = record
+    IdProducto: Integer;
+    Lineas: TArray<TMapeoLineaPrestaShop>;
+  end;
+
   THiloPrestaShopCola = class(TThread)
   private
     FSesion: ISesionPrestaShopCola;
     FRepositorio: IRepositorioPrestaShopCola;
+    FRepositorioAlta: IRepositorioAltaArticuloPresta;
     FContextoSesion: IContextoSesionAplicacion;
     FFabricaSesion: IFabricaSesionPrestaShopCola;
     FRegistroLog: IRegistroLog;
@@ -66,26 +82,79 @@ type
     function SigueVigente(
       const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
     procedure AsegurarLease(const ATrabajo: TTrabajoArticuloPrestaShop);
+    procedure AsegurarAtributosAlta(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AArticulo: TArticuloCompletoAltaPresta;
+      const ACliente: IClienteCatalogoAltaPresta;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AGrupos, AValores: TDictionary<string, Integer>);
+    procedure AsegurarCombinacionesAlta(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AArticulo: TArticuloCompletoAltaPresta;
+      const ACliente: IClienteCatalogoAltaPresta;
+      const AValores: TDictionary<string, Integer>;
+      AIdProducto: Integer);
+    function AsegurarFamiliasAlta(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AArticulo: TArticuloCompletoAltaPresta;
+      const ACliente: IClienteCatalogoAltaPresta;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop):
+      TArray<Integer>;
+    procedure AsegurarFotoAlta(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AArticulo: TArticuloCompletoAltaPresta;
+      const ACliente: IClienteCatalogoAltaPresta;
+      AIdProducto: Integer);
+    function AsegurarProductoAlta(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AArticulo: TArticuloCompletoAltaPresta;
+      const ACliente: IClienteCatalogoAltaPresta;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AIdsCategorias: TArray<Integer>): Integer;
+    procedure CrearOCompletarArticulo(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const ACliente: IClienteCatalogoAltaPresta;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure EsperarSegundos(ASegundos: Integer);
     procedure GuardarError(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const AConfiguracion: TConfiguracionGlobalPrestaShop;
       const AMensaje: string);
+    procedure GuardarIncidenciaTerminal(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AMensaje: string);
+    procedure GuardarRecursoAmbiguo(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AError: ERecursoPrestaAmbiguo);
+    procedure GuardarRecursoNoEncontrado(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AError: ERecursoPrestaNoEncontrado);
     procedure ProcesarArticulo(
       const ATrabajo: TTrabajoArticuloPrestaShop;
-      const ACliente: IClienteCatalogoPresta);
+      const ACliente: IClienteCatalogoPresta;
+      const AClienteAlta: IClienteCatalogoAltaPresta;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop);
+    function PrepararPlanArticulo(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const ACliente: IClienteCatalogoPresta;
+      ASincronizarStockPrecios: Boolean): TPlanArticuloPrestaShop;
     procedure ProcesarCiclo;
     procedure ProcesarFila(
       AIdCola: Int64;
       const ACliente: IClienteCatalogoPresta;
+      const AClienteAlta: IClienteCatalogoAltaPresta;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure ProcesarLinea(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ALinea: TLineaArticuloPrestaShop;
-      AIdProducto: Integer;
+      const AMapeo: TMapeoLineaPrestaShop;
       const ACliente: IClienteCatalogoPresta);
     procedure ProcesarPendientes(
       const ACliente: IClienteCatalogoPresta;
+      const AClienteAlta: IClienteCatalogoAltaPresta;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
   protected
     procedure Execute; override;
@@ -102,11 +171,16 @@ type
 resourcestring
   SConfiguracionPrestaShopIncompleta =
     'Cola PrestaShop pendiente: faltan URL, API key, empresa, tarifa o ' +
-    'identificador de tienda en la configuración global Todos.';
+    'identificador de tienda en la configuración efectiva de la sesión.';
+  SDestinoPrestaShopEnConflicto =
+    'Cola PrestaShop detenida: otro perfil activo usa la misma URL y ' +
+    'tienda con empresa, tarifa o permisos de sincronización distintos.';
   SSesionPrestaShopNoCreada =
     'La fábrica no creó la sesión de cola PrestaShop.';
   SRepositorioPrestaShopNoCreado =
     'La sesión de cola PrestaShop no tiene repositorio.';
+  SRepositorioAltaPrestaShopNoCreado =
+    'La sesión de cola PrestaShop no tiene repositorio para altas.';
   STrabajoPrestaShopNoReclamado =
     'No se pudo leer el artículo reclamado de la cola PrestaShop.';
   SLeasePrestaShopPerdido =
@@ -121,6 +195,25 @@ resourcestring
     'PrestaShop no confirmó el stock %d.';
   SBarridoPrestaShopOmitido =
     'Barrido de respaldo PrestaShop omitido: %s';
+  SProductoPrestaShopNoEncontradoSinAlta =
+    'No existe en PrestaShop un producto único con reference="%s". ' +
+    'La creación de artículos está desactivada; no se envió ningún cambio.';
+  SProductoPrestaShopNoEncontradoTrasAlta =
+    'El alta no dejó un producto único con reference="%s". ' +
+    'No se envió ningún cambio posterior.';
+  SConfiguracionFiscalPrestaShopInvalida =
+    'No existe una regla fiscal PrestaShop válida para el tipo de IVA %s.';
+  SRecursoPrestaShopNoEncontrado =
+    'No existe en PrestaShop la correspondencia %s del artículo con ' +
+    'reference="%s". Se detuvo el envío; revise la correspondencia antes ' +
+    'de reintentar.';
+  SProductoPrestaShopAmbiguo =
+    'PrestaShop devolvió %d productos para reference="%s". La referencia ' +
+    'debe identificar un único producto; no se envió ningún cambio.';
+  SRecursoPrestaShopAmbiguo =
+    'PrestaShop devolvió %d correspondencias %s para el artículo con ' +
+    'reference="%s". Se detuvo el envío; revise la correspondencia antes ' +
+    'de reintentar.';
 
 function PrecioDiferente(AActual, ADeseado: Double): Boolean;
 begin
@@ -147,6 +240,42 @@ begin
   if AIntentos > 6 then
     AIntentos := 6;
   Result := 60 * (1 shl AIntentos);
+end;
+
+function ClaveGrupoAtributo(
+  const AGrupo: TAtributoAltaArticuloPresta): string;
+begin
+  Result := UpperCase(Trim(AGrupo.CodigoGrupo));
+end;
+
+function ClaveValorAtributo(
+  const AValor: TAtributoAltaArticuloPresta): string;
+begin
+  Result := ClaveGrupoAtributo(AValor) + #1 +
+    UpperCase(Trim(AValor.CodigoValor));
+end;
+
+function ResolverIdReglaIva(
+  const ATipoIva: string;
+  const AConfiguracion: TConfiguracionPrestaShopCola): Integer;
+var
+  sTipoIva: string;
+begin
+  sTipoIva := UpperCase(Trim(ATipoIva));
+  Result := -1;
+  if sTipoIva = 'N' then
+    Result := AConfiguracion.IdReglaIvaNormal
+  else if sTipoIva = 'R' then
+    Result := AConfiguracion.IdReglaIvaReducido
+  else if sTipoIva = 'S' then
+    Result := AConfiguracion.IdReglaIvaSuperreducido
+  else if sTipoIva = 'E' then
+    Result := AConfiguracion.IdReglaIvaExento;
+  if (Result < 0) or
+     ((sTipoIva <> 'E') and (Result = 0)) then
+    raise EConfiguracionPrestaInvalida.CreateFmt(
+      SConfiguracionFiscalPrestaShopInvalida,
+      [ATipoIva]);
 end;
 
 { TPrestaShopCola }
@@ -234,6 +363,7 @@ end;
 
 destructor THiloPrestaShopCola.Destroy;
 begin
+  FRepositorioAlta := nil;
   FRepositorio := nil;
   FSesion := nil;
   FFabricaSesion := nil;
@@ -250,13 +380,22 @@ begin
             (AConfiguracion.Cola.ClaveInstalacion <> '') and
             (AConfiguracion.Cola.CodigoEmpresa <> '') and
             (AConfiguracion.Cola.CodigoTarifa <> '') and
-            (AConfiguracion.Cola.IdTienda > 0);
+            (AConfiguracion.Cola.IdTienda > 0) and
+            ((not AConfiguracion.CrearArticulos) or
+             ((AConfiguracion.Cola.IdIdioma > 0) and
+              (AConfiguracion.Cola.IdCategoriaRaiz > 0) and
+              (AConfiguracion.Cola.IdReglaIvaNormal > 0) and
+              (AConfiguracion.Cola.IdReglaIvaReducido > 0) and
+              (AConfiguracion.Cola.IdReglaIvaSuperreducido > 0) and
+              (AConfiguracion.Cola.IdReglaIvaExento >= 0)));
 end;
 
 function THiloPrestaShopCola.PrepararConfiguracion:
   TConfiguracionGlobalPrestaShop;
 begin
-  Result := FRepositorio.LeerConfiguracionGlobal;
+  Result := FRepositorio.LeerConfiguracionPerfil(
+    FContextoSesion.Identidad.Usuario,
+    FContextoSesion.Identidad.Grupo);
   FSegundosCiclo := Result.SegundosCiclo;
   FClaveOculta := Result.ClaveApi;
   if Result.Activo and (Result.UrlApi <> '') then
@@ -271,12 +410,27 @@ var
 begin
   oActual := PrepararConfiguracion;
   Result := oActual.Activo and
+    FRepositorio.DestinoSinConflictos(oActual, FUsuario) and
     SameText(oActual.UrlApi, AConfiguracion.UrlApi) and
     (oActual.ClaveApi = AConfiguracion.ClaveApi) and
     SameText(
       oActual.Cola.ClaveInstalacion,
       AConfiguracion.Cola.ClaveInstalacion) and
     (oActual.Cola.IdTienda = AConfiguracion.Cola.IdTienda) and
+    (oActual.Cola.IdIdioma = AConfiguracion.Cola.IdIdioma) and
+    (oActual.Cola.IdCategoriaRaiz =
+      AConfiguracion.Cola.IdCategoriaRaiz) and
+    (oActual.Cola.IdReglaIvaNormal =
+      AConfiguracion.Cola.IdReglaIvaNormal) and
+    (oActual.Cola.IdReglaIvaReducido =
+      AConfiguracion.Cola.IdReglaIvaReducido) and
+    (oActual.Cola.IdReglaIvaSuperreducido =
+      AConfiguracion.Cola.IdReglaIvaSuperreducido) and
+    (oActual.Cola.IdReglaIvaExento =
+      AConfiguracion.Cola.IdReglaIvaExento) and
+    (oActual.SincronizarStockPrecios =
+      AConfiguracion.SincronizarStockPrecios) and
+    (oActual.CrearArticulos = AConfiguracion.CrearArticulos) and
     (oActual.Cola.StockActivo = AConfiguracion.Cola.StockActivo) and
     (oActual.HorasBarrido = AConfiguracion.HorasBarrido) and
     SameText(
@@ -294,6 +448,289 @@ begin
     ATrabajo.IdCola,
     ATrabajo.Token) then
     raise EInvalidOpException.Create(SLeasePrestaShopPerdido);
+end;
+
+function THiloPrestaShopCola.AsegurarFamiliasAlta(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AArticulo: TArticuloCompletoAltaPresta;
+  const ACliente: IClienteCatalogoAltaPresta;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop):
+  TArray<Integer>;
+var
+  iFamilia: Integer;
+  iIdPadre: Integer;
+  oDatos: TAltaCategoriaPresta;
+  oResultado: TResultadoAltaPresta;
+begin
+  SetLength(Result, Length(AArticulo.Familias) + 1);
+  iIdPadre := AConfiguracion.Cola.IdCategoriaRaiz;
+  Result[0] := iIdPadre;
+  iFamilia := 0;
+  while iFamilia <= High(AArticulo.Familias) do
+  begin
+    oDatos := Default(TAltaCategoriaPresta);
+    oDatos.IdPadre := iIdPadre;
+    oDatos.IdTienda := ATrabajo.IdTienda;
+    oDatos.IdIdioma := AConfiguracion.Cola.IdIdioma;
+    oDatos.Nombre := AArticulo.Familias[iFamilia].Nombre;
+    oDatos.Enlace := AArticulo.Familias[iFamilia].Enlace;
+    oDatos.Activa := True;
+    AsegurarLease(ATrabajo);
+    oResultado := ACliente.AsegurarCategoria(oDatos);
+    iIdPadre := oResultado.Id;
+    Result[iFamilia + 1] := iIdPadre;
+    Inc(iFamilia);
+  end;
+end;
+
+procedure THiloPrestaShopCola.AsegurarAtributosAlta(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AArticulo: TArticuloCompletoAltaPresta;
+  const ACliente: IClienteCatalogoAltaPresta;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AGrupos, AValores: TDictionary<string, Integer>);
+var
+  iAtributo: Integer;
+  iGrupo: Integer;
+  iSku: Integer;
+  iValor: Integer;
+  oAtributo: TAtributoAltaArticuloPresta;
+  oDatosGrupo: TAltaGrupoAtributosPresta;
+  oDatosValor: TAltaValorAtributoPresta;
+  sClaveGrupo: string;
+  sClaveValor: string;
+begin
+  iSku := 0;
+  while iSku <= High(AArticulo.Skus) do
+  begin
+    iAtributo := 0;
+    while iAtributo <= High(AArticulo.Skus[iSku].Atributos) do
+    begin
+      oAtributo := AArticulo.Skus[iSku].Atributos[iAtributo];
+      sClaveGrupo := ClaveGrupoAtributo(oAtributo);
+      if not AGrupos.TryGetValue(sClaveGrupo, iGrupo) then
+      begin
+        oDatosGrupo := Default(TAltaGrupoAtributosPresta);
+        oDatosGrupo.IdTienda := ATrabajo.IdTienda;
+        oDatosGrupo.IdIdioma := AConfiguracion.Cola.IdIdioma;
+        oDatosGrupo.Nombre := oAtributo.NombreGrupo;
+        oDatosGrupo.NombrePublico := oAtributo.NombrePublicoGrupo;
+        oDatosGrupo.TipoGrupo := oAtributo.TipoGrupo;
+        oDatosGrupo.EsColor := oAtributo.EsColor;
+        AsegurarLease(ATrabajo);
+        iGrupo := ACliente.AsegurarGrupoAtributos(oDatosGrupo).Id;
+        AGrupos.Add(sClaveGrupo, iGrupo);
+      end;
+      sClaveValor := ClaveValorAtributo(oAtributo);
+      if not AValores.TryGetValue(sClaveValor, iValor) then
+      begin
+        oDatosValor := Default(TAltaValorAtributoPresta);
+        oDatosValor.IdGrupo := iGrupo;
+        oDatosValor.IdTienda := ATrabajo.IdTienda;
+        oDatosValor.IdIdioma := AConfiguracion.Cola.IdIdioma;
+        oDatosValor.Nombre := oAtributo.NombreValor;
+        oDatosValor.Color := oAtributo.ColorHtml;
+        AsegurarLease(ATrabajo);
+        iValor := ACliente.AsegurarValorAtributo(oDatosValor).Id;
+        AValores.Add(sClaveValor, iValor);
+      end;
+      Inc(iAtributo);
+    end;
+    Inc(iSku);
+  end;
+end;
+
+function THiloPrestaShopCola.AsegurarProductoAlta(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AArticulo: TArticuloCompletoAltaPresta;
+  const ACliente: IClienteCatalogoAltaPresta;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AIdsCategorias: TArray<Integer>): Integer;
+var
+  oDatos: TAltaProductoPresta;
+begin
+  oDatos := Default(TAltaProductoPresta);
+  oDatos.IdCategoriaDefecto := AIdsCategorias[High(AIdsCategorias)];
+  oDatos.IdGrupoReglasIva := ResolverIdReglaIva(
+    AArticulo.TipoIva,
+    AConfiguracion.Cola);
+  oDatos.IdTienda := ATrabajo.IdTienda;
+  oDatos.IdIdioma := AConfiguracion.Cola.IdIdioma;
+  oDatos.Referencia := AArticulo.Codigo;
+  oDatos.Nombre := AArticulo.Nombre;
+  oDatos.Enlace := AArticulo.Enlace;
+  oDatos.DescripcionCorta := AArticulo.DescripcionCorta;
+  oDatos.Descripcion := AArticulo.Descripcion;
+  oDatos.Precio := AArticulo.PrecioBaseSinIva;
+  oDatos.IdsCategorias := AIdsCategorias;
+  AsegurarLease(ATrabajo);
+  Result := ACliente.AsegurarProductoInactivo(oDatos).Id;
+end;
+
+procedure THiloPrestaShopCola.AsegurarCombinacionesAlta(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AArticulo: TArticuloCompletoAltaPresta;
+  const ACliente: IClienteCatalogoAltaPresta;
+  const AValores: TDictionary<string, Integer>;
+  AIdProducto: Integer);
+var
+  aIdsValores: TArray<Integer>;
+  iAtributo: Integer;
+  iSku: Integer;
+  iValor: Integer;
+  oDatos: TAltaCombinacionPresta;
+  sClaveValor: string;
+begin
+  iSku := 0;
+  while iSku <= High(AArticulo.Skus) do
+  begin
+    SetLength(
+      aIdsValores,
+      Length(AArticulo.Skus[iSku].Atributos));
+    iAtributo := 0;
+    while iAtributo <= High(AArticulo.Skus[iSku].Atributos) do
+    begin
+      sClaveValor := ClaveValorAtributo(
+        AArticulo.Skus[iSku].Atributos[iAtributo]);
+      if not AValores.TryGetValue(sClaveValor, iValor) then
+        raise EInvalidOpException.Create(
+          'No se resolvió un atributo de la combinación PrestaShop');
+      aIdsValores[iAtributo] := iValor;
+      Inc(iAtributo);
+    end;
+    oDatos := Default(TAltaCombinacionPresta);
+    oDatos.IdProducto := AIdProducto;
+    oDatos.IdTienda := ATrabajo.IdTienda;
+    oDatos.Referencia := AArticulo.Skus[iSku].Codigo;
+    oDatos.ImpactoPrecio := AArticulo.Skus[iSku].ImpactoPrecio;
+    oDatos.Predeterminada := AArticulo.Skus[iSku].Predeterminado;
+    oDatos.CantidadMinima := 1;
+    oDatos.IdsValores := aIdsValores;
+    AsegurarLease(ATrabajo);
+    ACliente.AsegurarCombinacion(oDatos);
+    Inc(iSku);
+  end;
+end;
+
+procedure THiloPrestaShopCola.AsegurarFotoAlta(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AArticulo: TArticuloCompletoAltaPresta;
+  const ACliente: IClienteCatalogoAltaPresta;
+  AIdProducto: Integer);
+var
+  bSubida: Boolean;
+  iFoto: Integer;
+  iIndice: Integer;
+begin
+  if Length(AArticulo.Fotos) = 0 then
+    raise EAltaArticuloPrestaLocal.Create(
+      'El artículo no tiene una foto real válida para publicar');
+  iFoto := 0;
+  iIndice := 0;
+  while iIndice <= High(AArticulo.Fotos) do
+  begin
+    if AArticulo.Fotos[iIndice].Principal then
+      iFoto := iIndice;
+    Inc(iIndice);
+  end;
+  AsegurarLease(ATrabajo);
+  bSubida := ACliente.AsegurarImagenProductoSiVacia(
+    AIdProducto,
+    ATrabajo.IdTienda,
+    AArticulo.Fotos[iFoto].RutaReal);
+  if bSubida then
+    AsegurarLease(ATrabajo);
+end;
+
+procedure THiloPrestaShopCola.CrearOCompletarArticulo(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const ACliente: IClienteCatalogoAltaPresta;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop);
+var
+  aIdsCategorias: TArray<Integer>;
+  iIdProducto: Integer;
+  oArticulo: TArticuloCompletoAltaPresta;
+  oConfiguracionAlta: TConfiguracionAltaArticuloPresta;
+  oGrupos: TDictionary<string, Integer>;
+  oValores: TDictionary<string, Integer>;
+begin
+  if not Assigned(ACliente) then
+    raise EInvalidOpException.Create(
+      'El cliente de altas PrestaShop no está asignado');
+  if not Assigned(FRepositorioAlta) then
+    raise EInvalidOpException.Create(
+      SRepositorioAltaPrestaShopNoCreado);
+  oConfiguracionAlta := Default(TConfiguracionAltaArticuloPresta);
+  oConfiguracionAlta.CodigoEmpresa :=
+    AConfiguracion.Cola.CodigoEmpresa;
+  oConfiguracionAlta.CodigoTarifa :=
+    AConfiguracion.Cola.CodigoTarifa;
+  oConfiguracionAlta.StockActivo :=
+    AConfiguracion.Cola.StockActivo;
+  try
+    oArticulo := FRepositorioAlta.CargarValidado(
+      ATrabajo.CodigoArticulo,
+      FContextoSesion.Identidad.Usuario,
+      FContextoSesion.Identidad.Grupo,
+      oConfiguracionAlta);
+    AsegurarLease(ATrabajo);
+    if not SigueVigente(AConfiguracion) then
+      raise EInvalidOpException.Create(
+        'La configuración PrestaShop cambió antes del alta');
+    if not FRepositorio.MarcarAltaEnCurso(
+             ATrabajo.IdCola,
+             ATrabajo.Token) then
+      raise EInvalidOpException.Create(SLeasePrestaShopPerdido);
+    oGrupos := TDictionary<string, Integer>.Create;
+    oValores := TDictionary<string, Integer>.Create;
+    try
+      aIdsCategorias := AsegurarFamiliasAlta(
+        ATrabajo,
+        oArticulo,
+        ACliente,
+        AConfiguracion);
+      AsegurarAtributosAlta(
+        ATrabajo,
+        oArticulo,
+        ACliente,
+        AConfiguracion,
+        oGrupos,
+        oValores);
+      if not SigueVigente(AConfiguracion) then
+        raise EInvalidOpException.Create(
+          'La configuración PrestaShop cambió durante el alta');
+      iIdProducto := AsegurarProductoAlta(
+        ATrabajo,
+        oArticulo,
+        ACliente,
+        AConfiguracion,
+        aIdsCategorias);
+      AsegurarCombinacionesAlta(
+        ATrabajo,
+        oArticulo,
+        ACliente,
+        oValores,
+        iIdProducto);
+      AsegurarFotoAlta(
+        ATrabajo,
+        oArticulo,
+        ACliente,
+        iIdProducto);
+    finally
+      FreeAndNil(oValores);
+      FreeAndNil(oGrupos);
+    end;
+  except
+    on E: EAltaArticuloPrestaLocal do
+      raise;
+    on E: ERecursoPrestaAmbiguo do
+      raise;
+    on E: EAltaArticuloPrestaWorker do
+      raise;
+    on E: Exception do
+      raise EAltaArticuloPrestaWorker.Create(
+        CMarcaReanudacionAltaPrestaShop + E.Message);
+  end;
 end;
 
 procedure THiloPrestaShopCola.Execute;
@@ -353,6 +790,7 @@ end;
 procedure THiloPrestaShopCola.ProcesarCiclo;
 var
   oCliente: IClienteCatalogoPresta;
+  oClienteAlta: IClienteCatalogoAltaPresta;
   oConfiguracion: TConfiguracionGlobalPrestaShop;
   sMensaje: string;
 begin
@@ -364,22 +802,33 @@ begin
     FRepositorio := FSesion.Repositorio;
     if not Assigned(FRepositorio) then
       raise EInvalidOpException.Create(SRepositorioPrestaShopNoCreado);
+    FRepositorioAlta := FSesion.RepositorioAlta;
   end;
   oConfiguracion := PrepararConfiguracion;
-  if oConfiguracion.Activo and ConfiguracionCompleta(oConfiguracion) then
+  if oConfiguracion.Activo and ConfiguracionCompleta(oConfiguracion) and
+     FRepositorio.DestinoSinConflictos(oConfiguracion, FUsuario) then
   begin
     FAvisoConfiguracion := False;
     oCliente := TClienteCatalogoPresta.Create(
       oConfiguracion.UrlApi,
       oConfiguracion.ClaveApi);
+    if oConfiguracion.CrearArticulos then
+    begin
+      if not Assigned(FRepositorioAlta) then
+        raise EInvalidOpException.Create(
+          SRepositorioAltaPrestaShopNoCreado);
+      oClienteAlta := CrearClienteCatalogoAltaPresta(
+        oConfiguracion.UrlApi,
+        oConfiguracion.ClaveApi);
+    end;
     FRepositorio.ReencolarProcesandoCaducadas(
       oConfiguracion.Cola.ClaveInstalacion,
       oConfiguracion.Cola.IdTienda,
       CMinutosReclamacionCaducada);
     try
       FRepositorio.ReconciliarSiProcede(
+        oConfiguracion.Cola,
         oConfiguracion.HorasBarrido,
-        oConfiguracion.Cola.StockActivo,
         FUsuario);
     except
       on E: Exception do
@@ -390,14 +839,19 @@ begin
             Format(SBarridoPrestaShopOmitido, [sMensaje]));
       end;
     end;
-    ProcesarPendientes(oCliente, oConfiguracion);
+    ProcesarPendientes(oCliente, oClienteAlta, oConfiguracion);
   end
   else
   begin
     if oConfiguracion.Activo and (not FAvisoConfiguracion) then
     begin
       if Assigned(FRegistroLog) then
-        FRegistroLog.RegistrarAviso(SConfiguracionPrestaShopIncompleta);
+      begin
+        if ConfiguracionCompleta(oConfiguracion) then
+          FRegistroLog.RegistrarAviso(SDestinoPrestaShopEnConflicto)
+        else
+          FRegistroLog.RegistrarAviso(SConfiguracionPrestaShopIncompleta);
+      end;
       FAvisoConfiguracion := True;
     end;
     if not oConfiguracion.Activo then
@@ -407,6 +861,7 @@ end;
 
 procedure THiloPrestaShopCola.ProcesarPendientes(
   const ACliente: IClienteCatalogoPresta;
+  const AClienteAlta: IClienteCatalogoAltaPresta;
   const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
   aPendientes: TArray<Int64>;
@@ -432,6 +887,7 @@ begin
         ProcesarFila(
           aPendientes[iIndice],
           ACliente,
+          AClienteAlta,
           AConfiguracion);
       Inc(iIndice);
     end;
@@ -441,6 +897,7 @@ end;
 procedure THiloPrestaShopCola.ProcesarFila(
   AIdCola: Int64;
   const ACliente: IClienteCatalogoPresta;
+  const AClienteAlta: IClienteCatalogoAltaPresta;
   const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
   oTrabajo: TTrabajoArticuloPrestaShop;
@@ -467,15 +924,21 @@ begin
       if oTrabajo.CodigoArticulo = '' then
         raise EInvalidOpException.Create(STrabajoPrestaShopNoReclamado);
       if oTrabajo.EstaEnWeb and
-         ((oTrabajo.TienePrecio and
-           oTrabajo.TienePrecioProducto) or
-          oTrabajo.TieneStock) then
+         (AConfiguracion.CrearArticulos or
+          (AConfiguracion.SincronizarStockPrecios and
+           ((oTrabajo.TienePrecio and
+             oTrabajo.TienePrecioProducto) or
+            oTrabajo.TieneStock))) then
       begin
         AsegurarLease(oTrabajo);
         if not SigueVigente(AConfiguracion) then
           raise EInvalidOpException.Create(
-            'La configuración global PrestaShop cambió durante el envío');
-        ProcesarArticulo(oTrabajo, ACliente);
+            'La configuración PrestaShop cambió durante el envío');
+        ProcesarArticulo(
+          oTrabajo,
+          ACliente,
+          AClienteAlta,
+          AConfiguracion);
       end;
       FRepositorio.MarcarEnviada(
         oTrabajo.IdCola,
@@ -484,6 +947,26 @@ begin
         oTrabajo.TieneProximoCambioPrecio,
         oTrabajo.ProximoCambioPrecio);
     except
+      on E: EAltaArticuloPrestaLocal do
+        GuardarIncidenciaTerminal(
+          oTrabajo,
+          AConfiguracion,
+          E.Message);
+      on E: EConfiguracionPrestaInvalida do
+        GuardarIncidenciaTerminal(
+          oTrabajo,
+          AConfiguracion,
+          E.Message);
+      on E: ERecursoPrestaNoEncontrado do
+        GuardarRecursoNoEncontrado(
+          oTrabajo,
+          AConfiguracion,
+          E);
+      on E: ERecursoPrestaAmbiguo do
+        GuardarRecursoAmbiguo(
+          oTrabajo,
+          AConfiguracion,
+          E);
       on E: Exception do
         GuardarError(oTrabajo, AConfiguracion, E.Message);
     end;
@@ -492,131 +975,194 @@ end;
 
 procedure THiloPrestaShopCola.ProcesarArticulo(
   const ATrabajo: TTrabajoArticuloPrestaShop;
-  const ACliente: IClienteCatalogoPresta);
+  const ACliente: IClienteCatalogoPresta;
+  const AClienteAlta: IClienteCatalogoAltaPresta;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
+  bAltaCompletada: Boolean;
   dActual: Double;
   iLinea: Integer;
-  iProducto: Integer;
+  oPlan: TPlanArticuloPrestaShop;
 begin
+  bAltaCompletada := False;
+  if AConfiguracion.CrearArticulos and ATrabajo.ReanudarAlta then
+  begin
+    CrearOCompletarArticulo(
+      ATrabajo,
+      AClienteAlta,
+      AConfiguracion);
+    bAltaCompletada := True;
+  end;
+  try
+    oPlan := PrepararPlanArticulo(
+      ATrabajo,
+      ACliente,
+      AConfiguracion.SincronizarStockPrecios);
+  except
+    on E: ERecursoPrestaNoEncontrado do
+    begin
+      if AConfiguracion.CrearArticulos and
+         SameText(E.TipoRecurso, CTipoRecursoProducto) then
+      begin
+        if not bAltaCompletada then
+          CrearOCompletarArticulo(
+            ATrabajo,
+            AClienteAlta,
+            AConfiguracion);
+        oPlan := PrepararPlanArticulo(
+          ATrabajo,
+          ACliente,
+          AConfiguracion.SincronizarStockPrecios);
+      end
+      else
+        raise;
+    end;
+  end;
+  if AConfiguracion.SincronizarStockPrecios then
+  begin
+    if ATrabajo.TienePrecio then
+    begin
+      if not ATrabajo.TienePrecioProducto then
+        raise EInvalidOpException.CreateFmt(
+          SPrecioProductoPrestaShopAusente,
+          [ATrabajo.CodigoArticulo]);
+      AsegurarLease(ATrabajo);
+      dActual := ACliente.LeerPrecioProducto(
+        oPlan.IdProducto,
+        ATrabajo.IdTienda);
+      if PrecioDiferente(dActual, ATrabajo.PrecioProducto) then
+      begin
+        AsegurarLease(ATrabajo);
+        ACliente.ActualizarPrecioProducto(
+          oPlan.IdProducto,
+          ATrabajo.IdTienda,
+          ATrabajo.PrecioProducto);
+      end;
+      AsegurarLease(ATrabajo);
+      dActual := ACliente.LeerPrecioProducto(
+        oPlan.IdProducto,
+        ATrabajo.IdTienda);
+      if PrecioDiferente(dActual, ATrabajo.PrecioProducto) then
+        raise EInvalidOpException.CreateFmt(
+          SPrecioProductoNoVerificado,
+          [oPlan.IdProducto]);
+    end;
+    iLinea := 0;
+    while iLinea <= High(ATrabajo.Lineas) do
+    begin
+      AsegurarLease(ATrabajo);
+      ProcesarLinea(
+        ATrabajo,
+        ATrabajo.Lineas[iLinea],
+        oPlan.Lineas[iLinea],
+        ACliente);
+      Inc(iLinea);
+    end;
+  end;
+end;
+
+function THiloPrestaShopCola.PrepararPlanArticulo(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const ACliente: IClienteCatalogoPresta;
+  ASincronizarStockPrecios: Boolean): TPlanArticuloPrestaShop;
+var
+  iAtributo: Integer;
+  iLinea: Integer;
+  oStock: TStockDisponiblePresta;
+begin
+  Result := Default(TPlanArticuloPrestaShop);
   AsegurarLease(ATrabajo);
-  iProducto := ACliente.BuscarProductoUnico(
+  Result.IdProducto := ACliente.BuscarProductoUnico(
     ATrabajo.CodigoArticulo,
     ATrabajo.IdTienda);
   AsegurarLease(ATrabajo);
-  if ATrabajo.TienePrecio then
+  if ASincronizarStockPrecios then
   begin
-    if not ATrabajo.TienePrecioProducto then
-      raise EInvalidOpException.CreateFmt(
-        SPrecioProductoPrestaShopAusente,
-        [ATrabajo.CodigoArticulo]);
-    AsegurarLease(ATrabajo);
-    dActual := ACliente.LeerPrecioProducto(
-      iProducto,
-      ATrabajo.IdTienda);
-    if PrecioDiferente(dActual, ATrabajo.PrecioProducto) then
+    SetLength(Result.Lineas, Length(ATrabajo.Lineas));
+    iLinea := 0;
+    while iLinea <= High(ATrabajo.Lineas) do
     begin
-      AsegurarLease(ATrabajo);
-      ACliente.ActualizarPrecioProducto(
-        iProducto,
-        ATrabajo.IdTienda,
-        ATrabajo.PrecioProducto);
+      iAtributo := 0;
+      if ATrabajo.Lineas[iLinea].EsCombinacion then
+      begin
+        AsegurarLease(ATrabajo);
+        iAtributo := ACliente.BuscarCombinacionUnica(
+          ATrabajo.Lineas[iLinea].CodigoSku,
+          Result.IdProducto,
+          ATrabajo.IdTienda);
+        Result.Lineas[iLinea].IdCombinacion := iAtributo;
+      end;
+      if ATrabajo.Lineas[iLinea].TieneStock then
+      begin
+        AsegurarLease(ATrabajo);
+        oStock := ACliente.ResolverStockDisponible(
+          Result.IdProducto,
+          iAtributo,
+          ATrabajo.IdTienda);
+        Result.Lineas[iLinea].IdStock := oStock.Id;
+      end;
+      Inc(iLinea);
     end;
     AsegurarLease(ATrabajo);
-    dActual := ACliente.LeerPrecioProducto(
-      iProducto,
-      ATrabajo.IdTienda);
-    if PrecioDiferente(dActual, ATrabajo.PrecioProducto) then
-      raise EInvalidOpException.CreateFmt(
-        SPrecioProductoNoVerificado,
-        [iProducto]);
-  end;
-  iLinea := 0;
-  while iLinea <= High(ATrabajo.Lineas) do
-  begin
-    AsegurarLease(ATrabajo);
-    ProcesarLinea(
-      ATrabajo,
-      ATrabajo.Lineas[iLinea],
-      iProducto,
-      ACliente);
-    Inc(iLinea);
   end;
 end;
 
 procedure THiloPrestaShopCola.ProcesarLinea(
   const ATrabajo: TTrabajoArticuloPrestaShop;
   const ALinea: TLineaArticuloPrestaShop;
-  AIdProducto: Integer;
+  const AMapeo: TMapeoLineaPrestaShop;
   const ACliente: IClienteCatalogoPresta);
 var
   dActual: Double;
   dImpacto: Double;
   iActual: Integer;
-  iAtributo: Integer;
-  iStock: Integer;
-  oStock: TStockDisponiblePresta;
 begin
-  iAtributo := 0;
-  if ALinea.EsCombinacion then
-  begin
-    AsegurarLease(ATrabajo);
-    iAtributo := ACliente.BuscarCombinacionUnica(
-      ALinea.CodigoSku,
-      AIdProducto,
-      ATrabajo.IdTienda);
-  end;
-  if ALinea.TienePrecio then
+  if ALinea.TienePrecio and ALinea.EsCombinacion then
   begin
     dImpacto := ALinea.Precio - ATrabajo.PrecioProducto;
     AsegurarLease(ATrabajo);
     dActual := ACliente.LeerImpactoPrecioCombinacion(
-      iAtributo,
+      AMapeo.IdCombinacion,
       ATrabajo.IdTienda);
     if PrecioDiferente(dActual, dImpacto) then
     begin
       AsegurarLease(ATrabajo);
       ACliente.ActualizarImpactoPrecioCombinacion(
-        iAtributo,
+        AMapeo.IdCombinacion,
         ATrabajo.IdTienda,
         dImpacto);
     end;
     AsegurarLease(ATrabajo);
     dActual := ACliente.LeerImpactoPrecioCombinacion(
-      iAtributo,
+      AMapeo.IdCombinacion,
       ATrabajo.IdTienda);
     if PrecioDiferente(dActual, dImpacto) then
       raise EInvalidOpException.CreateFmt(
         SPrecioCombinacionNoVerificado,
-        [iAtributo]);
+        [AMapeo.IdCombinacion]);
   end;
   if ALinea.TieneStock then
   begin
     AsegurarLease(ATrabajo);
-    oStock := ACliente.ResolverStockDisponible(
-      AIdProducto,
-      iAtributo,
-      ATrabajo.IdTienda);
-    iStock := oStock.Id;
-    AsegurarLease(ATrabajo);
     iActual := ACliente.LeerCantidadStock(
-      iStock,
+      AMapeo.IdStock,
       ATrabajo.IdTienda);
     if iActual <> ALinea.Cantidad then
     begin
       AsegurarLease(ATrabajo);
       ACliente.ActualizarCantidadStock(
-        iStock,
+        AMapeo.IdStock,
         ATrabajo.IdTienda,
         ALinea.Cantidad);
     end;
     AsegurarLease(ATrabajo);
     iActual := ACliente.LeerCantidadStock(
-      iStock,
+      AMapeo.IdStock,
       ATrabajo.IdTienda);
     if iActual <> ALinea.Cantidad then
       raise EInvalidOpException.CreateFmt(
         SStockPrestaShopNoVerificado,
-        [iStock]);
+        [AMapeo.IdStock]);
   end;
 end;
 
@@ -647,6 +1193,79 @@ begin
       Format(
         'Cola PrestaShop, artículo %s: %s',
         [ATrabajo.CodigoArticulo, sMensaje]));
+end;
+
+procedure THiloPrestaShopCola.GuardarIncidenciaTerminal(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AMensaje: string);
+var
+  sMensaje: string;
+begin
+  sMensaje := OcultarClave(AMensaje, AConfiguracion.ClaveApi);
+  FRepositorio.GuardarErrorIntento(
+    ATrabajo.IdCola,
+    ATrabajo.Token,
+    'ERROR',
+    0,
+    sMensaje,
+    FUsuario);
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarAviso(
+      Format(
+        'Incidencia terminal PrestaShop, artículo %s: %s',
+        [ATrabajo.CodigoArticulo, sMensaje]));
+end;
+
+procedure THiloPrestaShopCola.GuardarRecursoAmbiguo(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AError: ERecursoPrestaAmbiguo);
+var
+  sMensaje: string;
+begin
+  if SameText(AError.TipoRecurso, CTipoRecursoProducto) then
+    sMensaje := Format(
+      SProductoPrestaShopAmbiguo,
+      [AError.Cantidad, ATrabajo.CodigoArticulo])
+  else
+    sMensaje := Format(
+      SRecursoPrestaShopAmbiguo,
+      [AError.Cantidad,
+       AError.TipoRecurso,
+       ATrabajo.CodigoArticulo]);
+  GuardarIncidenciaTerminal(
+    ATrabajo,
+    AConfiguracion,
+    sMensaje);
+end;
+
+procedure THiloPrestaShopCola.GuardarRecursoNoEncontrado(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AError: ERecursoPrestaNoEncontrado);
+var
+  sMensaje: string;
+begin
+  if SameText(AError.TipoRecurso, CTipoRecursoProducto) then
+  begin
+    if AConfiguracion.CrearArticulos then
+      sMensaje := Format(
+        SProductoPrestaShopNoEncontradoTrasAlta,
+        [ATrabajo.CodigoArticulo])
+    else
+      sMensaje := Format(
+        SProductoPrestaShopNoEncontradoSinAlta,
+        [ATrabajo.CodigoArticulo]);
+  end
+  else
+    sMensaje := Format(
+      SRecursoPrestaShopNoEncontrado,
+      [AError.TipoRecurso, ATrabajo.CodigoArticulo]);
+  GuardarIncidenciaTerminal(
+    ATrabajo,
+    AConfiguracion,
+    sMensaje);
 end;
 
 end.

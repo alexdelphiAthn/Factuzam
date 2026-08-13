@@ -22,40 +22,21 @@
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    object lblBaseURL: TcxLabel
+    object lblConfiguracion: TcxLabel
       Left = 8
-      Top = 8
-      Caption = 'URL base API PrestaShop (ej. http://midominio.com/api)'
-      TabOrder = 3
-      Transparent = True
-    end
-    object edtBaseURL: TcxTextEdit
-      Left = 8
-      Top = 28
-      TabOrder = 0
-      Width = 540
-    end
-    object lblApiKey: TcxLabel
-      Left = 8
-      Top = 50
-      Caption = 'API Key'
-      TabOrder = 4
-      Transparent = True
-    end
-    object edtApiKey: TcxTextEdit
-      Left = 8
-      Top = 64
-      Properties.EchoMode = eemPassword
+      Top = 35
+      Caption =
+        'Se usa la configuraci'#243'n efectiva de Par'#225'metros de Entorno'
       TabOrder = 1
-      Width = 540
+      Transparent = True
     end
     object btnConectar: TcxButton
-      Left = 560
-      Top = 26
+      Left = 760
+      Top = 29
       Width = 140
       Height = 30
       Caption = 'Conectar y listar'
-      TabOrder = 2
+      TabOrder = 0
       OnClick = btnConectarClick
     end
   end

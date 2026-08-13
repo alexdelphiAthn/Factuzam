@@ -244,12 +244,19 @@ begin
     'Reintentos antes de marcar un envío de venta en ERROR',
     tpInteger, '20');
   // --- PrestaShop ---
-  RegistrarParametro('PrestaShop', 'appPrestaShopActivo',
-    'Activar el envío de la cola de cambios a PrestaShop',
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopSincronizarStockPrecios',
+    'Sincronizar stock y precios',
     tpBoolean, 'False');
-  RegistrarParametro('PrestaShop', 'appPrestaShopStockActivo',
-    'Enviar stock; activar solo con reserva automática de pedidos web',
+  RegistrarParametro('PrestaShop', 'appPrestaShopCrearArticulos',
+    'Crear artículos en PrestaShop al darlos de alta',
     tpBoolean, 'False');
+  // Claves históricas ocultas. Se conservan sin convertirlas en la nueva
+  // autorización conjunta, para no activar el stock de forma implícita.
+  RegistrarParametro('', 'appPrestaShopActivo',
+    'Activación histórica de la cola PrestaShop', tpBoolean, 'False');
+  RegistrarParametro('', 'appPrestaShopStockActivo',
+    'Activación histórica del stock PrestaShop', tpBoolean, 'False');
   RegistrarParametro('PrestaShop', 'appPrestaShopUrl',
     'URL base de la API REST de PrestaShop', tpString,
     'https://www.martamere.com/api');
@@ -258,11 +265,33 @@ begin
   RegistrarParametro('PrestaShop', 'appPrestaShopTarifa',
     'Código de la tarifa que se sincroniza con PrestaShop',
     tpString, 'PVP');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaNormal',
+    'Id. regla fiscal PrestaShop para IVA normal',
+    tpInteger, '1');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaReducido',
+    'Id. regla fiscal PrestaShop para IVA reducido',
+    tpInteger, '2');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaSuperreducido',
+    'Id. regla fiscal PrestaShop para IVA superreducido',
+    tpInteger, '3');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaExento',
+    'Id. regla fiscal PrestaShop para artículos exentos',
+    tpInteger, '0');
   RegistrarParametro('PrestaShop', 'appPrestaShopEmpresa',
     'Empresa de Factuzam usada para calcular el IVA del precio web',
     tpString, '1');
   RegistrarParametro('PrestaShop', 'appPrestaShopIdTienda',
     'Identificador de tienda de PrestaShop', tpInteger, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopIdIdioma',
+    'Identificador del idioma usado al crear el catálogo',
+    tpInteger, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopIdCategoriaRaiz',
+    'Identificador de la categoría raíz para crear familias',
+    tpInteger, '2');
   RegistrarParametro('PrestaShop', 'appPrestaShopSegundosCiclo',
     'Segundos entre comprobaciones de respaldo de la cola PrestaShop',
     tpInteger, '60');

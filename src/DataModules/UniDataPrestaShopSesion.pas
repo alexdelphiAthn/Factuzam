@@ -18,7 +18,8 @@ unit UniDataPrestaShopSesion;
 interface
 
 uses
-  inLibConexionesIntf, inLibPrestaShopColaIntf;
+  inLibConexionesIntf, inLibPrestaShopColaIntf,
+  inLibPrestaShopAltaArticuloIntf;
 
 function CrearFabricaSesionPrestaShopColaUniDAC(
   const AConexiones: IServicioConexiones): IFabricaSesionPrestaShopCola;
@@ -26,7 +27,8 @@ function CrearFabricaSesionPrestaShopColaUniDAC(
 implementation
 
 uses
-  System.SysUtils, Uni, UniDataPrestaShopCola;
+  System.SysUtils, Uni, UniDataPrestaShopCola,
+  UniDataPrestaShopAltaArticulo;
 
 type
   TSesionPrestaShopColaUniDAC = class(
@@ -35,10 +37,12 @@ type
   private
     FConexion: TUniConnection;
     FRepositorio: IRepositorioPrestaShopCola;
+    FRepositorioAlta: IRepositorioAltaArticuloPresta;
   public
     constructor Create(const AConexiones: IServicioConexiones);
     destructor Destroy; override;
     function GetRepositorio: IRepositorioPrestaShopCola;
+    function GetRepositorioAlta: IRepositorioAltaArticuloPresta;
   end;
 
   TFabricaSesionPrestaShopColaUniDAC = class(
@@ -60,13 +64,22 @@ begin
   inherited Create;
   FConexion := AConexiones.CrearConexion(nil, uctSegundoPlano);
   FRepositorio := CrearRepositorioPrestaShopColaUniDAC(FConexion);
+  FRepositorioAlta :=
+    CrearRepositorioAltaArticuloPrestaUniDAC(FConexion);
 end;
 
 destructor TSesionPrestaShopColaUniDAC.Destroy;
 begin
+  FRepositorioAlta := nil;
   FRepositorio := nil;
   FreeAndNil(FConexion);
   inherited;
+end;
+
+function TSesionPrestaShopColaUniDAC.GetRepositorioAlta:
+  IRepositorioAltaArticuloPresta;
+begin
+  Result := FRepositorioAlta;
 end;
 
 function TSesionPrestaShopColaUniDAC.GetRepositorio:

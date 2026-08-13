@@ -20,6 +20,8 @@ uses
 
 function CalcularClaveInstalacionPresta(
   const AUrlApi: string): string;
+function CrearTransportePresta(const AUrlApi,
+  AClaveApi: string): ITransporteAltaPresta;
 
 type
   TClienteCatalogoPresta = class(TInterfacedObject,
@@ -114,7 +116,8 @@ resourcestring
     'el stock no corresponde al producto y atributo solicitados';
 
 type
-  TTransporteRestPresta = class(TInterfacedObject, ITransportePresta)
+  TTransporteRestPresta = class(TInterfacedObject, ITransportePresta,
+    ITransporteAltaPresta)
   private
     FCliente: TRESTClient;
     FSolicitud: TRESTRequest;
@@ -128,6 +131,10 @@ type
     function EjecutarGet(
       const ARecurso: string): TRespuestaHttpPresta;
     function EjecutarPatch(const ARecurso, AXml: string):
+      TRespuestaHttpPresta;
+    function EjecutarPostXml(const ARecurso, AXml: string):
+      TRespuestaHttpPresta;
+    function EjecutarPostImagen(const ARecurso, ARutaImagen: string):
       TRespuestaHttpPresta;
   end;
 
@@ -174,6 +181,12 @@ function CalcularClaveInstalacionPresta(
 begin
   Result := UpperCase(THashSHA2.GetHashString(
     NormalizarUrlApi(AUrlApi)));
+end;
+
+function CrearTransportePresta(const AUrlApi,
+  AClaveApi: string): ITransporteAltaPresta;
+begin
+  Result := TTransporteRestPresta.Create(AUrlApi, AClaveApi);
 end;
 
 procedure ComprobarPositivo(AValor: Integer; const ANombre: string);
@@ -456,10 +469,11 @@ var
 begin
   sMetodo := RESTRequestMethodToString(AMetodo);
   FRespuesta.ResetToDefaults;
+  FSolicitud.Params.Clear;
   FSolicitud.ClearBody;
   FSolicitud.Resource := ARecurso;
   FSolicitud.Method := AMetodo;
-  if AMetodo = rmPATCH then
+  if AMetodo in [rmPATCH, rmPOST] then
     FSolicitud.AddBody(AXml, ctAPPLICATION_XML);
   try
     FSolicitud.Execute;
@@ -485,6 +499,38 @@ function TTransporteRestPresta.EjecutarPatch(
   const ARecurso, AXml: string): TRespuestaHttpPresta;
 begin
   Result := Ejecutar(rmPATCH, ARecurso, AXml);
+end;
+
+function TTransporteRestPresta.EjecutarPostXml(
+  const ARecurso, AXml: string): TRespuestaHttpPresta;
+begin
+  Result := Ejecutar(rmPOST, ARecurso, AXml);
+end;
+
+function TTransporteRestPresta.EjecutarPostImagen(
+  const ARecurso, ARutaImagen: string): TRespuestaHttpPresta;
+var
+  sMetodo: string;
+begin
+  sMetodo := RESTRequestMethodToString(rmPOST);
+  FRespuesta.ResetToDefaults;
+  FSolicitud.Params.Clear;
+  FSolicitud.ClearBody;
+  FSolicitud.Resource := ARecurso;
+  FSolicitud.Method := rmPOST;
+  FSolicitud.AddFile('image', ARutaImagen);
+  try
+    FSolicitud.Execute;
+  except
+    on E: Exception do
+      raise ETransportePresta.CreateFmt(SErrorTransportePresta,
+        [sMetodo, ARecurso,
+         OcultarSecreto(E.Message, FAutenticador.Username)]);
+  end;
+  Result.EstadoHttp := FRespuesta.StatusCode;
+  Result.TextoEstado := OcultarSecreto(FRespuesta.StatusText,
+    FAutenticador.Username);
+  Result.Contenido := FRespuesta.Content;
 end;
 
 { TClienteCatalogoPresta }

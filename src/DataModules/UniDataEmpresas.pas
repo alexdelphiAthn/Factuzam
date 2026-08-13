@@ -130,7 +130,9 @@ function TdmEmpresas.EmpresaAfectaPrestaShop(
 var
   sEmpresaPrestaShop: string;
 begin
-  sEmpresaPrestaShop := LeerCodigoEmpresaPrestaShop(AConexion);
+  sEmpresaPrestaShop := LeerCodigoEmpresaPrestaShop(
+    AConexion,
+    IdentidadSesion.Usuario);
   Result := SameText(Trim(ACodigoActual), sEmpresaPrestaShop) or
     SameText(Trim(ACodigoAnterior), sEmpresaPrestaShop);
 end;

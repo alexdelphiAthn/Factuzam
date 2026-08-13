@@ -17,7 +17,10 @@ unit inLibPrestaShopColaIntf;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibPrestaShopAltaArticuloIntf;
+
+const
+  CMarcaReanudacionAltaPrestaShop = '[ALTA_PRESTASHOP] ';
 
 type
   TConfiguracionPrestaShopCola = record
@@ -25,11 +28,19 @@ type
     CodigoEmpresa: string;
     CodigoTarifa: string;
     IdTienda: Integer;
+    IdIdioma: Integer;
+    IdCategoriaRaiz: Integer;
+    IdReglaIvaNormal: Integer;
+    IdReglaIvaReducido: Integer;
+    IdReglaIvaSuperreducido: Integer;
+    IdReglaIvaExento: Integer;
     StockActivo: Boolean;
   end;
 
   TConfiguracionGlobalPrestaShop = record
     Activo: Boolean;
+    SincronizarStockPrecios: Boolean;
+    CrearArticulos: Boolean;
     UrlApi: string;
     ClaveApi: string;
     SegundosCiclo: Integer;
@@ -60,6 +71,7 @@ type
     TieneStock: Boolean;
     TienePrecioProducto: Boolean;
     TieneProximoCambioPrecio: Boolean;
+    ReanudarAlta: Boolean;
     PrecioProducto: Double;
     ProximoCambioPrecio: TDateTime;
     Lineas: TArray<TLineaArticuloPrestaShop>;
@@ -71,11 +83,14 @@ type
       const ACodigoArticulo, ACodigoUnidad: string;
       AEsPrecio, AEsStock: Boolean;
       const AUsuario: string);
-    function LeerConfiguracionGlobal:
-      TConfiguracionGlobalPrestaShop;
+    function LeerConfiguracionPerfil(
+      const AUsuario, AGrupo: string): TConfiguracionGlobalPrestaShop;
+    function DestinoSinConflictos(
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AUsuario: string): Boolean;
     procedure ReconciliarSiProcede(
+      const AConfiguracion: TConfiguracionPrestaShopCola;
       AHoras: Integer;
-      AStockActivo: Boolean;
       const AUsuario: string);
     procedure ReencolarProcesandoCaducadas(
       const AClaveInstalacion: string;
@@ -99,6 +114,9 @@ type
     function RenovarReclamacion(
       AIdCola: Int64;
       const AToken: string): Boolean;
+    function MarcarAltaEnCurso(
+      AIdCola: Int64;
+      const AToken: string): Boolean;
     procedure MarcarEnviada(
       AIdCola: Int64;
       const AToken, AUsuario: string;
@@ -114,7 +132,10 @@ type
   ISesionPrestaShopCola = interface
     ['{B1063C7D-9530-4B02-98B9-7BB1BD30D9BA}']
     function GetRepositorio: IRepositorioPrestaShopCola;
+    function GetRepositorioAlta: IRepositorioAltaArticuloPresta;
     property Repositorio: IRepositorioPrestaShopCola read GetRepositorio;
+    property RepositorioAlta: IRepositorioAltaArticuloPresta
+      read GetRepositorioAlta;
   end;
 
   IFabricaSesionPrestaShopCola = interface

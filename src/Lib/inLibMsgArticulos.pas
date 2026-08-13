@@ -31,6 +31,9 @@ resourcestring
     '%s ya tiene un proveedor principal asociado a este artículo.';
   SErrorDescripcionArticulo =
     '%s no es un valor válido para el campo Descripción de Artículos';
+  SErrorPermisoCambiarMarcaWebArticulo =
+    'No tiene permiso para activar o desactivar la marca En web del ' +
+    'artículo.';
   SPreguntaDesactivarTarifaSinPrecio =
     'El precio de salida pasa a 0. ¿Desea desactivar la tarifa?';
   SPreguntaActivarTarifaConPrecio =

@@ -22,7 +22,7 @@ uses
   Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxStyles, cxClasses, cxCustomData, cxFilter, cxData,
-  cxDataStorage, cxEdit, cxLabel, cxTextEdit, cxButtons, cxCheckBox,
+  cxDataStorage, cxEdit, cxLabel, cxButtons, cxCheckBox,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGrid, dxSkinsCore, dxSkinBlue, cxContainer, cxMaskEdit,
   cxDropDownEdit, cxListBox, cxCheckListBox, cxNavigator,
@@ -36,10 +36,7 @@ type
     pnlTop: TPanel;
     pnlMid:  TPanel;
     pnlBottom: TPanel;
-    lblBaseURL: TcxLabel;
-    edtBaseURL: TcxTextEdit;
-    lblApiKey: TcxLabel;
-    edtApiKey: TcxTextEdit;
+    lblConfiguracion: TcxLabel;
     btnConectar: TcxButton;
     cxgrdPedidos: TcxGrid;
     tvPedidos: TcxGridTableView;
@@ -60,8 +57,15 @@ type
     procedure btnImportarClick(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
   private
+    FBaseURL: string;
+    FApiKey: string;
+    FConfiguracionCargada: Boolean;
     FResumen: TResumenPedidosImportacion;
     FCasoUsoImportacion: ICasoUsoImportacionPedidos;
+    function CargarConfiguracion: Boolean;
+    function ConfiguracionSigueVigente: Boolean;
+    function LeerConfiguracion(
+      out ABaseURL, AApiKey: string): Boolean;
   public
     procedure Configurar(ADataModule: TdmPedidos);
   end;
@@ -76,6 +80,15 @@ uses
   UniDataImportacionPedidos,
   inMtoImportacionPedidosVcl;
 
+resourcestring
+  SConfiguracionPrestaShopIncompleta =
+    'Configura la URL y la clave de PrestaShop en Parámetros de Entorno.';
+  SConfiguracionPrestaShopCambiada =
+    'La configuración de PrestaShop ha cambiado. Pulsa Conectar y listar ' +
+    'antes de importar.';
+  SPrestaShopNoConectado =
+    'Pulsa Conectar y listar antes de importar pedidos.';
+
 function CrearContextoImportacionPedidosVcl(
   AFormulario: TfrmModalImportarPedidosPS
 ): TContextoImportacionPedidosVcl;
@@ -85,8 +98,8 @@ begin
   Result.Estado := AFormulario.lblEstado;
   Result.Resumen := AFormulario.FResumen;
   Result.CasoUso := AFormulario.FCasoUsoImportacion;
-  Result.BaseURL := AFormulario.edtBaseURL.Text;
-  Result.ApiKey := AFormulario.edtApiKey.Text;
+  Result.BaseURL := AFormulario.FBaseURL;
+  Result.ApiKey := AFormulario.FApiKey;
   Result.IndiceSeleccion := AFormulario.colSel.Index;
   Result.IndiceId := AFormulario.colId.Index;
   Result.IndiceReferencia := AFormulario.colRef.Index;
@@ -101,9 +114,48 @@ procedure TfrmModalImportarPedidosPS.FormCreate(Sender: TObject);
 begin
   inherited;
   FResumen := TResumenPedidosImportacion.Create;
-  // Valores por defecto recuperables desde el servicio de parámetros.
-  edtBaseURL.Text := 'http://localhost/api';
-  edtApiKey.Text  := '';
+  FConfiguracionCargada := False;
+end;
+
+function TfrmModalImportarPedidosPS.CargarConfiguracion: Boolean;
+begin
+  Result := LeerConfiguracion(FBaseURL, FApiKey);
+  FConfiguracionCargada := Result;
+  if not Result then
+    ShowMessage(SConfiguracionPrestaShopIncompleta);
+end;
+
+function TfrmModalImportarPedidosPS.ConfiguracionSigueVigente: Boolean;
+var
+  sApiKeyActual: string;
+  sBaseURLActual: string;
+begin
+  Result := False;
+  if not FConfiguracionCargada then
+    ShowMessage(SPrestaShopNoConectado)
+  else if not LeerConfiguracion(sBaseURLActual, sApiKeyActual) then
+    ShowMessage(SConfiguracionPrestaShopIncompleta)
+  else if (sBaseURLActual <> FBaseURL) or
+          (sApiKeyActual <> FApiKey) then
+  begin
+    FConfiguracionCargada := False;
+    ShowMessage(SConfiguracionPrestaShopCambiada);
+  end
+  else
+    Result := True;
+end;
+
+function TfrmModalImportarPedidosPS.LeerConfiguracion(
+  out ABaseURL, AApiKey: string): Boolean;
+begin
+  ABaseURL := '';
+  AApiKey := '';
+  if Assigned(ParametrosApp) then
+  begin
+    ABaseURL := Trim(ParametrosApp.GetString('appPrestaShopUrl', ''));
+    AApiKey := Trim(ParametrosApp.GetString('appPrestaShopApiKey', ''));
+  end;
+  Result := (ABaseURL <> '') and (AApiKey <> '');
 end;
 
 procedure TfrmModalImportarPedidosPS.btnCerrarClick(Sender: TObject);
@@ -114,8 +166,11 @@ end;
 
 procedure TfrmModalImportarPedidosPS.btnConectarClick(Sender: TObject);
 begin
-  TCoordinadorImportacionPedidosVcl.Conectar(
-    CrearContextoImportacionPedidosVcl(Self));
+  if CargarConfiguracion then
+  begin
+    TCoordinadorImportacionPedidosVcl.Conectar(
+      CrearContextoImportacionPedidosVcl(Self));
+  end;
 end;
 
 procedure TfrmModalImportarPedidosPS.Configurar(
@@ -128,8 +183,11 @@ end;
 
 procedure TfrmModalImportarPedidosPS.btnImportarClick(Sender: TObject);
 begin
-  TCoordinadorImportacionPedidosVcl.Importar(
-    CrearContextoImportacionPedidosVcl(Self));
+  if ConfiguracionSigueVigente then
+  begin
+    TCoordinadorImportacionPedidosVcl.Importar(
+      CrearContextoImportacionPedidosVcl(Self));
+  end;
 end;
 
 end.
