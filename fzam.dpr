@@ -869,6 +869,16 @@ uses
   UniDataVentasWsCola in 'src\DataModules\UniDataVentasWsCola.pas',
   UniDataVentasWsSesion in 'src\DataModules\UniDataVentasWsSesion.pas',
   inLibVentasWsCola in 'src\Lib\inLibVentasWsCola.pas',
+  inLibPrestaCatalogoIntf in 'src\Lib\inLibPrestaCatalogoIntf.pas',
+  inLibPrestaCatalogo in 'src\Lib\inLibPrestaCatalogo.pas',
+  inLibPrestaShopColaIntf in 'src\Lib\inLibPrestaShopColaIntf.pas',
+  UniDataPrestaShopCola in
+    'src\DataModules\UniDataPrestaShopCola.pas',
+  UniDataPrestaShopSesion in
+    'src\DataModules\UniDataPrestaShopSesion.pas',
+  UniDataPrestaShopEncolado in
+    'src\DataModules\UniDataPrestaShopEncolado.pas',
+  inLibPrestaShopCola in 'src\Lib\inLibPrestaShopCola.pas',
   inLibXades in 'src\Lib\inLibXades.pas',
   inLibDocumentoFiscal in 'src\Lib\inLibDocumentoFiscal.pas',
   inLibRelojFiscal in 'src\Lib\inLibRelojFiscal.pas',

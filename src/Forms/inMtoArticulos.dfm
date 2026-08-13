@@ -229,7 +229,7 @@
               Left = 18
               Top = 55
               Caption = 'Nombre'
-              TabOrder = 4
+              TabOrder = 5
               Transparent = True
             end
             object txtDESCRIPCION_ARTICULO: TcxDBTextEdit
@@ -237,7 +237,7 @@
               Top = 54
               DataBinding.DataField = 'DESCRIPCION_ART'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 3
+              TabOrder = 4
               Width = 597
             end
             object chkActivo: TcxDBCheckBox
@@ -249,6 +249,17 @@
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               TabOrder = 2
+              Transparent = True
+            end
+            object chkEnWeb: TcxDBCheckBox
+              Left = 420
+              Top = 10
+              Caption = 'En web'
+              DataBinding.DataField = 'ESWEB_ART'
+              DataBinding.DataSource = dsTablaG
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              TabOrder = 3
               Transparent = True
             end
             object cbbFamilia: TcxDBLookupComboBox
@@ -270,7 +281,7 @@
                 end>
               Properties.ListOptions.ShowHeader = False
               Properties.OnEditValueChanged = cbbFamiliaPropertiesEditValueChanged
-              TabOrder = 5
+              TabOrder = 6
               Width = 322
             end
             object lblFamilia: TcxLabel
@@ -282,7 +293,7 @@
               Margins.Bottom = 4
               Caption = 'Familia'
               Properties.Alignment.Horz = taRightJustify
-              TabOrder = 6
+              TabOrder = 7
               Transparent = True
               AnchorX = 90
             end
@@ -291,7 +302,7 @@
               Top = 128
               DataBinding.DataField = 'DESCRIPCION_FAM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 7
+              TabOrder = 8
               Transparent = True
               Height = 21
               Width = 538
@@ -301,7 +312,7 @@
               Top = 128
               DataBinding.DataField = 'NOMBRE_FAM_FAM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 8
+              TabOrder = 9
               Transparent = True
               Height = 21
               Width = 274

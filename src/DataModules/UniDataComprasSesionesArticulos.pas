@@ -39,6 +39,7 @@ uses
   inLibEAN13,
   UniDataValoresAutomaticosRepositorio,
   UniDataComprasSesionesColores,
+  UniDataPrestaShopEncolado,
   inLibMsgCompras;
 function GenerarEAN13Local(
                            const ALecturas:
@@ -594,6 +595,10 @@ begin
       q.ParamByName('pre').AsFloat  := APrecioVenta;
       q.ParamByName('u').AsString   := AUsuario;
       q.ExecSQL;
+      EncolarPrecioPrestaShop(
+        AConn,
+        ACodigoArt,
+        AUsuario);
     finally
       FreeAndNil(q);
     end;

@@ -74,6 +74,7 @@ type
     cxdbtxtdtUSUARIOALTA1: TcxDBTextEdit;
     lblUsuarioModif: TcxLabel;
     chkActivo: TcxDBCheckBox;
+    chkEnWeb: TcxDBCheckBox;
     cbbFamilia: TcxDBLookupComboBox;
     lblFamilia: TcxLabel;
     tsTarifas: TcxTabSheet;

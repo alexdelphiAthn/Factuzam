@@ -19,8 +19,8 @@ interface
 
 uses
   inLibRegistroPantallas,
-  System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser, Datasnap.Provider,
+  System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
+  MemDS, DBAccess, Uni, inLibUser, Datasnap.Provider,
   Datasnap.DBClient, Forms, Windows, Dateutils;
 
 type
@@ -55,7 +55,13 @@ type
     procedure unqryTablaGAfterDelete(DataSet: TDataSet);
     procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
+    FEncolarPrecioPrestaShop: Boolean;
+    function CampoPrecioPrestaShopCambiado(
+      DataSet: TDataSet): Boolean;
     function ConfirmarCambioCriticoEmpresa(const sAccion: string): Boolean;
+    function EmpresaAfectaPrestaShop(
+      AConexion: TUniConnection;
+      const ACodigoActual, ACodigoAnterior: string): Boolean;
     procedure ValidarSerieTokenizada;
     { Private declarations }
   public
@@ -84,7 +90,7 @@ uses
   UniDataValoresAutomaticosRepositorio,
   System.Diagnostics,
   inLibFormatoDocumento, inLibIBAN, inLibMsgComun,
-  inLibMsgFacturas;
+  inLibMsgFacturas, UniDataPrestaShopEncolado;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -97,6 +103,36 @@ function TdmEmpresas.ConfirmarCambioCriticoEmpresa(
 begin
   Result := SolicitarConfirmacion(
     Format(SPreguntaCambioCriticoEmpresa, [sAccion]));
+end;
+
+function TdmEmpresas.CampoPrecioPrestaShopCambiado(
+  DataSet: TDataSet): Boolean;
+
+  function Cambio(const ACampo: string): Boolean;
+  begin
+    Result := not SameText(
+      VarToStr(DataSet.FieldByName(ACampo).OldValue),
+      VarToStr(DataSet.FieldByName(ACampo).Value));
+  end;
+
+begin
+  Result := DataSet.State = dsInsert;
+  if DataSet.State = dsEdit then
+    Result :=
+      Cambio('CODIGO_EMP_EMP') or
+      Cambio('ESACTIVO_EMP') or
+      Cambio('GRUPO_ZONA_IVA_EMP');
+end;
+
+function TdmEmpresas.EmpresaAfectaPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoActual, ACodigoAnterior: string): Boolean;
+var
+  sEmpresaPrestaShop: string;
+begin
+  sEmpresaPrestaShop := LeerCodigoEmpresaPrestaShop(AConexion);
+  Result := SameText(Trim(ACodigoActual), sEmpresaPrestaShop) or
+    SameText(Trim(ACodigoAnterior), sEmpresaPrestaShop);
 end;
 
 procedure TdmEmpresas.unqryRetencionesAfterInsert(DataSet: TDataSet);
@@ -313,6 +349,16 @@ begin
     unqryTablaG.FieldByName('CODIGO_EMP_EMP').AsString;
   qryBorrarLineas.ExecSQL;
   qryBorrarLineas.Free;
+  try
+    if FEncolarPrecioPrestaShop then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPrecioPrestaShop := False;
+  end;
 end;
 
 procedure TdmEmpresas.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -486,6 +532,16 @@ begin
     finally
       FreeAndNil(unqryPie);
     end;
+  end;
+  try
+    if FEncolarPrecioPrestaShop then
+      EncolarTodosWebPrestaShop(
+        oConexion,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPrecioPrestaShop := False;
   end;
 end;
 
@@ -671,6 +727,7 @@ end;
 procedure TdmEmpresas.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   inherited;
+  FEncolarPrecioPrestaShop := False;
   if not ConfirmarCambioCriticoEmpresa('borrar') then
   begin
     Abort;
@@ -683,6 +740,10 @@ begin
       Abort;
     end;
   end;
+  FEncolarPrecioPrestaShop := EmpresaAfectaPrestaShop(
+    TUniQuery(DataSet).Connection,
+    DataSet.FieldByName('CODIGO_EMP_EMP').AsString,
+    '');
 end;
 
 procedure TdmEmpresas.unqryTablaGBeforeEdit(DataSet: TDataSet);
@@ -706,6 +767,7 @@ end;
 procedure TdmEmpresas.unqryTablaGBeforePost(DataSet: TDataSet);
 var
   bError:Boolean;
+  sCodigoAnterior: string;
   sCodigoEmpresa, sRazonSocial:String;
   function FindField(const ANombre: string): TField;
   begin
@@ -713,6 +775,7 @@ var
   end;
 begin
   inherited;
+  FEncolarPrecioPrestaShop := False;
   // Insert vacío (accidental): cancelar sin error
   if (DataSet.State = dsInsert) and
      (Trim(unqryTablaG.FindField('RAZON_SOCIAL_EMP').AsString) = '') then
@@ -755,7 +818,19 @@ begin
   if bError then
     Abort
   else
+  begin
     GetCodigoAutoEmpresa;
+    sCodigoAnterior := '';
+    if DataSet.State = dsEdit then
+      sCodigoAnterior := VarToStr(
+        DataSet.FieldByName('CODIGO_EMP_EMP').OldValue);
+    FEncolarPrecioPrestaShop :=
+      CampoPrecioPrestaShopCambiado(DataSet) and
+      EmpresaAfectaPrestaShop(
+        TUniQuery(DataSet).Connection,
+        DataSet.FieldByName('CODIGO_EMP_EMP').AsString,
+        sCodigoAnterior);
+  end;
 end;
 
 procedure TdmEmpresas.GetCodigoAutoRetencion;

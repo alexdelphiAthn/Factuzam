@@ -18,16 +18,23 @@ interface
 
 uses
   inLibRegistroPantallas,
-  System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
-   inLibUser, inLibCadenas, UniDataValoresAutomaticosRepositorio;
+  System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
+  MemDS, DBAccess, Uni, inLibUser, inLibCadenas,
+  UniDataValoresAutomaticosRepositorio;
 
 type
   TdmIvasGrupos = class(TdmBase)
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
+    procedure unqryTablaGAfterDelete(DataSet: TDataSet);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
   private
-    { Private declarations }
+    FEncolarPrecioPrestaShop: Boolean;
+    function GrupoAfectaPrestaShop(
+      AConexion: TUniConnection;
+      const AGrupoActual, AGrupoAnterior: string): Boolean;
   public
     procedure GetCodigoAutoIvaGrupo;
   end;
@@ -35,7 +42,7 @@ type
 implementation
 
 uses
-  inLibMsgComun;
+  inLibMsgComun, UniDataPrestaShopEncolado;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -54,12 +61,61 @@ begin
   unqryTablaG.FindField('PALABRA_REPORTS_IVA_IVAGRP').AsString := 'IVA';
 end;
 
+procedure TdmIvasGrupos.unqryTablaGAfterDelete(DataSet: TDataSet);
+begin
+  try
+    if FEncolarPrecioPrestaShop then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPrecioPrestaShop := False;
+  end;
+end;
+
+procedure TdmIvasGrupos.unqryTablaGAfterPost(DataSet: TDataSet);
+begin
+  try
+    if FEncolarPrecioPrestaShop then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPrecioPrestaShop := False;
+  end;
+end;
+
+procedure TdmIvasGrupos.unqryTablaGBeforeDelete(DataSet: TDataSet);
+begin
+  FEncolarPrecioPrestaShop := GrupoAfectaPrestaShop(
+    TUniQuery(DataSet).Connection,
+    DataSet.FieldByName('IVA_IVAGRP').AsString,
+    '');
+end;
+
+function TdmIvasGrupos.GrupoAfectaPrestaShop(
+  AConexion: TUniConnection;
+  const AGrupoActual, AGrupoAnterior: string): Boolean;
+var
+  sGrupoPrestaShop: string;
+begin
+  sGrupoPrestaShop := LeerGrupoIvaEmpresaPrestaShop(AConexion);
+  Result := (sGrupoPrestaShop <> '') and
+    (SameText(Trim(AGrupoActual), sGrupoPrestaShop) or
+     SameText(Trim(AGrupoAnterior), sGrupoPrestaShop));
+end;
+
 procedure TdmIvasGrupos.unqryTablaGBeforePost(DataSet: TDataSet);
 var
-  sCodigo, sDescripcion: string;
+  sCodigo, sCodigoAnterior, sDescripcion: string;
   unqrySol: TUniQuery;
 begin
   inherited;
+  FEncolarPrecioPrestaShop := False;
   // Insert vacío (accidental): cancelar sin error
   if (DataSet.State = dsInsert) and
      (Trim(unqryTablaG.FindField('DESCRIPCION_IVA_IVAGRP').AsString) = '') then
@@ -94,6 +150,14 @@ begin
       end;
     end;
   GetCodigoAutoIvaGrupo;
+  sCodigoAnterior := '';
+  if DataSet.State = dsEdit then
+    sCodigoAnterior := VarToStr(
+      DataSet.FieldByName('IVA_IVAGRP').OldValue);
+  FEncolarPrecioPrestaShop := GrupoAfectaPrestaShop(
+    TUniQuery(DataSet).Connection,
+    DataSet.FieldByName('IVA_IVAGRP').AsString,
+    sCodigoAnterior);
 end;
 
 procedure TdmIvasGrupos.DataModuleCreate(Sender: TObject);

@@ -272,6 +272,7 @@ uses
   inLibVentasImpuestos,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
+  UniDataPrestaShopEncolado,
   UniDataFacturasConfiguracion,
   inLibFacturasValidacionCabecera,
   inLibFacturasValidacionDatos,
@@ -1731,6 +1732,10 @@ begin
       //  ParamByName('pINSTANTEMODIF').AsString :=
       //                             FormatDateTime('YYYY-MM-DD hh:mm:ss', Now);
     Procedimiento.ExecProc;
+    EncolarPrecioPrestaShop(
+      Procedimiento.Connection,
+      unqryLinFac.FieldByName(fcodart).AsString,
+      IdentidadSesion.Usuario);
   end;
   if not FCalculandoFactura and FRecalculoFacturaPendiente then
   begin

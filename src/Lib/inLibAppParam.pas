@@ -243,6 +243,35 @@ begin
   RegistrarParametro('Servicios web', 'appVentasWsMaxIntentos',
     'Reintentos antes de marcar un envío de venta en ERROR',
     tpInteger, '20');
+  // --- PrestaShop ---
+  RegistrarParametro('PrestaShop', 'appPrestaShopActivo',
+    'Activar el envío de la cola de cambios a PrestaShop',
+    tpBoolean, 'False');
+  RegistrarParametro('PrestaShop', 'appPrestaShopStockActivo',
+    'Enviar stock; activar solo con reserva automática de pedidos web',
+    tpBoolean, 'False');
+  RegistrarParametro('PrestaShop', 'appPrestaShopUrl',
+    'URL base de la API REST de PrestaShop', tpString,
+    'https://www.martamere.com/api');
+  RegistrarParametro('PrestaShop', 'appPrestaShopApiKey',
+    'Clave de acceso a la API de PrestaShop', tpString, '');
+  RegistrarParametro('PrestaShop', 'appPrestaShopTarifa',
+    'Código de la tarifa que se sincroniza con PrestaShop',
+    tpString, 'PVP');
+  RegistrarParametro('PrestaShop', 'appPrestaShopEmpresa',
+    'Empresa de Factuzam usada para calcular el IVA del precio web',
+    tpString, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopIdTienda',
+    'Identificador de tienda de PrestaShop', tpInteger, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopSegundosCiclo',
+    'Segundos entre comprobaciones de respaldo de la cola PrestaShop',
+    tpInteger, '60');
+  RegistrarParametro('PrestaShop', 'appPrestaShopHorasBarrido',
+    'Horas entre barridos completos de respaldo del catálogo web',
+    tpInteger, '24');
+  RegistrarParametro('PrestaShop', 'appPrestaShopMaxIntentos',
+    'Reintentos antes de marcar un envío como error definitivo',
+    tpInteger, '10');
   RegistrarParametro('', 'appRecuentoUrl',
     'URL histórica del servicio de recuentos', tpString, '');
   RegistrarParametro('', 'appRecuentoApiKey',

@@ -128,6 +128,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_pedidos`                        | `PED`     |
 | `fza_pedidos_lineas`                 | `PEDLIN`  |
 | `fza_pedidos_mensajes`               | `PEDMSG`  |
+| `fza_prestashop_cola`                | `PSCOLA`  |
 | `fza_propiedades`                    | `PROP`    |
 | `fza_propiedades_valores`            | `PV`      |
 | `fza_proformas_caja`                 | `PROCAJ`  |

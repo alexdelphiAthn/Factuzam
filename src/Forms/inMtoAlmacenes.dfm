@@ -41,6 +41,15 @@
               Properties.ValueUnchecked = 'N'
               Width = 89
             end
+            object dbcGrdDBTabPrinESWEB_ALM: TcxGridDBColumn
+              Caption = 'En web'
+              DataBinding.FieldName = 'ESWEB_ALM'
+              PropertiesClassName = 'TcxCheckBoxProperties'
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Width = 89
+            end
             object dbcGrdDBTabPrinESFISICO_ALM: TcxGridDBColumn
               Caption = 'Es F'#237'sico'
               DataBinding.FieldName = 'ESFISICO_ALM'
@@ -178,6 +187,18 @@
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               TabOrder = 1
+              Transparent = True
+            end
+            object chkESWEB_ALM: TcxDBCheckBox
+              Left = 480
+              Top = 16
+              Caption = 'En web'
+              DataBinding.DataField = 'ESWEB_ALM'
+              DataBinding.DataSource = dsTablaG
+              Properties.NullStyle = nssUnchecked
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              TabOrder = 10
               Transparent = True
             end
             object chkESFISICO_ALM: TcxDBCheckBox

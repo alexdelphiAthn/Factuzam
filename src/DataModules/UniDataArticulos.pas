@@ -68,20 +68,29 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
     procedure unqryTablaGAfterDelete(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
     procedure unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
     procedure unqryTarifasArticulosBeforePost(DataSet: TDataSet);
+    procedure unqryTarifasArticulosAfterPost(DataSet: TDataSet);
+    procedure unqryTarifasArticulosBeforeDelete(DataSet: TDataSet);
+    procedure unqryTarifasArticulosAfterDelete(DataSet: TDataSet);
     procedure unqryStockArticulosAfterScroll(DataSet: TDataSet);
     procedure unqryVariacionesArticulosBeforePost(DataSet: TDataSet);
     procedure unqryVariacionesArticulosBeforeDelete(DataSet: TDataSet);
     procedure unqrySkusBeforePost(DataSet: TDataSet);
     procedure unqrySkusBeforeDelete(DataSet: TDataSet);
+    procedure unqrySkusAfterPost(DataSet: TDataSet);
+    procedure unqrySkusAfterDelete(DataSet: TDataSet);
     procedure unqryDetallesAtributosBeforePost(DataSet: TDataSet);
   private
     // Vista de stock del Mto de Articulos, empujada por el form via
     // AsignarVistaStock (el DM ya no la busca con GetOwnerForm).
     FVistaStock: TcxGridDBTableView;
+    FCodigoArticuloBorrado: string;
+    FCodigoArticuloTarifaBorrada: string;
+    FCodigoArticuloSkuBorrado: string;
     procedure AsegurarSkuBase(const ACodArt: string);
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
@@ -153,6 +162,7 @@ uses
   System.Diagnostics,
   inLibCadenas, inLibDatasets,
   inLibLogIntf,
+  UniDataPrestaShopEncolado,
   UniDataValoresAutomaticosRepositorio,
   inLibMsgArticulos;
 
@@ -385,6 +395,13 @@ begin
     qry.ParamByName('USR').AsString := IdentidadSesion.Usuario;
     qry.ParamByName('SKU').AsString := aSku;
     qry.ExecSQL;
+    EncolarCambioPrestaShop(
+      qry.Connection,
+      '',
+      aSku,
+      True,
+      True,
+      IdentidadSesion.Usuario);
   finally
     FreeAndNil(qry);
   end;
@@ -432,6 +449,11 @@ begin
       Inc(Result);
       qrySel.Next;
     end;
+    if Result > 0 then
+      EncolarArticuloPrestaShop(
+        qryUpd.Connection,
+        aCodArt,
+        IdentidadSesion.Usuario);
   finally
     FreeAndNil(qryUpd);
     FreeAndNil(qrySel);
@@ -503,10 +525,35 @@ end;
 procedure TdmArticulos.unqrySkusBeforeDelete(DataSet: TDataSet);
 begin
   inherited;
+  if SameText(
+    unqryTablaG.FieldByName('ESWEB_ART').AsString,
+    'S') then
+    raise EDatabaseError.Create(
+      'No se puede borrar un SKU de un artículo En web. ' +
+      'Desmarque Activo para enviar stock cero a PrestaShop');
+  FCodigoArticuloSkuBorrado := Trim(
+    DataSet.FieldByName('CODIGO_ART_SKU').AsString);
   // Sin FK declarada, la fila de coste quedaría huérfana al borrar el SKU:
   // la limpiamos antes de que el framework dispare el DELETE sobre
   // fza_articulos_skus.
   EliminarCosteSku(DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString);
+end;
+
+procedure TdmArticulos.unqrySkusAfterPost(DataSet: TDataSet);
+begin
+  EncolarArticuloPrestaShop(
+    unqrySkus.Connection,
+    DataSet.FieldByName('CODIGO_ART_SKU').AsString,
+    IdentidadSesion.Usuario);
+end;
+
+procedure TdmArticulos.unqrySkusAfterDelete(DataSet: TDataSet);
+begin
+  EncolarArticuloPrestaShop(
+    unqrySkus.Connection,
+    FCodigoArticuloSkuBorrado,
+    IdentidadSesion.Usuario);
+  FCodigoArticuloSkuBorrado := '';
 end;
 
 procedure TdmArticulos.unqryDetallesAtributosBeforePost(DataSet: TDataSet);
@@ -737,6 +784,13 @@ begin
   end;
 end;
 
+procedure TdmArticulos.unqryTablaGBeforeDelete(DataSet: TDataSet);
+begin
+  inherited;
+  FCodigoArticuloBorrado := Trim(
+    DataSet.FieldByName('CODIGO_ART_ART').AsString);
+end;
+
 procedure TdmArticulos.unqryTablaGAfterDelete(DataSet: TDataSet);
 var
   qryBorrarLineas : TUniQuery;
@@ -747,23 +801,35 @@ begin
     '  FROM fza_articulos_proveedores ' +
     ' WHERE CODIGO_ART_AP = :Articulo ;';
   qryBorrarLineas.Params.ParamByName('Articulo').AsString :=
-    unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    FCodigoArticuloBorrado;
   qryBorrarLineas.ExecSQL;
   qryBorrarLineas.SQL.Text := 'DELETE ' +
     '  FROM fza_articulos_tarifas ' +
     ' WHERE CODIGO_ART_ARTTAR = :Articulo ;';
   qryBorrarLineas.Params.ParamByName('Articulo').AsString :=
-    unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
+    FCodigoArticuloBorrado;
   qryBorrarLineas.ExecSQL;
   qryBorrarLineas.Free;
+  OmitirArticuloPrestaShop(
+    unqryTablaG.Connection,
+    FCodigoArticuloBorrado,
+    IdentidadSesion.Usuario);
+  FCodigoArticuloBorrado := '';
 //  end;
 end;
 
 procedure TdmArticulos.unqryTablaGAfterInsert(DataSet: TDataSet);
+var
+  oCampoWeb: TField;
 begin
   inherited;
   UniDataValoresAutomaticosRepositorio.AplicarValoresPorDefecto(
     ConexionPrincipal, unqryTablaG, 'fza_articulos');
+  // La marca web es opt-in: un artículo nuevo nunca debe publicarse por
+  // accidente ni enviar NULL aunque aún no exista un valor configurable.
+  oCampoWeb := unqryTablaG.FindField('ESWEB_ART');
+  if Assigned(oCampoWeb) and (Trim(oCampoWeb.AsString) = '') then
+    oCampoWeb.AsString := 'N';
   unqryTablaG.FindField('CODIGO_FAM_ART').AsString :=
                                    ObtenerValorPorDefecto(
                                      ConexionPrincipal,
@@ -790,6 +856,17 @@ begin
     if sArt <> '' then
       AsegurarSkuBase(sArt);
   end;
+  sArt := Trim(unqryTablaG.FindField('CODIGO_ART_ART').AsString);
+  if SameText(unqryTablaG.FindField('ESWEB_ART').AsString, 'S') then
+    EncolarArticuloPrestaShop(
+      unqryTablaG.Connection,
+      sArt,
+      IdentidadSesion.Usuario)
+  else
+    OmitirArticuloPrestaShop(
+      unqryTablaG.Connection,
+      sArt,
+      IdentidadSesion.Usuario);
 end;
 
 procedure TdmArticulos.AsegurarSkuBase(const ACodArt: string);
@@ -1198,6 +1275,31 @@ begin
   SanearDescuentoTarifa;
   if unqryTarifasArticulos.State in [dsInsert, dsEdit] then
     ActualizarAuditoria(DataSet);
+end;
+
+procedure TdmArticulos.unqryTarifasArticulosAfterPost(DataSet: TDataSet);
+begin
+  EncolarPrecioPrestaShop(
+    unqryTarifasArticulos.Connection,
+    DataSet.FieldByName('CODIGO_ART_ARTTAR').AsString,
+    IdentidadSesion.Usuario);
+end;
+
+procedure TdmArticulos.unqryTarifasArticulosBeforeDelete(
+  DataSet: TDataSet);
+begin
+  FCodigoArticuloTarifaBorrada := Trim(
+    DataSet.FieldByName('CODIGO_ART_ARTTAR').AsString);
+end;
+
+procedure TdmArticulos.unqryTarifasArticulosAfterDelete(
+  DataSet: TDataSet);
+begin
+  EncolarPrecioPrestaShop(
+    unqryTarifasArticulos.Connection,
+    FCodigoArticuloTarifaBorrada,
+    IdentidadSesion.Usuario);
+  FCodigoArticuloTarifaBorrada := '';
 end;
 
 function TdmArticulos.ReconstruirStock: string;

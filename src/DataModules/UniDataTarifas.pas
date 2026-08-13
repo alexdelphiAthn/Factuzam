@@ -19,8 +19,8 @@ interface
 
 uses
   inLibRegistroPantallas,
-  System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess,
-  Uni, inLibUser;
+  System.SysUtils, System.Classes, System.Variants, UniDataGen, Data.DB,
+  MemDS, DBAccess, Uni, inLibUser;
 
 type
   TdmTarifas = class(TdmBase)
@@ -28,16 +28,34 @@ type
     unqryArticulosTarifas: TUniQuery;
     dsArticulosTarifas: TDataSource;
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
+    procedure unqryTablaGAfterDelete(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
+    procedure unqryArticulosTarifasAfterDelete(DataSet: TDataSet);
+    procedure unqryArticulosTarifasAfterPost(DataSet: TDataSet);
+    procedure unqryArticulosTarifasBeforeDelete(DataSet: TDataSet);
+    procedure unqryArticulosTarifasBeforePost(DataSet: TDataSet);
     procedure DataModuleCreate(Sender: TObject);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
   private
-    { Private declarations }
+    FArticuloTarifaAnteriorPrestaShop: string;
+    FArticuloTarifaBorradoPrestaShop: string;
+    FEncolarArticuloTarifaPrestaShop: Boolean;
+    FEncolarPrecioPrestaShop: Boolean;
+    function CampoPrecioPrestaShopCambiado(
+      DataSet: TDataSet): Boolean;
+    function EsTarifaPrestaShop(
+      AConexion: TUniConnection;
+      const ACodigoActual, ACodigoAnterior: string): Boolean;
   public
     procedure GetCodigoAutoFamilia;
     //procedure GetCodigoAutoRetencion;
   end;
 
 implementation
+
+uses
+  UniDataPrestaShopEncolado;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -49,6 +67,153 @@ procedure TdmTarifas.unqryTablaGAfterInsert(DataSet: TDataSet);
 begin
   inherited;
   unqryTablaG.FindField('CODIGO_TAR_ARTTAR').AsString := '0';
+end;
+
+procedure TdmTarifas.unqryArticulosTarifasAfterDelete(
+  DataSet: TDataSet);
+begin
+  try
+    if FArticuloTarifaBorradoPrestaShop <> '' then
+      EncolarPrecioPrestaShop(
+        TUniQuery(DataSet).Connection,
+        FArticuloTarifaBorradoPrestaShop,
+        IdentidadSesion.Usuario);
+  finally
+    FArticuloTarifaBorradoPrestaShop := '';
+  end;
+end;
+
+procedure TdmTarifas.unqryArticulosTarifasAfterPost(
+  DataSet: TDataSet);
+var
+  sArticuloActual: string;
+begin
+  try
+    if FEncolarArticuloTarifaPrestaShop then
+    begin
+      sArticuloActual := Trim(
+        DataSet.FieldByName('CODIGO_ART_ARTTAR').AsString);
+      EncolarPrecioPrestaShop(
+        TUniQuery(DataSet).Connection,
+        sArticuloActual,
+        IdentidadSesion.Usuario);
+      if (FArticuloTarifaAnteriorPrestaShop <> '') and
+         (not SameText(
+           FArticuloTarifaAnteriorPrestaShop,
+           sArticuloActual)) then
+        EncolarPrecioPrestaShop(
+          TUniQuery(DataSet).Connection,
+          FArticuloTarifaAnteriorPrestaShop,
+          IdentidadSesion.Usuario);
+    end;
+  finally
+    FArticuloTarifaAnteriorPrestaShop := '';
+    FEncolarArticuloTarifaPrestaShop := False;
+  end;
+end;
+
+procedure TdmTarifas.unqryArticulosTarifasBeforeDelete(
+  DataSet: TDataSet);
+begin
+  FArticuloTarifaBorradoPrestaShop := '';
+  if EsTarifaPrestaShop(
+    TUniQuery(DataSet).Connection,
+    DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+    '') then
+    FArticuloTarifaBorradoPrestaShop := Trim(
+      DataSet.FieldByName('CODIGO_ART_ARTTAR').AsString);
+end;
+
+procedure TdmTarifas.unqryArticulosTarifasBeforePost(
+  DataSet: TDataSet);
+var
+  sTarifaAnterior: string;
+begin
+  inherited unqryTablaGBeforePost(DataSet);
+  GetCodigoAutoFamilia;
+  FArticuloTarifaAnteriorPrestaShop := '';
+  FEncolarArticuloTarifaPrestaShop := False;
+  sTarifaAnterior := '';
+  if DataSet.State = dsEdit then
+  begin
+    FArticuloTarifaAnteriorPrestaShop := Trim(VarToStr(
+      DataSet.FieldByName('CODIGO_ART_ARTTAR').OldValue));
+    sTarifaAnterior := VarToStr(
+      DataSet.FieldByName('CODIGO_TAR_ARTTAR').OldValue);
+  end;
+  FEncolarArticuloTarifaPrestaShop := EsTarifaPrestaShop(
+    TUniQuery(DataSet).Connection,
+    DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+    sTarifaAnterior);
+end;
+
+procedure TdmTarifas.unqryTablaGAfterDelete(DataSet: TDataSet);
+begin
+  try
+    if FEncolarPrecioPrestaShop then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPrecioPrestaShop := False;
+  end;
+end;
+
+procedure TdmTarifas.unqryTablaGAfterPost(DataSet: TDataSet);
+begin
+  try
+    if FEncolarPrecioPrestaShop then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPrecioPrestaShop := False;
+  end;
+end;
+
+procedure TdmTarifas.unqryTablaGBeforeDelete(DataSet: TDataSet);
+begin
+  inherited;
+  FEncolarPrecioPrestaShop := EsTarifaPrestaShop(
+    TUniQuery(DataSet).Connection,
+    DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+    '');
+end;
+
+function TdmTarifas.CampoPrecioPrestaShopCambiado(
+  DataSet: TDataSet): Boolean;
+
+  function Cambio(const ACampo: string): Boolean;
+  begin
+    Result := not SameText(
+      VarToStr(DataSet.FieldByName(ACampo).OldValue),
+      VarToStr(DataSet.FieldByName(ACampo).Value));
+  end;
+
+begin
+  Result := DataSet.State = dsInsert;
+  if DataSet.State = dsEdit then
+    Result :=
+      Cambio('CODIGO_TAR_ARTTAR') or
+      Cambio('ESACTIVO_ARTTAR') or
+      Cambio('ESIMP_INCL_TAR') or
+      Cambio('FECHA_DESDE_DTO_TAR') or
+      Cambio('FECHA_HASTA_DTO_TAR');
+end;
+
+function TdmTarifas.EsTarifaPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoActual, ACodigoAnterior: string): Boolean;
+var
+  sTarifa: string;
+begin
+  sTarifa := LeerCodigoTarifaPrestaShop(AConexion);
+  Result := SameText(Trim(ACodigoActual), sTarifa) or
+    SameText(Trim(ACodigoAnterior), sTarifa);
 end;
 
 procedure TdmTarifas.DataModuleCreate(Sender: TObject);
@@ -78,9 +243,22 @@ begin
 end;
 
 procedure TdmTarifas.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  sCodigoAnterior: string;
 begin
   inherited;
+  FEncolarPrecioPrestaShop := False;
   GetCodigoAutoFamilia;
+  sCodigoAnterior := '';
+  if DataSet.State = dsEdit then
+    sCodigoAnterior := VarToStr(
+      DataSet.FieldByName('CODIGO_TAR_ARTTAR').OldValue);
+  FEncolarPrecioPrestaShop :=
+    CampoPrecioPrestaShopCambiado(DataSet) and
+    EsTarifaPrestaShop(
+      TUniQuery(DataSet).Connection,
+      DataSet.FieldByName('CODIGO_TAR_ARTTAR').AsString,
+      sCodigoAnterior);
 end;
 
 initialization

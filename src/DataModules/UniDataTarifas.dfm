@@ -8,6 +8,9 @@
       '  FROM vi_tarifas'
       '')
     AfterInsert = unqryTablaGAfterInsert
+    AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
+    AfterDelete = unqryTablaGAfterDelete
   end
   inherited unqryPerfiles: TUniQuery
     SQL.Strings = (
@@ -98,7 +101,10 @@
     DetailFields = 'CODIGO_TAR_ARTTAR'
     BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
-    BeforePost = unqryTablaGBeforePost
+    BeforePost = unqryArticulosTarifasBeforePost
+    AfterPost = unqryArticulosTarifasAfterPost
+    BeforeDelete = unqryArticulosTarifasBeforeDelete
+    AfterDelete = unqryArticulosTarifasAfterDelete
     Left = 200
     Top = 24
     ParamData = <

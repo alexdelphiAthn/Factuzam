@@ -282,6 +282,7 @@ begin
   AddSuf('fza_pedidos',                         'PED');
   AddSuf('fza_pedidos_lineas',                  'PEDLIN');
   AddSuf('fza_pedidos_mensajes',                'PEDMSG');
+  AddSuf('fza_prestashop_cola',                 'PSCOLA');
   AddSuf('fza_propiedades',                     'PROP');
   AddSuf('fza_propiedades_valores',             'PV');
   AddSuf('fza_proformas_caja',                  'PROCAJ');
@@ -379,6 +380,7 @@ begin
   AddOwn('fza_traspasos_solicitudes_lineas',   ['TRASPASO','SOLICITUD','LINEA']);
   AddOwn('fza_facturas_pagos',                 ['PAGO','FACTURA']);
   AddOwn('fza_pedidos_mensajes',               ['PEDIDO','MENSAJE','MENSAJES']);
+  AddOwn('fza_prestashop_cola',                ['PRESTASHOP','COLA']);
   AddOwn('fza_proveedores_familias',           ['FAMILIA']);
   AddOwn('fza_proveedores_familias_conjuntos', ['FAMILIA','CONJUNTO']);
   AddOwn('fza_familias_atributos',             ['ATRIBUTO']);

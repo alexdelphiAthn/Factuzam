@@ -32,7 +32,8 @@ uses
   System.SysUtils,
   Data.DB,
   DBAccess,
-  inLibArticulosVariaciones;
+  inLibArticulosVariaciones,
+  UniDataPrestaShopEncolado;
 
 type
   TLecturaSkuArticulosVariacionesUniDAC = class(
@@ -176,8 +177,12 @@ begin
     Consulta.ParamByName('art').AsString := ACodigoArticulo;
     Consulta.ParamByName('usuario').AsString := AUsuario;
     Consulta.ExecSQL;
+    EncolarArticuloPrestaShop(
+      FConexion,
+      ACodigoArticulo,
+      AUsuario);
   finally
-    Consulta.Free;
+    FreeAndNil(Consulta);
   end;
 end;
 
@@ -198,8 +203,12 @@ begin
     Consulta.ParamByName('sku').AsString := ACodigoArticulo;
     Consulta.ParamByName('usuario').AsString := AUsuario;
     Consulta.ExecSQL;
+    EncolarArticuloPrestaShop(
+      FConexion,
+      ACodigoArticulo,
+      AUsuario);
   finally
-    Consulta.Free;
+    FreeAndNil(Consulta);
   end;
 end;
 

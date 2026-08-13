@@ -22,7 +22,8 @@ function CrearRepositorioGeneracionSkusUniDAC(
 implementation
 
 uses
-  System.SysUtils, Data.DB;
+  System.SysUtils, Data.DB,
+  UniDataPrestaShopEncolado;
 
 const
   SQL_MAESTRO =
@@ -401,6 +402,10 @@ begin
       SQL_GUARDAR_ATRIBUTO_SKU,
       [ACodigoSku, iIdValor]);
   end;
+  EncolarArticuloPrestaShop(
+    FConexion,
+    ACodigoArticulo,
+    'SISTEMA');
 end;
 
 procedure TRepositorioGeneracionSkusUniDAC.GuardarOrdenAtributo(

@@ -22,7 +22,8 @@ function CrearRepositorioMargenUniDAC(
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  UniDataPrestaShopEncolado;
 
 const
   SQL_GUARDAR_COSTE_SKU =
@@ -114,6 +115,10 @@ begin
         oConsulta.ParamByName('p_unico').AsInteger :=
           ASolicitud.CodigoUnicoTarifa;
         oConsulta.Execute;
+        EncolarPrecioPrestaShop(
+          FConexion,
+          ASolicitud.CodigoArticulo,
+          ASolicitud.Usuario);
         FConexion.Commit;
         Result.Guardado := True;
       end;

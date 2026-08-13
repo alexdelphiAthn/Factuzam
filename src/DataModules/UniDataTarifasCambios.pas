@@ -62,7 +62,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibUser, inLibMsgArticulos;
+  inLibUser, inLibMsgArticulos, UniDataPrestaShopEncolado;
 
 {$R *.dfm}
 
@@ -467,6 +467,10 @@ begin
     AConsultaMarca.ParamByName('ID').AsInteger :=
       unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
     AConsultaMarca.Execute;
+    EncolarPrecioPrestaShop(
+      AConsultaExec.Connection,
+      sArticulo,
+      IdentidadSesion.Usuario);
     Result := True;
   end;
 end;
@@ -476,6 +480,7 @@ procedure TdmTarifasCambios.AplicarVentanaDescuento(
 var
   fDesde: TField;
   fHasta: TField;
+  sTarifa: string;
 begin
   fDesde := unqryTablaG.FindField('FECHA_DESDE_DTO_TARC');
   fHasta := unqryTablaG.FindField('FECHA_HASTA_DTO_TARC');
@@ -495,9 +500,18 @@ begin
     else
       AConsulta.ParamByName('HASTA_DTO').AsDateTime := fHasta.AsDateTime;
     AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-    AConsulta.ParamByName('TAR').AsString :=
-      unqryTablaG.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString;
+    sTarifa := unqryTablaG.FieldByName(
+      'CODIGO_TAR_DESTINO_TARC').AsString;
+    AConsulta.ParamByName('TAR').AsString := sTarifa;
     AConsulta.Execute;
+    if SameText(
+      Trim(sTarifa),
+      LeerCodigoTarifaPrestaShop(AConsulta.Connection)) then
+      EncolarTodosWebPrestaShop(
+        AConsulta.Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
   end;
 end;
 

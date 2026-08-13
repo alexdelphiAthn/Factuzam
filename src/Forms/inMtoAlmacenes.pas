@@ -38,6 +38,7 @@ type
     dbcGrdDBTabPrinCODIGO_EMPRESA_ALM: TcxGridDBColumn;
     dbcGrdDBTabPrinNOMBRE_ALMACEN_ALM: TcxGridDBColumn;
     dbcGrdDBTabPrinESACTIVO_ALM: TcxGridDBColumn;
+    dbcGrdDBTabPrinESWEB_ALM: TcxGridDBColumn;
     dbcGrdDBTabPrinCODIGO_PADRE_ALM: TcxGridDBColumn;
     dbcGrdDBTabPrinESFISICO_ALM: TcxGridDBColumn;
     dbcGrdDBTabPrinTIPO_USO_ALM: TcxGridDBColumn;
@@ -59,6 +60,7 @@ type
     lblNombre: TcxLabel;
     txtNOMBRE_ALMACEN_ALM: TcxDBTextEdit;
     chkESACTIVO_ALM: TcxDBCheckBox;
+    chkESWEB_ALM: TcxDBCheckBox;
     chkESFISICO_ALM: TcxDBCheckBox;
     lblOrden: TcxLabel;
     spnORDEN_ALM: TcxDBSpinEdit;

@@ -34,6 +34,25 @@ type
   PInteger = ^Integer;
   PString  = ^String;
   TInspectorItemEvent = procedure(Sender: TJvCustomInspectorItem) of object;
+  TValoresApiHistoricos = record
+    UrlFotos: string;
+    TokenFotos: string;
+    ReferenciaFotos: string;
+    UrlRecuentos: string;
+    TokenRecuentos: string;
+    ReferenciaRecuentos: string;
+    UrlComunConfigurada: Boolean;
+    TokenComunConfigurado: Boolean;
+    ReferenciaComunConfigurada: Boolean;
+  end;
+  TCambiosAppParam = record
+    ValoresPerfil: TValoresPerfilAppParam;
+    ValoresGlobales: TValoresPerfilAppParam;
+    Guardados: Integer;
+    Ignorados: Integer;
+    CambioVerifactu: Boolean;
+    CambioPrestaShop: Boolean;
+  end;
   TfrmMtoAppParam = class(TFrmBase)
     JvInspectorDotNETPainter1: TJvInspectorDotNETPainter;
     ActionList1    : TActionList;
@@ -91,10 +110,72 @@ type
                 const Nombre: string): TJvCustomInspectorItem;
     procedure FiltrarVerticalGrid(Grid: TJvInspector; Texto: string);
     procedure AplicarBloqueoParametros;
+    procedure EliminarValoresPrestaShopNoGlobales;
     function UsuarioPuedeEditarParametro(const ANombre: string): Boolean;
+    function NombreCategoriaInspector(
+      const AParametro: TParamInfo): string;
+    function CrearItemInspector(
+      ACategoria: TJvInspectorCustomCategoryItem;
+      const AParametro: TParamInfo): TJvCustomInspectorItem;
+    procedure ConfigurarItemCadena(
+      AItem: TJvCustomInspectorItem;
+      const ANombre: string);
+    procedure AgregarParametroInspector(const AParametro: TParamInfo);
+    procedure ConfigurarVisibilidadParametro(
+      AItem: TJvCustomInspectorItem);
+    procedure InicializarValoresApiHistoricos(
+      var AValores: TValoresApiHistoricos);
+    procedure RegistrarValorApiHistorico(
+      const ANombre, AValor: string;
+      var AValores: TValoresApiHistoricos);
+    procedure AplicarValorInspector(
+      AInspector: TJvInspector;
+      const ANombre, AValor: string);
+    procedure AplicarValorHistorico(
+      AInspector: TJvInspector;
+      const ANombre, AValorFotos, AValorRecuentos: string;
+      AConfigurado: Boolean);
+    procedure AplicarValoresPerfil(
+      AInspector: TJvInspector;
+      const AValores: TValoresPerfilAppParam;
+      var AValoresApi: TValoresApiHistoricos);
+    function CargarValoresPrestaShopGlobales:
+      TValoresPerfilAppParam;
+    procedure AplicarValoresPrestaShopGlobales(
+      AInspector: TJvInspector;
+      const AValores: TValoresPerfilAppParam);
+    procedure AplicarValoresApiHistoricos(
+      AInspector: TJvInspector;
+      var AValores: TValoresApiHistoricos);
     procedure CargarParametros(Grid: TJvInspector;
                                const pUsuario, pGrupo: string);
     procedure ConstruirInspector;
+    procedure InicializarCambiosParametros(
+      var ACambios: TCambiosAppParam);
+    procedure ClasificarCambioParametro(
+      AItem: TJvCustomInspectorItem;
+      var ACambios: TCambiosAppParam);
+    procedure ClasificarCambiosInspector(
+      var ACambios: TCambiosAppParam);
+    procedure ActualizarOriginalesParametros(
+      const AValores: TValoresPerfilAppParam);
+    procedure GuardarCambiosPerfil(
+      const AAmbito: string;
+      const AValores: TValoresPerfilAppParam);
+    procedure GuardarCambiosPrestaShop(
+      const AValores: TValoresPerfilAppParam);
+    function AmbitoMensajeGuardado(
+      const AAmbito: string;
+      const ACambios: TCambiosAppParam): string;
+    procedure RecargarParametrosGuardados(
+      const AAmbito, ATemaAnterior: string;
+      const ACambios: TCambiosAppParam);
+    procedure RegistrarCambioVerifactuGuardado(
+      const AAmbito: string;
+      const ACambios: TCambiosAppParam);
+    procedure MostrarResultadoGuardado(
+      const AAmbito, ATemaAnterior: string;
+      const ACambios: TCambiosAppParam);
     procedure GuardarLayout;
     procedure RestaurarLayout;
     procedure AplicarIdiomaInterfaz(const AIdioma: string);
@@ -140,7 +221,51 @@ uses
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
    inMtoModalDescargaTraduccion, inLibLogIntf,
    UniDataConfiguracionPantalla,
-   UniDataTraduccionesDescargaRepositorio;
+   UniDataTraduccionesDescargaRepositorio,
+   UniDataPrestaShopEncolado;
+
+function EsParametroPrestaShop(const ANombre: string): Boolean;
+begin
+  Result := StartsText('appPrestaShop', ANombre);
+end;
+
+function CambioPrestaShopRequiereReencolado(
+  const ANombre: string): Boolean;
+begin
+  Result := SameText(ANombre, 'appPrestaShopActivo') or
+    SameText(ANombre, 'appPrestaShopStockActivo') or
+    SameText(ANombre, 'appPrestaShopUrl') or
+    SameText(ANombre, 'appPrestaShopApiKey') or
+    SameText(ANombre, 'appPrestaShopTarifa') or
+    SameText(ANombre, 'appPrestaShopEmpresa') or
+    SameText(ANombre, 'appPrestaShopIdTienda');
+end;
+
+function ValoresIncluyenReencoladoPrestaShop(
+  const AValores: TValoresPerfilAppParam): Boolean;
+var
+  oValor: TValorPerfilAppParam;
+begin
+  Result := False;
+  for oValor in AValores do
+    Result := Result or
+      CambioPrestaShopRequiereReencolado(oValor.Subclave);
+end;
+
+function StockPrestaShopActivoEnValores(
+  const AValores: TValoresPerfilAppParam;
+  AParametros: IParametrosAplicacion): Boolean;
+var
+  oValor: TValorPerfilAppParam;
+begin
+  Result := AParametros.GetBool('appPrestaShopStockActivo', False);
+  for oValor in AValores do
+  begin
+    if SameText(oValor.Subclave, 'appPrestaShopStockActivo') then
+      Result := SameText(oValor.Valor, 'True') or
+        (oValor.Valor = '1');
+  end;
+end;
 
 constructor TfrmMtoAppParam.Create(
   AOwner: TComponent;
@@ -178,12 +303,34 @@ function TfrmMtoAppParam.UsuarioPuedeEditarParametro(
   const ANombre: string): Boolean;
 begin
   Result := True;
-  // Verifactu y la restricción por empresa/almacén/caja solo los puede
-  // cambiar un administrador: si no, un usuario restringido podría
-  // desactivarse la restricción a sí mismo.
+  // Las integraciones fiscales y de comercio electrónico, junto con la
+  // restricción por empresa/almacén/caja, solo las puede cambiar un
+  // administrador.
   if StartsText('appVerifactu', ANombre) or
+     EsParametroPrestaShop(ANombre) or
      SameText(ANombre, 'appRestringirEmpAlmCaja') then
     Result := SameText(IdentidadSesion.GrupoRaiz, 'S');
+end;
+
+procedure TfrmMtoAppParam.EliminarValoresPrestaShopNoGlobales;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := ConexionPrincipal;
+    Consulta.SQL.Text :=
+      'DELETE FROM fza_usuarios_perfiles ' +
+      ' WHERE KEY_USUPER = :FORMULARIO ' +
+      '   AND SUBKEY_USUPER LIKE :PREFIJO ' +
+      '   AND USUARIO_GRUPO_USUPER <> :TODOS';
+    Consulta.ParamByName('FORMULARIO').AsString := 'frmMtoAppParam';
+    Consulta.ParamByName('PREFIJO').AsString := 'appPrestaShop%';
+    Consulta.ParamByName('TODOS').AsString := oAll;
+    Consulta.Execute;
+  finally
+    FreeAndNil(Consulta);
+  end;
 end;
 
 // -----------------------------------------------------------------------
@@ -299,123 +446,145 @@ begin
   end;
 end;
 
+function TfrmMtoAppParam.NombreCategoriaInspector(
+  const AParametro: TParamInfo): string;
+begin
+  Result := TraducirCategoriaParametro(
+    'inMtoAppParam',
+    AParametro.Categoria);
+  if SameText(AParametro.Categoria, 'PrestaShop') then
+    Result := Result + ' (global para toda la instalación)';
+end;
+
+function TfrmMtoAppParam.CrearItemInspector(
+  ACategoria: TJvInspectorCustomCategoryItem;
+  const AParametro: TParamInfo): TJvCustomInspectorItem;
+var
+  pBool: PBoolean;
+  pInt: PInteger;
+  pStr: PString;
+begin
+  Result := nil;
+  case AParametro.Tipo of
+    tpBoolean:
+      begin
+        New(pBool);
+        FBools.Add(pBool);
+        pBool^ := SameText(AParametro.ValorPorDefecto, 'True') or
+          (AParametro.ValorPorDefecto = '1');
+        Result := TJvInspectorVarData.New(
+          ACategoria, AParametro.Nombre, TypeInfo(Boolean), pBool);
+      end;
+    tpInteger:
+      begin
+        New(pInt);
+        FInts.Add(pInt);
+        pInt^ := StrToIntDef(AParametro.ValorPorDefecto, 0);
+        Result := TJvInspectorVarData.New(
+          ACategoria, AParametro.Nombre, TypeInfo(Integer), pInt);
+      end;
+    tpString:
+      begin
+        New(pStr);
+        FStrs.Add(pStr);
+        pStr^ := AParametro.ValorPorDefecto;
+        Result := TJvInspectorVarData.New(
+          ACategoria, AParametro.Nombre, TypeInfo(string), pStr);
+      end;
+  end;
+end;
+
+procedure TfrmMtoAppParam.ConfigurarItemCadena(
+  AItem: TJvCustomInspectorItem;
+  const ANombre: string);
+begin
+  if SameText(ANombre, 'appImpresoraInformes') then
+  begin
+    AItem.Flags := AItem.Flags +
+      [iifValueList, iifAllowNonListValues];
+    AItem.OnGetValueList := GetImpresorasInformesList;
+  end
+  else if SameText(ANombre, 'appTema') then
+  begin
+    AItem.Flags := AItem.Flags + [iifValueList];
+    AItem.OnGetValueList := GetTemasList;
+  end
+  else if SameText(ANombre, 'appPaleta') then
+  begin
+    AItem.Flags := AItem.Flags +
+      [iifValueList, iifAllowNonListValues];
+    AItem.OnGetValueList := GetPaletasList;
+  end
+  else if SameText(ANombre, 'appIdioma') then
+  begin
+    AItem.Flags := AItem.Flags + [iifValueList];
+    AItem.OnGetValueList := GetIdiomasList;
+  end
+  else if SameText(ANombre, 'appTemporadaDefecto') then
+  begin
+    AItem.Flags := AItem.Flags +
+      [iifValueList, iifAllowNonListValues];
+    AItem.OnGetValueList := GetTemporadasList;
+  end
+  else if SameText(ANombre, 'appVerifactuModo') then
+  begin
+    AItem.Flags := AItem.Flags + [iifValueList];
+    AItem.OnGetValueList := GetModosVerifactuList;
+  end
+  else if SameText(ANombre, 'appVerifactuSifNif') then
+  begin
+    AItem.Flags := AItem.Flags +
+      [iifValueList, iifAllowNonListValues];
+    AItem.OnGetValueList := GetNifsEmpresasList;
+  end
+  else if StartsText('appDir', ANombre) then
+    AItem.Flags := AItem.Flags + [iifEditButton];
+end;
+
+procedure TfrmMtoAppParam.AgregarParametroInspector(
+  const AParametro: TParamInfo);
+var
+  oCategoria: TJvInspectorCustomCategoryItem;
+  oItem: TJvCustomInspectorItem;
+begin
+  // Categoría vacía = parámetro histórico cargado solo como respaldo.
+  if AParametro.Categoria <> '' then
+  begin
+    oCategoria := ObtenerCategoria(
+      NombreCategoriaInspector(AParametro));
+    oItem := CrearItemInspector(oCategoria, AParametro);
+    oItem.DisplayName := TraducirDescripcionParametro(
+      'inMtoAppParam', AParametro);
+    if AParametro.Tipo = tpString then
+      ConfigurarItemCadena(oItem, AParametro.Nombre);
+  end;
+end;
+
 procedure TfrmMtoAppParam.ConstruirInspector;
 var
-  Parametros: TArray<TParamInfo>;
-  Param: TParamInfo;
-  CatItem : TJvInspectorCustomCategoryItem;
-  ItemCombo: TJvCustomInspectorItem;
-  DescripcionTraducida: string;
-  pBool   : PBoolean;
-  pInt    : PInteger;
-  pStr    : PString;
+  oParametro: TParamInfo;
+  aParametros: TArray<TParamInfo>;
 begin
   LimpiarMemoria;
-  Parametros := FParametrosEdicion.ListarDefiniciones;
+  aParametros := FParametrosEdicion.ListarDefiniciones;
   JvInspector1.BeginUpdate;
   try
     JvInspector1.Root.Clear;
-
-    for Param in Parametros do
-    begin
-      // Categoría vacía = parámetro histórico cargado solo como respaldo.
-      if Param.Categoria <> '' then
-      begin
-        CatItem := ObtenerCategoria(
-          TraducirCategoriaParametro(
-            'inMtoAppParam',
-            Param.Categoria));
-        DescripcionTraducida :=
-          TraducirDescripcionParametro(
-            'inMtoAppParam',
-            Param);
-        case Param.Tipo of
-        tpBoolean:
-          begin
-            New(pBool);
-            FBools.Add(pBool);
-            pBool^ := SameText(Param.ValorPorDefecto, 'True') or
-                      (Param.ValorPorDefecto = '1');
-            ItemCombo := TJvInspectorVarData.New(CatItem, Param.Nombre,
-                                                 TypeInfo(Boolean), pBool);
-            ItemCombo.DisplayName := DescripcionTraducida;
-          end;
-
-        tpInteger:
-          begin
-            New(pInt);
-            FInts.Add(pInt);
-            pInt^ := StrToIntDef(Param.ValorPorDefecto, 0);
-            ItemCombo := TJvInspectorVarData.New(CatItem, Param.Nombre,
-                                                 TypeInfo(Integer), pInt);
-            ItemCombo.DisplayName := DescripcionTraducida;
-          end;
-
-        tpString:
-          begin
-            New(pStr);
-            FStrs.Add(pStr);
-            pStr^     := Param.ValorPorDefecto;
-            ItemCombo := TJvInspectorVarData.New(CatItem, Param.Nombre,
-                                                 TypeInfo(string), pStr);
-            ItemCombo.DisplayName := DescripcionTraducida;
-
-            if SameText(Param.Nombre, 'appImpresoraInformes') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags +
-                                 [iifValueList, iifAllowNonListValues];
-              ItemCombo.OnGetValueList := GetImpresorasInformesList;
-            end
-            else if SameText(Param.Nombre, 'appTema') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
-              ItemCombo.OnGetValueList := GetTemasList;
-            end
-            else if SameText(Param.Nombre, 'appPaleta') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags +
-                                 [iifValueList, iifAllowNonListValues];
-              ItemCombo.OnGetValueList := GetPaletasList;
-            end
-            else if SameText(Param.Nombre, 'appIdioma') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
-              ItemCombo.OnGetValueList := GetIdiomasList;
-            end
-            else if SameText(Param.Nombre, 'appTemporadaDefecto') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags +
-                                 [iifValueList, iifAllowNonListValues];
-              ItemCombo.OnGetValueList := GetTemporadasList;
-            end
-            else if SameText(Param.Nombre, 'appVerifactuModo') then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags + [iifValueList];
-              ItemCombo.OnGetValueList := GetModosVerifactuList;
-            end
-            else if SameText(Param.Nombre, 'appVerifactuSifNif') then
-            begin
-              // Combo editable: el editor plano del inspector rechaza
-              // letras en este campo; con AllowNonListValues se puede
-              // teclear cualquier NIF y se sugieren los de las empresas
-              ItemCombo.Flags := ItemCombo.Flags +
-                                 [iifValueList, iifAllowNonListValues];
-              ItemCombo.OnGetValueList := GetNifsEmpresasList;
-            end
-            else if StartsText('appDir', Param.Nombre) then
-            begin
-              ItemCombo.Flags := ItemCombo.Flags + [iifEditButton];
-            end;
-            // Los directorios (appDirPDF, appDirExcel) quedan como
-            // tpString normal: el usuario escribe la ruta directamente
-          end;
-        end;
-      end;
-    end;
+    for oParametro in aParametros do
+      AgregarParametroInspector(oParametro);
     AplicarBloqueoParametros;
   finally
     JvInspector1.EndUpdate;
   end;
+end;
+
+procedure TfrmMtoAppParam.ConfigurarVisibilidadParametro(
+  AItem: TJvCustomInspectorItem);
+begin
+  AItem.ReadOnly := not UsuarioPuedeEditarParametro(AItem.Name);
+  AItem.Hidden :=
+    SameText(AItem.Name, 'appPrestaShopApiKey') and
+    (IdentidadSesion.GrupoRaiz <> 'S');
 end;
 
 procedure TfrmMtoAppParam.AplicarBloqueoParametros;
@@ -433,7 +602,7 @@ begin
       for j := 0 to NodoPrincipal.Count - 1 do
       begin
         ParamItem := NodoPrincipal.Items[j];
-        ParamItem.ReadOnly := not UsuarioPuedeEditarParametro(ParamItem.Name);
+        ConfigurarVisibilidadParametro(ParamItem);
       end;
     end;
   end;
@@ -765,110 +934,172 @@ begin
   end;
 end;
 
-procedure TfrmMtoAppParam.CargarParametros(Grid: TJvInspector;
-                                           const pUsuario, pGrupo: string);
-var
-  Valores: TValoresPerfilAppParam;
-  ValorPerfil: TValorPerfilAppParam;
-  SubKey  : string;
-  ValorStr: string;
-  ItemData: TJvCustomInspectorItem;
-  sUrlFotos: string;
-  sTokenFotos: string;
-  sReferenciaFotos: string;
-  sUrlRecuentos: string;
-  sTokenRecuentos: string;
-  sReferenciaRecuentos: string;
-  bUrlComun: Boolean;
-  bTokenComun: Boolean;
-  bReferenciaComun: Boolean;
+procedure TfrmMtoAppParam.InicializarValoresApiHistoricos(
+  var AValores: TValoresApiHistoricos);
+begin
+  AValores.UrlFotos := cUrlFactuzamApiDefecto;
+  AValores.TokenFotos := '';
+  AValores.ReferenciaFotos := '';
+  AValores.UrlRecuentos := '';
+  AValores.TokenRecuentos := '';
+  AValores.ReferenciaRecuentos := '';
+  AValores.UrlComunConfigurada := False;
+  AValores.TokenComunConfigurado := False;
+  AValores.ReferenciaComunConfigurada := False;
+end;
 
-  procedure AplicarValorHistorico(const ANombre, AValorFotos,
-    AValorRecuentos: string; AConfigurado: Boolean);
-  var
-    sValor: string;
-    oItem: TJvCustomInspectorItem;
+procedure TfrmMtoAppParam.RegistrarValorApiHistorico(
+  const ANombre, AValor: string;
+  var AValores: TValoresApiHistoricos);
+begin
+  if SameText(ANombre, 'appApiUrl') then
+    AValores.UrlComunConfigurada := Trim(AValor) <> ''
+  else if SameText(ANombre, 'appApiToken') then
+    AValores.TokenComunConfigurado := Trim(AValor) <> ''
+  else if SameText(ANombre, 'appApiReferencia') then
+    AValores.ReferenciaComunConfigurada := Trim(AValor) <> ''
+  else if SameText(ANombre, 'appFotosUrlDescarga') then
+    AValores.UrlFotos := AValor
+  else if SameText(ANombre, 'appFotosApiKey') then
+    AValores.TokenFotos := AValor
+  else if SameText(ANombre, 'appFotosCarpetaCliente') then
+    AValores.ReferenciaFotos := AValor
+  else if SameText(ANombre, 'appRecuentoUrl') then
+    AValores.UrlRecuentos := AValor
+  else if SameText(ANombre, 'appRecuentoApiKey') then
+    AValores.TokenRecuentos := AValor
+  else if SameText(ANombre, 'appRecuentoCarpetaCliente') then
+    AValores.ReferenciaRecuentos := AValor;
+end;
+
+procedure TfrmMtoAppParam.AplicarValorInspector(
+  AInspector: TJvInspector;
+  const ANombre, AValor: string);
+var
+  oItem: TJvCustomInspectorItem;
+  sValor: string;
+begin
+  sValor := AValor;
+  oItem := BuscarItemPorNombre(AInspector.Root, ANombre);
+  if (oItem <> nil) and (oItem.Data <> nil) then
   begin
-    if not AConfigurado then
-    begin
-      sValor := AValorFotos;
-      if Trim(sValor) = '' then
-        sValor := AValorRecuentos;
-      oItem := BuscarItemPorNombre(Grid.Root, ANombre);
-      if (Trim(sValor) <> '') and (oItem <> nil) and
-         (oItem.Data <> nil) then
-        oItem.DisplayValue := sValor;
+    try
+      if (sValor = '') and
+         (oItem.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
+        sValor := '0';
+      oItem.DisplayValue := sValor;
+    except
+      // El resto de parámetros se sigue aplicando.
+      on E: Exception do
+        RegistroLog.RegistrarAviso(
+          'AppParam: no se pudo aplicar el parámetro "' +
+          ANombre + '": ' + E.Message);
     end;
   end;
+end;
 
+procedure TfrmMtoAppParam.AplicarValorHistorico(
+  AInspector: TJvInspector;
+  const ANombre, AValorFotos, AValorRecuentos: string;
+  AConfigurado: Boolean);
+var
+  oItem: TJvCustomInspectorItem;
+  sValor: string;
+begin
+  if not AConfigurado then
+  begin
+    sValor := AValorFotos;
+    if Trim(sValor) = '' then
+      sValor := AValorRecuentos;
+    oItem := BuscarItemPorNombre(AInspector.Root, ANombre);
+    if (Trim(sValor) <> '') and (oItem <> nil) and
+       (oItem.Data <> nil) then
+      oItem.DisplayValue := sValor;
+  end;
+end;
+
+procedure TfrmMtoAppParam.AplicarValoresPerfil(
+  AInspector: TJvInspector;
+  const AValores: TValoresPerfilAppParam;
+  var AValoresApi: TValoresApiHistoricos);
+var
+  oValor: TValorPerfilAppParam;
+begin
+  for oValor in AValores do
+  begin
+    if not EsParametroPrestaShop(oValor.Subclave) then
+    begin
+      RegistrarValorApiHistorico(
+        oValor.Subclave, oValor.Valor, AValoresApi);
+      AplicarValorInspector(
+        AInspector, oValor.Subclave, oValor.Valor);
+    end;
+  end;
+end;
+
+function TfrmMtoAppParam.CargarValoresPrestaShopGlobales:
+  TValoresPerfilAppParam;
+begin
+  Result := FRepositorioPersistencia.CargarValores(
+    oAll,
+    '',
+    'frmMtoAppParam');
+end;
+
+procedure TfrmMtoAppParam.AplicarValoresPrestaShopGlobales(
+  AInspector: TJvInspector;
+  const AValores: TValoresPerfilAppParam);
+var
+  oValor: TValorPerfilAppParam;
+begin
+  for oValor in AValores do
+  begin
+    if EsParametroPrestaShop(oValor.Subclave) then
+      AplicarValorInspector(
+        AInspector, oValor.Subclave, oValor.Valor);
+  end;
+end;
+
+procedure TfrmMtoAppParam.AplicarValoresApiHistoricos(
+  AInspector: TJvInspector;
+  var AValores: TValoresApiHistoricos);
+begin
+  if (Trim(AValores.UrlFotos) = '') and
+     (Trim(AValores.UrlRecuentos) = '') then
+    AValores.UrlFotos := cUrlFactuzamApiDefecto;
+  AplicarValorHistorico(
+    AInspector, 'appApiUrl', AValores.UrlFotos,
+    AValores.UrlRecuentos, AValores.UrlComunConfigurada);
+  AplicarValorHistorico(
+    AInspector, 'appApiToken', AValores.TokenFotos,
+    AValores.TokenRecuentos, AValores.TokenComunConfigurado);
+  AplicarValorHistorico(
+    AInspector, 'appApiReferencia', AValores.ReferenciaFotos,
+    AValores.ReferenciaRecuentos,
+    AValores.ReferenciaComunConfigurada);
+end;
+
+procedure TfrmMtoAppParam.CargarParametros(
+  Grid: TJvInspector;
+  const pUsuario, pGrupo: string);
+var
+  oValoresApi: TValoresApiHistoricos;
+  aValores: TValoresPerfilAppParam;
+  aValoresGlobales: TValoresPerfilAppParam;
 begin
   FCargandoParametros := True;
   try
     ResetearADefectos;
     Grid.Refresh;
-    sUrlFotos := cUrlFactuzamApiDefecto;
-    sTokenFotos := '';
-    sReferenciaFotos := '';
-    sUrlRecuentos := '';
-    sTokenRecuentos := '';
-    sReferenciaRecuentos := '';
-    bUrlComun := False;
-    bTokenComun := False;
-    bReferenciaComun := False;
-
-    Valores := FRepositorioPersistencia.CargarValores(
-      pUsuario,
-      pGrupo,
-      'frmMtoAppParam');
+    InicializarValoresApiHistoricos(oValoresApi);
+    aValores := FRepositorioPersistencia.CargarValores(
+      pUsuario, pGrupo, 'frmMtoAppParam');
+    aValoresGlobales := CargarValoresPrestaShopGlobales;
     Grid.BeginUpdate;
     try
-      for ValorPerfil in Valores do
-      begin
-          SubKey := ValorPerfil.Subclave;
-          ValorStr := ValorPerfil.Valor;
-          if SameText(SubKey, 'appApiUrl') then
-            bUrlComun := Trim(ValorStr) <> ''
-          else if SameText(SubKey, 'appApiToken') then
-            bTokenComun := Trim(ValorStr) <> ''
-          else if SameText(SubKey, 'appApiReferencia') then
-            bReferenciaComun := Trim(ValorStr) <> ''
-          else if SameText(SubKey, 'appFotosUrlDescarga') then
-            sUrlFotos := ValorStr
-          else if SameText(SubKey, 'appFotosApiKey') then
-            sTokenFotos := ValorStr
-          else if SameText(SubKey, 'appFotosCarpetaCliente') then
-            sReferenciaFotos := ValorStr
-          else if SameText(SubKey, 'appRecuentoUrl') then
-            sUrlRecuentos := ValorStr
-          else if SameText(SubKey, 'appRecuentoApiKey') then
-            sTokenRecuentos := ValorStr
-          else if SameText(SubKey, 'appRecuentoCarpetaCliente') then
-            sReferenciaRecuentos := ValorStr;
-          ItemData := BuscarItemPorNombre(Grid.Root, SubKey);
-          if (ItemData <> nil) and (ItemData.Data <> nil) then
-          begin
-            try
-              if (ValorStr = '') and
-                 (ItemData.Data.TypeInfo.Kind in [tkInteger, tkFloat]) then
-                ValorStr := '0';
-              ItemData.DisplayValue := ValorStr;
-            except
-              // El resto de parametros se sigue aplicando.
-              on E: Exception do
-                RegistroLog.RegistrarAviso(
-                  'AppParam: no se pudo aplicar el parametro "' +
-                  SubKey + '": ' + E.Message);
-            end;
-          end;
-      end;
-      if (Trim(sUrlFotos) = '') and (Trim(sUrlRecuentos) = '') then
-        sUrlFotos := cUrlFactuzamApiDefecto;
-      AplicarValorHistorico('appApiUrl', sUrlFotos, sUrlRecuentos,
-        bUrlComun);
-      AplicarValorHistorico('appApiToken', sTokenFotos, sTokenRecuentos,
-        bTokenComun);
-      AplicarValorHistorico('appApiReferencia', sReferenciaFotos,
-        sReferenciaRecuentos, bReferenciaComun);
+      AplicarValoresPerfil(Grid, aValores, oValoresApi);
+      AplicarValoresPrestaShopGlobales(Grid, aValoresGlobales);
+      AplicarValoresApiHistoricos(Grid, oValoresApi);
     finally
       Grid.EndUpdate;
     end;
@@ -900,45 +1131,125 @@ begin
   end;
 end;
 
-procedure ClasificarCambioParametro(
-  AItem: TJvCustomInspectorItem;
-  APuedeEditar: Boolean;
-  AOriginales: TDictionary<string, string>;
-  var AValores: TValoresPerfilAppParam;
-  var AGuardados, AIgnorados: Integer;
-  var ACambioVerifactu: Boolean);
-var
-  Valor: string;
-  CambioReal: Boolean;
+procedure TfrmMtoAppParam.InicializarCambiosParametros(
+  var ACambios: TCambiosAppParam);
 begin
-  Valor := ValorInspectorParaGuardar(AItem);
-  CambioReal := True;
-  if AOriginales.ContainsKey(AItem.Name) then
-    CambioReal := not SameText(AOriginales[AItem.Name], Valor);
-  if CambioReal then
+  SetLength(ACambios.ValoresPerfil, 0);
+  SetLength(ACambios.ValoresGlobales, 0);
+  ACambios.Guardados := 0;
+  ACambios.Ignorados := 0;
+  ACambios.CambioVerifactu := False;
+  ACambios.CambioPrestaShop := False;
+end;
+
+procedure TfrmMtoAppParam.ClasificarCambioParametro(
+  AItem: TJvCustomInspectorItem;
+  var ACambios: TCambiosAppParam);
+var
+  EsCambioReal: Boolean;
+  sValor: string;
+begin
+  sValor := ValorInspectorParaGuardar(AItem);
+  EsCambioReal := True;
+  if FValoresOriginales.ContainsKey(AItem.Name) then
+    EsCambioReal := not SameText(
+      FValoresOriginales[AItem.Name], sValor);
+  if EsCambioReal then
   begin
-    if APuedeEditar then
+    if UsuarioPuedeEditarParametro(AItem.Name) then
     begin
-      SetLength(AValores, Length(AValores) + 1);
-      AValores[High(AValores)].Subclave := AItem.Name;
-      AValores[High(AValores)].Valor := Valor;
-      Inc(AGuardados);
+      if EsParametroPrestaShop(AItem.Name) then
+      begin
+        SetLength(
+          ACambios.ValoresGlobales,
+          Length(ACambios.ValoresGlobales) + 1);
+        ACambios.ValoresGlobales[
+          High(ACambios.ValoresGlobales)].Subclave := AItem.Name;
+        ACambios.ValoresGlobales[
+          High(ACambios.ValoresGlobales)].Valor := sValor;
+        ACambios.CambioPrestaShop := True;
+      end
+      else
+      begin
+        SetLength(
+          ACambios.ValoresPerfil,
+          Length(ACambios.ValoresPerfil) + 1);
+        ACambios.ValoresPerfil[
+          High(ACambios.ValoresPerfil)].Subclave := AItem.Name;
+        ACambios.ValoresPerfil[
+          High(ACambios.ValoresPerfil)].Valor := sValor;
+      end;
+      Inc(ACambios.Guardados);
       if StartsText('appVerifactu', AItem.Name) then
-        ACambioVerifactu := True;
+        ACambios.CambioVerifactu := True;
     end
     else
-      Inc(AIgnorados);
+      Inc(ACambios.Ignorados);
   end;
 end;
 
-procedure ActualizarOriginalesParametros(
-  AOriginales: TDictionary<string, string>;
+procedure TfrmMtoAppParam.ClasificarCambiosInspector(
+  var ACambios: TCambiosAppParam);
+var
+  i: Integer;
+  j: Integer;
+  oCategoria: TJvCustomInspectorItem;
+begin
+  for i := 0 to JvInspector1.Root.Count - 1 do
+  begin
+    oCategoria := JvInspector1.Root.Items[i];
+    if oCategoria is TJvInspectorCustomCategoryItem then
+    begin
+      for j := 0 to oCategoria.Count - 1 do
+        ClasificarCambioParametro(oCategoria.Items[j], ACambios);
+    end;
+  end;
+end;
+
+procedure TfrmMtoAppParam.ActualizarOriginalesParametros(
   const AValores: TValoresPerfilAppParam);
 var
-  Valor: TValorPerfilAppParam;
+  oValor: TValorPerfilAppParam;
 begin
-  for Valor in AValores do
-    AOriginales.AddOrSetValue(Valor.Subclave, Valor.Valor);
+  for oValor in AValores do
+    FValoresOriginales.AddOrSetValue(oValor.Subclave, oValor.Valor);
+end;
+
+procedure TfrmMtoAppParam.GuardarCambiosPerfil(
+  const AAmbito: string;
+  const AValores: TValoresPerfilAppParam);
+begin
+  if Length(AValores) > 0 then
+  begin
+    FRepositorioPersistencia.GuardarValores(
+      AAmbito, 'frmMtoAppParam', AValores);
+    ActualizarOriginalesParametros(AValores);
+  end;
+end;
+
+procedure TfrmMtoAppParam.GuardarCambiosPrestaShop(
+  const AValores: TValoresPerfilAppParam);
+var
+  EsStockActivo: Boolean;
+  RequiereReencolado: Boolean;
+begin
+  if Length(AValores) > 0 then
+  begin
+    RequiereReencolado :=
+      ValoresIncluyenReencoladoPrestaShop(AValores);
+    EsStockActivo := StockPrestaShopActivoEnValores(
+      AValores, ParametrosApp);
+    FRepositorioPersistencia.GuardarValores(
+      oAll, 'frmMtoAppParam', AValores);
+    EliminarValoresPrestaShopNoGlobales;
+    if RequiereReencolado then
+      EncolarTodosWebPrestaShop(
+        ConexionPrincipal,
+        True,
+        EsStockActivo,
+        IdentidadSesion.Usuario);
+    ActualizarOriginalesParametros(AValores);
+  end;
 end;
 
 function EsAmbitoSesionParametros(
@@ -949,98 +1260,98 @@ begin
     (AAmbito = ATodos);
 end;
 
+function TfrmMtoAppParam.AmbitoMensajeGuardado(
+  const AAmbito: string;
+  const ACambios: TCambiosAppParam): string;
+begin
+  Result := AAmbito;
+  if ACambios.CambioPrestaShop then
+  begin
+    if Length(ACambios.ValoresPerfil) > 0 then
+      Result := AAmbito + ' y Todos (PrestaShop global)'
+    else
+      Result := 'Todos (PrestaShop global)';
+  end;
+end;
+
+procedure TfrmMtoAppParam.RecargarParametrosGuardados(
+  const AAmbito, ATemaAnterior: string;
+  const ACambios: TCambiosAppParam);
+var
+  sTemaNuevo: string;
+begin
+  if ACambios.CambioPrestaShop or EsAmbitoSesionParametros(
+       AAmbito,
+       IdentidadSesion.Usuario,
+       IdentidadSesion.Grupo,
+       oAll) then
+  begin
+    FParametrosEdicion.Recargar(
+      IdentidadSesion.Usuario,
+      IdentidadSesion.Grupo);
+    sTemaNuevo := ParametrosApp.GetString('appTema');
+    if not SameText(ATemaAnterior, sTemaNuevo) and
+       (sTemaNuevo <> '') then
+    begin
+//    El cambio de tema en caliente sigue pendiente de implementación.
+    end;
+  end;
+end;
+
+procedure TfrmMtoAppParam.RegistrarCambioVerifactuGuardado(
+  const AAmbito: string;
+  const ACambios: TCambiosAppParam);
+begin
+  if ACambios.CambioVerifactu then
+    RegistrarCambioConfiguracionVerifactuSeguro(
+      RegistroLog,
+      ParametrosApp,
+      ConexionPrincipal,
+      IdentidadSesion.Usuario,
+      'Parámetros guardados para ' + AAmbito + ': ' +
+      IntToStr(ACambios.Guardados));
+end;
+
+procedure TfrmMtoAppParam.MostrarResultadoGuardado(
+  const AAmbito, ATemaAnterior: string;
+  const ACambios: TCambiosAppParam);
+begin
+  if ACambios.Guardados > 0 then
+  begin
+    ShowMessage(Format(
+      SInfoParametrosGuardados,
+      [ACambios.Guardados, AmbitoMensajeGuardado(AAmbito, ACambios)]));
+    RecargarParametrosGuardados(AAmbito, ATemaAnterior, ACambios);
+    RegistrarCambioVerifactuGuardado(AAmbito, ACambios);
+    if ACambios.Ignorados > 0 then
+      ShowMessage(Format(
+        SAvisoParametrosRestringidosIgnorados,
+        [ACambios.Ignorados]));
+  end
+  else if ACambios.Ignorados > 0 then
+    ShowMessage(Format(
+      SAvisoParametrosRestringidosNoGuardados,
+      [ACambios.Ignorados]))
+  else
+    ShowMessage(SInfoSinCambiosParametros);
+end;
+
 procedure TfrmMtoAppParam.btnGuardarClick(Sender: TObject);
 var
-  ValoresGuardar: TValoresPerfilAppParam;
-  sUsuarioGrupo : string;
-  i, j          : Integer;
-  NodoPrincipal : TJvCustomInspectorItem;
-  ParamItem     : TJvCustomInspectorItem;
-  GuardadosCount: Integer;
-  IgnoradosCount: Integer;
-  TemaAnterior  : string;
-  TemaNuevo     : string;
-  CambioVerifactu: Boolean;
+  oCambios: TCambiosAppParam;
+  sAmbito: string;
+  sTemaAnterior: string;
 begin
   JvInspector1.SaveValues;
   if cmbGrupoUsuario.ItemIndex >= 0 then
   begin
-    sUsuarioGrupo := cmbGrupoUsuario.Text;
-    GuardadosCount := 0;
-    IgnoradosCount := 0;
-    TemaAnterior := ParametrosApp.GetString('appTema');
-    CambioVerifactu := False;
-    SetLength(ValoresGuardar, 0);
-    for i := 0 to JvInspector1.Root.Count - 1 do
-    begin
-      NodoPrincipal := JvInspector1.Root.Items[i];
-      if NodoPrincipal is TJvInspectorCustomCategoryItem then
-      begin
-        for j := 0 to NodoPrincipal.Count - 1 do
-        begin
-          ParamItem := NodoPrincipal.Items[j];
-          ClasificarCambioParametro(
-            ParamItem,
-            UsuarioPuedeEditarParametro(ParamItem.Name),
-            FValoresOriginales,
-            ValoresGuardar,
-            GuardadosCount,
-            IgnoradosCount,
-            CambioVerifactu);
-        end;
-      end;
-    end;
-    if Length(ValoresGuardar) > 0 then
-    begin
-      FRepositorioPersistencia.GuardarValores(
-        sUsuarioGrupo,
-        'frmMtoAppParam',
-        ValoresGuardar);
-      ActualizarOriginalesParametros(FValoresOriginales, ValoresGuardar);
-    end;
-    if GuardadosCount > 0 then
-    begin
-      ShowMessage(Format(SInfoParametrosGuardados,
-                         [GuardadosCount, sUsuarioGrupo]));
-
-      // Recargamos en memoria si afecta al usuario/grupo actual
-      if EsAmbitoSesionParametros(
-           sUsuarioGrupo,
-           IdentidadSesion.Usuario,
-           IdentidadSesion.Grupo,
-           oAll) then
-      begin
-        FParametrosEdicion.Recargar(
-          IdentidadSesion.Usuario,
-          IdentidadSesion.Grupo
-        );
-
-        // ── Aplicar tema al vuelo si cambió ──────────────────────────
-        TemaNuevo := ParametrosApp.GetString('appTema');
-        if not SameText(TemaAnterior, TemaNuevo) and (TemaNuevo <> '') then
-        begin
-//          dxSkinsCore.dxSkinController.SkinName := TemaNuevo;
-//          ShowMessage('El tema "' + TemaNuevo +
-//                      '" se aplicará completamente al reiniciar.');
-        end;
-      end;
-      if CambioVerifactu then
-        RegistrarCambioConfiguracionVerifactuSeguro(
-          RegistroLog,
-          ParametrosApp,
-          ConexionPrincipal,
-          IdentidadSesion.Usuario,
-          'Parámetros guardados para ' + sUsuarioGrupo + ': ' +
-          IntToStr(GuardadosCount));
-      if IgnoradosCount > 0 then
-        ShowMessage(Format(SAvisoParametrosRestringidosIgnorados,
-                           [IgnoradosCount]));
-    end
-    else if IgnoradosCount > 0 then
-      ShowMessage(Format(SAvisoParametrosRestringidosNoGuardados,
-                         [IgnoradosCount]))
-    else
-      ShowMessage(SInfoSinCambiosParametros);
+    sAmbito := cmbGrupoUsuario.Text;
+    sTemaAnterior := ParametrosApp.GetString('appTema');
+    InicializarCambiosParametros(oCambios);
+    ClasificarCambiosInspector(oCambios);
+    GuardarCambiosPerfil(sAmbito, oCambios.ValoresPerfil);
+    GuardarCambiosPrestaShop(oCambios.ValoresGlobales);
+    MostrarResultadoGuardado(sAmbito, sTemaAnterior, oCambios);
   end;
 end;
 

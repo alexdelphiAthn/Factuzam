@@ -12,7 +12,7 @@
 {    Raíz de composición de servicios, adaptadores y procesos de Factuzam.     }
 {    Su fan-out alto es intencionado porque construye implementaciones         }
 {    concretas y las expone mediante contratos estrechos; no aloja navegación  }
-{    ni lógica de pantallas. IA-S23: 47 dependencias; máximo permitido: 50.    }
+{    ni lógica de pantallas. IA-S23: 49 dependencias; máximo permitido: 50.    }
 {******************************************************************************}
 unit UniDataComposicionAplicacion;
 
@@ -86,6 +86,7 @@ type
     FRepositorioCopias: IRepositorioCopiasSeguridad;
     FOperaciones: ICasoUsoCopiasSeguridad;
     FVentasWsCola: TObject;
+    FPrestaShopCola: TObject;
     FProcesosSegundoPlanoIniciados: Boolean;
     FCerrada: Boolean;
     function EjecutarCargaWorker(
@@ -180,11 +181,13 @@ uses
   inLibAuditoriaDatos,
   inLibMonitorSQLUniDAC,
   inLibVentasWsCola,
+  inLibPrestaShopCola,
   inLibVerifactu,
   inLibVerifactuInstalacion,
   inLibVerifactuCola,
   UniDataVerifactuColaProcesador,
   UniDataVentasWsSesion,
+  UniDataPrestaShopSesion,
   UniDataConfigCamposRepositorio,
   UniDataUnidadesMedidaRepositorio,
   UniDataRegistroPantallasRepositorio,
@@ -704,10 +707,12 @@ end;
 
 procedure TComposicionAplicacion.IniciarProcesosSegundoPlano;
 var
+  oPrestaShopCola: TPrestaShopCola;
   oVentasWsCola: TVentasWsCola;
 begin
   if not FProcesosSegundoPlanoIniciados then
   begin
+    oPrestaShopCola := nil;
     oVentasWsCola := nil;
     try
       TVerifactuCola.IniciarHilo(
@@ -724,11 +729,21 @@ begin
         FServiciosParametrosApp.Lectura,
         CrearFabricaSesionVentasWsUniDAC(FConexiones),
         FContextoSesion.Identidad.Usuario);
+      oPrestaShopCola := TPrestaShopCola.Create(FRegistroLog);
+      oPrestaShopCola.IniciarHilo(
+        FContextoSesion,
+        FServiciosParametrosApp.Lectura,
+        CrearFabricaSesionPrestaShopColaUniDAC(FConexiones),
+        FContextoSesion.Identidad.Usuario);
       FVentasWsCola := oVentasWsCola;
       oVentasWsCola := nil;
+      FPrestaShopCola := oPrestaShopCola;
+      oPrestaShopCola := nil;
       FProcesosSegundoPlanoIniciados := True;
     except
+      FreeAndNil(oPrestaShopCola);
       FreeAndNil(oVentasWsCola);
+      FreeAndNil(FPrestaShopCola);
       FreeAndNil(FVentasWsCola);
       try
         TVerifactuCola.DetenerHilo;
@@ -791,6 +806,7 @@ procedure TComposicionAplicacion.DetenerProcesosSegundoPlano;
 begin
   if FProcesosSegundoPlanoIniciados then
   begin
+    FreeAndNil(FPrestaShopCola);
     FreeAndNil(FVentasWsCola);
     TVerifactuCola.DetenerHilo;
     FProcesosSegundoPlanoIniciados := False;

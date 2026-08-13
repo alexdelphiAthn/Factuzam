@@ -40,5 +40,8 @@
     SQL.Strings = (
       'select * from vi_ivas_grupos')
     AfterInsert = unqryTablaGAfterInsert
+    AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
+    AfterDelete = unqryTablaGAfterDelete
   end
 end

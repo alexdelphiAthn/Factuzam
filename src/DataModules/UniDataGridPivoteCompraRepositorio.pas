@@ -24,7 +24,8 @@ function CrearRepositorioGridPivoteCompraUniDAC(
 implementation
 
 uses
-  System.SysUtils, System.StrUtils, Data.DB;
+  System.SysUtils, System.StrUtils, Data.DB,
+  UniDataPrestaShopEncolado;
 
 type
   TRepositorioGridPivoteCompraUniDAC = class(
@@ -520,6 +521,10 @@ begin
     Consulta.ParamByName('av').AsInteger := AIdTalla;
     Consulta.ParamByName('u').AsString := AUsuario;
     Consulta.ExecSQL;
+    EncolarArticuloPrestaShop(
+      FConexion,
+      ACodigoArticulo,
+      AUsuario);
   finally
     FreeAndNil(Consulta);
   end;
@@ -580,6 +585,10 @@ begin
     Consulta.ParamByName('av').AsInteger := AIdColor;
     Consulta.ParamByName('usuario').AsString := AUsuario;
     Consulta.Execute;
+    EncolarArticuloPrestaShop(
+      FConexion,
+      ACodigoArticulo,
+      AUsuario);
   finally
     FreeAndNil(Consulta);
   end;

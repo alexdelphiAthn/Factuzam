@@ -26,7 +26,8 @@ implementation
 
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
-  Data.DB, inLibCargaMasivaArticulosReglas, UniDataRectificativasSql;
+  Data.DB, inLibCargaMasivaArticulosReglas, UniDataRectificativasSql,
+  UniDataPrestaShopEncolado;
 
 const
   SQL_FAMILIAS =
@@ -1296,6 +1297,7 @@ var
   oDatos: TDataSet;
   oInsercion: TUniQuery;
   sArticulo: string;
+  iCodigo: Integer;
 begin
   Result.NumeroLineas := 0;
   Result.NumeroArticulos := 0;
@@ -1356,6 +1358,11 @@ begin
         end;
         oDatos.Next;
       end;
+      for iCodigo := 0 to oCodigos.Count - 1 do
+        EncolarPrecioPrestaShop(
+          FConexion,
+          oCodigos[iCodigo],
+          AParametros.Usuario);
       FConexion.Commit;
       Result.NumeroLineas := oCodigos.Count;
       Result.NumeroArticulos := oCodigos.Count;

@@ -63,3 +63,6 @@ database.cfg
 
 # Contexto local para asistentes de IA (rutas específicas de este equipo)
 /AGENTS.md
+
+# Laboratorio local de PrestaShop (instalacion, datos y credenciales locales)
+/tmp/prestashop_factuzam_lab/

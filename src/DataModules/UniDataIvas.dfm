@@ -64,6 +64,9 @@
       'select * from vi_ivas')
     Active = True
     AfterInsert = unqryTablaGAfterInsert
+    AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
+    AfterDelete = unqryTablaGAfterDelete
   end
   object unstrdprcContador: TUniStoredProc
     StoredProcName = 'PRC_GET_NEXT_CONT'

@@ -5,14 +5,14 @@
   inherited unqryTablaG: TUniQuery
     SQLInsert.Strings = (
       'INSERT INTO `fza_articulos`'
-      '  (`CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`,'
+      '  (`CODIGO_ART_ART`, `ESACTIVO_ART`, `ESWEB_ART`, `ORDEN_ART`,'
       '   `DESCRIPCION_ART`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`,'
       '   `ESACTIVO_FIJO_ART`, `TIPO_CANTIDAD_ART`,'
       '   `ESVARIACION_ART`, `ESTRAZABLE_ART`, `TIPO_VARIACION_ART`,'
       '   `INSTANTE_MODIF`, `INSTANTE_ALTA`,'
       '   `USUARIO_ALTA`, `USUARIO_MODIF`)'
       'VALUES'
-      '  (:`CODIGO_ART_ART`, :`ESACTIVO_ART`, :`ORDEN_ART`,'
+      '  (:`CODIGO_ART_ART`, :`ESACTIVO_ART`, :`ESWEB_ART`, :`ORDEN_ART`,'
       '   :`DESCRIPCION_ART`, :`CODIGO_FAM_ART`, :`TIPO_IVA_ART`,'
       '   :`ESACTIVO_FIJO_ART`, :`TIPO_CANTIDAD_ART`,'
       '   :`ESVARIACION_ART`, :`ESTRAZABLE_ART`, :`TIPO_VARIACION_ART`,'
@@ -27,6 +27,7 @@
       'SET'
       '  `CODIGO_ART_ART` = :`CODIGO_ART_ART`,'
       '  `ESACTIVO_ART` = :`ESACTIVO_ART`,'
+      '  `ESWEB_ART` = :`ESWEB_ART`,'
       '  `ORDEN_ART` = :`ORDEN_ART`,'
       '  `DESCRIPCION_ART` = :`DESCRIPCION_ART`,'
       '  `CODIGO_FAM_ART` = :`CODIGO_FAM_ART`,'
@@ -48,7 +49,7 @@
       '  `CODIGO_ART_ART` = :`Old_CODIGO_ART_ART`'
       'FOR UPDATE')
     SQLRefresh.Strings = (
-      'SELECT `CODIGO_ART_ART`, `ESACTIVO_ART`, `ORDEN_ART`,'
+      'SELECT `CODIGO_ART_ART`, `ESACTIVO_ART`, `ESWEB_ART`, `ORDEN_ART`,'
       '       `DESCRIPCION_ART`, `CODIGO_FAM_ART`, `TIPO_IVA_ART`,'
       '       `ESACTIVO_FIJO_ART`, `TIPO_CANTIDAD_ART`,'
       '       `ESVARIACION_ART`, `ESTRAZABLE_ART`, `TIPO_VARIACION_ART`,'
@@ -68,6 +69,7 @@
     BeforeInsert = nil
     AfterInsert = unqryTablaGAfterInsert
     AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
     AfterDelete = unqryTablaGAfterDelete
     Left = 48
   end
@@ -159,6 +161,9 @@
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_ARTTAR'
     BeforePost = unqryTarifasArticulosBeforePost
+    AfterPost = unqryTarifasArticulosAfterPost
+    BeforeDelete = unqryTarifasArticulosBeforeDelete
+    AfterDelete = unqryTarifasArticulosAfterDelete
     Left = 384
     Top = 16
     ParamData = <
@@ -650,7 +655,9 @@
     MasterFields = 'CODIGO_ART_ART'
     DetailFields = 'CODIGO_ART_SKU'
     BeforePost = unqrySkusBeforePost
+    AfterPost = unqrySkusAfterPost
     BeforeDelete = unqrySkusBeforeDelete
+    AfterDelete = unqrySkusAfterDelete
     Left = 112
     Top = 416
     ParamData = <
