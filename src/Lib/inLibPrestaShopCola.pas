@@ -58,6 +58,7 @@ type
   TMapeoLineaPrestaShop = record
     IdCombinacion: Integer;
     IdStock: Integer;
+    Omitir: Boolean;
   end;
 
   TPlanArticuloPrestaShop = record
@@ -1125,12 +1126,15 @@ begin
     iLinea := 0;
     while iLinea <= High(ATrabajo.Lineas) do
     begin
-      AsegurarLease(ATrabajo);
-      ProcesarLinea(
-        ATrabajo,
-        ATrabajo.Lineas[iLinea],
-        oPlan.Lineas[iLinea],
-        ACliente);
+      if not oPlan.Lineas[iLinea].Omitir then
+      begin
+        AsegurarLease(ATrabajo);
+        ProcesarLinea(
+          ATrabajo,
+          ATrabajo.Lineas[iLinea],
+          oPlan.Lineas[iLinea],
+          ACliente);
+      end;
       Inc(iLinea);
     end;
   end;
@@ -1161,13 +1165,24 @@ begin
       if ATrabajo.Lineas[iLinea].EsCombinacion then
       begin
         AsegurarLease(ATrabajo);
-        iAtributo := ACliente.BuscarCombinacionUnica(
-          ATrabajo.Lineas[iLinea].CodigoSku,
-          Result.IdProducto,
-          ATrabajo.IdTienda);
-        Result.Lineas[iLinea].IdCombinacion := iAtributo;
+        try
+          iAtributo := ACliente.BuscarCombinacionUnica(
+            ATrabajo.Lineas[iLinea].CodigoSku,
+            Result.IdProducto,
+            ATrabajo.IdTienda);
+          Result.Lineas[iLinea].IdCombinacion := iAtributo;
+        except
+          on E: ERecursoPrestaNoEncontrado do
+          begin
+            if ATrabajo.Lineas[iLinea].EstaActiva then
+              raise
+            else
+              Result.Lineas[iLinea].Omitir := True;
+          end;
+        end;
       end;
-      if ATrabajo.Lineas[iLinea].TieneStock then
+      if ATrabajo.Lineas[iLinea].TieneStock and
+         (not Result.Lineas[iLinea].Omitir) then
       begin
         AsegurarLease(ATrabajo);
         oStock := ACliente.ResolverStockDisponible(

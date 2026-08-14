@@ -879,6 +879,7 @@ begin
       bActiva :=
         (oConsulta.FieldByName('ESACTIVO_ART').AsString = 'S') and
         (oConsulta.FieldByName('ESACTIVO_SKU').AsString = 'S');
+      oLinea.EstaActiva := bActiva;
       oLinea.EsCombinacion := bEsCombinacion;
       oLinea.TieneStock := ATrabajo.TieneStock and
         (oConsulta.FieldByName('TIPO_ART').AsString <> 'SERVICIO');

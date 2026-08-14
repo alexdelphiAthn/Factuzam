@@ -53,6 +53,7 @@ type
 
   TLineaArticuloPrestaShop = record
     CodigoSku: string;
+    EstaActiva: Boolean;
     EsCombinacion: Boolean;
     TienePrecio: Boolean;
     TieneStock: Boolean;
