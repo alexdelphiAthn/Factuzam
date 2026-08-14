@@ -1246,14 +1246,18 @@
         ShortCut = 16505
         OnClick = mnuParmetrosdeEntornoClick
       end
-      object mnuColasIntegraciones: TMenuItem
-        Caption = 'Colas de integraciones'
+      object mnuColasEnvios: TMenuItem
+        Caption = 'Colas de env'#237'os'
+        object mnuVerifactuCola: TMenuItem
+          Caption = 'Verifactu'
+          OnClick = MenuGenericoClick
+        end
         object mnuPrestaShopCola: TMenuItem
-          Caption = 'Cola de PrestaShop'
+          Caption = 'PrestaShop'
           OnClick = MenuGenericoClick
         end
         object mnuVentasWsCola: TMenuItem
-          Caption = 'Cola de ventas WS'
+          Caption = 'Web Service Fzam'
           OnClick = MenuGenericoClick
         end
       end
@@ -2650,10 +2654,6 @@
       object mnuVerifactuDeclaracion: TMenuItem
         Caption = 'Declaraci'#243'n Responsable'
         OnClick = mnuVerifactuDeclaracionClick
-      end
-      object mnuVerifactuCola: TMenuItem
-        Caption = 'Cola de Env'#237'os'
-        OnClick = MenuGenericoClick
       end
       object mnuVerifactuLog: TMenuItem
         Caption = 'Verifactu Log'

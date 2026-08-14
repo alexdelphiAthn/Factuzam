@@ -24,6 +24,10 @@ Otros
 │   ├── Perfiles
 │   ├── Permisos
 │   └── Permisos (tabla)
+├── Colas de envíos
+│   ├── Verifactu
+│   ├── PrestaShop
+│   └── Web Service Fzam
 ├── Hacer Copia de Seguridad
 ├── Recuperar Copia de Seguridad
 └── Generador de Procesos
@@ -250,6 +254,30 @@ no puede alterar esa marca.
 
 La misma información de permisos presentada en **formato tabla** (rejilla),
 para edición masiva o revisión rápida de muchos permisos a la vez.
+
+---
+
+## Colas de envíos
+
+La ruta **Otros ▸ Colas de envíos** reúne en un solo lugar el seguimiento
+de las tres integraciones:
+
+- **Verifactu** muestra la cola de comunicaciones fiscales.
+- **PrestaShop** muestra los artículos pendientes, procesados o con error.
+- **Web Service Fzam** muestra los documentos enviados al servicio de
+  Factuzam.
+
+Las tres opciones son pantallas de consulta y seguimiento. Las ventanas de
+**PrestaShop** y **Web Service Fzam** muestran una lista de trabajos y el
+historial de sus operaciones HTTP. Al seleccionar una operación se pueden
+consultar la petición, la respuesta del servidor y el error registrado.
+
+Estas dos ventanas son de **solo lectura**: no permiten modificar, borrar ni
+reintentar trabajos. Los permisos independientes de consulta, exportación y
+detalle deciden si el usuario puede abrir la ventana, exportar la lista o ver
+la petición y la respuesta. Los administradores pueden revisar todos los
+destinos; los demás usuarios solo ven la tienda o empresa de su configuración
+efectiva.
 
 ---
 

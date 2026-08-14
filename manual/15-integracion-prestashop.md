@@ -304,6 +304,38 @@ perfil efectivo con la herencia usuario → grupo → `Todos`. Por tanto, un cam
 o una desactivación guardados en el usuario, su grupo o `Todos` llegan a los
 terminales que ya están abiertos sin reiniciar la aplicación.
 
+### Ventana de seguimiento
+
+La cola puede revisarse en **Otros ▸ Colas de envíos ▸ PrestaShop**. La
+lista muestra la tienda, el código y nombre del artículo, los indicadores de
+precio y stock pendiente o reclamado, el estado, los intentos, las fechas de
+próximo intento, último cambio y último envío, y el error general de la
+fila.
+
+Al seleccionar una fila se muestra su historial de operaciones HTTP, con
+intento, orden, método, recurso relativo, código y texto de estado HTTP,
+resultado, instante de inicio y duración. Al seleccionar una operación se
+cargan, bajo demanda, sus pestañas **Petición**, **Respuesta del servidor** y
+**Error**. De esta forma, los cuerpos extensos no se leen al abrir o recorrer
+la lista principal.
+
+El historial empieza a conservarse desde la instalación de esta versión. Las
+operaciones realizadas anteriormente no se reconstruyen de forma retroactiva.
+
+El historial es de diagnóstico. No guarda la clave API, cabeceras de
+autorización, contenido binario, datos en base64 ni rutas locales completas.
+En una subida de imagen conserva solo una descripción segura, como el nombre,
+el tamaño y la huella. Los textos que exceden el límite de almacenamiento se
+recortan con una marca visible de truncado.
+
+La ventana es de **solo lectura** y no permite editar, borrar ni reintentar
+una fila. Solo ofrece actualizar la consulta, exportarla cuando exista el
+permiso e ir al artículo relacionado. Los permisos separados **Consultar**,
+**Excel** y **Ver petición/respuesta** controlan el acceso a la lista, la
+exportación y el detalle respectivamente. Un administrador puede consultar
+todos los destinos; los demás usuarios ven exclusivamente la tienda resuelta
+por su configuración efectiva.
+
 ---
 
 ## 6. Precios de producto y de SKU

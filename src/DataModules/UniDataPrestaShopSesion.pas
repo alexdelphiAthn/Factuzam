@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       UniDataPrestaShopSesion                                     }
 {    Tipo:       Composición de persistencia                                   }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       13/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
@@ -19,7 +19,8 @@ interface
 
 uses
   inLibConexionesIntf, inLibPrestaShopColaIntf,
-  inLibPrestaShopAltaArticuloIntf;
+  inLibPrestaShopAltaArticuloIntf,
+  inLibPrestaShopColaHistorialIntf;
 
 function CrearFabricaSesionPrestaShopColaUniDAC(
   const AConexiones: IServicioConexiones): IFabricaSesionPrestaShopCola;
@@ -28,7 +29,8 @@ implementation
 
 uses
   System.SysUtils, Uni, UniDataPrestaShopCola,
-  UniDataPrestaShopAltaArticulo;
+  UniDataPrestaShopAltaArticulo,
+  UniDataPrestaShopColaHistorial;
 
 type
   TSesionPrestaShopColaUniDAC = class(
@@ -38,11 +40,14 @@ type
     FConexion: TUniConnection;
     FRepositorio: IRepositorioPrestaShopCola;
     FRepositorioAlta: IRepositorioAltaArticuloPresta;
+    FRegistradorEventos: IRegistradorEventosPrestaShopCola;
   public
     constructor Create(const AConexiones: IServicioConexiones);
     destructor Destroy; override;
     function GetRepositorio: IRepositorioPrestaShopCola;
     function GetRepositorioAlta: IRepositorioAltaArticuloPresta;
+    function GetRegistradorEventos:
+      IRegistradorEventosPrestaShopCola;
   end;
 
   TFabricaSesionPrestaShopColaUniDAC = class(
@@ -66,14 +71,23 @@ begin
   FRepositorio := CrearRepositorioPrestaShopColaUniDAC(FConexion);
   FRepositorioAlta :=
     CrearRepositorioAltaArticuloPrestaUniDAC(FConexion);
+  FRegistradorEventos :=
+    CrearRegistradorEventosPrestaShopColaUniDAC(FConexion);
 end;
 
 destructor TSesionPrestaShopColaUniDAC.Destroy;
 begin
+  FRegistradorEventos := nil;
   FRepositorioAlta := nil;
   FRepositorio := nil;
   FreeAndNil(FConexion);
   inherited;
+end;
+
+function TSesionPrestaShopColaUniDAC.GetRegistradorEventos:
+  IRegistradorEventosPrestaShopCola;
+begin
+  Result := FRegistradorEventos;
 end;
 
 function TSesionPrestaShopColaUniDAC.GetRepositorioAlta:

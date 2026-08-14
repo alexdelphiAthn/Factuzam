@@ -1,5 +1,5 @@
 ﻿inherited frmMtoVentasWsCola: TfrmMtoVentasWsCola
-  Caption = 'Cola de ventas WS'
+  Caption = 'Cola del Web Service Fzam'
   TextHeight = 19
   inherited pButtonPage: TPanel
     inherited pcPantalla: TcxPageControl

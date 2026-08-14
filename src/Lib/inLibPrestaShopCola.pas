@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibPrestaShopCola                                          }
 {    Tipo:       Librería                                                      }
-{ Versión:       2.0.0                                                         }
-{   Fecha:       13/08/2026                                                    }
+{ Versión:       2.1.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
@@ -43,7 +43,8 @@ uses
   System.SysUtils, System.Generics.Collections,
   inLibPrestaCatalogoIntf, inLibPrestaCatalogo,
   inLibPrestaCatalogoAltaIntf, inLibPrestaCatalogoAlta,
-  inLibPrestaShopAltaArticuloIntf, inLibPrestaShopColaSenal;
+  inLibPrestaShopAltaArticuloIntf, inLibPrestaShopColaSenal,
+  inLibPrestaShopTransporteHistorial;
 
 const
   CToleranciaPrecio = 0.000001;
@@ -148,6 +149,8 @@ type
       AIdCola: Int64;
       const ACliente: IClienteCatalogoPresta;
       const AClienteAlta: IClienteCatalogoAltaPresta;
+      const ATransporteHistorial:
+        ITransportePrestaShopConHistorial;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure ProcesarLinea(
       const ATrabajo: TTrabajoArticuloPrestaShop;
@@ -157,6 +160,8 @@ type
     procedure ProcesarPendientes(
       const ACliente: IClienteCatalogoPresta;
       const AClienteAlta: IClienteCatalogoAltaPresta;
+      const ATransporteHistorial:
+        ITransportePrestaShopConHistorial;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
   protected
     procedure Execute; override;
@@ -829,6 +834,8 @@ var
   oCliente: IClienteCatalogoPresta;
   oClienteAlta: IClienteCatalogoAltaPresta;
   oConfiguracion: TConfiguracionGlobalPrestaShop;
+  oTransporte: ITransporteAltaPresta;
+  oTransporteHistorial: ITransportePrestaShopConHistorial;
 begin
   if FSesion = nil then
   begin
@@ -856,17 +863,23 @@ begin
         FUsuario);
     if bProcesar then
     begin
-      oCliente := TClienteCatalogoPresta.Create(
+      oTransporte := CrearTransportePresta(
         oConfiguracion.UrlApi,
         oConfiguracion.ClaveApi);
+      oTransporteHistorial := CrearTransportePrestaShopConHistorial(
+        oTransporte,
+        FSesion.RegistradorEventos,
+        oConfiguracion.UrlApi,
+        oConfiguracion.ClaveApi);
+      oCliente := TClienteCatalogoPresta.Create(
+        oTransporteHistorial);
       if oConfiguracion.CrearArticulos then
       begin
         if not Assigned(FRepositorioAlta) then
           raise EInvalidOpException.Create(
             SRepositorioAltaPrestaShopNoCreado);
-        oClienteAlta := CrearClienteCatalogoAltaPresta(
-          oConfiguracion.UrlApi,
-          oConfiguracion.ClaveApi);
+        oClienteAlta := TClienteCatalogoAltaPresta.Create(
+          oTransporteHistorial);
       end;
       if ARecuperacion then
         FRepositorio.ReencolarProcesandoCaducadas(
@@ -875,7 +888,11 @@ begin
           CMinutosReclamacionCaducada);
       { La exclusión es por fila mediante token y versión. Así un envío HTTP
         bloqueado no impide que otro proceso atienda el resto de la cola. }
-      ProcesarPendientes(oCliente, oClienteAlta, oConfiguracion);
+      ProcesarPendientes(
+        oCliente,
+        oClienteAlta,
+        oTransporteHistorial,
+        oConfiguracion);
     end;
   end
   else
@@ -899,6 +916,8 @@ end;
 procedure THiloPrestaShopCola.ProcesarPendientes(
   const ACliente: IClienteCatalogoPresta;
   const AClienteAlta: IClienteCatalogoAltaPresta;
+  const ATransporteHistorial:
+    ITransportePrestaShopConHistorial;
   const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
   aPendientes: TArray<Int64>;
@@ -925,6 +944,7 @@ begin
           aPendientes[iIndice],
           ACliente,
           AClienteAlta,
+          ATransporteHistorial,
           AConfiguracion);
       Inc(iIndice);
     end;
@@ -935,8 +955,11 @@ procedure THiloPrestaShopCola.ProcesarFila(
   AIdCola: Int64;
   const ACliente: IClienteCatalogoPresta;
   const AClienteAlta: IClienteCatalogoAltaPresta;
+  const ATransporteHistorial:
+    ITransportePrestaShopConHistorial;
   const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
+  oContextoHistorial: TContextoTransportePrestaShop;
   oTrabajo: TTrabajoArticuloPrestaShop;
   sToken: string;
 begin
@@ -951,61 +974,76 @@ begin
     oTrabajo.IdCola := AIdCola;
     oTrabajo.Token := sToken;
     try
-      oTrabajo := FRepositorio.LeerTrabajo(
-        AIdCola,
-        sToken,
-        AConfiguracion.Cola);
-      if oTrabajo.IdCola = 0 then
-        oTrabajo.IdCola := AIdCola;
-      oTrabajo.Token := sToken;
-      if oTrabajo.CodigoArticulo = '' then
-        raise EInvalidOpException.Create(STrabajoPrestaShopNoReclamado);
-      if oTrabajo.EstaEnWeb and
-         (AConfiguracion.CrearArticulos or
-          (AConfiguracion.SincronizarStockPrecios and
-           ((oTrabajo.TienePrecio and
-             oTrabajo.TienePrecioProducto) or
-            oTrabajo.TieneStock))) then
-      begin
-        AsegurarLease(oTrabajo);
-        if not SigueVigente(AConfiguracion) then
+      try
+        oTrabajo := FRepositorio.LeerTrabajo(
+          AIdCola,
+          sToken,
+          AConfiguracion.Cola);
+        if oTrabajo.IdCola = 0 then
+          oTrabajo.IdCola := AIdCola;
+        oTrabajo.Token := sToken;
+        if oTrabajo.CodigoArticulo = '' then
           raise EInvalidOpException.Create(
-            'La configuración PrestaShop cambió durante el envío');
-        ProcesarArticulo(
-          oTrabajo,
-          ACliente,
-          AClienteAlta,
-          AConfiguracion);
+            STrabajoPrestaShopNoReclamado);
+        oContextoHistorial := Default(TContextoTransportePrestaShop);
+        oContextoHistorial.IdCola := oTrabajo.IdCola;
+        oContextoHistorial.IdReclamacion := oTrabajo.Token;
+        oContextoHistorial.VersionReclamada :=
+          oTrabajo.VersionReclamada;
+        oContextoHistorial.NumeroIntento := oTrabajo.Intentos + 1;
+        oContextoHistorial.Usuario := FUsuario;
+        oContextoHistorial.OrdenOperacion := 0;
+        ATransporteHistorial.EstablecerContexto(
+          oContextoHistorial);
+        if oTrabajo.EstaEnWeb and
+           (AConfiguracion.CrearArticulos or
+            (AConfiguracion.SincronizarStockPrecios and
+             ((oTrabajo.TienePrecio and
+               oTrabajo.TienePrecioProducto) or
+              oTrabajo.TieneStock))) then
+        begin
+          AsegurarLease(oTrabajo);
+          if not SigueVigente(AConfiguracion) then
+            raise EInvalidOpException.Create(
+              'La configuración PrestaShop cambió durante el envío');
+          ProcesarArticulo(
+            oTrabajo,
+            ACliente,
+            AClienteAlta,
+            AConfiguracion);
+        end;
+        FRepositorio.MarcarEnviada(
+          oTrabajo.IdCola,
+          oTrabajo.Token,
+          FUsuario,
+          oTrabajo.TieneProximoCambioPrecio,
+          oTrabajo.ProximoCambioPrecio);
+      except
+        on E: EAltaArticuloPrestaLocal do
+          GuardarIncidenciaTerminal(
+            oTrabajo,
+            AConfiguracion,
+            E.Message);
+        on E: EConfiguracionPrestaInvalida do
+          GuardarIncidenciaTerminal(
+            oTrabajo,
+            AConfiguracion,
+            E.Message);
+        on E: ERecursoPrestaNoEncontrado do
+          GuardarRecursoNoEncontrado(
+            oTrabajo,
+            AConfiguracion,
+            E);
+        on E: ERecursoPrestaAmbiguo do
+          GuardarRecursoAmbiguo(
+            oTrabajo,
+            AConfiguracion,
+            E);
+        on E: Exception do
+          GuardarError(oTrabajo, AConfiguracion, E.Message);
       end;
-      FRepositorio.MarcarEnviada(
-        oTrabajo.IdCola,
-        oTrabajo.Token,
-        FUsuario,
-        oTrabajo.TieneProximoCambioPrecio,
-        oTrabajo.ProximoCambioPrecio);
-    except
-      on E: EAltaArticuloPrestaLocal do
-        GuardarIncidenciaTerminal(
-          oTrabajo,
-          AConfiguracion,
-          E.Message);
-      on E: EConfiguracionPrestaInvalida do
-        GuardarIncidenciaTerminal(
-          oTrabajo,
-          AConfiguracion,
-          E.Message);
-      on E: ERecursoPrestaNoEncontrado do
-        GuardarRecursoNoEncontrado(
-          oTrabajo,
-          AConfiguracion,
-          E);
-      on E: ERecursoPrestaAmbiguo do
-        GuardarRecursoAmbiguo(
-          oTrabajo,
-          AConfiguracion,
-          E);
-      on E: Exception do
-        GuardarError(oTrabajo, AConfiguracion, E.Message);
+    finally
+      ATransporteHistorial.LimpiarContexto;
     end;
   end;
 end;

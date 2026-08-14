@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibPrestaShopColaIntf                                      }
 {    Tipo:       Contrato                                                      }
-{ Versión:       2.0.0                                                         }
-{   Fecha:       13/08/2026                                                    }
+{ Versión:       2.1.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
@@ -17,7 +17,8 @@ unit inLibPrestaShopColaIntf;
 interface
 
 uses
-  System.SysUtils, inLibPrestaShopAltaArticuloIntf;
+  System.SysUtils, inLibPrestaShopAltaArticuloIntf,
+  inLibPrestaShopColaHistorialIntf;
 
 const
   CMarcaReanudacionAltaPrestaShop = '[ALTA_PRESTASHOP] ';
@@ -135,12 +136,16 @@ type
   end;
 
   ISesionPrestaShopCola = interface
-    ['{B1063C7D-9530-4B02-98B9-7BB1BD30D9BA}']
+    ['{9C7B7C1A-40BB-420E-B396-F675E4D12B53}']
     function GetRepositorio: IRepositorioPrestaShopCola;
     function GetRepositorioAlta: IRepositorioAltaArticuloPresta;
+    function GetRegistradorEventos:
+      IRegistradorEventosPrestaShopCola;
     property Repositorio: IRepositorioPrestaShopCola read GetRepositorio;
     property RepositorioAlta: IRepositorioAltaArticuloPresta
       read GetRepositorioAlta;
+    property RegistradorEventos: IRegistradorEventosPrestaShopCola
+      read GetRegistradorEventos;
   end;
 
   IFabricaSesionPrestaShopCola = interface

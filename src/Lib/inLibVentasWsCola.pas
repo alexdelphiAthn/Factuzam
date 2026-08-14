@@ -117,8 +117,12 @@ type
 const
   cContenidoBase64Omitido =
     '[OMITIDO DEL HISTORIAL: CONTENIDO BINARIO/BASE64]';
+  cContenidoSensibleOmitido =
+    '[OMITIDO DEL HISTORIAL: CREDENCIAL O SECRETO]';
   cPeticionJsonNoDisponible =
     '[PETICIÓN OMITIDA DEL HISTORIAL: JSON NO VÁLIDO]';
+  cRespuestaNoDisponible =
+    '[RESPUESTA OMITIDA DEL HISTORIAL: NO SE PUDO SANEAR]';
 
 function EsCampoBinarioHistorial(const ANombre: string): Boolean;
 begin
@@ -128,7 +132,21 @@ begin
             SameText(ANombre, 'QRCODE_PNG_FACCON');
 end;
 
-procedure OcultarContenidoBinario(AValor: TJSONValue);
+function EsCampoSensibleHistorial(const ANombre: string): Boolean;
+begin
+  Result := SameText(ANombre, 'authorization') or
+            SameText(ANombre, 'api_key') or
+            SameText(ANombre, 'apikey') or
+            SameText(ANombre, 'clave_api') or
+            SameText(ANombre, 'password') or
+            SameText(ANombre, 'contrasena') or
+            SameText(ANombre, 'access_token') or
+            SameText(ANombre, 'refresh_token') or
+            SameText(ANombre, 'client_secret') or
+            SameText(ANombre, 'secret');
+end;
+
+procedure OcultarContenidoNoPersistible(AValor: TJSONValue);
 var
   iIndice: Integer;
   oObjeto: TJSONObject;
@@ -143,8 +161,10 @@ begin
       oPar := oObjeto.Pairs[iIndice];
       if EsCampoBinarioHistorial(oPar.JsonString.Value) then
         oPar.JsonValue := TJSONString.Create(cContenidoBase64Omitido)
+      else if EsCampoSensibleHistorial(oPar.JsonString.Value) then
+        oPar.JsonValue := TJSONString.Create(cContenidoSensibleOmitido)
       else
-        OcultarContenidoBinario(oPar.JsonValue);
+        OcultarContenidoNoPersistible(oPar.JsonValue);
       Inc(iIndice);
     end;
   end
@@ -153,7 +173,7 @@ begin
     iIndice := 0;
     while iIndice < TJSONArray(AValor).Count do
     begin
-      OcultarContenidoBinario(TJSONArray(AValor).Items[iIndice]);
+      OcultarContenidoNoPersistible(TJSONArray(AValor).Items[iIndice]);
       Inc(iIndice);
     end;
   end;
@@ -170,7 +190,7 @@ begin
       oJson := TJSONObject.ParseJSONValue(AContenido);
       if Assigned(oJson) then
       begin
-        OcultarContenidoBinario(oJson);
+        OcultarContenidoNoPersistible(oJson);
         Result := oJson.ToJSON;
       end;
     except
@@ -180,6 +200,37 @@ begin
   finally
     FreeAndNil(oJson);
   end;
+end;
+
+function RespuestaParaHistorial(const AContenido: string): string;
+var
+  oJson: TJSONValue;
+begin
+  Result := AContenido;
+  oJson := nil;
+  try
+    try
+      oJson := TJSONObject.ParseJSONValue(AContenido);
+      if Assigned(oJson) then
+      begin
+        OcultarContenidoNoPersistible(oJson);
+        Result := oJson.ToJSON;
+      end;
+    except
+      on E: Exception do
+        Result := AContenido;
+    end;
+  finally
+    FreeAndNil(oJson);
+  end;
+end;
+
+function OcultarSecretoLiteral(const AContenido, ASecreto: string): string;
+begin
+  Result := AContenido;
+  if ASecreto <> '' then
+    Result := StringReplace(
+      Result, ASecreto, cContenidoSensibleOmitido, [rfReplaceAll]);
 end;
 
 function NuevoUuid: string;
@@ -549,6 +600,7 @@ function THiloVentasWsCola.EnviarConHistorial(
 var
   iInicioMs: UInt64;
   oIntento: TIntentoVentasWsCola;
+  sToken: string;
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
@@ -582,8 +634,19 @@ begin
     oIntento.DuracionMs := Int64(GetTickCount64 - iInicioMs);
     oIntento.IdPeticion := Result.IdPeticion;
     oIntento.EstadoHttp := Result.EstadoHttp;
-    oIntento.Respuesta := Result.Respuesta;
-    oIntento.Mensaje := Result.Mensaje;
+    try
+      sToken := TClienteFactuzamApi.Token(FParametrosApp);
+      oIntento.Respuesta := OcultarSecretoLiteral(
+        RespuestaParaHistorial(Result.Respuesta), sToken);
+      oIntento.Mensaje := OcultarSecretoLiteral(Result.Mensaje, sToken);
+    except
+      on E: Exception do
+      begin
+        oIntento.Respuesta := cRespuestaNoDisponible;
+        oIntento.Mensaje :=
+          'No se pudo sanear la respuesta: ' + E.ClassName;
+      end;
+    end;
     if Result.Ok then
       oIntento.Resultado := rccCorrecto
     else

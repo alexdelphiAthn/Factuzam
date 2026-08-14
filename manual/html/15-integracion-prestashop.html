@@ -273,6 +273,32 @@ tienda.</p>
 perfil efectivo con la herencia usuario → grupo → <code>Todos</code>. Por tanto, un cambio
 o una desactivación guardados en el usuario, su grupo o <code>Todos</code> llegan a los
 terminales que ya están abiertos sin reiniciar la aplicación.</p>
+<h3 id="ventana-de-seguimiento">Ventana de seguimiento</h3>
+<p>La cola puede revisarse en <strong>Otros ▸ Colas de envíos ▸ PrestaShop</strong>. La
+lista muestra la tienda, el código y nombre del artículo, los indicadores de
+precio y stock pendiente o reclamado, el estado, los intentos, las fechas de
+próximo intento, último cambio y último envío, y el error general de la
+fila.</p>
+<p>Al seleccionar una fila se muestra su historial de operaciones HTTP, con
+intento, orden, método, recurso relativo, código y texto de estado HTTP,
+resultado, instante de inicio y duración. Al seleccionar una operación se
+cargan, bajo demanda, sus pestañas <strong>Petición</strong>, <strong>Respuesta del servidor</strong> y
+<strong>Error</strong>. De esta forma, los cuerpos extensos no se leen al abrir o recorrer
+la lista principal.</p>
+<p>El historial empieza a conservarse desde la instalación de esta versión. Las
+operaciones realizadas anteriormente no se reconstruyen de forma retroactiva.</p>
+<p>El historial es de diagnóstico. No guarda la clave API, cabeceras de
+autorización, contenido binario, datos en base64 ni rutas locales completas.
+En una subida de imagen conserva solo una descripción segura, como el nombre,
+el tamaño y la huella. Los textos que exceden el límite de almacenamiento se
+recortan con una marca visible de truncado.</p>
+<p>La ventana es de <strong>solo lectura</strong> y no permite editar, borrar ni reintentar
+una fila. Solo ofrece actualizar la consulta, exportarla cuando exista el
+permiso e ir al artículo relacionado. Los permisos separados <strong>Consultar</strong>,
+<strong>Excel</strong> y <strong>Ver petición/respuesta</strong> controlan el acceso a la lista, la
+exportación y el detalle respectivamente. Un administrador puede consultar
+todos los destinos; los demás usuarios ven exclusivamente la tienda resuelta
+por su configuración efectiva.</p>
 <hr>
 <h2 id="6-precios-de-producto-y-de-sku">6. Precios de producto y de SKU</h2>
 <p>PrestaShop guarda los precios sin impuestos:</p>

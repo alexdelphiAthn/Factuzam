@@ -1058,6 +1058,10 @@
         <DCCReference Include="src\Lib\inLibVentasWsColaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataVentasWsCola.pas"/>
         <DCCReference
+            Include="src\Lib\inLibVentasWsColaHistorialIntf.pas"/>
+        <DCCReference
+            Include="src\DataModules\UniDataVentasWsColaHistorial.pas"/>
+        <DCCReference
             Include="src\DataModules\UniDataVentasWsColaMonitor.pas">
             <Form>dmVentasWsColaMonitor</Form>
             <DesignClass>TdmVentasWsColaMonitor</DesignClass>
@@ -1069,6 +1073,13 @@
         <DCCReference Include="src\Lib\inLibVentasWsCola.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaCatalogoIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaCatalogo.pas"/>
+        <DCCReference Include="src\Lib\inLibColasHistorialIntf.pas"/>
+        <DCCReference
+            Include="src\Lib\inLibPrestaShopColaHistorialIntf.pas"/>
+        <DCCReference
+            Include="src\DataModules\UniDataPrestaShopColaHistorial.pas"/>
+        <DCCReference
+            Include="src\Lib\inLibPrestaShopTransporteHistorial.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopColaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataPrestaShopCola.pas"/>
         <DCCReference

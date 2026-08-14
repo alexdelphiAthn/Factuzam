@@ -35,6 +35,10 @@ avanzadas. Son opciones que usa principalmente el <strong>administrador</strong>
 │   ├── Perfiles
 │   ├── Permisos
 │   └── Permisos (tabla)
+├── Colas de envíos
+│   ├── Verifactu
+│   ├── PrestaShop
+│   └── Web Service Fzam
 ├── Hacer Copia de Seguridad
 ├── Recuperar Copia de Seguridad
 └── Generador de Procesos</code></pre>
@@ -191,6 +195,21 @@ afectado.</p></blockquote>
 <p><em>(Sin atajo de menú; se abre desde el menú.)</em></p>
 <p>La misma información de permisos presentada en <strong>formato tabla</strong> (rejilla),
 para edición masiva o revisión rápida de muchos permisos a la vez.</p>
+<hr>
+<h2 id="colas-de-envios">Colas de envíos</h2>
+<p>La ruta <strong>Otros ▸ Colas de envíos</strong> reúne en un solo lugar el seguimiento
+de las tres integraciones:</p>
+<ul><li><strong>Verifactu</strong> muestra la cola de comunicaciones fiscales.</li><li><strong>PrestaShop</strong> muestra los artículos pendientes, procesados o con error.</li><li><strong>Web Service Fzam</strong> muestra los documentos enviados al servicio de Factuzam.</li></ul>
+<p>Las tres opciones son pantallas de consulta y seguimiento. Las ventanas de
+<strong>PrestaShop</strong> y <strong>Web Service Fzam</strong> muestran una lista de trabajos y el
+historial de sus operaciones HTTP. Al seleccionar una operación se pueden
+consultar la petición, la respuesta del servidor y el error registrado.</p>
+<p>Estas dos ventanas son de <strong>solo lectura</strong>: no permiten modificar, borrar ni
+reintentar trabajos. Los permisos independientes de consulta, exportación y
+detalle deciden si el usuario puede abrir la ventana, exportar la lista o ver
+la petición y la respuesta. Los administradores pueden revisar todos los
+destinos; los demás usuarios solo ven la tienda o empresa de su configuración
+efectiva.</p>
 <hr>
 <h2 id="hacer-copia-de-seguridad">Hacer Copia de Seguridad</h2>
 <p><img src="img/07-copia-seguridad.png" alt="Diálogo de copia de seguridad" loading="lazy"></p>

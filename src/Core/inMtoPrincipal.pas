@@ -224,7 +224,7 @@ type
     mnuErroresEnvios: TMenuItem;
     mnuConsultaStocks: TMenuItem;
     mnuArticulosSimilares: TMenuItem;
-    mnuColasIntegraciones: TMenuItem;
+    mnuColasEnvios: TMenuItem;
     mnuPrestaShopCola: TMenuItem;
     mnuVentasWsCola: TMenuItem;
     Listados1: TMenuItem;
