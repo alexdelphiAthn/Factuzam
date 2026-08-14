@@ -283,6 +283,7 @@ begin
   AddSuf('fza_pedidos_lineas',                  'PEDLIN');
   AddSuf('fza_pedidos_mensajes',                'PEDMSG');
   AddSuf('fza_prestashop_cola',                 'PSCOLA');
+  AddSuf('fza_prestashop_cola_eventos',         'PSCEV');
   AddSuf('fza_propiedades',                     'PROP');
   AddSuf('fza_propiedades_valores',             'PV');
   AddSuf('fza_proformas_caja',                  'PROCAJ');
@@ -310,6 +311,7 @@ begin
   AddSuf('fza_variaciones_atributos',           'VA');
   AddSuf('fza_facturas_relaciones',             'FACREL');
   AddSuf('fza_ventas_ws_cola',                  'VWSC');
+  AddSuf('fza_ventas_ws_cola_intentos',         'VWSCI');
   AddSuf('fza_verifactu_cadena',                'VFCAD');
   AddSuf('fza_verifactu_cola',                  'VFCOLA');
   AddSuf('fza_verifactu_eventos',               'LOG');
@@ -381,6 +383,8 @@ begin
   AddOwn('fza_facturas_pagos',                 ['PAGO','FACTURA']);
   AddOwn('fza_pedidos_mensajes',               ['PEDIDO','MENSAJE','MENSAJES']);
   AddOwn('fza_prestashop_cola',                ['PRESTASHOP','COLA']);
+  AddOwn('fza_prestashop_cola_eventos',
+         ['PRESTASHOP','COLA','EVENTO']);
   AddOwn('fza_proveedores_familias',           ['FAMILIA']);
   AddOwn('fza_proveedores_familias_conjuntos', ['FAMILIA','CONJUNTO']);
   AddOwn('fza_familias_atributos',             ['ATRIBUTO']);
@@ -414,6 +418,8 @@ begin
   AddOwn('fza_remesas_venta',                  ['REMESA','VENTA']);
   AddOwn('fza_tipos_efecto',                   ['TIPO','EFECTO']);
   AddOwn('fza_ventas_ws_cola',                 ['VENTA','WS','COLA']);
+  AddOwn('fza_ventas_ws_cola_intentos',
+         ['VENTA','WS','COLA','INTENTO']);
 
   // ========== Auditoría ==========
   FAuditRenames.AddOrSetValue('INSTANTEALTA',  'INSTANTE_ALTA');

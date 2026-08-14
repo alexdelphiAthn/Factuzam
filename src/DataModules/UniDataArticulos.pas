@@ -165,6 +165,7 @@ uses
   System.Diagnostics,
   inLibCadenas, inLibDatasets,
   inLibLogIntf,
+  inLibPrestaShopColaSenal,
   UniDataPrestaShopEncolado,
   UniDataValoresAutomaticosRepositorio,
   inLibMsgArticulos;
@@ -1352,6 +1353,9 @@ begin
     if not unqrySol.IsEmpty then
       Result := unqrySol.FieldByName('MENSAJE').AsString;
     unqrySol.Close;
+    if (not ConexionPrincipal.InTransaction) and
+       (not StartsText('ERROR', Result)) then
+      SolicitarProcesadoPrestaShop;
   finally
     FreeAndNil(unqrySol);
   end;

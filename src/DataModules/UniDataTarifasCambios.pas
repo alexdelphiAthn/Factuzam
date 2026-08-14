@@ -62,7 +62,8 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
-  inLibUser, inLibMsgArticulos, UniDataPrestaShopEncolado;
+  inLibUser, inLibMsgArticulos, UniDataPrestaShopEncolado,
+  inLibPrestaShopColaSenal;
 
 {$R *.dfm}
 
@@ -535,6 +536,7 @@ function TdmTarifasCambios.AplicarSesionActual(
   out AMensaje: string): Integer;
 var
   EsTransaccionPropia: Boolean;
+  TransaccionConfirmada: Boolean;
   oConexion: TUniConnection;
   qryBusca: TUniQuery;
   qryExec: TUniQuery;
@@ -568,6 +570,7 @@ begin
       qryUnico.Connection := oConexion;
       ConfigurarConsultasAplicacion(qryBusca, qryMarca, qryUnico);
       EsTransaccionPropia := not oConexion.InTransaction;
+      TransaccionConfirmada := False;
       if EsTransaccionPropia then
         oConexion.StartTransaction;
       try
@@ -587,7 +590,10 @@ begin
         AplicarVentanaDescuento(qryExec);
         MarcarSesionAplicada(qryExec);
         if EsTransaccionPropia then
+        begin
           oConexion.Commit;
+          TransaccionConfirmada := True;
+        end;
       except
         on E: Exception do
         begin
@@ -602,6 +608,8 @@ begin
             raise;
         end;
       end;
+      if TransaccionConfirmada then
+        SolicitarProcesadoPrestaShop;
       unqryTablaG.Refresh;
       unqryLineas.Refresh;
     finally

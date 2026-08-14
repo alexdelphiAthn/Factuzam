@@ -39,10 +39,11 @@ type
 implementation
 
 uses
-  Winapi.ActiveX, Winapi.Windows, System.Math, System.SysUtils,
-  System.Generics.Collections, inLibPrestaCatalogoIntf,
-  inLibPrestaCatalogo, inLibPrestaCatalogoAltaIntf,
-  inLibPrestaCatalogoAlta, inLibPrestaShopAltaArticuloIntf;
+  Winapi.ActiveX, Winapi.Windows, System.Math, System.SyncObjs,
+  System.SysUtils, System.Generics.Collections,
+  inLibPrestaCatalogoIntf, inLibPrestaCatalogo,
+  inLibPrestaCatalogoAltaIntf, inLibPrestaCatalogoAlta,
+  inLibPrestaShopAltaArticuloIntf, inLibPrestaShopColaSenal;
 
 const
   CToleranciaPrecio = 0.000001;
@@ -115,7 +116,6 @@ type
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ACliente: IClienteCatalogoAltaPresta;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
-    procedure EsperarSegundos(ASegundos: Integer);
     procedure GuardarError(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const AConfiguracion: TConfiguracionGlobalPrestaShop;
@@ -141,7 +141,9 @@ type
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ACliente: IClienteCatalogoPresta;
       ASincronizarStockPrecios: Boolean): TPlanArticuloPrestaShop;
-    procedure ProcesarCiclo;
+    procedure EjecutarBarridoSiProcede(
+      const AConfiguracion: TConfiguracionGlobalPrestaShop);
+    procedure ProcesarCiclo(ARecuperacion: Boolean);
     procedure ProcesarFila(
       AIdCola: Int64;
       const ACliente: IClienteCatalogoPresta;
@@ -328,6 +330,7 @@ begin
   if FHilo <> nil then
   begin
     FHilo.Terminate;
+    SolicitarProcesadoPrestaShop;
     FHilo.WaitFor;
     FreeAndNil(FHilo);
     if Assigned(FRegistroLog) then
@@ -735,18 +738,24 @@ end;
 
 procedure THiloPrestaShopCola.Execute;
 var
+  bRecuperacion: Boolean;
   iInicializacionCom: HRESULT;
+  iAhora: UInt64;
+  iProximaRecuperacion: UInt64;
+  iTiempoEspera: Cardinal;
   sMensaje: string;
 begin
   iInicializacionCom := CoInitializeEx(nil, COINIT_APARTMENTTHREADED);
   try
     NameThreadForDebugging('PrestaShopCola');
     FAvisoConfiguracion := False;
+    bRecuperacion := True;
+    iProximaRecuperacion := 0;
     while (not Terminated) and
           (not FContextoSesion.CerrandoAplicacion) do
     begin
       try
-        ProcesarCiclo;
+        ProcesarCiclo(bRecuperacion);
       except
         on E: Exception do
         begin
@@ -758,9 +767,31 @@ begin
           FSesion := nil;
         end;
       end;
+      if bRecuperacion then
+      begin
+        iProximaRecuperacion := GetTickCount64 +
+          (UInt64(FSegundosCiclo) * 1000);
+        bRecuperacion := False;
+      end;
       if (not Terminated) and
          (not FContextoSesion.CerrandoAplicacion) then
-        EsperarSegundos(FSegundosCiclo);
+      begin
+        iAhora := GetTickCount64;
+        if iAhora >= iProximaRecuperacion then
+          bRecuperacion := True;
+        if not bRecuperacion then
+        begin
+          iTiempoEspera := Cardinal(iProximaRecuperacion - iAhora);
+          case EsperarProcesadoPrestaShop(iTiempoEspera) of
+            wrSignaled:
+              bRecuperacion := False;
+            wrTimeout:
+              bRecuperacion := True;
+          else
+            bRecuperacion := True;
+          end;
+        end;
+      end;
     end;
   finally
     if Succeeded(iInicializacionCom) then
@@ -768,31 +799,36 @@ begin
   end;
 end;
 
-procedure THiloPrestaShopCola.EsperarSegundos(ASegundos: Integer);
+procedure THiloPrestaShopCola.EjecutarBarridoSiProcede(
+  const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
-  iPaso: Integer;
-  iPasos: Integer;
+  sMensaje: string;
 begin
-  if ASegundos < 1 then
-    ASegundos := 1;
-  if ASegundos > 300 then
-    ASegundos := 300;
-  iPasos := ASegundos * 10;
-  iPaso := 0;
-  while (iPaso < iPasos) and (not Terminated) and
-        (not FContextoSesion.CerrandoAplicacion) do
+  if AConfiguracion.HacerBarridoPeriodico then
   begin
-    Sleep(100);
-    Inc(iPaso);
+    try
+      FRepositorio.ReconciliarSiProcede(
+        AConfiguracion.Cola,
+        AConfiguracion.HorasBarrido,
+        FUsuario);
+    except
+      on E: Exception do
+      begin
+        sMensaje := OcultarClave(E.Message, FClaveOculta);
+        if Assigned(FRegistroLog) then
+          FRegistroLog.RegistrarAviso(
+            Format(SBarridoPrestaShopOmitido, [sMensaje]));
+      end;
+    end;
   end;
 end;
 
-procedure THiloPrestaShopCola.ProcesarCiclo;
+procedure THiloPrestaShopCola.ProcesarCiclo(ARecuperacion: Boolean);
 var
+  bProcesar: Boolean;
   oCliente: IClienteCatalogoPresta;
   oClienteAlta: IClienteCatalogoAltaPresta;
   oConfiguracion: TConfiguracionGlobalPrestaShop;
-  sMensaje: string;
 begin
   if FSesion = nil then
   begin
@@ -809,37 +845,38 @@ begin
      FRepositorio.DestinoSinConflictos(oConfiguracion, FUsuario) then
   begin
     FAvisoConfiguracion := False;
-    oCliente := TClienteCatalogoPresta.Create(
-      oConfiguracion.UrlApi,
-      oConfiguracion.ClaveApi);
-    if oConfiguracion.CrearArticulos then
+    if ARecuperacion then
+      EjecutarBarridoSiProcede(oConfiguracion);
+    bProcesar := not ARecuperacion;
+    if ARecuperacion then
+      bProcesar := FRepositorio.ReclamarRecuperacion(
+        oConfiguracion.Cola.ClaveInstalacion,
+        oConfiguracion.Cola.IdTienda,
+        oConfiguracion.SegundosCiclo,
+        FUsuario);
+    if bProcesar then
     begin
-      if not Assigned(FRepositorioAlta) then
-        raise EInvalidOpException.Create(
-          SRepositorioAltaPrestaShopNoCreado);
-      oClienteAlta := CrearClienteCatalogoAltaPresta(
+      oCliente := TClienteCatalogoPresta.Create(
         oConfiguracion.UrlApi,
         oConfiguracion.ClaveApi);
-    end;
-    FRepositorio.ReencolarProcesandoCaducadas(
-      oConfiguracion.Cola.ClaveInstalacion,
-      oConfiguracion.Cola.IdTienda,
-      CMinutosReclamacionCaducada);
-    try
-      FRepositorio.ReconciliarSiProcede(
-        oConfiguracion.Cola,
-        oConfiguracion.HorasBarrido,
-        FUsuario);
-    except
-      on E: Exception do
+      if oConfiguracion.CrearArticulos then
       begin
-        sMensaje := OcultarClave(E.Message, FClaveOculta);
-        if Assigned(FRegistroLog) then
-          FRegistroLog.RegistrarAviso(
-            Format(SBarridoPrestaShopOmitido, [sMensaje]));
+        if not Assigned(FRepositorioAlta) then
+          raise EInvalidOpException.Create(
+            SRepositorioAltaPrestaShopNoCreado);
+        oClienteAlta := CrearClienteCatalogoAltaPresta(
+          oConfiguracion.UrlApi,
+          oConfiguracion.ClaveApi);
       end;
+      if ARecuperacion then
+        FRepositorio.ReencolarProcesandoCaducadas(
+          oConfiguracion.Cola.ClaveInstalacion,
+          oConfiguracion.Cola.IdTienda,
+          CMinutosReclamacionCaducada);
+      { La exclusión es por fila mediante token y versión. Así un envío HTTP
+        bloqueado no impide que otro proceso atienda el resto de la cola. }
+      ProcesarPendientes(oCliente, oClienteAlta, oConfiguracion);
     end;
-    ProcesarPendientes(oCliente, oClienteAlta, oConfiguracion);
   end
   else
   begin

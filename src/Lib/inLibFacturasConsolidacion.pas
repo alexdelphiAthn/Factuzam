@@ -30,7 +30,9 @@ function CrearCasoUsoConsolidacionFactura(
 implementation
 
 uses
-  System.SysUtils, inLibMsgFacturas;
+  System.SysUtils,
+  inLibMsgFacturas,
+  inLibPrestaShopColaSenal;
 
 type
   TCasoUsoConsolidacionFactura = class(
@@ -176,6 +178,8 @@ begin
           FServicioMovimientos.GenerarSalidas(SolicitudMovimientos);
       end;
     end);
+  if Resultado.MovimientosGenerados > 0 then
+    SolicitarProcesadoPrestaShop;
   Result := Resultado;
 end;
 

@@ -293,6 +293,7 @@ uses UniDataValoresAutomaticosRepositorio,
      UniDataLicenciaAplicacionRepositorio,
      UniDataMovimientosAlmacenRecalculo,
      UniDataCajaCierreVenta,
+     inLibPrestaShopColaSenal,
      inLibCajaDepositos,
      inLibRectificativas,
      inLibEAN13,
@@ -1909,6 +1910,8 @@ end;
 procedure TGrabacionFacturaCaja.ConfirmarTransaccion;
 begin
   FPersistencia.ConfirmarUnidadTrabajo;
+  if FGenerarMovimientos then
+    SolicitarProcesadoPrestaShop;
 end;
 
 procedure TGrabacionFacturaCaja.ImprimirDocumentosDeposito;

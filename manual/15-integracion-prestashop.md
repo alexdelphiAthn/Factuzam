@@ -7,11 +7,10 @@ precios y del stock de la tienda online cuando se autoriza expresamente su
 sincronización. Los cambios se anotan en una cola y se envían en segundo plano
 mediante la API directa de PrestaShop.
 
-El diseño previsto también contempla el alta de un artículo que todavía no
-existe en la tienda: familia, producto, combinaciones de talla y color,
-precios e imágenes. Cuando se implemente, todo producto creado por Factuzam
-quedará **inactivo** en PrestaShop hasta que un administrador lo revise y lo
-publique manualmente.
+La integración también puede dar de alta un artículo que todavía no existe
+en la tienda: familias, producto, combinaciones de talla y color, precios e
+imagen principal. Todo producto creado por Factuzam queda **inactivo** en
+PrestaShop hasta que un administrador lo revise y lo publique manualmente.
 
 > **Regla de publicación:** marcar **En web** en Factuzam hace que el artículo
 > sea elegible para la integración configurada. No significa «hacer visible en
@@ -37,12 +36,12 @@ y pruebas.
 | Marca **En web** en artículos | Disponible |
 | Marca **En web** en almacenes | Disponible |
 | Cola por cambios de precio o stock | Disponible |
-| Barrido periódico de recuperación | Disponible |
+| Reconciliación completa periódica opcional | Disponible; desmarcada de forma predeterminada |
 | Actualización del precio y la cantidad de productos y SKU existentes | Disponible; requiere **Sincronizar stock y precios** |
 | Localización del producto por `reference` exacta y única | Disponible |
-| Incidencia inmediata ante `reference` inexistente o ambigua | Disponible; no realiza ningún `POST` |
-| Opción **Crear artículos en PrestaShop al darlos de alta** | Disponible, desmarcada; el motor de alta completa sigue pendiente |
-| Alta de productos, familias, atributos y fotos | Diseñada; pendiente de implementación y prueba local |
+| Incidencia inmediata ante `reference` ambigua | Disponible; no elige ni crea otro recurso |
+| Opción **Crear artículos en PrestaShop al darlos de alta** | Disponible y desmarcada de forma predeterminada |
+| Alta de familias, atributos, producto, combinaciones e imagen principal | Implementada; pendiente de superar la batería funcional completa del laboratorio |
 | Sincronización con producción | Desactivada por defecto; ver [seguridad del stock](#11-seguridad-del-stock) |
 
 La integración actualiza el catálogo remoto, pero no importa automáticamente
@@ -67,22 +66,22 @@ Cambio en artículo, tarifa o stock
                |
                +---- reference única ----> verifica; actualiza si se autoriza
                |
-               +---- ninguna reference --> ERROR; alta completa pendiente
+               +---- ninguna reference --> alta inactiva, si se autoriza
                |
                `---- varias reference ---> ERROR inmediato, sin POST
 ```
 
 Los checks son independientes. **Sincronizar stock y precios** autoriza las
 modificaciones de productos existentes. **Crear artículos en PrestaShop al
-darlos de alta** solicita actuar cuando falta el producto, pero hasta que esté
-disponible el alta completa Factuzam registra una incidencia explícita y no
-crea ningún recurso parcial. Una referencia ambigua siempre es una incidencia.
-En el futuro, el alta validará el conjunto completo y creará el producto
-inactivo para su revisión.
+darlos de alta** solicita actuar cuando falta el producto. Factuzam valida el
+conjunto local antes del primer `POST` y crea el producto con `active=0`. Una
+referencia ambigua siempre es una incidencia y nunca provoca otra alta.
 
-Los eventos son el mecanismo principal. El barrido completo es únicamente
-una red de seguridad para recuperar un cambio que no hubiera llegado a la
-cola por una incidencia, una importación antigua o un equipo desconectado.
+Los eventos son el mecanismo principal. La recuperación de pendientes se
+comprueba siempre cada 60 a 120 segundos, aunque **Hacer barrido
+periódicamente** esté desmarcado. Este check habilita únicamente una
+reconciliación completa, cada cierto número de horas, para detectar un cambio
+que no hubiera llegado a la cola por una incidencia o una importación antigua.
 
 Una fila de la cola representa el **artículo completo**. Si cambia el precio
 de un SKU, Factuzam vuelve a calcular el artículo y todas sus combinaciones,
@@ -110,8 +109,9 @@ recorre las configuraciones de los demás perfiles.
 | Parámetro | Uso |
 |-----------|-----|
 | **Sincronizar stock y precios** | Autoriza al trabajador a actualizar los productos existentes localizados por `reference` única. También autoriza la escritura de cantidades absolutas. Valor inicial: desmarcado. |
-| **Crear artículos en PrestaShop al darlos de alta** | Solicita el alta cuando no haya correspondencia. Es independiente del check de sincronización y comienza desmarcado. Mientras el alta completa siga pendiente, registra una incidencia sin realizar `POST`. |
-| **URL** | URL base de la API, terminada normalmente en `/api`. El valor inicial actual apunta a la tienda de producción y debe revisarse antes de activar. |
+| **Crear artículos en PrestaShop al darlos de alta** | Solicita el alta completa e inactiva cuando no haya correspondencia. Es independiente del check de sincronización y comienza desmarcado. |
+| **Hacer barrido periódicamente** | Habilita la reconciliación completa del catálogo cada cierto número de horas. Su clave técnica es `appPrestaShopHacerBarridoPeriodico`, se hereda por usuario, grupo o `Todos` y su valor inicial es `False` (desmarcado). No desactiva la recuperación de pendientes cada 60–120 segundos. |
+| **URL** | URL base de la API, terminada normalmente en `/api`. Comienza vacía y debe configurarse expresamente en el ámbito correcto. |
 | **Clave API** | Credencial del Webservice. Solo debe verla el administrador raíz y no debe copiarse a mensajes o registros. |
 | **Tarifa** | Está en **Otros ▸ Parámetros del entorno ▸ PrestaShop**, corresponde a la clave `appPrestaShopTarifa` y su valor inicial es `PVP`. Se hereda por usuario, grupo o `Todos`. La tarifa efectiva proporciona el precio del producto padre y de cada SKU; a partir de ellos se calculan los impactos de las combinaciones. |
 | **Reglas fiscales PrestaShop** | Identificadores remotos para IVA normal, reducido, superreducido y exento. Los valores iniciales 1, 2, 3 y 0 corresponden al laboratorio local y deben revisarse en cada tienda antes de permitir altas. Si no hay correspondencia válida, no se crea el producto. |
@@ -119,26 +119,34 @@ recorre las configuraciones de los demás perfiles.
 | **Id. tienda** | Identificador de la tienda dentro de PrestaShop. |
 | **Id. idioma** | Idioma en el que se crean nombres, descripciones, categorías y atributos. El valor inicial del laboratorio es 1. |
 | **Id. categoría raíz** | Categoría remota bajo la que se crea la primera familia local. Debe ser mayor que cero; el laboratorio usa 2 (`Home`). |
-| **Segundos de ciclo** | Frecuencia con la que el trabajador atiende la cola. Valor inicial: 60. |
-| **Horas entre barridos** | Intervalo del barrido de recuperación. Valor inicial: 24 horas. |
+| **Intervalo de recuperación** | Espera de seguridad entre comprobaciones por posibles cuelgues o cierres. Admite de 60 a 120 segundos; valor inicial: 60. Los cambios normales despiertan al trabajador inmediatamente. |
+| **Horas entre barridos** | Intervalo entre reconciliaciones completas cuando **Hacer barrido periódicamente** está marcado. Valor inicial: 24 horas. |
 | **Máximo de intentos** | Reintentos antes de dejar un trabajo en `ERROR`. Valor inicial: 10. |
 
-Los dos checks nacen desmarcados y se pueden combinar así:
+Los dos checks que autorizan escrituras nacen desmarcados y se pueden combinar
+así. **Hacer barrido periódicamente** también nace desmarcado, pero no cambia
+esta matriz: decide cuándo buscar divergencias completas, no qué escrituras
+están autorizadas.
 
 | Sincronizar | Crear | Producto existente | `reference` inexistente |
 |-------------|-------|---------------------|--------------------------|
 | No | No | No se envían cambios. | No se intenta crear. |
 | Sí | No | Se actualizan precio y stock. | Incidencia: creación no autorizada. |
-| No | Sí | Se localiza, pero no se modifica. | Incidencia mientras el alta completa esté pendiente. |
-| Sí | Sí | Se actualizan precio y stock. | Incidencia mientras el alta completa esté pendiente. |
+| No | Sí | Se localiza, pero no se modifica. | Se crea completo e inactivo, sin sincronizar stock. |
+| Sí | Sí | Se actualizan precio y stock. | Se crea inactivo y después sincroniza lo autorizado. |
 
-Antes de marcar **Sincronizar stock y precios**, hay que sustituir o confirmar
-expresamente la URL: el valor inicial actual apunta a producción.
+Antes de marcar **Sincronizar stock y precios**, hay que configurar y comprobar
+expresamente la URL. Una instalación nueva no presupone ningún destino.
 
 Las antiguas claves `appPrestaShopActivo` y `appPrestaShopStockActivo`, si
 permanecen guardadas tras actualizar una instalación, ya no gobiernan el
 trabajador ni activan nada de forma implícita. Las autorizaciones vigentes son
 los dos checks independientes descritos en la tabla anterior.
+
+Si varios perfiles compatibles comparten la misma instalación y tienda pero
+solicitan intervalos de barrido distintos, se aplica materialmente la cadencia
+más frecuente. Todos comparten el mismo marcador remoto para evitar recorridos
+duplicados del catálogo.
 
 La cola separa cada destino por la URL normalizada y el identificador de
 tienda. Si se cambia de una tienda de pruebas a producción, no se reutilizan
@@ -146,8 +154,10 @@ los identificadores remotos de la instalación anterior. Para dos empresas con
 tiendas distintas deben configurarse destinos distintos.
 
 Varios perfiles activos pueden compartir la misma URL normalizada e Id. de
-tienda cuando su empresa, tarifa y los dos checks son idénticos. Si el
-trabajador detecta que alguno de esos datos es distinto, considera el destino
+tienda cuando su empresa, tarifa y opciones de sincronización son idénticas.
+Cada perfil puede decidir si participa en el barrido periódico. Si el
+trabajador detecta que alguno de los datos funcionales es distinto, considera
+el destino
 contradictorio, detiene su procesamiento y registra un aviso. No se reanuda
 hasta corregir los perfiles para que sean compatibles o asignarles destinos
 diferentes.
@@ -158,12 +168,12 @@ La clave debe tener solo los permisos necesarios:
 
 | Recurso | Lectura | Alta | Modificación |
 |---------|---------|------|--------------|
-| `products` | Sí | Sí, cuando se implemente el alta | Sí |
-| `combinations` | Sí | Sí, cuando se implemente el alta | Sí |
-| `categories` | Sí | Sí, cuando se implemente el alta | Sí |
-| `product_options` | Sí | Sí, cuando se implemente el alta | Sí |
-| `product_option_values` | Sí | Sí, cuando se implemente el alta | Sí |
-| `images` | Sí | Sí, cuando se implemente el alta | Sí |
+| `products` | Sí | Sí, si se autoriza el alta | Sí |
+| `combinations` | Sí | Sí, si se autoriza el alta | Sí |
+| `categories` | Sí | Sí, si se autoriza el alta | No |
+| `product_options` | Sí | Sí, si se autoriza el alta | No |
+| `product_option_values` | Sí | Sí, si se autoriza el alta | No |
+| `images` | Sí | Sí, si se autoriza el alta | No |
 | `stock_availables` | Sí | No | Sí, con **Sincronizar stock y precios** |
 | `languages`, `shops`, `shop_groups` y reglas de IVA | Sí | No | No |
 
@@ -185,11 +195,11 @@ participa en la integración.
   `reference`.
 - Si existe una sola coincidencia, lo verifica y solo actualiza el producto y
   sus SKU cuando está marcado **Sincronizar stock y precios**.
-- Si no existe ninguna o existen varias, registra inmediatamente una
-  incidencia `ERROR`, sin reintentos transitorios ni peticiones `POST`.
-- Aunque **Crear artículos en PrestaShop al darlos de alta** esté marcado, una
-  referencia inexistente produce hoy una incidencia explícita: el alta
-  completa sigue pendiente y nunca se crea una ficha parcial.
+- Si no existe ninguna y está autorizado **Crear artículos**, valida y
+  ejecuta el alta completa e inactiva.
+- Si no está autorizada la creación, la ausencia termina en una incidencia.
+- Si existen varias coincidencias, registra una incidencia `ERROR` sin elegir
+  ninguna ni crear una tercera.
 - Al desmarcarla, Factuzam cancela los cambios pendientes de precio y stock
   y deja de mantenerlo sincronizado.
 
@@ -239,11 +249,18 @@ pantalla.
 
 ---
 
-## 5. Cola, eventos y barrido de recuperación
+## 5. Cola, eventos, recuperación y barrido opcional
 
 Los cambios de precios y de stock en los principales procesos de Factuzam
 llaman al encolador dentro de la misma unidad de trabajo siempre que es
 posible. Varias llamadas para el mismo artículo se agrupan en una sola fila.
+Cuando la operación queda confirmada, el propio proceso que generó el
+pendiente despierta al consumidor. La señal es acumulativa: cien cambios de
+un lote provocan un único vaciado de la cola, no cien ciclos independientes.
+Estas señales no reinician ni aplazan la fecha límite monotónica de la
+recuperación. Aunque lleguen cambios continuamente, el turno de seguridad
+sigue venciendo cada 60–120 segundos y no puede quedar bloqueado por actividad
+normal de la cola.
 
 | Estado | Significado |
 |--------|-------------|
@@ -261,20 +278,31 @@ Quitar **En web** usa el mismo control de versión, pero deja vacíos los dos
 indicadores de cambio. Una petición que ya estuviera en curso puede terminar;
 después de ella no se reclaman ni envían nuevas versiones del artículo.
 
-El barrido periódico encola de nuevo los artículos **En web** con la
-frecuencia configurada. Está coordinado por base de datos para que varias
-instancias abiertas de Factuzam no dupliquen el barrido. Un fallo del barrido
-no impide que se siga procesando la cola de eventos.
+Cada 60 a 120 segundos se realiza siempre una comprobación de recuperación por
+si un proceso se cerró después de encolar o quedó una reclamación interrumpida.
+La base de datos concede esa comprobación a una sola instancia de Factuzam por
+destino. El proceso ganador recupera reclamaciones caducadas y vacía los
+pendientes; los demás no repiten el trabajo. Desmarcar **Hacer barrido
+periódicamente** no desactiva este mecanismo. Las señales recibidas entre dos
+turnos tampoco desplazan su próximo vencimiento.
+
+Cuando **Hacer barrido periódicamente** está marcado y han transcurrido las
+horas configuradas, una única sesión habilitada ejecuta la reconciliación
+completa y encola de nuevo los artículos **En web** que lo necesiten. Este
+arbitraje es independiente del ganador de la recuperación, para que un perfil
+con el check desmarcado no impida el barrido solicitado por otro perfil
+compatible. Con el check desmarcado no recorre todo el catálogo, pero sigue
+rescatando y procesando la cola cada 60–120 segundos. Un fallo de la
+reconciliación completa tampoco impide que se sigan procesando los eventos.
 
 Cada sesión reclama solamente la cola del destino que resulta de su perfil
 efectivo. Los destinos quedan aislados por URL normalizada e identificador de
 tienda.
 
-Antes de atender cada ciclo, el trabajador vuelve a leer de la base de datos
-el perfil efectivo con la herencia usuario → grupo → `Todos`. Por tanto, un
-cambio o una desactivación guardados en el usuario, su grupo o `Todos` llegan a
-los terminales que ya están abiertos en el siguiente ciclo, sin reiniciar la
-aplicación.
+Antes de vaciar la cola, el trabajador vuelve a leer de la base de datos el
+perfil efectivo con la herencia usuario → grupo → `Todos`. Por tanto, un cambio
+o una desactivación guardados en el usuario, su grupo o `Todos` llegan a los
+terminales que ya están abiertos sin reiniciar la aplicación.
 
 ---
 
@@ -291,9 +319,9 @@ efectivo. Si la tarifa incluye IVA, lo divide por
 `1 + tipo de IVA / 100` antes de enviarlo.
 En los productos que ya existen, la integración actual no cambia ni valida
 `id_tax_rules_group`: el administrador debe comprobar que la regla fiscal
-remota sea correcta. El alta futura exigirá un mapeo explícito entre el IVA
-local y el grupo fiscal de PrestaShop; no bastará con que ambos muestren el
-mismo porcentaje.
+remota sea correcta. En el alta se usa el identificador configurado para el
+tipo de IVA local; no basta con que ambos sistemas muestren el mismo
+porcentaje.
 
 Ejemplo con IVA del 21 %:
 
@@ -321,31 +349,27 @@ también que `combinations.price` es un impacto y no el precio final del SKU.
 ## 7. Alta de un artículo inexistente
 
 El check **Crear artículos en PrestaShop al darlos de alta** está disponible,
-comienza desmarcado y es independiente de **Sincronizar stock y precios**. El
-alta completa aún no está implementada. Por ello, una `reference` inexistente
-termina actualmente en `ERROR` con una causa explícita y sin ejecutar ningún
-`POST`, aunque se haya autorizado crear. Una referencia ambigua también
-termina en `ERROR` y nunca provoca un alta.
+comienza desmarcado y es independiente de **Sincronizar stock y precios**.
+Una `reference` inexistente inicia el alta solo cuando este check está
+marcado. Una referencia ambigua termina en `ERROR` y nunca provoca un alta.
 
-La siguiente secuencia es el **diseño del alta pendiente de implementar**.
-No es una sola petición, sino una operación reanudable contra varios recursos
-de PrestaShop:
+El alta no es una sola petición. El trabajador ejecuta esta secuencia contra
+varios recursos de PrestaShop:
 
 1. Validar todos los datos locales sin crear nada todavía.
-2. Resolver o crear, como inactivas, las categorías nuevas de la familia.
+2. Resolver o crear la ruta de categorías de la familia bajo la raíz
+   configurada.
 3. Resolver o crear los grupos de atributos, como **Color** y **Talla**.
 4. Resolver o crear los valores utilizados por los SKU.
 5. Crear el producto maestro con `active=0`.
 6. Crear una combinación por cada SKU activo y elegir una sola combinación
    predeterminada de forma determinista.
-7. Subir la fotografía general real y las fotografías por color.
-8. Asociar cada imagen de color a sus combinaciones.
-9. Resolver y verificar los registros de stock, si su envío está autorizado.
-10. Leer nuevamente todo el producto y dejarlo pendiente de revisión.
+7. Subir una fotografía general real si el producto todavía no tiene ninguna.
+8. Continuar con la sincronización de precio y stock solo si está autorizada.
 
-El resultado previsto del alta es **creado, completo e inactivo**. El futuro
-servicio podrá seguir actualizando después precios, combinaciones e imágenes,
-pero no dispondrá de una operación para cambiar `active`.
+El resultado es **creado, completo e inactivo**. El servicio puede seguir
+actualizando después precios y stock, pero no dispone de una operación para
+cambiar `active`.
 
 ### Validación previa
 
@@ -361,13 +385,12 @@ Antes del primer `POST` deben comprobarse, al menos:
 - fotografía real registrada, existente y legible;
 - ausencia inequívoca del producto y de sus referencias en PrestaShop.
 
-Cuando se implemente, si falta un requisito el artículo quedará en `ERROR`
-con una causa concreta y no se creará un producto incompleto.
+Si falta un requisito el artículo queda en `ERROR` con una causa concreta y
+la validación local evita comenzar el alta.
 
 ### Revisión del administrador
 
-Cuando el alta esté implementada, el administrador entrará en el back office
-de PrestaShop y comprobará:
+El administrador entra en el back office de PrestaShop y comprueba:
 
 1. Nombre, descripción y categoría.
 2. Tipo y regla de IVA.
@@ -384,18 +407,19 @@ publicación.
 
 ## 8. Familias y categorías
 
-En el alta futura, la familia de Factuzam se transformará en una categoría de
-PrestaShop. La jerarquía se recorrerá desde la familia raíz hasta la hoja del
-artículo; los padres se crearán antes que sus hijos. Una categoría ya
-existente conservará su estado. Toda categoría creada por la integración
-quedará inactiva hasta la revisión manual, para que no aparezca una rama
-vacía en la tienda.
+En el alta, la familia de Factuzam se transforma en una categoría de
+PrestaShop. La jerarquía se recorre desde la familia raíz hasta la hoja del
+artículo; los padres se crean antes que sus hijos. Una categoría ya existente
+conserva su estado. En la implementación actual las categorías nuevas se
+crean activas; el producto permanece inactivo, por lo que no aparece en el
+escaparate hasta la revisión manual.
 
 La identidad no puede basarse solo en el nombre. Dos ramas pueden contener
-una categoría llamada igual. Se guarda una correspondencia por:
+una categoría llamada igual. La implementación busca la combinación de padre
+y enlace normalizado antes de crear:
 
 ```text
-instalación + tienda + código de familia local -> id_category remoto
+tienda + categoría padre + enlace normalizado -> id_category remoto
 ```
 
 El producto usa la familia hoja como `id_category_default` y también la
@@ -421,10 +445,10 @@ asociará todos sus valores, por ejemplo **Color: Azul** y **Talla: L**. Solo
 se crearán SKU activos. Después se marcará como predeterminada una única
 combinación: la primera según el orden estable de atributos y referencia.
 
-Las tallas y los colores son recursos compartidos. Se guardan sus IDs
-remotos para no crear otra talla **L** o color **Negro** por cada artículo.
-Si existen varias coincidencias remotas y no puede saberse cuál es la
-correcta, el alta se detiene para revisión en lugar de escoger una al azar.
+Las tallas y los colores son recursos compartidos. Antes de crear se busca el
+grupo o valor remoto correspondiente. Si existen varias coincidencias y no
+puede saberse cuál es la correcta, el alta se detiene para revisión en lugar
+de escoger una al azar.
 
 ---
 
@@ -440,14 +464,11 @@ el color— o por SKU completo. La integración usa la resolución **real**:
 La extensión de origen guardada en la base de datos es informativa. El
 fichero operativo que genera Factuzam es PNG.
 
-En el alta futura, la fotografía general se subirá como imagen del producto y
-portada. Una foto de color se subirá una sola vez y se asociará a todas las
-tallas de ese color. PrestaShop genera automáticamente los tamaños derivados
-de la imagen recibida.
-
-Para que un reintento no duplique fotografías se guarda el ID remoto y la
-huella SHA-256 del fichero. Si cambia la foto real, cambia la huella y puede
-programarse su actualización de forma controlada.
+En la implementación actual se elige la fotografía general principal y se
+sube únicamente cuando el producto remoto no tiene ninguna imagen. PrestaShop
+genera automáticamente los tamaños derivados. Las galerías, la sustitución de
+una foto ya subida y la asociación de fotos por color quedan fuera del flujo
+actual y deben hacerse manualmente.
 
 > En una instalación donde `fza_articulos_fotos` esté vacía, la existencia
 > de ficheros sueltos en la carpeta no basta. Primero deben relacionarse las
@@ -482,32 +503,34 @@ tienda configurada y falla de forma segura si PrestaShop usa `id_shop=0` con
 un grupo de tiendas. Ese modo necesitará validar antes `share_stock` y el
 grupo efectivo.
 
-Esta cautela no impedirá el alta futura de familias, producto, combinaciones,
-precios o imágenes. El producto nuevo podrá quedar preparado e inactivo con
-stock cero hasta que el administrador revise la política.
+Esta cautela no impide el alta de familias, producto, combinaciones, precios
+o imagen principal. Con la sincronización desmarcada, el producto nuevo queda
+preparado e inactivo sin publicar el stock local.
 
 ---
 
 ## 12. Reintentos y prevención de duplicados
 
-La API no ofrece una transacción única para crear todo el catálogo. El diseño
-del alta futura la trata como una secuencia con puntos de control:
+La API no ofrece una transacción única para crear todo el catálogo. El alta
+se trata como una secuencia reanudable:
 
 ```text
 VALIDAR -> CATEGORIAS -> ATRIBUTOS -> PRODUCTO_INACTIVO
-        -> SKU -> IMAGENES -> VERIFICADO_INACTIVO
+        -> SKU -> IMAGEN_PRINCIPAL
 ```
 
-Después de cada paso se guarda el ID remoto y se verifica el recurso. Si se
-corta la red, el siguiente intento continúa desde el último punto confirmado.
+Antes de cada alta se busca el recurso remoto por su identidad. Si se corta
+la red, el siguiente intento vuelve a buscar y reutiliza lo que ya exista. La
+batería funcional debe verificar esta idempotencia, especialmente con dos
+trabajadores concurrentes, porque la búsqueda y el `POST` no forman una
+transacción única.
 
 Reglas de seguridad:
 
 - una referencia ambigua nunca provoca un alta nueva;
 - producto y SKU se resuelven por referencia exacta y relación padre;
-- categorías y atributos usan correspondencias persistentes, no solo texto;
-- dos artículos que comparten familia o talla coordinan su creación;
-- una imagen se identifica además por su huella;
+- categorías y atributos se buscan dentro de su padre o grupo;
+- una imagen no se vuelve a subir si el producto ya tiene alguna;
 - un fallo nunca activa el producto;
 - los recursos compartidos no se borran como compensación automática.
 
@@ -518,15 +541,16 @@ Reglas de seguridad:
 | Incidencia | Comprobación |
 |------------|-------------|
 | **401 / 403** | Revisar clave API y permisos; no copiar la clave en el parte de soporte. |
-| **Producto no encontrado** | Se registra `ERROR` inmediato y no se realiza `POST`. Confirmar la `reference` exacta. Marcar **Crear artículos en PrestaShop al darlos de alta** todavía no ejecuta el alta pendiente. |
+| **Producto no encontrado** | Si la creación está desmarcada, se registra `ERROR` inmediato. Si está marcada, revisar los requisitos locales y los permisos POST del Webservice. |
 | **Referencia ambigua** | Se registra `ERROR` inmediato. Corregir duplicados en PrestaShop; Factuzam no elige uno ni crea otro automáticamente. |
 | **Categoría o talla duplicada** | Revisar el mapeo de instalación y tienda, no solo el nombre visible. |
 | **Precio de SKU demasiado alto** | Comprobar que se envía un impacto y no el precio final como `combinations.price`. |
 | **Foto no encontrada** | Revisar `appDirFotos`, la fila de `fza_articulos_fotos` y el PNG de `real`. |
 | **Almacén no incluido** | Debe estar En web, activo, físico y ser de uso ESTANDAR. |
-| **Artículo nuevo no aparece en la página** | Actualmente no se crea: queda una incidencia explícita incluso con el check de creación marcado. Cuando se implemente el alta completa, quedará inactivo hasta que el administrador lo publique. |
+| **Artículo nuevo no aparece en la página** | Es el comportamiento previsto del alta: se crea con `active=0` y el administrador debe revisarlo y activarlo manualmente. |
 | **Artículo desmarcado sigue visible** | Es el comportamiento previsto: quitar En web solo detiene precio y stock. Desactívelo manualmente en PrestaShop si desea retirarlo. |
-| **Fila en ERROR** | Corregir la causa y reencolar. En el alta futura, el reintento continuará sin duplicar lo ya creado. |
+| **Fila en ERROR** | Corregir la causa y reencolar. El reintento busca y reutiliza los recursos ya creados; comprobar que no haya duplicados. |
+| **Desmarqué el barrido y se procesó un pendiente** | Es correcto: el check solo desactiva la reconciliación completa por horas. La recuperación de filas pendientes y reclamaciones interrumpidas continúa cada 60–120 segundos. |
 
 Los mensajes de error y los registros nunca deben incluir la clave API.
 
@@ -535,24 +559,24 @@ Los mensajes de error y los registros nunca deben incluir la clave API.
 ## 14. Lista de comprobación para una implantación
 
 1. Aplicar la migración de base de datos y comprobar las marcas **En web**.
-2. Sustituir la URL inicial de producción por una tienda de pruebas de la
-   misma versión que la tienda real.
+2. Configurar primero una tienda de pruebas de la misma versión que la tienda
+   real; no usar producción para la validación inicial.
 3. Crear una clave API de mínimo privilegio.
 4. Configurar el ámbito correcto —usuario, grupo o `Todos`—, URL, tienda,
-   empresa y tarifa con ambos checks desmarcados.
+   empresa y tarifa con los tres checks desmarcados.
 5. Marcar únicamente los almacenes estándar que aportarán stock web.
 6. Revisar familias, IVA, SKU, atributos, precios y fotos reales.
 7. Probar un artículo con varios colores, tallas y precios por SKU.
-8. Confirmar que una `reference` inexistente o ambigua deja un `ERROR`
-   inmediato sin crear recursos.
+8. Confirmar que una `reference` ambigua deja un `ERROR` inmediato sin crear
+   recursos.
 9. Mantener **Crear artículos en PrestaShop al darlos de alta** desmarcado
-   hasta que se implante y pruebe el alta completa.
+   hasta superar la batería funcional del laboratorio.
 10. Comprobar la reserva o ingestión automática de pedidos web antes de
     autorizar cantidades absolutas.
 11. Marcar **Sincronizar stock y precios** únicamente después de completar
     todas las comprobaciones.
-12. Cuando se implemente el alta, repetirla para confirmar que conserva IDs,
-    no duplica recursos y deja el producto completo pero inactivo.
+12. Repetir el alta para confirmar que conserva IDs, no duplica recursos y
+    deja el producto completo pero inactivo.
 
 Las pruebas de desarrollo se realizan únicamente contra la instalación local
 actual de PrestaShop. No se hacen altas ni modificaciones de prueba en la

@@ -41,6 +41,7 @@ type
     Activo: Boolean;
     SincronizarStockPrecios: Boolean;
     CrearArticulos: Boolean;
+    HacerBarridoPeriodico: Boolean;
     UrlApi: string;
     ClaveApi: string;
     SegundosCiclo: Integer;
@@ -96,6 +97,10 @@ type
       const AClaveInstalacion: string;
       AIdTienda: Integer;
       AMinutos: Integer);
+    function ReclamarRecuperacion(
+      const AClaveInstalacion: string;
+      AIdTienda, ASegundos: Integer;
+      const AUsuario: string): Boolean;
     function BuscarPendientes(
       const AClaveInstalacion: string;
       AIdTienda: Integer;

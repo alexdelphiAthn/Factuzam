@@ -43,7 +43,7 @@ function LeerGrupoIvaEmpresaPrestaShop(
 implementation
 
 uses
-  System.SysUtils, Data.DB;
+  System.SysUtils, Data.DB, inLibPrestaShopColaSenal;
 
 function Indicador(AValor: Boolean): string;
 begin
@@ -79,6 +79,9 @@ begin
       oConsulta.ParamByName('STOCK').AsString := Indicador(AEsStock);
       oConsulta.ParamByName('USUARIO').AsString := AUsuario;
       oConsulta.Execute;
+      if not AConexion.InTransaction then
+        SolicitarProcesadoPrestaShop;
+      // La UoW transaccional debe señalizar después del Commit.
     finally
       FreeAndNil(oConsulta);
     end;
@@ -193,6 +196,9 @@ begin
         Trim(ACodigoAlmacen);
       oConsulta.ParamByName('USUARIO').AsString := AUsuario;
       oConsulta.Execute;
+      if not AConexion.InTransaction then
+        SolicitarProcesadoPrestaShop;
+      // La UoW transaccional debe señalizar después del Commit.
     finally
       FreeAndNil(oConsulta);
     end;
@@ -220,6 +226,9 @@ begin
       oConsulta.ParamByName('STOCK').AsString := Indicador(AEsStock);
       oConsulta.ParamByName('USUARIO').AsString := AUsuario;
       oConsulta.Execute;
+      if not AConexion.InTransaction then
+        SolicitarProcesadoPrestaShop;
+      // La UoW transaccional debe señalizar después del Commit.
     finally
       FreeAndNil(oConsulta);
     end;

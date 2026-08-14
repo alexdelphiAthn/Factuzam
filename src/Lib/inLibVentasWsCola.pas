@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibVentasWsCola                                             }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.2.0                                                         }
-{   Fecha:       31/07/2026                                                    }
+{ Versión:       1.3.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -72,15 +72,18 @@ type
 implementation
 
 uses
-  Winapi.Windows, System.Hash,
+  Winapi.Windows, System.Hash, System.JSON,
+  System.Generics.Collections,
   inLibGlobalVar, inLibMsgIntegraciones,
-  inLibVentasWsJson, inLibFactuzamApi;
+  inLibVentasWsJson, inLibFactuzamApi,
+  inLibColasHistorialIntf, inLibVentasWsColaHistorialIntf;
 
 type
   THiloVentasWsCola = class(TThread)
   private
     FSesion: ISesionVentasWs;
     FRepositorio: IRepositorioVentasWsCola;
+    FRegistradorIntentos: IRegistradorIntentosVentasWsCola;
     FContextoSesion: IContextoSesionAplicacion;
     FParametrosApp: IParametrosAplicacion;
     FFabricaSesion: IFabricaSesionVentasWs;
@@ -91,6 +94,12 @@ type
     procedure EsperarSegundos(ASegundos: Integer);
     procedure ProcesarPendientes;
     procedure ProcesarFila(AIdCola: Int64);
+    function EnviarConHistorial(
+      AIdCola: Int64;
+      const AFila: TFilaVentasWsCola;
+      const AContenido: string): TResultadoFactuzamApi;
+    procedure RegistrarIntentoSeguro(
+      const AIntento: TIntentoVentasWsCola);
     procedure GuardarError(AIdCola: Int64; const AMensaje: string;
       AIntentos: Integer);
   protected
@@ -104,6 +113,74 @@ type
       const ARegistroLog: IRegistroLog); reintroduce;
     destructor Destroy; override;
   end;
+
+const
+  cContenidoBase64Omitido =
+    '[OMITIDO DEL HISTORIAL: CONTENIDO BINARIO/BASE64]';
+  cPeticionJsonNoDisponible =
+    '[PETICIÓN OMITIDA DEL HISTORIAL: JSON NO VÁLIDO]';
+
+function EsCampoBinarioHistorial(const ANombre: string): Boolean;
+begin
+  Result := SameText(ANombre, 'contenido_base64') or
+            SameText(ANombre, 'DOCUMENTO_FAC') or
+            SameText(ANombre, 'PDF_FAC') or
+            SameText(ANombre, 'QRCODE_PNG_FACCON');
+end;
+
+procedure OcultarContenidoBinario(AValor: TJSONValue);
+var
+  iIndice: Integer;
+  oObjeto: TJSONObject;
+  oPar: TJSONPair;
+begin
+  if AValor is TJSONObject then
+  begin
+    oObjeto := TJSONObject(AValor);
+    iIndice := 0;
+    while iIndice < oObjeto.Count do
+    begin
+      oPar := oObjeto.Pairs[iIndice];
+      if EsCampoBinarioHistorial(oPar.JsonString.Value) then
+        oPar.JsonValue := TJSONString.Create(cContenidoBase64Omitido)
+      else
+        OcultarContenidoBinario(oPar.JsonValue);
+      Inc(iIndice);
+    end;
+  end
+  else if AValor is TJSONArray then
+  begin
+    iIndice := 0;
+    while iIndice < TJSONArray(AValor).Count do
+    begin
+      OcultarContenidoBinario(TJSONArray(AValor).Items[iIndice]);
+      Inc(iIndice);
+    end;
+  end;
+end;
+
+function PeticionParaHistorial(const AContenido: string): string;
+var
+  oJson: TJSONValue;
+begin
+  Result := cPeticionJsonNoDisponible;
+  oJson := nil;
+  try
+    try
+      oJson := TJSONObject.ParseJSONValue(AContenido);
+      if Assigned(oJson) then
+      begin
+        OcultarContenidoBinario(oJson);
+        Result := oJson.ToJSON;
+      end;
+    except
+      on E: Exception do
+        Result := cPeticionJsonNoDisponible + ' ' + E.ClassName;
+    end;
+  finally
+    FreeAndNil(oJson);
+  end;
+end;
 
 function NuevoUuid: string;
 var
@@ -324,6 +401,7 @@ end;
 
 destructor THiloVentasWsCola.Destroy;
 begin
+  FRegistradorIntentos := nil;
   FRepositorio := nil;
   FSesion := nil;
   FFabricaSesion := nil;
@@ -350,6 +428,7 @@ begin
           if Assigned(FRegistroLog) then
             FRegistroLog.RegistrarError(
               'Cola de ventas WS: ' + E.Message);
+          FRegistradorIntentos := nil;
           FRepositorio := nil;
           FSesion := nil;
         end;
@@ -404,6 +483,7 @@ begin
         raise Exception.Create('La sesión VentasWs no tiene repositorio');
       if not Assigned(FSesion.Json) then
         raise Exception.Create('La sesión VentasWs no tiene serializador');
+      FRegistradorIntentos := FSesion.RegistradorIntentos;
     end;
     FRepositorio.ReencolarProcesandoCaducadas;
     aPendientes := FRepositorio.BuscarPendientes(10);
@@ -449,9 +529,7 @@ begin
         sHuella := UpperCase(THashSHA2.GetHashString(sContenido));
         FRepositorio.GuardarContenido(AIdCola, sContenido, sHuella);
       end;
-      oResultado := TClienteFactuzamApi.EnviarJson(
-        FParametrosApp,
-        'ventas/eventos.php', sContenido);
+      oResultado := EnviarConHistorial(AIdCola, oFila, sContenido);
       if oResultado.Ok then
         FRepositorio.MarcarEnviada(
           AIdCola, oResultado.IdPeticion, FUsuario)
@@ -460,6 +538,89 @@ begin
     except
       on E: Exception do
         GuardarError(AIdCola, E.Message, oFila.Intentos);
+    end;
+  end;
+end;
+
+function THiloVentasWsCola.EnviarConHistorial(
+  AIdCola: Int64;
+  const AFila: TFilaVentasWsCola;
+  const AContenido: string): TResultadoFactuzamApi;
+var
+  iInicioMs: UInt64;
+  oIntento: TIntentoVentasWsCola;
+begin
+  Result.Ok := False;
+  Result.EstadoHttp := 0;
+  Result.Respuesta := '';
+  Result.IdPeticion := '';
+  Result.Mensaje := '';
+  oIntento := Default(TIntentoVentasWsCola);
+  oIntento.IdCola := AIdCola;
+  oIntento.IdEvento := AFila.IdEvento;
+  oIntento.NumeroIntento := AFila.Intentos + 1;
+  oIntento.MetodoHttp := 'POST';
+  oIntento.RecursoHttp := 'ventas/eventos.php';
+  oIntento.Peticion := PeticionParaHistorial(AContenido);
+  oIntento.Usuario := FUsuario;
+  oIntento.InstanteInicio := Now;
+  iInicioMs := GetTickCount64;
+  try
+    try
+      Result := TClienteFactuzamApi.EnviarJson(
+        FParametrosApp,
+        oIntento.RecursoHttp,
+        AContenido);
+    except
+      on E: Exception do
+        Result.Mensaje := E.Message;
+    end;
+  finally
+    oIntento.InstanteFin := Now;
+    if oIntento.InstanteFin < oIntento.InstanteInicio then
+      oIntento.InstanteFin := oIntento.InstanteInicio;
+    oIntento.DuracionMs := Int64(GetTickCount64 - iInicioMs);
+    oIntento.IdPeticion := Result.IdPeticion;
+    oIntento.EstadoHttp := Result.EstadoHttp;
+    oIntento.Respuesta := Result.Respuesta;
+    oIntento.Mensaje := Result.Mensaje;
+    if Result.Ok then
+      oIntento.Resultado := rccCorrecto
+    else
+      oIntento.Resultado := rccError;
+    RegistrarIntentoSeguro(oIntento);
+  end;
+end;
+
+procedure THiloVentasWsCola.RegistrarIntentoSeguro(
+  const AIntento: TIntentoVentasWsCola);
+var
+  bRegistrado: Boolean;
+  sError: string;
+begin
+  sError := '';
+  if Assigned(FRegistradorIntentos) then
+  begin
+    try
+      bRegistrado :=
+        FRegistradorIntentos.IntentarRegistrar(AIntento, sError);
+      if (not bRegistrado) and (sError = '') then
+        sError := 'El registrador no confirmó la escritura.';
+    except
+      on E: Exception do
+        sError := E.Message;
+    end;
+  end
+  else
+    sError := 'No hay registrador de intentos disponible.';
+  if (sError <> '') and Assigned(FRegistroLog) then
+  begin
+    try
+      FRegistroLog.RegistrarAviso(
+        'Cola de ventas WS: no se guardó el historial: ' + sError);
+    except
+      on E: Exception do
+        sError := E.Message;
     end;
   end;
 end;

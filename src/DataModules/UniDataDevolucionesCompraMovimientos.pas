@@ -46,6 +46,7 @@ uses
   inLibDocumentoIntf, UniDataValoresAutomaticosRepositorio,
   inLibMsgCompras, UniDataMovimientosAlmacenRecalculo,
   UniDataDevolucionesCompraMovimientosSql,
+  inLibPrestaShopColaSenal,
   inLibDevolucionesCompraMovimientos;
 type
   TUnidadTrabajoMovimientosDevolucionCompraUniDAC = class(
@@ -346,6 +347,7 @@ end;
 procedure TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Confirmar;
 begin
   FConexion.Commit;
+  SolicitarProcesadoPrestaShop;
 end;
 
 procedure TUnidadTrabajoMovimientosDevolucionCompraUniDAC.Revertir;

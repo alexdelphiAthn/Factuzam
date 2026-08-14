@@ -146,6 +146,7 @@ uses
   UniDataContadorLineasRepositorio, inLibData,
   UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
+  inLibPrestaShopColaSenal,
   inLibSqlSeguro, inLibDocumento, inLibDocumentoIntf,
   UniDataAlbaranesVentaMovimientos;
 
@@ -566,6 +567,8 @@ begin
       EstrategiaAlbaranVenta.TipoDocumentoMovimientoStock;
     AsignarDocumento;
     q.ExecSQL;
+    if not unqryTablaG.Connection.InTransaction then
+      SolicitarProcesadoPrestaShop;
     q.SQL.Text :=
       'DELETE FROM fza_albaranes_lineas ' +
       ' WHERE SERIE_ALB_ALBLIN  = :s ' +
@@ -1114,7 +1117,10 @@ begin
     SincronizarAlmacenLineasCabecera;
     SincronizarMovimientosSalida;
     if bTransaccionPropia and ConexionPrincipal.InTransaction then
+    begin
       ConexionPrincipal.Commit;
+      SolicitarProcesadoPrestaShop;
+    end;
   except
     if bTransaccionPropia and ConexionPrincipal.InTransaction then
       ConexionPrincipal.Rollback;
@@ -1133,7 +1139,10 @@ begin
     CalcularTotalesAlbaran;
     SincronizarMovimientosSalida;
     if bTransaccionPropia and ConexionPrincipal.InTransaction then
+    begin
       ConexionPrincipal.Commit;
+      SolicitarProcesadoPrestaShop;
+    end;
   except
     if bTransaccionPropia and ConexionPrincipal.InTransaction then
       ConexionPrincipal.Rollback;

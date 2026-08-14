@@ -21,7 +21,10 @@ function CrearRepositorioMovimientosSkuUniDAC(
 implementation
 
 uses
-  System.SysUtils, Data.DB;
+  System.SysUtils,
+  System.StrUtils,
+  Data.DB,
+  inLibPrestaShopColaSenal;
 
 const
   SQL_MOVIMIENTOS_SKU =
@@ -114,6 +117,9 @@ begin
     Consulta.Open;
     if not Consulta.IsEmpty then
       Result := Consulta.FieldByName('MENSAJE').AsString;
+    if (not FConexion.InTransaction) and
+       (not StartsText('ERROR', Result)) then
+      SolicitarProcesadoPrestaShop;
   finally
     FreeAndNil(Consulta);
   end;

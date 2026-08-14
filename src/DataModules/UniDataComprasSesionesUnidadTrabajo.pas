@@ -53,7 +53,8 @@ type
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  inLibPrestaShopColaSenal;
 
 constructor TControlTransaccionMaterializacionUniDAC.Create(
   AConexion: TUniConnection);
@@ -122,7 +123,10 @@ begin
     raise EInvalidOpException.Create(
       'La unidad de trabajo no está iniciada');
   if FPropietaria and FControl.EnTransaccion then
+  begin
     FControl.ConfirmarTransaccion;
+    SolicitarProcesadoPrestaShop;
+  end;
   FPropietaria := False;
   FIniciada := False;
 end;

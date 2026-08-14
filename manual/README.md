@@ -53,7 +53,7 @@ con las excepciones y condiciones explicadas en el
 | [12 · Cambios y novedades](12-cambios-y-novedades.md) | Resumen de las novedades recientes y dónde se documentan dentro del manual. |
 | [13 · Aplicaciones móviles](13-aplicaciones-moviles.md) | Fotos de artículos, consulta de ventas diarias y recuento de inventarios desde Android. |
 | [14 · Arquitectura y desarrollo](14-arquitectura-y-desarrollo.md) | Estilo de programación, principios SOLID, capas, pruebas y catálogo SQL configurable. |
-| [15 · Integración con PrestaShop](15-integracion-prestashop.md) | Configuración por perfil, artículos y almacenes web, cola, precios por SKU y diseño del alta inactiva. |
+| [15 · Integración con PrestaShop](15-integracion-prestashop.md) | Configuración por perfil, artículos y almacenes web, cola, precios por SKU y alta inactiva. |
 
 ---
 

@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibFactuzamApi                                              }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       25/07/2026                                                    }
+{ Versión:       1.2.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -26,6 +26,7 @@ type
   TResultadoFactuzamApi = record
     Ok: Boolean;
     EstadoHttp: Integer;
+    Respuesta: string;
     IdPeticion: string;
     Mensaje: string;
   end;
@@ -200,6 +201,7 @@ var
 begin
   Result.Ok := (AEstadoHttp >= 200) and (AEstadoHttp < 300);
   Result.EstadoHttp := AEstadoHttp;
+  Result.Respuesta := AContenido;
   Result.IdPeticion := '';
   Result.Mensaje := Format(SErrorRespuestaHttpFactuzamApi, [AEstadoHttp]);
   oValor := TJSONObject.ParseJSONValue(AContenido);
@@ -236,6 +238,7 @@ var
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
+  Result.Respuesta := '';
   Result.IdPeticion := '';
   Result.Mensaje := '';
   if not Configurada(AParametrosApp) then
@@ -277,6 +280,7 @@ var
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
+  Result.Respuesta := '';
   Result.IdPeticion := '';
   Result.Mensaje := '';
   AContenido := '';
@@ -328,6 +332,7 @@ var
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
+  Result.Respuesta := '';
   Result.IdPeticion := '';
   Result.Mensaje := '';
   if (Trim(AUrlBase) = '') or (Trim(AToken) = '') then

@@ -27,7 +27,7 @@ implementation
 uses
   System.SysUtils, System.Classes, System.Generics.Collections, System.Math,
   Data.DB, inLibCargaMasivaArticulosReglas, UniDataRectificativasSql,
-  UniDataPrestaShopEncolado;
+  UniDataPrestaShopEncolado, inLibPrestaShopColaSenal;
 
 const
   SQL_FAMILIAS =
@@ -1371,6 +1371,8 @@ begin
       FConexion.Rollback;
       raise;
     end;
+    if oCodigos.Count > 0 then
+      SolicitarProcesadoPrestaShop;
   finally
     oDatos.EnableControls;
     FreeAndNil(oInsercion);

@@ -25,7 +25,8 @@ function CrearRepositorioPrestaShopColaUniDAC(
 implementation
 
 uses
-  System.Math, System.StrUtils, System.SysUtils, Data.DB;
+  System.Math, System.StrUtils, System.SysUtils, Data.DB,
+  inLibPrestaShopColaSenal;
 
 type
   TRepositorioPrestaShopColaUniDAC = class(
@@ -63,6 +64,10 @@ type
       const AClaveInstalacion: string;
       AIdTienda: Integer;
       AMinutos: Integer);
+    function ReclamarRecuperacion(
+      const AClaveInstalacion: string;
+      AIdTienda, ASegundos: Integer;
+      const AUsuario: string): Boolean;
     function BuscarPendientes(
       const AClaveInstalacion: string;
       AIdTienda: Integer;
@@ -334,6 +339,9 @@ begin
   finally
     FreeAndNil(oConsulta);
   end;
+  if (AEsPrecio or AEsStock) and
+     (not FConexion.InTransaction) then
+    SolicitarProcesadoPrestaShop;
 end;
 
 function TRepositorioPrestaShopColaUniDAC.LeerConfiguracionPerfil(
@@ -344,7 +352,7 @@ var
   sValor: string;
 begin
   Result := Default(TConfiguracionGlobalPrestaShop);
-  Result.UrlApi := 'https://www.martamere.com/api';
+  Result.UrlApi := '';
   Result.SegundosCiclo := 60;
   Result.HorasBarrido := 24;
   Result.MaxIntentos := 10;
@@ -378,6 +386,11 @@ begin
           (sValor = '1') or SameText(sValor, 'S')
       else if SameText(sNombre, 'appPrestaShopCrearArticulos') then
         Result.CrearArticulos := SameText(sValor, 'True') or
+          (sValor = '1') or SameText(sValor, 'S')
+      else if SameText(
+                sNombre,
+                'appPrestaShopHacerBarridoPeriodico') then
+        Result.HacerBarridoPeriodico := SameText(sValor, 'True') or
           (sValor = '1') or SameText(sValor, 'S')
       else if SameText(sNombre, 'appPrestaShopUrl') then
         Result.UrlApi := Trim(sValor)
@@ -417,8 +430,10 @@ begin
   Result.Activo := Result.SincronizarStockPrecios or
     Result.CrearArticulos;
   Result.Cola.StockActivo := Result.SincronizarStockPrecios;
-  if Result.SegundosCiclo < 5 then
-    Result.SegundosCiclo := 5;
+  if Result.SegundosCiclo < 60 then
+    Result.SegundosCiclo := 60;
+  if Result.SegundosCiclo > 120 then
+    Result.SegundosCiclo := 120;
   if Result.HorasBarrido < 1 then
     Result.HorasBarrido := 1;
   if Result.HorasBarrido > 720 then
@@ -469,7 +484,7 @@ begin
       'THEN VALUE_USUPER END), ''False'') CREAR, ' +
       'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ''appPrestaShopUrl'' ' +
       'AND RN = 1 THEN VALUE_USUPER END), ' +
-      '''https://www.martamere.com/api'') URL_API, ' +
+      ''''') URL_API, ' +
       'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
       '''appPrestaShopApiKey'' AND RN = 1 THEN VALUE_USUPER END), ' +
       ''''') API_KEY, ' +
@@ -627,6 +642,39 @@ begin
     oConsulta.Execute;
   finally
     FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioPrestaShopColaUniDAC.ReclamarRecuperacion(
+  const AClaveInstalacion: string;
+  AIdTienda, ASegundos: Integer;
+  const AUsuario: string): Boolean;
+var
+  oProcedimiento: TUniStoredProc;
+begin
+  oProcedimiento := TUniStoredProc.Create(nil);
+  try
+    oProcedimiento.Connection := FConexion;
+    oProcedimiento.StoredProcName :=
+      'PRC_PRESTASHOP_RECLAMAR_RECUPERACION';
+    oProcedimiento.Params.CreateParam(
+      ftInteger, 'p_SEGUNDOS', ptInput).AsInteger := ASegundos;
+    oProcedimiento.Params.CreateParam(
+      ftString, 'p_CLAVE_INSTALACION', ptInput).AsString :=
+      AClaveInstalacion;
+    oProcedimiento.ParamByName('p_CLAVE_INSTALACION').Size := 64;
+    oProcedimiento.Params.CreateParam(
+      ftInteger, 'p_TIENDA', ptInput).AsInteger := AIdTienda;
+    oProcedimiento.Params.CreateParam(
+      ftString, 'p_USUARIO', ptInput).AsString := AUsuario;
+    oProcedimiento.ParamByName('p_USUARIO').Size := 200;
+    oProcedimiento.Params.CreateParam(
+      ftInteger, 'p_RECLAMADA', ptOutput);
+    oProcedimiento.Execute;
+    Result :=
+      oProcedimiento.ParamByName('p_RECLAMADA').AsInteger = 1;
+  finally
+    FreeAndNil(oProcedimiento);
   end;
 end;
 

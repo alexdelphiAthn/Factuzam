@@ -867,6 +867,11 @@ uses
   UniDataVentasWsJson in 'src\DataModules\UniDataVentasWsJson.pas',
   inLibVentasWsColaIntf in 'src\Lib\inLibVentasWsColaIntf.pas',
   UniDataVentasWsCola in 'src\DataModules\UniDataVentasWsCola.pas',
+  UniDataVentasWsColaMonitor in
+    'src\DataModules\UniDataVentasWsColaMonitor.pas'
+    {dmVentasWsColaMonitor: TDataModule},
+  inMtoVentasWsCola in
+    'src\Forms\inMtoVentasWsCola.pas' {frmMtoVentasWsCola},
   UniDataVentasWsSesion in 'src\DataModules\UniDataVentasWsSesion.pas',
   inLibVentasWsCola in 'src\Lib\inLibVentasWsCola.pas',
   inLibPrestaCatalogoIntf in 'src\Lib\inLibPrestaCatalogoIntf.pas',
@@ -881,6 +886,11 @@ uses
   inLibPrestaShopColaIntf in 'src\Lib\inLibPrestaShopColaIntf.pas',
   UniDataPrestaShopCola in
     'src\DataModules\UniDataPrestaShopCola.pas',
+  UniDataPrestaShopColaMonitor in
+    'src\DataModules\UniDataPrestaShopColaMonitor.pas'
+    {dmPrestaShopColaMonitor: TDataModule},
+  inMtoPrestaShopCola in
+    'src\Forms\inMtoPrestaShopCola.pas' {frmMtoPrestaShopCola},
   UniDataPrestaShopSesion in
     'src\DataModules\UniDataPrestaShopSesion.pas',
   UniDataPrestaShopEncolado in

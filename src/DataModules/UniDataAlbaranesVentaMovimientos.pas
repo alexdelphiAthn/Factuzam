@@ -34,6 +34,7 @@ uses
   System.SysUtils,
   Data.DB,
   inLibContadorLineas,
+  inLibPrestaShopColaSenal,
   UniDataContadorLineasRepositorio,
   UniDataMovimientosAlmacenRecalculo,
   UniDataValoresAutomaticosRepositorio;
@@ -673,6 +674,7 @@ end;
 procedure TUnidadTrabajoMovimientosAlbaranVentaUniDAC.Confirmar;
 begin
   FConexion.Commit;
+  SolicitarProcesadoPrestaShop;
 end;
 
 procedure TUnidadTrabajoMovimientosAlbaranVentaUniDAC.Revertir;

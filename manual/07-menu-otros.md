@@ -49,7 +49,7 @@ Categorías habituales:
 | **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y número de atributos usado en su clave. |
 | **Servicios web** | URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos. |
 | **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
-| **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola, barrido y checks **Sincronizar stock y precios** y **Crear artículos en PrestaShop al darlos de alta**. |
+| **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola y checks **Sincronizar stock y precios**, **Crear artículos en PrestaShop al darlos de alta** y **Hacer barrido periódicamente**. |
 | **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
 
 El valor efectivo se resuelve por herencia: primero el valor propio del
@@ -60,13 +60,14 @@ diferentes. Cada sesión atiende únicamente la configuración efectiva de su
 usuario.
 
 La clave API queda oculta para los usuarios que no son administradores raíz.
-Los dos checks comienzan desmarcados y son independientes. **Sincronizar stock
-y precios** autoriza la actualización de productos existentes localizados por
-una `reference` exacta y única. **Crear artículos en PrestaShop al darlos de
-alta** solicita el alta cuando no existe esa correspondencia, pero el motor de
-creación completa todavía no está implementado: por ahora se registra una
-incidencia `ERROR` sin crear recursos. Antes de activar la sincronización,
-sigue la
+Los tres checks comienzan desmarcados y son independientes. **Sincronizar
+stock y precios** autoriza la actualización de productos existentes
+localizados por una `reference` exacta y única. **Crear artículos en
+PrestaShop al darlos de alta** solicita el alta completa cuando no existe esa
+correspondencia y deja el producto nuevo desactivado para su revisión en
+PrestaShop. **Hacer barrido periódicamente** habilita la reconciliación
+completa por horas; aunque esté desmarcado, la recuperación de pendientes
+continúa cada 60–120 segundos. Antes de activar la integración, sigue la
 [lista de comprobación de la integración](15-integracion-prestashop.md#14-lista-de-comprobacion-para-una-implantacion).
 
 ### Idioma y traducciones

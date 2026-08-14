@@ -42,7 +42,9 @@ type
 implementation
 
 uses
-  inLibDocumento, inLibValoresAutomaticos;
+  inLibDocumento,
+  inLibPrestaShopColaSenal,
+  inLibValoresAutomaticos;
 
 constructor TServicioMovimientosFactura.Create(
   AConexion: TUniConnection;
@@ -129,7 +131,11 @@ begin
         ASolicitud.Serie,
         ASolicitud.Numero);
     if TransaccionPropia then
+    begin
       FConexion.Commit;
+      if Result > 0 then
+        SolicitarProcesadoPrestaShop;
+    end;
   except
     if TransaccionPropia and FConexion.InTransaction then
       FConexion.Rollback;

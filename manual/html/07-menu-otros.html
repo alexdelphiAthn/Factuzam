@@ -56,7 +56,7 @@ etc. Cada valor puede asignarse a un usuario, a un grupo o a <code>Todos</code>.
 <tr><td><strong>Directorios / Fotos</strong></td><td>Carpeta local o compartida de fotos (<code>appDirFotos</code>) y número de atributos usado en su clave.</td></tr>
 <tr><td><strong>Servicios web</strong></td><td>URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos.</td></tr>
 <tr><td><strong>Verifactu</strong></td><td>Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj.</td></tr>
-<tr><td><strong>PrestaShop</strong></td><td>Conexión API, tienda, empresa, tarifa, cola, barrido y checks <strong>Sincronizar stock y precios</strong> y <strong>Crear artículos en PrestaShop al darlos de alta</strong>.</td></tr>
+<tr><td><strong>PrestaShop</strong></td><td>Conexión API, tienda, empresa, tarifa, cola y checks <strong>Sincronizar stock y precios</strong>, <strong>Crear artículos en PrestaShop al darlos de alta</strong> y <strong>Hacer barrido periódicamente</strong>.</td></tr>
 <tr><td><strong>Caja</strong></td><td>Valores por defecto del TPV y comportamiento de arqueo.</td></tr>
 </tbody>
 </table>
@@ -67,13 +67,14 @@ que dos grupos trabajen con empresas, almacenes y tiendas PrestaShop
 diferentes. Cada sesión atiende únicamente la configuración efectiva de su
 usuario.</p>
 <p>La clave API queda oculta para los usuarios que no son administradores raíz.
-Los dos checks comienzan desmarcados y son independientes. <strong>Sincronizar stock
-y precios</strong> autoriza la actualización de productos existentes localizados por
-una <code>reference</code> exacta y única. <strong>Crear artículos en PrestaShop al darlos de
-alta</strong> solicita el alta cuando no existe esa correspondencia, pero el motor de
-creación completa todavía no está implementado: por ahora se registra una
-incidencia <code>ERROR</code> sin crear recursos. Antes de activar la sincronización,
-sigue la
+Los tres checks comienzan desmarcados y son independientes. <strong>Sincronizar
+stock y precios</strong> autoriza la actualización de productos existentes
+localizados por una <code>reference</code> exacta y única. <strong>Crear artículos en
+PrestaShop al darlos de alta</strong> solicita el alta completa cuando no existe esa
+correspondencia y deja el producto nuevo desactivado para su revisión en
+PrestaShop. <strong>Hacer barrido periódicamente</strong> habilita la reconciliación
+completa por horas; aunque esté desmarcado, la recuperación de pendientes
+continúa cada 60–120 segundos. Antes de activar la integración, sigue la
 <a href="15-integracion-prestashop.html#14-lista-de-comprobacion-para-una-implantacion">lista de comprobación de la integración</a>.</p>
 <h3 id="idioma-y-traducciones">Idioma y traducciones</h3>
 <p>En la categoría <strong>Apariencia</strong>, el parámetro <strong>Idioma de la interfaz</strong>
@@ -254,7 +255,7 @@ ejecuta por selección antes que el script completo.</p></blockquote>
 <hr>
 <p><a href="06-menu-almacen.html">◀ Menú Almacén</a> · <a href="index.html">Índice</a> · <a href="08-menu-ayuda.html">Siguiente ▶ Menú Ayuda</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 13/08/2026</footer>
+<footer>Manual de Factuzam · generado el 14/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

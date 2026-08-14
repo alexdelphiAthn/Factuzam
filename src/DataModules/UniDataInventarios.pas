@@ -251,6 +251,7 @@ uses
                // RegistroLog.RegistrarInformacion para metricas
   UniDataAlmacenesEmpresaRepositorio,
   UniDataConn,
+  inLibPrestaShopColaSenal,
   inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -1253,6 +1254,8 @@ begin
   unspAplicar.ParamByName('p_NRO').AsString     := FNumero;
   unspAplicar.ParamByName('p_USUARIO').AsString := FUsuario;
   unspAplicar.ExecProc;
+  if not unspAplicar.Connection.InTransaction then
+    SolicitarProcesadoPrestaShop;
 end;
 
 procedure TdmInventarios.RefrescarTrasAplicar;
@@ -1309,6 +1312,8 @@ begin
   unspEliminarRegul.ParamByName('p_NRO').AsString     := FNumero;
   unspEliminarRegul.ParamByName('p_USUARIO').AsString := FUsuario;
   unspEliminarRegul.ExecProc;
+  if not unspEliminarRegul.Connection.InTransaction then
+    SolicitarProcesadoPrestaShop;
 
   CargarLineasInventario;
   CargarMovimientosRegularizacion;

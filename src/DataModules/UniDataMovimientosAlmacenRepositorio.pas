@@ -36,6 +36,7 @@ uses
   Data.DB,
   System.SysUtils,
   inLibFiltroUsuario,
+  inLibPrestaShopColaSenal,
   UniDataMovimientosAlmacenRecalculo,
   UniDataValoresAutomaticosRepositorio;
 
@@ -319,16 +320,21 @@ begin
 end;
 
 procedure TUnidadTrabajoMovimientosAlmacenUniDAC.Confirmar;
+var
+  EsPropietaria: Boolean;
 begin
   if not FIniciada then
     raise EInvalidOpException.Create(
       'La unidad de trabajo de movimientos no está iniciada');
-  if FPropietaria then
+  EsPropietaria := FPropietaria;
+  if EsPropietaria then
     FConexion.Commit
   else
     FConexion.ExecSQL('RELEASE SAVEPOINT ' + NOMBRE_SAVEPOINT_MOVIMIENTOS);
   FIniciada := False;
   FPropietaria := False;
+  if EsPropietaria then
+    SolicitarProcesadoPrestaShop;
 end;
 
 procedure TUnidadTrabajoMovimientosAlmacenUniDAC.Revertir;

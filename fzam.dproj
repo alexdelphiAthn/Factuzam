@@ -1057,12 +1057,28 @@
         <DCCReference Include="src\DataModules\UniDataVentasWsJson.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsColaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataVentasWsCola.pas"/>
+        <DCCReference
+            Include="src\DataModules\UniDataVentasWsColaMonitor.pas">
+            <Form>dmVentasWsColaMonitor</Form>
+            <DesignClass>TdmVentasWsColaMonitor</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoVentasWsCola.pas">
+            <Form>frmMtoVentasWsCola</Form>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataVentasWsSesion.pas"/>
         <DCCReference Include="src\Lib\inLibVentasWsCola.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaCatalogoIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaCatalogo.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopColaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataPrestaShopCola.pas"/>
+        <DCCReference
+            Include="src\DataModules\UniDataPrestaShopColaMonitor.pas">
+            <Form>dmPrestaShopColaMonitor</Form>
+            <DesignClass>TdmPrestaShopColaMonitor</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Forms\inMtoPrestaShopCola.pas">
+            <Form>frmMtoPrestaShopCola</Form>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataPrestaShopSesion.pas"/>
         <DCCReference Include="src\DataModules\UniDataPrestaShopEncolado.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopCola.pas"/>

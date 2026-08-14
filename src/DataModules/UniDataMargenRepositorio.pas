@@ -23,7 +23,8 @@ implementation
 
 uses
   System.SysUtils,
-  UniDataPrestaShopEncolado;
+  UniDataPrestaShopEncolado,
+  inLibPrestaShopColaSenal;
 
 const
   SQL_GUARDAR_COSTE_SKU =
@@ -129,6 +130,8 @@ begin
         Result.MensajeError := E.Message;
       end;
     end;
+    if Result.Guardado then
+      SolicitarProcesadoPrestaShop;
   finally
     FreeAndNil(oConsulta);
   end;

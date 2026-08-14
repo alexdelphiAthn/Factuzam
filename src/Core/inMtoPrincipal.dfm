@@ -1246,6 +1246,17 @@
         ShortCut = 16505
         OnClick = mnuParmetrosdeEntornoClick
       end
+      object mnuColasIntegraciones: TMenuItem
+        Caption = 'Colas de integraciones'
+        object mnuPrestaShopCola: TMenuItem
+          Caption = 'Cola de PrestaShop'
+          OnClick = MenuGenericoClick
+        end
+        object mnuVentasWsCola: TMenuItem
+          Caption = 'Cola de ventas WS'
+          OnClick = MenuGenericoClick
+        end
+      end
       object N2: TMenuItem
         Caption = '-'
       end

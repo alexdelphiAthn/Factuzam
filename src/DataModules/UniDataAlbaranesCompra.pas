@@ -145,6 +145,7 @@ uses
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
   inLibAlbaranesCompraMovimientos,
+  inLibPrestaShopColaSenal,
   UniDataAlbaranesCompraMovimientos,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibData, UniDataAlmacenesEmpresaRepositorio,
@@ -665,6 +666,8 @@ begin
     inLibAlbaranesCompraMovimientos.RevertirMovimientosDesdeAlbaranCompra(
       CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
       sSerie, sNumero, IdentidadSesion.Usuario);
+    if not unqryTablaG.Connection.InTransaction then
+      SolicitarProcesadoPrestaShop;
     q.SQL.Text :=
       'DELETE FROM fza_albaranes_compra_celdas ' +
       ' WHERE SERIE_ALBC_ALBCCEL  = :s ' +
@@ -1035,6 +1038,8 @@ begin
                 unqryTablaG.Connection),
               sSerie, sNumero, IdentidadSesion.Usuario);
         RefrescarMovimientosProveedor;
+        if not unqryTablaG.Connection.InTransaction then
+          SolicitarProcesadoPrestaShop;
       end;
     end;
   end;

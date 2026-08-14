@@ -174,7 +174,9 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgCaja, UniDataMovimientosAlmacenRecalculo;
+  inLibMsgCaja,
+  inLibPrestaShopColaSenal,
+  UniDataMovimientosAlmacenRecalculo;
 
 constructor TdmTraspaso.Create(
   AOwner: TComponent;
@@ -947,6 +949,7 @@ begin
       RegistrarOperacionTraspaso(oConsulta, AContexto, cTotal,
         ANumSolicitud, ASerieSolicitud);
       FConexion.Commit;
+      SolicitarProcesadoPrestaShop;
       Result := True;
     except
       FConexion.Rollback;

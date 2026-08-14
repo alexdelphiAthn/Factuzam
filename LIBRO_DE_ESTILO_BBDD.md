@@ -129,6 +129,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_pedidos_lineas`                 | `PEDLIN`  |
 | `fza_pedidos_mensajes`               | `PEDMSG`  |
 | `fza_prestashop_cola`                | `PSCOLA`  |
+| `fza_prestashop_cola_eventos`        | `PSCEV`   |
 | `fza_propiedades`                    | `PROP`    |
 | `fza_propiedades_valores`            | `PV`      |
 | `fza_proformas_caja`                 | `PROCAJ`  |
@@ -157,6 +158,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_variaciones`                    | `VAR`     |
 | `fza_variaciones_atributos`          | `VA`      |
 | `fza_ventas_ws_cola`                 | `VWSC`    |
+| `fza_ventas_ws_cola_intentos`        | `VWSCI`   |
 | `fza_verifactu_cadena`               | `VFCAD`   |
 | `fza_verifactu_cola`                 | `VFCOLA`  |
 | `fza_verifactu_eventos`              | `LOG`     |

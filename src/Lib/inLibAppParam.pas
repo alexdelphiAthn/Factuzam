@@ -258,8 +258,7 @@ begin
   RegistrarParametro('', 'appPrestaShopStockActivo',
     'Activación histórica del stock PrestaShop', tpBoolean, 'False');
   RegistrarParametro('PrestaShop', 'appPrestaShopUrl',
-    'URL base de la API REST de PrestaShop', tpString,
-    'https://www.martamere.com/api');
+    'URL base de la API REST de PrestaShop', tpString, '');
   RegistrarParametro('PrestaShop', 'appPrestaShopApiKey',
     'Clave de acceso a la API de PrestaShop', tpString, '');
   RegistrarParametro('PrestaShop', 'appPrestaShopTarifa',
@@ -293,8 +292,12 @@ begin
     'Identificador de la categoría raíz para crear familias',
     tpInteger, '2');
   RegistrarParametro('PrestaShop', 'appPrestaShopSegundosCiclo',
-    'Segundos entre comprobaciones de respaldo de la cola PrestaShop',
+    'Intervalo de recuperación de la cola (60 a 120 segundos)',
     tpInteger, '60');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopHacerBarridoPeriodico',
+    'Hacer barrido periódicamente',
+    tpBoolean, 'False');
   RegistrarParametro('PrestaShop', 'appPrestaShopHorasBarrido',
     'Horas entre barridos completos de respaldo del catálogo web',
     tpInteger, '24');

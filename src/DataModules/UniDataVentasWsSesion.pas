@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       UniDataVentasWsSesion                                         }
 {    Tipo:       Composición de persistencia                                   }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       01/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -26,7 +26,8 @@ implementation
 
 uses
   System.SysUtils, Uni, inLibVentasWsJsonIntf,
-  UniDataVentasWsCola, UniDataVentasWsJson;
+  inLibVentasWsColaHistorialIntf, UniDataVentasWsCola,
+  UniDataVentasWsColaHistorial, UniDataVentasWsJson;
 
 type
   TSesionVentasWsUniDAC = class(TInterfacedObject, ISesionVentasWs)
@@ -34,11 +35,14 @@ type
     FConexion: TUniConnection;
     FRepositorio: IRepositorioVentasWsCola;
     FJson: IVentasWsJson;
+    FRegistradorIntentos: IRegistradorIntentosVentasWsCola;
   public
     constructor Create(const AConexiones: IServicioConexiones);
     destructor Destroy; override;
     function GetRepositorio: IRepositorioVentasWsCola;
     function GetJson: IVentasWsJson;
+    function GetRegistradorIntentos:
+      IRegistradorIntentosVentasWsCola;
   end;
   TFabricaSesionVentasWsUniDAC = class(
     TInterfacedObject,
@@ -59,12 +63,15 @@ begin
   inherited Create;
   FConexion := AConexiones.CrearConexion(nil, uctSegundoPlano);
   FRepositorio := CrearRepositorioVentasWsColaUniDAC(FConexion);
+  FRegistradorIntentos :=
+    CrearRegistradorIntentosVentasWsColaUniDAC(FConexion);
   FJson := CrearVentasWsJsonUniDAC(FConexion);
 end;
 
 destructor TSesionVentasWsUniDAC.Destroy;
 begin
   FJson := nil;
+  FRegistradorIntentos := nil;
   FRepositorio := nil;
   FreeAndNil(FConexion);
   inherited;
@@ -79,6 +86,12 @@ end;
 function TSesionVentasWsUniDAC.GetJson: IVentasWsJson;
 begin
   Result := FJson;
+end;
+
+function TSesionVentasWsUniDAC.GetRegistradorIntentos:
+  IRegistradorIntentosVentasWsCola;
+begin
+  Result := FRegistradorIntentos;
 end;
 
 constructor TFabricaSesionVentasWsUniDAC.Create(

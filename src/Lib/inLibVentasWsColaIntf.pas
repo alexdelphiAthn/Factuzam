@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibVentasWsColaIntf                                         }
 {    Tipo:       Contrato                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       31/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       14/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -17,7 +17,7 @@ unit inLibVentasWsColaIntf;
 interface
 
 uses
-  inLibVentasWsJsonIntf;
+  inLibVentasWsJsonIntf, inLibVentasWsColaHistorialIntf;
 
 type
   TFilaVentasWsCola = record
@@ -65,8 +65,12 @@ type
     ['{06E365D5-63CF-48D0-9D6E-165A815DBB77}']
     function GetRepositorio: IRepositorioVentasWsCola;
     function GetJson: IVentasWsJson;
+    function GetRegistradorIntentos:
+      IRegistradorIntentosVentasWsCola;
     property Repositorio: IRepositorioVentasWsCola read GetRepositorio;
     property Json: IVentasWsJson read GetJson;
+    property RegistradorIntentos: IRegistradorIntentosVentasWsCola
+      read GetRegistradorIntentos;
   end;
   IFabricaSesionVentasWs = interface
     ['{6827FEAE-15F3-41A1-99CC-A1F1341A361F}']

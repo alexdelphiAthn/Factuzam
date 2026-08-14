@@ -25,7 +25,8 @@ function CrearUnidadTrabajoRecepcionPedidoCompraUniDAC(
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  inLibPrestaShopColaSenal;
 
 type
   TUnidadTrabajoRecepcionPedidoCompraUniDAC = class(
@@ -62,6 +63,7 @@ end;
 procedure TUnidadTrabajoRecepcionPedidoCompraUniDAC.Confirmar;
 begin
   FConexion.Commit;
+  SolicitarProcesadoPrestaShop;
 end;
 
 procedure TUnidadTrabajoRecepcionPedidoCompraUniDAC.Revertir;
