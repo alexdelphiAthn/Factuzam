@@ -5,7 +5,6 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT C.ID_PSCOLA,'
-      '       C.CLAVE_INSTALACION_PSCOLA,'
       '       C.ID_TIENDA_PSCOLA,'
       '       C.CODIGO_ART_PSCOLA,'
       '       A.DESCRIPCION_ART,'

@@ -312,17 +312,30 @@ end;
 procedure TfrmMtoPermisosArbol.AnadirAccionesPantalla(
   AParent: TcxTreeListNode; const ACall: string);
 begin
-  NuevoNodo(AParent, 'Consultar / buscar',  ACall + '.consultar');
-  NuevoNodo(AParent, 'Alta de registros',   ACall + '.insertar');
-  NuevoNodo(AParent, 'Modificar registros', ACall + '.modificar');
-  NuevoNodo(AParent, 'Borrar registros',    ACall + '.borrar');
-  NuevoNodo(AParent, 'Exportar a Excel',    ACall + '.excel');
-  NuevoNodo(AParent, 'Imprimir informes',   ACall + '.imprimir');
-  if SameText(ACall, 'Articulos') then
+  if SameText(ACall, 'PrestaShopCola') or
+     SameText(ACall, 'VentasWsCola') then
+  begin
+    NuevoNodo(AParent, 'Consultar / buscar', ACall + '.consultar');
+    NuevoNodo(AParent, 'Exportar a Excel', ACall + '.excel');
     NuevoNodo(
       AParent,
-      'Activar/desactivar web',
-      PERMISO_ARTICULOS_ACTIVAR_DESACTIVAR_WEB);
+      'Ver petición / respuesta',
+      ACall + '.detalle');
+  end
+  else
+  begin
+    NuevoNodo(AParent, 'Consultar / buscar', ACall + '.consultar');
+    NuevoNodo(AParent, 'Alta de registros', ACall + '.insertar');
+    NuevoNodo(AParent, 'Modificar registros', ACall + '.modificar');
+    NuevoNodo(AParent, 'Borrar registros', ACall + '.borrar');
+    NuevoNodo(AParent, 'Exportar a Excel', ACall + '.excel');
+    NuevoNodo(AParent, 'Imprimir informes', ACall + '.imprimir');
+    if SameText(ACall, 'Articulos') then
+      NuevoNodo(
+        AParent,
+        'Activar/desactivar web',
+        PERMISO_ARTICULOS_ACTIVAR_DESACTIVAR_WEB);
+  end;
 end;
 
 function TfrmMtoPermisosArbol.EsPantallaMto(const AUnitForm: string): Boolean;

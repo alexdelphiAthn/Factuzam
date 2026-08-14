@@ -17,13 +17,6 @@
               Options.Editing = False
               Width = 64
             end
-            object colInstalacion: TcxGridDBColumn
-              Caption = 'Destino (huella)'
-              DataBinding.FieldName = 'CLAVE_INSTALACION_PSCOLA'
-              Options.Editing = False
-              Visible = False
-              Width = 180
-            end
             object colTienda: TcxGridDBColumn
               Caption = 'Tienda'
               DataBinding.FieldName = 'ID_TIENDA_PSCOLA'

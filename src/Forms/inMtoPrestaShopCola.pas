@@ -25,7 +25,6 @@ uses
 type
   TfrmMtoPrestaShopCola = class(TfrmMtoGen)
     colIdCola: TcxGridDBColumn;
-    colInstalacion: TcxGridDBColumn;
     colTienda: TcxGridDBColumn;
     colArticulo: TcxGridDBColumn;
     colNombreArticulo: TcxGridDBColumn;
@@ -86,8 +85,8 @@ type
 implementation
 
 uses
-  inLibFiltroUsuario, inLibPermisosIntf, inLibPrestaCatalogo,
-  inLibRegistroPantallas, inLibShowMto;
+  inLibPermisosIntf, inLibPrestaCatalogo, inLibRegistroPantallas,
+  inLibShowMto;
 
 {$R *.dfm}
 
@@ -255,17 +254,22 @@ begin
   if (not Assigned(Permisos)) or
      (not Permisos.TienePermiso(CPermisoConsultar, paDenegar)) then
     Result := ' AND 1 = 0'
-  else if RestriccionEmpAlmCajaActiva(
-            ContextoSesion, ParametrosApp) then
+  else if not IdentidadSesion.EsAdministrador then
   begin
-    sUrl := Trim(ParametrosApp.GetString('appPrestaShopUrl', ''));
-    iTienda := ParametrosApp.GetInt('appPrestaShopIdTienda', 1);
-    sEmpresaConfigurada := Trim(ParametrosApp.GetString(
-      'appPrestaShopEmpresa', ''));
+    sUrl := '';
+    iTienda := 0;
+    sEmpresaConfigurada := '';
+    if Assigned(ParametrosApp) then
+    begin
+      sUrl := Trim(ParametrosApp.GetString('appPrestaShopUrl', ''));
+      iTienda := ParametrosApp.GetInt('appPrestaShopIdTienda', 1);
+      sEmpresaConfigurada := Trim(ParametrosApp.GetString(
+        'appPrestaShopEmpresa', ''));
+    end;
     sEmpresaSesion := Trim(ContextoSesion.Ubicacion.Empresa);
-    bDestinoValido := (sUrl <> '') and (iTienda > 0) and
-      (sEmpresaConfigurada <> '');
-    if bDestinoValido and (sEmpresaSesion <> '') then
+    bDestinoValido := (sUrl <> '') and (iTienda > 0);
+    if bDestinoValido and (sEmpresaConfigurada <> '') and
+       (sEmpresaSesion <> '') then
       bDestinoValido := SameText(
         sEmpresaConfigurada, sEmpresaSesion);
     sClave := '';

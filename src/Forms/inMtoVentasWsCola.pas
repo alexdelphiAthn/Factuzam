@@ -83,8 +83,8 @@ type
 implementation
 
 uses
-  inLibFiltroUsuario, inLibPermisosIntf, inLibRegistroPantallas,
-  inLibShowMto, UniDataDestinoFacturaRepositorio;
+  inLibPermisosIntf, inLibRegistroPantallas, inLibShowMto,
+  UniDataDestinoFacturaRepositorio;
 
 {$R *.dfm}
 
@@ -252,18 +252,21 @@ begin
 end;
 
 function TfrmMtoVentasWsCola.SqlRestriccionUsuario: string;
+var
+  sEmpresa: string;
 begin
   Result := '';
   if (not Assigned(Permisos)) or
      (not Permisos.TienePermiso(CPermisoConsultar, paDenegar)) then
     Result := ' AND 1 = 0'
-  else
-    Result := SqlFiltroEmpAlmCaja(
-      ContextoSesion,
-      ParametrosApp,
-      'C.CODIGO_EMP_VWSC',
-      '',
-      '');
+  else if not IdentidadSesion.EsAdministrador then
+  begin
+    sEmpresa := Trim(ContextoSesion.Ubicacion.Empresa);
+    if sEmpresa = '' then
+      Result := ' AND 1 = 0'
+    else
+      Result := ' AND C.CODIGO_EMP_VWSC = ' + QuotedStr(sEmpresa);
+  end;
 end;
 
 procedure TfrmMtoVentasWsCola.ResetForm;
