@@ -34,6 +34,15 @@ resourcestring
   SErrorPermisoCambiarMarcaWebArticulo =
     'No tiene permiso para activar o desactivar la marca En web del ' +
     'artículo.';
+  SPreguntaDesactivarArticuloPrestaShop =
+    'El artículo "%s" dejará de sincronizarse con PrestaShop.' +
+    sLineBreak + sLineBreak +
+    '¿Desea desactivarlo también en la tienda web?' + sLineBreak +
+    'Sí: se desactiva en PrestaShop y deja de mostrarse en la web.' +
+    sLineBreak +
+    'No: solo deja de sincronizarse; el artículo permanece como esté.' +
+    sLineBreak +
+    'Cancelar: no se guarda el cambio.';
   SPreguntaDesactivarTarifaSinPrecio =
     'El precio de salida pasa a 0. ¿Desea desactivar la tarifa?';
   SPreguntaActivarTarifaConPrecio =

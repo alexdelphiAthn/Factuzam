@@ -231,6 +231,23 @@ type
     procedure CargarFotos(const AUsuario, AGrupo: string;
       var AArticulo: TArticuloCompletoAltaPresta);
     procedure ValidarImagenPng(const ARuta: string);
+    procedure ValidarTextosArticulo(
+      const AArticulo: TArticuloCompletoAltaPresta);
+    procedure ValidarFamilias(
+      const AArticulo: TArticuloCompletoAltaPresta);
+    procedure ValidarAtributo(
+      const AAtributo: TAtributoAltaArticuloPresta;
+      const AClavesGrupo, AClavesAtributo:
+        TDictionary<string, string>);
+    procedure ValidarSku(
+      const ASku: TSkuAltaArticuloPresta;
+      const ACodigosSku: TDictionary<string, Boolean>;
+      const AClavesGrupo, AClavesAtributo:
+        TDictionary<string, string>);
+    procedure ValidarSkus(
+      const AArticulo: TArticuloCompletoAltaPresta);
+    procedure ValidarFotos(
+      const AArticulo: TArticuloCompletoAltaPresta);
     procedure ValidarArticulo(
       const AArticulo: TArticuloCompletoAltaPresta);
   public
@@ -873,20 +890,8 @@ begin
       '%s no puede ser negativo.', [ANombre]);
 end;
 
-procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarArticulo(
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarTextosArticulo(
   const AArticulo: TArticuloCompletoAltaPresta);
-var
-  iAtributo: Integer;
-  iFamilia: Integer;
-  iFoto: Integer;
-  iSku: Integer;
-  oAtributo: TAtributoAltaArticuloPresta;
-  oClavesAtributo: TDictionary<string, string>;
-  oClavesGrupo: TDictionary<string, string>;
-  oCodigosFamilia: TDictionary<string, Boolean>;
-  oCodigosSku: TDictionary<string, Boolean>;
-  sClave: string;
-  sFirma: string;
 begin
   ComprobarTexto(AArticulo.Codigo, 'Referencia del producto',
     CLongitudReferenciaPresta);
@@ -903,25 +908,20 @@ begin
     raise EAltaArticuloPrestaLocal.CreateFmt(
       'La descripción supera los %d caracteres permitidos.',
       [CLongitudDescripcionPresta]);
-  if (AArticulo.TipoIva <> 'N') and (AArticulo.TipoIva <> 'R') and
-     (AArticulo.TipoIva <> 'S') and (AArticulo.TipoIva <> 'E') then
-    raise EAltaArticuloPrestaLocal.CreateFmt(
-      'El tipo de IVA "%s" no se puede publicar.', [AArticulo.TipoIva]);
-  ComprobarDecimal(AArticulo.PorcentajeIva,
-    'Porcentaje de IVA', False);
-  ComprobarDecimal(AArticulo.PrecioBaseSinIva,
-    'Precio base sin IVA', False);
-  if AArticulo.Cantidad < 0 then
+end;
+
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarFamilias(
+  const AArticulo: TArticuloCompletoAltaPresta);
+var
+  iFamilia: Integer;
+  oCodigosFamilia: TDictionary<string, Boolean>;
+  sClave: string;
+begin
+  if Length(AArticulo.Familias) = 0 then
     raise EAltaArticuloPrestaLocal.Create(
-      'La cantidad total no puede ser negativa.');
+      'El producto debe tener al menos una familia local.');
   oCodigosFamilia := TDictionary<string, Boolean>.Create;
-  oCodigosSku := TDictionary<string, Boolean>.Create;
-  oClavesGrupo := TDictionary<string, string>.Create;
-  oClavesAtributo := TDictionary<string, string>.Create;
   try
-    if Length(AArticulo.Familias) = 0 then
-      raise EAltaArticuloPrestaLocal.Create(
-        'El producto debe tener al menos una familia local.');
     for iFamilia := 0 to High(AArticulo.Familias) do
     begin
       ComprobarTexto(AArticulo.Familias[iFamilia].Codigo,
@@ -948,96 +948,164 @@ begin
         raise EAltaArticuloPrestaLocal.Create(
           'La ruta jerárquica de familias no es continua.');
     end;
-    if AArticulo.TieneVariaciones and
-       (Length(AArticulo.Skus) = 0) then
-      raise EAltaArticuloPrestaLocal.Create(
-        'El producto variable debe tener combinaciones activas.');
-    if (not AArticulo.TieneVariaciones) and
-       (Length(AArticulo.Skus) <> 0) then
-      raise EAltaArticuloPrestaLocal.Create(
-        'El producto simple no debe crear combinaciones.');
+  finally
+    FreeAndNil(oCodigosFamilia);
+  end;
+end;
+
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarAtributo(
+  const AAtributo: TAtributoAltaArticuloPresta;
+  const AClavesGrupo, AClavesAtributo:
+    TDictionary<string, string>);
+var
+  sClave: string;
+  sFirma: string;
+begin
+  ComprobarTexto(AAtributo.CodigoGrupo,
+    'Código de grupo', CLongitudNombrePresta);
+  ComprobarTexto(AAtributo.NombreGrupo,
+    'Nombre de grupo', CLongitudNombrePresta);
+  ComprobarTexto(AAtributo.NombrePublicoGrupo,
+    'Nombre público de grupo', CLongitudNombrePublicoPresta);
+  ComprobarTexto(AAtributo.CodigoValor,
+    'Código de valor', CLongitudNombrePresta);
+  ComprobarTexto(AAtributo.NombreValor,
+    'Nombre de valor', CLongitudNombrePresta);
+  if (AAtributo.TipoGrupo <> 'select') and
+     (AAtributo.TipoGrupo <> 'radio') and
+     (AAtributo.TipoGrupo <> 'color') then
+    raise EAltaArticuloPrestaLocal.CreateFmt(
+      'El grupo "%s" tiene un tipo no válido.',
+      [AAtributo.CodigoGrupo]);
+  sClave := UpperCase(AAtributo.CodigoGrupo);
+  sFirma := AAtributo.NombreGrupo + #1 +
+    AAtributo.NombrePublicoGrupo + #1 + AAtributo.TipoGrupo;
+  if AClavesGrupo.ContainsKey(sClave) then
+  begin
+    if AClavesGrupo[sClave] <> sFirma then
+      raise EAltaArticuloPrestaLocal.CreateFmt(
+        'El grupo de atributo "%s" tiene datos contradictorios.',
+        [AAtributo.CodigoGrupo]);
+  end
+  else
+    AClavesGrupo.Add(sClave, sFirma);
+  sClave := sClave + #1 + UpperCase(AAtributo.CodigoValor);
+  sFirma := AAtributo.NombreValor + #1 + AAtributo.ColorHtml;
+  if AClavesAtributo.ContainsKey(sClave) then
+  begin
+    if AClavesAtributo[sClave] <> sFirma then
+      raise EAltaArticuloPrestaLocal.CreateFmt(
+        'El valor de atributo "%s" tiene datos contradictorios.',
+        [AAtributo.CodigoValor]);
+  end
+  else
+    AClavesAtributo.Add(sClave, sFirma);
+end;
+
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarSku(
+  const ASku: TSkuAltaArticuloPresta;
+  const ACodigosSku: TDictionary<string, Boolean>;
+  const AClavesGrupo, AClavesAtributo:
+    TDictionary<string, string>);
+var
+  iAtributo: Integer;
+  sClave: string;
+begin
+  ComprobarTexto(ASku.Codigo,
+    'Referencia de combinación', CLongitudReferenciaPresta);
+  ComprobarDecimal(ASku.PrecioSinIva,
+    'Precio de combinación sin IVA', False);
+  ComprobarDecimal(ASku.ImpactoPrecio,
+    'Impacto de precio', True);
+  if ASku.Cantidad < 0 then
+    raise EAltaArticuloPrestaLocal.CreateFmt(
+      'El stock del SKU "%s" no puede ser negativo.',
+      [ASku.Codigo]);
+  sClave := UpperCase(ASku.Codigo);
+  if ACodigosSku.ContainsKey(sClave) then
+    raise EAltaArticuloPrestaLocal.CreateFmt(
+      'El SKU "%s" está duplicado.', [ASku.Codigo]);
+  ACodigosSku.Add(sClave, True);
+  if Length(ASku.Atributos) = 0 then
+    raise EAltaArticuloPrestaLocal.CreateFmt(
+      'El SKU "%s" no tiene atributos.', [ASku.Codigo]);
+  for iAtributo := 0 to High(ASku.Atributos) do
+    ValidarAtributo(
+      ASku.Atributos[iAtributo],
+      AClavesGrupo,
+      AClavesAtributo);
+end;
+
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarSkus(
+  const AArticulo: TArticuloCompletoAltaPresta);
+var
+  iSku: Integer;
+  oClavesAtributo: TDictionary<string, string>;
+  oClavesGrupo: TDictionary<string, string>;
+  oCodigosSku: TDictionary<string, Boolean>;
+begin
+  if AArticulo.TieneVariaciones and
+     (Length(AArticulo.Skus) = 0) then
+    raise EAltaArticuloPrestaLocal.Create(
+      'El producto variable debe tener combinaciones activas.');
+  if (not AArticulo.TieneVariaciones) and
+     (Length(AArticulo.Skus) <> 0) then
+    raise EAltaArticuloPrestaLocal.Create(
+      'El producto simple no debe crear combinaciones.');
+  oCodigosSku := TDictionary<string, Boolean>.Create;
+  oClavesGrupo := TDictionary<string, string>.Create;
+  oClavesAtributo := TDictionary<string, string>.Create;
+  try
     for iSku := 0 to High(AArticulo.Skus) do
     begin
-      ComprobarTexto(AArticulo.Skus[iSku].Codigo,
-        'Referencia de combinación', CLongitudReferenciaPresta);
-      ComprobarDecimal(AArticulo.Skus[iSku].PrecioSinIva,
-        'Precio de combinación sin IVA', False);
-      ComprobarDecimal(AArticulo.Skus[iSku].ImpactoPrecio,
-        'Impacto de precio', True);
-      if AArticulo.Skus[iSku].Cantidad < 0 then
-        raise EAltaArticuloPrestaLocal.CreateFmt(
-          'El stock del SKU "%s" no puede ser negativo.',
-          [AArticulo.Skus[iSku].Codigo]);
-      sClave := UpperCase(AArticulo.Skus[iSku].Codigo);
-      if oCodigosSku.ContainsKey(sClave) then
-        raise EAltaArticuloPrestaLocal.CreateFmt(
-          'El SKU "%s" está duplicado.',
-          [AArticulo.Skus[iSku].Codigo]);
-      oCodigosSku.Add(sClave, True);
-      if Length(AArticulo.Skus[iSku].Atributos) = 0 then
-        raise EAltaArticuloPrestaLocal.CreateFmt(
-          'El SKU "%s" no tiene atributos.',
-          [AArticulo.Skus[iSku].Codigo]);
-      for iAtributo := 0 to High(AArticulo.Skus[iSku].Atributos) do
-      begin
-        oAtributo := AArticulo.Skus[iSku].Atributos[iAtributo];
-        ComprobarTexto(oAtributo.CodigoGrupo,
-          'Código de grupo', CLongitudNombrePresta);
-        ComprobarTexto(oAtributo.NombreGrupo,
-          'Nombre de grupo', CLongitudNombrePresta);
-        ComprobarTexto(oAtributo.NombrePublicoGrupo,
-          'Nombre público de grupo', CLongitudNombrePublicoPresta);
-        ComprobarTexto(oAtributo.CodigoValor,
-          'Código de valor', CLongitudNombrePresta);
-        ComprobarTexto(oAtributo.NombreValor,
-          'Nombre de valor', CLongitudNombrePresta);
-        if (oAtributo.TipoGrupo <> 'select') and
-           (oAtributo.TipoGrupo <> 'radio') and
-           (oAtributo.TipoGrupo <> 'color') then
-          raise EAltaArticuloPrestaLocal.CreateFmt(
-            'El grupo "%s" tiene un tipo no válido.',
-            [oAtributo.CodigoGrupo]);
-        sClave := UpperCase(oAtributo.CodigoGrupo);
-        sFirma := oAtributo.NombreGrupo + #1 +
-          oAtributo.NombrePublicoGrupo + #1 + oAtributo.TipoGrupo;
-        if oClavesGrupo.ContainsKey(sClave) then
-        begin
-          if oClavesGrupo[sClave] <> sFirma then
-            raise EAltaArticuloPrestaLocal.CreateFmt(
-              'El grupo de atributo "%s" tiene datos contradictorios.',
-              [oAtributo.CodigoGrupo]);
-        end
-        else
-          oClavesGrupo.Add(sClave, sFirma);
-        sClave := sClave + #1 + UpperCase(oAtributo.CodigoValor);
-        sFirma := oAtributo.NombreValor + #1 + oAtributo.ColorHtml;
-        if oClavesAtributo.ContainsKey(sClave) then
-        begin
-          if oClavesAtributo[sClave] <> sFirma then
-            raise EAltaArticuloPrestaLocal.CreateFmt(
-              'El valor de atributo "%s" tiene datos contradictorios.',
-              [oAtributo.CodigoValor]);
-        end
-        else
-          oClavesAtributo.Add(sClave, sFirma);
-      end;
-    end;
-    if Length(AArticulo.Fotos) = 0 then
-      raise EAltaArticuloPrestaLocal.Create(
-        'El producto debe tener una foto general real.');
-    for iFoto := 0 to High(AArticulo.Fotos) do
-    begin
-      ComprobarTexto(AArticulo.Fotos[iFoto].Nombre,
-        'Nombre de foto', 255);
-      ComprobarTexto(AArticulo.Fotos[iFoto].RutaReal,
-        'Ruta real de foto', 32767);
+      ValidarSku(
+        AArticulo.Skus[iSku],
+        oCodigosSku,
+        oClavesGrupo,
+        oClavesAtributo);
     end;
   finally
     FreeAndNil(oClavesAtributo);
     FreeAndNil(oClavesGrupo);
     FreeAndNil(oCodigosSku);
-    FreeAndNil(oCodigosFamilia);
   end;
+end;
+
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarFotos(
+  const AArticulo: TArticuloCompletoAltaPresta);
+var
+  iFoto: Integer;
+begin
+  if Length(AArticulo.Fotos) = 0 then
+    raise EAltaArticuloPrestaLocal.Create(
+      'El producto debe tener una foto general real.');
+  for iFoto := 0 to High(AArticulo.Fotos) do
+  begin
+    ComprobarTexto(AArticulo.Fotos[iFoto].Nombre,
+      'Nombre de foto', 255);
+    ComprobarTexto(AArticulo.Fotos[iFoto].RutaReal,
+      'Ruta real de foto', 32767);
+  end;
+end;
+
+procedure TRepositorioAltaArticuloPrestaUniDAC.ValidarArticulo(
+  const AArticulo: TArticuloCompletoAltaPresta);
+begin
+  ValidarTextosArticulo(AArticulo);
+  if (AArticulo.TipoIva <> 'N') and (AArticulo.TipoIva <> 'R') and
+     (AArticulo.TipoIva <> 'S') and (AArticulo.TipoIva <> 'E') then
+    raise EAltaArticuloPrestaLocal.CreateFmt(
+      'El tipo de IVA "%s" no se puede publicar.', [AArticulo.TipoIva]);
+  ComprobarDecimal(AArticulo.PorcentajeIva,
+    'Porcentaje de IVA', False);
+  ComprobarDecimal(AArticulo.PrecioBaseSinIva,
+    'Precio base sin IVA', False);
+  if AArticulo.Cantidad < 0 then
+    raise EAltaArticuloPrestaLocal.Create(
+      'La cantidad total no puede ser negativa.');
+  ValidarFamilias(AArticulo);
+  ValidarSkus(AArticulo);
+  ValidarFotos(AArticulo);
 end;
 
 function TRepositorioAltaArticuloPrestaUniDAC.CargarValidado(

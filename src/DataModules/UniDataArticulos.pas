@@ -24,9 +24,19 @@ uses
   cxCustomData, cxFilter,
   System.Variants, vcl.Controls, Datasnap.Provider, Datasnap.DBClient,
   System.Generics.Collections,
-  frxClass, frxDBSet, frCoreClasses, System.UITypes;
+  frxClass, frxDBSet, frCoreClasses, System.UITypes,
+  inLibPrestaShopColaIntf;
 
 type
+  TDecisionDesactivacionWebArticulo = (
+    ddwSoloDejarDeSincronizar,
+    ddwDesactivarEnPrestaShop,
+    ddwCancelar);
+
+  TConfirmarDesactivacionWebArticuloEvent = function(
+    const ACodigoArticulo, ADescripcionArticulo: string):
+    TDecisionDesactivacionWebArticulo of object;
+
   TdmArticulos = class(TdmBase)
     unqryFamiliaArticulos: TUniQuery;
     dsFamiliaArticulos: TDataSource;
@@ -92,7 +102,30 @@ type
     FCodigoArticuloTarifaBorrada: string;
     FCodigoArticuloSkuBorrado: string;
     FPermitirCambiarMarcaWeb: Boolean;
+    FAccionVisibilidadPendiente: TAccionVisibilidadPrestaShop;
+    FAccionVisibilidadAplazada: TAccionVisibilidadPrestaShop;
+    FAplazarVisibilidadPrestaShop: Boolean;
+    FCambioMarcaWebPreparado: Boolean;
+    FCodigoArticuloCambioWebPreparado: string;
+    FCodigoArticuloVisibilidadAplazada: string;
+    FHayVisibilidadPrestaShopAplazada: Boolean;
+    FMarcaWebAnteriorPreparada: Boolean;
+    FMarcaWebNuevaPreparada: Boolean;
+    FOnConfirmarDesactivacionWeb:
+      TConfirmarDesactivacionWebArticuloEvent;
     procedure AsegurarSkuBase(const ACodArt: string);
+    procedure CapturarOEncolarVisibilidadPrestaShop(
+      const ACodigoArticulo: string;
+      AAccion: TAccionVisibilidadPrestaShop);
+    function CambioMarcaWebPreparadoCoincide(
+      const ACodigoArticulo: string;
+      AEstabaMarcado, AQuedaMarcado: Boolean): Boolean;
+    function LeerCambioMarcaWeb(
+      out ACodigoArticulo, ADescripcionArticulo: string;
+      out AEstabaMarcado, AQuedaMarcado: Boolean): Boolean;
+    procedure PrepararAccionCambioMarcaWeb(
+      const ACodigoArticulo, ADescripcionArticulo: string;
+      AEstabaMarcado, AQuedaMarcado: Boolean);
     procedure ValidarCambioMarcaWeb(ADataSet: TDataSet);
     procedure QuitarEscribiblesVista;
     procedure ActualizarSkuActivo(const aSku, aActivo: string);
@@ -127,6 +160,13 @@ type
     procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AsignarVistaStock(AVista: TcxGridDBTableView);
     procedure AsignarPermisoCambioMarcaWeb(APermitido: Boolean);
+    procedure AsignarConfirmacionDesactivacionWeb(
+      AConfirmacion: TConfirmarDesactivacionWebArticuloEvent);
+    procedure IniciarAplazamientoVisibilidadPrestaShop;
+    procedure ConfirmarVisibilidadPrestaShopAplazada;
+    procedure DescartarVisibilidadPrestaShopAplazada;
+    procedure PrepararCambioMarcaWeb;
+    procedure LimpiarCambioMarcaWebPreparado;
     procedure AbrirDetalles; override;
     // En main thread tras AbrirDetalles: reactiva los TDataSource que
     // se desactivaron durante el thread y dispara manualmente el
@@ -850,27 +890,40 @@ procedure TdmArticulos.unqryTablaGAfterPost(DataSet: TDataSet);
 var
   sArt: string;
 begin
-  inherited;
-  // Articulo simple (sin variaciones): garantizar una unidad/SKU base con
-  // CODIGO_UNIDAD_SKU = CODIGO_ART_ART para que pueda llevar stock y aparezca
-  // en la consulta (Ctrl+U), movimientos, etc. sin tener que crear SKUs a mano.
-  if SameText(unqryTablaG.FindField('ESVARIACION_ART').AsString, 'N') then
-  begin
+  try
+    inherited;
+    // Articulo simple (sin variaciones): garantizar una unidad/SKU base con
+    // CODIGO_UNIDAD_SKU = CODIGO_ART_ART para que pueda llevar stock y
+    // aparezca en la consulta (Ctrl+U), movimientos, etc. sin crear SKUs a
+    // mano.
+    if SameText(unqryTablaG.FindField('ESVARIACION_ART').AsString, 'N') then
+    begin
+      sArt := Trim(unqryTablaG.FindField('CODIGO_ART_ART').AsString);
+      if sArt <> '' then
+        AsegurarSkuBase(sArt);
+    end;
     sArt := Trim(unqryTablaG.FindField('CODIGO_ART_ART').AsString);
-    if sArt <> '' then
-      AsegurarSkuBase(sArt);
+    if FCambioMarcaWebPreparado and
+       (FMarcaWebAnteriorPreparada <>
+        FMarcaWebNuevaPreparada) then
+      CapturarOEncolarVisibilidadPrestaShop(
+        sArt,
+        FAccionVisibilidadPendiente)
+    else if SameText(
+      unqryTablaG.FindField('ESWEB_ART').AsString,
+      'S') then
+      EncolarArticuloPrestaShop(
+        unqryTablaG.Connection,
+        sArt,
+        IdentidadSesion.Usuario)
+    else
+      OmitirArticuloPrestaShop(
+        unqryTablaG.Connection,
+        sArt,
+        IdentidadSesion.Usuario);
+  finally
+    LimpiarCambioMarcaWebPreparado;
   end;
-  sArt := Trim(unqryTablaG.FindField('CODIGO_ART_ART').AsString);
-  if SameText(unqryTablaG.FindField('ESWEB_ART').AsString, 'S') then
-    EncolarArticuloPrestaShop(
-      unqryTablaG.Connection,
-      sArt,
-      IdentidadSesion.Usuario)
-  else
-    OmitirArticuloPrestaShop(
-      unqryTablaG.Connection,
-      sArt,
-      IdentidadSesion.Usuario);
 end;
 
 procedure TdmArticulos.AsegurarSkuBase(const ACodArt: string);
@@ -1141,27 +1194,206 @@ end;
 
 procedure TdmArticulos.unqryTablaGBeforePost(DataSet: TDataSet);
 begin
-  ValidarCambioMarcaWeb(DataSet);
-  inherited;
-  // Insert vacío (accidental): cancelar sin error
-  if (DataSet.State = dsInsert) and
-     (Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString) = '') then
-    Abort;
-  var sDescripcion :=
-    Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString);
-  if (sDescripcion = '') or
-     SimbolosProhibidos(sDescripcion, PerfilesLectura) then
-  begin
-    raise ERangeError.CreateFmt(SErrorDescripcionArticulo,
-      [unqryTablaG.FindField('DESCRIPCION_ART').AsString]);
-  end
-  else
-    GetCodigoAutoArticulo;
+  PrepararCambioMarcaWeb;
+  try
+    inherited;
+    // Insert vacío (accidental): cancelar sin error
+    if (DataSet.State = dsInsert) and
+       (Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString) = '') then
+      Abort;
+    var sDescripcion :=
+      Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString);
+    if (sDescripcion = '') or
+       SimbolosProhibidos(sDescripcion, PerfilesLectura) then
+    begin
+      raise ERangeError.CreateFmt(SErrorDescripcionArticulo,
+        [unqryTablaG.FindField('DESCRIPCION_ART').AsString]);
+    end
+    else
+      GetCodigoAutoArticulo;
+  except
+    LimpiarCambioMarcaWebPreparado;
+    raise;
+  end;
 end;
 
 procedure TdmArticulos.AsignarPermisoCambioMarcaWeb(APermitido: Boolean);
 begin
   FPermitirCambiarMarcaWeb := APermitido;
+end;
+
+procedure TdmArticulos.AsignarConfirmacionDesactivacionWeb(
+  AConfirmacion: TConfirmarDesactivacionWebArticuloEvent);
+begin
+  FOnConfirmarDesactivacionWeb := AConfirmacion;
+end;
+
+procedure TdmArticulos.CapturarOEncolarVisibilidadPrestaShop(
+  const ACodigoArticulo: string;
+  AAccion: TAccionVisibilidadPrestaShop);
+begin
+  if FAplazarVisibilidadPrestaShop then
+  begin
+    FCodigoArticuloVisibilidadAplazada := ACodigoArticulo;
+    FAccionVisibilidadAplazada := AAccion;
+    FHayVisibilidadPrestaShopAplazada := True;
+  end
+  else
+    EncolarVisibilidadPrestaShop(
+      unqryTablaG.Connection,
+      ACodigoArticulo,
+      AAccion,
+      IdentidadSesion.Usuario);
+end;
+
+procedure TdmArticulos.IniciarAplazamientoVisibilidadPrestaShop;
+begin
+  DescartarVisibilidadPrestaShopAplazada;
+  FAplazarVisibilidadPrestaShop := True;
+end;
+
+procedure TdmArticulos.ConfirmarVisibilidadPrestaShopAplazada;
+begin
+  try
+    if FHayVisibilidadPrestaShopAplazada then
+      EncolarVisibilidadPrestaShop(
+        unqryTablaG.Connection,
+        FCodigoArticuloVisibilidadAplazada,
+        FAccionVisibilidadAplazada,
+        IdentidadSesion.Usuario);
+  finally
+    DescartarVisibilidadPrestaShopAplazada;
+  end;
+end;
+
+procedure TdmArticulos.DescartarVisibilidadPrestaShopAplazada;
+begin
+  FAccionVisibilidadAplazada := avpNinguna;
+  FAplazarVisibilidadPrestaShop := False;
+  FCodigoArticuloVisibilidadAplazada := '';
+  FHayVisibilidadPrestaShopAplazada := False;
+end;
+
+procedure TdmArticulos.LimpiarCambioMarcaWebPreparado;
+begin
+  FAccionVisibilidadPendiente := avpNinguna;
+  FCambioMarcaWebPreparado := False;
+  FCodigoArticuloCambioWebPreparado := '';
+  FMarcaWebAnteriorPreparada := False;
+  FMarcaWebNuevaPreparada := False;
+end;
+
+function TdmArticulos.CambioMarcaWebPreparadoCoincide(
+  const ACodigoArticulo: string;
+  AEstabaMarcado, AQuedaMarcado: Boolean): Boolean;
+begin
+  Result := FCambioMarcaWebPreparado and
+    SameText(
+      FCodigoArticuloCambioWebPreparado,
+      ACodigoArticulo) and
+    (FMarcaWebAnteriorPreparada = AEstabaMarcado) and
+    (FMarcaWebNuevaPreparada = AQuedaMarcado);
+end;
+
+function TdmArticulos.LeerCambioMarcaWeb(
+  out ACodigoArticulo, ADescripcionArticulo: string;
+  out AEstabaMarcado, AQuedaMarcado: Boolean): Boolean;
+var
+  CampoCodigo: TField;
+  CampoDescripcion: TField;
+  CampoWeb: TField;
+begin
+  ACodigoArticulo := '';
+  ADescripcionArticulo := '';
+  AEstabaMarcado := False;
+  AQuedaMarcado := False;
+  Result := unqryTablaG.State in [dsInsert, dsEdit];
+  if Result then
+  begin
+    CampoWeb := unqryTablaG.FindField('ESWEB_ART');
+    Result := Assigned(CampoWeb);
+    if Result then
+    begin
+      AQuedaMarcado := SameText(Trim(CampoWeb.AsString), 'S');
+      if unqryTablaG.State = dsEdit then
+        AEstabaMarcado := SameText(
+          Trim(VarToStr(CampoWeb.OldValue)),
+          'S');
+      CampoCodigo := unqryTablaG.FindField('CODIGO_ART_ART');
+      if Assigned(CampoCodigo) then
+        ACodigoArticulo := Trim(CampoCodigo.AsString);
+      CampoDescripcion := unqryTablaG.FindField('DESCRIPCION_ART');
+      if Assigned(CampoDescripcion) then
+        ADescripcionArticulo := Trim(CampoDescripcion.AsString);
+    end;
+  end;
+end;
+
+procedure TdmArticulos.PrepararAccionCambioMarcaWeb(
+  const ACodigoArticulo, ADescripcionArticulo: string;
+  AEstabaMarcado, AQuedaMarcado: Boolean);
+var
+  Decision: TDecisionDesactivacionWebArticulo;
+begin
+  FMarcaWebAnteriorPreparada := AEstabaMarcado;
+  FMarcaWebNuevaPreparada := AQuedaMarcado;
+  FCodigoArticuloCambioWebPreparado := ACodigoArticulo;
+  FAccionVisibilidadPendiente := avpNinguna;
+  if AEstabaMarcado and (not AQuedaMarcado) then
+  begin
+    Decision := ddwSoloDejarDeSincronizar;
+    if Assigned(FOnConfirmarDesactivacionWeb) then
+      Decision := FOnConfirmarDesactivacionWeb(
+        ACodigoArticulo,
+        ADescripcionArticulo);
+    case Decision of
+      ddwDesactivarEnPrestaShop:
+        FAccionVisibilidadPendiente := avpDesactivar;
+      ddwCancelar:
+        begin
+          LimpiarCambioMarcaWebPreparado;
+          Abort;
+        end;
+    end;
+  end
+  else if (not AEstabaMarcado) and AQuedaMarcado and
+          Assigned(ParametrosApp) and
+          ParametrosApp.GetBool(
+            'appPrestaShopActivarArticulosAlMarcarWeb',
+            False) then
+    FAccionVisibilidadPendiente := avpActivar;
+  FCambioMarcaWebPreparado := True;
+end;
+
+procedure TdmArticulos.PrepararCambioMarcaWeb;
+var
+  CodigoArticulo: string;
+  DescripcionArticulo: string;
+  EstabaMarcado: Boolean;
+  QuedaMarcado: Boolean;
+begin
+  if LeerCambioMarcaWeb(
+    CodigoArticulo,
+    DescripcionArticulo,
+    EstabaMarcado,
+    QuedaMarcado) then
+  begin
+    if not CambioMarcaWebPreparadoCoincide(
+      CodigoArticulo,
+      EstabaMarcado,
+      QuedaMarcado) then
+    begin
+      LimpiarCambioMarcaWebPreparado;
+      ValidarCambioMarcaWeb(unqryTablaG);
+      PrepararAccionCambioMarcaWeb(
+        CodigoArticulo,
+        DescripcionArticulo,
+        EstabaMarcado,
+        QuedaMarcado);
+    end;
+  end
+  else
+    LimpiarCambioMarcaWebPreparado;
 end;
 
 procedure TdmArticulos.ValidarCambioMarcaWeb(ADataSet: TDataSet);

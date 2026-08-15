@@ -437,15 +437,15 @@ resourcestring
   SCaptionMarqueValoresIncluir =
     'Marque los valores a incluir. Si no marca ninguno, salen todos.';
   SCaptionMarqueAgrupacion =
-    'Marque por qu' + #233 + ' agrupar y ordene los niveles con ' +
-    'Subir/Bajar (el primero es el grupo m' + #225 + 's externo). ' +
-    'Sin marcar = sin agrupar.';
+    'Marque por qué agrupar y ordene los niveles con ' +
+    'Subir/Bajar (el primero es el grupo más externo). ' +
+    'Máximo 3 niveles. Sin marcar = sin agrupar.';
   SCaptionSubir = 'Subir';
   SCaptionBajar = 'Bajar';
   SCaptionNivelFamilia = 'Nivel familia:';
   SHintNivelFamilia =
-    'Al agrupar por familia: 0 = familia del art' + #237 +
-    'culo; 1 = familia ra' + #237 + 'z; 2, 3... niveles intermedios.';
+    'Al agrupar por familia: 0 = familia del artículo; ' +
+    '1 = familia raíz; 2, 3... niveles intermedios.';
   SCaptionTabFamilias = 'Familias';
   SCaptionDobleClicMarcaFamilia =
     'Doble clic o barra espaciadora marca/desmarca. Marcar una ' +

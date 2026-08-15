@@ -1,5 +1,5 @@
 ﻿inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
-  Caption = 'Movimientos de ventas por art'#237'culos y fechas'
+  Caption = 'Movimientos de ventas por artículos y fechas'
   ClientWidth = 1040
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1056
@@ -72,7 +72,7 @@
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            'Movimientos de ventas por art'#237'culos y fechas')
+            'Movimientos de ventas por artículos y fechas')
           ParentFont = False
         end
         object MemoImpreso: TfrxMemoView
@@ -116,7 +116,7 @@
           Font.Style = [fsBold]
           Frame.Typ = [ftBottom]
           Memo.UTF8W = (
-            'Art'#237'culo')
+            'Artículo')
           ParentFont = False
         end
         object MemoHUniEnt: TfrxMemoView
@@ -460,7 +460,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[MovVentas."CODIGO_ART_ART"]'
+            '[MovVentas."CODIGO_ART_ART"]  [MovVentas."COLOR_ETIQUETA"]'
             '[MovVentas."DESCRIPCION_ART"]')
           ParentFont = False
         end
@@ -1694,7 +1694,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'P'#225'gina [Page#] de [TotalPages#]')
+            'Página [Page#] de [TotalPages#]')
           ParentFont = False
         end
         object MemoPie: TfrxMemoView

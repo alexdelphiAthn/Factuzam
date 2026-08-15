@@ -93,9 +93,13 @@ type
     procedure dsTablaGStateChange(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
+    procedure tvValoresID_AV_ACDPropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption;
+      var Error: Boolean);
   private
     dmmAtributosConjuntos: TdmAtributosConjuntos;
     procedure ActualizarDescripciones;
+    procedure ActualizarValoresLookup;
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -161,6 +165,7 @@ begin
                                     := dmmAtributosConjuntos.dsAtributosLookup;
   pkFieldName := 'ID_AC';
   ActualizarDescripciones;
+  ActualizarValoresLookup;
 end;
 
 procedure TfrmMtoAtributosConjuntos.ResetForm;
@@ -175,6 +180,127 @@ begin
      (Field.FieldName = 'ID_VAR_AC') or
      (Field.FieldName = 'ID_VA_AC') then
     ActualizarDescripciones;
+  if (Field = nil) or (Field.FieldName = 'ID_VA_AC') then
+    ActualizarValoresLookup;
+end;
+
+procedure TfrmMtoAtributosConjuntos.ActualizarValoresLookup;
+var
+  sIdAtributo: string;
+begin
+  sIdAtributo := '';
+  if (dsTablaG <> nil) and (dsTablaG.DataSet <> nil) and
+     dsTablaG.DataSet.Active then
+    sIdAtributo := dsTablaG.DataSet.FieldByName('ID_VA_AC').AsString;
+  if dmmAtributosConjuntos <> nil then
+    dmmAtributosConjuntos.FiltrarValoresLookup(sIdAtributo);
+end;
+
+procedure TfrmMtoAtributosConjuntos.
+  tvValoresID_AV_ACDPropertiesValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  bValorLocalizado: Boolean;
+  iIdConjunto: Integer;
+  iIdValor: Integer;
+  iOrden: Integer;
+  iOrdenSugerido: Integer;
+  sIdAtributo: string;
+  sOrden: string;
+  sTexto: string;
+  sValor: string;
+begin
+  Error := False;
+  sTexto := Trim(VarToStr(DisplayValue));
+  if sTexto <> '' then
+  begin
+    sIdAtributo := '';
+    if (dsTablaG <> nil) and (dsTablaG.DataSet <> nil) and
+       dsTablaG.DataSet.Active then
+      sIdAtributo := dsTablaG.DataSet.FieldByName('ID_VA_AC').AsString;
+    if sIdAtributo = '' then
+    begin
+      Error := True;
+      ErrorText := 'Selecciona primero el atributo de la colección.';
+    end
+    else if dmmAtributosConjuntos.BuscarValorActivo(
+              sIdAtributo, sTexto, iIdValor, sValor) then
+    begin
+      bValorLocalizado :=
+        dmmAtributosConjuntos.unqryValoresLookup.Locate(
+          'ID_AV', iIdValor, []);
+      if bValorLocalizado and (Sender is TcxCustomLookupEdit) then
+      begin
+        TcxCustomLookupEdit(Sender).EditValue := iIdValor;
+        DisplayValue := sValor;
+      end
+      else
+      begin
+        Error := True;
+        ErrorText := SErrorValorColeccionAtributosObligatorio;
+      end;
+    end
+    else if dsTablaG.DataSet.State in [dsEdit, dsInsert] then
+    begin
+      Error := True;
+      ErrorText :=
+        'Graba primero los datos de la colección antes de añadir valores.';
+    end
+    else
+    begin
+      iIdConjunto := dsTablaG.DataSet.FieldByName('ID_AC').AsInteger;
+      iOrdenSugerido :=
+        dmmAtributosConjuntos.CalcularSiguienteOrdenValor(
+          iIdConjunto, sIdAtributo);
+      sOrden := Trim(InputBox(
+        STituloAnadirValorSku,
+        SSolicitudOrdenNuevoValorSku,
+        IntToStr(iOrdenSugerido)));
+      if sOrden = '' then
+      begin
+        Error := True;
+        ErrorText := SErrorValorColeccionAtributosObligatorio;
+      end
+      else
+      begin
+        iOrden := StrToIntDef(sOrden, iOrdenSugerido);
+        iIdValor := dmmAtributosConjuntos.AsegurarValor(
+          sIdAtributo, sTexto, iOrden, sValor);
+        if iIdValor > 0 then
+        begin
+          dmmAtributosConjuntos.unqryValoresLookup.Refresh;
+          ActualizarValoresLookup;
+          bValorLocalizado :=
+            dmmAtributosConjuntos.unqryValoresLookup.Locate(
+              'ID_AV', iIdValor, []);
+          if bValorLocalizado and (Sender is TcxCustomLookupEdit) then
+          begin
+            TcxCustomLookupEdit(Sender).EditValue := iIdValor;
+            DisplayValue := sValor;
+            if dmmAtributosConjuntos.unqryConjuntoDetalle.State in
+                 [dsEdit, dsInsert] then
+            begin
+              if dmmAtributosConjuntos.unqryConjuntoDetalle.FieldByName(
+                   'ORDEN_ACD').AsInteger = 0 then
+                dmmAtributosConjuntos.unqryConjuntoDetalle.FieldByName(
+                  'ORDEN_ACD').AsInteger := iOrden;
+            end;
+          end
+          else
+          begin
+            Error := True;
+            ErrorText := SErrorValorColeccionAtributosObligatorio;
+          end;
+        end
+        else
+        begin
+          Error := True;
+          ErrorText := SErrorValorColeccionAtributosObligatorio;
+        end;
+      end;
+    end;
+  end;
 end;
 
 procedure TfrmMtoAtributosConjuntos.ActualizarDescripciones;

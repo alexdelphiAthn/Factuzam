@@ -27,6 +27,12 @@ type
   )
   private
     FContextoSesion: IContextoSesionAplicacion;
+    procedure AsignarFechaAuditoria(
+      ACampo: TField;
+      AValor: TDateTime);
+    procedure AsignarTextoAuditoria(
+      ACampo: TField;
+      const AValor: string);
     function GetUsuario: string;
   public
     constructor Create(
@@ -41,6 +47,42 @@ implementation
 uses
   System.SysUtils,
   inLibContextoSesion;
+
+procedure TServicioAuditoriaDatos.AsignarFechaAuditoria(
+  ACampo: TField;
+  AValor: TDateTime);
+var
+  EraSoloLectura: Boolean;
+begin
+  if Assigned(ACampo) then
+  begin
+    EraSoloLectura := ACampo.ReadOnly;
+    ACampo.ReadOnly := False;
+    try
+      ACampo.AsDateTime := AValor;
+    finally
+      ACampo.ReadOnly := EraSoloLectura;
+    end;
+  end;
+end;
+
+procedure TServicioAuditoriaDatos.AsignarTextoAuditoria(
+  ACampo: TField;
+  const AValor: string);
+var
+  EraSoloLectura: Boolean;
+begin
+  if Assigned(ACampo) then
+  begin
+    EraSoloLectura := ACampo.ReadOnly;
+    ACampo.ReadOnly := False;
+    try
+      ACampo.AsString := AValor;
+    finally
+      ACampo.ReadOnly := EraSoloLectura;
+    end;
+  end;
+end;
 
 constructor TServicioAuditoriaDatos.Create(
   const AContextoSesion: IContextoSesionAplicacion);
@@ -66,22 +108,23 @@ end;
 
 procedure TServicioAuditoriaDatos.Actualizar(DataSet: TDataSet);
 var
+  Campo: TField;
   Usuario: string;
 begin
   Usuario := GetUsuario;
   if Assigned(DataSet) and
      (DataSet.State in dsEditModes) then
   begin
-    if DataSet.FindField('USUARIO_MODIF') <> nil then
-      DataSet.FieldByName('USUARIO_MODIF').AsString := Usuario;
+    Campo := DataSet.FindField('USUARIO_MODIF');
+    AsignarTextoAuditoria(Campo, Usuario);
     if DataSet.State = dsInsert then
     begin
-      if DataSet.FindField('INSTANTE_ALTA') <> nil then
-        DataSet.FieldByName('INSTANTE_ALTA').AsDateTime := Now;
-      if DataSet.FindField('USUARIO_ALTA') <> nil then
-        DataSet.FieldByName('USUARIO_ALTA').AsString := Usuario;
-      if DataSet.FindField('INSTANTE_MODIF') <> nil then
-        DataSet.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
+      Campo := DataSet.FindField('INSTANTE_ALTA');
+      AsignarFechaAuditoria(Campo, Now);
+      Campo := DataSet.FindField('USUARIO_ALTA');
+      AsignarTextoAuditoria(Campo, Usuario);
+      Campo := DataSet.FindField('INSTANTE_MODIF');
+      AsignarFechaAuditoria(Campo, Now);
     end;
   end;
 end;

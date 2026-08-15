@@ -76,6 +76,8 @@ type
     chkActivo: TcxDBCheckBox;
     chkEnWeb: TcxDBCheckBox;
     cbbFamilia: TcxDBLookupComboBox;
+    btnSeleccionarFamilia: TcxButton;
+    btnQuitarFamilia: TcxButton;
     lblFamilia: TcxLabel;
     tsTarifas: TcxTabSheet;
     cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn;
@@ -422,6 +424,8 @@ type
     procedure cxDBCheckBox1PropertiesEditValueChanged(Sender: TObject);
     procedure cxDBComboBox1PropertiesEditValueChanged(Sender: TObject);
     procedure cbbFamiliaPropertiesEditValueChanged(Sender: TObject);
+    procedure btnSeleccionarFamiliaClick(Sender: TObject);
+    procedure btnQuitarFamiliaClick(Sender: TObject);
     procedure addSkuAllClick(Sender: TObject);
     procedure btnAddSKUClick(Sender: TObject);
     procedure cxButton11Click(Sender: TObject);
@@ -512,6 +516,13 @@ type
     FCodigosBarrasPersistencia: IArticulosCodigosBarrasPersistencia;
     FResolutorDestinoFactura: IResolutorDestinoFactura;
     FPuedeCambiarMarcaWeb: Boolean;
+    FActualizandoFamiliaDesdeArbol: Boolean;
+    function ConfirmarDesactivacionWebArticulo(
+      const ACodigoArticulo, ADescripcionArticulo: string):
+      TDecisionDesactivacionWebArticulo;
+    procedure CargarPropiedadesFamiliaActual;
+    procedure CambiarFamiliaArticulo(const ACodigoFamilia: string;
+      ALimpiar: Boolean);
     procedure InicializarPestanyaVariaciones;
     procedure InicializarPestanyaPropiedades;
     procedure InicializarPresentadores;
@@ -554,6 +565,7 @@ uses
   inLibShowMto,
   inLibFotos,
   inLibGenBusq,
+  inMtoModalSelFamilia,
   inMtoModalGenerarSKUs,
   inMtoModalEtiqArt,
   inLibArticulosCodigosBarras,
@@ -1002,28 +1014,66 @@ begin
                                                  'CODIGO_TAR_ARTTAR').AsString);
 end;
 
+function TfrmMtoArticulos.ConfirmarDesactivacionWebArticulo(
+  const ACodigoArticulo, ADescripcionArticulo: string):
+  TDecisionDesactivacionWebArticulo;
+var
+  Identificacion: string;
+  Respuesta: Integer;
+begin
+  Identificacion := Trim(ACodigoArticulo);
+  if Trim(ADescripcionArticulo) <> '' then
+    Identificacion := Identificacion + ' - ' +
+      Trim(ADescripcionArticulo);
+  Respuesta := MessageDlg(
+    Format(
+      SPreguntaDesactivarArticuloPrestaShop,
+      [Identificacion]),
+    mtConfirmation,
+    [mbYes, mbNo, mbCancel],
+    0);
+  case Respuesta of
+    mrYes:
+      Result := ddwDesactivarEnPrestaShop;
+    mrNo:
+      Result := ddwSoloDejarDeSincronizar;
+  else
+    Result := ddwCancelar;
+  end;
+end;
+
 procedure TfrmMtoArticulos.btnGrabarClick(Sender: TObject);
 var
   Resultado: TResultadoGuardadoArticulo;
 begin
-  Resultado := FAplicacionGuardado.Ejecutar;
-  case Resultado.Error of
-    egaRevisionPropiedades:
-      begin
-        ShowMessage(Format(SAvisoRevisionArticulo, [Resultado.Mensaje]));
-        pcDetail.ActivePage := tsPropiedades;
-      end;
-    egaGuardadoPropiedades:
-      ShowMessage(Format(
-        SErrorGuardarPropiedadesArticulo,
-        [Resultado.Mensaje]));
-    egaGuardadoVariaciones:
-      ShowMessage(Format(
-        SErrorGuardarVariacionesArticulo,
-        [Resultado.Mensaje]));
+  if dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit] then
+    chkEnWeb.PostEditValue;
+  try
+    dmmArticulos.PrepararCambioMarcaWeb;
+    dmmArticulos.IniciarAplazamientoVisibilidadPrestaShop;
+    Resultado := FAplicacionGuardado.Ejecutar;
+    case Resultado.Error of
+      egaRevisionPropiedades:
+        begin
+          ShowMessage(Format(SAvisoRevisionArticulo, [Resultado.Mensaje]));
+          pcDetail.ActivePage := tsPropiedades;
+        end;
+      egaGuardadoPropiedades:
+        ShowMessage(Format(
+          SErrorGuardarPropiedadesArticulo,
+          [Resultado.Mensaje]));
+      egaGuardadoVariaciones:
+        ShowMessage(Format(
+          SErrorGuardarVariacionesArticulo,
+          [Resultado.Mensaje]));
+    end;
+    dmmArticulos.ConfirmarVisibilidadPrestaShopAplazada;
+    if Resultado.Error = egaNinguno then
+      inherited;
+  finally
+    dmmArticulos.DescartarVisibilidadPrestaShopAplazada;
+    dmmArticulos.LimpiarCambioMarcaWebPreparado;
   end;
-  if Resultado.Error = egaNinguno then
-    inherited;
 end;
 
 procedure TfrmMtoArticulos.btnNuevoArticuloClick(Sender: TObject);
@@ -1221,14 +1271,98 @@ procedure TfrmMtoArticulos.cbbFamiliaPropertiesEditValueChanged(
   Sender: TObject);
 begin
   inherited;
-  // Verificamos que el gestor esté creado y estemos en modo inserción o edición
+  if not FActualizandoFamiliaDesdeArbol then
+    CargarPropiedadesFamiliaActual;
+end;
+
+procedure TfrmMtoArticulos.CargarPropiedadesFamiliaActual;
+var
+  oCampoFamilia: TField;
+begin
   if Assigned(FGestorProp) and
+     Assigned(dmmArticulos) and
      (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
   begin
-    // Forzamos a que el control actualice su EditValue
-    cbbFamilia.PostEditValue;
-    if not VarIsNull(cbbFamilia.EditValue) then
-      FGestorProp.CargarPropiedadesPorFamilia(VarToStr(cbbFamilia.EditValue));
+    oCampoFamilia := dmmArticulos.unqryTablaG.FindField('CODIGO_FAM_ART');
+    if Assigned(oCampoFamilia) and
+       (not oCampoFamilia.IsNull) then
+      FGestorProp.CargarPropiedadesPorFamilia(oCampoFamilia.AsString);
+  end;
+end;
+
+procedure TfrmMtoArticulos.CambiarFamiliaArticulo(
+  const ACodigoFamilia: string; ALimpiar: Boolean);
+var
+  bHayCambio: Boolean;
+  oCampoFamilia: TField;
+  oDatos: TDataSet;
+begin
+  oDatos := dmmArticulos.unqryTablaG;
+  oCampoFamilia := oDatos.FieldByName('CODIGO_FAM_ART');
+  if ALimpiar then
+    bHayCambio := not oCampoFamilia.IsNull
+  else
+    bHayCambio := oCampoFamilia.IsNull or
+      (oCampoFamilia.AsString <> ACodigoFamilia);
+  if bHayCambio then
+  begin
+    if not (oDatos.State in [dsInsert, dsEdit]) then
+      oDatos.Edit;
+    if oDatos.State in [dsInsert, dsEdit] then
+    begin
+      FActualizandoFamiliaDesdeArbol := True;
+      try
+        if ALimpiar then
+          oCampoFamilia.Clear
+        else
+          oCampoFamilia.AsString := ACodigoFamilia;
+      finally
+        FActualizandoFamiliaDesdeArbol := False;
+      end;
+      if not ALimpiar then
+        CargarPropiedadesFamiliaActual;
+    end;
+  end;
+end;
+
+procedure TfrmMtoArticulos.btnSeleccionarFamiliaClick(Sender: TObject);
+var
+  oDatos: TDataSet;
+  oModal: TfrmModalSelFamilia;
+begin
+  inherited;
+  if Assigned(dmmArticulos) then
+  begin
+    oDatos := dmmArticulos.unqryTablaG;
+    if oDatos.Active and
+       (not oDatos.IsEmpty) and
+       oDatos.CanModify then
+    begin
+      oModal := TfrmModalSelFamilia.Create(Self);
+      try
+        oModal.CodigoFamiliaInicial :=
+          oDatos.FieldByName('CODIGO_FAM_ART').AsString;
+        if oModal.ShowModal = mrOk then
+          CambiarFamiliaArticulo(oModal.CodigoFamilia, False);
+      finally
+        FreeAndNil(oModal);
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoArticulos.btnQuitarFamiliaClick(Sender: TObject);
+var
+  oDatos: TDataSet;
+begin
+  inherited;
+  if Assigned(dmmArticulos) then
+  begin
+    oDatos := dmmArticulos.unqryTablaG;
+    if oDatos.Active and
+       (not oDatos.IsEmpty) and
+       oDatos.CanModify then
+      CambiarFamiliaArticulo('', True);
   end;
 end;
 
@@ -1244,6 +1378,8 @@ begin
   chkEnWeb.Properties.ReadOnly := not FPuedeCambiarMarcaWeb;
   dmmArticulos.AsignarPermisoCambioMarcaWeb(
     FPuedeCambiarMarcaWeb);
+  dmmArticulos.AsignarConfirmacionDesactivacionWeb(
+    ConfirmarDesactivacionWebArticulo);
   FCodigosBarrasPersistencia :=
     CrearArticulosCodigosBarrasPersistenciaUniDAC(ConexionPrincipal);
   FResolutorDestinoFactura :=
@@ -1787,6 +1923,8 @@ end;
 
 procedure TfrmMtoArticulos.FormDestroy(Sender: TObject);
 begin
+  if Assigned(dmmArticulos) then
+    dmmArticulos.AsignarConfirmacionDesactivacionWeb(nil);
   FAplicacionGuardado := nil;
   FCodigosBarrasPersistencia := nil;
   FResolutorDestinoFactura := nil;

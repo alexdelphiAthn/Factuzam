@@ -31,6 +31,7 @@ type
     FBloqueoLicencia: TCriticalSection;
     FRegistroLog: IRegistroLog;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
+    procedure InicializarParametrosPrestaShop;
     procedure InicializarParametrosVerifactu;
     procedure InicializarParametrosApp(
       const AUsuario, AGrupo: string);
@@ -193,6 +194,78 @@ begin
     'Venta');
 end;
 
+procedure TParametrosAplicacion.InicializarParametrosPrestaShop;
+begin
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopSincronizarStockPrecios',
+    'Sincronizar stock y precios',
+    tpBoolean, 'False');
+  RegistrarParametro('PrestaShop', 'appPrestaShopCrearArticulos',
+    'Crear artículos en PrestaShop al darlos de alta',
+    tpBoolean, 'False');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopActivarArticulosAlMarcarWeb',
+    'Activar artículos en PrestaShop al marcar En web',
+    tpBoolean, 'False');
+  // Claves históricas ocultas. Se conservan sin convertirlas en la nueva
+  // autorización conjunta, para no activar el stock de forma implícita.
+  RegistrarParametro('', 'appPrestaShopActivo',
+    'Activación histórica de la cola PrestaShop', tpBoolean, 'False');
+  RegistrarParametro('', 'appPrestaShopStockActivo',
+    'Activación histórica del stock PrestaShop', tpBoolean, 'False');
+  RegistrarParametro('PrestaShop', 'appPrestaShopUrl',
+    'URL base de la API REST de PrestaShop', tpString, '');
+  RegistrarParametro('PrestaShop', 'appPrestaShopApiKey',
+    'Clave de acceso a la API de PrestaShop', tpString, '');
+  RegistrarParametro('PrestaShop', 'appPrestaShopTarifa',
+    'Código de la tarifa que se sincroniza con PrestaShop',
+    tpString, 'PVP');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaNormal',
+    'Id. regla fiscal PrestaShop para IVA normal',
+    tpInteger, '1');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaReducido',
+    'Id. regla fiscal PrestaShop para IVA reducido',
+    tpInteger, '2');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaSuperreducido',
+    'Id. regla fiscal PrestaShop para IVA superreducido',
+    tpInteger, '3');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopReglaIvaExento',
+    'Id. regla fiscal PrestaShop para artículos exentos',
+    tpInteger, '0');
+  RegistrarParametro('PrestaShop', 'appPrestaShopEmpresa',
+    'Empresa de Factuzam usada para calcular el IVA del precio web',
+    tpString, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopIdTienda',
+    'Identificador de tienda de PrestaShop', tpInteger, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopIdIdioma',
+    'Identificador del idioma usado al crear el catálogo',
+    tpInteger, '1');
+  RegistrarParametro('PrestaShop', 'appPrestaShopIdCategoriaRaiz',
+    'Identificador de la categoría raíz para crear familias',
+    tpInteger, '2');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopNivelesFamiliaAlta',
+    'Niveles de familia a crear (0 = todos)',
+    tpInteger, '0');
+  RegistrarParametro('PrestaShop', 'appPrestaShopSegundosCiclo',
+    'Intervalo de recuperación de la cola (60 a 120 segundos)',
+    tpInteger, '60');
+  RegistrarParametro('PrestaShop',
+    'appPrestaShopHacerBarridoPeriodico',
+    'Hacer barrido periódicamente',
+    tpBoolean, 'False');
+  RegistrarParametro('PrestaShop', 'appPrestaShopHorasBarrido',
+    'Horas entre barridos completos de respaldo del catálogo web',
+    tpInteger, '24');
+  RegistrarParametro('PrestaShop', 'appPrestaShopMaxIntentos',
+    'Reintentos antes de marcar un envío como error definitivo',
+    tpInteger, '10');
+end;
+
 procedure TParametrosAplicacion.InicializarParametrosApp(
   const AUsuario, AGrupo: string);
 begin
@@ -244,66 +317,7 @@ begin
     'Reintentos antes de marcar un envío de venta en ERROR',
     tpInteger, '20');
   // --- PrestaShop ---
-  RegistrarParametro('PrestaShop',
-    'appPrestaShopSincronizarStockPrecios',
-    'Sincronizar stock y precios',
-    tpBoolean, 'False');
-  RegistrarParametro('PrestaShop', 'appPrestaShopCrearArticulos',
-    'Crear artículos en PrestaShop al darlos de alta',
-    tpBoolean, 'False');
-  // Claves históricas ocultas. Se conservan sin convertirlas en la nueva
-  // autorización conjunta, para no activar el stock de forma implícita.
-  RegistrarParametro('', 'appPrestaShopActivo',
-    'Activación histórica de la cola PrestaShop', tpBoolean, 'False');
-  RegistrarParametro('', 'appPrestaShopStockActivo',
-    'Activación histórica del stock PrestaShop', tpBoolean, 'False');
-  RegistrarParametro('PrestaShop', 'appPrestaShopUrl',
-    'URL base de la API REST de PrestaShop', tpString, '');
-  RegistrarParametro('PrestaShop', 'appPrestaShopApiKey',
-    'Clave de acceso a la API de PrestaShop', tpString, '');
-  RegistrarParametro('PrestaShop', 'appPrestaShopTarifa',
-    'Código de la tarifa que se sincroniza con PrestaShop',
-    tpString, 'PVP');
-  RegistrarParametro('PrestaShop',
-    'appPrestaShopReglaIvaNormal',
-    'Id. regla fiscal PrestaShop para IVA normal',
-    tpInteger, '1');
-  RegistrarParametro('PrestaShop',
-    'appPrestaShopReglaIvaReducido',
-    'Id. regla fiscal PrestaShop para IVA reducido',
-    tpInteger, '2');
-  RegistrarParametro('PrestaShop',
-    'appPrestaShopReglaIvaSuperreducido',
-    'Id. regla fiscal PrestaShop para IVA superreducido',
-    tpInteger, '3');
-  RegistrarParametro('PrestaShop',
-    'appPrestaShopReglaIvaExento',
-    'Id. regla fiscal PrestaShop para artículos exentos',
-    tpInteger, '0');
-  RegistrarParametro('PrestaShop', 'appPrestaShopEmpresa',
-    'Empresa de Factuzam usada para calcular el IVA del precio web',
-    tpString, '1');
-  RegistrarParametro('PrestaShop', 'appPrestaShopIdTienda',
-    'Identificador de tienda de PrestaShop', tpInteger, '1');
-  RegistrarParametro('PrestaShop', 'appPrestaShopIdIdioma',
-    'Identificador del idioma usado al crear el catálogo',
-    tpInteger, '1');
-  RegistrarParametro('PrestaShop', 'appPrestaShopIdCategoriaRaiz',
-    'Identificador de la categoría raíz para crear familias',
-    tpInteger, '2');
-  RegistrarParametro('PrestaShop', 'appPrestaShopSegundosCiclo',
-    'Intervalo de recuperación de la cola (60 a 120 segundos)',
-    tpInteger, '60');
-  RegistrarParametro('PrestaShop',
-    'appPrestaShopHacerBarridoPeriodico',
-    'Hacer barrido periódicamente',
-    tpBoolean, 'False');
-  RegistrarParametro('PrestaShop', 'appPrestaShopHorasBarrido',
-    'Horas entre barridos completos de respaldo del catálogo web',
-    tpInteger, '24');
-  RegistrarParametro('PrestaShop', 'appPrestaShopMaxIntentos',
-    'Reintentos antes de marcar un envío como error definitivo',
-    tpInteger, '10');
+  InicializarParametrosPrestaShop;
   RegistrarParametro('', 'appRecuentoUrl',
     'URL histórica del servicio de recuentos', tpString, '');
   RegistrarParametro('', 'appRecuentoApiKey',

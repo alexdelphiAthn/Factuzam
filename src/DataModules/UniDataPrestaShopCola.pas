@@ -51,6 +51,10 @@ type
       const ACodigoArticulo, ACodigoUnidad: string;
       AEsPrecio, AEsStock: Boolean;
       const AUsuario: string);
+    procedure EncolarVisibilidad(
+      const ACodigoArticulo: string;
+      AAccion: TAccionVisibilidadPrestaShop;
+      const AUsuario: string);
     function LeerConfiguracionPerfil(
       const AUsuario, AGrupo: string): TConfiguracionGlobalPrestaShop;
     function DestinoSinConflictos(
@@ -72,6 +76,9 @@ type
       const AClaveInstalacion: string;
       AIdTienda: Integer;
       AMaximo: Integer): TArray<Int64>;
+    function TieneVisibilidadPendiente(
+      const AClaveInstalacion: string;
+      AIdTienda: Integer): Boolean;
     function MarcarProcesando(
       AIdCola: Int64;
       const AClaveInstalacion: string;
@@ -102,6 +109,7 @@ type
   end;
 
 const
+  CNivelesFamiliaAltaMaximo = 50;
   SQL_PRECIO_PRODUCTO =
     'SELECT CASE WHEN ((COALESCE(tp.PORCENTAJE_DTO_ARTTAR, 0) <> 0 ' +
     'OR COALESCE(tp.PRECIO_DTO_ARTTAR, 0) <> 0) AND ' +
@@ -271,6 +279,30 @@ const
     'WHERE emp_ok.CODIGO_EMP_EMP = :EMPRESA ' +
     'AND emp_ok.ESACTIVO_EMP = ''S'')';
 
+function AccionVisibilidadTexto(
+  AAccion: TAccionVisibilidadPrestaShop): string;
+begin
+  case AAccion of
+    avpActivar:
+      Result := 'A';
+    avpDesactivar:
+      Result := 'D';
+  else
+    Result := 'N';
+  end;
+end;
+
+function TextoAccionVisibilidad(
+  const AAccion: string): TAccionVisibilidadPrestaShop;
+begin
+  if SameText(Trim(AAccion), 'A') then
+    Result := avpActivar
+  else if SameText(Trim(AAccion), 'D') then
+    Result := avpDesactivar
+  else
+    Result := avpNinguna;
+end;
+
 constructor TRepositorioPrestaShopColaUniDAC.Create(
   AConexion: TUniConnection);
 begin
@@ -344,6 +376,34 @@ begin
     SolicitarProcesadoPrestaShop;
 end;
 
+procedure TRepositorioPrestaShopColaUniDAC.EncolarVisibilidad(
+  const ACodigoArticulo: string;
+  AAccion: TAccionVisibilidadPrestaShop;
+  const AUsuario: string);
+var
+  oConsulta: TUniQuery;
+begin
+  if Trim(ACodigoArticulo) = '' then
+    raise EArgumentException.Create(
+      'La visibilidad PrestaShop no identifica el artículo');
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      'CALL PRC_PRESTASHOP_ENCOLAR_VISIBILIDAD(' +
+      ':ARTICULO, :ACCION, :USUARIO)';
+    oConsulta.ParamByName('ARTICULO').AsString :=
+      Trim(ACodigoArticulo);
+    oConsulta.ParamByName('ACCION').AsString :=
+      AccionVisibilidadTexto(AAccion);
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  if not FConexion.InTransaction then
+    SolicitarProcesadoPrestaShop;
+end;
+
 function TRepositorioPrestaShopColaUniDAC.LeerConfiguracionPerfil(
   const AUsuario, AGrupo: string): TConfiguracionGlobalPrestaShop;
 var
@@ -365,6 +425,7 @@ begin
   Result.Cola.IdReglaIvaReducido := 2;
   Result.Cola.IdReglaIvaSuperreducido := 3;
   Result.Cola.IdReglaIvaExento := 0;
+  Result.Cola.NivelesFamiliaAlta := 0;
   oConsulta := NuevaConsulta;
   try
     oConsulta.SQL.Text :=
@@ -416,6 +477,8 @@ begin
         Result.Cola.IdReglaIvaSuperreducido := StrToIntDef(sValor, 3)
       else if SameText(sNombre, 'appPrestaShopReglaIvaExento') then
         Result.Cola.IdReglaIvaExento := StrToIntDef(sValor, 0)
+      else if SameText(sNombre, 'appPrestaShopNivelesFamiliaAlta') then
+        Result.Cola.NivelesFamiliaAlta := StrToIntDef(sValor, 0)
       else if SameText(sNombre, 'appPrestaShopSegundosCiclo') then
         Result.SegundosCiclo := StrToIntDef(sValor, 60)
       else if SameText(sNombre, 'appPrestaShopHorasBarrido') then
@@ -440,6 +503,10 @@ begin
     Result.HorasBarrido := 720;
   if Result.MaxIntentos < 1 then
     Result.MaxIntentos := 1;
+  if Result.Cola.NivelesFamiliaAlta < 0 then
+    Result.Cola.NivelesFamiliaAlta := 0;
+  if Result.Cola.NivelesFamiliaAlta > CNivelesFamiliaAltaMaximo then
+    Result.Cola.NivelesFamiliaAlta := CNivelesFamiliaAltaMaximo;
 end;
 
 function TRepositorioPrestaShopColaUniDAC.DestinoSinConflictos(
@@ -473,7 +540,8 @@ begin
       '''appPrestaShopReglaIvaNormal'', ' +
       '''appPrestaShopReglaIvaReducido'', ' +
       '''appPrestaShopReglaIvaSuperreducido'', ' +
-      '''appPrestaShopReglaIvaExento'')), ' +
+      '''appPrestaShopReglaIvaExento'', ' +
+      '''appPrestaShopNivelesFamiliaAlta'')), ' +
       'efectivos AS (' +
       'SELECT USUARIO, ' +
       'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
@@ -514,7 +582,10 @@ begin
       'THEN VALUE_USUPER END), ''3'') IVA_SUPERREDUCIDO, ' +
       'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
       '''appPrestaShopReglaIvaExento'' AND RN = 1 ' +
-      'THEN VALUE_USUPER END), ''0'') IVA_EXENTO ' +
+      'THEN VALUE_USUPER END), ''0'') IVA_EXENTO, ' +
+      'COALESCE(MAX(CASE WHEN SUBKEY_USUPER = ' +
+      '''appPrestaShopNivelesFamiliaAlta'' AND RN = 1 ' +
+      'THEN VALUE_USUPER END), ''0'') NIVELES_FAMILIA ' +
       'FROM candidatos GROUP BY USUARIO) ' +
       'SELECT COUNT(*) AS CONFLICTOS FROM efectivos E ' +
       'WHERE E.USUARIO <> :USUARIO ' +
@@ -539,6 +610,11 @@ begin
       'OR (TRIM(E.IVA_REDUCIDO) + 0) <> :IVA_REDUCIDO ' +
       'OR (TRIM(E.IVA_SUPERREDUCIDO) + 0) <> :IVA_SUPERREDUCIDO ' +
       'OR (TRIM(E.IVA_EXENTO) + 0) <> :IVA_EXENTO ' +
+      'OR LEAST(50, GREATEST(0, CASE WHEN ' +
+      'TRIM(E.NIVELES_FAMILIA) REGEXP ''^-?[0-9]+$'' AND ' +
+      'LENGTH(TRIM(E.NIVELES_FAMILIA)) <= 3 THEN ' +
+      'CAST(TRIM(E.NIVELES_FAMILIA) AS SIGNED) ELSE 0 END)) ' +
+      '<> :NIVELES_FAMILIA ' +
       'OR (UPPER(TRIM(E.SINCRONIZAR)) IN (''TRUE'', ''1'', ''S'')) ' +
       '<> :SINCRONIZAR OR ' +
       '(UPPER(TRIM(E.CREAR)) IN (''TRUE'', ''1'', ''S'')) <> :CREAR)';
@@ -563,6 +639,8 @@ begin
       AConfiguracion.Cola.IdReglaIvaSuperreducido;
     oConsulta.ParamByName('IVA_EXENTO').AsInteger :=
       AConfiguracion.Cola.IdReglaIvaExento;
+    oConsulta.ParamByName('NIVELES_FAMILIA').AsInteger :=
+      AConfiguracion.Cola.NivelesFamiliaAlta;
     oConsulta.ParamByName('SINCRONIZAR').AsInteger :=
       Ord(AConfiguracion.SincronizarStockPrecios);
     oConsulta.ParamByName('CREAR').AsInteger :=
@@ -621,17 +699,23 @@ begin
   try
     oConsulta.SQL.Text :=
       'UPDATE fza_prestashop_cola SET ' +
-      'ESTADO_PSCOLA = ''PENDIENTE'', ' +
+      'ESTADO_PSCOLA = CASE WHEN ACCION_VISIBILIDAD_PSCOLA ' +
+      'IN (''A'', ''D'') THEN ''PENDIENTE_VISIBILIDAD'' ' +
+      'WHEN ESCAMBIO_PRECIO_PSCOLA = ''S'' OR ' +
+      'ESCAMBIO_STOCK_PSCOLA = ''S'' THEN ''PENDIENTE'' ' +
+      'ELSE ''ENVIADA'' END, ' +
       'VERSION_RECLAMADA_PSCOLA = NULL, ' +
       'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
       'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
+      'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ''N'', ' +
       'ID_RECLAMACION_PSCOLA = NULL, ' +
       'INSTANTE_RECLAMACION_PSCOLA = NULL, ' +
       'INSTANTE_PROXIMO_INTENTO_PSCOLA = NULL, ' +
       'INSTANTE_MODIF = NOW() ' +
       'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
       'AND ID_TIENDA_PSCOLA = :TIENDA ' +
-      'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'') ' +
       'AND (INSTANTE_RECLAMACION_PSCOLA IS NULL OR ' +
       'INSTANTE_RECLAMACION_PSCOLA < ' +
       'DATE_SUB(NOW(), INTERVAL :MINUTOS MINUTE))';
@@ -695,7 +779,8 @@ begin
         'SELECT ID_PSCOLA FROM fza_prestashop_cola ' +
         'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
         'AND ID_TIENDA_PSCOLA = :TIENDA ' +
-        'AND ESTADO_PSCOLA = ''PENDIENTE'' ' +
+        'AND ESTADO_PSCOLA IN ' +
+        '(''PENDIENTE'', ''PENDIENTE_VISIBILIDAD'') ' +
         'AND (INSTANTE_PROXIMO_INTENTO_PSCOLA IS NULL OR ' +
         'INSTANTE_PROXIMO_INTENTO_PSCOLA <= NOW()) ' +
         'ORDER BY ID_PSCOLA LIMIT :MAXIMO';
@@ -720,6 +805,32 @@ begin
   end;
 end;
 
+function TRepositorioPrestaShopColaUniDAC.TieneVisibilidadPendiente(
+  const AClaveInstalacion: string;
+  AIdTienda: Integer): Boolean;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      'SELECT COUNT(*) AS NUMERO_FILAS ' +
+      'FROM fza_prestashop_cola ' +
+      'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
+      'AND ID_TIENDA_PSCOLA = :TIENDA ' +
+      'AND (ESTADO_PSCOLA = ''PROCESANDO_VISIBILIDAD'' ' +
+      'OR (ESTADO_PSCOLA = ''PENDIENTE_VISIBILIDAD'' ' +
+      'AND ACCION_VISIBILIDAD_PSCOLA IN (''A'', ''D'')))';
+    oConsulta.ParamByName('INSTALACION').AsString :=
+      AClaveInstalacion;
+    oConsulta.ParamByName('TIENDA').AsInteger := AIdTienda;
+    oConsulta.Open;
+    Result := oConsulta.FieldByName('NUMERO_FILAS').AsInteger > 0;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
 function TRepositorioPrestaShopColaUniDAC.MarcarProcesando(
   AIdCola: Int64;
   const AClaveInstalacion: string;
@@ -734,19 +845,24 @@ begin
   try
     oConsulta.SQL.Text :=
       'UPDATE fza_prestashop_cola SET ' +
-      'ESTADO_PSCOLA = ''PROCESANDO'', ' +
+      'ESTADO_PSCOLA = CASE WHEN ACCION_VISIBILIDAD_PSCOLA ' +
+      'IN (''A'', ''D'') THEN ''PROCESANDO_VISIBILIDAD'' ' +
+      'ELSE ''PROCESANDO'' END, ' +
       'VERSION_RECLAMADA_PSCOLA = VERSION_DESEADA_PSCOLA, ' +
       'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ' +
       'ESCAMBIO_PRECIO_PSCOLA, ' +
       'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ' +
       'ESCAMBIO_STOCK_PSCOLA, ' +
+      'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ' +
+      'ACCION_VISIBILIDAD_PSCOLA, ' +
       'ID_RECLAMACION_PSCOLA = :TOKEN, ' +
       'INSTANTE_RECLAMACION_PSCOLA = NOW(), ' +
       'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
       'WHERE ID_PSCOLA = :ID ' +
       'AND CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
       'AND ID_TIENDA_PSCOLA = :TIENDA ' +
-      'AND ESTADO_PSCOLA = ''PENDIENTE'' ' +
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PENDIENTE'', ''PENDIENTE_VISIBILIDAD'') ' +
       'AND (INSTANTE_PROXIMO_INTENTO_PSCOLA IS NULL OR ' +
       'INSTANTE_PROXIMO_INTENTO_PSCOLA <= NOW())';
     oConsulta.ParamByName('TOKEN').AsString := AToken;
@@ -931,6 +1047,7 @@ begin
       'c.VERSION_RECLAMADA_PSCOLA, ' +
       'c.ESCAMBIO_PRECIO_RECLAMADO_PSCOLA, ' +
       'c.ESCAMBIO_STOCK_RECLAMADO_PSCOLA, ' +
+      'c.ACCION_VISIBILIDAD_RECLAMADA_PSCOLA, ' +
       'c.ID_RECLAMACION_PSCOLA, a.ESWEB_ART, a.TIPO_ART, ' +
       'c.MENSAJE_ERROR_PSCOLA ' +
       'FROM fza_prestashop_cola c ' +
@@ -940,7 +1057,8 @@ begin
       'AND c.CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
       'AND c.ID_TIENDA_PSCOLA = :TIENDA ' +
       'AND c.ID_RECLAMACION_PSCOLA = :TOKEN ' +
-      'AND c.ESTADO_PSCOLA = ''PROCESANDO''';
+      'AND c.ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'')';
     oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
     oConsulta.ParamByName('INSTALACION').AsString :=
       AConfiguracion.ClaveInstalacion;
@@ -971,6 +1089,9 @@ begin
         'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA').AsString = 'S';
       Result.TieneStock := oConsulta.FieldByName(
         'ESCAMBIO_STOCK_RECLAMADO_PSCOLA').AsString = 'S';
+      Result.AccionVisibilidad := TextoAccionVisibilidad(
+        oConsulta.FieldByName(
+          'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA').AsString);
       Result.TieneStock := Result.TieneStock and
         AConfiguracion.StockActivo and
         (not Result.EsServicio);
@@ -1008,7 +1129,8 @@ begin
       'SET INSTANTE_RECLAMACION_PSCOLA = NOW() ' +
       'WHERE ID_PSCOLA = :ID ' +
       'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
-      'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'') ' +
       'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA';
     oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
     oConsulta.ParamByName('TOKEN').AsString := AToken;
@@ -1021,7 +1143,8 @@ begin
         'FROM fza_prestashop_cola ' +
         'WHERE ID_PSCOLA = :ID ' +
         'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
-        'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+        'AND ESTADO_PSCOLA IN ' +
+        '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'') ' +
         'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA';
       oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
       oConsulta.ParamByName('TOKEN').AsString := AToken;
@@ -1046,7 +1169,8 @@ begin
       'SET MENSAJE_ERROR_PSCOLA = :MARCA ' +
       'WHERE ID_PSCOLA = :ID ' +
       'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
-      'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'') ' +
       'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA';
     oConsulta.ParamByName('MARCA').AsString :=
       CMarcaReanudacionAltaPrestaShop;
@@ -1061,7 +1185,8 @@ begin
         'FROM fza_prestashop_cola ' +
         'WHERE ID_PSCOLA = :ID ' +
         'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
-        'AND ESTADO_PSCOLA = ''PROCESANDO'' ' +
+        'AND ESTADO_PSCOLA IN ' +
+        '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'') ' +
         'AND VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
         'AND MENSAJE_ERROR_PSCOLA = :MARCA';
       oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
@@ -1089,7 +1214,13 @@ begin
     oConsulta.SQL.Text :=
       'UPDATE fza_prestashop_cola SET ' +
       'ESTADO_PSCOLA = CASE WHEN VERSION_DESEADA_PSCOLA <> ' +
-      'VERSION_RECLAMADA_PSCOLA THEN ''PENDIENTE'' ' +
+      'VERSION_RECLAMADA_PSCOLA AND ACCION_VISIBILIDAD_PSCOLA ' +
+      'IN (''A'', ''D'') THEN ''PENDIENTE_VISIBILIDAD'' ' +
+      'WHEN VERSION_DESEADA_PSCOLA <> VERSION_RECLAMADA_PSCOLA ' +
+      'AND (ESCAMBIO_PRECIO_PSCOLA = ''S'' OR ' +
+      'ESCAMBIO_STOCK_PSCOLA = ''S'') THEN ''PENDIENTE'' ' +
+      'WHEN VERSION_DESEADA_PSCOLA <> VERSION_RECLAMADA_PSCOLA ' +
+      'THEN ''ENVIADA'' ' +
       'WHEN :PROGRAMAR = ''S'' THEN ''PENDIENTE'' ' +
       'ELSE ''ENVIADA'' END, ' +
       'ESCAMBIO_PRECIO_PSCOLA = CASE WHEN VERSION_DESEADA_PSCOLA = ' +
@@ -1100,6 +1231,9 @@ begin
       'ESCAMBIO_STOCK_PSCOLA = CASE WHEN VERSION_DESEADA_PSCOLA = ' +
       'VERSION_RECLAMADA_PSCOLA THEN ''N'' ' +
       'ELSE ESCAMBIO_STOCK_PSCOLA END, ' +
+      'ACCION_VISIBILIDAD_PSCOLA = CASE ' +
+      'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
+      'THEN ''N'' ELSE ACCION_VISIBILIDAD_PSCOLA END, ' +
       'CONTADOR_INTENTOS_PSCOLA = 0, ' +
       'INSTANTE_PROXIMO_INTENTO_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA <> VERSION_RECLAMADA_PSCOLA ' +
@@ -1114,12 +1248,14 @@ begin
       'VERSION_RECLAMADA_PSCOLA = NULL, ' +
       'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
       'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
+      'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ''N'', ' +
       'ID_RECLAMACION_PSCOLA = NULL, ' +
       'INSTANTE_RECLAMACION_PSCOLA = NULL, ' +
       'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
       'WHERE ID_PSCOLA = :ID ' +
       'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
-      'AND ESTADO_PSCOLA = ''PROCESANDO''';
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'')';
     oConsulta.ParamByName('USUARIO').AsString := AUsuario;
     if ATieneProximoPrecio then
       oConsulta.ParamByName('PROGRAMAR').AsString := 'S'
@@ -1156,8 +1292,12 @@ begin
     oConsulta.SQL.Text :=
       'UPDATE fza_prestashop_cola SET ' +
       'ESTADO_PSCOLA = CASE WHEN VERSION_DESEADA_PSCOLA = ' +
-      'VERSION_RECLAMADA_PSCOLA THEN :ESTADO ' +
-      'ELSE ''PENDIENTE'' END, ' +
+      'VERSION_RECLAMADA_PSCOLA AND :ESTADO = ''ERROR'' ' +
+      'THEN ''ERROR'' WHEN ACCION_VISIBILIDAD_PSCOLA ' +
+      'IN (''A'', ''D'') THEN ''PENDIENTE_VISIBILIDAD'' ' +
+      'WHEN ESCAMBIO_PRECIO_PSCOLA = ''S'' OR ' +
+      'ESCAMBIO_STOCK_PSCOLA = ''S'' THEN ''PENDIENTE'' ' +
+      'ELSE ''ENVIADA'' END, ' +
       'CONTADOR_INTENTOS_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
       'AND :ESTADO = ''ERROR'' AND :ESPERA = 0 ' +
@@ -1176,12 +1316,14 @@ begin
       'VERSION_RECLAMADA_PSCOLA = NULL, ' +
       'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
       'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
+      'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ''N'', ' +
       'ID_RECLAMACION_PSCOLA = NULL, ' +
       'INSTANTE_RECLAMACION_PSCOLA = NULL, ' +
       'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
       'WHERE ID_PSCOLA = :ID ' +
       'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
-      'AND ESTADO_PSCOLA = ''PROCESANDO''';
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'')';
     oConsulta.ParamByName('ESTADO').AsString := AEstado;
     oConsulta.ParamByName('ESPERA').AsInteger := AEsperaSegundos;
     oConsulta.ParamByName('MENSAJE').AsMemo := AMensaje;

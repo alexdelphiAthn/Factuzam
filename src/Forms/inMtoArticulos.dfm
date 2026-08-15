@@ -267,6 +267,7 @@
               Top = 95
               DataBinding.DataField = 'CODIGO_FAM_ART'
               DataBinding.DataSource = dsTablaG
+              Properties.AllowDropDownWhenReadOnly = False
               Properties.KeyFieldNames = 'CODIGO_FAM_FAM'
               Properties.ListColumns = <
                 item
@@ -280,9 +281,33 @@
                   FieldName = 'NOMBRE_FAM_FAM'
                 end>
               Properties.ListOptions.ShowHeader = False
+              Properties.ReadOnly = True
               Properties.OnEditValueChanged = cbbFamiliaPropertiesEditValueChanged
+              ShowHint = True
               TabOrder = 6
               Width = 322
+            end
+            object btnSeleccionarFamilia: TcxButton
+              Left = 428
+              Top = 94
+              Width = 34
+              Height = 24
+              Hint = 'Seleccionar familia en '#225'rbol'
+              Caption = '...'
+              ShowHint = True
+              TabOrder = 7
+              OnClick = btnSeleccionarFamiliaClick
+            end
+            object btnQuitarFamilia: TcxButton
+              Left = 468
+              Top = 94
+              Width = 34
+              Height = 24
+              Hint = 'Quitar familia'
+              Caption = 'X'
+              ShowHint = True
+              TabOrder = 8
+              OnClick = btnQuitarFamiliaClick
             end
             object lblFamilia: TcxLabel
               Left = 33
@@ -293,7 +318,7 @@
               Margins.Bottom = 4
               Caption = 'Familia'
               Properties.Alignment.Horz = taRightJustify
-              TabOrder = 7
+              TabOrder = 9
               Transparent = True
               AnchorX = 90
             end
@@ -302,7 +327,7 @@
               Top = 128
               DataBinding.DataField = 'DESCRIPCION_FAM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 8
+              TabOrder = 10
               Transparent = True
               Height = 21
               Width = 538
@@ -312,7 +337,7 @@
               Top = 128
               DataBinding.DataField = 'NOMBRE_FAM_FAM'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 9
+              TabOrder = 11
               Transparent = True
               Height = 21
               Width = 274

@@ -4,13 +4,8 @@
 {    Tipo:       Formulario (Modal)                                            }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Selector jerarquico de familias. Se invoca desde la sesion de compra      }
-{    (Compras-Sesiones -> Lineas -> columna Codigo articulo, tecla F3) y       }
-{    devuelve el CODIGO_FAM_FAM elegido.                                       }
-{                                                                              }
-{    Al pegarlo al codigo tentativo de la linea, el BeforePost de              }
-{    UniDataComprasSesiones invoca ResolverCodigoFamilia y expande al          }
-{    siguiente codigo de la serie.                                             }
+{    Selector jerarquico y reutilizable de familias. Devuelve el codigo y el  }
+{    nombre de la familia elegida.                                             }
 {******************************************************************************}
 unit inMtoModalSelFamilia;
 
@@ -57,6 +52,7 @@ type
   private
     FCodigoFamilia : string;
     FNombreFamilia : string;
+    FCodigoFamiliaInicial: string;
     FRepositorio: IRepositorioSeleccionFamilia;
     FConsulta: IConsultaSeleccionFamilia;
     FFamilias: TDataSet;
@@ -64,6 +60,8 @@ type
   public
     property CodigoFamilia : string read FCodigoFamilia;
     property NombreFamilia : string read FNombreFamilia;
+    property CodigoFamiliaInicial: string read FCodigoFamiliaInicial
+      write FCodigoFamiliaInicial;
   end;
 
 implementation
@@ -90,10 +88,19 @@ begin
 end;
 
 procedure TfrmModalSelFamilia.FormShow(Sender: TObject);
+var
+  oNodo: TcxTreeListNode;
 begin
   inherited;
   AplicarFiltro;
-  if txtFiltro.CanFocus then txtFiltro.SetFocus;
+  if FCodigoFamiliaInicial <> '' then
+  begin
+    oNodo := tlFamilias.FindNodeByKeyValue(FCodigoFamiliaInicial);
+    if oNodo <> nil then
+      tlFamilias.FocusedNode := oNodo;
+  end;
+  if txtFiltro.CanFocus then
+    txtFiltro.SetFocus;
 end;
 
 procedure TfrmModalSelFamilia.FormClose(Sender: TObject;
@@ -104,7 +111,7 @@ begin
   FFamilias := nil;
   FConsulta := nil;
   FRepositorio := nil;
-  Action := caFree;
+  Action := caHide;
 end;
 
 procedure TfrmModalSelFamilia.AplicarFiltro;

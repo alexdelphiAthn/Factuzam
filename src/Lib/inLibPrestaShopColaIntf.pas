@@ -24,6 +24,11 @@ const
   CMarcaReanudacionAltaPrestaShop = '[ALTA_PRESTASHOP] ';
 
 type
+  TAccionVisibilidadPrestaShop = (
+    avpNinguna,
+    avpActivar,
+    avpDesactivar);
+
   TConfiguracionPrestaShopCola = record
     ClaveInstalacion: string;
     CodigoEmpresa: string;
@@ -35,6 +40,7 @@ type
     IdReglaIvaReducido: Integer;
     IdReglaIvaSuperreducido: Integer;
     IdReglaIvaExento: Integer;
+    NivelesFamiliaAlta: Integer;
     StockActivo: Boolean;
   end;
 
@@ -68,6 +74,7 @@ type
     VersionReclamada: Int64;
     CodigoArticulo: string;
     Token: string;
+    AccionVisibilidad: TAccionVisibilidadPrestaShop;
     EstaEnWeb: Boolean;
     EsServicio: Boolean;
     TienePrecio: Boolean;
@@ -85,6 +92,10 @@ type
     procedure EncolarCambio(
       const ACodigoArticulo, ACodigoUnidad: string;
       AEsPrecio, AEsStock: Boolean;
+      const AUsuario: string);
+    procedure EncolarVisibilidad(
+      const ACodigoArticulo: string;
+      AAccion: TAccionVisibilidadPrestaShop;
       const AUsuario: string);
     function LeerConfiguracionPerfil(
       const AUsuario, AGrupo: string): TConfiguracionGlobalPrestaShop;
@@ -107,6 +118,9 @@ type
       const AClaveInstalacion: string;
       AIdTienda: Integer;
       AMaximo: Integer): TArray<Int64>;
+    function TieneVisibilidadPendiente(
+      const AClaveInstalacion: string;
+      AIdTienda: Integer): Boolean;
     function MarcarProcesando(
       AIdCola: Int64;
       const AClaveInstalacion: string;

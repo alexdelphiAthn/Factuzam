@@ -53,6 +53,12 @@
               Options.Editing = False
               Width = 88
             end
+            object colAccionVisibilidad: TcxGridDBColumn
+              Caption = 'Visibilidad pend.'
+              DataBinding.FieldName = 'VISIBILIDAD_PENDIENTE'
+              Options.Editing = False
+              Width = 110
+            end
             object colPrecioReclamado: TcxGridDBColumn
               Caption = 'Precio proc.'
               DataBinding.FieldName =
@@ -73,6 +79,13 @@
               Options.Editing = False
               Visible = False
               Width = 88
+            end
+            object colAccionVisibilidadReclamada: TcxGridDBColumn
+              Caption = 'Visibilidad proc.'
+              DataBinding.FieldName = 'VISIBILIDAD_RECLAMADA'
+              Options.Editing = False
+              Visible = False
+              Width = 110
             end
             object colEstado: TcxGridDBColumn
               Caption = 'Estado'

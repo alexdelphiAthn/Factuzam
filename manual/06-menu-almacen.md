@@ -217,11 +217,17 @@ analizar solo artículos cuya primera compra sea posterior a una fecha. El
 informe calcula ventas, coste, beneficio y dos márgenes: margen sobre lo
 vendido y margen considerando toda la compra como gasto.
 
+En **Agrupaciones** puede elegir **Color** en cualquiera de los tres niveles.
+Al hacerlo, cada artículo se desglosa en una fila por color —las tallas del
+mismo color permanecen consolidadas— y los importes, costes y márgenes se
+calculan para ese color. Sin seleccionar Color se mantiene el total agregado
+del artículo.
+
 Columnas del informe:
 
 | Columna | Qué indica |
 |---------|------------|
-| **Artículo** | Código y descripción del artículo. Si se agrupa por almacén, un mismo artículo puede aparecer en varios bloques de almacén. |
+| **Artículo** | Código y descripción del artículo. Al agrupar por Color también muestra el color de cada fila; si se agrupa por almacén, un mismo artículo puede aparecer en varios bloques de almacén. |
 | **Uni.Ent.** | Unidades compradas o entradas del artículo. Se toman de los movimientos de entrada de compra/albarán de entrada. |
 | **Imp.Ent.** | Importe de coste de esas entradas. Es el valor comprado, no el precio de venta. |
 | **Uds Vta** | Unidades vendidas dentro del periodo **Desde / Hasta** indicado en el filtro. |

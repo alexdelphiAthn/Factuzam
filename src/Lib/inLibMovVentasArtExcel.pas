@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Exportación a Excel del informe "Movimientos de ventas por artículos y    }
-{    fechas". Una fila por artículo con las magnitudes de compra y venta del   }
+{    fechas". Una fila por artículo/color cuando hay color, con las magnitudes }
 {    periodo y los dos márgenes. Si el SP devuelve agrupaciones (GRUPO1..3),   }
 {    dibuja una cabecera por grupo y una línea de TOTAL por corte (sumas de    }
 {    las magnitudes base y porcentajes/márgenes recalculados a partir de esas  }
@@ -311,10 +311,19 @@ begin
 end;
 
 procedure TExportadorMovVentasArt.EscribirDetalle;
+var
+  sArticulo: string;
+  sColor: string;
 begin
-  EscribirValor(COL_ART,
-    FDatos.FieldByName('CODIGO_ART_ART').AsString + '  ' +
-    FDatos.FieldByName('DESCRIPCION_ART').AsString);
+  sArticulo := FDatos.FieldByName('CODIGO_ART_ART').AsString;
+  sColor := Trim(CampoTexto('COLOR_ETIQUETA'));
+  if sColor = '' then
+    sColor := Trim(CampoTexto('COLOR'));
+  if sColor <> '' then
+    sArticulo := sArticulo + '  Color: ' + sColor;
+  sArticulo := sArticulo + '  ' +
+    FDatos.FieldByName('DESCRIPCION_ART').AsString;
+  EscribirValor(COL_ART, sArticulo);
   EscribirNumero(COL_UNIENT,
     FDatos.FieldByName('UNI_ENT_TOT').AsFloat, FMT_NUM, True);
   EscribirNumero(COL_IMPENT,
@@ -413,7 +422,7 @@ begin
     FFila := 1;
     EscribirValor(
       COL_ART,
-      'MOVIMIENTOS DE VENTAS POR ARTICULOS Y FECHAS',
+      'MOVIMIENTOS DE VENTAS POR ARTÍCULOS Y FECHAS',
       True);
     FFormateador.TamanoFuente(FFila, COL_ART, 14);
     Inc(FFila, 2);

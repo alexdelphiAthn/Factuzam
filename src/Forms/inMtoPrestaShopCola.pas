@@ -30,8 +30,10 @@ type
     colNombreArticulo: TcxGridDBColumn;
     colCambioPrecio: TcxGridDBColumn;
     colCambioStock: TcxGridDBColumn;
+    colAccionVisibilidad: TcxGridDBColumn;
     colPrecioReclamado: TcxGridDBColumn;
     colStockReclamado: TcxGridDBColumn;
+    colAccionVisibilidadReclamada: TcxGridDBColumn;
     colEstado: TcxGridDBColumn;
     colIntentos: TcxGridDBColumn;
     colProximoIntento: TcxGridDBColumn;

@@ -1,0 +1,518 @@
+*** Begin Patch
+*** Update File: C:\DISCO_DURO\proyectos\factuzam_web\DESARROLLOS EN CURSO\prestashop_cola.sql
+@@
+        'ESCAMBIO_PRECIO_PSCOLA',
+        'ESCAMBIO_STOCK_PSCOLA',
++       'ACCION_VISIBILIDAD_PSCOLA',
+        'VERSION_DESEADA_PSCOLA',
+@@
+        'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA',
+        'ESCAMBIO_STOCK_RECLAMADO_PSCOLA',
++       'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA',
+@@
+      )
+ );
++SET @sColumnasBase := (
++  SELECT COUNT(*)
++    FROM INFORMATION_SCHEMA.COLUMNS
++   WHERE TABLE_SCHEMA = DATABASE()
++     AND TABLE_NAME = 'fza_prestashop_cola'
++     AND COLUMN_NAME IN (
++       'ID_PSCOLA',
++       'CLAVE_INSTALACION_PSCOLA',
++       'ID_TIENDA_PSCOLA',
++       'CODIGO_ART_PSCOLA',
++       'ESCAMBIO_PRECIO_PSCOLA',
++       'ESCAMBIO_STOCK_PSCOLA',
++       'VERSION_DESEADA_PSCOLA',
++       'VERSION_RECLAMADA_PSCOLA',
++       'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA',
++       'ESCAMBIO_STOCK_RECLAMADO_PSCOLA',
++       'ESTADO_PSCOLA',
++       'CONTADOR_INTENTOS_PSCOLA',
++       'INSTANTE_PROXIMO_INTENTO_PSCOLA',
++       'ID_RECLAMACION_PSCOLA',
++       'INSTANTE_RECLAMACION_PSCOLA',
++       'MENSAJE_ERROR_PSCOLA',
++       'INSTANTE_ULTIMO_CAMBIO_PSCOLA',
++       'INSTANTE_ULTIMO_ENVIO_PSCOLA',
++       'INSTANTE_ALTA',
++       'USUARIO_ALTA',
++       'INSTANTE_MODIF',
++       'USUARIO_MODIF'
++     )
++);
+ SET @sColaCompatible := IF(
+   @sExisteCola = 0,
+   1,
+-  IF(@sColumnasCola = 22 AND @sColumnasCompatibles = 22, 1, 0)
++  IF(@sColumnasBase = 22 AND
++     @sColumnasCompatibles = @sColumnasCola, 1, 0)
+ );
+@@
+   ESCAMBIO_PRECIO_PSCOLA varchar(1) NOT NULL DEFAULT 'N',
+   ESCAMBIO_STOCK_PSCOLA varchar(1) NOT NULL DEFAULT 'N',
++  ACCION_VISIBILIDAD_PSCOLA char(1) NOT NULL DEFAULT 'N',
+   VERSION_DESEADA_PSCOLA bigint(20) unsigned NOT NULL DEFAULT 1,
+@@
+   ESCAMBIO_PRECIO_RECLAMADO_PSCOLA varchar(1) NOT NULL DEFAULT 'N',
+   ESCAMBIO_STOCK_RECLAMADO_PSCOLA varchar(1) NOT NULL DEFAULT 'N',
++  ACCION_VISIBILIDAD_RECLAMADA_PSCOLA char(1) NOT NULL DEFAULT 'N',
+-  ESTADO_PSCOLA varchar(20) NOT NULL DEFAULT 'PENDIENTE',
++  ESTADO_PSCOLA varchar(30) NOT NULL DEFAULT 'PENDIENTE',
+@@
+ ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
+   COLLATE=utf8mb4_spanish_ci;
++SET @sExisteColumna := (
++  SELECT COUNT(*)
++    FROM INFORMATION_SCHEMA.COLUMNS
++   WHERE TABLE_SCHEMA = DATABASE()
++     AND TABLE_NAME = 'fza_prestashop_cola'
++     AND COLUMN_NAME = 'ACCION_VISIBILIDAD_PSCOLA'
++);
++SET @sSql := IF(
++  @sExisteColumna = 0,
++  'ALTER TABLE fza_prestashop_cola
++     ADD COLUMN ACCION_VISIBILIDAD_PSCOLA char(1) NOT NULL DEFAULT ''N''
++     AFTER ESCAMBIO_STOCK_PSCOLA',
++  'SELECT ''ACCION_VISIBILIDAD_PSCOLA ya existe'' AS info'
++);
++PREPARE stmt FROM @sSql;
++EXECUTE stmt;
++DEALLOCATE PREPARE stmt;
++SET @sExisteColumna := (
++  SELECT COUNT(*)
++    FROM INFORMATION_SCHEMA.COLUMNS
++   WHERE TABLE_SCHEMA = DATABASE()
++     AND TABLE_NAME = 'fza_prestashop_cola'
++     AND COLUMN_NAME = 'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA'
++);
++SET @sSql := IF(
++  @sExisteColumna = 0,
++  'ALTER TABLE fza_prestashop_cola
++     ADD COLUMN ACCION_VISIBILIDAD_RECLAMADA_PSCOLA char(1)
++       NOT NULL DEFAULT ''N''
++     AFTER ESCAMBIO_STOCK_RECLAMADO_PSCOLA',
++  'SELECT ''ACCION_VISIBILIDAD_RECLAMADA_PSCOLA ya existe'' AS info'
++);
++PREPARE stmt FROM @sSql;
++EXECUTE stmt;
++DEALLOCATE PREPARE stmt;
++UPDATE fza_prestashop_cola
++   SET ACCION_VISIBILIDAD_PSCOLA = 'N'
++ WHERE ACCION_VISIBILIDAD_PSCOLA IS NULL
++    OR ACCION_VISIBILIDAD_PSCOLA NOT IN ('N', 'A', 'D');
++UPDATE fza_prestashop_cola
++   SET ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = 'N'
++ WHERE ACCION_VISIBILIDAD_RECLAMADA_PSCOLA IS NULL
++    OR ACCION_VISIBILIDAD_RECLAMADA_PSCOLA NOT IN ('N', 'A', 'D');
++ALTER TABLE fza_prestashop_cola
++  MODIFY COLUMN ACCION_VISIBILIDAD_PSCOLA char(1)
++    NOT NULL DEFAULT 'N' AFTER ESCAMBIO_STOCK_PSCOLA,
++  MODIFY COLUMN ACCION_VISIBILIDAD_RECLAMADA_PSCOLA char(1)
++    NOT NULL DEFAULT 'N' AFTER ESCAMBIO_STOCK_RECLAMADO_PSCOLA,
++  MODIFY COLUMN ESTADO_PSCOLA varchar(30)
++    NOT NULL DEFAULT 'PENDIENTE';
+ SET @sExisteIndice := (
+@@
+       VERSION_DESEADA_PSCOLA = VERSION_DESEADA_PSCOLA + 1,
+       CONTADOR_INTENTOS_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO', CONTADOR_INTENTOS_PSCOLA, 0),
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        CONTADOR_INTENTOS_PSCOLA, 0),
+       INSTANTE_PROXIMO_INTENTO_PSCOLA = NULL,
+-      MENSAJE_ERROR_PSCOLA = NULL,
++      MENSAJE_ERROR_PSCOLA = IF(
++        LEFT(COALESCE(MENSAJE_ERROR_PSCOLA, ''), 18) =
++          '[ALTA_PRESTASHOP] ',
++        MENSAJE_ERROR_PSCOLA, NULL),
+       VERSION_RECLAMADA_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO', VERSION_RECLAMADA_PSCOLA, NULL),
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        VERSION_RECLAMADA_PSCOLA, NULL),
+       ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO',
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+         ESCAMBIO_PRECIO_RECLAMADO_PSCOLA, 'N'),
+       ESCAMBIO_STOCK_RECLAMADO_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO',
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+         ESCAMBIO_STOCK_RECLAMADO_PSCOLA, 'N'),
++      ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        ACCION_VISIBILIDAD_RECLAMADA_PSCOLA, 'N'),
+       ID_RECLAMACION_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO', ID_RECLAMACION_PSCOLA, NULL),
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        ID_RECLAMACION_PSCOLA, NULL),
+       INSTANTE_RECLAMACION_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO', INSTANTE_RECLAMACION_PSCOLA, NULL),
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        INSTANTE_RECLAMACION_PSCOLA, NULL),
+       ESTADO_PSCOLA = IF(
+-        ESTADO_PSCOLA = 'PROCESANDO', 'PROCESANDO', 'PENDIENTE'),
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        IF(ESTADO_PSCOLA = 'PROCESANDO_VISIBILIDAD' OR
++           ACCION_VISIBILIDAD_PSCOLA IN ('A', 'D'),
++          'PROCESANDO_VISIBILIDAD', 'PROCESANDO'),
++        IF(ACCION_VISIBILIDAD_PSCOLA IN ('A', 'D'),
++          'PENDIENTE_VISIBILIDAD', 'PENDIENTE')),
+@@
+          C.VERSION_RECLAMADA_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.VERSION_RECLAMADA_PSCOLA, NULL),
+          C.ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.ESCAMBIO_PRECIO_RECLAMADO_PSCOLA, 'N'),
+          C.ESCAMBIO_STOCK_RECLAMADO_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.ESCAMBIO_STOCK_RECLAMADO_PSCOLA, 'N'),
++         C.ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = IF(
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++           C.ACCION_VISIBILIDAD_RECLAMADA_PSCOLA, 'N'),
+          C.CONTADOR_INTENTOS_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.CONTADOR_INTENTOS_PSCOLA, 0),
+          C.INSTANTE_PROXIMO_INTENTO_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.INSTANTE_PROXIMO_INTENTO_PSCOLA, NULL),
+          C.ID_RECLAMACION_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.ID_RECLAMACION_PSCOLA, NULL),
+          C.INSTANTE_RECLAMACION_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
+            C.INSTANTE_RECLAMACION_PSCOLA, NULL),
+          C.MENSAJE_ERROR_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
+-           C.MENSAJE_ERROR_PSCOLA, NULL),
++           LEFT(COALESCE(C.MENSAJE_ERROR_PSCOLA, ''), 18) =
++             '[ALTA_PRESTASHOP] ',
++           C.MENSAJE_ERROR_PSCOLA, NULL),
+          C.ESTADO_PSCOLA = IF(
+-           C.ESTADO_PSCOLA = 'PROCESANDO',
+-           'PROCESANDO', 'ENVIADA'),
++           C.ESTADO_PSCOLA IN
++             ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++           C.ESTADO_PSCOLA, 'ENVIADA'),
+@@
+    WHERE ((v_peticion_precio = 'N' AND v_peticion_stock = 'N')
+-      OR COALESCE(A.ESWEB_ART, 'N') <> 'S';
++      OR COALESCE(A.ESWEB_ART, 'N') <> 'S')
++     AND C.ACCION_VISIBILIDAD_PSCOLA = 'N';
+@@
+ END ;;
+ DELIMITER ;
+ 
++DELIMITER ;;
++CREATE OR REPLACE PROCEDURE PRC_PRESTASHOP_ENCOLAR_VISIBILIDAD(
++  IN p_CODIGO_ART varchar(20),
++  IN p_ACCION varchar(1),
++  IN p_USUARIO varchar(200)
++)
++BEGIN
++  DECLARE v_accion char(1);
++  DECLARE v_api_key varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_cancelacion_local char(1) DEFAULT 'N';
++  DECLARE v_clave char(64);
++  DECLARE v_codigo_art varchar(20) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_crear char(1) DEFAULT 'N';
++  DECLARE v_crear_texto varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_empresa varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_es_precio char(1) DEFAULT 'N';
++  DECLARE v_es_stock char(1) DEFAULT 'N';
++  DECLARE v_es_usuario char(1) DEFAULT 'N';
++  DECLARE v_esweb char(1) DEFAULT 'N';
++  DECLARE v_existe_articulo int DEFAULT 0;
++  DECLARE v_grupo varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_sincronizar char(1) DEFAULT 'N';
++  DECLARE v_sincronizar_texto varchar(200)
++    COLLATE utf8mb4_spanish_ci;
++  DECLARE v_tarifa varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_tienda int DEFAULT 1;
++  DECLARE v_tienda_texto varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_url varchar(200) COLLATE utf8mb4_spanish_ci;
++  DECLARE v_usuario_auditoria varchar(50)
++    COLLATE utf8mb4_spanish_ci;
++  DECLARE v_usuario_perfil varchar(200) COLLATE utf8mb4_spanish_ci;
++
++  SET v_codigo_art = NULLIF(TRIM(p_CODIGO_ART), '');
++  SET v_accion = UPPER(TRIM(COALESCE(p_ACCION, 'N')));
++  IF v_codigo_art IS NULL THEN
++    SIGNAL SQLSTATE '45000'
++      SET MESSAGE_TEXT =
++        'La visibilidad PrestaShop no identifica el articulo';
++  END IF;
++  IF v_accion NOT IN ('N', 'A', 'D') THEN
++    SIGNAL SQLSTATE '45000'
++      SET MESSAGE_TEXT = 'Accion de visibilidad PrestaShop no valida';
++  END IF;
++
++  SELECT COUNT(*), COALESCE(MAX(A.ESWEB_ART), 'N')
++    INTO v_existe_articulo, v_esweb
++    FROM fza_articulos A
++   WHERE A.CODIGO_ART_ART = v_codigo_art;
++  IF v_existe_articulo = 0 THEN
++    SIGNAL SQLSTATE '45000'
++      SET MESSAGE_TEXT = 'No existe el articulo indicado para PrestaShop';
++  END IF;
++  IF v_esweb = 'S' AND v_accion = 'D' THEN
++    SET v_accion = 'N';
++  END IF;
++  IF v_esweb <> 'S' AND v_accion = 'A' THEN
++    SET v_accion = 'N';
++  END IF;
++  IF v_esweb <> 'S' AND v_accion = 'N' THEN
++    SET v_cancelacion_local = 'S';
++    UPDATE fza_prestashop_cola
++       SET ESCAMBIO_PRECIO_PSCOLA = 'N',
++           ESCAMBIO_STOCK_PSCOLA = 'N',
++           ACCION_VISIBILIDAD_PSCOLA = 'N',
++           VERSION_DESEADA_PSCOLA = VERSION_DESEADA_PSCOLA + 1,
++           VERSION_RECLAMADA_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             VERSION_RECLAMADA_PSCOLA, NULL),
++           ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             ESCAMBIO_PRECIO_RECLAMADO_PSCOLA, 'N'),
++           ESCAMBIO_STOCK_RECLAMADO_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             ESCAMBIO_STOCK_RECLAMADO_PSCOLA, 'N'),
++           ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             ACCION_VISIBILIDAD_RECLAMADA_PSCOLA, 'N'),
++           CONTADOR_INTENTOS_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             CONTADOR_INTENTOS_PSCOLA, 0),
++           INSTANTE_PROXIMO_INTENTO_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             INSTANTE_PROXIMO_INTENTO_PSCOLA, NULL),
++           ID_RECLAMACION_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             ID_RECLAMACION_PSCOLA, NULL),
++           INSTANTE_RECLAMACION_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             INSTANTE_RECLAMACION_PSCOLA, NULL),
++           MENSAJE_ERROR_PSCOLA = IF(
++             LEFT(COALESCE(MENSAJE_ERROR_PSCOLA, ''), 18) =
++               '[ALTA_PRESTASHOP] ',
++             MENSAJE_ERROR_PSCOLA, NULL),
++           ESTADO_PSCOLA = IF(
++             ESTADO_PSCOLA IN
++               ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++             ESTADO_PSCOLA, 'ENVIADA'),
++           INSTANTE_ULTIMO_CAMBIO_PSCOLA = NOW(),
++           INSTANTE_MODIF = NOW(),
++           USUARIO_MODIF = LEFT(COALESCE(
++             NULLIF(TRIM(p_USUARIO), ''), 'PRESTASHOP'), 50)
++     WHERE CODIGO_ART_PSCOLA = v_codigo_art;
++  END IF;
++
++  SET v_usuario_perfil = TRIM(COALESCE(p_USUARIO, ''));
++  SET v_usuario_auditoria = LEFT(COALESCE(
++    NULLIF(v_usuario_perfil, ''), 'PRESTASHOP'), 50);
++  SELECT MAX(U.GRUPO_USU), IF(COUNT(*) > 0, 'S', 'N')
++    INTO v_grupo, v_es_usuario
++    FROM fza_usuarios U
++   WHERE U.USUARIO_USU = v_usuario_perfil
++     COLLATE utf8mb4_spanish_ci
++     AND U.ESACTIVO_USU = 'S';
++  IF v_es_usuario <> 'S' THEN
++    SET v_usuario_perfil = '';
++    SET v_grupo = '';
++  END IF;
++
++  SELECT
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER = 'appPrestaShopUrl'
++      AND R.RN = 1 THEN TRIM(R.VALUE_USUPER) END), ''),
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER = 'appPrestaShopApiKey'
++      AND R.RN = 1 THEN TRIM(R.VALUE_USUPER) END), ''),
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER = 'appPrestaShopIdTienda'
++      AND R.RN = 1 THEN TRIM(R.VALUE_USUPER) END), '1'),
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER =
++      'appPrestaShopSincronizarStockPrecios' AND R.RN = 1
++      THEN TRIM(R.VALUE_USUPER) END), 'False'),
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER =
++      'appPrestaShopCrearArticulos' AND R.RN = 1
++      THEN TRIM(R.VALUE_USUPER) END), 'False'),
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER = 'appPrestaShopEmpresa'
++      AND R.RN = 1 THEN TRIM(R.VALUE_USUPER) END), '1'),
++    COALESCE(MAX(CASE WHEN R.SUBKEY_USUPER = 'appPrestaShopTarifa'
++      AND R.RN = 1 THEN TRIM(R.VALUE_USUPER) END), 'PVP')
++    INTO v_url, v_api_key, v_tienda_texto,
++         v_sincronizar_texto, v_crear_texto, v_empresa, v_tarifa
++    FROM (
++      SELECT P.SUBKEY_USUPER, P.VALUE_USUPER,
++             ROW_NUMBER() OVER (
++               PARTITION BY P.SUBKEY_USUPER
++               ORDER BY CASE P.USUARIO_GRUPO_USUPER
++                 WHEN v_usuario_perfil COLLATE utf8mb4_spanish_ci THEN 1
++                 WHEN v_grupo COLLATE utf8mb4_spanish_ci THEN 2
++                 ELSE 3 END) AS RN
++        FROM fza_usuarios_perfiles P
++       WHERE P.KEY_USUPER = 'frmMtoAppParam'
++         AND P.SUBKEY_USUPER IN (
++           'appPrestaShopUrl',
++           'appPrestaShopApiKey',
++           'appPrestaShopIdTienda',
++           'appPrestaShopSincronizarStockPrecios',
++           'appPrestaShopCrearArticulos',
++           'appPrestaShopEmpresa',
++           'appPrestaShopTarifa')
++         AND (P.USUARIO_GRUPO_USUPER =
++                'Todos' COLLATE utf8mb4_spanish_ci OR
++           (v_es_usuario = 'S' AND
++            (P.USUARIO_GRUPO_USUPER = v_usuario_perfil
++               COLLATE utf8mb4_spanish_ci OR
++             P.USUARIO_GRUPO_USUPER = v_grupo
++               COLLATE utf8mb4_spanish_ci)))
++    ) R;
++
++  SET v_url = TRIM(TRAILING '/' FROM TRIM(v_url));
++  IF TRIM(v_tienda_texto) REGEXP '^[+]?[0-9]+$' AND
++     LENGTH(TRIM(v_tienda_texto)) <= 10 AND
++     CAST(TRIM(v_tienda_texto) AS unsigned) <= 2147483647 THEN
++    SET v_tienda = CAST(TRIM(v_tienda_texto) AS signed);
++  ELSE
++    SET v_tienda = 0;
++  END IF;
++  SET v_sincronizar = IF(
++    UPPER(TRIM(v_sincronizar_texto)) IN ('TRUE', '1', 'S'),
++    'S', 'N');
++  SET v_crear = IF(
++    UPPER(TRIM(v_crear_texto)) IN ('TRUE', '1', 'S'),
++    'S', 'N');
++  IF v_esweb = 'S' THEN
++    SET v_es_precio = IF(
++      v_sincronizar = 'S' OR
++      (v_accion <> 'A' AND v_crear = 'S'), 'S', 'N');
++    SET v_es_stock = IF(v_sincronizar = 'S', 'S', 'N');
++  ELSE
++    SET v_es_precio = 'N';
++    SET v_es_stock = 'N';
++  END IF;
++
++  IF v_cancelacion_local = 'N' AND v_accion IN ('A', 'D') AND
++     (NULLIF(v_url, '') IS NULL OR v_tienda <= 0) THEN
++    SIGNAL SQLSTATE '45000'
++      SET MESSAGE_TEXT =
++        'Faltan URL o tienda para cambiar la visibilidad PrestaShop';
++  END IF;
++
++  IF v_cancelacion_local = 'N' AND
++     NULLIF(v_url, '') IS NOT NULL AND
++     v_tienda > 0 THEN
++    SET v_clave = UPPER(SHA2(v_url, 256));
++    INSERT INTO fza_prestashop_cola (
++      CLAVE_INSTALACION_PSCOLA,
++      ID_TIENDA_PSCOLA,
++      CODIGO_ART_PSCOLA,
++      ESCAMBIO_PRECIO_PSCOLA,
++      ESCAMBIO_STOCK_PSCOLA,
++      ACCION_VISIBILIDAD_PSCOLA,
++      VERSION_DESEADA_PSCOLA,
++      ESTADO_PSCOLA,
++      CONTADOR_INTENTOS_PSCOLA,
++      INSTANTE_ULTIMO_CAMBIO_PSCOLA,
++      INSTANTE_ALTA,
++      USUARIO_ALTA
++    ) VALUES (
++      v_clave,
++      v_tienda,
++      v_codigo_art,
++      v_es_precio,
++      v_es_stock,
++      v_accion,
++      1,
++      CASE WHEN v_accion IN ('A', 'D')
++        THEN 'PENDIENTE_VISIBILIDAD'
++        WHEN v_es_precio = 'S' OR v_es_stock = 'S'
++        THEN 'PENDIENTE' ELSE 'ENVIADA' END,
++      0,
++      NOW(),
++      NOW(),
++      v_usuario_auditoria
++    )
++    ON DUPLICATE KEY UPDATE
++      ESCAMBIO_PRECIO_PSCOLA = VALUES(ESCAMBIO_PRECIO_PSCOLA),
++      ESCAMBIO_STOCK_PSCOLA = VALUES(ESCAMBIO_STOCK_PSCOLA),
++      ACCION_VISIBILIDAD_PSCOLA = VALUES(ACCION_VISIBILIDAD_PSCOLA),
++      VERSION_DESEADA_PSCOLA = VERSION_DESEADA_PSCOLA + 1,
++      CONTADOR_INTENTOS_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        CONTADOR_INTENTOS_PSCOLA, 0),
++      INSTANTE_PROXIMO_INTENTO_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        INSTANTE_PROXIMO_INTENTO_PSCOLA, NULL),
++      MENSAJE_ERROR_PSCOLA = IF(
++        LEFT(COALESCE(MENSAJE_ERROR_PSCOLA, ''), 18) =
++          '[ALTA_PRESTASHOP] ',
++        MENSAJE_ERROR_PSCOLA, NULL),
++      VERSION_RECLAMADA_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        VERSION_RECLAMADA_PSCOLA, NULL),
++      ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        ESCAMBIO_PRECIO_RECLAMADO_PSCOLA, 'N'),
++      ESCAMBIO_STOCK_RECLAMADO_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        ESCAMBIO_STOCK_RECLAMADO_PSCOLA, 'N'),
++      ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        ACCION_VISIBILIDAD_RECLAMADA_PSCOLA, 'N'),
++      ID_RECLAMACION_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        ID_RECLAMACION_PSCOLA, NULL),
++      INSTANTE_RECLAMACION_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        INSTANTE_RECLAMACION_PSCOLA, NULL),
++      ESTADO_PSCOLA = IF(
++        ESTADO_PSCOLA IN ('PROCESANDO', 'PROCESANDO_VISIBILIDAD'),
++        IF(ESTADO_PSCOLA = 'PROCESANDO_VISIBILIDAD' OR
++           VALUES(ACCION_VISIBILIDAD_PSCOLA) IN ('A', 'D'),
++          'PROCESANDO_VISIBILIDAD', 'PROCESANDO'),
++        CASE WHEN VALUES(ACCION_VISIBILIDAD_PSCOLA) IN ('A', 'D')
++          THEN 'PENDIENTE_VISIBILIDAD'
++          WHEN VALUES(ESCAMBIO_PRECIO_PSCOLA) = 'S' OR
++               VALUES(ESCAMBIO_STOCK_PSCOLA) = 'S'
++          THEN 'PENDIENTE' ELSE 'ENVIADA' END),
++      INSTANTE_ULTIMO_CAMBIO_PSCOLA = NOW(),
++      INSTANTE_MODIF = NOW(),
++      USUARIO_MODIF = v_usuario_auditoria;
++  END IF;
++END ;;
++DELIMITER ;
++
+ -- 5. Contratos publicos para cambios concretos y operaciones masivas.
+@@
+         'PRC_PRESTASHOP_ENCOLAR_TEMP_DESTINO',
+         'PRC_PRESTASHOP_ENCOLAR_CAMBIO',
++        'PRC_PRESTASHOP_ENCOLAR_VISIBILIDAD',
+         'PRC_PRESTASHOP_ENCOLAR_CAMBIO_ALMACEN',
+@@
+       )) AS PROCEDIMIENTOS_ESPERADOS;
+--- Esperado: 1, 1, 22, 4, 1 y 14.
++-- Esperado: 1, 1, 24, 4, 1 y 15.
+*** End Patch

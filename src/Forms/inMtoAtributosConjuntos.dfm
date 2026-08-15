@@ -321,6 +321,7 @@
                     DataBinding.FieldName = 'ID_AV_ACD'
                     PropertiesClassName = 'TcxLookupComboBoxProperties'
                     Properties.DropDownAutoSize = True
+                    Properties.DropDownListStyle = lsEditList
                     Properties.DropDownSizeable = True
                     Properties.ImmediatePost = True
                     Properties.KeyFieldNames = 'ID_AV'
@@ -347,6 +348,8 @@
                         FieldName = 'DESCRIPCION_AV'
                       end>
                     Properties.ListFieldIndex = 2
+                    Properties.ListOptions.CaseInsensitive = True
+                    Properties.OnValidate = tvValoresID_AV_ACDPropertiesValidate
                     Width = 220
                   end
                   object tvValoresORDEN_ACD: TcxGridDBColumn

@@ -177,6 +177,9 @@ implementation
 uses
   System.DateUtils, inLibMsgComun, UniDataInformeMultiFiltroRepositorio;
 
+const
+  MAX_NIVELES_AGRUPACION = 3;
+
 { TFiltroChecklist }
 
 constructor TFiltroChecklist.Create;
@@ -248,7 +251,7 @@ begin
   if frTemporadas in fs then
     FfcTemporadas := CrearTabFiltro('Temporadas');
   if frArticulos in fs then
-    FfcArticulos := CrearTabFiltro('Art' + #$00ED + 'culos');
+    FfcArticulos := CrearTabFiltro('Artículos');
   if FpcFiltros.PageCount > 0 then
     FpcFiltros.ActivePageIndex := 0;
 end;
@@ -630,10 +633,29 @@ end;
 
 procedure TfrmPrintMultiFiltro.AgrupClickCheck(Sender: TObject;
   AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+var
+  i: Integer;
+  iMarcados: Integer;
 begin
   if (FAgrupItems <> nil) and (AIndex >= 0)
      and (AIndex < FAgrupItems.Count) then
+  begin
+    if ANewState = cbsChecked then
+    begin
+      iMarcados := 0;
+      for i := 0 to FAgrupItems.Count - 1 do
+        if (i <> AIndex) and FAgrupItems[i].Marcado then
+          Inc(iMarcados);
+      if iMarcados >= MAX_NIVELES_AGRUPACION then
+      begin
+        FAgrupItems[AIndex].Marcado := False;
+        if (FclbAgrup <> nil) and (AIndex < FclbAgrup.Items.Count) then
+          FclbAgrup.Items[AIndex].State := cbsUnchecked;
+        Exit;
+      end;
+    end;
     FAgrupItems[AIndex].Marcado := (ANewState = cbsChecked);
+  end;
 end;
 
 procedure TfrmPrintMultiFiltro.AgrupSubirClick(Sender: TObject);
@@ -762,7 +784,7 @@ begin
   FcolFamMarcado.Options.Editing       := False;
   FcolFamCodigo := FtlFamilias.CreateColumn;
   FcolFamCodigo.Position.BandIndex := 0;
-  FcolFamCodigo.Caption.Text       := 'C' + #243 + 'digo';
+  FcolFamCodigo.Caption.Text       := 'Código';
   FcolFamCodigo.Width              := 120;
   FcolFamCodigo.Options.Editing    := False;
   FtlFamilias.OnDblClick := FamiliasDblClick;

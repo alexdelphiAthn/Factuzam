@@ -124,6 +124,10 @@ type
       AIdTienda: Integer; AImpacto: Double);
     procedure ActualizarCantidadStock(AIdStockDisponible,
       AIdTienda, ACantidad: Integer);
+    // Garantiza el estado visible del producto mediante GET/PATCH/GET.
+    procedure AsegurarEstadoActivoProducto(
+      AIdProducto, AIdTienda: Integer;
+      AActivo: Boolean);
   end;
 
 implementation

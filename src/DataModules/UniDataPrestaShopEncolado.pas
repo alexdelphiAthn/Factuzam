@@ -7,7 +7,7 @@ unit UniDataPrestaShopEncolado;
 interface
 
 uses
-  Uni;
+  Uni, inLibPrestaShopColaIntf;
 
 procedure EncolarCambioPrestaShop(
   AConexion: TUniConnection;
@@ -23,6 +23,11 @@ procedure EncolarArticuloPrestaShop(
 procedure OmitirArticuloPrestaShop(
   AConexion: TUniConnection;
   const ACodigoArticulo, AUsuario: string);
+procedure EncolarVisibilidadPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoArticulo: string;
+  AAccion: TAccionVisibilidadPrestaShop;
+  const AUsuario: string);
 procedure EncolarStockAlmacenPrestaShop(
   AConexion: TUniConnection;
   const ACodigoAlmacen, AUsuario: string);
@@ -51,6 +56,50 @@ begin
     Result := 'S'
   else
     Result := 'N';
+end;
+
+function AccionVisibilidad(
+  AAccion: TAccionVisibilidadPrestaShop): string;
+begin
+  case AAccion of
+    avpActivar:
+      Result := 'A';
+    avpDesactivar:
+      Result := 'D';
+  else
+    Result := 'N';
+  end;
+end;
+
+procedure EncolarVisibilidadPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoArticulo: string;
+  AAccion: TAccionVisibilidadPrestaShop;
+  const AUsuario: string);
+var
+  oConsulta: TUniQuery;
+begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  if Trim(ACodigoArticulo) = '' then
+    raise EArgumentException.Create('ACodigoArticulo');
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'CALL PRC_PRESTASHOP_ENCOLAR_VISIBILIDAD(' +
+      ':ARTICULO, :ACCION, :USUARIO)';
+    oConsulta.ParamByName('ARTICULO').AsString :=
+      Trim(ACodigoArticulo);
+    oConsulta.ParamByName('ACCION').AsString :=
+      AccionVisibilidad(AAccion);
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.Execute;
+    if not AConexion.InTransaction then
+      SolicitarProcesadoPrestaShop;
+  finally
+    FreeAndNil(oConsulta);
+  end;
 end;
 
 procedure EncolarCambioPrestaShop(

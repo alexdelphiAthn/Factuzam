@@ -30,6 +30,8 @@ type
     FTransporte: ITransportePresta;
     function SolicitarXml(const ARecurso: string): string;
     procedure EnviarParche(const ARecurso, AXml: string);
+    function LeerActivoProducto(AIdProducto,
+      AIdTienda: Integer): Boolean;
     function ResolverIdUnico(const AXml, AColeccion, AElemento,
       AIdentificacion, ARecurso: string): Integer;
   public
@@ -54,6 +56,9 @@ type
       AIdTienda: Integer; AImpacto: Double);
     procedure ActualizarCantidadStock(AIdStockDisponible,
       AIdTienda, ACantidad: Integer);
+    procedure AsegurarEstadoActivoProducto(
+      AIdProducto, AIdTienda: Integer;
+      AActivo: Boolean);
   end;
 
 implementation
@@ -114,6 +119,10 @@ resourcestring
     'falta el nodo %s';
   SRespuestaStockIncoherente =
     'el stock no corresponde al producto y atributo solicitados';
+  SEstadoActivoPrestaInvalido =
+    'el campo active no contiene 0 ni 1';
+  SEstadoActivoProductoNoVerificado =
+    'PrestaShop no confirmó el estado activo del producto %d.';
 
 type
   TTransporteRestPresta = class(TInterfacedObject, ITransportePresta,
@@ -687,6 +696,26 @@ begin
   Result := DecimalCampo(oProducto, 'price', sRecurso);
 end;
 
+function TClienteCatalogoPresta.LeerActivoProducto(
+  AIdProducto, AIdTienda: Integer): Boolean;
+var
+  iActivo: Integer;
+  oProducto: IXMLNode;
+  sRecurso: string;
+begin
+  ComprobarPositivo(AIdProducto, 'AIdProducto');
+  ComprobarPositivo(AIdTienda, 'AIdTienda');
+  sRecurso := Format('%s/%d?display=[id,active]&id_shop=%d',
+    [CNombreProductos, AIdProducto, AIdTienda]);
+  oProducto := NodoRecurso(SolicitarXml(sRecurso),
+    CNombreProducto, sRecurso);
+  iActivo := EnteroCampo(oProducto, 'active', sRecurso);
+  if (iActivo <> 0) and (iActivo <> 1) then
+    raise ERespuestaPrestaInvalida.Create(
+      sRecurso, SEstadoActivoPrestaInvalido);
+  Result := iActivo = 1;
+end;
+
 function TClienteCatalogoPresta.LeerImpactoPrecioCombinacion(
   AIdCombinacion, AIdTienda: Integer): Double;
 var
@@ -762,6 +791,36 @@ begin
   sXml := CrearXmlParche(CNombreStock, 'quantity',
     AIdStockDisponible, IntToStr(ACantidad));
   EnviarParche(sRecurso, sXml);
+end;
+
+procedure TClienteCatalogoPresta.AsegurarEstadoActivoProducto(
+  AIdProducto, AIdTienda: Integer; AActivo: Boolean);
+var
+  bActual: Boolean;
+  sRecurso: string;
+  sValor: string;
+  sXml: string;
+begin
+  ComprobarPositivo(AIdProducto, 'AIdProducto');
+  ComprobarPositivo(AIdTienda, 'AIdTienda');
+  bActual := LeerActivoProducto(AIdProducto, AIdTienda);
+  if bActual <> AActivo then
+  begin
+    sRecurso := Format('%s/%d?id_shop=%d',
+      [CNombreProductos, AIdProducto, AIdTienda]);
+    if AActivo then
+      sValor := '1'
+    else
+      sValor := '0';
+    sXml := CrearXmlParche(CNombreProducto, 'active',
+      AIdProducto, sValor);
+    EnviarParche(sRecurso, sXml);
+  end;
+  bActual := LeerActivoProducto(AIdProducto, AIdTienda);
+  if bActual <> AActivo then
+    raise EInvalidOpException.CreateFmt(
+      SEstadoActivoProductoNoVerificado,
+      [AIdProducto]);
 end;
 
 end.

@@ -22,16 +22,18 @@ sincronización. Los cambios se anotan en una cola y se envían en segundo plano
 mediante la API directa de PrestaShop.</p>
 <p>La integración también puede dar de alta un artículo que todavía no existe
 en la tienda: familias, producto, combinaciones de talla y color, precios e
-imagen principal. Todo producto creado por Factuzam queda <strong>inactivo</strong> en
-PrestaShop hasta que un administrador lo revise y lo publique manualmente.</p>
+imagen principal. Todo producto creado por Factuzam comienza <strong>inactivo</strong> en
+PrestaShop. Solo puede activarse al final de un alta o una sincronización
+correctas si el perfil lo autoriza expresamente, o después de forma manual.</p>
 <blockquote><p><strong>Regla de publicación:</strong> marcar <strong>En web</strong> en Factuzam hace que el artículo
-sea elegible para la integración configurada. No significa «hacer visible en
-la tienda». Las acciones dependen de los checks del perfil y Factuzam nunca
-activa automáticamente un producto nuevo ni cambia posteriormente su estado
-<code>active</code>.</p></blockquote>
-<blockquote><p><strong>Regla al quitar En web:</strong> se detiene la sincronización de <strong>precios y
-stock</strong>. No se desactiva ni borra el producto remoto, no se cambia su precio
-y no se envía stock cero. PrestaShop conserva exactamente su último estado.</p></blockquote>
+sea elegible para la integración configurada. Con <strong>Activar artículos en
+PrestaShop al marcar En web</strong> desmarcado, no cambia su visibilidad. Con el
+check marcado, Factuzam solicita la activación únicamente como último paso,
+después de completar correctamente el alta o la sincronización autorizada.</p></blockquote>
+<blockquote><p><strong>Regla al quitar En web:</strong> Factuzam pregunta qué hacer. <strong>Sí</strong> desactiva el
+producto en PrestaShop y deja de sincronizarlo; <strong>No</strong> solo detiene la
+sincronización y conserva su estado remoto; <strong>Cancelar</strong> no guarda el cambio.
+Ninguna opción borra el producto, cambia su precio ni envía stock cero.</p></blockquote>
 <hr>
 <h2 id="1-estado-de-la-integracion">1. Estado de la integración</h2>
 <p>Este capítulo se actualiza a medida que se completa la integración. Conviene
@@ -52,6 +54,8 @@ y pruebas.</p>
 <tr><td>Localización del producto por <code>reference</code> exacta y única</td><td>Disponible</td></tr>
 <tr><td>Incidencia inmediata ante <code>reference</code> ambigua</td><td>Disponible; no elige ni crea otro recurso</td></tr>
 <tr><td>Opción <strong>Crear artículos en PrestaShop al darlos de alta</strong></td><td>Disponible y desmarcada de forma predeterminada</td></tr>
+<tr><td>Opción <strong>Activar artículos en PrestaShop al marcar En web</strong></td><td>Disponible y desmarcada de forma predeterminada; actúa solo al final del proceso</td></tr>
+<tr><td>Límite de niveles de familia para el alta</td><td>Configurable por ámbito; el valor inicial <code>0</code> conserva toda la jerarquía local</td></tr>
 <tr><td>Alta de familias, atributos, producto, combinaciones e imagen principal</td><td>Implementada; pendiente de superar la batería funcional completa del laboratorio</td></tr>
 <tr><td>Sincronización con producción</td><td>Desactivada por defecto; ver <a href="#11-seguridad-del-stock">seguridad del stock</a></td></tr>
 </tbody>
@@ -73,14 +77,21 @@ conectar y listar antes de importar.</p>
                |
                +---- reference única ----&gt; verifica; actualiza si se autoriza
                |
-               +---- ninguna reference --&gt; alta inactiva, si se autoriza
+               +---- ninguna reference --&gt; alta inicialmente inactiva, si se autoriza
                |
-               `---- varias reference ---&gt; ERROR inmediato, sin POST</code></pre>
+               `---- varias reference ---&gt; ERROR inmediato, sin POST
+
+Tras completar sin error el alta o la sincronización
+               |
+               `---- activación final, solo si N-&gt;S y el perfil la autoriza</code></pre>
 <p>Los checks son independientes. <strong>Sincronizar stock y precios</strong> autoriza las
 modificaciones de productos existentes. <strong>Crear artículos en PrestaShop al
-darlos de alta</strong> solicita actuar cuando falta el producto. Factuzam valida el
-conjunto local antes del primer <code>POST</code> y crea el producto con <code>active=0</code>. Una
-referencia ambigua siempre es una incidencia y nunca provoca otra alta.</p>
+darlos de alta</strong> solicita actuar cuando falta el producto. <strong>Activar artículos
+en PrestaShop al marcar En web</strong> permite cambiar <code>active</code> a <code>1</code> únicamente al
+final del proceso iniciado por el paso de <strong>En web</strong> de No a Sí. Factuzam
+valida el conjunto local antes del primer <code>POST</code> y todo producto nuevo se crea
+con <code>active=0</code>. Una referencia ambigua siempre es una incidencia y nunca
+provoca otra alta ni una activación.</p>
 <p>Los eventos son el mecanismo principal. La recuperación de pendientes se
 comprueba siempre cada 60 a 120 segundos, aunque <strong>Hacer barrido
 periódicamente</strong> esté desmarcado. Este check habilita únicamente una
@@ -109,6 +120,7 @@ recorre las configuraciones de los demás perfiles.</p>
 <tbody>
 <tr><td><strong>Sincronizar stock y precios</strong></td><td>Autoriza al trabajador a actualizar los productos existentes localizados por <code>reference</code> única. También autoriza la escritura de cantidades absolutas. Valor inicial: desmarcado.</td></tr>
 <tr><td><strong>Crear artículos en PrestaShop al darlos de alta</strong></td><td>Solicita el alta completa e inactiva cuando no haya correspondencia. Es independiente del check de sincronización y comienza desmarcado.</td></tr>
+<tr><td><strong>Activar artículos en PrestaShop al marcar En web</strong></td><td>Su clave técnica es <code>appPrestaShopActivarArticulosAlMarcarWeb</code>. Se hereda por usuario, grupo o <code>Todos</code> y su valor inicial es <code>False</code> (desmarcado). Cuando <strong>En web</strong> pasa de No a Sí, autoriza <code>active=1</code> solo como último paso de un alta o una sincronización correctas. No cambia la regla de que el producto se crea primero con <code>active=0</code>.</td></tr>
 <tr><td><strong>Hacer barrido periódicamente</strong></td><td>Habilita la reconciliación completa del catálogo cada cierto número de horas. Su clave técnica es <code>appPrestaShopHacerBarridoPeriodico</code>, se hereda por usuario, grupo o <code>Todos</code> y su valor inicial es <code>False</code> (desmarcado). No desactiva la recuperación de pendientes cada 60–120 segundos.</td></tr>
 <tr><td><strong>URL</strong></td><td>URL base de la API, terminada normalmente en <code>/api</code>. Comienza vacía y debe configurarse expresamente en el ámbito correcto.</td></tr>
 <tr><td><strong>Clave API</strong></td><td>Credencial del Webservice. Solo debe verla el administrador raíz y no debe copiarse a mensajes o registros.</td></tr>
@@ -118,15 +130,17 @@ recorre las configuraciones de los demás perfiles.</p>
 <tr><td><strong>Id. tienda</strong></td><td>Identificador de la tienda dentro de PrestaShop.</td></tr>
 <tr><td><strong>Id. idioma</strong></td><td>Idioma en el que se crean nombres, descripciones, categorías y atributos. El valor inicial del laboratorio es 1.</td></tr>
 <tr><td><strong>Id. categoría raíz</strong></td><td>Categoría remota bajo la que se crea la primera familia local. Debe ser mayor que cero; el laboratorio usa 2 (<code>Home</code>).</td></tr>
+<tr><td><strong>Niveles de familia a crear (0 = todos)</strong></td><td>Su clave técnica es <code>appPrestaShopNivelesFamiliaAlta</code>. Es un entero heredable por usuario, grupo o <code>Todos</code>; valor inicial: <code>0</code>. <code>0</code> conserva toda la jerarquía local y un valor mayor que cero conserva ese número de niveles contados desde la familia hoja. El subconjunto siempre se crea en orden raíz → hoja. La categoría raíz de PrestaShop configurada no cuenta como nivel local.</td></tr>
 <tr><td><strong>Intervalo de recuperación</strong></td><td>Espera de seguridad entre comprobaciones por posibles cuelgues o cierres. Admite de 60 a 120 segundos; valor inicial: 60. Los cambios normales despiertan al trabajador inmediatamente.</td></tr>
 <tr><td><strong>Horas entre barridos</strong></td><td>Intervalo entre reconciliaciones completas cuando <strong>Hacer barrido periódicamente</strong> está marcado. Valor inicial: 24 horas.</td></tr>
 <tr><td><strong>Máximo de intentos</strong></td><td>Reintentos antes de dejar un trabajo en <code>ERROR</code>. Valor inicial: 10.</td></tr>
 </tbody>
 </table>
-<p>Los dos checks que autorizan escrituras nacen desmarcados y se pueden combinar
-así. <strong>Hacer barrido periódicamente</strong> también nace desmarcado, pero no cambia
-esta matriz: decide cuándo buscar divergencias completas, no qué escrituras
-están autorizadas.</p>
+<p>Los dos checks que autorizan el mantenimiento del catálogo nacen desmarcados
+y se pueden combinar así. <strong>Activar artículos en PrestaShop al marcar En web</strong>
+y <strong>Hacer barrido periódicamente</strong> también nacen desmarcados, pero no cambian
+esta matriz: el primero decide la visibilidad al final de un proceso y el
+segundo cuándo buscar divergencias completas.</p>
 <table>
 <thead><tr>
 <th>Sincronizar</th>
@@ -137,16 +151,21 @@ están autorizadas.</p>
 <tbody>
 <tr><td>No</td><td>No</td><td>No se envían cambios.</td><td>No se intenta crear.</td></tr>
 <tr><td>Sí</td><td>No</td><td>Se actualizan precio y stock.</td><td>Incidencia: creación no autorizada.</td></tr>
-<tr><td>No</td><td>Sí</td><td>Se localiza, pero no se modifica.</td><td>Se crea completo e inactivo, sin sincronizar stock.</td></tr>
-<tr><td>Sí</td><td>Sí</td><td>Se actualizan precio y stock.</td><td>Se crea inactivo y después sincroniza lo autorizado.</td></tr>
+<tr><td>No</td><td>Sí</td><td>Se localiza, pero no se modifica.</td><td>Se crea completo con <code>active=0</code>, sin sincronizar stock.</td></tr>
+<tr><td>Sí</td><td>Sí</td><td>Se actualizan precio y stock.</td><td>Se crea con <code>active=0</code> y después sincroniza lo autorizado.</td></tr>
 </tbody>
 </table>
+<p>Si el cambio <strong>En web</strong> fue de No a Sí y el check de activación está marcado,
+la petición <code>active=1</code> se añade después de completar correctamente la acción
+indicada en la matriz. Si hay un error anterior, el producto no se activa. Con
+el check desmarcado, un producto nuevo permanece inactivo y un producto ya
+existente conserva su visibilidad.</p>
 <p>Antes de marcar <strong>Sincronizar stock y precios</strong>, hay que configurar y comprobar
 expresamente la URL. Una instalación nueva no presupone ningún destino.</p>
 <p>Las antiguas claves <code>appPrestaShopActivo</code> y <code>appPrestaShopStockActivo</code>, si
 permanecen guardadas tras actualizar una instalación, ya no gobiernan el
-trabajador ni activan nada de forma implícita. Las autorizaciones vigentes son
-los dos checks independientes descritos en la tabla anterior.</p>
+trabajador ni activan nada de forma implícita. Deben usarse los controles
+explícitos descritos en la tabla anterior.</p>
 <p>Si varios perfiles compatibles comparten la misma instalación y tienda pero
 solicitan intervalos de barrido distintos, se aplica materialmente la cadencia
 más frecuente. Todos comparten el mismo marcador remoto para evitar recorridos
@@ -191,17 +210,20 @@ borrar una categoría, talla o color compartidos con otros productos.</p>
 <h3 id="articulos">Artículos</h3>
 <p>En <strong>Archivo ▸ Artículos</strong>, la casilla <strong>En web</strong> decide si el artículo
 participa en la integración.</p>
-<ul><li>Al marcarla, se encola una comprobación completa del artículo.</li><li>Factuzam busca el producto maestro por coincidencia exacta de su <code>reference</code>.</li><li>Si existe una sola coincidencia, lo verifica y solo actualiza el producto y sus SKU cuando está marcado <strong>Sincronizar stock y precios</strong>.</li><li>Si no existe ninguna y está autorizado <strong>Crear artículos</strong>, valida y ejecuta el alta completa e inactiva.</li><li>Si no está autorizada la creación, la ausencia termina en una incidencia.</li><li>Si existen varias coincidencias, registra una incidencia <code>ERROR</code> sin elegir ninguna ni crear una tercera.</li><li>Al desmarcarla, Factuzam cancela los cambios pendientes de precio y stock y deja de mantenerlo sincronizado.</li></ul>
+<ul><li>Al marcarla, se encola una comprobación completa del artículo.</li><li>Factuzam busca el producto maestro por coincidencia exacta de su <code>reference</code>.</li><li>Si existe una sola coincidencia, lo verifica y solo actualiza el producto y sus SKU cuando está marcado <strong>Sincronizar stock y precios</strong>.</li><li>Si no existe ninguna y está autorizado <strong>Crear artículos</strong>, valida y ejecuta el alta completa e inactiva.</li><li>Si no está autorizada la creación, la ausencia termina en una incidencia.</li><li>Si existen varias coincidencias, registra una incidencia <code>ERROR</code> sin elegir ninguna ni crear una tercera.</li><li>Si la marca pasa de No a Sí y está autorizado <strong>Activar artículos en PrestaShop al marcar En web</strong>, la activación se solicita solo después de que termine correctamente el alta o la sincronización aplicable.</li><li>Al desmarcarla, Factuzam muestra un diálogo antes de guardar.</li></ul>
 <p>Cambiar <strong>En web</strong> requiere el permiso <strong>Permisos ▸ Artículos ▸
 Activar/desactivar web</strong>. Sin ese permiso la casilla queda en solo lectura y
 la grabación tampoco puede alterar la marca.</p>
-<p>Al quitar <strong>En web</strong>, no se realiza ninguna acción de retirada sobre
-PrestaShop:</p>
-<ul><li>no se envía stock cero;</li><li>no se cambia el último precio enviado;</li><li>no se desactiva ni elimina el producto;</li><li>no se eliminan combinaciones, categorías o imágenes.</li></ul>
-<p>Si el administrador desea retirarlo de la página, debe desactivarlo
-manualmente en PrestaShop. Si se vuelve a marcar <strong>En web</strong>, Factuzam encola
-una comprobación completa. El precio y el stock vigentes solo se envían cuando
-el perfil efectivo tiene marcado <strong>Sincronizar stock y precios</strong>.</p>
+<p>Al quitar <strong>En web</strong>, el diálogo ofrece tres decisiones:</p>
+<ul><li><strong>Sí</strong>: guarda <strong>En web = No</strong>, deja de sincronizar y solicita la desactivación remota (<code>active=0</code>).</li><li><strong>No</strong>: guarda <strong>En web = No</strong> y solo deja de sincronizar. El producto permanece en el estado de visibilidad que ya tuviera en PrestaShop.</li><li><strong>Cancelar</strong>: no guarda el cambio; el artículo continúa <strong>En web</strong>.</li></ul>
+<p>En los dos primeros casos se cancelan los cambios pendientes de precio y
+stock. La retirada no realiza otras modificaciones:</p>
+<ul><li>no se envía stock cero;</li><li>no se cambia el último precio enviado;</li><li>no se elimina el producto;</li><li>no se eliminan combinaciones, categorías o imágenes.</li></ul>
+<p>Si se vuelve a marcar <strong>En web</strong>, Factuzam encola una comprobación completa.
+El precio y el stock vigentes solo se envían cuando el perfil efectivo tiene
+marcado <strong>Sincronizar stock y precios</strong>. La activación final solo se solicita
+cuando también está marcado <strong>Activar artículos en PrestaShop al marcar En
+web</strong>.</p>
 <p>Un SKU de un artículo web no se borra físicamente: se marca inactivo en
 Factuzam para conservar su referencia. La integración deja de enviar su
 precio y, con la sincronización habilitada, envía cantidad cero. PrestaShop
@@ -248,9 +270,12 @@ normal de la cola.</p>
 su versión pero no libera la reclamación en curso. Al terminar el envío
 anterior, la fila vuelve a <code>PENDIENTE</code>. Así se evita que dos trabajadores
 escriban versiones antiguas y nuevas en orden inverso.</p>
-<p>Quitar <strong>En web</strong> usa el mismo control de versión, pero deja vacíos los dos
-indicadores de cambio. Una petición que ya estuviera en curso puede terminar;
-después de ella no se reclaman ni envían nuevas versiones del artículo.</p>
+<p>Al quitar <strong>En web</strong> y elegir <strong>No</strong>, el mismo control de versión deja vacíos
+los dos indicadores de cambio. Si se elige <strong>Sí</strong>, además queda solicitada la
+desactivación remota. Una petición que ya estuviera en curso puede terminar;
+después se aplica, cuando corresponda, la decisión de visibilidad y no se
+reclaman nuevas versiones de precio o stock. <strong>Cancelar</strong> no guarda el cambio
+ni altera la cola.</p>
 <p>Cada 60 a 120 segundos se realiza siempre una comprobación de recuperación por
 si un proceso se cerró después de encolar o quedó una reclamación interrumpida.
 La base de datos concede esa comprobación a una sola instancia de Factuzam por
@@ -342,10 +367,12 @@ Una <code>reference</code> inexistente inicia el alta solo cuando este check est
 marcado. Una referencia ambigua termina en <code>ERROR</code> y nunca provoca un alta.</p>
 <p>El alta no es una sola petición. El trabajador ejecuta esta secuencia contra
 varios recursos de PrestaShop:</p>
-<ol><li>Validar todos los datos locales sin crear nada todavía.</li><li>Resolver o crear la ruta de categorías de la familia bajo la raíz configurada.</li><li>Resolver o crear los grupos de atributos, como <strong>Color</strong> y <strong>Talla</strong>.</li><li>Resolver o crear los valores utilizados por los SKU.</li><li>Crear el producto maestro con <code>active=0</code>.</li><li>Crear una combinación por cada SKU activo y elegir una sola combinación predeterminada de forma determinista.</li><li>Subir una fotografía general real si el producto todavía no tiene ninguna.</li><li>Continuar con la sincronización de precio y stock solo si está autorizada.</li></ol>
-<p>El resultado es <strong>creado, completo e inactivo</strong>. El servicio puede seguir
-actualizando después precios y stock, pero no dispone de una operación para
-cambiar <code>active</code>.</p>
+<ol><li>Validar todos los datos locales sin crear nada todavía.</li><li>Resolver o crear la ruta de categorías de la familia bajo la raíz configurada.</li><li>Resolver o crear los grupos de atributos, como <strong>Color</strong> y <strong>Talla</strong>.</li><li>Resolver o crear los valores utilizados por los SKU.</li><li>Crear el producto maestro con <code>active=0</code>.</li><li>Crear una combinación por cada SKU activo y elegir una sola combinación predeterminada de forma determinista.</li><li>Subir una fotografía general real si el producto todavía no tiene ninguna.</li><li>Continuar con la sincronización de precio y stock solo si está autorizada.</li><li>Si el proceso procede de marcar <strong>En web</strong> y el perfil lo autoriza, activar el producto únicamente después de que todos los pasos anteriores terminen correctamente.</li></ol>
+<p>El producto se crea siempre <strong>completo e inicialmente inactivo</strong>. Con
+<code>appPrestaShopActivarArticulosAlMarcarWeb=False</code>, permanece así hasta la
+revisión manual. Con el parámetro a <code>True</code>, el mismo trabajo puede activarlo
+como último paso. Un alta parcial o una sincronización con error nunca debe
+dejar visible el producto.</p>
 <h3 id="validacion-previa">Validación previa</h3>
 <p>Antes del primer <code>POST</code> deben comprobarse, al menos:</p>
 <ul><li>código de artículo y referencias de SKU no vacíos ni duplicados;</li><li>artículo, familia, tarifa y atributos activos;</li><li>jerarquía de familias completa y sin ciclos;</li><li>nombre y descripción válidos para los límites de PrestaShop;</li><li>precio base vigente y precio efectivo de cada SKU;</li><li>correspondencia del IVA con un grupo fiscal remoto;</li><li>un valor válido por cada eje de variación necesario;</li><li>fotografía real registrada, existente y legible;</li><li>ausencia inequívoca del producto y de sus referencias en PrestaShop.</li></ul>
@@ -354,17 +381,27 @@ la validación local evita comenzar el alta.</p>
 <h3 id="revision-del-administrador">Revisión del administrador</h3>
 <p>El administrador entra en el back office de PrestaShop y comprueba:</p>
 <ol><li>Nombre, descripción y categoría.</li><li>Tipo y regla de IVA.</li><li>Tallas, colores y combinación predeterminada.</li><li>Precio final de varias combinaciones, incluidas las de impacto negativo.</li><li>Fotografía de portada e imágenes por color.</li><li>Política de stock y disponibilidad para pedidos.</li></ol>
-<p>Solo entonces activa manualmente las categorías nuevas necesarias y el
-producto. Factuzam respetará esa decisión y no modificará el estado de
-publicación.</p>
+<p>Solo entonces activa las categorías nuevas necesarias. Si la activación
+automática está desmarcada, activa también el producto manualmente. Si está
+marcada, comprueba que el trabajo terminó sin error y que el producto solo se
+hizo visible al final.</p>
 <hr>
 <h2 id="8-familias-y-categorias">8. Familias y categorías</h2>
 <p>En el alta, la familia de Factuzam se transforma en una categoría de
-PrestaShop. La jerarquía se recorre desde la familia raíz hasta la hoja del
-artículo; los padres se crean antes que sus hijos. Una categoría ya existente
-conserva su estado. En la implementación actual las categorías nuevas se
-crean activas; el producto permanece inactivo, por lo que no aparece en el
-escaparate hasta la revisión manual.</p>
+PrestaShop. El parámetro heredable <strong>Niveles de familia a crear (0 = todos)</strong>
+(<code>appPrestaShopNivelesFamiliaAlta</code>) determina qué parte de la jerarquía local
+se exporta:</p>
+<ul><li><code>0</code>: toda la jerarquía local, desde su raíz hasta la familia hoja;</li><li><code>N &amp;gt; 0</code>: los últimos <code>N</code> niveles, contados desde la familia hoja hacia arriba.</li></ul>
+<p>El subconjunto elegido se conserva y crea en orden raíz → hoja: los padres
+van antes que sus hijos. La categoría raíz configurada en PrestaShop es solo
+el punto remoto bajo el que se cuelga el subconjunto y <strong>no cuenta</strong> como uno
+de esos niveles. Por ejemplo, <strong>DEMO-CAMISA</strong> pertenece únicamente a la
+familia local <strong>ROPA</strong>; por tanto, <code>0</code>, <code>1</code> o cualquier valor superior solo
+exportan ese nivel local.</p>
+<p>Una categoría ya existente conserva su estado. En la implementación actual
+las categorías nuevas se crean activas. El producto se crea con <code>active=0</code> y
+solo puede activarse después, como último paso, según el parámetro de
+activación.</p>
 <p>La identidad no puede basarse solo en el nombre. Dos ramas pueden contener
 una categoría llamada igual. La implementación busca la combinación de padre
 y enlace normalizado antes de crear:</p>
@@ -435,7 +472,8 @@ preparado e inactivo sin publicar el stock local.</p>
 <p>La API no ofrece una transacción única para crear todo el catálogo. El alta
 se trata como una secuencia reanudable:</p>
 <pre><code>VALIDAR -&gt; CATEGORIAS -&gt; ATRIBUTOS -&gt; PRODUCTO_INACTIVO
-        -&gt; SKU -&gt; IMAGEN_PRINCIPAL</code></pre>
+        -&gt; SKU -&gt; IMAGEN_PRINCIPAL -&gt; SINCRONIZACION_AUTORIZADA
+        -&gt; ACTIVACION_FINAL_OPCIONAL</code></pre>
 <p>Antes de cada alta se busca el recurso remoto por su identidad. Si se corta
 la red, el siguiente intento vuelve a buscar y reutiliza lo que ya exista. La
 batería funcional debe verificar esta idempotencia, especialmente con dos
@@ -458,8 +496,10 @@ transacción única.</p>
 <tr><td><strong>Precio de SKU demasiado alto</strong></td><td>Comprobar que se envía un impacto y no el precio final como <code>combinations.price</code>.</td></tr>
 <tr><td><strong>Foto no encontrada</strong></td><td>Revisar <code>appDirFotos</code>, la fila de <code>fza_articulos_fotos</code> y el PNG de <code>real</code>.</td></tr>
 <tr><td><strong>Almacén no incluido</strong></td><td>Debe estar En web, activo, físico y ser de uso ESTANDAR.</td></tr>
-<tr><td><strong>Artículo nuevo no aparece en la página</strong></td><td>Es el comportamiento previsto del alta: se crea con <code>active=0</code> y el administrador debe revisarlo y activarlo manualmente.</td></tr>
-<tr><td><strong>Artículo desmarcado sigue visible</strong></td><td>Es el comportamiento previsto: quitar En web solo detiene precio y stock. Desactívelo manualmente en PrestaShop si desea retirarlo.</td></tr>
+<tr><td><strong>Artículo nuevo no aparece en la página</strong></td><td>El alta siempre comienza con <code>active=0</code>. Revisar si <strong>Activar artículos en PrestaShop al marcar En web</strong> está desmarcado, si el trabajo terminó sin error o si la activación final quedó pendiente. Con el check desmarcado debe activarse manualmente tras la revisión.</td></tr>
+<tr><td><strong>Artículo desmarcado sigue visible</strong></td><td>Si se eligió <strong>No</strong>, es el comportamiento solicitado: solo deja de sincronizarse. Para retirarlo, volver a marcarlo y desmarcarlo eligiendo <strong>Sí</strong>, o desactivarlo manualmente en PrestaShop.</td></tr>
+<tr><td><strong>Cancelé al quitar En web</strong></td><td>No se guarda el cambio, no se desactiva el producto y no se modifica la cola.</td></tr>
+<tr><td><strong>Se crean demasiados niveles de categoría</strong></td><td>Revisar <strong>Niveles de familia a crear (0 = todos)</strong>. Los valores positivos se cuentan desde la hoja; la raíz PrestaShop configurada no cuenta.</td></tr>
 <tr><td><strong>Fila en ERROR</strong></td><td>Corregir la causa y reencolar. El reintento busca y reutiliza los recursos ya creados; comprobar que no haya duplicados.</td></tr>
 <tr><td><strong>Desmarqué el barrido y se procesó un pendiente</strong></td><td>Es correcto: el check solo desactiva la reconciliación completa por horas. La recuperación de filas pendientes y reclamaciones interrumpidas continúa cada 60–120 segundos.</td></tr>
 </tbody>
@@ -467,7 +507,7 @@ transacción única.</p>
 <p>Los mensajes de error y los registros nunca deben incluir la clave API.</p>
 <hr>
 <h2 id="14-lista-de-comprobacion-para-una-implantacion">14. Lista de comprobación para una implantación</h2>
-<ol><li>Aplicar la migración de base de datos y comprobar las marcas <strong>En web</strong>.</li><li>Configurar primero una tienda de pruebas de la misma versión que la tienda real; no usar producción para la validación inicial.</li><li>Crear una clave API de mínimo privilegio.</li><li>Configurar el ámbito correcto —usuario, grupo o <code>Todos</code>—, URL, tienda, empresa y tarifa con los tres checks desmarcados.</li><li>Marcar únicamente los almacenes estándar que aportarán stock web.</li><li>Revisar familias, IVA, SKU, atributos, precios y fotos reales.</li><li>Probar un artículo con varios colores, tallas y precios por SKU.</li><li>Confirmar que una <code>reference</code> ambigua deja un <code>ERROR</code> inmediato sin crear recursos.</li><li>Mantener <strong>Crear artículos en PrestaShop al darlos de alta</strong> desmarcado hasta superar la batería funcional del laboratorio.</li><li>Comprobar la reserva o ingestión automática de pedidos web antes de autorizar cantidades absolutas.</li><li>Marcar <strong>Sincronizar stock y precios</strong> únicamente después de completar todas las comprobaciones.</li><li>Repetir el alta para confirmar que conserva IDs, no duplica recursos y deja el producto completo pero inactivo.</li></ol>
+<ol><li>Aplicar la migración de base de datos y comprobar las marcas <strong>En web</strong>.</li><li>Configurar primero una tienda de pruebas de la misma versión que la tienda real; no usar producción para la validación inicial.</li><li>Crear una clave API de mínimo privilegio.</li><li>Configurar el ámbito correcto —usuario, grupo o <code>Todos</code>—, URL, tienda, empresa y tarifa con los cuatro checks desmarcados.</li><li>Revisar <strong>Niveles de familia a crear (0 = todos)</strong>: usar <code>0</code> para toda la jerarquía local o un número positivo contado desde la familia hoja.</li><li>Marcar únicamente los almacenes estándar que aportarán stock web.</li><li>Revisar familias, IVA, SKU, atributos, precios y fotos reales.</li><li>Probar un artículo con varios colores, tallas y precios por SKU.</li><li>Confirmar que una <code>reference</code> ambigua deja un <code>ERROR</code> inmediato sin crear recursos.</li><li>Mantener <strong>Crear artículos en PrestaShop al darlos de alta</strong> desmarcado hasta superar la batería funcional del laboratorio.</li><li>Comprobar la reserva o ingestión automática de pedidos web antes de autorizar cantidades absolutas.</li><li>Marcar <strong>Sincronizar stock y precios</strong> únicamente después de completar todas las comprobaciones.</li><li>Con la activación automática desmarcada, repetir el alta para comprobar que conserva IDs, no duplica recursos y deja el producto completo pero inactivo.</li><li>En el laboratorio, marcar <strong>Activar artículos en PrestaShop al marcar En web</strong> y comprobar que <code>active=1</code> se solicita solo al final de un proceso correcto; provocar un error previo y confirmar que no se activa.</li><li>Probar las tres respuestas al quitar <strong>En web</strong>: <strong>Sí</strong> desactiva, <strong>No</strong> solo deja de sincronizar y <strong>Cancelar</strong> no guarda.</li></ol>
 <p>Las pruebas de desarrollo se realizan únicamente contra la instalación local
 actual de PrestaShop. No se hacen altas ni modificaciones de prueba en la
 tienda de producción.</p>

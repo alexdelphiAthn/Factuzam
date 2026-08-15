@@ -37,6 +37,7 @@
       '  `ID_AC` = :`ID_AC`')
     SQLRecCount.Strings = (
       'SELECT COUNT(*) FROM fza_atributos_conjuntos')
+    BeforePost = unqryTablaGConjuntosBeforePost
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT *'
@@ -139,7 +140,7 @@
       'SELECT ID_AV, ID_VA_AV, AV, DESCRIPCION_AV, ORDEN_AV'
       '  FROM fza_atributos_valores'
       ' WHERE ESACTIVO_AV = '#39'S'#39
-      ' ORDER BY ID_VA_AV, ORDEN_AV, AV')
+      ' ORDER BY ID_VA_AV, ORDEN_AV, AV, ID_AV')
     Left = 376
     Top = 24
   end

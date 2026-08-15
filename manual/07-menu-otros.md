@@ -53,7 +53,7 @@ Categorías habituales:
 | **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y número de atributos usado en su clave. |
 | **Servicios web** | URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos. |
 | **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
-| **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola y checks **Sincronizar stock y precios**, **Crear artículos en PrestaShop al darlos de alta** y **Hacer barrido periódicamente**. |
+| **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola, niveles de familia y checks **Sincronizar stock y precios**, **Crear artículos en PrestaShop al darlos de alta**, **Activar artículos en PrestaShop al marcar En web** y **Hacer barrido periódicamente**. |
 | **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
 
 El valor efectivo se resuelve por herencia: primero el valor propio del
@@ -64,14 +64,27 @@ diferentes. Cada sesión atiende únicamente la configuración efectiva de su
 usuario.
 
 La clave API queda oculta para los usuarios que no son administradores raíz.
-Los tres checks comienzan desmarcados y son independientes. **Sincronizar
+Los cuatro checks comienzan desmarcados y son independientes. **Sincronizar
 stock y precios** autoriza la actualización de productos existentes
 localizados por una `reference` exacta y única. **Crear artículos en
 PrestaShop al darlos de alta** solicita el alta completa cuando no existe esa
-correspondencia y deja el producto nuevo desactivado para su revisión en
-PrestaShop. **Hacer barrido periódicamente** habilita la reconciliación
-completa por horas; aunque esté desmarcado, la recuperación de pendientes
-continúa cada 60–120 segundos. Antes de activar la integración, sigue la
+correspondencia. El alta siempre crea primero el producto con `active=0`.
+**Activar artículos en PrestaShop al marcar En web**
+(`appPrestaShopActivarArticulosAlMarcarWeb`) autoriza su activación únicamente
+al final de un alta o una sincronización correctas iniciadas al pasar **En
+web** de No a Sí; su valor inicial es `False`. **Hacer barrido
+periódicamente** habilita la reconciliación completa por horas; aunque esté
+desmarcado, la recuperación de pendientes continúa cada 60–120 segundos.
+
+**Niveles de familia a crear (0 = todos)**
+(`appPrestaShopNivelesFamiliaAlta`) es un entero heredable cuyo valor inicial
+es `0`. Con `0` se exporta toda la jerarquía local; con un valor positivo se
+conservan ese número de niveles contados desde la familia hoja y se crean en
+orden raíz → hoja. La categoría raíz configurada en PrestaShop no cuenta como
+nivel local. En **DEMO-CAMISA**, cuya única familia local es **ROPA**, solo se
+exporta ese nivel con cualquier valor permitido.
+
+Antes de activar la integración, sigue la
 [lista de comprobación de la integración](15-integracion-prestashop.md#14-lista-de-comprobacion-para-una-implantacion).
 
 ### Idioma y traducciones
@@ -244,6 +257,13 @@ En **Artículos ▸ Activar/desactivar web**, el permiso específico controla
 quién puede cambiar la casilla **En web** de la ficha de artículos. Si el
 usuario no lo tiene concedido, la casilla queda en solo lectura y la grabación
 no puede alterar esa marca.
+
+Cuando un usuario autorizado desmarca **En web**, Factuzam pregunta qué hacer:
+**Sí** desactiva el producto en PrestaShop y deja de sincronizarlo; **No** solo
+deja de sincronizarlo y conserva su estado remoto; **Cancelar** no guarda el
+cambio. Al marcar **En web**, la activación remota depende del parámetro
+heredable **Activar artículos en PrestaShop al marcar En web** y, si está
+autorizada, se ejecuta únicamente al final de un proceso correcto.
 
 > Los cambios de permisos se aplican en el próximo login del usuario
 > afectado.

@@ -10,8 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Modal de impresión del "Movimientos de ventas por artículos y fechas"     }
-{    (ranking de ventas, FastReport). Una fila por artículo (o por             }
-{    artículo+almacén si se agrupa por almacén) con las magnitudes de compra   }
+{    (ranking de ventas, FastReport). Una fila por artículo/color cuando hay   }
+{    color (o por artículo/color+almacén si se agrupa por almacén), con las    }
 {    (entradas) y venta del periodo y dos márgenes: Margen 1 (sobre lo         }
 {    vendido) y Margen 2 (contando todo lo comprado como gasto). Mantiene la   }
 {    foto del artículo. Se apoya en el SP PRC_GET_MOV_VENTAS_ART (ver          }
@@ -61,6 +61,8 @@ type
     procedure ExportarExcelMovVentas(Sender: TObject);
     // Handler de OnBeforePrint: fotos + ocultar bandas de grupo inactivas.
     procedure ReportBeforePrint(Component: TfrxReportComponent);
+    // Adapta el detalle a procedimientos nuevos o antiguos sin campo color.
+    procedure ConfigurarDetalleArticuloColor;
     // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
     procedure PrecargarFotosArticulos;
   protected
@@ -138,11 +140,11 @@ begin
     FchkSoloVentas.Width   := 210;
     FchkSoloVentas.Caption := SCaptionSoloArticulosConVentas;
   end;
-  // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada reordenables
+  // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada/color.
   // + spin de nivel de familia (igual que el balance de almacén).
   CrearTabAgrupacion('Agrupaciones',
-    ['ALM', 'PRV', 'FAM', 'TMP'],
-    ['Almacén', 'Proveedor', 'Familia', 'Temporada'], True);
+    ['ALM', 'PRV', 'FAM', 'TMP', 'COL'],
+    ['Almacén', 'Proveedor', 'Familia', 'Temporada', 'Color'], True);
 end;
 
 procedure TfrmPrintMovVentasArt.chkIniComprasChange(Sender: TObject);
@@ -199,11 +201,39 @@ begin
   fxdsMovVentas.DataSet := FResultadoMovimientos.DataSet;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsMovVentas);
+  ConfigurarDetalleArticuloColor;
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
   // las fotos y oculta las bandas de grupo de los niveles inactivos.
   frxrprt1.OnBeforePrint := ReportBeforePrint;
   // Precarga de fotos a nivel artículo en UNA consulta (evita el N+1).
   PrecargarFotosArticulos;
+end;
+
+procedure TfrmPrintMovVentasArt.ConfigurarDetalleArticuloColor;
+var
+  oComponente: TfrxComponent;
+  sCampoColor: string;
+begin
+  if (FResultadoMovimientos = nil) or
+     (not FResultadoMovimientos.DataSet.Active) then
+    Exit;
+  sCampoColor := '';
+  if FResultadoMovimientos.DataSet.FindField('COLOR_ETIQUETA') <> nil then
+    sCampoColor := 'COLOR_ETIQUETA'
+  else if FResultadoMovimientos.DataSet.FindField('COLOR') <> nil then
+    sCampoColor := 'COLOR';
+  oComponente := frxrprt1.FindObject('MemoArtDesc');
+  if oComponente is TfrxMemoView then
+  begin
+    if sCampoColor <> '' then
+      TfrxMemoView(oComponente).Memo.Text :=
+        '[MovVentas."CODIGO_ART_ART"]  [MovVentas."' + sCampoColor + '"]' +
+        sLineBreak + '[MovVentas."DESCRIPCION_ART"]'
+    else
+      TfrxMemoView(oComponente).Memo.Text :=
+        '[MovVentas."CODIGO_ART_ART"]' + sLineBreak +
+        '[MovVentas."DESCRIPCION_ART"]';
+  end;
 end;
 
 destructor TfrmPrintMovVentasArt.Destroy;

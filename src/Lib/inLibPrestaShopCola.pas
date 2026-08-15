@@ -139,6 +139,9 @@ type
       const ACliente: IClienteCatalogoPresta;
       const AClienteAlta: IClienteCatalogoAltaPresta;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
+    procedure ProcesarDesactivacion(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const ACliente: IClienteCatalogoPresta);
     function PrepararPlanArticulo(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ACliente: IClienteCatalogoPresta;
@@ -390,6 +393,7 @@ begin
             (AConfiguracion.Cola.CodigoEmpresa <> '') and
             (AConfiguracion.Cola.CodigoTarifa <> '') and
             (AConfiguracion.Cola.IdTienda > 0) and
+            (AConfiguracion.Cola.NivelesFamiliaAlta >= 0) and
             ((not AConfiguracion.CrearArticulos) or
              ((AConfiguracion.Cola.IdIdioma > 0) and
               (AConfiguracion.Cola.IdCategoriaRaiz > 0) and
@@ -407,7 +411,7 @@ begin
     FContextoSesion.Identidad.Grupo);
   FSegundosCiclo := Result.SegundosCiclo;
   FClaveOculta := Result.ClaveApi;
-  if Result.Activo and (Result.UrlApi <> '') then
+  if Result.UrlApi <> '' then
     Result.Cola.ClaveInstalacion :=
       CalcularClaveInstalacionPresta(Result.UrlApi);
 end;
@@ -418,8 +422,7 @@ var
   oActual: TConfiguracionGlobalPrestaShop;
 begin
   oActual := PrepararConfiguracion;
-  Result := oActual.Activo and
-    FRepositorio.DestinoSinConflictos(oActual, FUsuario) and
+  Result := FRepositorio.DestinoSinConflictos(oActual, FUsuario) and
     SameText(oActual.UrlApi, AConfiguracion.UrlApi) and
     (oActual.ClaveApi = AConfiguracion.ClaveApi) and
     SameText(
@@ -437,6 +440,8 @@ begin
       AConfiguracion.Cola.IdReglaIvaSuperreducido) and
     (oActual.Cola.IdReglaIvaExento =
       AConfiguracion.Cola.IdReglaIvaExento) and
+    (oActual.Cola.NivelesFamiliaAlta =
+      AConfiguracion.Cola.NivelesFamiliaAlta) and
     (oActual.SincronizarStockPrecios =
       AConfiguracion.SincronizarStockPrecios) and
     (oActual.CrearArticulos = AConfiguracion.CrearArticulos) and
@@ -468,13 +473,24 @@ function THiloPrestaShopCola.AsegurarFamiliasAlta(
 var
   iFamilia: Integer;
   iIdPadre: Integer;
+  iPrimeraFamilia: Integer;
+  iResultado: Integer;
   oDatos: TAltaCategoriaPresta;
   oResultado: TResultadoAltaPresta;
 begin
-  SetLength(Result, Length(AArticulo.Familias) + 1);
+  iPrimeraFamilia := 0;
+  if (AConfiguracion.Cola.NivelesFamiliaAlta > 0) and
+     (Length(AArticulo.Familias) >
+      AConfiguracion.Cola.NivelesFamiliaAlta) then
+    iPrimeraFamilia := Length(AArticulo.Familias) -
+      AConfiguracion.Cola.NivelesFamiliaAlta;
+  SetLength(
+    Result,
+    Length(AArticulo.Familias) - iPrimeraFamilia + 1);
   iIdPadre := AConfiguracion.Cola.IdCategoriaRaiz;
   Result[0] := iIdPadre;
-  iFamilia := 0;
+  iFamilia := iPrimeraFamilia;
+  iResultado := 1;
   while iFamilia <= High(AArticulo.Familias) do
   begin
     oDatos := Default(TAltaCategoriaPresta);
@@ -487,7 +503,8 @@ begin
     AsegurarLease(ATrabajo);
     oResultado := ACliente.AsegurarCategoria(oDatos);
     iIdPadre := oResultado.Id;
-    Result[iFamilia + 1] := iIdPadre;
+    Result[iResultado] := iIdPadre;
+    Inc(iResultado);
     Inc(iFamilia);
   end;
 end;
@@ -832,6 +849,8 @@ end;
 procedure THiloPrestaShopCola.ProcesarCiclo(ARecuperacion: Boolean);
 var
   bProcesar: Boolean;
+  bSolicitaProcesado: Boolean;
+  bTieneVisibilidad: Boolean;
   oCliente: IClienteCatalogoPresta;
   oClienteAlta: IClienteCatalogoAltaPresta;
   oConfiguracion: TConfiguracionGlobalPrestaShop;
@@ -849,11 +868,18 @@ begin
     FRepositorioAlta := FSesion.RepositorioAlta;
   end;
   oConfiguracion := PrepararConfiguracion;
-  if oConfiguracion.Activo and ConfiguracionCompleta(oConfiguracion) and
+  bTieneVisibilidad := False;
+  if (oConfiguracion.Cola.ClaveInstalacion <> '') and
+     (oConfiguracion.Cola.IdTienda > 0) then
+    bTieneVisibilidad := FRepositorio.TieneVisibilidadPendiente(
+      oConfiguracion.Cola.ClaveInstalacion,
+      oConfiguracion.Cola.IdTienda);
+  bSolicitaProcesado := oConfiguracion.Activo or bTieneVisibilidad;
+  if bSolicitaProcesado and ConfiguracionCompleta(oConfiguracion) and
      FRepositorio.DestinoSinConflictos(oConfiguracion, FUsuario) then
   begin
     FAvisoConfiguracion := False;
-    if ARecuperacion then
+    if ARecuperacion and oConfiguracion.Activo then
       EjecutarBarridoSiProcede(oConfiguracion);
     bProcesar := not ARecuperacion;
     if ARecuperacion then
@@ -898,7 +924,7 @@ begin
   end
   else
   begin
-    if oConfiguracion.Activo and (not FAvisoConfiguracion) then
+    if bSolicitaProcesado and (not FAvisoConfiguracion) then
     begin
       if Assigned(FRegistroLog) then
       begin
@@ -909,7 +935,7 @@ begin
       end;
       FAvisoConfiguracion := True;
     end;
-    if not oConfiguracion.Activo then
+    if not bSolicitaProcesado then
       FAvisoConfiguracion := False;
   end;
 end;
@@ -996,22 +1022,28 @@ begin
         oContextoHistorial.OrdenOperacion := 0;
         ATransporteHistorial.EstablecerContexto(
           oContextoHistorial);
-        if oTrabajo.EstaEnWeb and
-           (AConfiguracion.CrearArticulos or
-            (AConfiguracion.SincronizarStockPrecios and
-             ((oTrabajo.TienePrecio and
-               oTrabajo.TienePrecioProducto) or
-              oTrabajo.TieneStock))) then
+        if ((oTrabajo.AccionVisibilidad = avpDesactivar) and
+            (not oTrabajo.EstaEnWeb)) or
+           (oTrabajo.EstaEnWeb and
+            ((oTrabajo.AccionVisibilidad = avpActivar) or
+             AConfiguracion.CrearArticulos or
+             (AConfiguracion.SincronizarStockPrecios and
+              ((oTrabajo.TienePrecio and
+                oTrabajo.TienePrecioProducto) or
+               oTrabajo.TieneStock)))) then
         begin
           AsegurarLease(oTrabajo);
           if not SigueVigente(AConfiguracion) then
             raise EInvalidOpException.Create(
               'La configuración PrestaShop cambió durante el envío');
-          ProcesarArticulo(
-            oTrabajo,
-            ACliente,
-            AClienteAlta,
-            AConfiguracion);
+          if oTrabajo.AccionVisibilidad = avpDesactivar then
+            ProcesarDesactivacion(oTrabajo, ACliente)
+          else
+            ProcesarArticulo(
+              oTrabajo,
+              ACliente,
+              AClienteAlta,
+              AConfiguracion);
         end;
         FRepositorio.MarcarEnviada(
           oTrabajo.IdCola,
@@ -1046,6 +1078,40 @@ begin
     finally
       ATransporteHistorial.LimpiarContexto;
     end;
+  end;
+end;
+
+procedure THiloPrestaShopCola.ProcesarDesactivacion(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const ACliente: IClienteCatalogoPresta);
+var
+  bEncontrado: Boolean;
+  iIdProducto: Integer;
+begin
+  bEncontrado := True;
+  iIdProducto := 0;
+  AsegurarLease(ATrabajo);
+  try
+    iIdProducto := ACliente.BuscarProductoUnico(
+      ATrabajo.CodigoArticulo,
+      ATrabajo.IdTienda);
+  except
+    on E: ERecursoPrestaNoEncontrado do
+    begin
+      if SameText(E.TipoRecurso, CTipoRecursoProducto) then
+        bEncontrado := False
+      else
+        raise;
+    end;
+  end;
+  if bEncontrado then
+  begin
+    AsegurarLease(ATrabajo);
+    ACliente.AsegurarEstadoActivoProducto(
+      iIdProducto,
+      ATrabajo.IdTienda,
+      False);
+    AsegurarLease(ATrabajo);
   end;
 end;
 
@@ -1137,6 +1203,15 @@ begin
       end;
       Inc(iLinea);
     end;
+  end;
+  if ATrabajo.AccionVisibilidad = avpActivar then
+  begin
+    AsegurarLease(ATrabajo);
+    ACliente.AsegurarEstadoActivoProducto(
+      oPlan.IdProducto,
+      ATrabajo.IdTienda,
+      True);
+    AsegurarLease(ATrabajo);
   end;
 end;
 
