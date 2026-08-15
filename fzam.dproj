@@ -1081,6 +1081,8 @@
         <DCCReference
             Include="src\Lib\inLibPrestaShopTransporteHistorial.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopColaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibPrestaShopColaSenal.pas"/>
+        <DCCReference Include="src\Lib\inLibPrestaShopCierre.pas"/>
         <DCCReference Include="src\DataModules\UniDataPrestaShopCola.pas"/>
         <DCCReference
             Include="src\DataModules\UniDataPrestaShopColaMonitor.pas">

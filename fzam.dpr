@@ -896,6 +896,8 @@ uses
   UniDataPrestaShopAltaArticulo in
     'src\DataModules\UniDataPrestaShopAltaArticulo.pas',
   inLibPrestaShopColaIntf in 'src\Lib\inLibPrestaShopColaIntf.pas',
+  inLibPrestaShopColaSenal in 'src\Lib\inLibPrestaShopColaSenal.pas',
+  inLibPrestaShopCierre in 'src\Lib\inLibPrestaShopCierre.pas',
   UniDataPrestaShopCola in
     'src\DataModules\UniDataPrestaShopCola.pas',
   UniDataPrestaShopColaMonitor in

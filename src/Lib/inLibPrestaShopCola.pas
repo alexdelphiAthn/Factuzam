@@ -18,22 +18,28 @@ interface
 
 uses
   System.Classes, inLibContextoSesionIntf, inLibParametrosIntf,
-  inLibPrestaShopColaIntf, inLibLogIntf;
+  inLibPrestaShopColaIntf, inLibPrestaShopCierre, inLibLogIntf;
 
 type
   TPrestaShopCola = class
   private
+    FControlTrabajo: TControlTrabajoPrestaShop;
     FHilo: TThread;
     FRegistroLog: IRegistroLog;
+    procedure FinalizarHilo;
   public
     constructor Create(const ARegistroLog: IRegistroLog);
     destructor Destroy; override;
+    function BloquearNuevasReclamaciones: Boolean;
+    procedure CancelarCierre;
+    procedure DetenerLiberandoTrabajoActual;
     procedure IniciarHilo(
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
       const AFabricaSesion: IFabricaSesionPrestaShopCola;
       const AUsuario: string);
     procedure DetenerHilo;
+    procedure DetenerTrasTrabajoActual;
   end;
 
 implementation
@@ -54,6 +60,7 @@ const
 
 type
   EAltaArticuloPrestaWorker = class(Exception);
+  ECierreForzadoPrestaShop = class(Exception);
 
   TMapeoLineaPrestaShop = record
     IdCombinacion: Integer;
@@ -72,6 +79,7 @@ type
     FRepositorio: IRepositorioPrestaShopCola;
     FRepositorioAlta: IRepositorioAltaArticuloPresta;
     FContextoSesion: IContextoSesionAplicacion;
+    FControlTrabajo: TControlTrabajoPrestaShop;
     FFabricaSesion: IFabricaSesionPrestaShopCola;
     FRegistroLog: IRegistroLog;
     FUsuario: string;
@@ -85,6 +93,7 @@ type
     function SigueVigente(
       const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
     procedure AsegurarLease(const ATrabajo: TTrabajoArticuloPrestaShop);
+    procedure ComprobarCierreSeguro;
     procedure AsegurarAtributosAlta(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const AArticulo: TArticuloCompletoAltaPresta;
@@ -134,6 +143,7 @@ type
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const AConfiguracion: TConfiguracionGlobalPrestaShop;
       const AError: ERecursoPrestaNoEncontrado);
+    procedure LiberarTrabajoActual(AIdCola: Int64; const AToken: string);
     procedure ProcesarArticulo(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ACliente: IClienteCatalogoPresta;
@@ -175,7 +185,8 @@ type
       const AParametrosApp: IParametrosAplicacion;
       const AFabricaSesion: IFabricaSesionPrestaShopCola;
       const AUsuario: string;
-      const ARegistroLog: IRegistroLog); reintroduce;
+      const ARegistroLog: IRegistroLog;
+      AControlTrabajo: TControlTrabajoPrestaShop); reintroduce;
     destructor Destroy; override;
   end;
 
@@ -204,6 +215,12 @@ resourcestring
     'PrestaShop no confirmó el impacto de precio de la combinación %d.';
   SStockPrestaShopNoVerificado =
     'PrestaShop no confirmó el stock %d.';
+  SCierrePrestaShopReencolado =
+    'Cierre de aplicación: artículo PrestaShop %d reencolado sin consumir ' +
+    'intento.';
+  SCierrePrestaShopNoLiberado =
+    'Cierre de aplicación: no se liberó el artículo PrestaShop %d porque ' +
+    'su reclamación ya no estaba vigente.';
   SBarridoPrestaShopOmitido =
     'Barrido de respaldo PrestaShop omitido: %s';
   SProductoPrestaShopNoEncontradoSinAlta =
@@ -294,14 +311,38 @@ end;
 constructor TPrestaShopCola.Create(const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
+  FControlTrabajo := TControlTrabajoPrestaShop.Create;
   FRegistroLog := ARegistroLog;
 end;
 
 destructor TPrestaShopCola.Destroy;
 begin
-  DetenerHilo;
-  FRegistroLog := nil;
-  inherited;
+  try
+    DetenerHilo;
+    FRegistroLog := nil;
+  finally
+    FreeAndNil(FControlTrabajo);
+    inherited;
+  end;
+end;
+
+function TPrestaShopCola.BloquearNuevasReclamaciones: Boolean;
+begin
+  Result := False;
+  if FHilo <> nil then
+    Result := FControlTrabajo.BloquearNuevasReclamaciones;
+end;
+
+procedure TPrestaShopCola.CancelarCierre;
+begin
+  FControlTrabajo.CancelarCierre;
+  SolicitarProcesadoPrestaShop;
+end;
+
+procedure TPrestaShopCola.DetenerLiberandoTrabajoActual;
+begin
+  FControlTrabajo.SolicitarCerrarDeTodosModos;
+  FinalizarHilo;
 end;
 
 procedure TPrestaShopCola.IniciarHilo(
@@ -314,12 +355,14 @@ var
 begin
   if FHilo = nil then
   begin
+    FControlTrabajo.CancelarCierre;
     oHilo := THiloPrestaShopCola.Create(
       AContextoSesion,
       AParametrosApp,
       AFabricaSesion,
       AUsuario,
-      FRegistroLog);
+      FRegistroLog,
+      FControlTrabajo);
     try
       oHilo.FreeOnTerminate := False;
       oHilo.Start;
@@ -335,6 +378,18 @@ begin
 end;
 
 procedure TPrestaShopCola.DetenerHilo;
+begin
+  FControlTrabajo.SolicitarEsperar;
+  FinalizarHilo;
+end;
+
+procedure TPrestaShopCola.DetenerTrasTrabajoActual;
+begin
+  FControlTrabajo.SolicitarEsperar;
+  FinalizarHilo;
+end;
+
+procedure TPrestaShopCola.FinalizarHilo;
 begin
   if FHilo <> nil then
   begin
@@ -355,7 +410,8 @@ constructor THiloPrestaShopCola.Create(
   const AParametrosApp: IParametrosAplicacion;
   const AFabricaSesion: IFabricaSesionPrestaShopCola;
   const AUsuario: string;
-  const ARegistroLog: IRegistroLog);
+  const ARegistroLog: IRegistroLog;
+  AControlTrabajo: TControlTrabajoPrestaShop);
 begin
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
@@ -363,8 +419,11 @@ begin
     raise EArgumentNilException.Create('AParametrosApp');
   if not Assigned(AFabricaSesion) then
     raise EArgumentNilException.Create('AFabricaSesion');
+  if not Assigned(AControlTrabajo) then
+    raise EArgumentNilException.Create('AControlTrabajo');
   inherited Create(True);
   FContextoSesion := AContextoSesion;
+  FControlTrabajo := AControlTrabajo;
   FFabricaSesion := AFabricaSesion;
   FUsuario := Trim(AUsuario);
   if FUsuario = '' then
@@ -379,6 +438,7 @@ begin
   FRepositorio := nil;
   FSesion := nil;
   FFabricaSesion := nil;
+  FControlTrabajo := nil;
   FContextoSesion := nil;
   FRegistroLog := nil;
   inherited;
@@ -458,10 +518,19 @@ end;
 procedure THiloPrestaShopCola.AsegurarLease(
   const ATrabajo: TTrabajoArticuloPrestaShop);
 begin
+  ComprobarCierreSeguro;
   if not FRepositorio.RenovarReclamacion(
     ATrabajo.IdCola,
     ATrabajo.Token) then
     raise EInvalidOpException.Create(SLeasePrestaShopPerdido);
+  ComprobarCierreSeguro;
+end;
+
+procedure THiloPrestaShopCola.ComprobarCierreSeguro;
+begin
+  if FControlTrabajo.DebeLiberarTrabajo then
+    raise ECierreForzadoPrestaShop.Create(
+      'Cierre solicitado tras la operación remota actual');
 end;
 
 function THiloPrestaShopCola.AsegurarFamiliasAlta(
@@ -747,6 +816,8 @@ begin
       FreeAndNil(oGrupos);
     end;
   except
+    on E: ECierreForzadoPrestaShop do
+      raise;
     on E: EAltaArticuloPrestaLocal do
       raise;
     on E: ERecursoPrestaAmbiguo do
@@ -953,7 +1024,8 @@ var
 begin
   bContinuar := True;
   while bContinuar and (not Terminated) and
-        (not FContextoSesion.CerrandoAplicacion) do
+        (not FContextoSesion.CerrandoAplicacion) and
+        FControlTrabajo.PermiteNuevasReclamaciones do
   begin
     aPendientes := FRepositorio.BuscarPendientes(
       AConfiguracion.Cola.ClaveInstalacion,
@@ -963,7 +1035,8 @@ begin
     iIndice := 0;
     while (iIndice <= High(aPendientes)) and bContinuar and
           (not Terminated) and
-          (not FContextoSesion.CerrandoAplicacion) do
+          (not FContextoSesion.CerrandoAplicacion) and
+          FControlTrabajo.PermiteNuevasReclamaciones do
     begin
       bContinuar := SigueVigente(AConfiguracion);
       if bContinuar then
@@ -990,95 +1063,128 @@ var
   oTrabajo: TTrabajoArticuloPrestaShop;
   sToken: string;
 begin
-  if FRepositorio.MarcarProcesando(
-    AIdCola,
-    AConfiguracion.Cola.ClaveInstalacion,
-    AConfiguracion.Cola.IdTienda,
-    FUsuario,
-    sToken) then
+  if FControlTrabajo.IntentarIniciarTrabajo then
   begin
-    oTrabajo := Default(TTrabajoArticuloPrestaShop);
-    oTrabajo.IdCola := AIdCola;
-    oTrabajo.Token := sToken;
     try
-      try
-        oTrabajo := FRepositorio.LeerTrabajo(
-          AIdCola,
-          sToken,
-          AConfiguracion.Cola);
-        if oTrabajo.IdCola = 0 then
-          oTrabajo.IdCola := AIdCola;
+      if FRepositorio.MarcarProcesando(
+        AIdCola,
+        AConfiguracion.Cola.ClaveInstalacion,
+        AConfiguracion.Cola.IdTienda,
+        FUsuario,
+        sToken) then
+      begin
+        oTrabajo := Default(TTrabajoArticuloPrestaShop);
+        oTrabajo.IdCola := AIdCola;
         oTrabajo.Token := sToken;
-        if oTrabajo.CodigoArticulo = '' then
-          raise EInvalidOpException.Create(
-            STrabajoPrestaShopNoReclamado);
-        oContextoHistorial := Default(TContextoTransportePrestaShop);
-        oContextoHistorial.IdCola := oTrabajo.IdCola;
-        oContextoHistorial.IdReclamacion := oTrabajo.Token;
-        oContextoHistorial.VersionReclamada :=
-          oTrabajo.VersionReclamada;
-        oContextoHistorial.NumeroIntento := oTrabajo.Intentos + 1;
-        oContextoHistorial.Usuario := FUsuario;
-        oContextoHistorial.OrdenOperacion := 0;
-        ATransporteHistorial.EstablecerContexto(
-          oContextoHistorial);
-        if ((oTrabajo.AccionVisibilidad = avpDesactivar) and
-            (not oTrabajo.EstaEnWeb)) or
-           (oTrabajo.EstaEnWeb and
-            ((oTrabajo.AccionVisibilidad = avpActivar) or
-             AConfiguracion.CrearArticulos or
-             (AConfiguracion.SincronizarStockPrecios and
-              ((oTrabajo.TienePrecio and
-                oTrabajo.TienePrecioProducto) or
-               oTrabajo.TieneStock)))) then
-        begin
-          AsegurarLease(oTrabajo);
-          if not SigueVigente(AConfiguracion) then
-            raise EInvalidOpException.Create(
-              'La configuración PrestaShop cambió durante el envío');
-          if oTrabajo.AccionVisibilidad = avpDesactivar then
-            ProcesarDesactivacion(oTrabajo, ACliente)
-          else
-            ProcesarArticulo(
-              oTrabajo,
-              ACliente,
-              AClienteAlta,
-              AConfiguracion);
+        try
+          try
+            ComprobarCierreSeguro;
+            oTrabajo := FRepositorio.LeerTrabajo(
+              AIdCola,
+              sToken,
+              AConfiguracion.Cola);
+            if oTrabajo.IdCola = 0 then
+              oTrabajo.IdCola := AIdCola;
+            oTrabajo.Token := sToken;
+            if oTrabajo.CodigoArticulo = '' then
+              raise EInvalidOpException.Create(
+                STrabajoPrestaShopNoReclamado);
+            oContextoHistorial := Default(TContextoTransportePrestaShop);
+            oContextoHistorial.IdCola := oTrabajo.IdCola;
+            oContextoHistorial.IdReclamacion := oTrabajo.Token;
+            oContextoHistorial.VersionReclamada :=
+              oTrabajo.VersionReclamada;
+            oContextoHistorial.NumeroIntento := oTrabajo.Intentos + 1;
+            oContextoHistorial.Usuario := FUsuario;
+            oContextoHistorial.OrdenOperacion := 0;
+            ATransporteHistorial.EstablecerContexto(
+              oContextoHistorial);
+            if ((oTrabajo.AccionVisibilidad = avpDesactivar) and
+                (not oTrabajo.EstaEnWeb)) or
+               (oTrabajo.EstaEnWeb and
+                ((oTrabajo.AccionVisibilidad = avpActivar) or
+                 AConfiguracion.CrearArticulos or
+                 (AConfiguracion.SincronizarStockPrecios and
+                  ((oTrabajo.TienePrecio and
+                    oTrabajo.TienePrecioProducto) or
+                   oTrabajo.TieneStock)))) then
+            begin
+              AsegurarLease(oTrabajo);
+              if not SigueVigente(AConfiguracion) then
+                raise EInvalidOpException.Create(
+                  'La configuración PrestaShop cambió durante el envío');
+              if oTrabajo.AccionVisibilidad = avpDesactivar then
+                ProcesarDesactivacion(oTrabajo, ACliente)
+              else
+                ProcesarArticulo(
+                  oTrabajo,
+                  ACliente,
+                  AClienteAlta,
+                  AConfiguracion);
+            end;
+            ComprobarCierreSeguro;
+            FRepositorio.MarcarEnviada(
+              oTrabajo.IdCola,
+              oTrabajo.Token,
+              FUsuario,
+              oTrabajo.TieneProximoCambioPrecio,
+              oTrabajo.ProximoCambioPrecio);
+          except
+            on E: Exception do
+            begin
+              if FControlTrabajo.DebeLiberarTrabajo or
+                 (E is ECierreForzadoPrestaShop) then
+                LiberarTrabajoActual(AIdCola, sToken)
+              else if E is EAltaArticuloPrestaLocal then
+                GuardarIncidenciaTerminal(
+                  oTrabajo,
+                  AConfiguracion,
+                  E.Message)
+              else if E is EConfiguracionPrestaInvalida then
+                GuardarIncidenciaTerminal(
+                  oTrabajo,
+                  AConfiguracion,
+                  E.Message)
+              else if E is ERecursoPrestaNoEncontrado then
+                GuardarRecursoNoEncontrado(
+                  oTrabajo,
+                  AConfiguracion,
+                  ERecursoPrestaNoEncontrado(E))
+              else if E is ERecursoPrestaAmbiguo then
+                GuardarRecursoAmbiguo(
+                  oTrabajo,
+                  AConfiguracion,
+                  ERecursoPrestaAmbiguo(E))
+              else
+                GuardarError(oTrabajo, AConfiguracion, E.Message);
+            end;
+          end;
+        finally
+          ATransporteHistorial.LimpiarContexto;
         end;
-        FRepositorio.MarcarEnviada(
-          oTrabajo.IdCola,
-          oTrabajo.Token,
-          FUsuario,
-          oTrabajo.TieneProximoCambioPrecio,
-          oTrabajo.ProximoCambioPrecio);
-      except
-        on E: EAltaArticuloPrestaLocal do
-          GuardarIncidenciaTerminal(
-            oTrabajo,
-            AConfiguracion,
-            E.Message);
-        on E: EConfiguracionPrestaInvalida do
-          GuardarIncidenciaTerminal(
-            oTrabajo,
-            AConfiguracion,
-            E.Message);
-        on E: ERecursoPrestaNoEncontrado do
-          GuardarRecursoNoEncontrado(
-            oTrabajo,
-            AConfiguracion,
-            E);
-        on E: ERecursoPrestaAmbiguo do
-          GuardarRecursoAmbiguo(
-            oTrabajo,
-            AConfiguracion,
-            E);
-        on E: Exception do
-          GuardarError(oTrabajo, AConfiguracion, E.Message);
       end;
     finally
-      ATransporteHistorial.LimpiarContexto;
+      FControlTrabajo.FinalizarTrabajo;
     end;
   end;
+end;
+
+procedure THiloPrestaShopCola.LiberarTrabajoActual(
+  AIdCola: Int64;
+  const AToken: string);
+begin
+  if FRepositorio.LiberarReclamacionSinIntento(
+    AIdCola,
+    AToken,
+    FUsuario) then
+  begin
+    if Assigned(FRegistroLog) then
+      FRegistroLog.RegistrarInformacion(
+        Format(SCierrePrestaShopReencolado, [AIdCola]));
+  end
+  else if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarAviso(
+      Format(SCierrePrestaShopNoLiberado, [AIdCola]));
 end;
 
 procedure THiloPrestaShopCola.ProcesarDesactivacion(
@@ -1179,15 +1285,15 @@ begin
           oPlan.IdProducto,
           ATrabajo.IdTienda,
           ATrabajo.PrecioProducto);
+        AsegurarLease(ATrabajo);
+        dActual := ACliente.LeerPrecioProducto(
+          oPlan.IdProducto,
+          ATrabajo.IdTienda);
+        if PrecioDiferente(dActual, ATrabajo.PrecioProducto) then
+          raise EInvalidOpException.CreateFmt(
+            SPrecioProductoNoVerificado,
+            [oPlan.IdProducto]);
       end;
-      AsegurarLease(ATrabajo);
-      dActual := ACliente.LeerPrecioProducto(
-        oPlan.IdProducto,
-        ATrabajo.IdTienda);
-      if PrecioDiferente(dActual, ATrabajo.PrecioProducto) then
-        raise EInvalidOpException.CreateFmt(
-          SPrecioProductoNoVerificado,
-          [oPlan.IdProducto]);
     end;
     iLinea := 0;
     while iLinea <= High(ATrabajo.Lineas) do
@@ -1296,15 +1402,15 @@ begin
         AMapeo.IdCombinacion,
         ATrabajo.IdTienda,
         dImpacto);
+      AsegurarLease(ATrabajo);
+      dActual := ACliente.LeerImpactoPrecioCombinacion(
+        AMapeo.IdCombinacion,
+        ATrabajo.IdTienda);
+      if PrecioDiferente(dActual, dImpacto) then
+        raise EInvalidOpException.CreateFmt(
+          SPrecioCombinacionNoVerificado,
+          [AMapeo.IdCombinacion]);
     end;
-    AsegurarLease(ATrabajo);
-    dActual := ACliente.LeerImpactoPrecioCombinacion(
-      AMapeo.IdCombinacion,
-      ATrabajo.IdTienda);
-    if PrecioDiferente(dActual, dImpacto) then
-      raise EInvalidOpException.CreateFmt(
-        SPrecioCombinacionNoVerificado,
-        [AMapeo.IdCombinacion]);
   end;
   if ALinea.TieneStock then
   begin
@@ -1319,15 +1425,15 @@ begin
         AMapeo.IdStock,
         ATrabajo.IdTienda,
         ALinea.Cantidad);
+      AsegurarLease(ATrabajo);
+      iActual := ACliente.LeerCantidadStock(
+        AMapeo.IdStock,
+        ATrabajo.IdTienda);
+      if iActual <> ALinea.Cantidad then
+        raise EInvalidOpException.CreateFmt(
+          SStockPrestaShopNoVerificado,
+          [AMapeo.IdStock]);
     end;
-    AsegurarLease(ATrabajo);
-    iActual := ACliente.LeerCantidadStock(
-      AMapeo.IdStock,
-      ATrabajo.IdTienda);
-    if iActual <> ALinea.Cantidad then
-      raise EInvalidOpException.CreateFmt(
-        SStockPrestaShopNoVerificado,
-        [AMapeo.IdStock]);
   end;
 end;
 

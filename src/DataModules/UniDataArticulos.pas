@@ -111,6 +111,7 @@ type
     FHayVisibilidadPrestaShopAplazada: Boolean;
     FMarcaWebAnteriorPreparada: Boolean;
     FMarcaWebNuevaPreparada: Boolean;
+    FQuedaEnWebVisibilidadAplazada: Boolean;
     FOnConfirmarDesactivacionWeb:
       TConfirmarDesactivacionWebArticuloEvent;
     procedure AsegurarSkuBase(const ACodArt: string);
@@ -164,6 +165,9 @@ type
       AConfirmacion: TConfirmarDesactivacionWebArticuloEvent);
     procedure IniciarAplazamientoVisibilidadPrestaShop;
     procedure ConfirmarVisibilidadPrestaShopAplazada;
+    procedure FinalizarVisibilidadPrestaShopAplazada(
+      AExito: Boolean;
+      const AMensajeError: string);
     procedure DescartarVisibilidadPrestaShopAplazada;
     procedure PrepararCambioMarcaWeb;
     procedure LimpiarCambioMarcaWebPreparado;
@@ -888,6 +892,7 @@ end;
 
 procedure TdmArticulos.unqryTablaGAfterPost(DataSet: TDataSet);
 var
+  bQuedaEnWeb: Boolean;
   sArt: string;
 begin
   try
@@ -903,15 +908,21 @@ begin
         AsegurarSkuBase(sArt);
     end;
     sArt := Trim(unqryTablaG.FindField('CODIGO_ART_ART').AsString);
+    bQuedaEnWeb := SameText(
+      unqryTablaG.FindField('ESWEB_ART').AsString,
+      'S');
     if FCambioMarcaWebPreparado and
        (FMarcaWebAnteriorPreparada <>
         FMarcaWebNuevaPreparada) then
       CapturarOEncolarVisibilidadPrestaShop(
         sArt,
         FAccionVisibilidadPendiente)
-    else if SameText(
-      unqryTablaG.FindField('ESWEB_ART').AsString,
-      'S') then
+    else if FAplazarVisibilidadPrestaShop then
+    begin
+      FCodigoArticuloVisibilidadAplazada := sArt;
+      FQuedaEnWebVisibilidadAplazada := bQuedaEnWeb;
+    end
+    else if bQuedaEnWeb then
       EncolarArticuloPrestaShop(
         unqryTablaG.Connection,
         sArt,
@@ -1237,6 +1248,9 @@ begin
     FCodigoArticuloVisibilidadAplazada := ACodigoArticulo;
     FAccionVisibilidadAplazada := AAccion;
     FHayVisibilidadPrestaShopAplazada := True;
+    FQuedaEnWebVisibilidadAplazada := SameText(
+      unqryTablaG.FindField('ESWEB_ART').AsString,
+      'S');
   end
   else
     EncolarVisibilidadPrestaShop(
@@ -1244,6 +1258,63 @@ begin
       ACodigoArticulo,
       AAccion,
       IdentidadSesion.Usuario);
+end;
+
+procedure TdmArticulos.FinalizarVisibilidadPrestaShopAplazada(
+  AExito: Boolean;
+  const AMensajeError: string);
+var
+  Accion: TAccionVisibilidadPrestaShop;
+begin
+  try
+    if FCodigoArticuloVisibilidadAplazada <> '' then
+    begin
+      Accion := avpNinguna;
+      if FHayVisibilidadPrestaShopAplazada then
+        Accion := FAccionVisibilidadAplazada;
+      if AExito then
+      begin
+        if FHayVisibilidadPrestaShopAplazada then
+          EncolarVisibilidadPrestaShop(
+            unqryTablaG.Connection,
+            FCodigoArticuloVisibilidadAplazada,
+            Accion,
+            IdentidadSesion.Usuario)
+        else if not ReanudarPublicacionAplazadaPrestaShop(
+          unqryTablaG.Connection,
+          FCodigoArticuloVisibilidadAplazada,
+          IdentidadSesion.Usuario) then
+        begin
+          if FQuedaEnWebVisibilidadAplazada then
+            EncolarArticuloPrestaShop(
+              unqryTablaG.Connection,
+              FCodigoArticuloVisibilidadAplazada,
+              IdentidadSesion.Usuario)
+          else
+            OmitirArticuloPrestaShop(
+              unqryTablaG.Connection,
+              FCodigoArticuloVisibilidadAplazada,
+              IdentidadSesion.Usuario);
+        end;
+      end
+      else if FQuedaEnWebVisibilidadAplazada then
+        RegistrarPublicacionAplazadaPrestaShop(
+          unqryTablaG.Connection,
+          FCodigoArticuloVisibilidadAplazada,
+          Accion,
+          FHayVisibilidadPrestaShopAplazada,
+          AMensajeError,
+          IdentidadSesion.Usuario)
+      else
+        EncolarVisibilidadPrestaShop(
+          unqryTablaG.Connection,
+          FCodigoArticuloVisibilidadAplazada,
+          Accion,
+          IdentidadSesion.Usuario);
+    end;
+  finally
+    DescartarVisibilidadPrestaShopAplazada;
+  end;
 end;
 
 procedure TdmArticulos.IniciarAplazamientoVisibilidadPrestaShop;
@@ -1272,6 +1343,7 @@ begin
   FAplazarVisibilidadPrestaShop := False;
   FCodigoArticuloVisibilidadAplazada := '';
   FHayVisibilidadPrestaShopAplazada := False;
+  FQuedaEnWebVisibilidadAplazada := False;
 end;
 
 procedure TdmArticulos.LimpiarCambioMarcaWebPreparado;

@@ -1067,7 +1067,9 @@ begin
           SErrorGuardarVariacionesArticulo,
           [Resultado.Mensaje]));
     end;
-    dmmArticulos.ConfirmarVisibilidadPrestaShopAplazada;
+    dmmArticulos.FinalizarVisibilidadPrestaShopAplazada(
+      Resultado.Error = egaNinguno,
+      Resultado.Mensaje);
     if Resultado.Error = egaNinguno then
       inherited;
   finally

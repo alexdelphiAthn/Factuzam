@@ -56,6 +56,7 @@ uses
   inLibExcepcionesAplicacionIntf,
   inLibOperacionesAplicacionIntf,
   inLibDistribuidorPersistenciaIntf,
+  inLibPrestaShopCierre,
   UniDataComposicionAplicacion,
   inMtoMantenimientosInyeccionRaiz,
   inMtoCajaInyeccionRaiz,
@@ -267,6 +268,7 @@ type
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
     FReiniciando: Boolean;
+    FRelanzarLoginPendiente: Boolean;
     FFalloCargaPermisosAvisado: Boolean;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
     FComposicion: TComposicionAplicacion;
@@ -313,6 +315,9 @@ type
       out ARutaFichero, AContrasena: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
+    function ConsultarDecisionCierrePrestaShop:
+      TDecisionCierrePrestaShop;
+    procedure RelanzarLoginSiPendiente;
     procedure SolicitarCancelarOperacionEnCurso;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     function GetParametrosAppEdicion: IParametrosEdicion;
@@ -408,6 +413,20 @@ const
 resourcestring
   SErrorPantallaNoHeredaFrmBase =
     'La pantalla registrada no hereda de TfrmBase.';
+  STituloCierreColaPrestaShop =
+    'PrestaShop está enviando un artículo';
+  STextoCierreColaPrestaShop =
+    'Esta instancia está procesando un artículo de la cola de PrestaShop. ' +
+    'Elija cómo desea cerrar Factuzam.';
+  SBotonEsperarCierrePrestaShop = 'Esperar';
+  SPistaEsperarCierrePrestaShop =
+    'Finaliza únicamente el artículo actual y después cierra.';
+  SBotonForzarCierrePrestaShop = 'Cerrar de todos modos';
+  SPistaForzarCierrePrestaShop =
+    'Espera la petición HTTP actual, reencola el artículo y después cierra.';
+  SBotonCancelarCierrePrestaShop = 'Cancelar cierre';
+  SPistaCancelarCierrePrestaShop =
+    'Mantiene Factuzam abierto y reanuda el consumo de la cola.';
 
 type
   TClaseFrmBase = class of TfrmBase;
@@ -1015,6 +1034,78 @@ begin
   inherited;
 end;
 
+function TfrmMtoPrincipal.ConsultarDecisionCierrePrestaShop:
+  TDecisionCierrePrestaShop;
+var
+  oBoton: TTaskDialogButtonItem;
+  oDialogo: TTaskDialog;
+begin
+  Result := dcpCancelar;
+  oDialogo := TTaskDialog.Create(Self);
+  try
+    oDialogo.Caption := Application.Title;
+    oDialogo.Title := STituloCierreColaPrestaShop;
+    oDialogo.Text := STextoCierreColaPrestaShop;
+    oDialogo.CommonButtons := [];
+    oDialogo.Flags := [
+      tfAllowDialogCancellation,
+      tfPositionRelativeToWindow,
+      tfUseCommandLinks];
+    oDialogo.MainIcon := tdiWarning;
+
+    oBoton := TTaskDialogButtonItem(oDialogo.Buttons.Add);
+    oBoton.Caption := SBotonEsperarCierrePrestaShop;
+    oBoton.CommandLinkHint := SPistaEsperarCierrePrestaShop;
+    oBoton.ModalResult := mrYes;
+    oDialogo.Buttons.DefaultButton := oBoton;
+
+    oBoton := TTaskDialogButtonItem(oDialogo.Buttons.Add);
+    oBoton.Caption := SBotonForzarCierrePrestaShop;
+    oBoton.CommandLinkHint := SPistaForzarCierrePrestaShop;
+    oBoton.ModalResult := mrNo;
+
+    oBoton := TTaskDialogButtonItem(oDialogo.Buttons.Add);
+    oBoton.Caption := SBotonCancelarCierrePrestaShop;
+    oBoton.CommandLinkHint := SPistaCancelarCierrePrestaShop;
+    oBoton.ModalResult := mrCancel;
+
+    if oDialogo.Execute(Handle) then
+    begin
+      case oDialogo.ModalResult of
+        mrYes:
+          Result := dcpEsperar;
+        mrNo:
+          Result := dcpCerrarDeTodosModos;
+      else
+        Result := dcpCancelar;
+      end;
+    end;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.RelanzarLoginSiPendiente;
+var
+  iResultado: HINST;
+begin
+  if FRelanzarLoginPendiente then
+  begin
+    FRelanzarLoginPendiente := False;
+    iResultado := ShellExecute(
+      0,
+      'open',
+      PChar(Application.ExeName),
+      PChar('/relogin'),
+      nil,
+      SW_SHOWNORMAL);
+    if NativeInt(iResultado) <= 32 then
+      RegistroLog.RegistrarError(
+        'No se pudo relanzar Factuzam para solicitar el login. Código: ' +
+        IntToStr(NativeInt(iResultado)));
+  end;
+end;
+
 procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   GestorContexto: IGestorContextoSesion;
@@ -1035,6 +1126,7 @@ begin
     FComposicion.RegistrarCierreFiscal;
     FComposicion.DetenerProcesosSegundoPlano;
   end;
+  RelanzarLoginSiPendiente;
   // Las ventas flotantes conservan referencias a servicios de la sesion.
   // Deben destruirse antes de liberar la composicion que los proporciona.
   LiberarOperacionesCaja;
@@ -1087,7 +1179,8 @@ begin
     CanClose := False;
     SolicitarCancelarOperacionEnCurso;
   end
-  // Cierre por reinicio de sesion ('Invocar login'): no preguntar.
+  // Cierre por reinicio de sesión ('Invocar login'): omite sólo la pregunta
+  // general. La protección de una fila PrestaShop activa se aplica después.
   else if (FReiniciando) then
     CanClose := True
   else if (pcPrincipal.PageCount = 0) then
@@ -1104,6 +1197,19 @@ begin
   end;
   if CanClose and not FReiniciando then
     CanClose := PuedenCerrarOperacionesCaja;
+  if CanClose and Assigned(FComposicion) then
+  begin
+    CanClose := FComposicion.PrepararCierrePrestaShop(
+      function: TDecisionCierrePrestaShop
+      begin
+        Result := ConsultarDecisionCierrePrestaShop;
+      end);
+  end;
+  if (not CanClose) and FRelanzarLoginPendiente then
+  begin
+    FRelanzarLoginPendiente := False;
+    FReiniciando := False;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.mnArchivoSalirClick(Sender: TObject);
@@ -1559,14 +1665,10 @@ procedure TfrmMtoPrincipal.mnuInvocarLoginClick(Sender: TObject);
 begin
   // Cerrar sesion: relanza Fzam con el conmutador /relogin (que ignora el
   // auto-login y la contrasena recordada para forzar la reidentificacion)
-  // y cierra esta instancia.
+  // y cierra esta instancia. El nuevo proceso se inicia desde FormClose,
+  // después de que FormCloseQuery haya aprobado el cierre.
   FReiniciando := True;
-  ShellExecute(0,
-               'open',
-               PChar(Application.ExeName),
-               PChar('/relogin'),
-               nil,
-               SW_SHOWNORMAL);
+  FRelanzarLoginPendiente := True;
   Close;
 end;
 

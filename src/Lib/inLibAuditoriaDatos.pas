@@ -117,14 +117,14 @@ begin
   begin
     Campo := DataSet.FindField('USUARIO_MODIF');
     AsignarTextoAuditoria(Campo, Usuario);
+    Campo := DataSet.FindField('INSTANTE_MODIF');
+    AsignarFechaAuditoria(Campo, Now);
     if DataSet.State = dsInsert then
     begin
       Campo := DataSet.FindField('INSTANTE_ALTA');
       AsignarFechaAuditoria(Campo, Now);
       Campo := DataSet.FindField('USUARIO_ALTA');
       AsignarTextoAuditoria(Campo, Usuario);
-      Campo := DataSet.FindField('INSTANTE_MODIF');
-      AsignarFechaAuditoria(Campo, Now);
     end;
   end;
 end;

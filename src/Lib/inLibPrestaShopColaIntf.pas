@@ -135,6 +135,9 @@ type
     function RenovarReclamacion(
       AIdCola: Int64;
       const AToken: string): Boolean;
+    function LiberarReclamacionSinIntento(
+      AIdCola: Int64;
+      const AToken, AUsuario: string): Boolean;
     function MarcarAltaEnCurso(
       AIdCola: Int64;
       const AToken: string): Boolean;

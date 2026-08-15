@@ -93,6 +93,9 @@ type
     function RenovarReclamacion(
       AIdCola: Int64;
       const AToken: string): Boolean;
+    function LiberarReclamacionSinIntento(
+      AIdCola: Int64;
+      const AToken, AUsuario: string): Boolean;
     function MarcarAltaEnCurso(
       AIdCola: Int64;
       const AToken: string): Boolean;
@@ -1151,6 +1154,59 @@ begin
       oConsulta.Open;
       Result := oConsulta.FieldByName('NUMERO_FILAS').AsInteger = 1;
     end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioPrestaShopColaUniDAC.LiberarReclamacionSinIntento(
+  AIdCola: Int64;
+  const AToken, AUsuario: string): Boolean;
+var
+  oConsulta: TUniQuery;
+  sUsuario: string;
+begin
+  sUsuario := Copy(Trim(AUsuario), 1, 50);
+  if sUsuario = '' then
+    sUsuario := 'SISTEMA';
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      'UPDATE fza_prestashop_cola SET ' +
+      'ESTADO_PSCOLA = CASE WHEN ACCION_VISIBILIDAD_PSCOLA ' +
+      'IN (''A'', ''D'') OR ACCION_VISIBILIDAD_RECLAMADA_PSCOLA ' +
+      'IN (''A'', ''D'') THEN ''PENDIENTE_VISIBILIDAD'' ' +
+      'ELSE ''PENDIENTE'' END, ' +
+      'ESCAMBIO_PRECIO_PSCOLA = CASE WHEN ' +
+      'ESCAMBIO_PRECIO_PSCOLA = ''S'' OR ' +
+      'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''S'' THEN ''S'' ' +
+      'ELSE ''N'' END, ' +
+      'ESCAMBIO_STOCK_PSCOLA = CASE WHEN ' +
+      'ESCAMBIO_STOCK_PSCOLA = ''S'' OR ' +
+      'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''S'' THEN ''S'' ' +
+      'ELSE ''N'' END, ' +
+      'ACCION_VISIBILIDAD_PSCOLA = CASE ' +
+      'WHEN ACCION_VISIBILIDAD_PSCOLA IN (''A'', ''D'') ' +
+      'THEN ACCION_VISIBILIDAD_PSCOLA ' +
+      'WHEN ACCION_VISIBILIDAD_RECLAMADA_PSCOLA IN (''A'', ''D'') ' +
+      'THEN ACCION_VISIBILIDAD_RECLAMADA_PSCOLA ELSE ''N'' END, ' +
+      'INSTANTE_PROXIMO_INTENTO_PSCOLA = NULL, ' +
+      'VERSION_RECLAMADA_PSCOLA = NULL, ' +
+      'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
+      'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
+      'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ''N'', ' +
+      'ID_RECLAMACION_PSCOLA = NULL, ' +
+      'INSTANTE_RECLAMACION_PSCOLA = NULL, ' +
+      'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
+      'WHERE ID_PSCOLA = :ID ' +
+      'AND ID_RECLAMACION_PSCOLA = :TOKEN ' +
+      'AND ESTADO_PSCOLA IN ' +
+      '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'')';
+    oConsulta.ParamByName('USUARIO').AsString := sUsuario;
+    oConsulta.ParamByName('ID').AsLargeInt := AIdCola;
+    oConsulta.ParamByName('TOKEN').AsString := AToken;
+    oConsulta.Execute;
+    Result := oConsulta.RowsAffected = 1;
   finally
     FreeAndNil(oConsulta);
   end;

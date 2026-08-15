@@ -53,6 +53,7 @@ uses
   inLibUnidadesMedida,
   inLibPreviewTicket,
   inLibUnitForm,
+  inLibPrestaShopCierre,
   UniDataConn;
 
 type
@@ -116,6 +117,9 @@ type
     procedure ComprobarConfiguracionFiscal(const AVersion: string);
     function CargarDatosArranque: string;
     procedure IniciarProcesosSegundoPlano;
+    function PrepararCierrePrestaShop(
+      const AConsultarDecision:
+        TConsultarDecisionCierrePrestaShop): Boolean;
     procedure RegistrarInicioFiscal;
     procedure RegistrarCierreFiscal;
     procedure DetenerProcesosSegundoPlano;
@@ -198,6 +202,49 @@ uses
 resourcestring
   SErrorServicioConexionesComposicionNoDisponible =
     'El servicio de conexiones no está disponible.';
+
+type
+  TCierreColaPrestaShopAdaptador = class(
+    TInterfacedObject,
+    ICierreColaPrestaShop)
+  private
+    FCola: TPrestaShopCola;
+  public
+    constructor Create(ACola: TPrestaShopCola);
+    function BloquearNuevasReclamaciones: Boolean;
+    procedure CancelarCierre;
+    procedure DetenerTrasTrabajoActual;
+    procedure DetenerLiberandoTrabajoActual;
+  end;
+
+constructor TCierreColaPrestaShopAdaptador.Create(ACola: TPrestaShopCola);
+begin
+  inherited Create;
+  if not Assigned(ACola) then
+    raise EArgumentNilException.Create('ACola');
+  FCola := ACola;
+end;
+
+function TCierreColaPrestaShopAdaptador.BloquearNuevasReclamaciones:
+  Boolean;
+begin
+  Result := FCola.BloquearNuevasReclamaciones;
+end;
+
+procedure TCierreColaPrestaShopAdaptador.CancelarCierre;
+begin
+  FCola.CancelarCierre;
+end;
+
+procedure TCierreColaPrestaShopAdaptador.DetenerTrasTrabajoActual;
+begin
+  FCola.DetenerTrasTrabajoActual;
+end;
+
+procedure TCierreColaPrestaShopAdaptador.DetenerLiberandoTrabajoActual;
+begin
+  FCola.DetenerLiberandoTrabajoActual;
+end;
 
 function EsEventoNoVerifactuArranqueCierre(
   ATipoEvento: Integer): Boolean;
@@ -752,6 +799,23 @@ begin
       end;
       raise;
     end;
+  end;
+end;
+
+function TComposicionAplicacion.PrepararCierrePrestaShop(
+  const AConsultarDecision:
+    TConsultarDecisionCierrePrestaShop): Boolean;
+var
+  oCierre: ICierreColaPrestaShop;
+begin
+  Result := True;
+  if Assigned(FPrestaShopCola) then
+  begin
+    oCierre := TCierreColaPrestaShopAdaptador.Create(
+      TPrestaShopCola(FPrestaShopCola));
+    Result := IntentarCerrarColaPrestaShop(
+      oCierre,
+      AConsultarDecision);
   end;
 end;
 
