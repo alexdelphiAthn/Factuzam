@@ -424,12 +424,17 @@ begin
   Result := TUniQuery.Create(nil);
   Result.Connection := FConexion;
   Result.SQL.Text :=
-    'SELECT LINEA_ALBLIN, CODIGO_UNIDAD_ALBLIN, CODIGO_ART_ALBLIN, ' +
-    '       CANTIDAD_ALBLIN, CODIGO_ALMACEN_ALBLIN ' +
-    '  FROM fza_albaranes_lineas ' +
-    ' WHERE NUMERO_ALB_ALBLIN = :NUMERO ' +
-    '   AND SERIE_ALB_ALBLIN = :SERIE ' +
-    ' ORDER BY LINEA_ALBLIN';
+    'SELECT L.LINEA_ALBLIN, L.CODIGO_UNIDAD_ALBLIN, ' +
+    '       L.CODIGO_ART_ALBLIN, L.CANTIDAD_ALBLIN, ' +
+    '       L.CODIGO_ALMACEN_ALBLIN ' +
+    '  FROM fza_albaranes_lineas L ' +
+    '  LEFT JOIN fza_articulos A ' +
+    '    ON A.CODIGO_ART_ART = L.CODIGO_ART_ALBLIN ' +
+    ' WHERE L.NUMERO_ALB_ALBLIN = :NUMERO ' +
+    '   AND L.SERIE_ALB_ALBLIN = :SERIE ' +
+    '   AND COALESCE(UPPER(TRIM(A.TIPO_ART)), ''ESTANDAR'') ' +
+    '       <> ''SERVICIO'' ' +
+    ' ORDER BY L.LINEA_ALBLIN';
   Result.ParamByName('NUMERO').AsString := ADocumento.Numero;
   Result.ParamByName('SERIE').AsString := ADocumento.Serie;
   Result.Open;

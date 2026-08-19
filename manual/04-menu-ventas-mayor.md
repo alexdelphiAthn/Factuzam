@@ -5,7 +5,7 @@
 El menú **Ventas Mayor** gestiona la **venta al por mayor** (B2B): ventas a
 otros comercios o clientes con factura nominativa, a diferencia de la venta
 al detalle en tienda, que se hace desde el módulo
-[Caja](05-menu-caja.md).
+[TPV](05-menu-caja.md).
 
 Estructura del menú:
 
@@ -150,6 +150,130 @@ Mantenimiento de **Pedidos de Venta**. Registra lo que un cliente
 **encarga** (reserva de género). No mueve stock; sirve de base para generar
 el **albarán** de salida cuando se sirve el pedido.
 
+### Importar pedidos de PrestaShop
+
+El botón **Importar de PrestaShop** abre una ventana para incorporar de forma
+manual pedidos remotos. Esta función utiliza la URL y la clave API efectivas
+de **Otros ▸ Parámetros del entorno ▸ PrestaShop**; la credencial no se muestra
+en la ventana.
+
+Antes de empezar:
+
+1. Entra con la empresa y el almacén de salida correctos. La empresa y el
+   almacén del pedido se toman de la sesión actual; sin almacén no se importa.
+2. Configura una URL HTTPS y una clave API exclusiva de mínimo privilegio. La
+   clave necesita lectura de `orders`, `customers`, `addresses`, `states`,
+   `carriers`, `order_states`, `customer_threads` y `customer_messages`.
+3. Comprueba que la empresa tenga una configuración de IVA vigente en la fecha
+   del pedido y revisa que este sea fiscalmente compatible con ella. Sin esa
+   configuración no se importa, aunque el pedido no tenga portes.
+4. Usa una instalación de laboratorio o una clave limitada a una única
+   tienda. La importación actual no aplica el **Id. tienda** al listar pedidos.
+
+Procedimiento:
+
+1. Pulsa **Conectar y listar**. Factuzam consulta PrestaShop y carga el resumen
+   de los pedidos accesibles para esa clave. La consulta actual no limita por
+   fecha ni por estado; en tiendas con mucho histórico puede tardar.
+2. Revisa las columnas y contrasta el estado remoto antes de seleccionar:
+
+   | Columna | Contenido |
+   |---------|-----------|
+   | **Sel.** | Marca los pedidos que se intentarán importar. |
+   | **ID PS** | Identificador numérico del pedido en PrestaShop. |
+   | **Referencia** | Referencia comercial asignada por PrestaShop. |
+   | **Fecha** | Fecha comunicada por la tienda. |
+   | **Cliente** | Nombre del cliente remoto. |
+   | **Total** | Total con impuestos comunicado por PrestaShop. |
+   | **Estado** | Nombre del estado remoto; es informativo. |
+   | **Importado?** | `S` cuando Factuzam ya encuentra ese `ID PS`; `N` en caso contrario. |
+
+3. No selecciones pedidos cancelados, reembolsados, de prueba ni cualquier
+   estado que no deba servirse. La ventana todavía no bloquea automáticamente
+   esos estados.
+4. Marca las filas correctas y pulsa **Importar selección**.
+5. Factuzam procesa los pedidos uno a uno. Si uno falla, muestra el error para
+   ese identificador y continúa con los siguientes. Al terminar informa del
+   número de pedidos importados y de errores.
+6. Actualiza la lista de pedidos y revisa el documento local antes de crear el
+   albarán. No des por correcta una importación solo porque el resumen termine
+   sin errores.
+
+La detección de duplicados comprueba actualmente el `ID PS`. Un pedido que ya
+figure importado se omite también si vuelve a marcarse. Esta protección evita
+la repetición ordinaria en una sola instalación, pero el identificador aún no
+está ligado al destino PrestaShop ni protegido por una clave única de base de
+datos. No deben ejecutarse dos importaciones concurrentes del mismo pedido.
+
+Durante la importación:
+
+- el pedido queda asociado a la empresa y al almacén de la sesión;
+- el cliente se busca primero por NIF y después por correo electrónico; si no
+  se encuentra, se crea una ficha con los datos recibidos;
+- cada producto se intenta resolver por código de barras y por referencia;
+  si no existe, puede crearse un artículo y un SKU locales;
+- los mensajes del pedido se copian cuando PrestaShop los proporciona; un
+  error aislado en un mensaje no invalida el resto del pedido;
+- los importes de los productos se guardan con el tipo de IVA del artículo
+  local y los porcentajes vigentes de la empresa.
+
+#### Gastos de transporte `GASTOS_T`
+
+Si el pedido tiene portes, Factuzam añade al final una línea de una unidad con
+estas reglas:
+
+- artículo y SKU: `GASTOS_T`;
+- descripción: **GASTOS TRANSPORTE**;
+- tipo de artículo: **SERVICIO**, sin variaciones, sin trazabilidad y con
+  **En web = No**;
+- IVA: tipo normal de la empresa, calculado a partir de su configuración;
+- precio sin IVA, precio con IVA y base: los importes comunicados por
+  PrestaShop.
+
+El artículo y el SKU se crean la primera vez y se reutilizan después. Si alguno
+de esos códigos ya existe con un tipo, IVA, padre o estado incompatible, se
+cancela el pedido en lugar de transformar silenciosamente el maestro. También
+se cancela si los portes con y sin IVA no corresponden al IVA normal de la
+empresa. Cuando ambos importes son cero no se crea la línea.
+
+`GASTOS_T` es un servicio: al pasar el pedido a albarán y después a factura
+conserva su tipo y su importe, pero no genera un movimiento de almacén. Las
+líneas de mercancía del mismo documento sí siguen el circuito normal de stock.
+
+> **Límites actuales y uso en producción**
+>
+> - La importación solo transmite URL y clave al lector remoto: todavía no
+>   filtra `orders` por **Id. tienda**. Una clave que abarque varias tiendas
+>   puede mezclar pedidos y hace la función **NO-GO multitienda**.
+> - La correspondencia exacta del SKU o combinación remota con el SKU local no
+>   está cerrada para todos los casos. Deben revisarse especialmente productos
+>   sin EAN y combinaciones de talla o color antes de servirlos.
+> - Las altas automáticas de cliente y artículos de producto ocurren antes de
+>   la transacción final del pedido. La atomicidad completa de todos los
+>   maestros sigue pendiente.
+> - El IVA se resuelve para el grupo fiscal de la empresa y la fecha comunicada
+>   por PrestaShop. Revisa que los periodos fiscales no tengan huecos ni
+>   solapamientos antes de incorporar pedidos antiguos.
+> - El botón exige el permiso genérico **Insertar** del mantenimiento de
+>   pedidos. No existe todavía una acción independiente para conceder solo la
+>   importación. Ese permiso autoriza también las altas automáticas necesarias
+>   de clientes, artículos, SKU/EAN y `GASTOS_T`, sin consultar por separado
+>   los permisos de alta de esos maestros; concédelo solo a personal autorizado.
+> - Solo se materializan productos y portes. Los cupones o descuentos globales
+>   y el envoltorio no se convierten todavía en líneas locales; no importes un
+>   pedido que los contenga si la suma de las líneas no coincide con el total
+>   pagado en PrestaShop.
+> - Importar un pedido no mueve ni descuenta stock físico y no sustituye una
+>   ingestión o reserva automática. Mantén **Sincronizar stock y precios**
+>   desmarcado en producción: una escritura absoluta podría reponer unidades
+>   ya vendidas en la web.
+> - La batería funcional de importación, concurrencia, servicio y ciclo
+>   pedido → albarán → factura no está completada. Utiliza esta función en
+>   laboratorio y valida manualmente cliente, SKU, impuestos, portes y totales.
+>
+> Consulta también [Integración con PrestaShop](15-integracion-prestashop.md),
+> especialmente [Seguridad del stock](15-integracion-prestashop.md#11-seguridad-del-stock).
+
 ---
 
 ## Albaranes
@@ -185,4 +309,4 @@ exportar**.
 
 ---
 
-[◀ Menú Compras](03-menu-compras.md) · [Índice](README.md) · [Siguiente ▶ Menú Caja](05-menu-caja.md)
+[◀ Menú Compras](03-menu-compras.md) · [Índice](README.md) · [Siguiente ▶ Menú TPV](05-menu-caja.md)

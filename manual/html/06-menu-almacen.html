@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li class="activo"><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li class="activo"><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -133,9 +133,9 @@ puede reutilizar o enviar a varios destinos.</p>
 <tbody>
 <tr><td><strong>Albarán de venta (mayor)...</strong></td><td>Un <strong>albarán de venta ABIERTO</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Los precios entran a 0: asigna cliente, tarifa y precios en el Mto de albaranes.</td></tr>
 <tr><td><strong>Factura de venta (mayor)...</strong></td><td>Una <strong>factura de venta en BORRADOR</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Asigna cliente, tarifa, precios e impuestos antes de consolidarla.</td></tr>
-<tr><td><strong>Venta TPV</strong></td><td>Vuelca los SKUs con sus cantidades en la <strong>venta de caja en curso</strong>. Requiere tener abierta <em>Caja ▸ Ventas</em>; los precios los resuelve el TPV con su tarifa.</td></tr>
+<tr><td><strong>Venta TPV</strong></td><td>Vuelca los SKUs con sus cantidades en la <strong>venta de caja en curso</strong>. Requiere tener abierta <em>TPV ▸ Ventas</em>; los precios los resuelve el TPV con su tarifa.</td></tr>
 <tr><td><strong>Pedido de compra...</strong></td><td>Un <strong>pedido de compra ABIERTO</strong> con las líneas y cantidades del documento. Asigna proveedor, precios y condiciones de compra antes de tramitarlo.</td></tr>
-<tr><td><strong>Traspaso de caja...</strong></td><td>Abre la operativa habitual de <strong>Caja ▸ Traspasos</strong> en modo traspaso, con los artículos y cantidades precargados. El origen es la ubicación de Caja activa; allí se eligen almacén destino y empleado y se mantienen las validaciones de stock.</td></tr>
+<tr><td><strong>Traspaso de caja...</strong></td><td>Abre la operativa habitual de <strong>TPV ▸ Traspasos</strong> en modo traspaso, con los artículos y cantidades precargados. El origen es la ubicación de Caja activa; allí se eligen almacén destino y empleado y se mantienen las validaciones de stock.</td></tr>
 <tr><td><strong>Petición de traspaso...</strong></td><td>Abre la misma operativa en modo petición, con los artículos y cantidades precargados. Allí se elige el almacén al que se solicita la mercancía; la petición no mueve stock hasta que se atiende.</td></tr>
 <tr><td><strong>Inventario...</strong></td><td>Un <strong>inventario ABIERTO</strong> donde la cantidad del documento entra como <strong>cantidad física</strong> y el stock apuntado como teórica. Después usa <em>Recalcular teórico/PMP</em> en Inventarios antes de aplicar.</td></tr>
 <tr><td><strong>Sesión de cambio de tarifas</strong></td><td>Una <strong>sesión de cambios de tarifa en BORRADOR</strong> con un artículo por línea. Abre <em>Tarifas ▸ Cambios</em> para elegir tarifas origen/destino, regla de cálculo y aplicar.</td></tr>
@@ -211,9 +211,9 @@ del artículo.</p>
 suman. Los porcentajes y márgenes se recalculan a partir de esas sumas; no
 se suman ni se promedian los porcentajes de cada artículo.</p>
 <hr>
-<p><a href="05-menu-caja.html">◀ Menú Caja</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
+<p><a href="05-menu-caja.html">◀ Menú TPV</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

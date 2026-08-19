@@ -1165,6 +1165,8 @@ uses
     'src\Lib\inLibImportacionPedidosIntf.pas',
   inLibImportacionPedidos in
     'src\Lib\inLibImportacionPedidos.pas',
+  inLibPedidosPrestaShopPortes in
+    'src\Lib\inLibPedidosPrestaShopPortes.pas',
   inLibPrestaShopPedidosAdaptador in
     'src\Lib\inLibPrestaShopPedidosAdaptador.pas',
   UniDataImportacionPedidos in

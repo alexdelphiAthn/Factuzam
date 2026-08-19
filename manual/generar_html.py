@@ -31,7 +31,7 @@ ORDEN = [
     ('02-menu-archivo.md', '02-menu-archivo.html', '02 · Menú Archivo'),
     ('03-menu-compras.md', '03-menu-compras.html', '03 · Menú Compras'),
     ('04-menu-ventas-mayor.md', '04-menu-ventas-mayor.html', '04 · Menú Ventas Mayor'),
-    ('05-menu-caja.md', '05-menu-caja.html', '05 · Menú Caja'),
+    ('05-menu-caja.md', '05-menu-caja.html', '05 · Menú TPV'),
     ('06-menu-almacen.md', '06-menu-almacen.html', '06 · Menú Almacén'),
     ('07-menu-otros.md', '07-menu-otros.html', '07 · Menú Otros'),
     ('08-menu-ayuda.md', '08-menu-ayuda.html', '08 · Menú Ayuda'),
@@ -73,14 +73,22 @@ def corregir_enlace(destino):
 
 def inline(texto):
     """Formato en linea: codigo, imagenes, enlaces, negrita, cursiva."""
-    texto = html.escape(texto, quote=False)
     codigos = []
+    enlaces_automaticos = []
 
     def guarda_codigo(m):
         codigos.append(m.group(1))
-        return '\x00%d\x00' % (len(codigos) - 1)
+        return '\x00C%d\x00' % (len(codigos) - 1)
 
     texto = re.sub(r'`([^`]+)`', guarda_codigo, texto)
+
+    def guarda_enlace_automatico(m):
+        enlaces_automaticos.append(m.group(1))
+        return '\x00A%d\x00' % (len(enlaces_automaticos) - 1)
+
+    texto = re.sub(r'<(https?://[^<>\s]+)>', guarda_enlace_automatico,
+                   texto)
+    texto = html.escape(texto, quote=False)
     # imagenes ![alt](src)
     texto = re.sub(
         r'!\[([^\]]*)\]\(([^)]+)\)',
@@ -96,12 +104,71 @@ def inline(texto):
         texto)
     texto = re.sub(r'\*\*([^*]+)\*\*', r'<strong>\1</strong>', texto)
     texto = re.sub(r'(?<!\*)\*([^*]+)\*(?!\*)', r'<em>\1</em>', texto)
+    # restaurar enlaces automaticos
+    texto = re.sub(
+        r'\x00A(\d+)\x00',
+        lambda m: '<a href="%s">%s</a>'
+                  % (html.escape(enlaces_automaticos[int(m.group(1))],
+                                 quote=True),
+                     html.escape(enlaces_automaticos[int(m.group(1))],
+                                 quote=False)),
+        texto
+    )
     # restaurar codigo
-    texto = re.sub(r'\x00(\d+)\x00',
+    texto = re.sub(r'\x00C(\d+)\x00',
                    lambda m: '<code>%s</code>'
                              % html.escape(codigos[int(m.group(1))], quote=False),
                    texto)
     return texto
+
+
+PATRON_LISTA = re.compile(r'^(\s*)([-*]|\d+\.)\s+(.*)$')
+
+
+def datos_elemento_lista(linea):
+    """Devuelve sangria, tipo, numero y texto de un elemento de lista."""
+    m = PATRON_LISTA.match(linea)
+    if not m:
+        return None
+    sangria = len(m.group(1).expandtabs(4))
+    marcador = m.group(2)
+    tipo = 'ul' if marcador in ('-', '*') else 'ol'
+    numero = int(marcador[:-1]) if tipo == 'ol' else None
+    return sangria, tipo, numero, m.group(3).strip()
+
+
+def render_lista(lineas, inicio):
+    """Renderiza una lista y sus sublistas conservando la lista principal."""
+    primeros_datos = datos_elemento_lista(lineas[inicio])
+    sangria_base, tipo, primer_numero, _ = primeros_datos
+    atributos = ''
+    if tipo == 'ol' and primer_numero != 1:
+        atributos = ' start="%d"' % primer_numero
+    elementos = []
+    i = inicio
+    while i < len(lineas):
+        datos = datos_elemento_lista(lineas[i])
+        if not datos or datos[0] != sangria_base or datos[1] != tipo:
+            break
+        partes = [datos[3]]
+        sublistas = []
+        i += 1
+        while i < len(lineas) and lineas[i].strip() != '':
+            datos_siguiente = datos_elemento_lista(lineas[i])
+            if datos_siguiente:
+                if datos_siguiente[0] > sangria_base:
+                    sublista, i = render_lista(lineas, i)
+                    sublistas.append(sublista)
+                    continue
+                break
+            sangria = len(lineas[i]) - len(lineas[i].lstrip())
+            if sangria <= sangria_base:
+                break
+            partes.append(lineas[i].strip())
+            i += 1
+        contenido = inline(' '.join(partes)) + ''.join(sublistas)
+        elementos.append('<li>%s</li>' % contenido)
+    return '<%s%s>%s</%s>' % (tipo, atributos, ''.join(elementos), tipo), i
 
 
 def render_tabla(filas):
@@ -180,35 +247,10 @@ def md_a_html(texto):
             out.append('<blockquote>%s</blockquote>'
                        % md_a_html('\n'.join(buf)))
             continue
-        # lista no ordenada
-        if re.match(r'^\s*[-*]\s+', linea):
-            buf = []
-            while i < n and re.match(r'^\s*[-*]\s+', lineas[i]):
-                partes = [re.sub(r'^\s*[-*]\s+', '', lineas[i]).strip()]
-                i += 1
-                while (i < n and re.match(r'^\s{2,}\S', lineas[i])
-                       and not re.match(r'^\s*[-*]\s+', lineas[i])
-                       and not re.match(r'^\s*\d+\.\s+', lineas[i])):
-                    partes.append(lineas[i].strip())
-                    i += 1
-                buf.append(' '.join(partes))
-            out.append('<ul>%s</ul>'
-                       % ''.join('<li>%s</li>' % inline(x) for x in buf))
-            continue
-        # lista ordenada
-        if re.match(r'^\s*\d+\.\s+', linea):
-            buf = []
-            while i < n and re.match(r'^\s*\d+\.\s+', lineas[i]):
-                partes = [re.sub(r'^\s*\d+\.\s+', '', lineas[i]).strip()]
-                i += 1
-                while (i < n and re.match(r'^\s{2,}\S', lineas[i])
-                       and not re.match(r'^\s*[-*]\s+', lineas[i])
-                       and not re.match(r'^\s*\d+\.\s+', lineas[i])):
-                    partes.append(lineas[i].strip())
-                    i += 1
-                buf.append(' '.join(partes))
-            out.append('<ol>%s</ol>'
-                       % ''.join('<li>%s</li>' % inline(x) for x in buf))
+        # listas ordenadas y no ordenadas, incluidas sus sublistas
+        if PATRON_LISTA.match(linea):
+            bloque, i = render_lista(lineas, i)
+            out.append(bloque)
             continue
         # linea en blanco
         if linea.strip() == '':

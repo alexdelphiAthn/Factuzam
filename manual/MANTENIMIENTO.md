@@ -53,6 +53,10 @@ faltan: buscar `Captura pendiente` en los `.md`.
 Las capturas nuevas añadidas en la última revisión están resumidas en
 `CAPTURAS_PENDIENTES.md`.
 
+> Comprobar que todas las rutas `img/...` existen solo detecta enlaces rotos;
+> no demuestra que cada pantalla nueva tenga captura. Mantén también la lista
+> explícita de pantallas aún sin referencia visual.
+
 ## Publicar en la web
 
 Sube **todo el contenido de `manual/html/`** (los `.html`, `estilo.css` y

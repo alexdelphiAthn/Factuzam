@@ -34,6 +34,9 @@ type
       out APorcentajes: TPorcentajesImpuestos): Boolean;
     function LeerPorEmpresa(const ACodigoEmpresa: string;
       out APorcentajes: TPorcentajesImpuestos): Boolean;
+    function LeerPorEmpresaEnFecha(const ACodigoEmpresa: string;
+      AFecha: TDateTime;
+      out APorcentajes: TPorcentajesImpuestos): Boolean;
     function LeerTipoIvaArticulo(
       const ACodigoArticulo: string): string;
     function LeerRecargoComprasEmpresa(

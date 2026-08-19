@@ -363,7 +363,8 @@ uses
   inLibColumnasSku, inLibColumnasDocumento,
   UniDataColumnasDocumentoRepositorio, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
-  inLibMsgArticulos, inLibMsgVentas,
+  inLibMsgArticulos, inLibMsgVentas, inLibMsgConfiguracion,
+  inLibPermisosIntf,
   inMtoPedidosPresentacionArticuloVcl,
   // Composicion del puerto de persistencia del pivote (V2).
   UniDataPivoteVenta, UniDataVentasPantallaComposicion;
@@ -611,6 +612,7 @@ begin
   // pasar a SKU o a tallas horizontales cuando el pedido ya esta en SKU.
   FModoEntradaSel := mcsAuto;
   FColsModoConstruido := False;
+  btnImportarPS.Enabled := PuedeAccionMto(apmInsertar);
   tsTotales.TabVisible := True;
   tsTotales.Enabled := True;
   if Trim(tsTotales.Caption) = '' then
@@ -1898,6 +1900,11 @@ var
   form: TfrmModalImportarPedidosPS;
 begin
   inherited;
+  if not PuedeAccionMto(apmInsertar) then
+  begin
+    ShowMessage(SErrorPermisoInsertarRegistro);
+    Exit;
+  end;
   form := TfrmModalImportarPedidosPS.Create(Self);
   try
     form.Configurar(dmmPedidos);

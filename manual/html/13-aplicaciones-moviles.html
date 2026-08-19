@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li class="activo"><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li class="activo"><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -94,11 +94,20 @@ negocio y el huso horario de la instalación.</p></blockquote>
 <h3 id="puesta-en-marcha-administrador">Puesta en marcha (administrador)</h3>
 <p>La consulta móvil necesita que la instalación publique las ventas en el
 servicio web:</p>
-<ol><li>Configurar en Factuzam la URL, credencial y referencia del servicio.</li><li>Activar <strong>Enviar ventas al webservice</strong> (<code>vgerEnviarVentasWS</code>) en los perfiles o cajas que correspondan.</li><li>Crear una credencial móvil con permiso de lectura de ventas.</li><li>En <strong>VentasFzam ▸ Configuración (⚙)</strong>, indicar URL base, token y referencia.</li></ol>
+<ol><li>En <strong>Otros ▸ Parámetros del entorno ▸ Servicios web</strong>, configurar <code>appApiUrl</code> (URL general), <code>appApiToken</code> (API key/token) y <code>appApiReferencia</code> (referencia de la instalación).</li><li>En <strong>TPV ▸ Parámetros de Caja ▸ Servicios web</strong>, activar <strong>Enviar ventas completas al webservice de respaldo</strong> (<code>vgerEnviarVentasWS</code>) en los perfiles o cajas que correspondan. El valor inicial es <code>False</code>.</li><li>Crear una credencial móvil con permiso de lectura de ventas.</li><li>En <strong>VentasFzam ▸ Configuración (⚙)</strong>, indicar URL base, token y referencia.</li></ol>
 <p>Factuzam guarda cada cambio de una venta como un evento en una cola local y
 lo envía en segundo plano. La caja no espera a la red y la cola fiscal de
 Verifactu funciona de forma independiente. Los eventos se reintentan con el
 mismo identificador para evitar duplicados.</p>
+<h3 id="supervisar-los-envios">Supervisar los envíos</h3>
+<p>Abre <strong>Otros ▸ Colas de envíos ▸ Web Service Fzam</strong> para revisar el estado,
+los intentos y el historial HTTP de cada evento. <strong>Actualizar</strong> refresca la
+consulta y <strong>Ir a Documento</strong> abre la venta relacionada; la pantalla no
+permite modificar ni reintentar filas. Los envíos pendientes se procesan cada
+60 segundos de forma predeterminada y usan espera exponencial antes de pasar
+a <code>ERROR</code> al agotar los 20 intentos configurados.</p>
+<p>Consulta estados, permisos y recuperación en
+<a href="07-menu-otros.html#web-service-fzam">Otros ▸ Colas de envíos ▸ Web Service Fzam</a>.</p>
 <blockquote><p>Las ventas históricas sincronizadas antes de incorporar un dato nuevo —por
 ejemplo, la temporada— pueden mostrarlo vacío hasta que vuelvan a enviarse.
 Las ventas nuevas lo incluyen desde el primer envío.</p></blockquote>
@@ -112,7 +121,7 @@ controlan desde Factuzam; el móvil no regulariza el stock por sí solo.</p>
 <hr>
 <p><a href="12-cambios-y-novedades.html">◀ Cambios y novedades</a> · <a href="index.html">Índice</a> · <a href="14-arquitectura-y-desarrollo.html">Siguiente ▶ Arquitectura y desarrollo</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

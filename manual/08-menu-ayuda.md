@@ -105,9 +105,11 @@ Abre en el navegador **este manual de usuario** publicado en la web:
 
 <https://www.veryverifactu.com/manual/index.html>
 
-Es la versión siempre actualizada de la documentación, navegable por
-capítulos desde el índice lateral. Útil para consultar el manual desde
-cualquier puesto sin salir del programa.
+Es la copia de la documentación desplegada para consulta desde cualquier
+puesto. Comprueba la **fecha de generación** que aparece en el pie: una
+versión local recién generada no llega a la web hasta que el administrador
+publique la carpeta `manual/html` completa. Si falta un capítulo reciente,
+consulta el manual incluido con la versión instalada o avisa al soporte.
 
 ---
 

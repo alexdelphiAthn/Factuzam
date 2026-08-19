@@ -253,17 +253,17 @@ Sub-pestañas de la ficha:
 Desde la lista/ficha puedes además consultar **stock** y la **foto** del
 artículo con los botones del navegador.
 
-La casilla **En web** incorpora el artículo a la cola de sincronización. No
-lo publica automáticamente. Los productos existentes se localizan por una
-`reference` exacta y única. Si no existe correspondencia, el alta completa
-todavía no se ejecuta y se registra una incidencia; cuando se implemente,
-creará el producto inactivo hasta la revisión del administrador de
-PrestaShop. Consulta
-[Integración con PrestaShop](15-integracion-prestashop.md#articulos).
+La casilla **En web** hace que el artículo sea elegible para la integración y
+encola su comprobación; no equivale por sí sola a publicarlo. Según los checks
+del perfil efectivo, Factuzam puede sincronizar un producto existente, crear
+completo e inactivo uno que no exista y, si se ha autorizado expresamente,
+activarlo solo al final de un proceso correcto.
 
-Al quitar **En web** se dejan de sincronizar tanto el precio como el stock.
-No se envía stock cero ni se desactiva, elimina o modifica el producto en
-PrestaShop.
+Al quitar **En web**, un diálogo permite desactivar el producto remoto, dejar
+únicamente de sincronizarlo o cancelar el cambio. Ninguna de esas decisiones
+borra el producto. El comportamiento completo, los permisos y las cautelas de
+stock se describen en
+[Integración con PrestaShop ▸ Artículos](15-integracion-prestashop.md#articulos).
 
 Solo los usuarios con el permiso **Permisos ▸ Artículos ▸ Activar/desactivar
 web** pueden cambiar esta casilla.
@@ -319,9 +319,11 @@ destino cuando estén validadas.
 **Clasificación jerárquica** de los artículos (familias y subfamilias).
 Permite agrupar el catálogo para informes, filtros y precios.
 
-En el alta web futura, esta jerarquía se convertirá en categorías de
-PrestaShop sin identificarlas únicamente por el nombre visible. Consulta
-[Familias y categorías](15-integracion-prestashop.md#8-familias-y-categorias).
+En un alta web autorizada, esta jerarquía se convierte en categorías de
+PrestaShop bajo la raíz configurada. El perfil decide cuántos niveles locales
+se conservan y la integración resuelve cada categoría dentro de su padre, no
+solo por el nombre visible. Consulta
+[Integración con PrestaShop ▸ Familias y categorías](15-integracion-prestashop.md#8-familias-y-categorias).
 
 - **Más Datos** — datos de la familia.
 - **Artículos** — artículos pertenecientes a la familia.

@@ -13,6 +13,10 @@ Estructura del menú:
 ```
 Otros
 ├── Parámetros del entorno
+├── Colas de envíos
+│   ├── Verifactu
+│   ├── PrestaShop
+│   └── Web Service Fzam
 ├── Grupos de IVA
 ├── Impuesto IVA
 ├── Contadores
@@ -24,13 +28,10 @@ Otros
 │   ├── Perfiles
 │   ├── Permisos
 │   └── Permisos (tabla)
-├── Colas de envíos
-│   ├── Verifactu
-│   ├── PrestaShop
-│   └── Web Service Fzam
 ├── Hacer Copia de Seguridad
 ├── Recuperar Copia de Seguridad
-└── Generador de Procesos
+├── Generador de Procesos
+└── Procesos auxiliares BBDD
 ```
 
 ---
@@ -51,7 +52,7 @@ Categorías habituales:
 | Categoría | Uso |
 |-----------|-----|
 | **Directorios / Fotos** | Carpeta local o compartida de fotos (`appDirFotos`) y número de atributos usado en su clave. |
-| **Servicios web** | URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos. |
+| **Servicios web** | URL (`appApiUrl`), credencial (`appApiToken`) y referencia de instalación (`appApiReferencia`) comunes para fotos, correo, ventas, SIF y recuentos; también ciclo y máximo de intentos de la cola de ventas. |
 | **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
 | **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola, niveles de familia y checks **Sincronizar stock y precios**, **Crear artículos en PrestaShop al darlos de alta**, **Activar artículos en PrestaShop al marcar En web** y **Hacer barrido periódicamente**. |
 | **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
@@ -282,22 +283,98 @@ para edición masiva o revisión rápida de muchos permisos a la vez.
 La ruta **Otros ▸ Colas de envíos** reúne en un solo lugar el seguimiento
 de las tres integraciones:
 
-- **Verifactu** muestra la cola de comunicaciones fiscales.
-- **PrestaShop** muestra los artículos pendientes, procesados o con error.
-- **Web Service Fzam** muestra los documentos enviados al servicio de
-  Factuzam.
+### Verifactu
 
-Las tres opciones son pantallas de consulta y seguimiento. Las ventanas de
-**PrestaShop** y **Web Service Fzam** muestran una lista de trabajos y el
-historial de sus operaciones HTTP. Al seleccionar una operación se pueden
-consultar la petición, la respuesta del servidor y el error registrado.
+**Ruta:** *Otros ▸ Colas de envíos ▸ Verifactu*
 
-Estas dos ventanas son de **solo lectura**: no permiten modificar, borrar ni
-reintentar trabajos. Los permisos independientes de consulta, exportación y
-detalle deciden si el usuario puede abrir la ventana, exportar la lista o ver
-la petición y la respuesta. Los administradores pueden revisar todos los
-destinos; los demás usuarios solo ven la tienda o empresa de su configuración
-efectiva.
+Muestra las comunicaciones fiscales pendientes, en proceso, enviadas o con
+error. Su uso y el reproceso autorizado se explican en
+[capítulo Verifactu · Cola de envíos](11-verifactu.md#cola-de-envios).
+
+### PrestaShop
+
+**Ruta:** *Otros ▸ Colas de envíos ▸ PrestaShop*
+
+Muestra los trabajos de catálogo pendientes, procesados o con error y el
+historial HTTP de cada intento. Es una pantalla de diagnóstico de solo
+lectura: no modifica ni reintenta trabajos. Consulta el detalle operativo en
+[Integración con PrestaShop ▸ Ventana de seguimiento](15-integracion-prestashop.md#ventana-de-seguimiento).
+
+### Web Service Fzam
+
+**Ruta:** *Otros ▸ Colas de envíos ▸ Web Service Fzam*
+
+Esta cola publica en segundo plano una copia completa de los cambios de las
+ventas para servicios como **VentasFzam**. No es la cola fiscal de Verifactu y
+la espera o una caída de red del servicio no detienen el cobro en el TPV.
+
+Los tipos de evento que pueden aparecer son:
+
+| Evento | Qué representa |
+|--------|----------------|
+| `VENTA_CONFIRMADA` | Alta o confirmación de una venta. |
+| `VENTA_ANULADA` | Anulación de la venta. |
+| `VENTA_SUSTITUIDA` | Sustitución por otro documento. |
+| `VENTA_REABIERTA` | Reapertura controlada de una venta. |
+| `FISCAL_ACTUALIZADO` | Cambio posterior de su información fiscal. |
+| `TICKET_PDF_ACTUALIZADO` | Incorporación o actualización del PDF del ticket. |
+| `FACTURA_PDF_ACTUALIZADO` | Incorporación o actualización del PDF de la factura. |
+
+La lista muestra evento, empresa, serie y número, tipo, estado, intentos,
+próximo intento, fecha de envío, identificador de petición y último error. Los
+estados son:
+
+| Estado | Significado |
+|--------|-------------|
+| **PENDIENTE** | Espera al siguiente ciclo o a la fecha de próximo intento. |
+| **PROCESANDO** | Un proceso de la aplicación ha reservado el evento para enviarlo. |
+| **ENVIADA** | El servicio aceptó el evento y devolvió resultado correcto. |
+| **ERROR** | Se agotó el máximo de intentos configurado. |
+
+Al seleccionar una fila, el panel inferior presenta todos sus intentos HTTP:
+método, recurso, estado HTTP, resultado, duración e identificador de petición.
+Las pestañas **Petición**, **Respuesta del servidor** y **Error** muestran el
+contenido registrado; las credenciales y contenidos binarios sensibles se
+omiten del historial.
+
+- **Actualizar** vuelve a cargar la cola y su historial; no fuerza un envío.
+- **Ir a Documento** abre la factura o el borrador simplificado asociado.
+
+La ventana es de **solo lectura**: no permite insertar, modificar, borrar ni
+reintentar filas. Los permisos `VentasWsCola.consultar`,
+`VentasWsCola.excel` y `VentasWsCola.detalle` controlan respectivamente el
+acceso, la exportación y la vista de petición/respuesta. Un administrador ve
+todas las empresas; los demás usuarios solo ven la empresa de su sesión. Sin
+empresa efectiva, la consulta no devuelve filas.
+
+#### Ciclo, reintentos y recuperación
+
+El proceso consulta la cola cada **60 segundos** de forma predeterminada
+(`appVentasWsSegundosCiclo`; mínimo 5 segundos) y prueba hasta **20 veces**
+(`appVentasWsMaxIntentos`). Tras un fallo deja la fila en `PENDIENTE` y aplica
+una espera exponencial de 1, 2, 4, 8, 16, 32 y 64 minutos, con un máximo de
+64 minutos para los intentos posteriores. Al agotar el límite pasa a `ERROR`.
+
+Si la aplicación se interrumpe con una fila en `PROCESANDO`, la recupera como
+`PENDIENTE` cuando lleva más de diez minutos bloqueada. Tras corregir una
+incidencia de red o configuración, las filas que sigan en `PENDIENTE`
+continuarán solas en su próximo intento. Una fila ya agotada en `ERROR` no se
+reencola desde esta ventana: debe revisarla el administrador o soporte.
+
+#### Configuración necesaria
+
+En **Otros ▸ Parámetros del entorno ▸ Servicios web** deben tener valor:
+
+- `appApiUrl`: URL general del servicio web.
+- `appApiToken`: API key o token de la instalación.
+- `appApiReferencia`: referencia global de la instalación.
+
+Además, en **TPV ▸ Parámetros de Caja ▸ Servicios web** hay que activar
+**Enviar ventas completas al webservice de respaldo**
+(`vgerEnviarVentasWS`). Su valor inicial es `False`; si está desactivado no se
+crean eventos nuevos. Los que ya estaban encolados continúan su ciclo hasta
+terminar o agotar los intentos. Consulta la puesta en marcha de la aplicación
+móvil en [VentasFzam](13-aplicaciones-moviles.md#puesta-en-marcha-administrador).
 
 ---
 
@@ -407,6 +484,29 @@ fichero). El menú contextual del editor ofrece además *Seleccionar Todo*,
 > o borrar datos: **haz copia de seguridad antes de un proceso masivo**,
 > prueba primero con un `SELECT` que muestre las filas que vas a tocar, y
 > ejecuta por selección antes que el script completo.
+
+---
+
+## Procesos auxiliares BBDD
+
+**Ruta:** *Otros ▸ Procesos auxiliares BBDD*
+
+Herramienta técnica para inspeccionar los metadatos de la base de datos. La
+lista actual muestra las tablas del catálogo y permite consultar su
+**Estructura SQL** y su contenido; el doble clic abre los registros de la
+tabla activa.
+
+| Acción | Resultado |
+|--------|-----------|
+| **Refrescar metadatos** | Vuelve a leer el catálogo de la base de datos actual. |
+| **Ver contenido** | Abre los registros de la tabla seleccionada en una rejilla. |
+| **Copiar SQL** | Copia al portapapeles la estructura SQL mostrada. |
+| **Exportar a Excel** | Exporta el contenido abierto. |
+| **Editar datos / Bloquear edición** | Habilita o vuelve a bloquear la edición directa de la rejilla. |
+
+> Es una opción para usuarios técnicos autorizados. **Editar datos** actúa
+> directamente sobre la base real y también permite altas y borrados: haz una
+> copia de seguridad y evita usarla para el trabajo diario.
 
 ---
 

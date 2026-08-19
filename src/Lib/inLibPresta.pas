@@ -210,6 +210,7 @@ type
     Property Vat_numberBil:String read GetVat_numberBil write SetVat_numberBil;
     Property NameStateBil:String read GetNameStateBil write SetNameStateBil;
     Property FechaCreacion:String read GetFechaCreacion write SetFechaCreacion;
+    property FechaCreacionDateTime: TDateTime read _dFechaCreacion;
     Property FormaPago:String         read GetFormaPago  write SetFormaPago;
     Property TotalPedCIVA:Currency read GetTotalPedCIVA write SetTotalPedCIVA;
     Property TotalPedSIVA:Currency read GetTotalPedSIVA write SetTotalPedSIVA;
@@ -230,6 +231,7 @@ type
     { public declarations }
     Function ToString():String; override;
     constructor Create;
+    destructor Destroy; override;
   end;
 
 
@@ -249,8 +251,16 @@ end;
 
 constructor TOrder.Create;
 begin
+  inherited Create;
   LineasPedido := TList<TLineaPed>.Create;
   MensajesPedido.LMensajes := TList<TMensaje>.Create;
+end;
+
+destructor TOrder.Destroy;
+begin
+  FreeAndNil(MensajesPedido.LMensajes);
+  FreeAndNil(LineasPedido);
+  inherited Destroy;
 end;
 
 function TOrder.GetAddress1Bil: String;
@@ -375,7 +385,7 @@ end;
 
 function TOrder.GetPhone_moBil: String;
 begin
-  Result := Self._custAddBil.Phone;
+  Result := Self._custAddBil.Phone_mo;
 end;
 
 function TOrder.GetPhone_moDel: String;
@@ -440,7 +450,7 @@ end;
 
 function TOrder.GetTransportista: String;
 begin
-  Result := Self.Transportista;
+  Result := Self._Transportista;
 end;
 
 function TOrder.GetVat_numberBil: String;

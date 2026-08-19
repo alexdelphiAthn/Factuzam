@@ -149,9 +149,9 @@ puede reutilizar o enviar a varios destinos.
 |---------|----------|
 | **Albarán de venta (mayor)...** | Un **albarán de venta ABIERTO** con las líneas y cantidades del documento (número del contador oficial o el que indiques). Los precios entran a 0: asigna cliente, tarifa y precios en el Mto de albaranes. |
 | **Factura de venta (mayor)...** | Una **factura de venta en BORRADOR** con las líneas y cantidades del documento (número del contador oficial o el que indiques). Asigna cliente, tarifa, precios e impuestos antes de consolidarla. |
-| **Venta TPV** | Vuelca los SKUs con sus cantidades en la **venta de caja en curso**. Requiere tener abierta *Caja ▸ Ventas*; los precios los resuelve el TPV con su tarifa. |
+| **Venta TPV** | Vuelca los SKUs con sus cantidades en la **venta de caja en curso**. Requiere tener abierta *TPV ▸ Ventas*; los precios los resuelve el TPV con su tarifa. |
 | **Pedido de compra...** | Un **pedido de compra ABIERTO** con las líneas y cantidades del documento. Asigna proveedor, precios y condiciones de compra antes de tramitarlo. |
-| **Traspaso de caja...** | Abre la operativa habitual de **Caja ▸ Traspasos** en modo traspaso, con los artículos y cantidades precargados. El origen es la ubicación de Caja activa; allí se eligen almacén destino y empleado y se mantienen las validaciones de stock. |
+| **Traspaso de caja...** | Abre la operativa habitual de **TPV ▸ Traspasos** en modo traspaso, con los artículos y cantidades precargados. El origen es la ubicación de Caja activa; allí se eligen almacén destino y empleado y se mantienen las validaciones de stock. |
 | **Petición de traspaso...** | Abre la misma operativa en modo petición, con los artículos y cantidades precargados. Allí se elige el almacén al que se solicita la mercancía; la petición no mueve stock hasta que se atiende. |
 | **Inventario...** | Un **inventario ABIERTO** donde la cantidad del documento entra como **cantidad física** y el stock apuntado como teórica. Después usa *Recalcular teórico/PMP* en Inventarios antes de aplicar. |
 | **Sesión de cambio de tarifas** | Una **sesión de cambios de tarifa en BORRADOR** con un artículo por línea. Abre *Tarifas ▸ Cambios* para elegir tarifas origen/destino, regla de cálculo y aplicar. |
@@ -248,4 +248,4 @@ se suman ni se promedian los porcentajes de cada artículo.
 
 ---
 
-[◀ Menú Caja](05-menu-caja.md) · [Índice](README.md) · [Siguiente ▶ Menú Otros](07-menu-otros.md)
+[◀ Menú TPV](05-menu-caja.md) · [Índice](README.md) · [Siguiente ▶ Menú Otros](07-menu-otros.md)

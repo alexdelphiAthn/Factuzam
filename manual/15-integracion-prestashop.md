@@ -46,17 +46,33 @@ y pruebas.
 | Opción **Activar artículos en PrestaShop al marcar En web** | Disponible y desmarcada de forma predeterminada; actúa solo al final del proceso |
 | Límite de niveles de familia para el alta | Configurable por ámbito; el valor inicial `0` conserva toda la jerarquía local |
 | Alta de familias, atributos, producto, combinaciones e imagen principal | Implementada; pendiente de superar la batería funcional completa del laboratorio |
+| Importación manual de pedidos | Disponible para laboratorio y un único destino controlado; la validación funcional y el aislamiento multitienda no están cerrados |
+| Portes de pedidos como servicio `GASTOS_T` | Implementado con SKU `GASTOS_T`, IVA normal de la empresa y sin movimiento de stock |
 | Sincronización con producción | Desactivada por defecto; ver [seguridad del stock](#11-seguridad-del-stock) |
 
 La integración actualiza el catálogo remoto, pero no importa automáticamente
 en Factuzam los cambios hechos a mano en las fichas de PrestaShop. Debe
 decidirse qué sistema es responsable de cada dato antes de activarla.
 
-La opción **Ventas Mayor ▸ Pedidos ▸ Importar de PrestaShop** usa esa misma
-configuración efectiva de Parámetros de Entorno. La ventana de importación no
-tiene una URL ni una clave API propias y nunca muestra la credencial. Si se
-cambia la configuración con la ventana abierta, es obligatorio volver a
+La opción **Ventas Mayor ▸ Pedidos ▸ Importar de PrestaShop** lee la URL y la
+clave API efectivas de Parámetros del entorno. La ventana no tiene credenciales
+propias ni muestra la clave. La empresa y el almacén se toman de la sesión. Si
+se cambia la configuración con la ventana abierta, es obligatorio volver a
 conectar y listar antes de importar.
+
+Esta reutilización es todavía parcial: el importador no envía el **Id. tienda**
+al consultar `orders`. Debe usarse una clave limitada a un solo destino y no se
+considera apto para multitienda. El procedimiento, las columnas, la creación de
+cliente y artículos, el servicio `GASTOS_T` y todos los límites operativos se
+detallan en
+[Ventas Mayor ▸ Pedidos ▸ Importar pedidos de PrestaShop](04-menu-ventas-mayor.md#importar-pedidos-de-prestashop).
+
+> **Situación de validación:** no existe todavía una decisión **GO** para usar
+> la integración completa en producción. Hay evidencia parcial del catálogo y
+> de la cola en laboratorio, pero siguen pendientes la batería completa de
+> pedidos, importación, concurrencia, servicio, barrido y ciclo hasta factura.
+> Mantén desactivadas las escrituras de stock absoluto y realiza las pruebas
+> únicamente contra una instalación controlada.
 
 ---
 
@@ -196,6 +212,13 @@ La clave debe tener solo los permisos necesarios:
 | `images` | Sí | Sí, si se autoriza el alta | No |
 | `stock_availables` | Sí | No | Sí, con **Sincronizar stock y precios** |
 | `languages`, `shops`, `shop_groups` y reglas de IVA | Sí | No | No |
+| `orders`, `customers`, `addresses` y `states` | Sí, si se importan pedidos | No | No |
+| `carriers` y `order_states` | Sí, si se importan pedidos | No | No |
+| `customer_threads` y `customer_messages` | Sí, si se importan pedidos y mensajes | No | No |
+
+Los permisos de pedidos son solo de lectura. Si esa función no se utiliza, no
+deben concederse. La clave destinada al importador debe quedar limitada a una
+única tienda mientras la consulta de `orders` no aplique `id_shop`.
 
 No debe concederse permiso de borrado salvo que se diseñe y autorice una
 operación administrativa concreta. Una recuperación automática nunca debe
@@ -297,8 +320,10 @@ normal de la cola.
 |--------|-------------|
 | `PENDIENTE` | Hay una versión por enviar o verificar. |
 | `PROCESANDO` | Un trabajador ha reclamado temporalmente el artículo. |
+| `PENDIENTE_VISIBILIDAD` | Hay una activación o desactivación explícita pendiente. Puede coexistir con cambios de precio o stock. |
+| `PROCESANDO_VISIBILIDAD` | Un trabajador ha reclamado temporalmente una activación o desactivación. |
 | `ENVIADA` | La versión reclamada quedó verificada en PrestaShop. |
-| `ERROR` | Se agotaron los intentos o existe una incidencia terminal que requiere revisión. Una `reference` inexistente o ambigua llega aquí inmediatamente. |
+| `ERROR` | Se agotaron los intentos o existe una incidencia terminal que requiere revisión. Una `reference` ambigua llega aquí inmediatamente; una inexistente también lo hace si el alta automática está desactivada o no cumple sus requisitos. |
 
 Si el artículo cambia mientras se está enviando, el cambio nuevo incrementa
 su versión pero no libera la reclamación en curso. Al terminar el envío
@@ -369,6 +394,27 @@ permiso e ir al artículo relacionado. Los permisos separados **Consultar**,
 exportación y el detalle respectivamente. Un administrador puede consultar
 todos los destinos; los demás usuarios ven exclusivamente la tienda resuelta
 por su configuración efectiva.
+
+La rejilla muestra el **Id. tienda**, pero no una etiqueta de instalación. Si
+se supervisan varias instalaciones que reutilizan el mismo identificador de
+tienda, ese dato por sí solo no permite distinguirlas; contrasta el destino
+efectivo antes de interpretar o exportar la fila.
+
+### Cierre de Factuzam durante un envío
+
+Si se intenta cerrar Factuzam mientras esta instancia está procesando un
+artículo, primero se bloquean nuevas reclamaciones y se ofrecen tres opciones:
+
+- **Esperar**: termina únicamente el artículo actual y después cierra.
+- **Cerrar de todos modos**: no interrumpe a mitad la petición HTTP que ya está
+  en curso. Espera su retorno, devuelve el artículo a pendiente sin consumir un
+  intento y después cierra.
+- **Cancelar cierre**: mantiene Factuzam abierto, desbloquea las reclamaciones
+  y reanuda el consumo de la cola.
+
+El cierre forzado puede tardar hasta que termine la operación de red actual. La
+fila liberada conserva sus cambios de precio, stock o visibilidad y podrá ser
+reclamada por esta u otra instancia en el siguiente ciclo.
 
 ---
 
@@ -650,29 +696,44 @@ Los mensajes de error y los registros nunca deben incluir la clave API.
 1. Aplicar la migración de base de datos y comprobar las marcas **En web**.
 2. Configurar primero una tienda de pruebas de la misma versión que la tienda
    real; no usar producción para la validación inicial.
-3. Crear una clave API de mínimo privilegio.
+3. Crear una clave API de mínimo privilegio. Si se importan pedidos, añadir
+   solo lectura sobre `orders`, `customers`, `addresses`, `states`, `carriers`,
+   `order_states`, `customer_threads` y `customer_messages`.
 4. Configurar el ámbito correcto —usuario, grupo o `Todos`—, URL, tienda,
    empresa y tarifa con los cuatro checks desmarcados.
-5. Revisar **Niveles de familia a crear (0 = todos)**: usar `0` para toda la
+5. Mientras la importación no filtre por `id_shop`, usar una clave exclusiva
+   para una sola tienda y no habilitar el flujo en una instalación multitienda.
+6. Revisar **Niveles de familia a crear (0 = todos)**: usar `0` para toda la
    jerarquía local o un número positivo contado desde la familia hoja.
-6. Marcar únicamente los almacenes estándar que aportarán stock web.
-7. Revisar familias, IVA, SKU, atributos, precios y fotos reales.
-8. Probar un artículo con varios colores, tallas y precios por SKU.
-9. Confirmar que una `reference` ambigua deja un `ERROR` inmediato sin crear
+7. Marcar únicamente los almacenes estándar que aportarán stock web.
+8. Revisar familias, IVA, SKU, atributos, precios y fotos reales.
+9. Probar un artículo con varios colores, tallas y precios por SKU.
+10. Confirmar que una `reference` ambigua deja un `ERROR` inmediato sin crear
    recursos.
-10. Mantener **Crear artículos en PrestaShop al darlos de alta** desmarcado
+11. Mantener **Crear artículos en PrestaShop al darlos de alta** desmarcado
    hasta superar la batería funcional del laboratorio.
-11. Comprobar la reserva o ingestión automática de pedidos web antes de
-    autorizar cantidades absolutas.
-12. Marcar **Sincronizar stock y precios** únicamente después de completar
-    todas las comprobaciones.
-13. Con la activación automática desmarcada, repetir el alta para comprobar
+12. Entrar con la empresa y el almacén correctos; importar en laboratorio un
+    pedido con portes y otro sin ellos. Revisar cliente, productos, SKU, IVA,
+    totales y la línea de servicio `GASTOS_T`.
+13. Repetir el mismo `ID PS`, provocar un error intermedio y comprobar que no
+    se duplica el pedido y que los siguientes seleccionados continúan. No
+    ejecutar dos importaciones concurrentes del mismo pedido.
+14. Servir el pedido de prueba hasta albarán y factura: `GASTOS_T` debe
+    conservar el tipo **SERVICIO**, base e IVA sin mover stock; las líneas
+    físicas sí deben moverlo.
+15. Probar las opciones de cierre **Esperar**, **Cerrar de todos modos** y
+    **Cancelar cierre** con un envío real controlado.
+16. Comprobar una ingestión o reserva automática de pedidos web, distinta de
+    la importación manual, antes de autorizar cantidades absolutas.
+17. Mantener **Sincronizar stock y precios** desmarcado mientras no exista una
+    decisión GO documentada para la batería completa.
+18. Con la activación automática desmarcada, repetir el alta para comprobar
     que conserva IDs, no duplica recursos y deja el producto completo pero
     inactivo.
-14. En el laboratorio, marcar **Activar artículos en PrestaShop al marcar En
+19. En el laboratorio, marcar **Activar artículos en PrestaShop al marcar En
     web** y comprobar que `active=1` se solicita solo al final de un proceso
     correcto; provocar un error previo y confirmar que no se activa.
-15. Probar las tres respuestas al quitar **En web**: **Sí** desactiva, **No**
+20. Probar las tres respuestas al quitar **En web**: **Sí** desactiva, **No**
     solo deja de sincronizar y **Cancelar** no guarda.
 
 Las pruebas de desarrollo se realizan únicamente contra la instalación local

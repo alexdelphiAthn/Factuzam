@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li class="activo"><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -31,7 +31,9 @@ simplificadas, gestionar el efectivo de la caja y cuadrarla (arqueo).</p>
 ├── Histórico de Vales
 ├── Histórico de Operaciones
 ├── Histórico de Arqueos
-└── Borradores Simplificados</code></pre>
+├── Histórico de Solicitudes de Traspaso
+├── Borradores Simplificados
+└── Facturas proforma</code></pre>
 <h2 id="como-se-trabaja-una-jornada-de-caja">Cómo se trabaja una jornada de caja</h2>
 <p>Una jornada normal de tienda sigue este orden:</p>
 <ol><li>Entrar en <strong>TPV ▸ Menú de Caja</strong> y seleccionar la empresa, el almacén y la caja física del puesto.</li><li>Revisar la <strong>Fecha de Caja</strong>. Si se está registrando una jornada atrasada, cambiarla antes de hacer ventas.</li><li>Registrar la <strong>Entrada de Cambio (F6)</strong> si se mete efectivo inicial o un refuerzo de monedas/billetes.</li><li>Vender desde <strong>Ventas (F5)</strong>, cobrar con <strong>F12</strong> y emitir el ticket o el borrador que corresponda.</li><li>Registrar gastos, retiradas, traspasos y devoluciones durante el día.</li><li>Al cierre, abrir <strong>Arqueo (F11)</strong>, contar efectivo y otras formas de pago, grabar el arqueo e imprimir el justificante.</li></ol>
@@ -401,7 +403,7 @@ cobró, si hubo vale, si movió stock y qué documento fiscal quedó asociado.</
 la aplicación pide seleccionarla antes de buscar.</p></blockquote>
 <h4 id="rectificar-un-ticket-por-diferencias-o-sustitutiva">Rectificar un ticket: por diferencias o sustitutiva</h4>
 <p>Una venta ya consolidada no se modifica directamente. Para corregirla:</p>
-<ol><li>Entra en <strong>Menú de Caja ▸ Buscar / Modificar (F10)</strong>.</li><li>Localiza la operación y comprueba el ticket en las pestañas de detalle.</li><li>Pulsa <strong>Rectificar</strong>.</li><li>Elige <strong>Por diferencias</strong> o <strong>Sustitutiva</strong>.</li><li>Revisa la nueva operación que abre Factuzam, corrige sus líneas y finaliza el cobro con <code>[F12]</code>.</li></ol>
+<ol><li>Entra en <strong>TPV ▸ Buscar / Modificar (F10)</strong>.</li><li>Localiza la operación y comprueba el ticket en las pestañas de detalle.</li><li>Pulsa <strong>Rectificar</strong>.</li><li>Elige <strong>Por diferencias</strong> o <strong>Sustitutiva</strong>.</li><li>Revisa la nueva operación que abre Factuzam, corrige sus líneas y finaliza el cobro con <code>[F12]</code>.</li></ol>
 <table>
 <thead><tr>
 <th>Modalidad</th>
@@ -859,6 +861,21 @@ guardar desde el diseñador de informes.</p>
 </tbody>
 </table>
 <hr>
+<h2 id="historico-de-solicitudes-de-traspaso">Histórico de Solicitudes de Traspaso</h2>
+<p><strong>Ruta:</strong> <em>TPV ▸ Histórico de Solicitudes de Traspaso</em></p>
+<p>Reúne las solicitudes creadas con <strong>Solicitar a otro almacén (F6)</strong> y permite
+seguirlas hasta su atención. La lista muestra origen y destino, empleado,
+estado, cantidades pedidas, servidas y no servidas, líneas pendientes y
+motivos de rechazo.</p>
+<p>La ficha separa los <strong>Artículos solicitados</strong> del <strong>Traspaso realizado</strong>. Si
+la solicitud ya generó uno o varios traspasos, se pueden revisar sus datos y
+los movimientos de stock asociados. El botón <strong>Listado solicitudes</strong> prepara
+la consulta por fechas, ubicaciones y estados y permite obtenerla en Excel.</p>
+<p>El histórico no permite crear ni borrar solicitudes. Solo un administrador
+que además tenga permiso de modificación puede corregir el empleado o las
+observaciones; el estado, las cantidades y la trazabilidad del traspaso no se
+editan manualmente.</p>
+<hr>
 <h2 id="borradores-simplificados">Borradores Simplificados</h2>
 <p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[F]</code></p>
 <p>Mantenimiento de los <strong>Borradores Simplificados (tickets)</strong> generados en
@@ -883,9 +900,30 @@ documentos de venta, se consolidan según el modo fiscal configurado.</p>
 es usar <strong>Borrador (F8)</strong> en la fase de cobro. La conversión posterior queda
 para casos en los que el ticket ya se cerró.</p></blockquote>
 <hr>
+<h2 id="facturas-proforma">Facturas proforma</h2>
+<p><strong>Ruta:</strong> <em>TPV ▸ Facturas proforma</em></p>
+<p>Genera documentos por periodo a partir de operaciones ya cerradas del TPV y
+mantiene un historial de lo procesado. Se indica <strong>Desde</strong>, <strong>Hasta</strong> y la
+empresa emisora; para traspasos se selecciona también la empresa destino.</p>
+<table>
+<thead><tr>
+<th>Modalidad</th>
+<th>Resultado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Ventas (VE): proforma interna no fiscal</strong></td><td>Agrupa operaciones de <code>VENTA CONTADO</code> en una proforma interna. No declara IVA ni se comunica a Verifactu.</td></tr>
+<tr><td><strong>Traspasos (TA): borrador fiscal de Venta mayor</strong></td><td>Genera borradores normales por los traspasos entre empresas. El IVA y Verifactu se declaran cuando esos borradores se consolidan desde Venta Mayor.</td></tr>
+</tbody>
+</table>
+<p><strong>Generar documentos</strong> revisa antes el periodo y avisa si está duplicado o se
+solapa con otro. Las operaciones que ya quedaron vinculadas no se vuelven a
+incluir; las rectificaciones posteriores se incorporan como ajustes.
+<strong>Refrescar historial</strong> actualiza la lista. <strong>Imprimir selección</strong> imprime las
+proformas VE; los borradores TA se consultan e imprimen desde Venta Mayor.</p>
+<hr>
 <p><a href="04-menu-ventas-mayor.html">◀ Menú Ventas Mayor</a> · <a href="index.html">Índice</a> · <a href="06-menu-almacen.html">Siguiente ▶ Menú Almacén</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

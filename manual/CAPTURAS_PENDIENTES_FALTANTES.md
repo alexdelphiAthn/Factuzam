@@ -19,6 +19,18 @@ Resumen del cotejo:
 
 No falta ninguna imagen referenciada por los capítulos del manual.
 
+## Pantallas aún sin referencia visual
+
+El cotejo anterior no detecta una pantalla que nunca se haya incluido en un
+capítulo. La revisión funcional mantiene pendientes estas capturas:
+
+- modal y flujo de importación de pedidos de PrestaShop;
+- parámetros y cola de PrestaShop con detalle HTTP;
+- cola Web Service Fzam con detalle HTTP;
+- Histórico de Solicitudes de Traspaso;
+- Facturas proforma;
+- Procesos auxiliares BBDD.
+
 ## Al incorporar una captura
 
 1. Guardar el fichero exacto en `manual/img/`.

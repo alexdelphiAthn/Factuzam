@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li class="activo"><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li class="activo"><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -91,13 +91,14 @@ cuando todo funcione.</p></blockquote>
 <ul><li>En <strong>VERIFACTU</strong>, las nuevas ventas y facturas se imprimen con QR y se encolan automáticamente.</li><li>En <strong>NO_VERIFACTU</strong>, se registra y firma localmente la cadena. No hay cola AEAT, pero se pueden exportar los XML exigidos.</li><li>En <strong>SIN</strong>, el sistema permite trabajar sin cierre SIF durante el periodo transitorio o para pruebas.</li></ul>
 <hr>
 <h2 id="3-el-menu-verifactu">3. El menú Verifactu</h2>
-<p>Con el subsistema instalado aparece el menú principal <strong>Verifactu</strong> con tres
-opciones (todas se pueden ocultar por grupo desde
+<p>Con el subsistema instalado aparece el menú principal <strong>Verifactu</strong> con dos
+opciones (ambas se pueden ocultar por grupo desde
 <a href="07-menu-otros.html#permisos">Permisos</a>):</p>
 <pre><code>Verifactu
 ├── Declaración Responsable
-├── Cola de Envíos
 └── Verifactu Log</code></pre>
+<p>La cola fiscal está agrupada con las demás integraciones en
+<strong>Otros ▸ Colas de envíos ▸ Verifactu</strong>.</p>
 <h3 id="declaracion-responsable">Declaración Responsable</h3>
 <p>Muestra el texto de la <strong>declaración responsable</strong> del sistema de
 facturación (art. 13 del RD 1007/2023), compuesto con el nombre del
@@ -106,6 +107,7 @@ datos del productor/instalación configurados en los parámetros. Es el
 documento que acredita que el programa cumple la normativa.</p>
 <p><img src="img/11-declaracion.png" alt="Declaración responsable" loading="lazy"></p>
 <h3 id="cola-de-envios">Cola de Envíos</h3>
+<p><strong>Ruta:</strong> <em>Otros ▸ Colas de envíos ▸ Verifactu</em></p>
 <p>Consulta de la <strong>cola de comunicación</strong> (<code>fza_verifactu_cola</code>): muestra cada
 factura pendiente o procesada con su <strong>estado</strong>, número de <strong>intentos</strong>,
 fecha del <strong>próximo intento</strong> y el <strong>mensaje de error</strong> si lo hubo.</p>
@@ -194,14 +196,14 @@ reemplaza además los movimientos de almacén de la original por los del
 documento corregido; la modalidad por diferencias mantiene los movimientos
 originales y añade el ajuste con su signo.</p>
 <p>El procedimiento paso a paso está en
-<a href="05-menu-caja.html#rectificar-un-ticket-por-diferencias-o-sustitutiva">Caja ▸ Rectificar un ticket</a>.</p>
+<a href="05-menu-caja.html#rectificar-un-ticket-por-diferencias-o-sustitutiva">TPV ▸ Rectificar un ticket</a>.</p>
 <h3 id="resolver-un-aceptado-con-errores-en-venta-mayor">Resolver un «Aceptado con errores» en Venta Mayor</h3>
 <p>En <strong>Factura Venta Mayor</strong>, abre la pestaña <strong>Verifactu</strong> de la factura. El
 botón <strong>Resolver incidencia</strong> aparece únicamente si el último registro está
 en <strong>Aceptado con errores</strong> y no hay ya una subsanación en curso.</p>
 <p>El modal muestra el código y la descripción comunicados por la AEAT y pide
 elegir uno de estos dos casos:</p>
-<ol><li><strong>La factura expedida es correcta.</strong> Indica el motivo y usa <strong>Subsanar el registro</strong>. Factuzam encola un nuevo registro de alta con <code>&amp;lt;Subsanacion&amp;gt;S&amp;lt;/Subsanacion&amp;gt;</code>. No modifica ni sustituye la factura.</li><li><strong>El dato incorrecto figura en la factura expedida.</strong> Elige el cliente correcto, la serie y la fecha. Factuzam crea y encola una rectificativa sustitutiva <strong>R4</strong>, vinculada a la factura original.</li></ol>
+<ol><li><strong>La factura expedida es correcta.</strong> Indica el motivo y usa <strong>Subsanar el registro</strong>. Factuzam encola un nuevo registro de alta con <code>&lt;Subsanacion&gt;S&lt;/Subsanacion&gt;</code>. No modifica ni sustituye la factura.</li><li><strong>El dato incorrecto figura en la factura expedida.</strong> Elige el cliente correcto, la serie y la fecha. Factuzam crea y encola una rectificativa sustitutiva <strong>R4</strong>, vinculada a la factura original.</li></ol>
 <p>Por tanto, un error de NIF puede provocar un <strong>Aceptado con errores</strong>, pero
 eso no decide por sí solo el tratamiento. Si el NIF correcto ya estaba en la
 factura y solo se construyó mal el registro remitido, se subsana. Si la
@@ -219,8 +221,9 @@ rectificar la corrige emitiendo otra que la referencia. Para un cambio de
 importes lo correcto suele ser <strong>rectificar</strong>.</p></blockquote>
 <hr>
 <h2 id="6-diagnostico-de-problemas-frecuentes">6. Diagnóstico de problemas frecuentes</h2>
-<p><strong>Una factura se queda en <code>ERROR</code> en la cola.</strong> Abre <em>Verifactu ▸ Cola de
-Envíos</em> y lee el <strong>mensaje de error</strong> de la fila. Causas habituales:</p>
+<p><strong>Una factura se queda en <code>ERROR</code> en la cola.</strong> Abre <em>Otros ▸ Colas de
+envíos ▸ Verifactu</em> y lee el <strong>mensaje de error</strong> de la fila. Causas
+habituales:</p>
 <ul><li><strong>«[1100] NIF» en una fila <code>ERROR</code> no aceptada</strong> — falta el <strong>NIF del SIF</strong> en los parámetros, o el NIF de la empresa/cliente está mal formado. Corrige la causa y <strong>reprocesa</strong> la fila.</li><li><strong>Error de NIF en <code>Aceptado con errores</code></strong> — usa <strong>Resolver incidencia</strong>. Subsanar solo corresponde si la factura expedida ya era correcta; si el NIF equivocado está en la factura, crea la rectificativa R4.</li><li><strong>Certificado</strong> — el número de serie del certificado de la empresa no es válido o no está en el almacén de Windows del equipo.</li><li><strong>En PRE</strong> — el NIF no está censado en el entorno de pruebas o no guarda relación con el certificado.</li></ul>
 <p>Tras corregir la causa, <strong>relanza</strong> el envío editando la fila en la cola
 (estado → <code>PENDIENTE</code>, intentos → 0) o sube el parámetro de máximo de
@@ -231,11 +234,11 @@ guardado local, en el reintento la AEAT responde «registro duplicado» y la
 aplicación lo da por bueno. No hay que hacer nada.</p>
 <hr>
 <h2 id="7-resumen-para-el-dia-a-dia">7. Resumen para el día a día</h2>
-<ul><li>Con Verifactu <strong>activo</strong>, no tienes que hacer nada especial: vende y factura con normalidad; el QR y el envío son automáticos.</li><li>Si una factura está mal, <strong>no la borres</strong>: usa <strong>Rectificar</strong>, <strong>Anular</strong> o <strong>Resolver incidencia</strong> según el caso.</li><li>Vigila de vez en cuando <em>Verifactu ▸ Cola de Envíos</em>: si todo está en <strong>ENVIADA</strong>, vas al día; si ves <strong>ERROR</strong>, revisa el mensaje y reprocesa.</li><li>Ante cualquier incidencia con la AEAT, ten a mano la <strong>versión</strong> del programa (<em>Ayuda ▸ Acerca de</em>) y la <strong>Declaración Responsable</strong>.</li></ul>
+<ul><li>Con Verifactu <strong>activo</strong>, no tienes que hacer nada especial: vende y factura con normalidad; el QR y el envío son automáticos.</li><li>Si una factura está mal, <strong>no la borres</strong>: usa <strong>Rectificar</strong>, <strong>Anular</strong> o <strong>Resolver incidencia</strong> según el caso.</li><li>Vigila de vez en cuando <em>Otros ▸ Colas de envíos ▸ Verifactu</em>: si todo está en <strong>ENVIADA</strong>, vas al día; si ves <strong>ERROR</strong>, revisa el mensaje y reprocesa.</li><li>Ante cualquier incidencia con la AEAT, ten a mano la <strong>versión</strong> del programa (<em>Ayuda ▸ Acerca de</em>) y la <strong>Declaración Responsable</strong>.</li></ul>
 <hr>
 <p><a href="10-migracion-legacy.html">◀ Migración desde legacy</a> · <a href="index.html">Índice</a> · <a href="12-cambios-y-novedades.html">Siguiente ▶ Cambios y novedades</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

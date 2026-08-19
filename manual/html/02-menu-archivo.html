@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li class="activo"><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li class="activo"><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -193,16 +193,16 @@ variantes (las distintas tallas/colores se denominan <strong>SKU</strong>).</p>
 <ul><li><strong>General</strong> — datos básicos: descripción, familia, unidad de medida, IVA, etc.</li><li><strong>SKUs</strong> — las <strong>variantes</strong> del artículo (combinaciones de talla, color u otros atributos). Cada SKU es una referencia vendible con su propio stock y código de barras. Existe un asistente para <strong>generar SKUs</strong> a partir de las variaciones definidas.</li><li><strong>Propiedades</strong> — propiedades descriptivas asignadas al artículo. Algunas propiedades pueden informarse por <strong>artículo</strong>, por <strong>color</strong> o por <strong>SKU</strong>; si un color tiene una temporada distinta, el informe de stock y las búsquedas usan la temporada efectiva de ese color.</li><li><strong>CB</strong> — <strong>códigos de barras</strong> del artículo y sus SKUs.</li><li><strong>Tarifas</strong> — precios del artículo en las distintas tarifas.</li><li><strong>Proveedores</strong> — proveedores que lo suministran y sus referencias.</li></ul>
 <p>Desde la lista/ficha puedes además consultar <strong>stock</strong> y la <strong>foto</strong> del
 artículo con los botones del navegador.</p>
-<p>La casilla <strong>En web</strong> incorpora el artículo a la cola de sincronización. No
-lo publica automáticamente. Los productos existentes se localizan por una
-<code>reference</code> exacta y única. Si no existe correspondencia, el alta completa
-todavía no se ejecuta y se registra una incidencia; cuando se implemente,
-creará el producto inactivo hasta la revisión del administrador de
-PrestaShop. Consulta
-<a href="15-integracion-prestashop.html#articulos">Integración con PrestaShop</a>.</p>
-<p>Al quitar <strong>En web</strong> se dejan de sincronizar tanto el precio como el stock.
-No se envía stock cero ni se desactiva, elimina o modifica el producto en
-PrestaShop.</p>
+<p>La casilla <strong>En web</strong> hace que el artículo sea elegible para la integración y
+encola su comprobación; no equivale por sí sola a publicarlo. Según los checks
+del perfil efectivo, Factuzam puede sincronizar un producto existente, crear
+completo e inactivo uno que no exista y, si se ha autorizado expresamente,
+activarlo solo al final de un proceso correcto.</p>
+<p>Al quitar <strong>En web</strong>, un diálogo permite desactivar el producto remoto, dejar
+únicamente de sincronizarlo o cancelar el cambio. Ninguna de esas decisiones
+borra el producto. El comportamiento completo, los permisos y las cautelas de
+stock se describen en
+<a href="15-integracion-prestashop.html#articulos">Integración con PrestaShop ▸ Artículos</a>.</p>
 <p>Solo los usuarios con el permiso <strong>Permisos ▸ Artículos ▸ Activar/desactivar
 web</strong> pueden cambiar esta casilla.</p>
 <p>La gestión de fotos trabaja a nivel artículo o SKU/color. Si un SKU no
@@ -234,9 +234,11 @@ destino cuando estén validadas.</p>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[N]</code></p>
 <p><strong>Clasificación jerárquica</strong> de los artículos (familias y subfamilias).
 Permite agrupar el catálogo para informes, filtros y precios.</p>
-<p>En el alta web futura, esta jerarquía se convertirá en categorías de
-PrestaShop sin identificarlas únicamente por el nombre visible. Consulta
-<a href="15-integracion-prestashop.html#8-familias-y-categorias">Familias y categorías</a>.</p>
+<p>En un alta web autorizada, esta jerarquía se convierte en categorías de
+PrestaShop bajo la raíz configurada. El perfil decide cuántos niveles locales
+se conservan y la integración resuelve cada categoría dentro de su padre, no
+solo por el nombre visible. Consulta
+<a href="15-integracion-prestashop.html#8-familias-y-categorias">Integración con PrestaShop ▸ Familias y categorías</a>.</p>
 <ul><li><strong>Más Datos</strong> — datos de la familia.</li><li><strong>Artículos</strong> — artículos pertenecientes a la familia.</li><li><strong>Propiedades Artículos</strong> — propiedades que heredan los artículos de la familia.</li><li><strong>Otros</strong>.</li></ul>
 <h3 id="paises">Paises</h3>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[L]</code></p>
@@ -292,7 +294,7 @@ antes de salir.</p>
 <hr>
 <p><a href="01-conceptos-comunes.html">◀ Conceptos comunes</a> · <a href="index.html">Índice</a> · <a href="03-menu-compras.html">Siguiente ▶ Menú Compras</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

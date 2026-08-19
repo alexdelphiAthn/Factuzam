@@ -106,16 +106,18 @@ Selecciona el **modo fiscal**:
 
 ## 3. El menú Verifactu
 
-Con el subsistema instalado aparece el menú principal **Verifactu** con tres
-opciones (todas se pueden ocultar por grupo desde
+Con el subsistema instalado aparece el menú principal **Verifactu** con dos
+opciones (ambas se pueden ocultar por grupo desde
 [Permisos](07-menu-otros.md#permisos)):
 
 ```
 Verifactu
 ├── Declaración Responsable
-├── Cola de Envíos
 └── Verifactu Log
 ```
+
+La cola fiscal está agrupada con las demás integraciones en
+**Otros ▸ Colas de envíos ▸ Verifactu**.
 
 ### Declaración Responsable
 
@@ -128,6 +130,8 @@ documento que acredita que el programa cumple la normativa.
 ![Declaración responsable](img/11-declaracion.png)
 
 ### Cola de Envíos
+
+**Ruta:** *Otros ▸ Colas de envíos ▸ Verifactu*
 
 Consulta de la **cola de comunicación** (`fza_verifactu_cola`): muestra cada
 factura pendiente o procesada con su **estado**, número de **intentos**,
@@ -230,7 +234,7 @@ documento corregido; la modalidad por diferencias mantiene los movimientos
 originales y añade el ajuste con su signo.
 
 El procedimiento paso a paso está en
-[Caja ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva).
+[TPV ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva).
 
 ### Resolver un «Aceptado con errores» en Venta Mayor
 
@@ -271,8 +275,9 @@ cuál). La lista muestra además una columna **«Cola Verifactu»** con el
 
 ## 6. Diagnóstico de problemas frecuentes
 
-**Una factura se queda en `ERROR` en la cola.** Abre *Verifactu ▸ Cola de
-Envíos* y lee el **mensaje de error** de la fila. Causas habituales:
+**Una factura se queda en `ERROR` en la cola.** Abre *Otros ▸ Colas de
+envíos ▸ Verifactu* y lee el **mensaje de error** de la fila. Causas
+habituales:
 
 - **«[1100] NIF» en una fila `ERROR` no aceptada** — falta el **NIF del
   SIF** en los parámetros, o el NIF de la empresa/cliente está mal formado.
@@ -302,7 +307,7 @@ aplicación lo da por bueno. No hay que hacer nada.
   factura con normalidad; el QR y el envío son automáticos.
 - Si una factura está mal, **no la borres**: usa **Rectificar**, **Anular**
   o **Resolver incidencia** según el caso.
-- Vigila de vez en cuando *Verifactu ▸ Cola de Envíos*: si todo está en
+- Vigila de vez en cuando *Otros ▸ Colas de envíos ▸ Verifactu*: si todo está en
   **ENVIADA**, vas al día; si ves **ERROR**, revisa el mensaje y reprocesa.
 - Ante cualquier incidencia con la AEAT, ten a mano la **versión** del
   programa (*Ayuda ▸ Acerca de*) y la **Declaración Responsable**.

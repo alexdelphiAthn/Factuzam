@@ -128,7 +128,7 @@ de la misma operación.
 El inventario de unidades que leen el interruptor, publican perfiles o
 aportan definiciones al catálogo, junto con el recorrido histórico de los
 data modules, está en
-[`MANUAL_SQL_PERFILES.md`](../MANUAL_SQL_PERFILES.md#21-unidades-que-leen-ogetsqlfromdb-y-publican-perfiles).
+[`MANUAL_SQL_PERFILES.md`](https://github.com/alexdelphiAthn/Factuzam/blob/main/MANUAL_SQL_PERFILES.md#21-unidades-que-leen-ogetsqlfromdb-y-publican-perfiles).
 
 ### Validación y fallback seguro
 

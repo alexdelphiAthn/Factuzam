@@ -39,6 +39,9 @@ type
       out APorcentajes: TPorcentajesImpuestos): Boolean;
     function LeerPorEmpresa(const ACodigoEmpresa: string;
       out APorcentajes: TPorcentajesImpuestos): Boolean;
+    function LeerPorEmpresaEnFecha(const ACodigoEmpresa: string;
+      AFecha: TDateTime;
+      out APorcentajes: TPorcentajesImpuestos): Boolean;
     function LeerTipoIvaArticulo(
       const ACodigoArticulo: string): string;
     function LeerRecargoComprasEmpresa(
@@ -129,6 +132,15 @@ end;
 function TLecturasImpuestos.LeerPorEmpresa(
   const ACodigoEmpresa: string;
   out APorcentajes: TPorcentajesImpuestos): Boolean;
+begin
+  Result := LeerPorEmpresaEnFecha(
+    ACodigoEmpresa, Date, APorcentajes);
+end;
+
+function TLecturasImpuestos.LeerPorEmpresaEnFecha(
+  const ACodigoEmpresa: string;
+  AFecha: TDateTime;
+  out APorcentajes: TPorcentajesImpuestos): Boolean;
 var
   oConsulta: TUniQuery;
 begin
@@ -151,9 +163,15 @@ begin
         '       IFNULL(PORCENTAJE_EXENTO_RE_IVA, 0) AS REE ' +
         '  FROM vi_ivas_empresa ' +
         ' WHERE CODIGO_EMP_EMP = :EMPRESA ' +
-        '   AND ESDEFAULT_IVA_IVAGRP = ''S'' ' +
+        '   AND (FECHA_DESDE_IVA IS NULL OR FECHA_DESDE_IVA <= :FECHA) ' +
+        '   AND (FECHA_HASTA_IVA IS NULL OR FECHA_HASTA_IVA >= :FECHA) ' +
+        ' ORDER BY COALESCE(FECHA_DESDE_IVA, ''1000-01-01'') DESC, ' +
+        '          CODIGO_IVA DESC ' +
         ' LIMIT 1';
       oConsulta.ParamByName('EMPRESA').AsString := ACodigoEmpresa;
+      if AFecha <= 0 then
+        AFecha := Date;
+      oConsulta.ParamByName('FECHA').AsDateTime := Trunc(AFecha);
       oConsulta.Open;
       Result := not oConsulta.Eof;
       if Result then

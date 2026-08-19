@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li class="activo"><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li class="activo"><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -22,12 +22,12 @@ aplicación. Está orientado al <strong>instalador/administrador</strong>; el us
 final solo necesita el capítulo
 <a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a>.</p>
 <hr>
-<h2 id="descargar-y-probar-la-demo">Descargar y probar la demo</h2>
-<p>Antes de preparar una instalación completa, puedes descargar la demo desde
-la raíz de la web:</p>
-<p><a href="/Factuzam_DEMO_1.0.15.202606240020.alpha.exe">Descargar Factuzam_DEMO_1.0.15.202606240020.alpha.exe</a></p>
-<p>El fichero publicado se llama
-<code>Factuzam_DEMO_1.0.15.202606240020.alpha.exe</code>.</p>
+<h2 id="obtener-y-probar-la-demo">Obtener y probar la demo</h2>
+<p>Antes de preparar una instalación completa, solicita o descarga el
+<strong>instalador vigente</strong> de Factuzam DEMO. Los paquetes llevan la versión y la
+fecha en el nombre; usa el enlace actual de la web o el facilitado por soporte
+y no una URL guardada de una compilación anterior. Si no hay una descarga
+pública activa, confirma el paquete con soporte antes de instalarlo.</p>
 <p>La demo se entrega como instalador <strong>NSIS</strong> autoinstalable. Al ejecutarlo
 en un Windows de 64 bits, el asistente instala <strong>Factuzam DEMO</strong> en
 <code>%PROGRAMFILES%\Factuzam DEMO</code>, instala una <strong>MariaDB local</strong> para pruebas
@@ -55,9 +55,7 @@ o con un paquete preparado para esa instalación concreta.</p></blockquote>
 <ul><li>La <strong>impresora de tickets</strong> debe poder imprimir códigos QR en modo nativo <strong>ESC/POS</strong>.</li><li>El <strong>lector de códigos de barras</strong> debe funcionar por USB en simulación de teclado y enviar el código con prefijo <strong>STX</strong> (<code>0x02</code>) y sufijo <strong>ETX</strong> (<code>0x03</code>).</li><li>El lector no debe añadir ningún otro prefijo ni sufijo: nada de intro, tabulador ni caracteres adicionales antes o después del código.</li></ul>
 <hr>
 <h2 id="2-instalar-el-servidor-mariadb">2. Instalar el servidor MariaDB</h2>
-<ol><li>Descarga MariaDB para Windows desde <a href="https://mariadb.org/download/">mariadb.org/download</a> e instálalo en el equipo que hará de <strong>servidor</strong> (en monopuesto, el mismo PC).</li><li>Durante la instalación:</li></ol>
-<ul><li>Define la <strong>contraseña de <code>root</code></strong> y guárdala en lugar seguro.</li><li>Deja el servicio configurado para <strong>arrancar con Windows</strong>.</li><li>Puerto por defecto: <strong>3306</strong>.</li></ul>
-<ol><li>Si otros puestos van a conectarse, abre el puerto 3306 en el <strong>firewall de Windows</strong> del servidor (solo para la red local).</li></ol>
+<ol><li>Descarga MariaDB para Windows desde <a href="https://mariadb.org/download/">mariadb.org/download</a> e instálalo en el equipo que hará de <strong>servidor</strong> (en monopuesto, el mismo PC).</li><li>Durante la instalación:<ul><li>Define la <strong>contraseña de <code>root</code></strong> y guárdala en lugar seguro.</li><li>Deja el servicio configurado para <strong>arrancar con Windows</strong>.</li><li>Puerto por defecto: <strong>3306</strong>.</li></ul></li><li>Si otros puestos van a conectarse, abre el puerto 3306 en el <strong>firewall de Windows</strong> del servidor (solo para la red local).</li></ol>
 <blockquote><p>Factuzam usa el juego de caracteres <strong><code>utf8mb4</code></strong> con cotejamiento
 <strong><code>utf8mb4_spanish_ci</code></strong>; la base de datos se creará así en el paso
 siguiente.</p></blockquote>
@@ -73,7 +71,7 @@ países, tipos de IVA, ventanas, usuario inicial…).</p>
      CHARACTER SET utf8mb4
      COLLATE utf8mb4_spanish_ci;
    </code>``</p>
-<ol><li>Arranca <code>fzam.exe</code> y, en el login, pulsa <strong>Configurar Base de Datos ▸</strong> y rellena Host, Puerto, Nombre BD (<code>factuzam</code>), Usuario y Contraseña.</li><li>Pulsa el botón <strong>Subir Script</strong>: pide la contraseña de la base de datos y un fichero <code>.sql</code>; selecciona <code>factuzam_original.sql</code> y espera a que termine la carga.</li><li>Pulsa <strong>Probar Conexión</strong> para verificar.</li></ol>
+<ol start="2"><li>Arranca <code>fzam.exe</code> y, en el login, pulsa <strong>Configurar Base de Datos ▸</strong> y rellena Host, Puerto, Nombre BD (<code>factuzam</code>), Usuario y Contraseña.</li><li>Pulsa el botón <strong>Subir Script</strong>: pide la contraseña de la base de datos y un fichero <code>.sql</code>; selecciona <code>factuzam_original.sql</code> y espera a que termine la carga.</li><li>Pulsa <strong>Probar Conexión</strong> para verificar.</li></ol>
 <p><img src="img/09-subir-script.png" alt="Login con configuración de BBDD y Subir Script" loading="lazy"></p>
 <p><strong>Opción B — por línea de comandos:</strong></p>
 <pre><code>mysql -h localhost -P 3306 -u root -p ^
@@ -100,7 +98,7 @@ FLUSH PRIVILEGES;</code></pre>
 <tr><td><strong>Usuario / Contraseña</strong></td><td>El usuario de BBDD creado en el paso 3.</td></tr>
 </tbody>
 </table>
-<ol><li>Pulsa <strong>Probar Conexión</strong> — debe responder correctamente.</li></ol>
+<ol start="4"><li>Pulsa <strong>Probar Conexión</strong> — debe responder correctamente.</li></ol>
 <blockquote><p>La configuración se guarda <strong>por usuario de Windows</strong> en
 <code>%LOCALAPPDATA%\factuzam\</code> (fichero <code>.ini</code>). Cada puesto se configura
 una sola vez.</p></blockquote>
@@ -111,7 +109,7 @@ una sola vez.</p></blockquote>
 <hr>
 <h2 id="6-lista-de-comprobacion-de-puesta-en-marcha">6. Lista de comprobación de puesta en marcha</h2>
 <p>Configura en este orden antes de empezar a trabajar:</p>
-<ol><li><strong>Empresa</strong> — datos fiscales, NIF, <strong>series</strong> de facturación y <strong>certificado Verifactu</strong> (<em>Archivo ▸ Empresas</em>).</li><li><strong>Impuesto IVA y Grupos de IVA</strong> — verifica los tipos vigentes (<em>Otros ▸ Impuesto IVA</em>).</li><li><strong>Contadores</strong> — numeración inicial de los documentos por serie (<em>Otros ▸ Contadores</em>).</li><li><strong>Almacenes y Cajas</strong> — al menos un almacén y su caja de venta (<em>Archivo ▸ Almacenes</em>).</li><li><strong>Formas de pago</strong> — documentos en <em>Otros ▸ Formas de pago documentos</em> y caja en <em>Caja ▸ Formas de Pago Caja</em>.</li><li><strong>Tablas auxiliares y catálogo</strong> — familias, tallas/atributos, tarifas y artículos (<em>Archivo ▸ Tablas Auxiliares</em>; o mediante la <a href="10-migracion-legacy.html">migración desde el software anterior</a>).</li><li><strong>Usuarios, grupos y permisos</strong> — un usuario por persona, permisos por grupo.</li><li><strong>Parámetros de Caja</strong> — impresora de tickets y comportamiento del TPV (<em>Caja ▸ Parámetros de Caja</em>).</li><li><strong>Copia de seguridad</strong> — haz una primera copia y deja establecida la rutina (<em>Otros ▸ Hacer Copia de Seguridad</em>).</li></ol>
+<ol><li><strong>Empresa</strong> — datos fiscales, NIF, <strong>series</strong> de facturación y <strong>certificado Verifactu</strong> (<em>Archivo ▸ Empresas</em>).</li><li><strong>Impuesto IVA y Grupos de IVA</strong> — verifica los tipos vigentes (<em>Otros ▸ Impuesto IVA</em>).</li><li><strong>Contadores</strong> — numeración inicial de los documentos por serie (<em>Otros ▸ Contadores</em>).</li><li><strong>Almacenes y Cajas</strong> — al menos un almacén y su caja de venta (<em>Archivo ▸ Almacenes</em>).</li><li><strong>Formas de pago</strong> — documentos en <em>Otros ▸ Formas de pago documentos</em> y caja en <em>TPV ▸ Formas de Pago Caja</em>.</li><li><strong>Tablas auxiliares y catálogo</strong> — familias, tallas/atributos, tarifas y artículos (<em>Archivo ▸ Tablas Auxiliares</em>; o mediante la <a href="10-migracion-legacy.html">migración desde el software anterior</a>).</li><li><strong>Usuarios, grupos y permisos</strong> — un usuario por persona, permisos por grupo.</li><li><strong>Parámetros de Caja</strong> — impresora de tickets y comportamiento del TPV (<em>TPV ▸ Parámetros de Caja</em>).</li><li><strong>Copia de seguridad</strong> — haz una primera copia y deja establecida la rutina (<em>Otros ▸ Hacer Copia de Seguridad</em>).</li></ol>
 <hr>
 <h2 id="7-ficheros-locales-de-la-aplicacion">7. Ficheros locales de la aplicación</h2>
 <p>Cada puesto guarda sus datos locales en <code>%LOCALAPPDATA%\factuzam\</code>:</p>
@@ -135,7 +133,7 @@ negocio (que viven todos en MariaDB).</p>
 <hr>
 <p><a href="08-menu-ayuda.html">◀ Menú Ayuda</a> · <a href="index.html">Índice</a> · <a href="10-migracion-legacy.html">Siguiente ▶ Migración desde software legacy</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

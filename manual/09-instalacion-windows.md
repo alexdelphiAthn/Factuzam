@@ -10,15 +10,13 @@ final solo necesita el capítulo
 
 ---
 
-## Descargar y probar la demo
+## Obtener y probar la demo
 
-Antes de preparar una instalación completa, puedes descargar la demo desde
-la raíz de la web:
-
-[Descargar Factuzam_DEMO_1.0.15.202606240020.alpha.exe](/Factuzam_DEMO_1.0.15.202606240020.alpha.exe)
-
-El fichero publicado se llama
-`Factuzam_DEMO_1.0.15.202606240020.alpha.exe`.
+Antes de preparar una instalación completa, solicita o descarga el
+**instalador vigente** de Factuzam DEMO. Los paquetes llevan la versión y la
+fecha en el nombre; usa el enlace actual de la web o el facilitado por soporte
+y no una URL guardada de una compilación anterior. Si no hay una descarga
+pública activa, confirma el paquete con soporte antes de instalarlo.
 
 La demo se entrega como instalador **NSIS** autoinstalable. Al ejecutarlo
 en un Windows de 64 bits, el asistente instala **Factuzam DEMO** en
@@ -163,14 +161,14 @@ Configura en este orden antes de empezar a trabajar:
    (*Archivo ▸ Almacenes*).
 5. **Formas de pago** — documentos en
    *Otros ▸ Formas de pago documentos* y caja en
-   *Caja ▸ Formas de Pago Caja*.
+   *TPV ▸ Formas de Pago Caja*.
 6. **Tablas auxiliares y catálogo** — familias, tallas/atributos,
    tarifas y artículos (*Archivo ▸ Tablas Auxiliares*; o mediante la
    [migración desde el software anterior](10-migracion-legacy.md)).
 7. **Usuarios, grupos y permisos** — un usuario por persona, permisos
    por grupo.
 8. **Parámetros de Caja** — impresora de tickets y comportamiento del TPV
-   (*Caja ▸ Parámetros de Caja*).
+   (*TPV ▸ Parámetros de Caja*).
 9. **Copia de seguridad** — haz una primera copia y deja establecida la
    rutina (*Otros ▸ Hacer Copia de Seguridad*).
 

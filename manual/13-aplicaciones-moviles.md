@@ -125,9 +125,12 @@ consulta anterior.
 La consulta móvil necesita que la instalación publique las ventas en el
 servicio web:
 
-1. Configurar en Factuzam la URL, credencial y referencia del servicio.
-2. Activar **Enviar ventas al webservice** (`vgerEnviarVentasWS`) en los
-   perfiles o cajas que correspondan.
+1. En **Otros ▸ Parámetros del entorno ▸ Servicios web**, configurar
+   `appApiUrl` (URL general), `appApiToken` (API key/token) y
+   `appApiReferencia` (referencia de la instalación).
+2. En **TPV ▸ Parámetros de Caja ▸ Servicios web**, activar **Enviar ventas
+   completas al webservice de respaldo** (`vgerEnviarVentasWS`) en los
+   perfiles o cajas que correspondan. El valor inicial es `False`.
 3. Crear una credencial móvil con permiso de lectura de ventas.
 4. En **VentasFzam ▸ Configuración (⚙)**, indicar URL base, token y
    referencia.
@@ -136,6 +139,18 @@ Factuzam guarda cada cambio de una venta como un evento en una cola local y
 lo envía en segundo plano. La caja no espera a la red y la cola fiscal de
 Verifactu funciona de forma independiente. Los eventos se reintentan con el
 mismo identificador para evitar duplicados.
+
+### Supervisar los envíos
+
+Abre **Otros ▸ Colas de envíos ▸ Web Service Fzam** para revisar el estado,
+los intentos y el historial HTTP de cada evento. **Actualizar** refresca la
+consulta y **Ir a Documento** abre la venta relacionada; la pantalla no
+permite modificar ni reintentar filas. Los envíos pendientes se procesan cada
+60 segundos de forma predeterminada y usan espera exponencial antes de pasar
+a `ERROR` al agotar los 20 intentos configurados.
+
+Consulta estados, permisos y recuperación en
+[Otros ▸ Colas de envíos ▸ Web Service Fzam](07-menu-otros.md#web-service-fzam).
 
 > Las ventas históricas sincronizadas antes de incorporar un dato nuevo —por
 > ejemplo, la temporada— pueden mostrarlo vacío hasta que vuelvan a enviarse.

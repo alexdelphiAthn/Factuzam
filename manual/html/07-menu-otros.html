@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -24,6 +24,10 @@ avanzadas. Son opciones que usa principalmente el <strong>administrador</strong>
 <p>Estructura del menú:</p>
 <pre><code>Otros
 ├── Parámetros del entorno
+├── Colas de envíos
+│   ├── Verifactu
+│   ├── PrestaShop
+│   └── Web Service Fzam
 ├── Grupos de IVA
 ├── Impuesto IVA
 ├── Contadores
@@ -35,13 +39,10 @@ avanzadas. Son opciones que usa principalmente el <strong>administrador</strong>
 │   ├── Perfiles
 │   ├── Permisos
 │   └── Permisos (tabla)
-├── Colas de envíos
-│   ├── Verifactu
-│   ├── PrestaShop
-│   └── Web Service Fzam
 ├── Hacer Copia de Seguridad
 ├── Recuperar Copia de Seguridad
-└── Generador de Procesos</code></pre>
+├── Generador de Procesos
+└── Procesos auxiliares BBDD</code></pre>
 <hr>
 <h2 id="parametros-del-entorno">Parámetros del entorno</h2>
 <p><img src="img/07-parametros.png" alt="Parámetros Generales de la Aplicación" loading="lazy"></p>
@@ -58,7 +59,7 @@ etc. Cada valor puede asignarse a un usuario, a un grupo o a <code>Todos</code>.
 </tr></thead>
 <tbody>
 <tr><td><strong>Directorios / Fotos</strong></td><td>Carpeta local o compartida de fotos (<code>appDirFotos</code>) y número de atributos usado en su clave.</td></tr>
-<tr><td><strong>Servicios web</strong></td><td>URL, credencial y referencia comunes para fotos, correo, ventas, SIF y recuentos.</td></tr>
+<tr><td><strong>Servicios web</strong></td><td>URL (<code>appApiUrl</code>), credencial (<code>appApiToken</code>) y referencia de instalación (<code>appApiReferencia</code>) comunes para fotos, correo, ventas, SIF y recuentos; también ciclo y máximo de intentos de la cola de ventas.</td></tr>
 <tr><td><strong>Verifactu</strong></td><td>Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj.</td></tr>
 <tr><td><strong>PrestaShop</strong></td><td>Conexión API, tienda, empresa, tarifa, cola, niveles de familia y checks <strong>Sincronizar stock y precios</strong>, <strong>Crear artículos en PrestaShop al darlos de alta</strong>, <strong>Activar artículos en PrestaShop al marcar En web</strong> y <strong>Hacer barrido periódicamente</strong>.</td></tr>
 <tr><td><strong>Caja</strong></td><td>Valores por defecto del TPV y comportamiento de arqueo.</td></tr>
@@ -216,17 +217,85 @@ para edición masiva o revisión rápida de muchos permisos a la vez.</p>
 <h2 id="colas-de-envios">Colas de envíos</h2>
 <p>La ruta <strong>Otros ▸ Colas de envíos</strong> reúne en un solo lugar el seguimiento
 de las tres integraciones:</p>
-<ul><li><strong>Verifactu</strong> muestra la cola de comunicaciones fiscales.</li><li><strong>PrestaShop</strong> muestra los artículos pendientes, procesados o con error.</li><li><strong>Web Service Fzam</strong> muestra los documentos enviados al servicio de Factuzam.</li></ul>
-<p>Las tres opciones son pantallas de consulta y seguimiento. Las ventanas de
-<strong>PrestaShop</strong> y <strong>Web Service Fzam</strong> muestran una lista de trabajos y el
-historial de sus operaciones HTTP. Al seleccionar una operación se pueden
-consultar la petición, la respuesta del servidor y el error registrado.</p>
-<p>Estas dos ventanas son de <strong>solo lectura</strong>: no permiten modificar, borrar ni
-reintentar trabajos. Los permisos independientes de consulta, exportación y
-detalle deciden si el usuario puede abrir la ventana, exportar la lista o ver
-la petición y la respuesta. Los administradores pueden revisar todos los
-destinos; los demás usuarios solo ven la tienda o empresa de su configuración
-efectiva.</p>
+<h3 id="verifactu">Verifactu</h3>
+<p><strong>Ruta:</strong> <em>Otros ▸ Colas de envíos ▸ Verifactu</em></p>
+<p>Muestra las comunicaciones fiscales pendientes, en proceso, enviadas o con
+error. Su uso y el reproceso autorizado se explican en
+<a href="11-verifactu.html#cola-de-envios">capítulo Verifactu · Cola de envíos</a>.</p>
+<h3 id="prestashop">PrestaShop</h3>
+<p><strong>Ruta:</strong> <em>Otros ▸ Colas de envíos ▸ PrestaShop</em></p>
+<p>Muestra los trabajos de catálogo pendientes, procesados o con error y el
+historial HTTP de cada intento. Es una pantalla de diagnóstico de solo
+lectura: no modifica ni reintenta trabajos. Consulta el detalle operativo en
+<a href="15-integracion-prestashop.html#ventana-de-seguimiento">Integración con PrestaShop ▸ Ventana de seguimiento</a>.</p>
+<h3 id="web-service-fzam">Web Service Fzam</h3>
+<p><strong>Ruta:</strong> <em>Otros ▸ Colas de envíos ▸ Web Service Fzam</em></p>
+<p>Esta cola publica en segundo plano una copia completa de los cambios de las
+ventas para servicios como <strong>VentasFzam</strong>. No es la cola fiscal de Verifactu y
+la espera o una caída de red del servicio no detienen el cobro en el TPV.</p>
+<p>Los tipos de evento que pueden aparecer son:</p>
+<table>
+<thead><tr>
+<th>Evento</th>
+<th>Qué representa</th>
+</tr></thead>
+<tbody>
+<tr><td><code>VENTA_CONFIRMADA</code></td><td>Alta o confirmación de una venta.</td></tr>
+<tr><td><code>VENTA_ANULADA</code></td><td>Anulación de la venta.</td></tr>
+<tr><td><code>VENTA_SUSTITUIDA</code></td><td>Sustitución por otro documento.</td></tr>
+<tr><td><code>VENTA_REABIERTA</code></td><td>Reapertura controlada de una venta.</td></tr>
+<tr><td><code>FISCAL_ACTUALIZADO</code></td><td>Cambio posterior de su información fiscal.</td></tr>
+<tr><td><code>TICKET_PDF_ACTUALIZADO</code></td><td>Incorporación o actualización del PDF del ticket.</td></tr>
+<tr><td><code>FACTURA_PDF_ACTUALIZADO</code></td><td>Incorporación o actualización del PDF de la factura.</td></tr>
+</tbody>
+</table>
+<p>La lista muestra evento, empresa, serie y número, tipo, estado, intentos,
+próximo intento, fecha de envío, identificador de petición y último error. Los
+estados son:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>PENDIENTE</strong></td><td>Espera al siguiente ciclo o a la fecha de próximo intento.</td></tr>
+<tr><td><strong>PROCESANDO</strong></td><td>Un proceso de la aplicación ha reservado el evento para enviarlo.</td></tr>
+<tr><td><strong>ENVIADA</strong></td><td>El servicio aceptó el evento y devolvió resultado correcto.</td></tr>
+<tr><td><strong>ERROR</strong></td><td>Se agotó el máximo de intentos configurado.</td></tr>
+</tbody>
+</table>
+<p>Al seleccionar una fila, el panel inferior presenta todos sus intentos HTTP:
+método, recurso, estado HTTP, resultado, duración e identificador de petición.
+Las pestañas <strong>Petición</strong>, <strong>Respuesta del servidor</strong> y <strong>Error</strong> muestran el
+contenido registrado; las credenciales y contenidos binarios sensibles se
+omiten del historial.</p>
+<ul><li><strong>Actualizar</strong> vuelve a cargar la cola y su historial; no fuerza un envío.</li><li><strong>Ir a Documento</strong> abre la factura o el borrador simplificado asociado.</li></ul>
+<p>La ventana es de <strong>solo lectura</strong>: no permite insertar, modificar, borrar ni
+reintentar filas. Los permisos <code>VentasWsCola.consultar</code>,
+<code>VentasWsCola.excel</code> y <code>VentasWsCola.detalle</code> controlan respectivamente el
+acceso, la exportación y la vista de petición/respuesta. Un administrador ve
+todas las empresas; los demás usuarios solo ven la empresa de su sesión. Sin
+empresa efectiva, la consulta no devuelve filas.</p>
+<h4 id="ciclo-reintentos-y-recuperacion">Ciclo, reintentos y recuperación</h4>
+<p>El proceso consulta la cola cada <strong>60 segundos</strong> de forma predeterminada
+(<code>appVentasWsSegundosCiclo</code>; mínimo 5 segundos) y prueba hasta <strong>20 veces</strong>
+(<code>appVentasWsMaxIntentos</code>). Tras un fallo deja la fila en <code>PENDIENTE</code> y aplica
+una espera exponencial de 1, 2, 4, 8, 16, 32 y 64 minutos, con un máximo de
+64 minutos para los intentos posteriores. Al agotar el límite pasa a <code>ERROR</code>.</p>
+<p>Si la aplicación se interrumpe con una fila en <code>PROCESANDO</code>, la recupera como
+<code>PENDIENTE</code> cuando lleva más de diez minutos bloqueada. Tras corregir una
+incidencia de red o configuración, las filas que sigan en <code>PENDIENTE</code>
+continuarán solas en su próximo intento. Una fila ya agotada en <code>ERROR</code> no se
+reencola desde esta ventana: debe revisarla el administrador o soporte.</p>
+<h4 id="configuracion-necesaria">Configuración necesaria</h4>
+<p>En <strong>Otros ▸ Parámetros del entorno ▸ Servicios web</strong> deben tener valor:</p>
+<ul><li><code>appApiUrl</code>: URL general del servicio web.</li><li><code>appApiToken</code>: API key o token de la instalación.</li><li><code>appApiReferencia</code>: referencia global de la instalación.</li></ul>
+<p>Además, en <strong>TPV ▸ Parámetros de Caja ▸ Servicios web</strong> hay que activar
+<strong>Enviar ventas completas al webservice de respaldo</strong>
+(<code>vgerEnviarVentasWS</code>). Su valor inicial es <code>False</code>; si está desactivado no se
+crean eventos nuevos. Los que ya estaban encolados continúan su ciclo hasta
+terminar o agotar los intentos. Consulta la puesta en marcha de la aplicación
+móvil en <a href="13-aplicaciones-moviles.html#puesta-en-marcha-administrador">VentasFzam</a>.</p>
 <hr>
 <h2 id="hacer-copia-de-seguridad">Hacer Copia de Seguridad</h2>
 <p><img src="img/07-copia-seguridad.png" alt="Diálogo de copia de seguridad" loading="lazy"></p>
@@ -273,11 +342,7 @@ fichero <code>.sql</code>/<code>.txt</code> del disco como proceso nuevo, tomand
 fichero). El menú contextual del editor ofrece además <em>Seleccionar Todo</em>,
 <em>Ejecutar</em>, <em>Comentar</em> y <em>Abrir Script</em>.</p>
 <h3 id="como-sacar-un-listado">Cómo sacar un listado</h3>
-<ol><li>Pulsa <strong>Insertar registro</strong> y da <strong>Código</strong> y <strong>Nombre</strong> al proceso (p. ej. <code>L001 — Ventas por familia</code>).</li><li>En <strong>1_Código SQL</strong> escribe la consulta <code>SELECT …</code>. Ayudas:</li></ol>
-<ul><li>En <strong>2_Metadatos</strong>, el árbol muestra todas las tablas y vistas; <strong>doble clic</strong> sobre una tabla/vista enseña su contenido en <em>Vista Contenido</em>, y con el foco en el árbol <strong><code>[Ctrl]+[A]</code></strong> envía la estructura del objeto al editor.</li><li><strong>Bonito</strong> reformatea el SQL para hacerlo legible.</li></ul>
-<ol><li>Pulsa <strong>Ejecutar (F5)</strong>:</li></ol>
-<ul><li>Si hay <strong>texto seleccionado</strong> en el editor, se ejecuta <strong>solo la selección</strong>; si no, se ejecuta todo el contenido.</li><li>El resultado se abre en <strong>3_VistaDatos</strong>, con el número de registros y el tiempo de ejecución en el panel de resultados.</li></ul>
-<ol><li>Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y sácalo con <strong>Exp. Excel</strong> (exporta a Excel) o <strong>Copiar Datos</strong> (al portapapeles).</li><li>Pulsa <strong>Grabar</strong> para conservar el proceso y repetir el listado cuando haga falta.</li></ol>
+<ol><li>Pulsa <strong>Insertar registro</strong> y da <strong>Código</strong> y <strong>Nombre</strong> al proceso (p. ej. <code>L001 — Ventas por familia</code>).</li><li>En <strong>1_Código SQL</strong> escribe la consulta <code>SELECT …</code>. Ayudas:<ul><li>En <strong>2_Metadatos</strong>, el árbol muestra todas las tablas y vistas; <strong>doble clic</strong> sobre una tabla/vista enseña su contenido en <em>Vista Contenido</em>, y con el foco en el árbol <strong><code>[Ctrl]+[A]</code></strong> envía la estructura del objeto al editor.</li><li><strong>Bonito</strong> reformatea el SQL para hacerlo legible.</li></ul></li><li>Pulsa <strong>Ejecutar (F5)</strong>:<ul><li>Si hay <strong>texto seleccionado</strong> en el editor, se ejecuta <strong>solo la selección</strong>; si no, se ejecuta todo el contenido.</li><li>El resultado se abre en <strong>3_VistaDatos</strong>, con el número de registros y el tiempo de ejecución en el panel de resultados.</li></ul></li><li>Trabaja el resultado en la rejilla (ordenar, agrupar, filtrar) y sácalo con <strong>Exp. Excel</strong> (exporta a Excel) o <strong>Copiar Datos</strong> (al portapapeles).</li><li>Pulsa <strong>Grabar</strong> para conservar el proceso y repetir el listado cuando haga falta.</li></ol>
 <p><img src="img/07-generador-listado.png" alt="Resultado de un listado en VistaDatos" loading="lazy"></p>
 <blockquote><p>El botón <strong>Editar Grid</strong> habilita la edición directa del resultado sobre
 la base de datos. Es útil para correcciones puntuales, pero <strong>modifica
@@ -289,9 +354,32 @@ o borrar datos: <strong>haz copia de seguridad antes de un proceso masivo</stron
 prueba primero con un <code>SELECT</code> que muestre las filas que vas a tocar, y
 ejecuta por selección antes que el script completo.</p></blockquote>
 <hr>
+<h2 id="procesos-auxiliares-bbdd">Procesos auxiliares BBDD</h2>
+<p><strong>Ruta:</strong> <em>Otros ▸ Procesos auxiliares BBDD</em></p>
+<p>Herramienta técnica para inspeccionar los metadatos de la base de datos. La
+lista actual muestra las tablas del catálogo y permite consultar su
+<strong>Estructura SQL</strong> y su contenido; el doble clic abre los registros de la
+tabla activa.</p>
+<table>
+<thead><tr>
+<th>Acción</th>
+<th>Resultado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Refrescar metadatos</strong></td><td>Vuelve a leer el catálogo de la base de datos actual.</td></tr>
+<tr><td><strong>Ver contenido</strong></td><td>Abre los registros de la tabla seleccionada en una rejilla.</td></tr>
+<tr><td><strong>Copiar SQL</strong></td><td>Copia al portapapeles la estructura SQL mostrada.</td></tr>
+<tr><td><strong>Exportar a Excel</strong></td><td>Exporta el contenido abierto.</td></tr>
+<tr><td><strong>Editar datos / Bloquear edición</strong></td><td>Habilita o vuelve a bloquear la edición directa de la rejilla.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Es una opción para usuarios técnicos autorizados. <strong>Editar datos</strong> actúa
+directamente sobre la base real y también permite altas y borrados: haz una
+copia de seguridad y evita usarla para el trabajo diario.</p></blockquote>
+<hr>
 <p><a href="06-menu-almacen.html">◀ Menú Almacén</a> · <a href="index.html">Índice</a> · <a href="08-menu-ayuda.html">Siguiente ▶ Menú Ayuda</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');

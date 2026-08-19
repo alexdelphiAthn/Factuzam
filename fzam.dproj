@@ -1441,6 +1441,7 @@
         <DCCReference Include="src\Forms\inMtoFusionEfectosVcl.pas"/>
         <DCCReference Include="src\Lib\inLibImportacionPedidosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibImportacionPedidos.pas"/>
+        <DCCReference Include="src\Lib\inLibPedidosPrestaShopPortes.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopPedidosAdaptador.pas"/>
         <DCCReference Include="src\DataModules\UniDataImportacionPedidos.pas"/>
         <DCCReference Include="src\Modals\inMtoImportacionPedidosVcl.pas"/>

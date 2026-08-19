@@ -20,7 +20,9 @@ TPV
 ├── Histórico de Vales
 ├── Histórico de Operaciones
 ├── Histórico de Arqueos
-└── Borradores Simplificados
+├── Histórico de Solicitudes de Traspaso
+├── Borradores Simplificados
+└── Facturas proforma
 ```
 
 ## Cómo se trabaja una jornada de caja
@@ -512,7 +514,7 @@ Acciones habituales:
 
 Una venta ya consolidada no se modifica directamente. Para corregirla:
 
-1. Entra en **Menú de Caja ▸ Buscar / Modificar (F10)**.
+1. Entra en **TPV ▸ Buscar / Modificar (F10)**.
 2. Localiza la operación y comprueba el ticket en las pestañas de detalle.
 3. Pulsa **Rectificar**.
 4. Elige **Por diferencias** o **Sustitutiva**.
@@ -951,6 +953,27 @@ En el histórico del propio TPV se pueden sacar dos duplicados:
 
 ---
 
+## Histórico de Solicitudes de Traspaso
+
+**Ruta:** *TPV ▸ Histórico de Solicitudes de Traspaso*
+
+Reúne las solicitudes creadas con **Solicitar a otro almacén (F6)** y permite
+seguirlas hasta su atención. La lista muestra origen y destino, empleado,
+estado, cantidades pedidas, servidas y no servidas, líneas pendientes y
+motivos de rechazo.
+
+La ficha separa los **Artículos solicitados** del **Traspaso realizado**. Si
+la solicitud ya generó uno o varios traspasos, se pueden revisar sus datos y
+los movimientos de stock asociados. El botón **Listado solicitudes** prepara
+la consulta por fechas, ubicaciones y estados y permite obtenerla en Excel.
+
+El histórico no permite crear ni borrar solicitudes. Solo un administrador
+que además tenga permiso de modificación puede corregir el empleado o las
+observaciones; el estado, las cantidades y la trazabilidad del traspaso no se
+editan manualmente.
+
+---
+
 ## Borradores Simplificados
 
 **Atajo de menú:** `[Shift]+[Ctrl]+[F]`
@@ -974,6 +997,27 @@ Usos habituales:
 > Si el cliente pide factura nominativa en el momento de cobrar, lo correcto
 > es usar **Borrador (F8)** en la fase de cobro. La conversión posterior queda
 > para casos en los que el ticket ya se cerró.
+
+---
+
+## Facturas proforma
+
+**Ruta:** *TPV ▸ Facturas proforma*
+
+Genera documentos por periodo a partir de operaciones ya cerradas del TPV y
+mantiene un historial de lo procesado. Se indica **Desde**, **Hasta** y la
+empresa emisora; para traspasos se selecciona también la empresa destino.
+
+| Modalidad | Resultado |
+|-----------|-----------|
+| **Ventas (VE): proforma interna no fiscal** | Agrupa operaciones de `VENTA CONTADO` en una proforma interna. No declara IVA ni se comunica a Verifactu. |
+| **Traspasos (TA): borrador fiscal de Venta mayor** | Genera borradores normales por los traspasos entre empresas. El IVA y Verifactu se declaran cuando esos borradores se consolidan desde Venta Mayor. |
+
+**Generar documentos** revisa antes el periodo y avisa si está duplicado o se
+solapa con otro. Las operaciones que ya quedaron vinculadas no se vuelven a
+incluir; las rectificaciones posteriores se incorporan como ajustes.
+**Refrescar historial** actualiza la lista. **Imprimir selección** imprime las
+proformas VE; los borradores TA se consultan e imprimen desde Venta Mayor.
 
 ---
 

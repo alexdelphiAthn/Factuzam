@@ -7,26 +7,36 @@ han quedado incorporadas al manual normal. Para aprender el uso diario,
 entra siempre en el capítulo de menú correspondiente; esta página es solo
 un mapa rápido de cambios.
 
+> **Revisión documental:** 19/08/2026. Que una función figure en este mapa no
+> sustituye la comprobación de la versión instalada ni de su estado de
+> validación para producción.
+
 ---
 
 ## Novedades recientes
 
 | Novedad | Dónde verlo |
 |---------|-------------|
+| Importación manual de pedidos de **PrestaShop**, con alta controlada de clientes y artículos y portes como servicio `GASTOS_T` con IVA normal y sin movimiento de stock. Su uso sigue limitado a laboratorio y a un único destino controlado. | [Ventas Mayor ▸ Pedidos](04-menu-ventas-mayor.md#importar-pedidos-de-prestashop) · [Integración con PrestaShop](15-integracion-prestashop.md) |
+| Menú centralizado **Otros ▸ Colas de envíos** para supervisar Verifactu, PrestaShop y Web Service Fzam desde su ruta real. | [Otros ▸ Colas de envíos](07-menu-otros.md#colas-de-envios) |
+| Cola de **Web Service Fzam** con eventos de venta y PDF, estados, historial HTTP, reintentos exponenciales y acceso al documento asociado. | [Otros ▸ Colas de envíos ▸ Web Service Fzam](07-menu-otros.md#web-service-fzam) |
+| **Histórico de Solicitudes de Traspaso** con cantidades servidas/no servidas, motivos, traspasos y movimientos de stock relacionados. | [TPV ▸ Histórico de Solicitudes de Traspaso](05-menu-caja.md#historico-de-solicitudes-de-traspaso) |
+| **Facturas proforma** por periodo: proforma interna no fiscal de ventas VE o borradores de Venta Mayor para traspasos TA. | [TPV ▸ Facturas proforma](05-menu-caja.md#facturas-proforma) |
+| **Procesos auxiliares BBDD** para inspeccionar la estructura SQL y el contenido de las tablas. | [Otros ▸ Procesos auxiliares BBDD](07-menu-otros.md#procesos-auxiliares-bbdd) |
 | `[F1]` cambia la presentación de líneas entre Auto/desglose, SKU y los modos de tallas; el ciclo se adapta a cada tipo de documento. | [Conceptos comunes ▸ Modos de líneas con F1](01-conceptos-comunes.md#cambiar-la-presentacion-de-las-lineas-con-f1) |
 | Pedidos de compra con recepción parcial por línea o talla, **Recibir Todo**, bandas Pedido/A recibir/Pendiente e incorporación a un albarán existente. | [Compras ▸ Pedidos](03-menu-compras.md#pedidos) |
 | **Consulta de stocks de Factuzam** con `[Ctrl]+[U]`: existencias y pendientes por color, talla y almacén, estados desglosados, fotos relacionadas y envío a Documentos de Trabajo. | [Ayuda ▸ Consulta de stocks](08-menu-ayuda.md#consulta-de-stocks) |
 | Aplicación Android **Factuzam Fotos Nube** para capturar fotos por artículo/color, encolarlas y subirlas por lotes al servidor. | [Aplicaciones móviles ▸ Fotos Nube](13-aplicaciones-moviles.md#factuzam-fotos-nube-fotografiar-articulos-desde-android) |
 | **Administración de errores enviados a soporte**: evidencias protegidas, conversación, seguimiento por usuario y propuestas verificadas de script o actualización. | [Ayuda ▸ Envío de errores](08-menu-ayuda.md#envio-de-errores-administracion-y-seguimiento) |
 | Interfaz traducible desde un catálogo central, selector por parámetro, respaldo en español y editor independiente de traducciones. | [Otros ▸ Idioma y traducciones](07-menu-otros.md#idioma-y-traducciones) |
-| Rectificación de tickets **por diferencias** o mediante documento **sustitutivo**, con trazabilidad fiscal y tratamiento coherente de ventas y stock. | [Caja ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva) |
+| Rectificación de tickets **por diferencias** o mediante documento **sustitutivo**, con trazabilidad fiscal y tratamiento coherente de ventas y stock. | [TPV ▸ Rectificar un ticket](05-menu-caja.md#rectificar-un-ticket-por-diferencias-o-sustitutiva) |
 | Sesiones de compra con **foto provisional**, vista previa y migración automática de la imagen al artículo o SKU materializado. | [Compras ▸ Fotos de la sesión](03-menu-compras.md#7-fotos-de-la-sesion) |
 | Aplicación móvil **VentasFzam** para consultar ventas del día, fotografías, coste, margen y descuentos sin modificar datos. | [Aplicaciones móviles ▸ VentasFzam](13-aplicaciones-moviles.md#ventasfzam-ventas-del-dia-en-el-movil) |
 | Arquitectura por capas, aplicación progresiva de SOLID y catálogo de consultas SQL revisables y configurables con validación y fallback. | [Arquitectura y desarrollo](14-arquitectura-y-desarrollo.md) |
 | **Listado de operaciones de venta del TPV** por fechas, con color básico visual y selección acumulativa de empresas/almacenes/cajas cuando el usuario no está restringido. | [TPV ▸ Listados](05-menu-caja.md#listados) |
 | **Documentos de Trabajo**: listas de artículos/SKUs para compartir, imprimir etiquetas y enviar a albarán, TPV, inventario o cambio de tarifas. | [Almacén ▸ Documentos de Trabajo](06-menu-almacen.md#documentos-de-trabajo) |
 | **Búsqueda de datos de artículos** con `[Ctrl]+[E]` desde cualquier ventana: por talla, color, proximidad de paleta, stock y perfiles guardados. | [Conceptos comunes ▸ Búsqueda de datos](01-conceptos-comunes.md#busqueda-de-datos-de-articulos-ctrle) |
-| **Cuenta de cliente en el TPV** (F2): carga de depósitos y abonos a cuenta, cancelación por signo y reparto del cobro parcial en depósitos. | [Caja ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |
+| **Cuenta de cliente en el TPV** (F2): carga de depósitos y abonos a cuenta, cancelación por signo y reparto del cobro parcial en depósitos. | [TPV ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |
 | **Listado de efectos de pago** con filtros por vencimiento, proveedor, banco/remesa, tipo y situación. | [Compras ▸ Listados](03-menu-compras.md#listados-listado-de-efectos-de-pago) |
 | Menú **Ayuda** con acceso directo al **manual web** y al **foro de soporte**. | [Menú Ayuda](08-menu-ayuda.md) |
 | Emisión de eDoc Facturae firmado desde borradores de venta mayor consolidados. | [Ventas Mayor ▸ Borradores](04-menu-ventas-mayor.md#efectos-y-edoc-en-el-borrador) |
@@ -63,7 +73,6 @@ normales del manual.
 | Función incorporada | Dónde verlo |
 |---------------------|-------------|
 | Sesiones de compra con aplicación de kits y pestaña proveedor. | [Sesiones de compra](03-menu-compras.md#sesiones-crear-articulos-y-un-pedido-o-un-albaran) |
-| Pedidos con control de cantidades **A recibir** e incorporación a albarán existente. | [Pedidos de compra](03-menu-compras.md#pedidos) |
 | Marca informativa **Depósito** en albaranes de compra. | [Albaranes de compra](03-menu-compras.md#albaranes) |
 | Devoluciones a proveedor como documento propio con salida de stock. | [Devoluciones a Proveedor](03-menu-compras.md#devoluciones-a-proveedor) |
 | Borradores de compra con generación de efectos. | [Borradores](03-menu-compras.md#borradores) |
@@ -75,12 +84,12 @@ normales del manual.
 |---------------------|-------------|
 | Terminología de **Borradores** antes del cierre fiscal. | [Ventas Mayor ▸ Borradores](04-menu-ventas-mayor.md#borradores) |
 | Crear borradores de venta desde albaranes por rango de fechas. | [Albaranes de venta](04-menu-ventas-mayor.md#albaranes) |
-| Borradores simplificados de caja y conversión a borrador normal. | [Caja ▸ Borradores Simplificados](05-menu-caja.md#borradores-simplificados) |
-| TPV con foto, color/talla y datos de SKU en líneas. | [Caja ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |
-| Ampliación completa del flujo de caja: jornada, tickets, vales, préstamos, traspasos, recuento y tira de caja. | [Caja](05-menu-caja.md) |
-| Detalle de todos los parámetros de Caja y su efecto operativo actual. | [Caja ▸ Parámetros de Caja](05-menu-caja.md#parametros-de-caja) |
-| Histórico de arqueos desde TPV con duplicado de ticket/cierre. | [Caja ▸ Arqueo](05-menu-caja.md#arqueo-f11) |
-| Informe A4 de histórico de arqueos. | [Caja ▸ Histórico de Arqueos](05-menu-caja.md#historico-de-arqueos) |
+| Borradores simplificados de caja y conversión a borrador normal. | [TPV ▸ Borradores Simplificados](05-menu-caja.md#borradores-simplificados) |
+| TPV con foto, color/talla y datos de SKU en líneas. | [TPV ▸ Ventas](05-menu-caja.md#ventas-f5-la-pantalla-de-venta) |
+| Ampliación completa del flujo de caja: jornada, tickets, vales, préstamos, traspasos, recuento y tira de caja. | [TPV](05-menu-caja.md) |
+| Detalle de todos los parámetros de Caja y su efecto operativo actual. | [TPV ▸ Parámetros de Caja](05-menu-caja.md#parametros-de-caja) |
+| Histórico de arqueos desde TPV con duplicado de ticket/cierre. | [TPV ▸ Arqueo](05-menu-caja.md#arqueo-f11) |
+| Informe A4 de histórico de arqueos. | [TPV ▸ Histórico de Arqueos](05-menu-caja.md#historico-de-arqueos) |
 
 ### Almacén e informes
 

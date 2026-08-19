@@ -10,7 +10,7 @@
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
-<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú Caja</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li class="activo"><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
+<ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li class="activo"><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
 <article>
@@ -57,17 +57,31 @@ y pruebas.</p>
 <tr><td>Opción <strong>Activar artículos en PrestaShop al marcar En web</strong></td><td>Disponible y desmarcada de forma predeterminada; actúa solo al final del proceso</td></tr>
 <tr><td>Límite de niveles de familia para el alta</td><td>Configurable por ámbito; el valor inicial <code>0</code> conserva toda la jerarquía local</td></tr>
 <tr><td>Alta de familias, atributos, producto, combinaciones e imagen principal</td><td>Implementada; pendiente de superar la batería funcional completa del laboratorio</td></tr>
+<tr><td>Importación manual de pedidos</td><td>Disponible para laboratorio y un único destino controlado; la validación funcional y el aislamiento multitienda no están cerrados</td></tr>
+<tr><td>Portes de pedidos como servicio <code>GASTOS_T</code></td><td>Implementado con SKU <code>GASTOS_T</code>, IVA normal de la empresa y sin movimiento de stock</td></tr>
 <tr><td>Sincronización con producción</td><td>Desactivada por defecto; ver <a href="#11-seguridad-del-stock">seguridad del stock</a></td></tr>
 </tbody>
 </table>
 <p>La integración actualiza el catálogo remoto, pero no importa automáticamente
 en Factuzam los cambios hechos a mano en las fichas de PrestaShop. Debe
 decidirse qué sistema es responsable de cada dato antes de activarla.</p>
-<p>La opción <strong>Ventas Mayor ▸ Pedidos ▸ Importar de PrestaShop</strong> usa esa misma
-configuración efectiva de Parámetros de Entorno. La ventana de importación no
-tiene una URL ni una clave API propias y nunca muestra la credencial. Si se
-cambia la configuración con la ventana abierta, es obligatorio volver a
+<p>La opción <strong>Ventas Mayor ▸ Pedidos ▸ Importar de PrestaShop</strong> lee la URL y la
+clave API efectivas de Parámetros del entorno. La ventana no tiene credenciales
+propias ni muestra la clave. La empresa y el almacén se toman de la sesión. Si
+se cambia la configuración con la ventana abierta, es obligatorio volver a
 conectar y listar antes de importar.</p>
+<p>Esta reutilización es todavía parcial: el importador no envía el <strong>Id. tienda</strong>
+al consultar <code>orders</code>. Debe usarse una clave limitada a un solo destino y no se
+considera apto para multitienda. El procedimiento, las columnas, la creación de
+cliente y artículos, el servicio <code>GASTOS_T</code> y todos los límites operativos se
+detallan en
+<a href="04-menu-ventas-mayor.html#importar-pedidos-de-prestashop">Ventas Mayor ▸ Pedidos ▸ Importar pedidos de PrestaShop</a>.</p>
+<blockquote><p><strong>Situación de validación:</strong> no existe todavía una decisión <strong>GO</strong> para usar
+la integración completa en producción. Hay evidencia parcial del catálogo y
+de la cola en laboratorio, pero siguen pendientes la batería completa de
+pedidos, importación, concurrencia, servicio, barrido y ciclo hasta factura.
+Mantén desactivadas las escrituras de stock absoluto y realiza las pruebas
+únicamente contra una instalación controlada.</p></blockquote>
 <hr>
 <h2 id="2-vision-general">2. Visión general</h2>
 <pre><code>Cambio en artículo, tarifa o stock
@@ -200,8 +214,14 @@ diferentes.</p>
 <tr><td><code>images</code></td><td>Sí</td><td>Sí, si se autoriza el alta</td><td>No</td></tr>
 <tr><td><code>stock_availables</code></td><td>Sí</td><td>No</td><td>Sí, con <strong>Sincronizar stock y precios</strong></td></tr>
 <tr><td><code>languages</code>, <code>shops</code>, <code>shop_groups</code> y reglas de IVA</td><td>Sí</td><td>No</td><td>No</td></tr>
+<tr><td><code>orders</code>, <code>customers</code>, <code>addresses</code> y <code>states</code></td><td>Sí, si se importan pedidos</td><td>No</td><td>No</td></tr>
+<tr><td><code>carriers</code> y <code>order_states</code></td><td>Sí, si se importan pedidos</td><td>No</td><td>No</td></tr>
+<tr><td><code>customer_threads</code> y <code>customer_messages</code></td><td>Sí, si se importan pedidos y mensajes</td><td>No</td><td>No</td></tr>
 </tbody>
 </table>
+<p>Los permisos de pedidos son solo de lectura. Si esa función no se utiliza, no
+deben concederse. La clave destinada al importador debe quedar limitada a una
+única tienda mientras la consulta de <code>orders</code> no aplique <code>id_shop</code>.</p>
 <p>No debe concederse permiso de borrado salvo que se diseñe y autorice una
 operación administrativa concreta. Una recuperación automática nunca debe
 borrar una categoría, talla o color compartidos con otros productos.</p>
@@ -262,8 +282,10 @@ normal de la cola.</p>
 <tbody>
 <tr><td><code>PENDIENTE</code></td><td>Hay una versión por enviar o verificar.</td></tr>
 <tr><td><code>PROCESANDO</code></td><td>Un trabajador ha reclamado temporalmente el artículo.</td></tr>
+<tr><td><code>PENDIENTE_VISIBILIDAD</code></td><td>Hay una activación o desactivación explícita pendiente. Puede coexistir con cambios de precio o stock.</td></tr>
+<tr><td><code>PROCESANDO_VISIBILIDAD</code></td><td>Un trabajador ha reclamado temporalmente una activación o desactivación.</td></tr>
 <tr><td><code>ENVIADA</code></td><td>La versión reclamada quedó verificada en PrestaShop.</td></tr>
-<tr><td><code>ERROR</code></td><td>Se agotaron los intentos o existe una incidencia terminal que requiere revisión. Una <code>reference</code> inexistente o ambigua llega aquí inmediatamente.</td></tr>
+<tr><td><code>ERROR</code></td><td>Se agotaron los intentos o existe una incidencia terminal que requiere revisión. Una <code>reference</code> ambigua llega aquí inmediatamente; una inexistente también lo hace si el alta automática está desactivada o no cumple sus requisitos.</td></tr>
 </tbody>
 </table>
 <p>Si el artículo cambia mientras se está enviando, el cambio nuevo incrementa
@@ -324,6 +346,17 @@ permiso e ir al artículo relacionado. Los permisos separados <strong>Consultar<
 exportación y el detalle respectivamente. Un administrador puede consultar
 todos los destinos; los demás usuarios ven exclusivamente la tienda resuelta
 por su configuración efectiva.</p>
+<p>La rejilla muestra el <strong>Id. tienda</strong>, pero no una etiqueta de instalación. Si
+se supervisan varias instalaciones que reutilizan el mismo identificador de
+tienda, ese dato por sí solo no permite distinguirlas; contrasta el destino
+efectivo antes de interpretar o exportar la fila.</p>
+<h3 id="cierre-de-factuzam-durante-un-envio">Cierre de Factuzam durante un envío</h3>
+<p>Si se intenta cerrar Factuzam mientras esta instancia está procesando un
+artículo, primero se bloquean nuevas reclamaciones y se ofrecen tres opciones:</p>
+<ul><li><strong>Esperar</strong>: termina únicamente el artículo actual y después cierra.</li><li><strong>Cerrar de todos modos</strong>: no interrumpe a mitad la petición HTTP que ya está en curso. Espera su retorno, devuelve el artículo a pendiente sin consumir un intento y después cierra.</li><li><strong>Cancelar cierre</strong>: mantiene Factuzam abierto, desbloquea las reclamaciones y reanuda el consumo de la cola.</li></ul>
+<p>El cierre forzado puede tardar hasta que termine la operación de red actual. La
+fila liberada conserva sus cambios de precio, stock o visibilidad y podrá ser
+reclamada por esta u otra instancia en el siguiente ciclo.</p>
 <hr>
 <h2 id="6-precios-de-producto-y-de-sku">6. Precios de producto y de SKU</h2>
 <p>PrestaShop guarda los precios sin impuestos:</p>
@@ -391,7 +424,7 @@ hizo visible al final.</p>
 PrestaShop. El parámetro heredable <strong>Niveles de familia a crear (0 = todos)</strong>
 (<code>appPrestaShopNivelesFamiliaAlta</code>) determina qué parte de la jerarquía local
 se exporta:</p>
-<ul><li><code>0</code>: toda la jerarquía local, desde su raíz hasta la familia hoja;</li><li><code>N &amp;gt; 0</code>: los últimos <code>N</code> niveles, contados desde la familia hoja hacia arriba.</li></ul>
+<ul><li><code>0</code>: toda la jerarquía local, desde su raíz hasta la familia hoja;</li><li><code>N &gt; 0</code>: los últimos <code>N</code> niveles, contados desde la familia hoja hacia arriba.</li></ul>
 <p>El subconjunto elegido se conserva y crea en orden raíz → hoja: los padres
 van antes que sus hijos. La categoría raíz configurada en PrestaShop es solo
 el punto remoto bajo el que se cuelga el subconjunto y <strong>no cuenta</strong> como uno
@@ -507,7 +540,7 @@ transacción única.</p>
 <p>Los mensajes de error y los registros nunca deben incluir la clave API.</p>
 <hr>
 <h2 id="14-lista-de-comprobacion-para-una-implantacion">14. Lista de comprobación para una implantación</h2>
-<ol><li>Aplicar la migración de base de datos y comprobar las marcas <strong>En web</strong>.</li><li>Configurar primero una tienda de pruebas de la misma versión que la tienda real; no usar producción para la validación inicial.</li><li>Crear una clave API de mínimo privilegio.</li><li>Configurar el ámbito correcto —usuario, grupo o <code>Todos</code>—, URL, tienda, empresa y tarifa con los cuatro checks desmarcados.</li><li>Revisar <strong>Niveles de familia a crear (0 = todos)</strong>: usar <code>0</code> para toda la jerarquía local o un número positivo contado desde la familia hoja.</li><li>Marcar únicamente los almacenes estándar que aportarán stock web.</li><li>Revisar familias, IVA, SKU, atributos, precios y fotos reales.</li><li>Probar un artículo con varios colores, tallas y precios por SKU.</li><li>Confirmar que una <code>reference</code> ambigua deja un <code>ERROR</code> inmediato sin crear recursos.</li><li>Mantener <strong>Crear artículos en PrestaShop al darlos de alta</strong> desmarcado hasta superar la batería funcional del laboratorio.</li><li>Comprobar la reserva o ingestión automática de pedidos web antes de autorizar cantidades absolutas.</li><li>Marcar <strong>Sincronizar stock y precios</strong> únicamente después de completar todas las comprobaciones.</li><li>Con la activación automática desmarcada, repetir el alta para comprobar que conserva IDs, no duplica recursos y deja el producto completo pero inactivo.</li><li>En el laboratorio, marcar <strong>Activar artículos en PrestaShop al marcar En web</strong> y comprobar que <code>active=1</code> se solicita solo al final de un proceso correcto; provocar un error previo y confirmar que no se activa.</li><li>Probar las tres respuestas al quitar <strong>En web</strong>: <strong>Sí</strong> desactiva, <strong>No</strong> solo deja de sincronizar y <strong>Cancelar</strong> no guarda.</li></ol>
+<ol><li>Aplicar la migración de base de datos y comprobar las marcas <strong>En web</strong>.</li><li>Configurar primero una tienda de pruebas de la misma versión que la tienda real; no usar producción para la validación inicial.</li><li>Crear una clave API de mínimo privilegio. Si se importan pedidos, añadir solo lectura sobre <code>orders</code>, <code>customers</code>, <code>addresses</code>, <code>states</code>, <code>carriers</code>, <code>order_states</code>, <code>customer_threads</code> y <code>customer_messages</code>.</li><li>Configurar el ámbito correcto —usuario, grupo o <code>Todos</code>—, URL, tienda, empresa y tarifa con los cuatro checks desmarcados.</li><li>Mientras la importación no filtre por <code>id_shop</code>, usar una clave exclusiva para una sola tienda y no habilitar el flujo en una instalación multitienda.</li><li>Revisar <strong>Niveles de familia a crear (0 = todos)</strong>: usar <code>0</code> para toda la jerarquía local o un número positivo contado desde la familia hoja.</li><li>Marcar únicamente los almacenes estándar que aportarán stock web.</li><li>Revisar familias, IVA, SKU, atributos, precios y fotos reales.</li><li>Probar un artículo con varios colores, tallas y precios por SKU.</li><li>Confirmar que una <code>reference</code> ambigua deja un <code>ERROR</code> inmediato sin crear recursos.</li><li>Mantener <strong>Crear artículos en PrestaShop al darlos de alta</strong> desmarcado hasta superar la batería funcional del laboratorio.</li><li>Entrar con la empresa y el almacén correctos; importar en laboratorio un pedido con portes y otro sin ellos. Revisar cliente, productos, SKU, IVA, totales y la línea de servicio <code>GASTOS_T</code>.</li><li>Repetir el mismo <code>ID PS</code>, provocar un error intermedio y comprobar que no se duplica el pedido y que los siguientes seleccionados continúan. No ejecutar dos importaciones concurrentes del mismo pedido.</li><li>Servir el pedido de prueba hasta albarán y factura: <code>GASTOS_T</code> debe conservar el tipo <strong>SERVICIO</strong>, base e IVA sin mover stock; las líneas físicas sí deben moverlo.</li><li>Probar las opciones de cierre <strong>Esperar</strong>, <strong>Cerrar de todos modos</strong> y <strong>Cancelar cierre</strong> con un envío real controlado.</li><li>Comprobar una ingestión o reserva automática de pedidos web, distinta de la importación manual, antes de autorizar cantidades absolutas.</li><li>Mantener <strong>Sincronizar stock y precios</strong> desmarcado mientras no exista una decisión GO documentada para la batería completa.</li><li>Con la activación automática desmarcada, repetir el alta para comprobar que conserva IDs, no duplica recursos y deja el producto completo pero inactivo.</li><li>En el laboratorio, marcar <strong>Activar artículos en PrestaShop al marcar En web</strong> y comprobar que <code>active=1</code> se solicita solo al final de un proceso correcto; provocar un error previo y confirmar que no se activa.</li><li>Probar las tres respuestas al quitar <strong>En web</strong>: <strong>Sí</strong> desactiva, <strong>No</strong> solo deja de sincronizar y <strong>Cancelar</strong> no guarda.</li></ol>
 <p>Las pruebas de desarrollo se realizan únicamente contra la instalación local
 actual de PrestaShop. No se hacen altas ni modificaciones de prueba en la
 tienda de producción.</p>
@@ -517,7 +550,7 @@ tienda de producción.</p>
 <hr>
 <p><a href="14-arquitectura-y-desarrollo.html">◀ Arquitectura y desarrollo</a> · <a href="index.html">Índice</a></p>
 </article>
-<footer>Manual de Factuzam · generado el 14/08/2026</footer>
+<footer>Manual de Factuzam · generado el 19/08/2026</footer>
 </main>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
