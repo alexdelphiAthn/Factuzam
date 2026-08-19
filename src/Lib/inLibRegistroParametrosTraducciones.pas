@@ -18,6 +18,211 @@ procedure EnumerarParametrosTraduccion(
   const ARegistrar: TRegistrarParametroTraduccion);
 begin
   ARegistrar(
+    'inMtoAppParam.Parametros.Categoria.Verifactu',
+    'Verifactu',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuModo.Descripcion',
+    'Modo fiscal: SIN, VERIFACTU o NO_VERIFACTU',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuActivo.Descripcion',
+    'Activar SIF (False fuerza modo SIN y no imprime QR)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuFirmaCertificado.De' +
+    'scripcion',
+    'Firmar registros y eventos con certificado de empresa',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuNtpServidores.Descr' +
+    'ipcion',
+    'Servidores NTP para validar el reloj fiscal NO VERI*FACT' +
+    'U',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuNtpTimeoutMs.Descri' +
+    'pcion',
+    'Timeout por servidor NTP para control del reloj fiscal',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuNtpMargenSegundos.D' +
+    'escripcion',
+    'Margen máximo admitido del reloj fiscal en segundos',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuEntorno.Descripcion',
+    'Entorno AEAT: PRE (pruebas) o PRO (producción)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuUrlQRPre.Descripcio' +
+    'n',
+    'URL de cotejo del QR en preproducción',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuUrlQRPro.Descripcio' +
+    'n',
+    'URL de cotejo del QR en producción',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appNoVerifactuUrlQRPre.Descripc' +
+    'ion',
+    'URL de remisión del QR NO VERI*FACTU en preproducción',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appNoVerifactuUrlQRPro.Descripc' +
+    'ion',
+    'URL de remisión del QR NO VERI*FACTU en producción',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuSegundosCiclo.Descr' +
+    'ipcion',
+    'Segundos entre ciclos del hilo de la cola Verifactu',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuMaxIntentos.Descrip' +
+    'cion',
+    'Reintentos de envío antes de marcar ERROR definitivo',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuUrlEnvioPre.Descrip' +
+    'cion',
+    'URL del servicio SOAP de envío en preproducción',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuUrlEnvioPro.Descrip' +
+    'cion',
+    'URL del servicio SOAP de envío en producción',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuSifNombreRazon.Desc' +
+    'ripcion',
+    'Productor del software (SistemaInformatico.NombreRazon)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuSifNif.Descripcion',
+    'NIF del productor del software (SistemaInformatico.NIF)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuSifDireccion.Descri' +
+    'pcion',
+    'Dirección postal del productor del software',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuDeclaracionLugar.De' +
+    'scripcion',
+    'Lugar de suscripción de la declaración responsable',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuDeclaracionFecha.De' +
+    'scripcion',
+    'Fecha de suscripción de la declaración responsable',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appVerifactuDescripcionOpe.Desc' +
+    'ripcion',
+    'Texto de DescripcionOperacion del registro de alta',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.Categoria.PrestaShop',
+    'PrestaShop',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopSincronizarStockPr' +
+    'ecios.Descripcion',
+    'Sincronizar stock y precios',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopCrearArticulos.Des' +
+    'cripcion',
+    'Crear artículos en PrestaShop al darlos de alta',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopActivarArticulosAl' +
+    'MarcarWeb.Descripcion',
+    'Activar artículos en PrestaShop al marcar En web',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopUrl.Descripcion',
+    'URL base de la API REST de PrestaShop',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopApiKey.Descripcion',
+    'Clave de acceso a la API de PrestaShop',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopTarifa.Descripcion',
+    'Código de la tarifa que se sincroniza con PrestaShop',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopReglaIvaNormal.Des' +
+    'cripcion',
+    'Id. regla fiscal PrestaShop para IVA normal',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopReglaIvaReducido.D' +
+    'escripcion',
+    'Id. regla fiscal PrestaShop para IVA reducido',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopReglaIvaSuperreduc' +
+    'ido.Descripcion',
+    'Id. regla fiscal PrestaShop para IVA superreducido',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopReglaIvaExento.Des' +
+    'cripcion',
+    'Id. regla fiscal PrestaShop para artículos exentos',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopEmpresa.Descripcio' +
+    'n',
+    'Empresa de Factuzam usada para calcular el IVA del preci' +
+    'o web',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopIdTienda.Descripci' +
+    'on',
+    'Identificador de tienda de PrestaShop',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopIdIdioma.Descripci' +
+    'on',
+    'Identificador del idioma usado al crear el catálogo',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopIdCategoriaRaiz.De' +
+    'scripcion',
+    'Identificador de la categoría raíz para crear familias',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopNivelesFamiliaAlta' +
+    '.Descripcion',
+    'Niveles de familia a crear (0 = todos)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopSegundosCiclo.Desc' +
+    'ripcion',
+    'Intervalo de recuperación de la cola (60 a 120 segundos)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopHacerBarridoPeriod' +
+    'ico.Descripcion',
+    'Hacer barrido periódicamente',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopHorasBarrido.Descr' +
+    'ipcion',
+    'Horas entre barridos completos de respaldo del catálogo ' +
+    'web',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appPrestaShopMaxIntentos.Descri' +
+    'pcion',
+    'Reintentos antes de marcar un envío como error definitiv' +
+    'o',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
     'inMtoAppParam.Parametros.Categoria.Directorios',
     'Directorios',
     'src/Lib/inLibAppParam.pas');
@@ -152,112 +357,6 @@ begin
     'Precargar las caches de login en paralelo (experimental,' +
     ' normalmente más lento; dejar en False salvo BBDD de muy' +
     ' alta latencia)',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.Categoria.Verifactu',
-    'Verifactu',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuModo.Descripcion',
-    'Modo fiscal: SIN, VERIFACTU o NO_VERIFACTU',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuActivo.Descripcion',
-    'Activar SIF (False fuerza modo SIN y no imprime QR)',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuFirmaCertificado.De' +
-    'scripcion',
-    'Firmar registros y eventos con certificado de empresa',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuNtpServidores.Descr' +
-    'ipcion',
-    'Servidores NTP para validar el reloj fiscal NO VERI*FACT' +
-    'U',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuNtpTimeoutMs.Descri' +
-    'pcion',
-    'Timeout por servidor NTP para control del reloj fiscal',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuNtpMargenSegundos.D' +
-    'escripcion',
-    'Margen máximo admitido del reloj fiscal en segundos',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuEntorno.Descripcion',
-    'Entorno AEAT: PRE (pruebas) o PRO (producción)',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuUrlQRPre.Descripcio' +
-    'n',
-    'URL de cotejo del QR en preproducción',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuUrlQRPro.Descripcio' +
-    'n',
-    'URL de cotejo del QR en producción',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appNoVerifactuUrlQRPre.Descripc' +
-    'ion',
-    'URL de remisión del QR NO VERI*FACTU en preproducción',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appNoVerifactuUrlQRPro.Descripc' +
-    'ion',
-    'URL de remisión del QR NO VERI*FACTU en producción',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuSegundosCiclo.Descr' +
-    'ipcion',
-    'Segundos entre ciclos del hilo de la cola Verifactu',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuMaxIntentos.Descrip' +
-    'cion',
-    'Reintentos de envío antes de marcar ERROR definitivo',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuUrlEnvioPre.Descrip' +
-    'cion',
-    'URL del servicio SOAP de envío en preproducción',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuUrlEnvioPro.Descrip' +
-    'cion',
-    'URL del servicio SOAP de envío en producción',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuSifNombreRazon.Desc' +
-    'ripcion',
-    'Productor del software (SistemaInformatico.NombreRazon)',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuSifNif.Descripcion',
-    'NIF del productor del software (SistemaInformatico.NIF)',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuSifDireccion.Descri' +
-    'pcion',
-    'Dirección postal del productor del software',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuDeclaracionLugar.De' +
-    'scripcion',
-    'Lugar de suscripción de la declaración responsable',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuDeclaracionFecha.De' +
-    'scripcion',
-    'Fecha de suscripción de la declaración responsable',
-    'src/Lib/inLibAppParam.pas');
-  ARegistrar(
-    'inMtoAppParam.Parametros.appVerifactuDescripcionOpe.Desc' +
-    'ripcion',
-    'Texto de DescripcionOperacion del registro de alta',
     'src/Lib/inLibAppParam.pas');
   ARegistrar(
     'inMtoAppParam.Parametros.Categoria.Log',
@@ -471,13 +570,14 @@ begin
     'Niveles de familia en resumen por sección (1=sección)',
     'src/Caja/Lib/inLibCajaParam.pas');
   ARegistrar(
-    'inMtoCajaParam.Parametros.vgerArqueoEditarCambio.Descripc' +
-    'ion',
-    'Permitir editar el cambio dejado para la siguiente jornada',
+    'inMtoCajaParam.Parametros.vgerArqueoEditarCambio.Descrip' +
+    'cion',
+    'Permitir editar el cambio dejado para la siguiente jorna' +
+    'da',
     'src/Caja/Lib/inLibCajaParam.pas');
   ARegistrar(
-    'inMtoCajaParam.Parametros.vgerArqueoEmitirJustificante.De' +
-    'scripcion',
+    'inMtoCajaParam.Parametros.vgerArqueoEmitirJustificante.D' +
+    'escripcion',
     'Emitir justificante al grabar el cierre',
     'src/Caja/Lib/inLibCajaParam.pas');
 end;
