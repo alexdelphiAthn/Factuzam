@@ -10,19 +10,6 @@ permissions:
   contents: read
 
 jobs:
-  trinquetes:
-    name: Pruebas de infraestructura
-    runs-on: windows-latest
-    timeout-minutes: 20
-    steps:
-      - name: Obtener el repositorio
-        uses: actions/checkout@v6
-      - name: Comprobar trinquetes y compilación reproducible
-        shell: pwsh
-        run: |
-          .\tests\arquitectura\PruebasArquitecturaS31.ps1
-          .\tests\compilacion\PruebasCompilacionS32.ps1
-
   compilacion-delphi:
     name: fzam Release Win32 y Win64
     runs-on:

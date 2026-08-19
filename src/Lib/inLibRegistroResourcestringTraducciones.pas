@@ -73,6 +73,18 @@ begin
       SErrorDescripcionArticulo);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SErrorPermisoCambiarMarcaWebArticulo',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorPermisoCambiarMarcaWebArticulo);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SPreguntaDesactivarArticuloPrestaShop',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SPreguntaDesactivarArticuloPrestaShop);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SPreguntaDesactivarTarifaSinPrecio',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.

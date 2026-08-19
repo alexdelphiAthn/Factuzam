@@ -48,9 +48,6 @@ Linux64/
 link.res
 ppas.sh
 src/utilfmt80/Ancho80
-tests/bin/
-tests/dcu/
-tests/FactuzamTests.res
 
 # Configuración sensible (MySQL, etc.)
 config.ini
@@ -63,6 +60,3 @@ database.cfg
 
 # Contexto local para asistentes de IA (rutas específicas de este equipo)
 /AGENTS.md
-
-# Laboratorio local de PrestaShop (instalacion, datos y credenciales locales)
-/tmp/prestashop_factuzam_lab/
