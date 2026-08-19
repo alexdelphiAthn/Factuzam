@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>01 · Conceptos comunes a todas las pantallas — Factuzam User Manual</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menu">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>User manual</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Manual language"><a class="enlace-idioma" href="../01-conceptos-comunes.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma activo" href="01-conceptos-comunes.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/01-conceptos-comunes.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/01-conceptos-comunes.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Home</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></li><li class="activo"><a href="01-conceptos-comunes.html">01 · Common concepts</a></li><li><a href="02-menu-archivo.html">02 · File menu</a></li><li><a href="03-menu-compras.html">03 · Purchases menu</a></li><li><a href="04-menu-ventas-mayor.html">04 · Wholesale menu</a></li><li><a href="05-menu-caja.html">05 · POS menu</a></li><li><a href="06-menu-almacen.html">06 · Warehouse menu</a></li><li><a href="07-menu-otros.html">07 · Other menu</a></li><li><a href="08-menu-ayuda.html">08 · Help menu</a></li><li><a href="09-instalacion-windows.html">09 · Windows installation</a></li><li><a href="10-migracion-legacy.html">10 · Migration from legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></li><li><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="en-GB"><strong>Translation pending.</strong> This chapter is not yet available in English; the Spanish version is shown.</aside>
+<h1 id="01-conceptos-comunes-a-todas-las-pantallas">01 · Conceptos comunes a todas las pantallas</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Casi todas las opciones de menú abren una <strong>pantalla de mantenimiento</strong> con
+la misma estructura. Si entiendes cómo funciona una, las entiendes todas.
+Este capítulo explica esa estructura común; los capítulos siguientes solo
+añaden lo específico de cada pantalla.</p>
+<hr>
+<h2 id="1-estructura-de-una-pantalla-de-mantenimiento">1. Estructura de una pantalla de mantenimiento</h2>
+<p>Una pantalla de mantenimiento típica tiene <strong>dos pestañas principales</strong>:</p>
+<p><img src="../img/01-lista.png" alt="Pestaña Lista de un mantenimiento" loading="lazy"></p>
+<h3 id="pestana-lista">Pestaña <strong>Lista</strong></h3>
+<p>Muestra una <strong>rejilla (grid)</strong> con todos los registros de la tabla (clientes,
+artículos, facturas…). Desde aquí puedes:</p>
+<ul><li><strong>Ordenar</strong> por cualquier columna pulsando en su cabecera.</li><li><strong>Agrupar, filtrar y reorganizar</strong> columnas (funciones del grid DevExpress).</li><li><strong>Buscar</strong> texto en la rejilla.</li><li>Hacer <strong>doble clic</strong> en una fila para abrir su <strong>Ficha</strong>.</li></ul>
+<h4 id="guardar-la-disposicion-de-la-rejilla">Guardar la disposición de la rejilla</h4>
+<p>Puedes personalizar la rejilla a tu gusto (qué columnas se ven, su orden,
+ancho, ordenación y agrupación) y <strong>dejarla guardada</strong> para las próximas
+veces. Se gestiona con estos atajos (y con sus botones equivalentes sobre
+la rejilla):</p>
+<table>
+<thead><tr>
+<th>Atajo</th>
+<th>Acción</th>
+<th>Qué hace</th>
+</tr></thead>
+<tbody>
+<tr><td><code>[Alt]+[F12]</code></td><td><strong>Guardar layout</strong></td><td>Guarda la disposición actual de la rejilla. Al pulsarlo aparece un diálogo donde eliges el <strong>alcance</strong> de la grabación (ver abajo).</td></tr>
+<tr><td><code>[Ctrl]+[F12]</code></td><td><strong>Resetear layout</strong></td><td>Borra la personalización guardada y vuelve a la disposición por defecto. También pregunta el <strong>alcance</strong> (a quién se le resetea).</td></tr>
+<tr><td><code>[Ctrl]+[F10]</code></td><td><strong>Ajustar anchos</strong></td><td>Ajusta automáticamente el ancho de las columnas a su contenido (<em>best fit</em>). Es local y no guarda nada hasta que pulses <code>[Alt]+[F12]</code>.</td></tr>
+</tbody>
+</table>
+<p><strong>Alcance de la grabación (campo «Permiso» del diálogo).</strong> Tanto al guardar
+como al resetear, el diálogo te deja elegir <strong>a quién afecta</strong> el cambio:</p>
+<table>
+<thead><tr>
+<th>Opción</th>
+<th>Alcance</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Usuario</strong> <em>(por defecto)</em></td><td>Solo a <strong>ti</strong>. Tu vista personalizada; el resto de usuarios no la ven.</td></tr>
+<tr><td><strong>Grupo</strong></td><td>A <strong>todos los usuarios de tu grupo</strong> de permisos (p. ej. <em>Cajeros</em>). Útil para fijar una vista estándar del equipo.</td></tr>
+<tr><td><strong>Todos</strong></td><td>A <strong>todos los usuarios</strong> de la aplicación. Solo disponible si eres <strong>administrador</strong> (grupo root).</td></tr>
+</tbody>
+</table>
+<p><img src="../img/01-guardar-layout.png" alt="Diálogo de Guardar layout con el selector de alcance" loading="lazy"></p>
+<p><img src="../img/01-resetear-layout.png" alt="Diálogo de Resetear layout" loading="lazy"></p>
+<blockquote><p>Por defecto se guarda <strong>solo para tu usuario</strong>, así que puedes ajustar tu
+rejilla sin afectar a nadie. Elige <strong>Grupo</strong> o <strong>Todos</strong> únicamente cuando
+quieras imponer la misma vista a más gente; ten en cuenta que <strong>Todos</strong>
+sobrescribe la disposición de todos los usuarios y solo lo puede hacer un
+administrador.</p></blockquote>
+<h3 id="pestana-ficha">Pestaña <strong>Ficha</strong></h3>
+<p>Muestra el <strong>detalle de un único registro</strong> con todos sus campos
+organizados en sub-pestañas (Datos principales, Más datos, etc.). Es donde
+se <strong>da de alta, se consulta y se edita</strong> un registro concreto.</p>
+<p><img src="../img/01-ficha.png" alt="Pestaña Ficha de un mantenimiento" loading="lazy"></p>
+<blockquote><p>Algunas pantallas tienen además una pestaña <strong>Perfil</strong> (visible solo para
+administradores) para configurar columnas, captions y comportamiento de
+la propia pantalla por usuario/perfil.</p></blockquote>
+<hr>
+<h2 id="2-el-navegador-de-registros">2. El navegador de registros</h2>
+<p>En la parte inferior (o lateral) de la pantalla hay una <strong>barra de
+navegación</strong> con los botones estándar. Sus acciones son siempre las mismas:</p>
+<p><img src="../img/01-navegador.png" alt="Barra del navegador de registros" loading="lazy"></p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Atajo</th>
+<th>Acción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Primer registro</strong></td><td><code>[Ctrl]+[Inicio]</code></td><td>Va al primer registro de la lista (respeta la ordenación del grid).</td></tr>
+<tr><td><strong>Registro anterior</strong></td><td><code>[RePág]</code></td><td>Retrocede un registro.</td></tr>
+<tr><td><strong>Registro siguiente</strong></td><td><code>[AvPág]</code></td><td>Avanza un registro.</td></tr>
+<tr><td><strong>Último registro</strong></td><td><code>[Ctrl]+[Fin]</code></td><td>Va al último registro de la lista (respeta la ordenación del grid).</td></tr>
+<tr><td><strong>Insertar registro</strong></td><td><code>[Insert]</code></td><td>Crea un registro nuevo en blanco para rellenar.</td></tr>
+<tr><td><strong>Editar registro</strong></td><td><code>[F2]</code></td><td>Pone en modo edición el registro actual.</td></tr>
+<tr><td><strong>Eliminar registro</strong></td><td><code>[Ctrl]+[Supr]</code></td><td>Borra el registro actual (pide confirmación).</td></tr>
+<tr><td><strong>Grabar registro</strong></td><td><code>[F12]</code></td><td>Confirma y guarda los cambios en la base de datos.</td></tr>
+<tr><td><strong>Retroceder bloque</strong></td><td><code>[Ctrl]+[RePág]</code></td><td>Retrocede un bloque de registros (paginación).</td></tr>
+<tr><td><strong>Avanzar bloque</strong></td><td><code>[Ctrl]+[AvPág]</code></td><td>Avanza un bloque de registros (paginación).</td></tr>
+</tbody>
+</table>
+<p>En artículos y documentos aparecen además botones específicos:</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Atajo</th>
+<th>Acción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Foto artículo</strong></td><td><code>[Ctrl]+[F]</code></td><td>Muestra la foto del artículo.</td></tr>
+<tr><td><strong>Consulta stock</strong></td><td><code>[Ctrl]+[U]</code></td><td>Consulta el stock del artículo actual.</td></tr>
+<tr><td><strong>Búsqueda de datos</strong></td><td><code>[Ctrl]+[E]</code></td><td>Abre la <strong>búsqueda avanzada de artículos y SKU</strong> (ver abajo).</td></tr>
+</tbody>
+</table>
+<blockquote><p>Los atajos del navegador funcionan cuando la pantalla de mantenimiento
+tiene el foco. <strong>Grabar</strong> dispone de dos atajos equivalentes: <code>[F12]</code>
+(botón <strong>Grabar registro</strong> del navegador) y <code>[Alt]+[G]</code> (botón
+<strong>Grabar</strong> de acción, ver abajo).</p></blockquote>
+<h3 id="cambiar-la-presentacion-de-las-lineas-con-f1">Cambiar la presentación de las líneas con F1</h3>
+<p>En la pestaña <strong>Líneas</strong> de los documentos compatibles, <code>[F1]</code> ya no abre
+la ayuda: cambia la forma de introducir y consultar artículos, SKU y tallas.
+Cada pulsación avanza al modo siguiente y, al terminar el ciclo, vuelve al
+primero. La pestaña indica el modo que está activo.</p>
+<table>
+<thead><tr>
+<th>Modo</th>
+<th>Cuándo resulta más cómodo</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Auto (desglose)</strong></td><td>Muestra por separado los atributos que componen el SKU, como color y talla.</td></tr>
+<tr><td><strong>SKU</strong></td><td>Permite trabajar directamente con el código de la variante o con su código de barras.</td></tr>
+<tr><td><strong>Tallas en línea</strong></td><td>Presenta las tallas como columnas editables dentro de la línea.</td></tr>
+<tr><td><strong>Tallas horizontales</strong></td><td>Agrupa por artículo/color. En los pedidos añade bandas como <strong>Pedido</strong>, <strong>A recibir/A albaranar</strong> y <strong>Pendiente</strong>.</td></tr>
+</tbody>
+</table>
+<p>El ciclo depende del documento:</p>
+<table>
+<thead><tr>
+<th>Documento</th>
+<th>Ciclo de <code>[F1]</code></th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Inventarios</strong></td><td>Auto → SKU.</td></tr>
+<tr><td><strong>Albaranes de venta</strong> y <strong>Documentos de Trabajo</strong></td><td>Auto → SKU → Tallas en línea.</td></tr>
+<tr><td><strong>Pedidos de compra</strong></td><td>Auto → SKU → Tallas en línea → Tallas horizontales.</td></tr>
+<tr><td><strong>Pedidos y facturas de venta</strong>; <strong>albaranes, facturas y devoluciones de compra</strong></td><td>Auto → SKU → Tallas horizontales.</td></tr>
+</tbody>
+</table>
+<p><code>[F1]</code> solo actúa cuando estás en <strong>Líneas</strong> y se pulsa sin <code>[Ctrl]</code>,
+<code>[Alt]</code> ni <code>[Mayús]</code>. No cambia cantidades por sí solo: reorganiza la misma
+información para facilitar la entrada y la revisión. En facturas de venta
+queda inactivo mientras esté habilitada la creación de artículos desde la
+propia factura. Las <strong>Sesiones de compra</strong> conservan su operativa específica.</p>
+<p><img src="../img/01-f1-modos-lineas.png" alt="Los modos de líneas de un documento recorridos con F1" loading="lazy"></p>
+<h3 id="foto-flotante-del-articulo-sku">Foto flotante del artículo / SKU</h3>
+<p><code>[Ctrl]+[F]</code> abre una ventana flotante con la foto del artículo o SKU que
+esté activo en la pantalla. Si cambias de pestaña, de documento o de línea,
+la ventana sigue al registro seleccionado.</p>
+<p><img src="../img/01-foto-articulo.png" alt="Foto flotante del artículo o SKU" loading="lazy"></p>
+<p>Desde esa ventana puedes:</p>
+<ul><li>Ver la foto en resolución <strong>300</strong>, <strong>600</strong> o <strong>real</strong>.</li><li>Cambiar la foto del artículo o del SKU/nivel de color seleccionado.</li><li>Quitar o rotar la foto.</li><li>Bajar fotos del servidor si la instalación tiene configurada la descarga en la categoría <strong>Fotos</strong> de parámetros.</li></ul>
+<blockquote><p>Las fotos se guardan en la carpeta configurada en <code>appDirFotos</code>. En
+instalaciones con varios puestos conviene que sea una ruta compartida en
+red para que todos vean las mismas imágenes.</p></blockquote>
+<h3 id="busqueda-de-datos-de-articulos-ctrle">Búsqueda de datos de artículos (Ctrl+E)</h3>
+<p><code>[Ctrl]+[E]</code> abre desde <strong>cualquier ventana</strong> del programa la <strong>búsqueda
+avanzada de artículos y SKU</strong>: una pantalla de consulta rápida para
+localizar referencias por cualquier dato, sin salir de lo que estés
+haciendo.</p>
+<p><img src="../img/01-busqueda-datos.png" alt="Búsqueda de datos de artículos" loading="lazy">
+<em>Búsqueda por talla «M»: cada fila es un SKU, con su color, stock y almacenes.</em></p>
+<p>Criterios de búsqueda:</p>
+<ul><li><strong>Buscar por</strong> — el campo sobre el que buscar: todos los campos, código de artículo, SKU, descripción, <strong>talla</strong>, <strong>color</strong>, código de barras, familia, proveedor, referencia de proveedor, temporada, almacén, atributos y propiedades, <strong>color básico</strong> o <strong>proximidad de paleta</strong> (encuentra colores parecidos al indicado).</li><li><strong>Coincidencia</strong> — contiene, empieza por, es igual a, termina en o no contiene, con opción de distinguir mayúsculas/minúsculas.</li><li><strong>Estado</strong> — solo activos, todos o solo inactivos.</li><li><strong>Existencias</strong> — cualquier stock, con existencias o sin existencias.</li><li><strong>Máximo de filas</strong> — límite de resultados (500 / 2.000 / 5.000).</li></ul>
+<p>Sobre la rejilla de resultados se pueden <strong>combinar más filtros en la fila
+de filtro</strong> del grid y guardar la combinación como <strong>perfil</strong> (botón
+<strong>Perfiles...</strong>) para repetir búsquedas habituales.</p>
+<p>Desde los resultados:</p>
+<ul><li><strong>F12</strong> o doble clic — <strong>abre la ficha del artículo</strong> seleccionado.</li><li>Menú contextual <strong>Añadir a Documento de Trabajo...</strong> — apunta el SKU en un <a href="06-menu-almacen.html#documentos-de-trabajo">Documento de Trabajo</a>.</li><li><strong>Ocultar criterios</strong> — pliega la zona de filtros para ver más filas.</li><li><strong>Esc</strong> — cierra la ventana y devuelve el foco a la pantalla anterior.</li></ul>
+<hr>
+<h2 id="3-botones-de-accion">3. Botones de acción</h2>
+<p>Independientemente del navegador, las pantallas suelen mostrar tres botones
+de acción principales. La letra subrayada es su <strong>mnemónico</strong> (<code>[Alt]</code> +
+esa letra):</p>
+<ul><li><strong>Grabar</strong> (<code>[Alt]+[G]</code>) — guarda los cambios del registro en edición.</li><li><strong>Cancelar</strong> (<code>[Alt]+[C]</code>) — descarta los cambios no guardados y vuelve al estado anterior.</li><li><strong>Salir</strong> (<code>[Alt]+[S]</code>) — cierra la pestaña de la pantalla.</li></ul>
+<hr>
+<h2 id="4-flujo-de-trabajo-alta-modificacion-y-baja">4. Flujo de trabajo: alta, modificación y baja</h2>
+<p><strong>Dar de alta un registro nuevo:</strong></p>
+<ol><li>Pulsa <strong>Insertar registro</strong>, <code>[Insert]</code>, (o el botón de alta +).</li><li>Rellena los campos en la <strong>Ficha</strong>. Los campos obligatorios suelen estar marcados o se validan al grabar.</li><li>Pulsa <strong>Grabar</strong>.</li></ol>
+<p><strong>Modificar un registro existente:</strong></p>
+<ol><li>Localízalo en la <strong>Lista</strong> y ábrelo en la <strong>Ficha</strong> (doble clic).</li><li>Opcionalmente, puede omitirse, pulsa <strong>Editar registro</strong> ó F2.</li><li>Cambia lo necesario y pulsa <strong>Grabar</strong> ó F12.</li></ol>
+<p><strong>Dar de baja un registro:</strong></p>
+<ol><li>Sitúate sobre el registro.</li><li>Pulsa <strong>Eliminar registro</strong> y confirma o <code>[Ctrl]+[Supr]</code>.</li></ol>
+<blockquote><p>Muchas tablas no se borran realmente, sino que se <strong>desactivan</strong> mediante
+una marca <strong>Activo (S/N)</strong>. Así se conserva el histórico y la integridad
+de documentos antiguos. Cuando exista esa marca, prefiérela al borrado.</p></blockquote>
+<hr>
+<h2 id="5-busquedas">5. Búsquedas</h2>
+<p>Las pantallas ofrecen dos formas de buscar:</p>
+<ul><li><strong>Buscar BBDD</strong> — busca en <strong>toda la base de datos</strong> según el texto introducido en <em>Texto a buscar</em>. Útil para encontrar un registro que no está cargado en la página actual.</li><li><strong>Buscar Grid</strong> — busca <strong>solo dentro de los datos ya cargados</strong> en la rejilla.</li></ul>
+<blockquote><p><strong><code>[Ctrl]+[A]</code>:atajo de menú que abre la pantalla de Artículos</strong> (igual que
+<code>[Ctrl]+[P]</code> abre Proveedores o <code>[Ctrl]+[K]</code> abre Clientes). Cada
+mantenimiento tiene su propio atajo de menú; los encontrarás indicados
+en el capítulo de cada menú y resumidos en
+<a href="#7-atajos-de-menu">Atajos de menú</a>.</p></blockquote>
+<hr>
+<h2 id="6-exportar-a-excel-e-imprimir">6. Exportar a Excel e imprimir</h2>
+<ul><li>La mayoría de listas permiten <strong>exportar a Excel</strong> el contenido de la rejilla (con los filtros y columnas visibles en ese momento).</li><li>Los documentos (facturas, albaranes, pedidos…) y los informes generan <strong>vistas previas imprimibles</strong> (FastReport) desde las que se imprime o se exporta a PDF.</li></ul>
+<hr>
+<h2 id="7-atajos-de-menu">7. Atajos de menú</h2>
+<p>Cada opción de la barra de menú tiene un <strong>atajo de teclado</strong> que abre esa
+pantalla directamente, estés donde estés. Estos atajos se indican también
+junto a cada opción en los capítulos siguientes.</p>
+<h3 id="archivo">Archivo</h3>
+<table>
+<thead><tr>
+<th>Pantalla</th>
+<th>Atajo</th>
+</tr></thead>
+<tbody>
+<tr><td>Empresas</td><td><code>[Ctrl]+[E]</code></td></tr>
+<tr><td>Almacenes</td><td><code>[Ctrl]+[L]</code></td></tr>
+<tr><td>Clientes</td><td><code>[Ctrl]+[K]</code></td></tr>
+<tr><td>Proveedores</td><td><code>[Ctrl]+[P]</code></td></tr>
+<tr><td>Artículos</td><td><code>[Ctrl]+[A]</code></td></tr>
+<tr><td>Tarifas</td><td><code>[Ctrl]+[T]</code></td></tr>
+<tr><td>Familias</td><td><code>[Ctrl]+[N]</code></td></tr>
+<tr><td>Paises</td><td><code>[Ctrl]+[Alt]+[L]</code></td></tr>
+<tr><td>Unidades de Medida</td><td><code>[Ctrl]+[Alt]+[U]</code></td></tr>
+<tr><td>Propiedades</td><td><code>[Ctrl]+[Alt]+[Y]</code></td></tr>
+<tr><td>Tipos de Variaciones</td><td><code>[Ctrl]+[Alt]+[T]</code></td></tr>
+<tr><td>Colecciones de Atributos</td><td><code>[Ctrl]+[Alt]+[S]</code></td></tr>
+<tr><td>Atributos básicos</td><td><code>[Ctrl]+[Alt]+[B]</code></td></tr>
+<tr><td>Invocar login</td><td><code>[Shift]+[Ctrl]+[L]</code></td></tr>
+<tr><td>Salir</td><td><code>[Alt]+[F4]</code></td></tr>
+</tbody>
+</table>
+<h3 id="compras">Compras</h3>
+<table>
+<thead><tr>
+<th>Pantalla</th>
+<th>Atajo</th>
+</tr></thead>
+<tbody>
+<tr><td>Sesiones (crear artículos y documento)</td><td><code>[Ctrl]+[S]</code></td></tr>
+<tr><td>Pedidos</td><td><code>[Shift]+[Ctrl]+[P]</code></td></tr>
+<tr><td>Albaranes</td><td><code>[Shift]+[Ctrl]+[A]</code></td></tr>
+<tr><td>Borradores de compra</td><td><code>[Shift]+[Ctrl]+[Alt]+[F]</code></td></tr>
+<tr><td>Efectos de pago</td><td><code>[Ctrl]+[Alt]+[C]</code></td></tr>
+</tbody>
+</table>
+<h3 id="ventas-mayor">Ventas Mayor</h3>
+<table>
+<thead><tr>
+<th>Pantalla</th>
+<th>Atajo</th>
+</tr></thead>
+<tbody>
+<tr><td>Borradores</td><td><code>[Ctrl]+[Alt]+[F]</code></td></tr>
+<tr><td>Pedidos</td><td><code>[Ctrl]+[Alt]+[P]</code></td></tr>
+<tr><td>Albaranes</td><td><code>[Ctrl]+[Alt]+[A]</code></td></tr>
+<tr><td>Listados de ventas</td><td><code>[Ctrl]+[Alt]+[V]</code></td></tr>
+</tbody>
+</table>
+<h3 id="caja">Caja</h3>
+<table>
+<thead><tr>
+<th>Pantalla</th>
+<th>Atajo</th>
+</tr></thead>
+<tbody>
+<tr><td>Menú de Caja</td><td><code>[F5]</code></td></tr>
+<tr><td>Parámetros de Caja</td><td><code>[Ctrl]+[F5]</code></td></tr>
+<tr><td>Formas de Pago Caja</td><td><code>[Shift]+[Ctrl]+[Q]</code></td></tr>
+<tr><td>Depósitos de Clientes</td><td><code>[Ctrl]+[D]</code></td></tr>
+<tr><td>Histórico de Pagos de Caja</td><td><code>[Shift]+[Ctrl]+[J]</code></td></tr>
+<tr><td>Histórico de Vales</td><td><code>[Shift]+[Ctrl]+[V]</code></td></tr>
+<tr><td>Histórico de Operaciones</td><td><code>[Shift]+[Ctrl]+[O]</code></td></tr>
+<tr><td>Histórico de Arqueos</td><td><code>[Shift]+[Ctrl]+[H]</code></td></tr>
+<tr><td>Borradores Simplificados</td><td><code>[Shift]+[Ctrl]+[F]</code></td></tr>
+</tbody>
+</table>
+<h3 id="almacen">Almacén</h3>
+<table>
+<thead><tr>
+<th>Pantalla</th>
+<th>Atajo</th>
+</tr></thead>
+<tbody>
+<tr><td>Movimientos de almacén</td><td><code>[Ctrl]+[M]</code></td></tr>
+<tr><td>Inventarios</td><td><code>[Ctrl]+[Alt]+[I]</code></td></tr>
+</tbody>
+</table>
+<h3 id="otros">Otros</h3>
+<table>
+<thead><tr>
+<th>Pantalla</th>
+<th>Atajo</th>
+</tr></thead>
+<tbody>
+<tr><td>Parámetros del entorno</td><td><code>[Ctrl]+[F10]</code></td></tr>
+<tr><td>Grupos de IVA</td><td><code>[Ctrl]+[O]</code></td></tr>
+<tr><td>Impuesto IVA</td><td><code>[Ctrl]+[I]</code></td></tr>
+<tr><td>Contadores</td><td><code>[Ctrl]+[R]</code></td></tr>
+<tr><td>Formas de pago documentos</td><td><code>[Shift]+[Ctrl]+[G]</code></td></tr>
+<tr><td>Usuarios</td><td><code>[Ctrl]+[H]</code></td></tr>
+<tr><td>Empleados</td><td><code>[Ctrl]+[Alt]+[E]</code></td></tr>
+<tr><td>Grupos</td><td><code>[Ctrl]+[J]</code></td></tr>
+<tr><td>Perfiles</td><td><code>[Ctrl]+[W]</code></td></tr>
+<tr><td>Permisos</td><td><code>[Ctrl]+[Q]</code></td></tr>
+<tr><td>Hacer Copia de Seguridad</td><td><code>[Ctrl]+[Y]</code></td></tr>
+<tr><td>Recuperar Copia de Seguridad</td><td><code>[Ctrl]+[Z]</code></td></tr>
+<tr><td>Generador de Procesos</td><td><code>[Ctrl]+[G]</code></td></tr>
+</tbody>
+</table>
+<h2 id="8-campos-de-auditoria">8. Campos de auditoría</h2>
+<p>Todos los registros guardan automáticamente <strong>quién y cuándo</strong> los creó y
+los modificó por última vez (instante de alta/modificación y usuario). No
+hay que rellenarlos: la aplicación los gestiona sola. Son útiles para
+trazabilidad y soporte.</p>
+<hr>
+<p><a href="00-acceso-y-primeros-pasos.html">◀ Acceso</a> · <a href="index.html">Índice</a> · <a href="02-menu-archivo.html">Siguiente ▶ Menú Archivo</a></p>
+</article>
+<footer>Factuzam User Manual · generated on 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

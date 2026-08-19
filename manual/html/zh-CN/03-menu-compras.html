@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>03 · Menú Compras — Factuzam 用户手册</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="菜单">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>用户手册</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="手册语言"><a class="enlace-idioma" href="../03-menu-compras.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/03-menu-compras.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/03-menu-compras.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma activo" href="03-menu-compras.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">首页</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · 访问与入门</a></li><li><a href="01-conceptos-comunes.html">01 · 通用概念</a></li><li><a href="02-menu-archivo.html">02 · 文件菜单</a></li><li class="activo"><a href="03-menu-compras.html">03 · 采购菜单</a></li><li><a href="04-menu-ventas-mayor.html">04 · 批发销售菜单</a></li><li><a href="05-menu-caja.html">05 · POS 菜单</a></li><li><a href="06-menu-almacen.html">06 · 仓库菜单</a></li><li><a href="07-menu-otros.html">07 · 其他菜单</a></li><li><a href="08-menu-ayuda.html">08 · 帮助菜单</a></li><li><a href="09-instalacion-windows.html">09 · Windows 安装</a></li><li><a href="10-migracion-legacy.html">10 · 从旧版迁移</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · 更改与新功能</a></li><li><a href="13-aplicaciones-moviles.html">13 · 移动应用</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · 架构与开发</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop 集成</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="zh-CN"><strong>翻译待完成。</strong>本章暂未提供中文版本，现显示西班牙语版本。</aside>
+<h1 id="03-menu-compras">03 · Menú Compras</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Compras</strong> gestiona todo el ciclo de <strong>aprovisionamiento</strong>: desde
+el pedido al proveedor hasta la recepción de mercancía, las devoluciones y
+las facturas de compra. Es el flujo que <strong>da entrada de stock</strong> al almacén.</p>
+<p>Estructura del menú:</p>
+<pre><code>Compras
+├── Sesiones
+│   └── Crear artículos y un pedido o un albarán
+├── Pedidos
+├── Albaranes
+├── Devoluciones a Proveedor
+├── Crear borradores de albaranes...
+├── Borradores
+├── Efectos de pago
+├── Remesas de pago
+├── Cargar efectos en remesa...
+└── Listados
+    ├── Listado de documentos proveedor
+    └── Listado de efectos de pago</code></pre>
+<blockquote><p>Flujo habitual de compra:
+<strong>Pedido de compra</strong> → recepción como <strong>Albarán de compra</strong> (entra el
+stock) → <strong>Factura de compra</strong>. Las <strong>Devoluciones</strong> restan stock y
+generan el abono al proveedor.</p></blockquote>
+<hr>
+<h2 id="sesiones-crear-articulos-y-un-pedido-o-un-albaran">Sesiones ▸ Crear artículos y un pedido o un albarán</h2>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[S]</code></p>
+<p>Asistente de <strong>alta rápida de compra</strong>. Pensado para cuando llega género
+nuevo del proveedor: en una sola pantalla das de alta los artículos (con
+sus colores y tallas), fijas precios de compra y venta, y al terminar la
+sesión se <strong>materializa</strong> generando automáticamente los artículos, los
+SKUs, los códigos de barras y el <strong>pedido y/o albarán de compra</strong>.</p>
+<p><img src="../img/03-sesiones-general.png" alt="Pantalla de Sesiones de compra" loading="lazy"></p>
+<h3 id="1-la-cabecera-de-la-sesion">1. La cabecera de la sesión</h3>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Serie / Número / Fecha</strong></td><td>Identificación de la sesión (numeración por contador).</td></tr>
+<tr><td><strong>Estado</strong></td><td><code>ABIERTA</code> (editable) o <code>CERRADA</code> (ya materializada).</td></tr>
+<tr><td><strong>Empresa</strong></td><td>Empresa compradora.</td></tr>
+<tr><td><strong>Proveedor</strong></td><td>Proveedor del género (botón de búsqueda).</td></tr>
+<tr><td><strong>Ref. prov.</strong></td><td>Referencia del documento del proveedor (su albarán/factura).</td></tr>
+<tr><td><strong>Almacén</strong></td><td>Almacén de destino de la mercancía.</td></tr>
+<tr><td><strong>Tarifa venta</strong></td><td>Tarifa donde se grabarán los precios de venta calculados.</td></tr>
+<tr><td><strong>Temporada</strong></td><td>Temporada a la que pertenece el género.</td></tr>
+<tr><td><strong>Formato distribuido (por almacén)</strong></td><td>Actívalo si la entrada viene repartida entre varios almacenes/tiendas; las cantidades se introducen por almacén.</td></tr>
+</tbody>
+</table>
+<p><strong>Cálculo automático del precio de venta</strong> a partir del precio de compra:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Efecto</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Margen %</strong></td><td>Porcentaje de margen que se aplica sobre el precio de compra.</td></tr>
+<tr><td><strong>Múlt. redondeo</strong></td><td>Redondea el precio resultante al múltiplo indicado.</td></tr>
+<tr><td><strong>Ajuste final</strong></td><td>Ajuste que se suma al final (p. ej. <code>-0,05</code> para acabar en ,95).</td></tr>
+</tbody>
+</table>
+<p>Puedes aceptar el precio propuesto o corregirlo línea a línea.</p>
+<blockquote><p>El <strong>Margen %</strong> se <strong>propone automáticamente</strong> a partir de los
+<a href="02-menu-archivo.html#pestana-compras-parametros-de-compra-del-proveedor">parámetros de compra del proveedor</a>
+cuando lo eliges en la cabecera. El sistema de tallas se decide en cada
+línea o al aplicar un kit de proveedor.</p></blockquote>
+<h3 id="2-pestana-lineas-de-articulos">2. Pestaña «Líneas de Artículos»</h3>
+<p>Cada línea es un <strong>artículo + color</strong> con su escandallo de tallas:</p>
+<table>
+<thead><tr>
+<th>Columna</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Familia (F3)</strong></td><td>Familia del artículo; <code>[F3]</code> abre el <strong>árbol de familias</strong> para elegirla.</td></tr>
+<tr><td><strong>Cód. artículo</strong></td><td>Código del artículo (nuevo o existente).</td></tr>
+<tr><td><strong>Modelo prov.</strong></td><td>Referencia/modelo del proveedor.</td></tr>
+<tr><td><strong>Descripción</strong></td><td>Descripción del artículo.</td></tr>
+<tr><td><strong>Color / C. básico</strong></td><td>Color comercial y color básico de clasificación.</td></tr>
+<tr><td><strong>Pr. compra / Pr. venta</strong></td><td>Precio de compra y precio de venta (propuesto por el margen).</td></tr>
+<tr><td><strong>Sistema tallas</strong></td><td>Colección de tallas del artículo (S-M-L-XL, numérico…).</td></tr>
+<tr><td><strong>Total tallas</strong></td><td>Total de unidades; las cantidades se reparten <strong>por talla</strong> en la matriz.</td></tr>
+<tr><td><strong>Importe s/IVA</strong></td><td>Importe de la línea (compra).</td></tr>
+</tbody>
+</table>
+<p><strong>Botones de la pestaña:</strong></p>
+<ul><li><strong>+ Añadir línea / − Borrar línea</strong> — gestiona las líneas de la sesión.</li><li><strong>Otro color</strong> — duplica la línea actual para meter el <strong>mismo modelo en otro color</strong> sin reescribir los datos.</li><li><strong>Aplicar kit</strong> — vuelca una curva de tallas definida en el proveedor sobre la línea actual. En formato distribuido abre el distribuidor para aplicarlo por almacén.</li><li><strong>+ Foto / Bajar fotos</strong> — asocia fotografías al artículo o las descarga.</li></ul>
+<p><img src="../img/03-sesiones-lineas.png" alt="Líneas de artículos con matriz de tallas" loading="lazy"></p>
+<p><img src="../img/03-sesiones-proveedor.png" alt="Pestaña Proveedor de una sesión de compra" loading="lazy"></p>
+<blockquote><p><strong>Código duplicado.</strong> Si tecleas un código de artículo que <strong>ya existe</strong>
+en el catálogo, la aplicación lo detecta y pregunta qué hacer:
+<strong>Reusar el artículo existente</strong> (no se crea uno nuevo, se le añade la
+compra) o <strong>Renombrar el código en esta sesión</strong>.</p></blockquote>
+<h3 id="3-materializar-la-sesion">3. Materializar la sesión</h3>
+<p>Cuando la sesión está completa, pulsa <strong>«Crear artículos y albarán»</strong>. Se
+abre el asistente <strong>«Crear artículos y albarán / pedido»</strong> donde confirmas
+qué documentos generar:</p>
+<table>
+<thead><tr>
+<th>Opción</th>
+<th>Efecto</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Generar albarán (mueve stock)</strong></td><td>Crea el albarán de compra: la mercancía <strong>entra en el almacén destino</strong>. Eliges su <strong>serie</strong>.</td></tr>
+<tr><td><strong>Generar pedido (pdte. de recibir)</strong></td><td>Crea un pedido de compra (no mueve stock, queda pendiente de recibir). Eliges su <strong>serie</strong>.</td></tr>
+<tr><td><strong>Fecha</strong></td><td>Fecha de los documentos.</td></tr>
+<tr><td><strong>Almacén destino / Tarifa venta / Temporada</strong></td><td>Se proponen desde la cabecera; puedes ajustarlos.</td></tr>
+<tr><td><strong>Ref. documento proveedor</strong></td><td>Referencia del documento del proveedor.</td></tr>
+<tr><td><strong>Agrupación almacén</strong> (solo formato distribuido)</td><td><strong>Agrupar todos los almacenes en un solo documento</strong> o <strong>generar un documento por almacén</strong>.</td></tr>
+</tbody>
+</table>
+<p>Si marcas <strong>ambos</strong> documentos, se generan en orden: <strong>primero el pedido,
+luego el albarán</strong>.</p>
+<p>Tras pulsar <strong>Generar</strong>, un último aviso resume lo que va a ocurrir
+(<em>«Se van a crear los artículos, SKUs, códigos de barras y enlaces al
+proveedor según el detalle de la sesión»</em>) y pide confirmación
+(<code>[F12]</code> Confirmar / <code>[Esc]</code> Cancelar).</p>
+<p><img src="../img/03-sesiones-materializar.png" alt="Asistente de materialización" loading="lazy"></p>
+<p><strong>Qué hace exactamente la materialización:</strong></p>
+<ol><li>Crea (o reutiliza) los <strong>artículos</strong> de las líneas.</li><li>Genera los <strong>SKUs</strong> por cada combinación de color/talla.</li><li>Genera los <strong>códigos de barras</strong> de los SKUs.</li><li>Crea los <strong>enlaces artículo–proveedor</strong> con sus referencias.</li><li>Graba los <strong>precios de venta</strong> en la tarifa elegida.</li><li>Genera el <strong>pedido y/o albarán de compra</strong> (el albarán da entrada al stock).</li><li>La sesión pasa a estado <strong><code>CERRADA</code></strong> y deja de ser editable.</li></ol>
+<h3 id="4-pestana-documentos-creados">4. Pestaña «Documentos creados»</h3>
+<p>Tras materializar, esta pestaña lista los documentos generados (tipo,
+serie, número, almacén, fecha de alta, usuario). El botón
+<strong>«Ir a documento (F12)»</strong> abre directamente el pedido o albarán generado.
+También hay accesos rápidos <strong>Ir a Artículos</strong>, <strong>Ir a Albaranes de
+Compra</strong> e <strong>Ir a Pedidos de Compra</strong>.</p>
+<p><img src="../img/03-sesiones-documentos.png" alt="Documentos creados por la sesión" loading="lazy"></p>
+<h3 id="5-revertir-materializacion">5. Revertir materialización</h3>
+<p>El botón <strong>«Revertir materialización»</strong> (disponible solo en sesiones
+<code>CERRADA</code>) <strong>deshace</strong> lo generado: elimina los documentos creados por la
+sesión y la devuelve al estado <code>ABIERTA</code> para corregirla y volver a
+materializar.</p>
+<blockquote><p>⚠️ Úsalo solo si los documentos generados <strong>no se han trabajado todavía</strong>
+(no se han facturado, ni servido, ni modificado). Si el albarán ya metió
+stock y ha habido ventas posteriores, revisa el stock tras revertir.</p></blockquote>
+<h3 id="6-imprimir-horizontal">6. Imprimir horizontal</h3>
+<p>El botón <strong>«Imprimir horizontal»</strong> saca un listado de la sesión con las
+<strong>tallas en columnas</strong> (formato apaisado), útil para repasar la entrada de
+género contra el albarán del proveedor.</p>
+<h3 id="7-fotos-de-la-sesion">7. Fotos de la sesión</h3>
+<p>La pantalla permite fotografiar y reconocer el género <strong>antes de que el
+artículo exista en el catálogo</strong>. Selecciona una línea y usa una de estas
+acciones:</p>
+<ul><li><strong>+ Foto</strong> — elige una imagen local (<code>PNG</code>, <code>JPG</code>, <code>JPEG</code>, <code>WEBP</code>, <code>AVIF</code> o <code>BMP</code>) y la asocia a la línea activa.</li><li><strong>Bajar fotos</strong> — descarga las imágenes disponibles en el servidor y guarda como foto provisional una imagen representativa de la línea.</li></ul>
+<p>La pestaña <strong>Fotos provisionales</strong> permite revisar las imágenes de la
+sesión. La lista muestra la línea, el código de artículo tentativo, el
+modelo de proveedor, la descripción, el color, la asignación y el fichero;
+al cambiar de fila se actualizan la vista previa y el texto que indica a
+qué artículo o SKU se asignará.</p>
+<p>Mientras la sesión está abierta, las fotos se conservan como
+<strong>provisionales</strong> y quedan ligadas a su serie, número y línea. Al
+materializar:</p>
+<ol><li>Se crea o reutiliza el artículo y sus SKUs.</li><li>La foto provisional se migra al artículo o SKU definitivo.</li><li>Se renombran las copias de 300 px, 600 px y resolución real.</li><li>Si el artículo ya tenía fotos, la nueva se añade con el siguiente índice disponible, sin sobrescribirlas.</li></ol>
+<blockquote><p>Comprueba la vista previa antes de materializar. Después, la imagen se
+gestiona como cualquier otra foto del catálogo mediante
+<code>[Ctrl]+[F]</code> (ver <a href="01-conceptos-comunes.html#foto-flotante-del-articulo-sku">Foto flotante del artículo / SKU</a>).</p></blockquote>
+<hr>
+<h2 id="pedidos">Pedidos</h2>
+<p>Mantenimiento de <strong>Pedidos de Compra</strong>. Registra lo que se ha <strong>encargado</strong>
+a un proveedor. Mientras solo exista el pedido, la cantidad figura como
+<strong>pendiente de recibir</strong> y no aumenta las existencias.</p>
+<p><img src="../img/03-pedidos-compra.png" alt="Pedidos de compra" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[P]</code></p>
+<p>Un pedido tiene una <strong>cabecera</strong> (empresa, proveedor, serie/número, fechas,
+temporada y almacén de destino predeterminado) y un <strong>detalle de líneas</strong>
+(artículo/SKU, almacén efectivo, cantidad pedida, recibida, pendiente,
+precio e impuestos). Los indicadores de cabecera resumen <strong>Pedida</strong>,
+<strong>Recibida</strong>, <strong>Pendiente</strong> y <strong>A albaranar</strong>. En la lista, un pedido con
+cantidad pendiente y <strong>fecha tope de recepción vencida</strong> aparece resaltado.</p>
+<h3 id="presentacion-de-las-lineas-y-cantidades-a-recibir">Presentación de las líneas y cantidades a recibir</h3>
+<p>Dentro de <strong>Líneas</strong>, <code>[F1]</code> recorre cuatro presentaciones:</p>
+<ol><li><strong>Auto (desglose)</strong> — artículo y atributos en columnas separadas.</li><li><strong>SKU</strong> — una línea por variante.</li><li><strong>Tallas en línea</strong> — tallas como columnas de entrada.</li><li><strong>Tallas horizontales</strong> — grupos por artículo/color con las bandas <strong>Pedido</strong>, <strong>A recibir</strong> y <strong>Pendiente</strong>.</li></ol>
+<p>La pantalla suele abrir en <strong>Tallas en línea</strong>; si ese modo no puede
+construirse, pasa a SKU. El botón <strong>Expandir recibidos</strong> salta directamente
+a <strong>Tallas horizontales</strong>. Consulta también la explicación general de
+<a href="01-conceptos-comunes.html#cambiar-la-presentacion-de-las-lineas-con-f1">los modos con F1</a>.</p>
+<p><img src="../img/03-pedidos-recepcion-tallas.png" alt="Pedido de compra en tallas horizontales con sus bandas de recepción" loading="lazy"></p>
+<p>Para preparar una recepción:</p>
+<ul><li>Escribe en <strong>A recibir</strong> solo las unidades que han llegado. Se puede informar por línea o por talla, según el modo activo.</li><li><strong>Recibir Todo</strong> copia a <strong>A recibir</strong> todo lo que queda pendiente en el pedido. Después todavía puedes corregir una línea o una talla.</li><li>Factuzam no permite que <strong>A recibir</strong> supere <code>Pedida − Recibida</code>: reduce automáticamente el exceso al máximo pendiente y emite un aviso sonoro.</li><li>Si una línea tiene un artículo con variaciones pero no tiene SKU, al grabar se muestra un aviso: esa línea no puede mover stock correctamente.</li></ul>
+<blockquote><p><strong>Importante:</strong> si pulsas <strong>Crear albarán</strong> sin haber informado ninguna
+cantidad en <strong>A recibir</strong>, Factuzam aplica el flujo clásico y recibe <strong>todo
+lo pendiente del almacén elegido</strong>. Informa cantidades antes si la entrega
+es parcial.</p></blockquote>
+<h3 id="recibir-el-pedido-crear-o-ampliar-un-albaran">Recibir el pedido: crear o ampliar un albarán</h3>
+<ol><li>Revisa <strong>A recibir</strong> y pulsa <strong>Crear albarán</strong>.</li><li>Elige el <strong>almacén destino</strong>. Se puede seleccionar cualquier almacén activo; solo se procesan las líneas cuya ubicación efectiva coincide con el almacén elegido.</li><li>Para un albarán nuevo, confirma la <strong>serie</strong> propuesta para ese almacén, la <strong>referencia del proveedor</strong>, la <strong>fecha de recepción</strong> y la <strong>temporada</strong>.</li><li>Si la entrega continúa un albarán anterior, marca <strong>Incorporar a un albarán ya existente de este pedido</strong> y selecciona el documento destino.</li><li>Acepta con <code>[F12]</code>. Factuzam crea o amplía el albarán, mueve el stock, actualiza las cantidades recibidas y pendientes del pedido y recalcula su estado en una sola operación.</li></ol>
+<p><img src="../img/03-pedidos-incorporar-albaran.png" alt="Incorporación de una recepción a un albarán existente" loading="lazy"></p>
+<p>Después de una recepción correcta, las cantidades <strong>A recibir</strong> del almacén
+procesado se limpian; las de otros almacenes permanecen para poder continuar
+con la siguiente tienda o recepción. Un resumen muestra el albarán resultante
+y permite <strong>Ir a documento</strong>.</p>
+<p>El estado del pedido se mantiene automáticamente:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>ABIERTO</strong></td><td>Todavía no se ha recibido ninguna unidad.</td></tr>
+<tr><td><strong>PARCIAL</strong></td><td>Se ha recibido una parte y queda mercancía pendiente.</td></tr>
+<tr><td><strong>RECIBIDO</strong></td><td>Ya no queda cantidad pendiente.</td></tr>
+<tr><td><strong>CANCELADO</strong></td><td>El pedido no se continuará recibiendo.</td></tr>
+</tbody>
+</table>
+<p>La recepción es transaccional: si falla la creación, la incorporación o el
+movimiento de stock, Factuzam deshace el conjunto y deja el pedido como estaba.</p>
+<p><img src="../img/03-pedidos-crear-albaran.png" alt="Crear albarán desde pedido de compra" loading="lazy"></p>
+<hr>
+<h2 id="albaranes">Albaranes</h2>
+<p>Mantenimiento de <strong>Albaranes de Compra</strong>. Registra la <strong>recepción real</strong> de
+la mercancía: al confirmar el albarán <strong>entra el stock</strong> en el almacén
+indicado.</p>
+<p><img src="../img/03-albaranes-compra.png" alt="Albaranes de compra" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[A]</code></p>
+<p>Puede crearse:</p>
+<ul><li>A partir de un <strong>pedido</strong> previo (recepción de lo pedido).</li><li>Directamente (compra sin pedido previo).</li><li>Automáticamente desde una <strong>sesión de compra</strong> materializada.</li></ul>
+<p>El albarán es el documento que <strong>mueve existencias</strong>; la factura es solo el
+documento contable/fiscal asociado.</p>
+<p>En cabecera existe la marca <strong>Depósito</strong>. Es informativa: permite indicar
+que la mercancía está en depósito, pero no cambia el movimiento de stock ni
+la facturación.</p>
+<hr>
+<h2 id="devoluciones-a-proveedor">Devoluciones a Proveedor</h2>
+<p>Mantenimiento de <strong>Devoluciones a Proveedor</strong>. Registra la mercancía que se
+<strong>devuelve</strong> al proveedor (defectos, exceso, etc.). Al confirmarla, <strong>resta
+stock</strong> del almacén y sirve de base para el <strong>abono</strong> del proveedor.</p>
+<p><img src="../img/03-devoluciones.png" alt="Devoluciones a proveedor" loading="lazy"></p>
+<p><em>(Sin atajo de menú; se abre desde el menú.)</em></p>
+<hr>
+<h2 id="crear-borradores-de-albaranes">Crear borradores de albaranes...</h2>
+<p>Utilidad para convertir uno o varios <strong>albaranes de compra</strong> en un
+<strong>borrador de compra</strong>. Filtra por empresa y proveedor, muestra los
+albaranes pendientes y permite agrupar varios en el mismo borrador.</p>
+<p>El formulario trabaja en dos modos:</p>
+<table>
+<thead><tr>
+<th>Modo</th>
+<th>Resultado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Crear borrador nuevo</strong></td><td>Genera un documento nuevo para los albaranes seleccionados.</td></tr>
+<tr><td><strong>Incorporar a un borrador existente</strong></td><td>Añade los albaranes seleccionados a un borrador abierto del mismo proveedor y empresa.</td></tr>
+</tbody>
+</table>
+<p>Pulsa <strong>Cargar</strong> para listar los albaranes candidatos y <strong>Crear
+borradores</strong> para materializarlos. Al terminar se abre el borrador/factura
+de compra resultante para revisar líneas, totales y efectos.</p>
+<p><img src="../img/03-compras-crear-borradores.png" alt="Crear borradores desde albaranes de compra" loading="lazy"></p>
+<hr>
+<h2 id="borradores">Borradores</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[Alt]+[F]</code></p>
+<p>Mantenimiento de <strong>Borradores de Compra</strong>. Es el documento de proveedor
+que se registra para control de gasto, IVA soportado y vencimientos de
+pago. En la base de datos se guarda como <strong>factura de compra</strong>; el menú
+mantiene la etiqueta Borradores para el trabajo previo de revisión.</p>
+<p>Se crea manualmente o a partir de albaranes de compra. Cuando viene de
+albaranes, conserva la referencia al documento de origen y marca esos
+albaranes como facturados para evitar duplicidades.</p>
+<p><img src="../img/03-facturas-compra.png" alt="Facturas de compra" loading="lazy"></p>
+<p>La ficha incluye:</p>
+<ul><li><strong>Cabecera</strong> — proveedor, empresa, fecha, referencia/documento externo, forma de pago y datos fiscales.</li><li><strong>Líneas</strong> — artículos procedentes de los albaranes o introducidos a mano.</li><li><strong>Efectos</strong> — vencimientos generados desde la forma de pago.</li></ul>
+<p>El botón <strong>Generar efectos</strong> reparte el total líquido en vencimientos y
+pregunta qué <strong>banco de la empresa</strong> se usará como cuenta de cargo. Si el
+proveedor tiene banco para pagos por defecto, aparece preseleccionado.</p>
+<p>Estados relacionados:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>ABIERTO</strong></td><td>Documento editable, pendiente de cerrar o revisar.</td></tr>
+<tr><td><strong>CERRADO</strong></td><td>Documento validado para el circuito de pagos.</td></tr>
+<tr><td><strong>FACTURADO</strong></td><td>Albarán de compra ya incorporado a un borrador/factura de proveedor.</td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="efectos-de-pago">Efectos de pago</h2>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[C]</code></p>
+<p>Cartera de vencimientos de proveedor. Cada efecto representa una fecha de
+pago pendiente, pagada, remesada o conciliada. Desde aquí puedes revisar
+vencimientos, registrar pagos y fusionar impagados en un efecto resumen.</p>
+<p><img src="../img/03-efectos-pago.png" alt="Efectos de pago a proveedor" loading="lazy"></p>
+<p>Estados habituales:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>PENDIENTE</strong></td><td>Vencimiento vivo, todavía no pagado.</td></tr>
+<tr><td><strong>PAGADO</strong></td><td>Pagado total o parcialmente.</td></tr>
+<tr><td><strong>REMESADO</strong></td><td>Incluido en una remesa de pago.</td></tr>
+<tr><td><strong>CONCILIADO</strong></td><td>Fusionado o regularizado con otro efecto.</td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="remesas-de-pago">Remesas de pago</h2>
+<p>Agrupa efectos de pago para preparar una orden de pago bancaria. La remesa
+recoge su banco de cargo, fecha de cargo, número de efectos e importe total.</p>
+<p><img src="../img/03-remesas-pago.png" alt="Remesas de pago" loading="lazy"></p>
+<p>Acciones principales:</p>
+<ul><li><strong>Añadir efecto</strong> — abre la selección de efectos pendientes.</li><li><strong>Quitar efecto</strong> — retira el efecto seleccionado de la remesa.</li><li><strong>Pagar efecto</strong> — registra el pago de un efecto concreto.</li><li><strong>Pagar remesa</strong> — marca como pagados los efectos de la remesa.</li><li><strong>Asignar banco</strong> — fija o cambia el banco de cargo de la empresa.</li></ul>
+<hr>
+<h2 id="cargar-efectos-en-remesa">Cargar efectos en remesa...</h2>
+<p>Acceso directo al selector de efectos pendientes para incorporarlos a una
+remesa de pago. Se usa cuando ya existe una remesa abierta y quieres
+alimentarla con vencimientos filtrados por proveedor, vencimiento o estado.</p>
+<hr>
+<h2 id="listados-listado-de-documentos-proveedor">Listados ▸ Listado de documentos proveedor</h2>
+<p>Listado de documentos de proveedor para revisar pedidos, albaranes,
+devoluciones, borradores y vencimientos dentro de un rango de fechas o por
+proveedor.</p>
+<p>La vista preliminar agrupa los documentos por tipo y proveedor, presenta
+líneas, base, IVA, recargo de equivalencia y total, e incluye subtotales por
+proveedor, por tipo de documento y un total general.</p>
+<p><img src="../img/03-listado-documentos-proveedor-resultado.png" alt="Vista preliminar del listado de documentos proveedor" loading="lazy"></p>
+<hr>
+<h2 id="listados-listado-de-efectos-de-pago">Listados ▸ Listado de efectos de pago</h2>
+<p>Listado de la <strong>cartera de pagos a proveedor</strong>: los efectos (vencimientos)
+de compra con sus importes y situación. Permite filtrar por:</p>
+<ul><li><strong>Fechas</strong> (por fecha de vencimiento o fecha de emisión del efecto).</li><li><strong>Almacén</strong> y <strong>proveedor</strong>.</li><li><strong>Número de efecto</strong> (desde/hasta).</li><li><strong>Banco/remesa</strong> en que está cargado el efecto.</li><li><strong>Tipo de efecto</strong> y <strong>situación</strong> (pendiente, remesado, pagado…).</li></ul>
+<p>Puede sacarse en detalle o <strong>solo totales</strong> (con los agrupados que se
+marquen), y se previsualiza, imprime o exporta como el resto de listados.
+Es el complemento de impresión de las pantallas
+<a href="#efectos-de-pago">Efectos de pago</a> y <a href="#remesas-de-pago">Remesas de pago</a>.</p>
+<hr>
+<p><a href="02-menu-archivo.html">◀ Menú Archivo</a> · <a href="index.html">Índice</a> · <a href="04-menu-ventas-mayor.html">Siguiente ▶ Menú Ventas Mayor</a></p>
+</article>
+<footer>Factuzam 用户手册 · 生成于 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="ca-ES">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>00 · Acceso y primeros pasos — Manual de Factuzam</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual d'usuari</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Idioma del manual"><a class="enlace-idioma" href="../00-acceso-y-primeros-pasos.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/00-acceso-y-primeros-pasos.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma activo" href="00-acceso-y-primeros-pasos.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)" aria-current="page"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/00-acceso-y-primeros-pasos.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Inici</a></li><li class="activo"><a href="00-acceso-y-primeros-pasos.html">00 · Accés i primers passos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptes comuns</a></li><li><a href="02-menu-archivo.html">02 · Menú Fitxer</a></li><li><a href="03-menu-compras.html">03 · Menú Compres</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Vendes majoristes</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Magatzem</a></li><li><a href="07-menu-otros.html">07 · Menú Altres</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ajuda</a></li><li><a href="09-instalacion-windows.html">09 · Instal·lació a Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migració des del sistema anterior</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Canvis i novetats</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicacions mòbils</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura i desenvolupament</a></li><li><a href="15-integracion-prestashop.html">15 · Integració amb PrestaShop</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="ca-ES"><strong>Traducció pendent.</strong> Aquest capítol encara no està disponible en català; es mostra la versió en castellà.</aside>
+<h1 id="00-acceso-y-primeros-pasos">00 · Acceso y primeros pasos</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Este capítulo describe lo que ocurre desde que arrancas Factuzam hasta que
+tienes la ventana principal lista para trabajar.</p>
+<blockquote><p><strong>Práctica en programa DEMO:</strong> en la primera entrada, usa el usuario
+administrador de la demo solo para crear tu usuario propio con contraseña
+en <a href="07-menu-otros.html#usuarios-grupos-y-perfiles">Otros ▸ Usuarios, Grupos y Perfiles</a>.
+Asígnalo al grupo <strong>Administradores</strong> y después entra de nuevo desde
+<em>Archivo ▸ Invocar login</em> para continuar las pruebas con tu usuario.</p></blockquote>
+<hr>
+<h2 id="1-pantalla-de-presentacion-splash">1. Pantalla de presentación (Splash)</h2>
+<p>Al ejecutar la aplicación se muestra durante unos segundos la pantalla de
+presentación con el logotipo y el <strong>número de versión</strong>. Es informativa; no
+requiere ninguna acción. La misma pantalla puede consultarse en cualquier
+momento desde <em>Ayuda ▸ Acerca de</em>.</p>
+<p><img src="../img/00-splash.png" alt="Pantalla de presentación" loading="lazy"></p>
+<hr>
+<h2 id="2-inicio-de-sesion-login">2. Inicio de sesión (Login)</h2>
+<p>A continuación aparece la ventana <strong>Login FactuZam</strong>:</p>
+<p><img src="../img/00-login.png" alt="Ventana de login" loading="lazy"></p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Usuario</strong></td><td>Nombre de usuario de la aplicación.</td></tr>
+<tr><td><strong>Contraseña</strong></td><td>Clave del usuario.</td></tr>
+<tr><td><strong>Recordar Usuario</strong></td><td>Guarda el usuario para el próximo arranque.</td></tr>
+<tr><td><strong>Recordar Contraseña</strong></td><td>Guarda también la contraseña (úsalo solo en equipos de confianza).</td></tr>
+<tr><td><strong>Arranque sin login</strong></td><td>Si se marca, la aplicación entra directamente la próxima vez sin pedir credenciales.</td></tr>
+</tbody>
+</table>
+<p>Si hay un cambio de usuario dentro de la misma sesión, en la aplicación se
+puede invocar desde <em>Archivo ▸ Invocar login</em> o desde la combinación de
+teclas <code>[Ctrl]+[Mayúsculas]+[L]</code>.</p>
+<p><strong>Botones:</strong></p>
+<ul><li><strong>Aceptar (F12)</strong> — valida las credenciales y entra a la aplicación.</li><li><strong>Salir (Esc)</strong> — cierra la aplicación sin entrar.</li></ul>
+<blockquote><p>El usuario determina tu <strong>perfil de permisos</strong>, que decide qué menús y
+qué acciones tienes disponibles dentro de la aplicación.</p></blockquote>
+<hr>
+<h2 id="3-configuracion-de-la-base-de-datos">3. Configuración de la base de datos</h2>
+<p>Desde la propia ventana de login, el botón <strong>Configurar Base de Datos ▸</strong>
+despliega el panel <strong>Configuración BBDD</strong>. Aquí se indican los datos de
+conexión al servidor <strong>MariaDB/MySQL</strong> donde residen los datos:</p>
+<p><img src="../img/00-config-bbdd.png" alt="Panel de configuración de BBDD" loading="lazy"></p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Descripción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Host</strong></td><td>Servidor donde está la base de datos (p. ej. <code>localhost</code> o una IP).</td></tr>
+<tr><td><strong>Puerto</strong></td><td>Puerto del servidor (MariaDB usa <code>3306</code> por defecto).</td></tr>
+<tr><td><strong>Nombre BD</strong></td><td>Nombre de la base de datos de Factuzam.</td></tr>
+<tr><td><strong>Usuario</strong></td><td>Usuario de la base de datos.</td></tr>
+<tr><td><strong>Contraseña</strong></td><td>Clave del usuario de la base de datos.</td></tr>
+</tbody>
+</table>
+<p><strong>Botones del panel:</strong></p>
+<ul><li><strong>Probar Conexión</strong> — comprueba que los datos son correctos y que el servidor responde, sin necesidad de entrar.</li><li><strong>Configurar/cambiar credenciales del servidor</strong> (<code>...</code>) — utilidades avanzadas de administración de la conexión.</li></ul>
+<blockquote><p>Esta configuración normalmente la realiza <strong>una sola vez el instalador o
+administrador</strong>. Un usuario habitual no necesita tocarla. Si al arrancar
+aparece un error de conexión, avisa al administrador antes de cambiar
+nada aquí.</p></blockquote>
+<hr>
+<h2 id="4-la-ventana-principal">4. La ventana principal</h2>
+<p>Tras validar el login se muestra la ventana principal de Factuzam, con:</p>
+<p><img src="../img/00-principal.png" alt="Ventana principal" loading="lazy"></p>
+<ul><li>La <strong>barra de menú</strong> en la parte superior (Archivo, Compras, Ventas Mayor, Caja, Almacén, Otros, Verifactu, Ayuda). Es el eje de navegación de toda la aplicación y la estructura que sigue este manual.</li><li>Un <strong>área de trabajo con pestañas</strong>: cada opción de menú que abres se carga como una pestaña dentro de la ventana principal, de modo que puedes tener varias pantallas abiertas a la vez y cambiar entre ellas con la combinación de teclas Control + Tab.</li><li>Una <strong>barra de estado</strong> inferior con información de contexto (usuario, empresa activa, versión…).</li></ul>
+<h3 id="como-se-abren-las-pantallas">Cómo se abren las pantallas</h3>
+<p>Cuando eliges una opción de menú, la aplicación abre la pantalla de
+mantenimiento correspondiente <strong>como una pestaña nueva</strong> (o reutiliza la
+que ya esté abierta). Algunas pantallas admiten <strong>varias instancias
+simultáneas</strong> (verás un número junto al título, p. ej. <em>Clientes 2</em>).</p>
+<blockquote><p>El funcionamiento interno de cada pantalla (lista, ficha, búsqueda,
+navegación, grabado…) es <strong>común a casi todos los mantenimientos</strong> y se
+explica una sola vez en el capítulo
+<a href="01-conceptos-comunes.html">01 · Conceptos comunes</a>. Conviene leerlo antes
+de los capítulos de cada menú.</p></blockquote>
+<hr>
+<h2 id="5-practica-en-programa-demo-datos-basicos">5. Práctica en programa DEMO: datos básicos</h2>
+<p>Después de entrar con tu usuario propio, usa la demo para preparar un
+entorno mínimo de pruebas. La idea es crear pocos registros, pero bien
+relacionados, para poder comprar, vender y revisar stock sin depender de
+datos reales.</p>
+<blockquote><p>En la demo puedes probar sin miedo, pero conviene seguir este orden:
+primero datos de administración, después catálogos de tallas/colores y,
+al final, artículos y documentos.</p></blockquote>
+<h3 id="51-empresas-documentos-y-formas-de-pago">5.1 Empresas, documentos y formas de pago</h3>
+<ol><li>Abre <em>Archivo ▸ Empresas</em> y crea o revisa una empresa de prueba. Rellena los datos fiscales básicos y entra en la sub-pestaña <strong>Series</strong> para definir las series de facturación que usarán los documentos.</li><li>Abre <em>Otros ▸ Impuesto IVA</em> y <em>Otros ▸ Grupos de IVA</em>. En una demo normalmente basta con revisar los tipos existentes antes de tocar nada.</li><li>Abre <em>Otros ▸ Contadores</em> y comprueba la numeración inicial de facturas, albaranes, pedidos y otros documentos por empresa y serie.</li><li>Abre <em>Otros ▸ Formas de pago documentos</em> y crea las formas habituales para compras y ventas mayor: contado, transferencia, giro, etc.</li><li>Si más adelante se va a probar el TPV, deja previstas también las formas de cobro de caja: efectivo, tarjeta, vale o las que necesites.</li></ol>
+<h3 id="52-almacenes-y-cajas-de-venta">5.2 Almacenes y cajas de venta</h3>
+<ol><li>Abre <em>Archivo ▸ Almacenes</em> y crea al menos un almacén de venta. Rellena su nombre, dirección si procede y los usos del almacén.</li><li>En la sub-pestaña <strong>Cajas de Venta</strong>, crea las cajas físicas asociadas a ese almacén. Cada caja representa un puesto, mostrador o terminal de venta dentro del almacén.</li><li>Si hay varios puestos de cobro, crea una caja por puesto para poder separar después las operaciones, arqueos y movimientos de efectivo.</li><li>En una práctica sencilla basta con un almacén de venta y una caja de venta activa.</li></ol>
+<h3 id="53-tallas-colores-temporadas-y-tarifas">5.3 Tallas, colores, temporadas y tarifas</h3>
+<ol><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Atributos básicos</em> y da de alta los valores elementales que vas a usar: tallas, colores y equivalencias normalizadas.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Tipos de Variaciones</em> y crea los ejes <strong>Talla</strong> y <strong>Color</strong>. En cada uno, añade sus atributos: S, M, L, XL, 38, 40, rojo, azul, negro, etc.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Colecciones de Atributos</em> y prepara los sistemas de tallas reutilizables, por ejemplo <em>Mujer S-XL</em>, <em>Calzado 36-41</em> o <em>Niño 2-16</em>. Así podrás aplicarlos a varios artículos sin repetir la misma curva.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Propiedades</em> y crea la propiedad <strong>Temporada</strong> con valores como <em>Primavera-Verano</em>, <em>Otoño-Invierno</em> o el año/campaña que uses en la prueba.</li><li>Abre <em>Archivo ▸ Tablas Auxiliares ▸ Tarifas</em> y crea una tarifa de venta de prueba. Más adelante, al crear artículos o sesiones de compra, asignarás precios a esa tarifa.</li></ol>
+<h3 id="54-articulos-de-prueba-y-primer-circuito">5.4 Artículos de prueba y primer circuito</h3>
+<ol><li>Abre <em>Archivo ▸ Artículos</em> y crea un artículo sencillo: descripción, familia, unidad de medida, IVA y tarifa.</li><li>En la ficha del artículo, usa las variaciones y colecciones para generar sus SKUs de talla/color. Cada SKU representa una combinación vendible y con stock propio.</li><li>Para probar una entrada real de género, abre <em>Compras ▸ Sesiones</em>. Ahí puedes crear artículos con colores y tallas, repartir unidades por talla y generar el pedido o albarán de compra.</li><li>Comprueba el resultado en <em>Almacén ▸ Informes</em> o en la consulta de stock del artículo. Con esto quedan preparados los datos básicos para probar después compras, ventas o movimientos.</li></ol>
+<p>Cuando termines esta práctica, tendrás creados los datos básicos mínimos:
+empresa, documentos, almacén, caja, tallas, colores, sistemas de tallas,
+temporadas, tarifas y artículos de prueba.</p>
+<hr>
+<p><a href="index.html">◀ Índice</a> · <a href="01-conceptos-comunes.html">Siguiente ▶ Conceptos comunes</a></p>
+</article>
+<footer>Manual de Factuzam · generat el 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

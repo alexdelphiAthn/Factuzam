@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>02 · Menú Archivo — Factuzam 用户手册</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="菜单">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>用户手册</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="手册语言"><a class="enlace-idioma" href="../02-menu-archivo.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/02-menu-archivo.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/02-menu-archivo.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma activo" href="02-menu-archivo.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">首页</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · 访问与入门</a></li><li><a href="01-conceptos-comunes.html">01 · 通用概念</a></li><li class="activo"><a href="02-menu-archivo.html">02 · 文件菜单</a></li><li><a href="03-menu-compras.html">03 · 采购菜单</a></li><li><a href="04-menu-ventas-mayor.html">04 · 批发销售菜单</a></li><li><a href="05-menu-caja.html">05 · POS 菜单</a></li><li><a href="06-menu-almacen.html">06 · 仓库菜单</a></li><li><a href="07-menu-otros.html">07 · 其他菜单</a></li><li><a href="08-menu-ayuda.html">08 · 帮助菜单</a></li><li><a href="09-instalacion-windows.html">09 · Windows 安装</a></li><li><a href="10-migracion-legacy.html">10 · 从旧版迁移</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · 更改与新功能</a></li><li><a href="13-aplicaciones-moviles.html">13 · 移动应用</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · 架构与开发</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop 集成</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="zh-CN"><strong>翻译待完成。</strong>本章暂未提供中文版本，现显示西班牙语版本。</aside>
+<h1 id="02-menu-archivo">02 · Menú Archivo</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Archivo</strong> contiene los <strong>datos maestros</strong> del negocio: la
+información estable sobre la que se apoyan todos los documentos (empresas,
+almacenes, clientes, proveedores, artículos) y las <strong>tablas auxiliares</strong>
+que los clasifican. Es el primer menú que se configura al poner en marcha
+la aplicación.</p>
+<blockquote><p>Recuerda: todas estas pantallas comparten el funcionamiento descrito en
+<a href="01-conceptos-comunes.html">01 · Conceptos comunes</a> (lista, ficha,
+navegador, búsqueda, grabar/cancelar). Aquí se describe solo lo propio de
+cada una.</p></blockquote>
+<p>Estructura del menú:</p>
+<pre><code>Archivo
+├── Empresas
+├── Almacenes
+├── Clientes
+├── Proveedores
+├── Artículos
+├── Tablas Auxiliares
+│   ├── Tarifas
+│   ├── Familias
+│   ├── Paises
+│   ├── Unidades de Medida
+│   ├── Propiedades
+│   ├── Tipos de Variaciones
+│   ├── Colecciones de Atributos
+│   └── Atributos básicos
+├── Invocar login
+└── Salir</code></pre>
+<hr>
+<h2 id="empresas">Empresas</h2>
+<p><img src="../img/02-empresas.png" alt="Ficha de Empresas con sus sub-pestañas (Series, Retenciones, Certificado)" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[E]</code></p>
+<p>Mantiene las <strong>empresas emisoras</strong> que facturan desde Factuzam (puede haber
+más de una). Cada empresa concentra sus datos fiscales y la configuración
+de facturación. Todas ellas comparten artículos/familias/clientes...</p>
+<p><strong>Datos principales:</strong> Código, Orden, Activo, Razón Social, NIF, dirección
+completa (dirección, población, provincia, código postal), Móvil, Email.</p>
+<p><strong>Datos fiscales y de facturación</strong> (en sub-pestañas):</p>
+<ul><li><strong>Más datos</strong> — contacto y datos complementarios.</li><li><strong>Retenciones</strong> — código y <strong>% de retención</strong> aplicable; marca <em>Aplica Retenciones</em> y <em>Es REAGP</em> (Régimen Especial Agricultura, Ganadería y Pesca).</li><li><strong>Series</strong> — <strong>series de numeración</strong> de los documentos de la empresa (puedes añadir varias series de facturación).</li><li><strong>Bancos</strong> — cuentas bancarias propias de la empresa. Se usan para preseleccionar la cuenta de <strong>cobro</strong> en recibos de cliente y la cuenta de <strong>pago</strong> en efectos/remesas de proveedor.</li><li><strong>Certificado / Verifactu</strong> — <em>Número de Serie</em> y <em>Tipo de Certificado</em> para la firma y el envío de facturas al sistema <strong>Verifactu (AEAT)</strong> y para la emisión de eDoc firmado cuando corresponda.</li><li><strong>Texto en Factura</strong> — texto legal que se imprimirá en los documentos.</li><li><strong>Zona de IVA principal</strong> — régimen de IVA por defecto de la empresa.</li></ul>
+<p><img src="../img/02-empresas-bancos.png" alt="Pestaña Bancos de Empresas" loading="lazy"></p>
+<blockquote><p>La configuración correcta de <strong>NIF, series y certificado</strong> es
+imprescindible para emitir facturas válidas y para la integración con
+Verifactu. Si tienes dudas fiscales, consúltalas con tu asesoría antes de
+facturar.</p></blockquote>
+<hr>
+<h2 id="almacenes">Almacenes</h2>
+<p><img src="../img/02-almacenes.png" alt="Ficha de Almacenes" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[L]</code></p>
+<p>Mantiene los <strong>almacenes</strong> físicos o lógicos donde se ubica el stock. Cada
+movimiento de stock, inventario o documento de mercancía referencia un
+almacén.</p>
+<p>La casilla <strong>En web</strong> indica si un almacén estándar, activo y físico puede
+aportar stock a la tienda online de su empresa. Para cada perfil PrestaShop se
+suman únicamente los almacenes <strong>En web</strong> que pertenecen a la empresa
+configurada; los de otra empresa, taras y depósitos quedan fuera. Consulta
+<a href="15-integracion-prestashop.html#almacenes">Integración con PrestaShop</a>.</p>
+<p>Sub-pestañas de la ficha:</p>
+<ul><li><strong>Dirección física</strong> — ubicación del almacén.</li><li><strong>Cajas de Venta</strong> — cajas/TPV asociadas a este almacén (relación almacén ↔ caja para el módulo Caja).</li><li><strong>Usos Almacén</strong> — para qué se usa el almacén (venta, depósito, etc.).</li><li><strong>Otros</strong> — datos complementarios.</li></ul>
+<hr>
+<h2 id="clientes">Clientes</h2>
+<p><img src="../img/02-clientes.png" alt="Ficha de Clientes con los indicadores fiscales" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[K]</code></p>
+<p>Mantiene la <strong>ficha de clientes</strong> a quienes se vende y factura.</p>
+<p><strong>Datos generales:</strong> Código, Activo, Razón Social, NIF/CIF, teléfonos
+(móvil y fijo), Email, dirección completa, País, Observaciones, Referencia,
+Contacto y teléfono de contacto, Nº de cuenta.</p>
+<p><strong>Datos fiscales</strong> que determinan cómo se calcula cada factura del cliente:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Efecto</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Forma de pago por defecto</strong></td><td>Se propone automáticamente en sus documentos.</td></tr>
+<tr><td><strong>Banco cobro</strong></td><td>Cuenta de la empresa que se propone al generar recibos de cobro para este cliente.</td></tr>
+<tr><td><strong>Aplicar RE</strong></td><td>Aplica <strong>Recargo de Equivalencia</strong>.</td></tr>
+<tr><td><strong>Aplicar Retenciones</strong></td><td>Aplica retención de IRPF.</td></tr>
+<tr><td><strong>Tiene IVA exento</strong></td><td>El cliente no soporta IVA.</td></tr>
+<tr><td><strong>Es Intracomunitario</strong></td><td>Operación intracomunitaria (IVA 0 con condiciones).</td></tr>
+<tr><td><strong>Es Agricultor</strong></td><td>Régimen especial agrario.</td></tr>
+<tr><td><strong>Razón Social Fiscal</strong></td><td>Nombre fiscal si difiere del comercial.</td></tr>
+<tr><td><strong>Texto Legal Factura</strong></td><td>Texto específico para las facturas de este cliente.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Estos indicadores afectan directamente al <strong>cálculo de impuestos</strong> en
+ventas. Configúralos con cuidado al dar de alta el cliente.</p></blockquote>
+<p><strong>Parámetros eDoc:</strong> esta pestaña guarda los datos necesarios para emitir
+un fichero Facturae firmado desde Ventas Mayor:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Para qué sirve</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Oficina contable</strong></td><td>Código DIR3 de la oficina contable del cliente público.</td></tr>
+<tr><td><strong>Órgano gestor</strong></td><td>Código DIR3 del órgano gestor.</td></tr>
+<tr><td><strong>Unidad tramitadora</strong></td><td>Código DIR3 de la unidad tramitadora.</td></tr>
+<tr><td><strong>Nombre persona física</strong></td><td>Nombre cuando el receptor es persona física.</td></tr>
+<tr><td><strong>Apellidos persona física</strong></td><td>Apellidos cuando el receptor es persona física.</td></tr>
+</tbody>
+</table>
+<p>Estos datos se copian como foto a cada borrador de venta mayor al elegir el
+cliente. Si una factura concreta necesita otro valor, se corrige en la
+pestaña <strong>Parámetros eDoc</strong> del propio borrador.</p>
+<hr>
+<h2 id="proveedores">Proveedores</h2>
+<p><img src="../img/02-proveedores.png" alt="Ficha de Proveedores" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[P]</code></p>
+<p>Mantiene la <strong>ficha de proveedores</strong> a quienes se compra mercancía.
+Estructura análoga a Clientes, orientada a compras.</p>
+<p>Sub-pestañas de la ficha:</p>
+<ul><li><strong>Domicilio fiscal</strong> — datos fiscales y de dirección.</li><li><strong>Artículos</strong> — artículos que suministra el proveedor (con sus referencias y precios de compra).</li><li><strong>Ventas</strong> — histórico/relación comercial.</li><li><strong>Más datos</strong> y <strong>Otros</strong> — información complementaria.</li><li><strong>Compras</strong> — <strong>parámetros por defecto para las sesiones de compra</strong> de este proveedor (ver abajo).</li><li><strong>Pagos</strong> — forma de pago habitual y banco de la empresa desde el que se pagarán sus efectos o remesas.</li></ul>
+<h3 id="pestana-compras-parametros-de-compra-del-proveedor">Pestaña Compras (parámetros de compra del proveedor)</h3>
+<p>Concentra valores que se <strong>proponen automáticamente</strong> cuando creas una
+<a href="03-menu-compras.html">sesión de compra</a> para este proveedor, para no
+repetirlos en cada entrada de género.</p>
+<p><img src="../img/02-proveedores-compras.png" alt="Pestaña Compras del proveedor: margen, sistema de tallas y kits" loading="lazy"></p>
+<p><strong>Defectos para sesiones de compra:</strong></p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Para qué sirve</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Margen %</strong></td><td>Margen comercial habitual de este proveedor. Al elegirlo en una sesión de compra, se copia como margen de la sesión y sirve para <strong>calcular el precio de venta</strong> a partir del precio de compra.</td></tr>
+</tbody>
+</table>
+<blockquote><p>Estos valores solo <strong>se proponen</strong>; siempre puedes cambiarlos dentro de
+la sesión. Solo se copian si el proveedor los tiene rellenos.</p></blockquote>
+<p><strong>Kits de cantidades por talla:</strong></p>
+<p>Un <strong>kit</strong> es una <strong>plantilla de reparto de unidades por talla</strong> que se
+repite a menudo con ese proveedor (por ejemplo, un surtido <em>1-2-2-1</em> en
+<em>S-M-L-XL</em>). Aquí se mantiene la <strong>biblioteca de kits</strong> del proveedor para
+luego aplicarlos de un clic en las sesiones de compra.</p>
+<p>La pestaña tiene dos rejillas: la de <strong>kits</strong> (cabecera) y la de <strong>tallas
+del kit</strong> (detalle).</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Acción</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>+ Kit / − Kit</strong></td><td>Crea o borra un kit. Cada kit tiene <strong>Código</strong>, <strong>Nombre</strong>, <strong>Sistema de tallas</strong> y <strong>Descripción</strong>.</td></tr>
+<tr><td><strong>Tallas del sistema</strong></td><td>Rellena el detalle del kit con <strong>una fila por cada talla</strong> del sistema de tallas elegido (todas con cantidad 0), listas para teclear las unidades.</td></tr>
+<tr><td><strong>+ Talla / − Talla</strong></td><td>Añade o quita filas de talla del kit a mano.</td></tr>
+</tbody>
+</table>
+<p>Cada línea de detalle es una <strong>Talla</strong> con su <strong>Cantidad</strong> y un <strong>Orden</strong>
+de presentación.</p>
+<blockquote><p><strong>Cómo se usan los kits:</strong> dentro de una sesión de compra, sobre la línea
+de un artículo, el botón <strong>Aplicar kit</strong> vuelca las cantidades del kit en
+la matriz de tallas de esa línea. Así, en lugar de teclear talla a talla,
+aplicas el surtido completo de golpe. Es ideal cuando el proveedor sirve
+packs con un reparto de tallas estándar.</p></blockquote>
+<h3 id="pestana-pagos">Pestaña Pagos</h3>
+<p>Permite indicar los valores que se propondrán al registrar facturas de
+compra de este proveedor:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Para qué sirve</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Forma de pago</strong></td><td>Se copia a la factura de compra y define los vencimientos al generar efectos.</td></tr>
+<tr><td><strong>Banco para pagos (empresa)</strong></td><td>Cuenta propia de la empresa que se preselecciona al generar efectos o incluirlos en remesas.</td></tr>
+</tbody>
+</table>
+<p><img src="../img/02-proveedores-pagos.png" alt="Pestaña Pagos del proveedor" loading="lazy"></p>
+<hr>
+<h2 id="articulos">Artículos</h2>
+<p><img src="../img/02-articulos.png" alt="Ficha de Artículos con la pestaña SKUs" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[A]</code></p>
+<p>Es la pantalla central del catálogo. Mantiene los <strong>artículos</strong> y sus
+variantes (las distintas tallas/colores se denominan <strong>SKU</strong>).</p>
+<p>Sub-pestañas de la ficha:</p>
+<ul><li><strong>General</strong> — datos básicos: descripción, familia, unidad de medida, IVA, etc.</li><li><strong>SKUs</strong> — las <strong>variantes</strong> del artículo (combinaciones de talla, color u otros atributos). Cada SKU es una referencia vendible con su propio stock y código de barras. Existe un asistente para <strong>generar SKUs</strong> a partir de las variaciones definidas.</li><li><strong>Propiedades</strong> — propiedades descriptivas asignadas al artículo. Algunas propiedades pueden informarse por <strong>artículo</strong>, por <strong>color</strong> o por <strong>SKU</strong>; si un color tiene una temporada distinta, el informe de stock y las búsquedas usan la temporada efectiva de ese color.</li><li><strong>CB</strong> — <strong>códigos de barras</strong> del artículo y sus SKUs.</li><li><strong>Tarifas</strong> — precios del artículo en las distintas tarifas.</li><li><strong>Proveedores</strong> — proveedores que lo suministran y sus referencias.</li></ul>
+<p>Desde la lista/ficha puedes además consultar <strong>stock</strong> y la <strong>foto</strong> del
+artículo con los botones del navegador.</p>
+<p>La casilla <strong>En web</strong> hace que el artículo sea elegible para la integración y
+encola su comprobación; no equivale por sí sola a publicarlo. Según los checks
+del perfil efectivo, Factuzam puede sincronizar un producto existente, crear
+completo e inactivo uno que no exista y, si se ha autorizado expresamente,
+activarlo solo al final de un proceso correcto.</p>
+<p>Al quitar <strong>En web</strong>, un diálogo permite desactivar el producto remoto, dejar
+únicamente de sincronizarlo o cancelar el cambio. Ninguna de esas decisiones
+borra el producto. El comportamiento completo, los permisos y las cautelas de
+stock se describen en
+<a href="15-integracion-prestashop.html#articulos">Integración con PrestaShop ▸ Artículos</a>.</p>
+<p>Solo los usuarios con el permiso <strong>Permisos ▸ Artículos ▸ Activar/desactivar
+web</strong> pueden cambiar esta casilla.</p>
+<p>La gestión de fotos trabaja a nivel artículo o SKU/color. Si un SKU no
+tiene foto propia, hereda la del nivel más cercano disponible. Las fotos
+se pueden usar también en tickets, listados y balances.</p>
+<blockquote><p>El concepto de <strong>SKU</strong> (variante de talla/color) es clave en Factuzam:
+el stock, los precios y los códigos de barras se llevan a nivel de SKU,
+no solo de artículo.</p></blockquote>
+<hr>
+<h2 id="tablas-auxiliares">Tablas Auxiliares</h2>
+<p>Submenú con los <strong>catálogos de apoyo</strong> que clasifican y describen a los
+artículos. Conviene definirlos <strong>antes</strong> de cargar el catálogo de
+artículos.</p>
+<h3 id="tarifas">Tarifas</h3>
+<p><img src="../img/02-tarifas.png" alt="Mantenimiento de Tarifas con los precios por artículo" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[T]</code></p>
+<p>Define las <strong>listas de precios</strong> (tarifa general, ofertas, mayoristas…).
+Cada tarifa contiene los precios de los artículos.</p>
+<p>La tarifa elegida en la configuración de PrestaShop proporciona el precio
+web. Los precios de SKU se convierten en impactos sobre el precio base; se
+explica en <a href="15-integracion-prestashop.html#6-precios-de-producto-y-de-sku">Precios de producto y de SKU</a>.</p>
+<ul><li><strong>Artículos</strong> — precios de cada artículo/SKU en esta tarifa. Incluye utilidades para <strong>añadir precios</strong> en bloque y <strong>calcular márgenes</strong>.</li><li><strong>Otros</strong> — parámetros de la tarifa (vigencia, redondeos, etc.).</li><li><strong>Dto. desde / Dto. hasta</strong> — ventana de fechas en la que se aplican los descuentos de la tarifa. Fuera de esa ventana, se cobra el precio de salida sin descuento aunque la línea de tarifa tenga descuento informado.</li></ul>
+<p>El botón <strong>Sesiones cambios</strong> abre una pantalla para preparar cambios
+masivos de precios, revisar las líneas calculadas y aplicarlas a la tarifa
+destino cuando estén validadas.</p>
+<p><img src="../img/02-tarifas-cambios.png" alt="Sesión de cambios de tarifa" loading="lazy"></p>
+<h3 id="familias">Familias</h3>
+<p><img src="../img/02-familias.png" alt="Mantenimiento de Familias" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[N]</code></p>
+<p><strong>Clasificación jerárquica</strong> de los artículos (familias y subfamilias).
+Permite agrupar el catálogo para informes, filtros y precios.</p>
+<p>En un alta web autorizada, esta jerarquía se convierte en categorías de
+PrestaShop bajo la raíz configurada. El perfil decide cuántos niveles locales
+se conservan y la integración resuelve cada categoría dentro de su padre, no
+solo por el nombre visible. Consulta
+<a href="15-integracion-prestashop.html#8-familias-y-categorias">Integración con PrestaShop ▸ Familias y categorías</a>.</p>
+<ul><li><strong>Más Datos</strong> — datos de la familia.</li><li><strong>Artículos</strong> — artículos pertenecientes a la familia.</li><li><strong>Propiedades Artículos</strong> — propiedades que heredan los artículos de la familia.</li><li><strong>Otros</strong>.</li></ul>
+<h3 id="paises">Paises</h3>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[L]</code></p>
+<p>Catálogo de <strong>países</strong> usado en las direcciones de clientes, proveedores y
+empresas (y para la clasificación fiscal intracomunitaria/extracomunitaria).</p>
+<h3 id="unidades-de-medida">Unidades de Medida</h3>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[U]</code></p>
+<p>Catálogo de <strong>unidades</strong> en que se compran/venden los artículos (unidad,
+par, caja, metro, kilo…).</p>
+<p>Cada unidad define los <strong>decimales</strong> que se muestran y se admiten al
+vender o mover stock. Por ejemplo, una unidad <code>Uds</code> puede trabajar sin
+decimales y una unidad <code>m</code> puede trabajar con dos decimales para telas.</p>
+<h3 id="propiedades">Propiedades</h3>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[Y]</code></p>
+<p>Define <strong>propiedades descriptivas</strong> de artículos (p. ej. <em>Material</em>,
+<em>Temporada</em>) y sus <strong>valores disponibles</strong>.</p>
+<ul><li><strong>Valores Disponibles</strong> — lista de valores posibles de la propiedad.</li><li><strong>Artículos</strong> — artículos que usan esta propiedad.</li></ul>
+<h3 id="tipos-de-variaciones">Tipos de Variaciones</h3>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[T]</code></p>
+<p>Define los <strong>ejes de variación</strong> que generan SKUs (p. ej. <em>Talla</em>,
+<em>Color</em>) y sus atributos.</p>
+<ul><li><strong>Atributos</strong> — valores de la variación (S, M, L, XL… o la gama de colores).</li><li><strong>Artículos</strong> — artículos que usan este tipo de variación.</li><li><strong>Otros</strong>.</li></ul>
+<h3 id="colecciones-de-atributos">Colecciones de Atributos</h3>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[S]</code></p>
+<p>Define <strong>conjuntos reutilizables de atributos</strong> (p. ej. una colección de
+tallas estándar) que luego se aplican a varios artículos para generar sus
+SKUs sin redefinirlos cada vez.</p>
+<ul><li><strong>Valores</strong> — atributos que componen la colección.</li><li><strong>Artículos</strong> — artículos que la utilizan.</li><li><strong>Otros</strong>.</li></ul>
+<h3 id="atributos-basicos">Atributos básicos</h3>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[B]</code></p>
+<p>Catálogo de los <strong>atributos elementales</strong> (los valores individuales de
+talla, color, etc.) que componen las variaciones y colecciones.</p>
+<p>Además del valor visible, cada atributo puede enlazarse con un
+<strong>atributo básico</strong> o equivalente estándar: color normalizado, medida en
+centímetros, paleta HEX, etc. Factuzam lo resuelve por prioridad:
+artículo, conjunto y valor global. Esto permite que el mismo texto de
+proveedor tenga equivalencias distintas según el artículo.</p>
+<blockquote><p><strong>Orden recomendado de configuración del catálogo:</strong>
+Unidades de Medida y Países → Familias → Atributos básicos → Tipos de
+Variaciones / Colecciones de Atributos → Propiedades → Tarifas →
+finalmente, los <strong>Artículos</strong> y sus SKUs.</p></blockquote>
+<hr>
+<h2 id="invocar-login">Invocar login</h2>
+<p><strong>Atajo de menú:</strong> <code>[Shift]+[Ctrl]+[L]</code></p>
+<p>Vuelve a mostrar la ventana de <strong>Login</strong> sin cerrar la aplicación. Sirve
+para <strong>cambiar de usuario</strong> (por ejemplo, que entre otra persona con su
+perfil) sin reiniciar el programa.</p>
+<hr>
+<h2 id="salir">Salir</h2>
+<p><strong>Atajo de menú:</strong> <code>[Alt]+[F4]</code></p>
+<p><strong>Cierra la aplicación.</strong> Si hay cambios sin guardar, la aplicación avisará
+antes de salir.</p>
+<hr>
+<p><a href="01-conceptos-comunes.html">◀ Conceptos comunes</a> · <a href="index.html">Índice</a> · <a href="03-menu-compras.html">Siguiente ▶ Menú Compras</a></p>
+</article>
+<footer>Factuzam 用户手册 · 生成于 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

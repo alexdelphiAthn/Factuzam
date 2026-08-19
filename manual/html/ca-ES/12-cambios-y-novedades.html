@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="ca-ES">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12 · Canvis i novetats — Manual de Factuzam</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual d'usuari</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Idioma del manual"><a class="enlace-idioma" href="../12-cambios-y-novedades.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/12-cambios-y-novedades.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma activo" href="12-cambios-y-novedades.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)" aria-current="page"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/12-cambios-y-novedades.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Inici</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Accés i primers passos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptes comuns</a></li><li><a href="02-menu-archivo.html">02 · Menú Fitxer</a></li><li><a href="03-menu-compras.html">03 · Menú Compres</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Vendes majoristes</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Magatzem</a></li><li><a href="07-menu-otros.html">07 · Menú Altres</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ajuda</a></li><li><a href="09-instalacion-windows.html">09 · Instal·lació a Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migració des del sistema anterior</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li class="activo"><a href="12-cambios-y-novedades.html">12 · Canvis i novetats</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicacions mòbils</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura i desenvolupament</a></li><li><a href="15-integracion-prestashop.html">15 · Integració amb PrestaShop</a></li></ul>
+</nav>
+<main>
+<article lang="ca-ES">
+
+<h1 id="12-cambios-y-novedades">12 · Canvis i novetats</h1>
+<p><a href="index.html">◀ Tornar a l'índex</a></p>
+<p>Aquest capítol separa les <strong>novetats recents</strong> de les funcions que ja
+han quedat incorporades al manual normal. Per aprendre l'ús diari,
+entra sempre al capítol de menú corresponent; aquesta pàgina només és
+un mapa ràpid de canvis.</p>
+<blockquote><p><strong>Revisió documental:</strong> 19/08/2026. Que una funció figuri en aquest mapa no
+substitueix la comprovació de la versió instal·lada ni del seu estat de
+validació per a producció.</p></blockquote>
+<hr>
+<h2 id="novedades-recientes">Novetats recents</h2>
+<table>
+<thead><tr>
+<th>Novetat</th>
+<th>On veure-ho</th>
+</tr></thead>
+<tbody>
+<tr><td>Importació manual de comandes de <strong>PrestaShop</strong>, amb alta controlada de clients i articles i ports com a servei <code>GASTOS_T</code> amb IVA normal i sense moviment d'estoc. El seu ús continua limitat al laboratori i a una única destinació controlada.</td><td><a href="04-menu-ventas-mayor.html#importar-pedidos-de-prestashop">Ventas Mayor ▸ Pedidos</a> · <a href="15-integracion-prestashop.html">Integració amb PrestaShop</a></td></tr>
+<tr><td>Menú centralitzat <strong>Otros ▸ Colas de envíos</strong> per supervisar Verifactu, PrestaShop i Web Service Fzam des de la seva ruta real.</td><td><a href="07-menu-otros.html#colas-de-envios">Otros ▸ Colas de envíos</a></td></tr>
+<tr><td>Cua de <strong>Web Service Fzam</strong> amb esdeveniments de venda i PDF, estats, historial HTTP, reintents exponencials i accés al document associat.</td><td><a href="07-menu-otros.html#web-service-fzam">Otros ▸ Colas de envíos ▸ Web Service Fzam</a></td></tr>
+<tr><td><strong>Histórico de Solicitudes de Traspaso</strong> amb quantitats servides/no servides, motius, traspassos i moviments d'estoc relacionats.</td><td><a href="05-menu-caja.html#historico-de-solicitudes-de-traspaso">TPV ▸ Histórico de Solicitudes de Traspaso</a></td></tr>
+<tr><td><strong>Facturas proforma</strong> per període: proforma interna no fiscal de vendes VE o esborranys de Venta Mayor per a traspassos TA.</td><td><a href="05-menu-caja.html#facturas-proforma">TPV ▸ Facturas proforma</a></td></tr>
+<tr><td><strong>Procesos auxiliares BBDD</strong> per inspeccionar l'estructura SQL i el contingut de les taules.</td><td><a href="07-menu-otros.html#procesos-auxiliares-bbdd">Otros ▸ Procesos auxiliares BBDD</a></td></tr>
+<tr><td><code>[F1]</code> canvia la presentació de línies entre Auto/desglose, SKU i els modes de talles; el cicle s'adapta a cada tipus de document.</td><td><a href="01-conceptos-comunes.html#cambiar-la-presentacion-de-las-lineas-con-f1">Conceptes comuns ▸ Modes de línies amb F1</a></td></tr>
+<tr><td>Comandes de compra amb recepció parcial per línia o talla, <strong>Recibir Todo</strong>, bandes Pedido/A recibir/Pendiente i incorporació a un albarà existent.</td><td><a href="03-menu-compras.html#pedidos">Compras ▸ Pedidos</a></td></tr>
+<tr><td><strong>Consulta de stocks de Factuzam</strong> amb <code>[Ctrl]+[U]</code>: existències i pendents per color, talla i magatzem, estats desglossats, fotos relacionades i enviament a Documentos de Trabajo.</td><td><a href="08-menu-ayuda.html#consulta-de-stocks">Ayuda ▸ Consulta de stocks</a></td></tr>
+<tr><td>Aplicació Android <strong>Factuzam Fotos Nube</strong> per capturar fotos per article/color, posar-les en cua i pujar-les per lots al servidor.</td><td><a href="13-aplicaciones-moviles.html#factuzam-fotos-nube-fotografiar-articulos-desde-android">Aplicacions mòbils ▸ Fotos Nube</a></td></tr>
+<tr><td><strong>Administració d'errors enviats al suport</strong>: evidències protegides, conversa, seguiment per usuari i propostes verificades de script o actualització.</td><td><a href="08-menu-ayuda.html#envio-de-errores-administracion-y-seguimiento">Ayuda ▸ Envío de errores</a></td></tr>
+<tr><td>Interfície traduïble des d'un catàleg central, paquets descarregables <code>en-GB</code>, <code>ca-ES</code> i <code>zh-CN</code>, alternativa en espanyol i editor independent de traduccions.</td><td><a href="07-menu-otros.html#idioma-y-traducciones">Otros ▸ Parámetros del entorno ▸ Apariencia ▸ Idioma</a></td></tr>
+<tr><td>Rectificació de tiquets <strong>per diferències</strong> o mitjançant document <strong>substitutiu</strong>, amb traçabilitat fiscal i tractament coherent de vendes i estoc.</td><td><a href="05-menu-caja.html#rectificar-un-ticket-por-diferencias-o-sustitutiva">TPV ▸ Rectificar un ticket</a></td></tr>
+<tr><td>Sessions de compra amb <strong>foto provisional</strong>, vista prèvia i migració automàtica de la imatge a l'article o SKU materialitzat.</td><td><a href="03-menu-compras.html#7-fotos-de-la-sesion">Compras ▸ Fotos de la sesión</a></td></tr>
+<tr><td>Aplicació mòbil <strong>VentasFzam</strong> per consultar vendes del dia, fotografies, cost, marge i descomptes sense modificar dades.</td><td><a href="13-aplicaciones-moviles.html#ventasfzam-ventas-del-dia-en-el-movil">Aplicacions mòbils ▸ VentasFzam</a></td></tr>
+<tr><td>Arquitectura per capes, aplicació progressiva de SOLID i catàleg de consultes SQL revisables i configurables amb validació i fallback.</td><td><a href="14-arquitectura-y-desarrollo.html">Arquitectura i desenvolupament</a></td></tr>
+<tr><td><strong>Listado de operaciones de venta del TPV</strong> per dates, amb color bàsic visual i selecció acumulativa d'empreses/magatzems/caixes quan l'usuari no està restringit.</td><td><a href="05-menu-caja.html#listados">TPV ▸ Listados</a></td></tr>
+<tr><td><strong>Documentos de Trabajo</strong>: llistes d'articles/SKUs per compartir, imprimir etiquetes i enviar a albarà, TPV, inventari o canvi de tarifes.</td><td><a href="06-menu-almacen.html#documentos-de-trabajo">Almacén ▸ Documentos de Trabajo</a></td></tr>
+<tr><td><strong>Búsqueda de datos de artículos</strong> amb <code>[Ctrl]+[E]</code> des de qualsevol finestra: per talla, color, proximitat de paleta, estoc i perfils desats.</td><td><a href="01-conceptos-comunes.html#busqueda-de-datos-de-articulos-ctrle">Conceptes comuns ▸ Búsqueda de datos de artículos</a></td></tr>
+<tr><td><strong>Compte de client al TPV</strong> (F2): càrrega de dipòsits i abonaments a compte, cancel·lació per signe i repartiment del cobrament parcial en dipòsits.</td><td><a href="05-menu-caja.html#ventas-f5-la-pantalla-de-venta">TPV ▸ Ventas</a></td></tr>
+<tr><td><strong>Llistat d'efectes de pagament</strong> amb filtres per venciment, proveïdor, banc/remesa, tipus i situació.</td><td><a href="03-menu-compras.html#listados-listado-de-efectos-de-pago">Compras ▸ Listados</a></td></tr>
+<tr><td>Menú <strong>Ayuda</strong> amb accés directe al <strong>manual web</strong> i al <strong>foro de soporte</strong>.</td><td><a href="08-menu-ayuda.html">Menú Ayuda</a></td></tr>
+<tr><td>Emissió d'eDoc Facturae signat des d'esborranys de venda major consolidats.</td><td><a href="04-menu-ventas-mayor.html#efectos-y-edoc-en-el-borrador">Ventas Mayor ▸ Borradores</a></td></tr>
+<tr><td>Paràmetres eDoc del client: DIR3 i dades de persona física.</td><td><a href="02-menu-archivo.html#clientes">Clientes</a></td></tr>
+<tr><td>Codi Facturae en formes de pagament per informar el mitjà de pagament oficial.</td><td><a href="07-menu-otros.html#formas-de-pago-documentos">Formas de pago documentos</a></td></tr>
+<tr><td>Efectes de cobrament a client i conciliació de venciments.</td><td><a href="04-menu-ventas-mayor.html#efectos-de-cobro">Efectos de cobro</a></td></tr>
+<tr><td>Remeses de cobrament, càrrega d'efectes i generació SEPA.</td><td><a href="04-menu-ventas-mayor.html#remesas-de-cobro">Remesas de cobro</a></td></tr>
+<tr><td>Factures/esborranys de compra creats des d'albarans i que es poden incorporar a un document existent.</td><td><a href="03-menu-compras.html#crear-borradores-de-albaranes">Compras ▸ Crear borradores de albaranes</a></td></tr>
+<tr><td>Migració de compres completa: comandes, albarans, devolucions, factures, efectes i remeses.</td><td><a href="10-migracion-legacy.html#2-que-datos-migra">Migració des de legacy</a></td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="incorporado-al-manual">Incorporat al manual</h2>
+<p>Les funcions següents ja no es tracten com a acabades d'afegir; queden
+classificades per la seva àrea de treball i documentades als capítols
+normals del manual.</p>
+<h3 id="archivo-y-catalogo">Archivo i catàleg</h3>
+<table>
+<thead><tr>
+<th>Funció incorporada</th>
+<th>On veure-ho</th>
+</tr></thead>
+<tbody>
+<tr><td>Comptes bancaris per empresa, amb marques de cobrament i pagament per defecte.</td><td><a href="02-menu-archivo.html#empresas">Empresas</a></td></tr>
+<tr><td>Banc de cobrament per defecte en clients.</td><td><a href="02-menu-archivo.html#clientes">Clientes</a></td></tr>
+<tr><td>Forma de pagament i banc de pagament per defecte en proveïdors.</td><td><a href="02-menu-archivo.html#proveedores">Proveedores</a></td></tr>
+<tr><td>Kits de quantitats per talla per a sessions de compra.</td><td><a href="02-menu-archivo.html#pestana-compras-parametros-de-compra-del-proveedor">Proveedores ▸ Compras</a></td></tr>
+<tr><td>Fotos per article, color o SKU, amb finestra flotant i descàrrega des del servidor.</td><td><a href="01-conceptos-comunes.html#foto-flotante-del-articulo-sku">Conceptes comuns ▸ Foto flotant</a></td></tr>
+<tr><td>Unitats de mesura amb decimals per unitat.</td><td><a href="02-menu-archivo.html#unidades-de-medida">Unidades de Medida</a></td></tr>
+<tr><td>Atributs bàsics i equivalències estàndard de color/talla.</td><td><a href="02-menu-archivo.html#atributos-basicos">Atributos básicos</a></td></tr>
+<tr><td>Sessions de canvis de tarifa i finestra de dates per a descomptes.</td><td><a href="02-menu-archivo.html#tarifas">Tarifas</a></td></tr>
+</tbody>
+</table>
+<h3 id="compras">Compras</h3>
+<table>
+<thead><tr>
+<th>Funció incorporada</th>
+<th>On veure-ho</th>
+</tr></thead>
+<tbody>
+<tr><td>Sessions de compra amb aplicació de kits i pestanya de proveïdor.</td><td><a href="03-menu-compras.html#sesiones-crear-articulos-y-un-pedido-o-un-albaran">Sesiones de compra</a></td></tr>
+<tr><td>Marca informativa <strong>Depósito</strong> en albarans de compra.</td><td><a href="03-menu-compras.html#albaranes">Albaranes de compra</a></td></tr>
+<tr><td>Devolucions a proveïdor com a document propi amb sortida d'estoc.</td><td><a href="03-menu-compras.html#devoluciones-a-proveedor">Devoluciones a Proveedor</a></td></tr>
+<tr><td>Esborranys de compra amb generació d'efectes.</td><td><a href="03-menu-compras.html#borradores">Borradores</a></td></tr>
+<tr><td>Efectes i remeses de pagament a proveïdor.</td><td><a href="03-menu-compras.html#efectos-de-pago">Efectos de pago</a></td></tr>
+</tbody>
+</table>
+<h3 id="ventas-y-caja">Vendes i Caja</h3>
+<table>
+<thead><tr>
+<th>Funció incorporada</th>
+<th>On veure-ho</th>
+</tr></thead>
+<tbody>
+<tr><td>Terminologia de <strong>Borradores</strong> abans del tancament fiscal.</td><td><a href="04-menu-ventas-mayor.html#borradores">Ventas Mayor ▸ Borradores</a></td></tr>
+<tr><td>Crear esborranys de venda des d'albarans per interval de dates.</td><td><a href="04-menu-ventas-mayor.html#albaranes">Albaranes de venta</a></td></tr>
+<tr><td>Esborranys simplificats de caixa i conversió a esborrany normal.</td><td><a href="05-menu-caja.html#borradores-simplificados">TPV ▸ Borradores Simplificados</a></td></tr>
+<tr><td>TPV amb foto, color/talla i dades de SKU en línies.</td><td><a href="05-menu-caja.html#ventas-f5-la-pantalla-de-venta">TPV ▸ Ventas</a></td></tr>
+<tr><td>Ampliació completa del flux de caixa: jornada, tiquets, vals, préstecs, traspassos, recompte i tira de caixa.</td><td><a href="05-menu-caja.html">TPV</a></td></tr>
+<tr><td>Detall de tots els paràmetres de Caja i del seu efecte operatiu actual.</td><td><a href="05-menu-caja.html#parametros-de-caja">TPV ▸ Parámetros de Caja</a></td></tr>
+<tr><td>Històric d'arqueigs des del TPV amb duplicat de tiquet/tancament.</td><td><a href="05-menu-caja.html#arqueo-f11">TPV ▸ Arqueo</a></td></tr>
+<tr><td>Informe A4 de l'històric d'arqueigs.</td><td><a href="05-menu-caja.html#historico-de-arqueos">TPV ▸ Histórico de Arqueos</a></td></tr>
+</tbody>
+</table>
+<h3 id="almacen-e-informes">Almacén i informes</h3>
+<table>
+<thead><tr>
+<th>Funció incorporada</th>
+<th>On veure-ho</th>
+</tr></thead>
+<tbody>
+<tr><td>Recompte mòbil d'inventaris mitjançant app Android i servidor pont.</td><td><a href="06-menu-almacen.html#recuento-movil">Inventarios ▸ Recuento móvil</a></td></tr>
+<tr><td>Balanç de magatzem horitzontal per talles, amb fotos, filtres, bandes i agrupacions.</td><td><a href="06-menu-almacen.html#balance-de-almacen-horizontal">Balance de Almacén Horizontal</a></td></tr>
+<tr><td>Balanç de magatzem sense talles per a tot el catàleg.</td><td><a href="06-menu-almacen.html#balance-de-almacen-sin-tallas">Balance de Almacén sin tallas</a></td></tr>
+<tr><td>Moviments de vendes per articles i dates, amb marges.</td><td><a href="06-menu-almacen.html#movimientos-de-ventas-por-articulos-y-fechas">Movimientos de ventas por artículos y fechas</a></td></tr>
+<tr><td>Filtre de famílies com a arbre als informes.</td><td><a href="06-menu-almacen.html#informes">Informes de almacén</a></td></tr>
+</tbody>
+</table>
+<h3 id="administracion-y-fiscalidad">Administració i fiscalitat</h3>
+<table>
+<thead><tr>
+<th>Funció incorporada</th>
+<th>On veure-ho</th>
+</tr></thead>
+<tbody>
+<tr><td>Paràmetres de Fotos, Recuentos i Verifactu centralitzats.</td><td><a href="07-menu-otros.html#parametros-del-entorno">Parámetros del entorno</a></td></tr>
+<tr><td>Permisos en arbre, per menú i per acció de pantalla.</td><td><a href="07-menu-otros.html#permisos">Permisos</a></td></tr>
+<tr><td>Empleats separats dels usuaris per a caixa, traspassos i arqueigs.</td><td><a href="07-menu-otros.html#empleados">Empleados</a></td></tr>
+<tr><td>Modes fiscals <code>SIN</code>, <code>VERIFACTU</code> i <code>NO_VERIFACTU</code>.</td><td><a href="11-verifactu.html#2-configuracion-previa-administrador">Verifactu ▸ Configuración</a></td></tr>
+<tr><td>Exportació XML de registres NO VERI*FACTU.</td><td><a href="11-verifactu.html#verifactu-log">Verifactu Log</a></td></tr>
+<tr><td>Tipus d'operació Verifactu per a intracomunitàries, inversió del subjecte passiu i exportacions.</td><td><a href="11-verifactu.html#4-verifactu-en-la-ficha-de-la-factura">Verifactu en la ficha</a></td></tr>
+</tbody>
+</table>
+<hr>
+<p><a href="11-verifactu.html">◀ Verifactu</a> · <a href="index.html">Índex</a> · <a href="13-aplicaciones-moviles.html">Següent ▶ Aplicacions mòbils</a></p>
+</article>
+<footer>Manual de Factuzam · generat el 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

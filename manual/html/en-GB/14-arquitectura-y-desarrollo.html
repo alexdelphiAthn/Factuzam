@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>14 · Arquitectura, estilo de programación y SQL configurable — Factuzam User Manual</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menu">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>User manual</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Manual language"><a class="enlace-idioma" href="../14-arquitectura-y-desarrollo.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma activo" href="14-arquitectura-y-desarrollo.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/14-arquitectura-y-desarrollo.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/14-arquitectura-y-desarrollo.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Home</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></li><li><a href="01-conceptos-comunes.html">01 · Common concepts</a></li><li><a href="02-menu-archivo.html">02 · File menu</a></li><li><a href="03-menu-compras.html">03 · Purchases menu</a></li><li><a href="04-menu-ventas-mayor.html">04 · Wholesale menu</a></li><li><a href="05-menu-caja.html">05 · POS menu</a></li><li><a href="06-menu-almacen.html">06 · Warehouse menu</a></li><li><a href="07-menu-otros.html">07 · Other menu</a></li><li><a href="08-menu-ayuda.html">08 · Help menu</a></li><li><a href="09-instalacion-windows.html">09 · Windows installation</a></li><li><a href="10-migracion-legacy.html">10 · Migration from legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></li><li><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></li><li class="activo"><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="en-GB"><strong>Translation pending.</strong> This chapter is not yet available in English; the Spanish version is shown.</aside>
+<h1 id="14-arquitectura-estilo-de-programacion-y-sql-configurable">14 · Arquitectura, estilo de programación y SQL configurable</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Este capítulo resume las reglas técnicas con las que evoluciona Factuzam.
+Está dirigido a desarrollo, soporte avanzado e implantadores. La referencia
+completa del repositorio se mantiene en <code>LIBRO_DE_ESTILO_DELPHI.md</code>,
+<code>LIBRO_DE_ESTILO_BBDD.md</code>, <code>PLAN_SOLID.md</code> y <code>MANUAL_SQL_PERFILES.md</code>.</p>
+<hr>
+<h2 id="1-estilo-de-programacion">1. Estilo de programación</h2>
+<p>Factuzam está escrito en Object Pascal/Delphi VCL y prioriza código legible,
+predecible y compatible con su base instalada.</p>
+<p>Reglas principales:</p>
+<ul><li>Código, nombres propios, comentarios y commits en <strong>español</strong>; se respetan los prefijos de Delphi y de componentes de terceros.</li><li>Una instrucción por línea. <code>if</code>, <code>while</code> y <code>for</code> colocan la condición y la acción en líneas separadas.</li><li>Se evitan <code>Exit</code> y <code>Continue</code> en código nuevo para mantener visible el flujo completo del método.</li><li>En cada sección de una clase se declaran primero los <strong>campos</strong> y después los <strong>métodos</strong>, como exige Delphi.</li><li>Los comentarios son breves y explican decisiones, límites o reglas de negocio; no repiten una línea evidente.</li><li>Los métodos se nombran con verbos en español y deben representar un paso cohesivo. Antes de ampliar una clase grande se extrae un colaborador, estrategia o función de dominio.</li><li>Los formularios de mantenimiento heredan de <code>TfrmMtoGen</code> y los modales de <code>TfrmBase</code>; las utilidades independientes conservan su propio proyecto.</li><li>Se mantienen UniDAC, DevExpress, JEDI y FastReport como decisiones de arquitectura; no se sustituyen por dependencias nuevas sin justificación.</li></ul>
+<p>Los cambios de base de datos se entregan como scripts idempotentes en
+<code>DESARROLLOS EN CURSO/</code>. El dump <code>factuzam_original.sql</code> no se modifica.</p>
+<hr>
+<h2 id="2-solid-aplicado-de-forma-progresiva">2. SOLID aplicado de forma progresiva</h2>
+<p>Factuzam está migrando por fascículos desde un núcleo legado hacia una
+arquitectura SOLID. No se presenta como una reescritura terminada: cada
+extracción fija primero el comportamiento con pruebas y reduce el
+acoplamiento sin mezclar cambios funcionales.</p>
+<table>
+<thead><tr>
+<th>Principio</th>
+<th>Aplicación en Factuzam</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>SRP — responsabilidad única</strong></td><td>El formulario coordina la interfaz, el data module persiste y las librerías ejecutan reglas de negocio. Las responsabilidades grandes se extraen a colaboradores <code>TGestor*</code> o servicios específicos.</td></tr>
+<tr><td><strong>OCP — abierto/cerrado</strong></td><td>Las variaciones de compra, venta, impresión o documento se modelan con configuración y estrategias, evitando copiar formularios completos para cada caso.</td></tr>
+<tr><td><strong>LSP — sustitución</strong></td><td>Las clases base publican contratos y hooks coherentes; se evita ampliar una base cuando sus descendientes tendrían que anular el comportamiento con métodos vacíos.</td></tr>
+<tr><td><strong>ISP — interfaces pequeñas</strong></td><td>Cada consumidor recibe solo la capacidad que necesita. Las interfaces propias son pequeñas, tienen GUID y se agrupan únicamente cuando comparten una misma implementación.</td></tr>
+<tr><td><strong>DIP — inversión de dependencias</strong></td><td>El dominio depende de contratos <code>inLib*Intf</code>; las implementaciones UniDAC se crean fuera y se inyectan desde la raíz de composición.</td></tr>
+</tbody>
+</table>
+<p>La secuencia de un fascículo es: prueba que fija el comportamiento,
+extracción de una responsabilidad, compilación Win32/Win64, batería DUnitX
+y comprobación de los trinquetes automáticos de arquitectura.</p>
+<hr>
+<h2 id="3-capas-y-direccion-de-dependencias">3. Capas y dirección de dependencias</h2>
+<pre><code>fzam.dpr / Core (composición)
+            |
+            v
+Forms / Modals (presentación y coordinación)
+            |
+            v
+UniData* (persistencia) ---&gt; inLib* (dominio y colaboradores)
+                                  |
+                                  v
+                            inLib*Intf (contratos)</code></pre>
+<table>
+<thead><tr>
+<th>Capa</th>
+<th>Responsabilidad</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Core / composición</strong></td><td>Crea conexiones, repositorios, servicios y formularios; conecta implementaciones con contratos.</td></tr>
+<tr><td><strong>Forms / Modals</strong></td><td>Muestra datos, solicita confirmaciones, coordina pestañas y traduce resultados de negocio a acciones visuales.</td></tr>
+<tr><td><strong>UniData / DataModules</strong></td><td>Consulta y persiste mediante UniDAC, controla datasets y límites transaccionales.</td></tr>
+<tr><td><strong>inLib</strong></td><td>Cálculos, validaciones, transformaciones, orquestadores y colaboradores reutilizables.</td></tr>
+<tr><td>**inLib*Intf**</td><td>Interfaces y tipos estables sin dependencias de VCL, formularios o implementaciones de persistencia.</td></tr>
+</tbody>
+</table>
+<p>Una librería de dominio no crea un repositorio, no conoce un formulario y
+no obtiene una conexión global. Recibe por constructor o parámetro el
+contrato que necesita. Las conexiones, la identidad y las credenciales
+tienen propietario y ciclo de vida explícitos.</p>
+<p>Las escrituras que afectan a varias tablas son atómicas: respetan una
+transacción existente o realizan <code>Commit</code>/<code>Rollback</code> en el mismo nivel. Los
+hilos no comparten datasets ni conexiones con la interfaz.</p>
+<hr>
+<h2 id="4-consultas-sql-configurables-y-consultables">4. Consultas SQL configurables y consultables</h2>
+<p>El <strong>catálogo SQL por perfiles</strong> permite corregir determinadas consultas de
+lectura sin recompilar ni sustituir <code>fzam.exe</code>. El dominio solicita una
+operación de negocio a un repositorio; la implementación de persistencia
+elige entre:</p>
+<ol><li>El <strong>SQL base</strong>, incluido y probado con el ejecutable.</li><li>Un <strong>SQL personalizado</strong> activo en <code>fza_usuarios_perfiles</code>.</li></ol>
+<p>El dominio no recibe texto SQL y no ofrece un método genérico
+<code>Ejecutar(SQL)</code>. Cada operación mantiene una clave estable con la forma:</p>
+<pre><code>KEY_USUPER    = SQL_REPOSITORIOS
+SUBKEY_USUPER = SQL__Repositorio__Operacion</code></pre>
+<h3 id="activacion-por-pantalla">Activación por pantalla</h3>
+<p>La propiedad de perfil <code>oGetSQLFromDB</code> activa el catálogo para cada
+formulario consumidor. Al abrir la pantalla:</p>
+<ol><li>Factuzam carga las definiciones del catálogo compartido.</li><li>Publica las operaciones base que todavía falten, sin sobrescribir una personalización existente.</li><li>Resuelve cada lectura contra el perfil activo o contra el SQL base.</li></ol>
+<p>Desactivar el interruptor en un formulario no cambia los demás consumidores
+de la misma operación.</p>
+<p>El inventario de unidades que leen el interruptor, publican perfiles o
+aportan definiciones al catálogo, junto con el recorrido histórico de los
+data modules, está en
+<a href="https://github.com/alexdelphiAthn/Factuzam/blob/main/MANUAL_SQL_PERFILES.md#21-unidades-que-leen-ogetsqlfromdb-y-publican-perfiles"><code>MANUAL_SQL_PERFILES.md</code></a>.</p>
+<h3 id="validacion-y-fallback-seguro">Validación y fallback seguro</h3>
+<p>Antes de ejecutar una personalización se comprueba que:</p>
+<ul><li>no esté vacía;</li><li>sea una lectura válida (<code>SELECT</code> o <code>CALL</code> con dataset);</li><li>conserve exactamente los parámetros declarados;</li><li>devuelva todos los campos y alias obligatorios;</li><li>no contenga varias sentencias;</li><li>no incluya <code>DROP</code>, <code>ALTER</code> ni <code>TRUNCATE</code>.</li></ul>
+<p>Si la validación falla, la consulta personalizada se descarta, se registra
+la causa y se ejecuta el SQL base. Si pasa la validación pero falla al abrir
+o devuelve una estructura incorrecta, Factuzam reintenta una vez con el SQL
+base. Si también falla la base, el error se muestra de forma normal.</p>
+<p>Las escrituras no usan este reintento automático: cualquier futura
+personalización de escritura debe estar protegida por transacción y hacer
+<code>Rollback</code> antes de cambiar de implementación.</p>
+<h3 id="revision-auditoria-y-vuelta-atras">Revisión, auditoría y vuelta atrás</h3>
+<p>El administrador del catálogo permite <strong>publicar</strong>, <strong>revisar</strong> y
+<strong>exportar</strong> las definiciones base y de perfil. La revisión muestra estado,
+política, versión, huellas, validación y última causa de fallback. Cada fila
+guarda además instante y usuario de modificación.</p>
+<p>Para volver inmediatamente al comportamiento incluido en el ejecutable se
+puede:</p>
+<ol><li>Desactivar una operación cambiando su estado de <code>S</code> a <code>N</code>.</li><li>Eliminar únicamente su fila personalizada.</li><li>Establecer <code>oGetSQLFromDB=False</code> para toda la pantalla.</li></ol>
+<p>No es necesario desplegar otro ejecutable. Antes de editar una consulta se
+hace copia del SQL y de sus metadatos; nunca se cambian los parámetros ni
+los alias exigidos por el contrato.</p>
+<hr>
+<h2 id="5-pruebas-y-reglas-de-no-regresion">5. Pruebas y reglas de no regresión</h2>
+<ul><li>DUnitX cubre funciones de dominio, colaboradores y repositorios falsos sin necesidad de una base de datos real.</li><li>Las pruebas de integración cubren procedimientos, SQL y transacciones.</li><li>Los scripts de trinquete impiden reintroducir dependencias de capas, SQL nuevo en el dominio, variables globales o crecimiento de clases y métodos por encima de los topes vigentes.</li><li>Un refactor no mezcla cambios funcionales, renombrados masivos ni normalizaciones de formato.</li><li>Antes de cerrar un cambio transversal se validan las plataformas Win32 y Win64 afectadas.</li></ul>
+<p>La finalidad es que cada mejora deje una barrera automática que el código
+posterior no pueda volver a cruzar.</p>
+<hr>
+<p><a href="13-aplicaciones-moviles.html">◀ Aplicaciones móviles</a> · <a href="index.html">Índice</a> · <a href="15-integracion-prestashop.html">Siguiente ▶ Integración con PrestaShop</a></p>
+</article>
+<footer>Factuzam User Manual · generated on 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

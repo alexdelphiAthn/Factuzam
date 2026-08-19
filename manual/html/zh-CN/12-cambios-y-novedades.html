@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>12 · 更改与新增功能 — Factuzam 用户手册</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="菜单">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>用户手册</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="手册语言"><a class="enlace-idioma" href="../12-cambios-y-novedades.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/12-cambios-y-novedades.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/12-cambios-y-novedades.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma activo" href="12-cambios-y-novedades.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">首页</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · 访问与入门</a></li><li><a href="01-conceptos-comunes.html">01 · 通用概念</a></li><li><a href="02-menu-archivo.html">02 · 文件菜单</a></li><li><a href="03-menu-compras.html">03 · 采购菜单</a></li><li><a href="04-menu-ventas-mayor.html">04 · 批发销售菜单</a></li><li><a href="05-menu-caja.html">05 · POS 菜单</a></li><li><a href="06-menu-almacen.html">06 · 仓库菜单</a></li><li><a href="07-menu-otros.html">07 · 其他菜单</a></li><li><a href="08-menu-ayuda.html">08 · 帮助菜单</a></li><li><a href="09-instalacion-windows.html">09 · Windows 安装</a></li><li><a href="10-migracion-legacy.html">10 · 从旧版迁移</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li class="activo"><a href="12-cambios-y-novedades.html">12 · 更改与新功能</a></li><li><a href="13-aplicaciones-moviles.html">13 · 移动应用</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · 架构与开发</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop 集成</a></li></ul>
+</nav>
+<main>
+<article lang="zh-CN">
+
+<h1 id="12-cambios-y-novedades">12 · 更改与新增功能</h1>
+<p><a href="index.html">◀ 返回目录</a></p>
+<p>本章将<strong>近期新增功能</strong>与已经纳入常规手册的功能分开说明。要学习日常使用，
+请始终进入相应的菜单章节；本页只是更改内容的快速索引。</p>
+<blockquote><p><strong>文档审订日期：</strong> 2026 年 8 月 19 日。某项功能列在此索引中，并不能替代
+对已安装版本及其生产环境验证状态的检查。</p></blockquote>
+<hr>
+<h2 id="novedades-recientes">近期新增功能</h2>
+<table>
+<thead><tr>
+<th>新增功能</th>
+<th>参阅位置</th>
+</tr></thead>
+<tbody>
+<tr><td>手动导入 <strong>PrestaShop</strong> 订单，可受控新建客户和商品，并将运费记录为 <code>GASTOS_T</code> 服务，使用标准增值税且不产生库存移动。此功能仍仅限实验环境和单一受控目标使用。</td><td><a href="04-menu-ventas-mayor.html#importar-pedidos-de-prestashop">Ventas Mayor ▸ Pedidos</a> · <a href="15-integracion-prestashop.html">PrestaShop 集成</a></td></tr>
+<tr><td>集中的 <strong>Otros ▸ Colas de envíos</strong> 菜单，可从实际菜单路径监控 Verifactu、PrestaShop 和 Web Service Fzam。</td><td><a href="07-menu-otros.html#colas-de-envios">Otros ▸ Colas de envíos</a></td></tr>
+<tr><td><strong>Web Service Fzam</strong> 队列，包含销售及 PDF 事件、状态、HTTP 历史记录、指数退避重试，并可访问关联单据。</td><td><a href="07-menu-otros.html#web-service-fzam">Otros ▸ Colas de envíos ▸ Web Service Fzam</a></td></tr>
+<tr><td><strong>Histórico de Solicitudes de Traspaso</strong>，包含已满足/未满足数量、原因、调拨及相关库存移动。</td><td><a href="05-menu-caja.html#historico-de-solicitudes-de-traspaso">TPV ▸ Histórico de Solicitudes de Traspaso</a></td></tr>
+<tr><td>按期间生成 <strong>Facturas proforma</strong>：针对 VE 销售的内部非税务形式发票，或针对 TA 调拨的 Ventas Mayor 草稿。</td><td><a href="05-menu-caja.html#facturas-proforma">TPV ▸ Facturas proforma</a></td></tr>
+<tr><td>使用 <strong>Procesos auxiliares BBDD</strong> 检查表的 SQL 结构和内容。</td><td><a href="07-menu-otros.html#procesos-auxiliares-bbdd">Otros ▸ Procesos auxiliares BBDD</a></td></tr>
+<tr><td><code>[F1]</code> 可在 Auto/desglose、SKU 和各尺码模式之间切换行显示；循环方式会适配每种单据类型。</td><td><a href="01-conceptos-comunes.html#cambiar-la-presentacion-de-las-lineas-con-f1">通用概念 ▸ 使用 F1 的行模式</a></td></tr>
+<tr><td>采购订单支持按行或尺码部分收货、<strong>Recibir Todo</strong>、Pedido/A recibir/Pendiente 分带，并可加入现有送货单。</td><td><a href="03-menu-compras.html#pedidos">Compras ▸ Pedidos</a></td></tr>
+<tr><td>使用 <code>[Ctrl]+[U]</code> 打开 <strong>Consulta de stocks de Factuzam</strong>：按颜色、尺码和仓库查看现有量与待处理量、细分状态和关联照片，并可发送到 Documentos de Trabajo。</td><td><a href="08-menu-ayuda.html#consulta-de-stocks">Ayuda ▸ Consulta de stocks</a></td></tr>
+<tr><td>Android 应用 <strong>Factuzam Fotos Nube</strong>，可按商品/颜色拍照、加入队列并分批上传到服务器。</td><td><a href="13-aplicaciones-moviles.html#factuzam-fotos-nube-fotografiar-articulos-desde-android">移动应用 ▸ Fotos Nube</a></td></tr>
+<tr><td><strong>提交给支持团队的错误管理</strong>：受保护的证据、对话、按用户跟踪，以及经过验证的脚本或更新建议。</td><td><a href="08-menu-ayuda.html#envio-de-errores-administracion-y-seguimiento">Ayuda ▸ Envío de errores</a></td></tr>
+<tr><td>界面可通过中央目录翻译，提供可下载的 <code>en-GB</code>、<code>ca-ES</code> 和 <code>zh-CN</code> 软件包、西班牙语后备文本及独立翻译编辑器。</td><td><a href="07-menu-otros.html#idioma-y-traducciones">Otros ▸ Parámetros del entorno ▸ Apariencia ▸ Idioma</a></td></tr>
+<tr><td>票据可按<strong>差额</strong>更正，或通过<strong>替代</strong>单据更正，同时保留税务可追溯性，并一致处理销售和库存。</td><td><a href="05-menu-caja.html#rectificar-un-ticket-por-diferencias-o-sustitutiva">TPV ▸ Rectificar un ticket</a></td></tr>
+<tr><td>采购会话支持<strong>临时照片</strong>和预览，并可自动将图片迁移到最终创建的商品或 SKU。</td><td><a href="03-menu-compras.html#7-fotos-de-la-sesion">Compras ▸ Fotos de la sesión</a></td></tr>
+<tr><td>移动应用 <strong>VentasFzam</strong>，可查看当日销售、照片、成本、毛利和折扣，而不修改数据。</td><td><a href="13-aplicaciones-moviles.html#ventasfzam-ventas-del-dia-en-el-movil">移动应用 ▸ VentasFzam</a></td></tr>
+<tr><td>分层架构、逐步应用 SOLID，以及可审查、可配置并带验证和后备机制的 SQL 查询目录。</td><td><a href="14-arquitectura-y-desarrollo.html">架构与开发</a></td></tr>
+<tr><td>按日期查询 <strong>Listado de operaciones de venta del TPV</strong>，显示基础颜色；用户不受限制时，可累计选择公司、仓库和收银机。</td><td><a href="05-menu-caja.html#listados">TPV ▸ Listados</a></td></tr>
+<tr><td><strong>Documentos de Trabajo</strong>：可共享的商品/SKU 列表，用于打印标签，并可发送到送货单、TPV、盘点或价目表变更。</td><td><a href="06-menu-almacen.html#documentos-de-trabajo">Almacén ▸ Documentos de Trabajo</a></td></tr>
+<tr><td>可从任意窗口按 <code>[Ctrl]+[E]</code> 使用 <strong>Búsqueda de datos de artículos</strong>：按尺码、颜色、调色板相近程度、库存和已保存配置文件搜索。</td><td><a href="01-conceptos-comunes.html#busqueda-de-datos-de-articulos-ctrle">通用概念 ▸ Búsqueda de datos</a></td></tr>
+<tr><td><strong>TPV 客户账户</strong>（F2）：充值预存款和账户余额、通过正负号取消，以及在预存款之间分配部分收款。</td><td><a href="05-menu-caja.html#ventas-f5-la-pantalla-de-venta">TPV ▸ Ventas</a></td></tr>
+<tr><td><strong>付款票据报表</strong>，可按到期日、供应商、银行/批次、类型和状态筛选。</td><td><a href="03-menu-compras.html#listados-listado-de-efectos-de-pago">Compras ▸ Listados</a></td></tr>
+<tr><td><strong>Ayuda</strong> 菜单可直接访问<strong>在线手册</strong>和<strong>支持论坛</strong>。</td><td><a href="08-menu-ayuda.html">Ayuda 菜单</a></td></tr>
+<tr><td>从已合并的 Ventas Mayor 销售草稿签发带签名的 Facturae eDoc。</td><td><a href="04-menu-ventas-mayor.html#efectos-y-edoc-en-el-borrador">Ventas Mayor ▸ Borradores</a></td></tr>
+<tr><td>客户 eDoc 参数：DIR3 和自然人数据。</td><td><a href="02-menu-archivo.html#clientes">Clientes</a></td></tr>
+<tr><td>在支付方式中设置 Facturae 代码，以申报官方支付手段。</td><td><a href="07-menu-otros.html#formas-de-pago-documentos">Formas de pago documentos</a></td></tr>
+<tr><td>客户应收票据及到期款项核销。</td><td><a href="04-menu-ventas-mayor.html#efectos-de-cobro">Efectos de cobro</a></td></tr>
+<tr><td>收款批次、加载票据和生成 SEPA。</td><td><a href="04-menu-ventas-mayor.html#remesas-de-cobro">Remesas de cobro</a></td></tr>
+<tr><td>从送货单创建采购发票/草稿，并可加入现有单据。</td><td><a href="03-menu-compras.html#crear-borradores-de-albaranes">Compras ▸ Crear borradores de albaranes</a></td></tr>
+<tr><td>完整采购迁移：订单、送货单、退货、发票、票据和批次。</td><td><a href="10-migracion-legacy.html#2-que-datos-migra">从旧系统迁移</a></td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="incorporado-al-manual">已纳入常规手册</h2>
+<p>以下功能不再作为刚刚新增的内容处理；它们已按业务领域分类，并在手册的
+常规章节中说明。</p>
+<h3 id="archivo-y-catalogo">Archivo 与商品目录</h3>
+<table>
+<thead><tr>
+<th>已纳入功能</th>
+<th>参阅位置</th>
+</tr></thead>
+<tbody>
+<tr><td>按公司维护银行账户，并标记默认收款和付款账户。</td><td><a href="02-menu-archivo.html#empresas">Empresas</a></td></tr>
+<tr><td>客户的默认收款银行。</td><td><a href="02-menu-archivo.html#clientes">Clientes</a></td></tr>
+<tr><td>供应商的默认支付方式和付款银行。</td><td><a href="02-menu-archivo.html#proveedores">Proveedores</a></td></tr>
+<tr><td>采购会话所用的按尺码数量套装。</td><td><a href="02-menu-archivo.html#pestana-compras-parametros-de-compra-del-proveedor">Proveedores ▸ Compras</a></td></tr>
+<tr><td>按商品、颜色或 SKU 管理照片，带浮动窗口并可从服务器下载。</td><td><a href="01-conceptos-comunes.html#foto-flotante-del-articulo-sku">通用概念 ▸ 浮动照片</a></td></tr>
+<tr><td>每种计量单位可使用小数数量。</td><td><a href="02-menu-archivo.html#unidades-de-medida">Unidades de Medida</a></td></tr>
+<tr><td>基本属性和标准颜色/尺码对应关系。</td><td><a href="02-menu-archivo.html#atributos-basicos">Atributos básicos</a></td></tr>
+<tr><td>价目表变更会话及折扣日期窗口。</td><td><a href="02-menu-archivo.html#tarifas">Tarifas</a></td></tr>
+</tbody>
+</table>
+<h3 id="compras">Compras</h3>
+<table>
+<thead><tr>
+<th>已纳入功能</th>
+<th>参阅位置</th>
+</tr></thead>
+<tbody>
+<tr><td>采购会话支持应用套装并提供供应商标签页。</td><td><a href="03-menu-compras.html#sesiones-crear-articulos-y-un-pedido-o-un-albaran">Sesiones de compra</a></td></tr>
+<tr><td>采购送货单中的信息标记 <strong>Depósito</strong>。</td><td><a href="03-menu-compras.html#albaranes">Albaranes de compra</a></td></tr>
+<tr><td>供应商退货作为独立单据处理，并产生库存出库。</td><td><a href="03-menu-compras.html#devoluciones-a-proveedor">Devoluciones a Proveedor</a></td></tr>
+<tr><td>采购草稿可生成票据。</td><td><a href="03-menu-compras.html#borradores">Borradores</a></td></tr>
+<tr><td>供应商付款票据和付款批次。</td><td><a href="03-menu-compras.html#efectos-de-pago">Efectos de pago</a></td></tr>
+</tbody>
+</table>
+<h3 id="ventas-y-caja">销售与 Caja</h3>
+<table>
+<thead><tr>
+<th>已纳入功能</th>
+<th>参阅位置</th>
+</tr></thead>
+<tbody>
+<tr><td>税务结算前使用 <strong>Borradores</strong> 术语。</td><td><a href="04-menu-ventas-mayor.html#borradores">Ventas Mayor ▸ Borradores</a></td></tr>
+<tr><td>按日期范围从销售送货单创建销售草稿。</td><td><a href="04-menu-ventas-mayor.html#albaranes">Albaranes de venta</a></td></tr>
+<tr><td>简化收银草稿，并可转换为普通草稿。</td><td><a href="05-menu-caja.html#borradores-simplificados">TPV ▸ Borradores Simplificados</a></td></tr>
+<tr><td>TPV 行中显示照片、颜色/尺码和 SKU 数据。</td><td><a href="05-menu-caja.html#ventas-f5-la-pantalla-de-venta">TPV ▸ Ventas</a></td></tr>
+<tr><td>完整扩展收银流程：营业日、票据、代金券、借款、调拨、盘点和收银流水。</td><td><a href="05-menu-caja.html">TPV</a></td></tr>
+<tr><td>说明全部 Caja 参数及其当前实际效果。</td><td><a href="05-menu-caja.html#parametros-de-caja">TPV ▸ Parámetros de Caja</a></td></tr>
+<tr><td>从 TPV 查看现金盘点历史，并可补打票据/结算单。</td><td><a href="05-menu-caja.html#arqueo-f11">TPV ▸ Arqueo</a></td></tr>
+<tr><td>A4 现金盘点历史报表。</td><td><a href="05-menu-caja.html#historico-de-arqueos">TPV ▸ Histórico de Arqueos</a></td></tr>
+</tbody>
+</table>
+<h3 id="almacen-e-informes">Almacén 与报表</h3>
+<table>
+<thead><tr>
+<th>已纳入功能</th>
+<th>参阅位置</th>
+</tr></thead>
+<tbody>
+<tr><td>通过 Android 应用和桥接服务器执行移动盘点。</td><td><a href="06-menu-almacen.html#recuento-movil">Inventarios ▸ Recuento móvil</a></td></tr>
+<tr><td>按尺码横向显示仓库结余，支持照片、筛选、分带和分组。</td><td><a href="06-menu-almacen.html#balance-de-almacen-horizontal">Balance de Almacén Horizontal</a></td></tr>
+<tr><td>对整个商品目录显示不分尺码的仓库结余。</td><td><a href="06-menu-almacen.html#balance-de-almacen-sin-tallas">Balance de Almacén sin tallas</a></td></tr>
+<tr><td>按商品和日期查看销售移动及毛利。</td><td><a href="06-menu-almacen.html#movimientos-de-ventas-por-articulos-y-fechas">Movimientos de ventas por artículos y fechas</a></td></tr>
+<tr><td>报表中使用树形商品分类筛选器。</td><td><a href="06-menu-almacen.html#informes">Informes de almacén</a></td></tr>
+</tbody>
+</table>
+<h3 id="administracion-y-fiscalidad">管理与税务</h3>
+<table>
+<thead><tr>
+<th>已纳入功能</th>
+<th>参阅位置</th>
+</tr></thead>
+<tbody>
+<tr><td>集中管理 Fotos、Recuentos 和 Verifactu 参数。</td><td><a href="07-menu-otros.html#parametros-del-entorno">Parámetros del entorno</a></td></tr>
+<tr><td>按菜单和界面操作管理树形权限。</td><td><a href="07-menu-otros.html#permisos">Permisos</a></td></tr>
+<tr><td>将员工与用户分开，用于收银、调拨和现金盘点。</td><td><a href="07-menu-otros.html#empleados">Empleados</a></td></tr>
+<tr><td>税务模式 <code>SIN</code>、<code>VERIFACTU</code> 和 <code>NO_VERIFACTU</code>。</td><td><a href="11-verifactu.html#2-configuracion-previa-administrador">Verifactu ▸ Configuración</a></td></tr>
+<tr><td>导出 NO VERI*FACTU 记录的 XML。</td><td><a href="11-verifactu.html#verifactu-log">Verifactu Log</a></td></tr>
+<tr><td>针对欧盟内部交易、反向征税和出口设置 Verifactu 交易类型。</td><td><a href="11-verifactu.html#4-verifactu-en-la-ficha-de-la-factura">Verifactu en la ficha</a></td></tr>
+</tbody>
+</table>
+<hr>
+<p><a href="11-verifactu.html">◀ Verifactu</a> · <a href="index.html">目录</a> · <a href="13-aplicaciones-moviles.html">下一章 ▶ 移动应用</a></p>
+</article>
+<footer>Factuzam 用户手册 · 生成于 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

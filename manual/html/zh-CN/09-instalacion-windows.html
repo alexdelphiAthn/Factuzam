@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>09 · Instalación en Windows — Factuzam 用户手册</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="菜单">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>用户手册</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="手册语言"><a class="enlace-idioma" href="../09-instalacion-windows.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/09-instalacion-windows.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/09-instalacion-windows.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma activo" href="09-instalacion-windows.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">首页</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · 访问与入门</a></li><li><a href="01-conceptos-comunes.html">01 · 通用概念</a></li><li><a href="02-menu-archivo.html">02 · 文件菜单</a></li><li><a href="03-menu-compras.html">03 · 采购菜单</a></li><li><a href="04-menu-ventas-mayor.html">04 · 批发销售菜单</a></li><li><a href="05-menu-caja.html">05 · POS 菜单</a></li><li><a href="06-menu-almacen.html">06 · 仓库菜单</a></li><li><a href="07-menu-otros.html">07 · 其他菜单</a></li><li><a href="08-menu-ayuda.html">08 · 帮助菜单</a></li><li class="activo"><a href="09-instalacion-windows.html">09 · Windows 安装</a></li><li><a href="10-migracion-legacy.html">10 · 从旧版迁移</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · 更改与新功能</a></li><li><a href="13-aplicaciones-moviles.html">13 · 移动应用</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · 架构与开发</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop 集成</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="zh-CN"><strong>翻译待完成。</strong>本章暂未提供中文版本，现显示西班牙语版本。</aside>
+<h1 id="09-instalacion-en-windows">09 · Instalación en Windows</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Este capítulo describe cómo instalar Factuzam en un equipo Windows desde
+cero: el servidor de base de datos, la base de datos inicial y la
+aplicación. Está orientado al <strong>instalador/administrador</strong>; el usuario
+final solo necesita el capítulo
+<a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a>.</p>
+<hr>
+<h2 id="obtener-y-probar-la-demo">Obtener y probar la demo</h2>
+<p>Antes de preparar una instalación completa, solicita o descarga el
+<strong>instalador vigente</strong> de Factuzam DEMO. Los paquetes llevan la versión y la
+fecha en el nombre; usa el enlace actual de la web o el facilitado por soporte
+y no una URL guardada de una compilación anterior. Si no hay una descarga
+pública activa, confirma el paquete con soporte antes de instalarlo.</p>
+<p>La demo se entrega como instalador <strong>NSIS</strong> autoinstalable. Al ejecutarlo
+en un Windows de 64 bits, el asistente instala <strong>Factuzam DEMO</strong> en
+<code>%PROGRAMFILES%\Factuzam DEMO</code>, instala una <strong>MariaDB local</strong> para pruebas
+en el puerto <code>3310</code>, crea la base de datos de demostración y deja accesos
+directos en el escritorio y en el menú inicio.</p>
+<blockquote><p>Esta demo es para probar el programa en local. La instalación definitiva
+de una empresa puede hacerse con el procedimiento manual de este capítulo
+o con un paquete preparado para esa instalación concreta.</p></blockquote>
+<hr>
+<h2 id="1-requisitos">1. Requisitos</h2>
+<table>
+<thead><tr>
+<th>Componente</th>
+<th>Requisito</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Sistema operativo</strong></td><td>Windows 10 / Windows 11 (también Windows Server para el equipo que aloje la base de datos).</td></tr>
+<tr><td><strong>Base de datos</strong></td><td><strong>MariaDB</strong> (compatible MySQL). Puede instalarse en el mismo equipo o en un servidor de la red local.</td></tr>
+<tr><td><strong>Aplicación</strong></td><td>En instalación manual, <code>fzam.exe</code> es un ejecutable autónomo. La demo descargable usa instalador <strong>NSIS</strong> e incluye MariaDB local de pruebas.</td></tr>
+<tr><td><strong>Red</strong></td><td>Si hay varios puestos, todos deben ver el servidor MariaDB por TCP (puerto <code>3306</code> por defecto).</td></tr>
+<tr><td><strong>Periféricos (TPV)</strong></td><td>Impresora de tickets compatible <strong>ESC/POS</strong> y <strong>lector de códigos de barras</strong> USB en simulación de teclado; ambos opcionales fuera de Caja.</td></tr>
+</tbody>
+</table>
+<p>Requisitos concretos para Caja:</p>
+<ul><li>La <strong>impresora de tickets</strong> debe poder imprimir códigos QR en modo nativo <strong>ESC/POS</strong>.</li><li>El <strong>lector de códigos de barras</strong> debe funcionar por USB en simulación de teclado y enviar el código con prefijo <strong>STX</strong> (<code>0x02</code>) y sufijo <strong>ETX</strong> (<code>0x03</code>).</li><li>El lector no debe añadir ningún otro prefijo ni sufijo: nada de intro, tabulador ni caracteres adicionales antes o después del código.</li></ul>
+<hr>
+<h2 id="2-instalar-el-servidor-mariadb">2. Instalar el servidor MariaDB</h2>
+<ol><li>Descarga MariaDB para Windows desde <a href="https://mariadb.org/download/">mariadb.org/download</a> e instálalo en el equipo que hará de <strong>servidor</strong> (en monopuesto, el mismo PC).</li><li>Durante la instalación:<ul><li>Define la <strong>contraseña de <code>root</code></strong> y guárdala en lugar seguro.</li><li>Deja el servicio configurado para <strong>arrancar con Windows</strong>.</li><li>Puerto por defecto: <strong>3306</strong>.</li></ul></li><li>Si otros puestos van a conectarse, abre el puerto 3306 en el <strong>firewall de Windows</strong> del servidor (solo para la red local).</li></ol>
+<blockquote><p>Factuzam usa el juego de caracteres <strong><code>utf8mb4</code></strong> con cotejamiento
+<strong><code>utf8mb4_spanish_ci</code></strong>; la base de datos se creará así en el paso
+siguiente.</p></blockquote>
+<hr>
+<h2 id="3-crear-la-base-de-datos-inicial">3. Crear la base de datos inicial</h2>
+<p>La base de datos modelo se distribuye en el fichero
+<strong><code>factuzam_original.sql</code></strong> (esquema completo + datos de sistema:
+países, tipos de IVA, ventanas, usuario inicial…).</p>
+<p><strong>Opción A — desde la propia aplicación (recomendada):</strong></p>
+<ol><li>Crea primero la base de datos vacía. Desde una consola del servidor:</li></ol>
+<p>   ``<code>sql
+   CREATE DATABASE factuzam
+     CHARACTER SET utf8mb4
+     COLLATE utf8mb4_spanish_ci;
+   </code>``</p>
+<ol start="2"><li>Arranca <code>fzam.exe</code> y, en el login, pulsa <strong>Configurar Base de Datos ▸</strong> y rellena Host, Puerto, Nombre BD (<code>factuzam</code>), Usuario y Contraseña.</li><li>Pulsa el botón <strong>Subir Script</strong>: pide la contraseña de la base de datos y un fichero <code>.sql</code>; selecciona <code>factuzam_original.sql</code> y espera a que termine la carga.</li><li>Pulsa <strong>Probar Conexión</strong> para verificar.</li></ol>
+<p><img src="../img/09-subir-script.png" alt="Login con configuración de BBDD y Subir Script" loading="lazy"></p>
+<p><strong>Opción B — por línea de comandos:</strong></p>
+<pre><code>mysql -h localhost -P 3306 -u root -p ^
+      -e "CREATE DATABASE factuzam CHARACTER SET utf8mb4 COLLATE utf8mb4_spanish_ci;"
+mysql -h localhost -P 3306 -u root -p factuzam &lt; factuzam_original.sql</code></pre>
+<p>(También sirve cualquier cliente gráfico: HeidiSQL, DBeaver…)</p>
+<p><strong>Usuario de base de datos dedicado (recomendado):</strong> evita usar <code>root</code>
+desde los puestos; crea un usuario propio para la aplicación:</p>
+<pre><code>CREATE USER 'fzam'@'%' IDENTIFIED BY 'una_clave_segura';
+GRANT ALL PRIVILEGES ON factuzam.* TO 'fzam'@'%';
+FLUSH PRIVILEGES;</code></pre>
+<hr>
+<h2 id="4-instalar-la-aplicacion-en-cada-puesto">4. Instalar la aplicación en cada puesto</h2>
+<ol><li>Crea una carpeta, por ejemplo <code>C:\Factuzam\</code>, y copia en ella <strong><code>fzam.exe</code></strong>.</li><li>Crea un acceso directo en el escritorio/menú inicio.</li><li>Arranca la aplicación y en el login pulsa <strong>Configurar Base de Datos ▸</strong>; introduce:</li></ol>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Valor</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Host</strong></td><td>IP o nombre del servidor MariaDB (<code>localhost</code> en monopuesto).</td></tr>
+<tr><td><strong>Puerto</strong></td><td><code>3306</code> (salvo que se cambiara).</td></tr>
+<tr><td><strong>Nombre BD</strong></td><td><code>factuzam</code>.</td></tr>
+<tr><td><strong>Usuario / Contraseña</strong></td><td>El usuario de BBDD creado en el paso 3.</td></tr>
+</tbody>
+</table>
+<ol start="4"><li>Pulsa <strong>Probar Conexión</strong> — debe responder correctamente.</li></ol>
+<blockquote><p>La configuración se guarda <strong>por usuario de Windows</strong> en
+<code>%LOCALAPPDATA%\factuzam\</code> (fichero <code>.ini</code>). Cada puesto se configura
+una sola vez.</p></blockquote>
+<hr>
+<h2 id="5-primer-inicio-de-sesion">5. Primer inicio de sesión</h2>
+<ul><li>Usuario inicial: <strong><code>Administrador</code></strong> (grupo <em>Administradores</em>), con la contraseña suministrada con la instalación.</li><li>Tras entrar, <strong>cambia la contraseña</strong> del administrador y crea los usuarios reales en <a href="07-menu-otros.html#usuarios-grupos-y-perfiles">Otros ▸ Usuarios, Grupos y Perfiles</a>.</li></ul>
+<p><img src="../img/09-primer-login.png" alt="Primer inicio de sesión" loading="lazy"></p>
+<hr>
+<h2 id="6-lista-de-comprobacion-de-puesta-en-marcha">6. Lista de comprobación de puesta en marcha</h2>
+<p>Configura en este orden antes de empezar a trabajar:</p>
+<ol><li><strong>Empresa</strong> — datos fiscales, NIF, <strong>series</strong> de facturación y <strong>certificado Verifactu</strong> (<em>Archivo ▸ Empresas</em>).</li><li><strong>Impuesto IVA y Grupos de IVA</strong> — verifica los tipos vigentes (<em>Otros ▸ Impuesto IVA</em>).</li><li><strong>Contadores</strong> — numeración inicial de los documentos por serie (<em>Otros ▸ Contadores</em>).</li><li><strong>Almacenes y Cajas</strong> — al menos un almacén y su caja de venta (<em>Archivo ▸ Almacenes</em>).</li><li><strong>Formas de pago</strong> — documentos en <em>Otros ▸ Formas de pago documentos</em> y caja en <em>TPV ▸ Formas de Pago Caja</em>.</li><li><strong>Tablas auxiliares y catálogo</strong> — familias, tallas/atributos, tarifas y artículos (<em>Archivo ▸ Tablas Auxiliares</em>; o mediante la <a href="10-migracion-legacy.html">migración desde el software anterior</a>).</li><li><strong>Usuarios, grupos y permisos</strong> — un usuario por persona, permisos por grupo.</li><li><strong>Parámetros de Caja</strong> — impresora de tickets y comportamiento del TPV (<em>TPV ▸ Parámetros de Caja</em>).</li><li><strong>Copia de seguridad</strong> — haz una primera copia y deja establecida la rutina (<em>Otros ▸ Hacer Copia de Seguridad</em>).</li></ol>
+<hr>
+<h2 id="7-ficheros-locales-de-la-aplicacion">7. Ficheros locales de la aplicación</h2>
+<p>Cada puesto guarda sus datos locales en <code>%LOCALAPPDATA%\factuzam\</code>:</p>
+<table>
+<thead><tr>
+<th>Carpeta / fichero</th>
+<th>Contenido</th>
+</tr></thead>
+<tbody>
+<tr><td><code>fzam.ini</code></td><td>Configuración del puesto (conexión, usuario recordado…).</td></tr>
+<tr><td><code>log\</code></td><td>Ficheros de <strong>log</strong> de la aplicación (útiles para soporte).</td></tr>
+<tr><td><code>tickets\</code></td><td>Tickets generados por el TPV.</td></tr>
+</tbody>
+</table>
+<p>Estos ficheros son <strong>por usuario de Windows</strong> y no contienen los datos de
+negocio (que viven todos en MariaDB).</p>
+<hr>
+<h2 id="8-actualizaciones">8. Actualizaciones</h2>
+<ul><li>Actualizar la aplicación consiste en <strong>sustituir <code>fzam.exe</code></strong> por la versión nueva (con la aplicación cerrada en todos los puestos).</li><li>Si la versión incluye <strong>cambios de esquema</strong> de base de datos, se entregan como scripts SQL <strong>idempotentes</strong> que se aplican una sola vez sobre la base de datos (pueden cargarse con el botón <strong>Subir Script</strong> del login). Sigue las instrucciones de cada versión.</li><li>Comprueba la versión instalada en <em>Ayuda ▸ Acerca de</em>.</li></ul>
+<blockquote><p><strong>Antes de actualizar, haz copia de seguridad</strong> de la base de datos.</p></blockquote>
+<hr>
+<p><a href="08-menu-ayuda.html">◀ Menú Ayuda</a> · <a href="index.html">Índice</a> · <a href="10-migracion-legacy.html">Siguiente ▶ Migración desde software legacy</a></p>
+</article>
+<footer>Factuzam 用户手册 · 生成于 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

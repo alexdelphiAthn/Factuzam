@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-ES">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>14 · Arquitectura, estilo de programación y SQL configurable — Manual de Factuzam</title>
-<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="estilo.css?v=101124fa0007">
 </head>
 <body>
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Idioma del manual"><a class="enlace-idioma activo" href="14-arquitectura-y-desarrollo.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="en-GB/14-arquitectura-y-desarrollo.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="ca-ES/14-arquitectura-y-desarrollo.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="zh-CN/14-arquitectura-y-desarrollo.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
 <ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li class="activo"><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
-<article>
+<article lang="es-ES">
+
 <h1 id="14-arquitectura-estilo-de-programacion-y-sql-configurable">14 · Arquitectura, estilo de programación y SQL configurable</h1>
 <p><a href="index.html">◀ Volver al índice</a></p>
 <p>Este capítulo resume las reglas técnicas con las que evoluciona Factuzam.
@@ -137,6 +139,13 @@ posterior no pueda volver a cruzar.</p>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
 b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
 </script>
 </body>
 </html>

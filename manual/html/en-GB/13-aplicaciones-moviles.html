@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>13 · Aplicaciones móviles — Factuzam User Manual</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menu">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>User manual</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Manual language"><a class="enlace-idioma" href="../13-aplicaciones-moviles.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma activo" href="13-aplicaciones-moviles.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/13-aplicaciones-moviles.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/13-aplicaciones-moviles.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Home</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></li><li><a href="01-conceptos-comunes.html">01 · Common concepts</a></li><li><a href="02-menu-archivo.html">02 · File menu</a></li><li><a href="03-menu-compras.html">03 · Purchases menu</a></li><li><a href="04-menu-ventas-mayor.html">04 · Wholesale menu</a></li><li><a href="05-menu-caja.html">05 · POS menu</a></li><li><a href="06-menu-almacen.html">06 · Warehouse menu</a></li><li><a href="07-menu-otros.html">07 · Other menu</a></li><li><a href="08-menu-ayuda.html">08 · Help menu</a></li><li><a href="09-instalacion-windows.html">09 · Windows installation</a></li><li><a href="10-migracion-legacy.html">10 · Migration from legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></li><li class="activo"><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="en-GB"><strong>Translation pending.</strong> This chapter is not yet available in English; the Spanish version is shown.</aside>
+<h1 id="13-aplicaciones-moviles">13 · Aplicaciones móviles</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>Factuzam dispone de aplicaciones móviles independientes para consultar
+información o capturar datos fuera del puesto Windows. Cada app usa una
+credencial y permisos propios; no se conecta directamente a MariaDB.</p>
+<hr>
+<h2 id="factuzam-fotos-nube-fotografiar-articulos-desde-android">Factuzam Fotos Nube: fotografiar artículos desde Android</h2>
+<p><strong>Factuzam Fotos Nube</strong> permite hacer fotos con la cámara del móvil —o
+elegirlas de la galería—, asociarlas a un <strong>artículo y color</strong> y subirlas
+por lotes al servicio de fotos. Después pueden descargarse e integrarse en
+el catálogo desde Factuzam.</p>
+<p><img src="../img/13-fotos-nube-capturar.png" alt="Captura y cola de Factuzam Fotos Nube" loading="lazy"></p>
+<h3 id="configuracion-inicial">Configuración inicial</h3>
+<p>En la pestaña <strong>Configuración</strong> indica:</p>
+<table>
+<thead><tr>
+<th>Campo</th>
+<th>Contenido</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>URL</strong></td><td>Dirección del servicio <code>upload_foto.php</code> facilitada por el administrador.</td></tr>
+<tr><td><strong>API key</strong></td><td>Credencial de acceso al servicio de fotos.</td></tr>
+<tr><td><strong>Carpeta de cliente</strong></td><td>Identificador de la instalación en el servidor. Debe existir previamente; no se crea desde el móvil para evitar duplicados por errores de escritura.</td></tr>
+<tr><td><strong>Resolución máxima</strong></td><td>Tamaño máximo del lado mayor. El valor predeterminado es <strong>1000 px</strong> y el límite de seguridad es 4000 px.</td></tr>
+</tbody>
+</table>
+<p>Pulsa <strong>Guardar configuración</strong>. Los valores quedan en el almacenamiento
+privado de la aplicación; la pantalla muestra la ruta de su fichero de
+configuración.</p>
+<p><img src="../img/13-fotos-nube-configuracion.png" alt="Configuración de Factuzam Fotos Nube" loading="lazy"></p>
+<blockquote><p>La API key es una credencial. No la incluyas legible en capturas, correos
+ni incidencias: enmascárala antes de compartir la pantalla.</p></blockquote>
+<h3 id="capturar-y-subir-un-lote">Capturar y subir un lote</h3>
+<ol><li>Escribe el <strong>código exacto del artículo</strong>.</li><li>Escribe el <strong>color</strong>. Debe coincidir con el texto de color que forma el SKU en Factuzam, no con el color básico usado solo para clasificar.</li><li>Pulsa <strong>Hacer foto</strong> o <strong>Elegir de galería</strong>. La imagen se reduce a la resolución configurada y se añade a la cola como <strong>Pendiente</strong>.</li><li>Repite el proceso para todos los artículos y colores del lote.</li><li>Pulsa <strong>Subir todas</strong>. Cada elemento pasa por <strong>Subiendo...</strong> y termina en <strong>Subida OK</strong> o <strong>Error</strong>. El registro inferior muestra el resultado.</li></ol>
+<p>Si hay varias imágenes del mismo artículo/color, la app les asigna los
+índices 1, 2, 3... en el orden de la cola. Por ejemplo, la primera foto de
+<code>BLUSA01</code> en <code>011-AZ</code> se publica como la imagen 1 de ese grupo.</p>
+<p>Para que el emparejamiento sea fiable, Factuzam sanea el color con la misma
+regla que el SKU: mayúsculas, espacios convertidos en guiones y sin símbolos
+como <code>/</code>, <code>%</code> o <code>€</code>. Si el proveedor llama al color <code>011-AZ</code> y su color
+básico es <code>AZUL</code>, en la app se escribe <strong>011-AZ</strong>.</p>
+<h3 id="incorporar-las-fotos-al-catalogo-de-factuzam">Incorporar las fotos al catálogo de Factuzam</h3>
+<p>La subida al servidor no sustituye automáticamente la foto local. En el
+puesto Windows:</p>
+<ol><li>Configura el servicio y la carpeta compartida de fotos en <em>Otros ▸ Parámetros del entorno ▸ Fotos/Servicios web</em>.</li><li>Abre el artículo o la línea de una sesión de compra.</li><li>Usa <strong>Bajar fotos del servidor</strong>. Factuzam descarga las imágenes, relaciona el color con el SKU y crea sus copias de 300 px, 600 px y resolución real en <code>appDirFotos</code>.</li><li>Comprueba el resultado con <code>[Ctrl]+[F]</code> o en la <a href="08-menu-ayuda.html#consulta-de-stocks">Consulta de stocks</a>.</li></ol>
+<hr>
+<h2 id="ventasfzam-ventas-del-dia-en-el-movil">VentasFzam: ventas del día en el móvil</h2>
+<p><strong>VentasFzam</strong> es una aplicación de consulta en modo <strong>solo lectura</strong>. Permite
+seguir las ventas diarias desde el teléfono sin abrir el TPV y sin riesgo de
+modificar facturas, cobros o stock.</p>
+<h3 id="que-muestra">Qué muestra</h3>
+<p>Cada línea de venta incluye:</p>
+<ul><li>Hora, SKU y descripción.</li><li>Temporada y proveedor.</li><li>Importe vendido.</li><li>Foto del artículo en resolución de 300 px, cuando está disponible.</li></ul>
+<p>Al tocar una línea se abre su detalle con familia, color, precio de coste,
+PVP, descuento en porcentaje y euros, precio de venta y total.</p>
+<p>La cabecera resume cuatro indicadores del día:</p>
+<table>
+<thead><tr>
+<th>Indicador</th>
+<th>Contenido</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Venta</strong></td><td>Total vendido con IVA, para que cuadre con la caja.</td></tr>
+<tr><td><strong>Coste</strong></td><td>Coste acumulado de los artículos mostrados.</td></tr>
+<tr><td><strong>Margen</strong></td><td>Importe y porcentaje calculados sobre la base imponible, no sobre la venta con IVA.</td></tr>
+<tr><td><strong>Descuento</strong></td><td>Descuento total aplicado.</td></tr>
+</tbody>
+</table>
+<h3 id="manejo-diario">Manejo diario</h3>
+<ul><li><strong>◀ / ▶</strong> cambia al día anterior o siguiente.</li><li>Tocar la <strong>fecha</strong> vuelve directamente a hoy.</li><li>El <strong>buscador</strong> filtra en el teléfono sobre los datos descargados; el resultado aparece de inmediato y los cuatro totales se recalculan. La cabecera indica <strong>(filtrado)</strong> mientras haya una búsqueda activa.</li><li>Las ventas anuladas o sustituidas no aparecen ni suman. La rectificativa sustitutiva correcta sí aparece; las rectificaciones por diferencias computan con su signo.</li></ul>
+<p>Las fotografías se descargan después de mostrar la lista para no retrasar
+la consulta y quedan almacenadas en la caché del teléfono. Si se cambia de
+día mientras se descargan, la app descarta las imágenes pendientes de la
+consulta anterior.</p>
+<blockquote><p>El día se determina por la <strong>fecha de la factura</strong>, no por el instante en
+que el servidor recibió el evento. Así los totales respetan el cierre del
+negocio y el huso horario de la instalación.</p></blockquote>
+<h3 id="puesta-en-marcha-administrador">Puesta en marcha (administrador)</h3>
+<p>La consulta móvil necesita que la instalación publique las ventas en el
+servicio web:</p>
+<ol><li>En <strong>Otros ▸ Parámetros del entorno ▸ Servicios web</strong>, configurar <code>appApiUrl</code> (URL general), <code>appApiToken</code> (API key/token) y <code>appApiReferencia</code> (referencia de la instalación).</li><li>En <strong>TPV ▸ Parámetros de Caja ▸ Servicios web</strong>, activar <strong>Enviar ventas completas al webservice de respaldo</strong> (<code>vgerEnviarVentasWS</code>) en los perfiles o cajas que correspondan. El valor inicial es <code>False</code>.</li><li>Crear una credencial móvil con permiso de lectura de ventas.</li><li>En <strong>VentasFzam ▸ Configuración (⚙)</strong>, indicar URL base, token y referencia.</li></ol>
+<p>Factuzam guarda cada cambio de una venta como un evento en una cola local y
+lo envía en segundo plano. La caja no espera a la red y la cola fiscal de
+Verifactu funciona de forma independiente. Los eventos se reintentan con el
+mismo identificador para evitar duplicados.</p>
+<h3 id="supervisar-los-envios">Supervisar los envíos</h3>
+<p>Abre <strong>Otros ▸ Colas de envíos ▸ Web Service Fzam</strong> para revisar el estado,
+los intentos y el historial HTTP de cada evento. <strong>Actualizar</strong> refresca la
+consulta y <strong>Ir a Documento</strong> abre la venta relacionada; la pantalla no
+permite modificar ni reintentar filas. Los envíos pendientes se procesan cada
+60 segundos de forma predeterminada y usan espera exponencial antes de pasar
+a <code>ERROR</code> al agotar los 20 intentos configurados.</p>
+<p>Consulta estados, permisos y recuperación en
+<a href="07-menu-otros.html#web-service-fzam">Otros ▸ Colas de envíos ▸ Web Service Fzam</a>.</p>
+<blockquote><p>Las ventas históricas sincronizadas antes de incorporar un dato nuevo —por
+ejemplo, la temporada— pueden mostrarlo vacío hasta que vuelvan a enviarse.
+Las ventas nuevas lo incluyen desde el primer envío.</p></blockquote>
+<hr>
+<h2 id="recuento-movil-de-inventarios">Recuento móvil de inventarios</h2>
+<p>La app de recuento permite escanear existencias desde terminales Android y
+devolver las cantidades a un inventario abierto. El envío y la recogida se
+controlan desde Factuzam; el móvil no regulariza el stock por sí solo.</p>
+<p>Consulta el procedimiento completo en
+<a href="06-menu-almacen.html#recuento-movil">Almacén ▸ Inventarios ▸ Recuento móvil</a>.</p>
+<hr>
+<p><a href="12-cambios-y-novedades.html">◀ Cambios y novedades</a> · <a href="index.html">Índice</a> · <a href="14-arquitectura-y-desarrollo.html">Siguiente ▶ Arquitectura y desarrollo</a></p>
+</article>
+<footer>Factuzam User Manual · generated on 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

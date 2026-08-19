@@ -214,6 +214,7 @@ uses
   FileCtrl, inLibPathTokens,               // SelectDirectory
    inLibLayoutForm, inLibVerifactu, inLibFactuzamApi,
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
+   inLibTraduccionesDescargaPersistenciaIntf,
    inMtoModalDescargaTraduccion, inLibLogIntf,
    UniDataConfiguracionPantalla,
    UniDataTraduccionesDescargaRepositorio,
@@ -682,6 +683,8 @@ procedure TfrmMtoAppParam.InspectorItemValueChanged(
   Item: TJvCustomInspectorItem);
 var
   bAplicado: Boolean;
+  bDescargar: Boolean;
+  oInstalador: IInstaladorTraduccionesPersistencia;
   sError: string;
   sIdioma: string;
   sToken: string;
@@ -711,14 +714,17 @@ begin
               sUrlBase := cUrlFactuzamApiDefecto;
             sToken := Trim(
               ValorParametroInspector('appApiToken', ''));
+            oInstalador := TInstaladorTraduccionesUniDAC.Create(
+              ConexionPrincipal);
+            bDescargar := not oInstalador.DisponibleLocalmente(
+              sIdioma);
             bAplicado := TfrmModalDescargaTraduccion.Ejecutar(
               Self,
-              TInstaladorTraduccionesUniDAC.Create(
-                ConexionPrincipal),
+              oInstalador,
               sUrlBase,
               sToken,
               sIdioma,
-              True,
+              bDescargar,
               AplicarIdiomaInterfaz,
               sError);
           end

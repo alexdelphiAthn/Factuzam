@@ -55,6 +55,7 @@ Categorías habituales:
 | **Servicios web** | URL (`appApiUrl`), credencial (`appApiToken`) y referencia de instalación (`appApiReferencia`) comunes para fotos, correo, ventas, SIF y recuentos; también ciclo y máximo de intentos de la cola de ventas. |
 | **Verifactu** | Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj. |
 | **PrestaShop** | Conexión API, tienda, empresa, tarifa, cola, niveles de familia y checks **Sincronizar stock y precios**, **Crear artículos en PrestaShop al darlos de alta**, **Activar artículos en PrestaShop al marcar En web** y **Hacer barrido periódicamente**. |
+| **Apariencia** | Tema, paleta de color e idioma de la interfaz. |
 | **Caja** | Valores por defecto del TPV y comportamiento de arqueo. |
 
 El valor efectivo se resuelve por herencia: primero el valor propio del
@@ -90,17 +91,32 @@ Antes de activar la integración, sigue la
 
 ### Idioma y traducciones
 
-En la categoría **Apariencia**, el parámetro **Idioma de la interfaz**
-(`appIdioma`) selecciona el idioma de Factuzam. La lista contiene
-`es-ES`, los idiomas activos instalados en la base de datos —por ejemplo
-`en-GB` y `ca-ES`— y `qps-ploc`, reservado para pruebas de maquetación.
+La selección no es una opción independiente del menú. Su ruta exacta es
+**Otros ▸ Parámetros del entorno ▸ Apariencia ▸ Idioma de la interfaz**.
+El parámetro `appIdioma` ofrece siempre español (`es-ES`), inglés británico
+(`en-GB`), catalán (`ca-ES`) y chino simplificado (`zh-CN`), además de los
+idiomas activos que existan en la base de datos. `qps-ploc` queda reservado
+para pruebas de maquetación.
 
 Para cambiarlo:
 
 1. Selecciona el usuario, grupo o alcance al que se aplicará el parámetro.
 2. Abre **Apariencia ▸ Idioma de la interfaz**.
-3. Elige el idioma y pulsa **Grabar**.
-4. Cierra y vuelve a abrir Factuzam para aplicar el cambio completo.
+3. Elige el idioma. Para `en-GB`, `ca-ES` o `zh-CN`, Factuzam abre el diálogo
+   **Descargar traducción**. Si el paquete ya está instalado, lo reutiliza;
+   en caso contrario, lo obtiene del servicio configurado mediante
+   `appApiUrl` y `appApiToken`.
+4. Espera a que termine la comprobación y pulsa **Guardar (F12)**. Las
+   ventanas abiertas se actualizan en ese momento; cierra y vuelve a abrir
+   Factuzam para aplicar el cambio completo a toda la sesión.
+
+La descarga necesita conexión al servicio de Factuzam y un token con el
+ámbito `descargar:traducciones`. El ZIP autenticado solo se instala después
+de comprobar el idioma, la versión del contrato, el orden y tamaño de sus
+SQL y la huella SHA-256 declarada para cada archivo. Después de preparar el
+esquema, los SQL de datos se instalan en una transacción. Si falla la
+descarga, la validación o la instalación, se mantienen el idioma y el valor
+anteriores.
 
 El idioma afecta a formularios, menús, mensajes, controles Developer
 Express, tickets e informes FastReport que tengan traducción. Si falta una
@@ -385,7 +401,11 @@ móvil en [VentasFzam](13-aplicaciones-moviles.md#puesta-en-marcha-administrador
 **Atajo de menú:** `[Ctrl]+[Y]`
 
 Lanza una **copia de seguridad** de la base de datos. Genera un fichero de
-respaldo con todos los datos (clientes, artículos, documentos, stock…).
+respaldo con los datos operativos (clientes, artículos, documentos, stock…).
+En `fza_traducciones` incluye únicamente los idiomas instalados desde un
+paquete descargable. El español compilado y los catálogos de trabajo no se
+duplican; si mantienes un idioma propio con `utlTraduc`, conserva también su
+SQL o una exportación administrativa independiente.
 
 > Realiza copias **con regularidad** y guárdalas en un lugar seguro y
 > externo al equipo. Es tu única red de seguridad ante un fallo de disco o

@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ca-ES">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>04 · Menú Ventas Mayor — Manual de Factuzam</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menú">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>Manual d'usuari</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Idioma del manual"><a class="enlace-idioma" href="../04-menu-ventas-mayor.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="../en-GB/04-menu-ventas-mayor.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma activo" href="04-menu-ventas-mayor.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)" aria-current="page"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/04-menu-ventas-mayor.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Inici</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Accés i primers passos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptes comuns</a></li><li><a href="02-menu-archivo.html">02 · Menú Fitxer</a></li><li><a href="03-menu-compras.html">03 · Menú Compres</a></li><li class="activo"><a href="04-menu-ventas-mayor.html">04 · Menú Vendes majoristes</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Magatzem</a></li><li><a href="07-menu-otros.html">07 · Menú Altres</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ajuda</a></li><li><a href="09-instalacion-windows.html">09 · Instal·lació a Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migració des del sistema anterior</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Canvis i novetats</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicacions mòbils</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura i desenvolupament</a></li><li><a href="15-integracion-prestashop.html">15 · Integració amb PrestaShop</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="ca-ES"><strong>Traducció pendent.</strong> Aquest capítol encara no està disponible en català; es mostra la versió en castellà.</aside>
+<h1 id="04-menu-ventas-mayor">04 · Menú Ventas Mayor</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Ventas Mayor</strong> gestiona la <strong>venta al por mayor</strong> (B2B): ventas a
+otros comercios o clientes con factura nominativa, a diferencia de la venta
+al detalle en tienda, que se hace desde el módulo
+<a href="05-menu-caja.html">TPV</a>.</p>
+<p>Estructura del menú:</p>
+<pre><code>Ventas Mayor
+├── Borradores
+├── Efectos de cobro
+├── Remesas de cobro
+├── Cargar efectos en remesa...
+├── Pedidos
+├── Albaranes
+└── Listados
+    └── Ventas</code></pre>
+<blockquote><p>Flujo habitual de venta a mayor:
+<strong>Pedido</strong> del cliente → <strong>Albarán</strong> de salida (sale el stock) →
+<strong>Borrador</strong> de factura → <strong>Consolidar</strong> (registro fiscal). Se puede
+facturar albarán a albarán o agrupar varios albaranes en un solo
+borrador antes de emitirlo.</p></blockquote>
+<hr>
+<h2 id="borradores">Borradores</h2>
+<p><img src="../img/04-borradores.png" alt="Borrador de venta: cabecera, líneas y totales" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[F]</code></p>
+<p>Mantenimiento de <strong>Borradores de Venta Mayor</strong>. Mientras el documento está
+en fase <strong>BORRADOR</strong> se puede editar; al pulsar <strong>Consolidar</strong> se emite el
+registro fiscal según el modo configurado en Verifactu.</p>
+<p>Cada borrador lleva:</p>
+<ul><li><strong>Cabecera</strong>: cliente, fecha, <strong>serie</strong> y número, forma de pago y vencimientos.</li><li><strong>Líneas</strong>: artículos/SKU, cantidades, precio tomado de la <strong>tarifa</strong> del cliente y descuentos.</li><li><strong>Totales e impuestos</strong>: base, IVA por tipo, recargo de equivalencia y retenciones según cliente y empresa.</li><li><strong>Efectos</strong>: vencimientos de cobro generados desde la forma de pago, con importe, vencimiento, estado y banco asociado.</li></ul>
+<p>Los borradores se firman o comunican a <strong>Verifactu (AEAT)</strong> según la
+configuración de certificado de la empresa (ver
+<a href="02-menu-archivo.html#empresas">Empresas</a>).</p>
+<blockquote><p>Un borrador puede crearse manualmente o <strong>a partir de albaranes</strong>
+pendientes de facturar, incluso agrupando varios albaranes de un cliente
+en un rango de fechas.</p></blockquote>
+<p>Al consolidar, el documento deja de ser editable. Las correcciones
+posteriores se hacen con <strong>Anular</strong>, <strong>Rectificar</strong> o <strong>Subsanar</strong>, según
+el caso fiscal. La pestaña Verifactu muestra QR, URL de cotejo, estado y
+registro asociado.</p>
+<h3 id="efectos-y-edoc-en-el-borrador">Efectos y eDoc en el borrador</h3>
+<p>El botón <strong>Generar efectos</strong> reparte el total líquido en vencimientos según
+la forma de pago. En facturas normales la pestaña 3 muestra <strong>Efectos</strong> de
+cobro; en simplificadas mantiene el circuito de recibos.</p>
+<p>Desde la pestaña de efectos se puede marcar un vencimiento como
+<strong>Cobrado</strong> o <strong>Devuelto</strong>. Para gestionar muchos vencimientos juntos, usa
+las opciones de menú <strong>Efectos de cobro</strong>, <strong>Remesas de cobro</strong> y
+<strong>Cargar efectos en remesa...</strong>.</p>
+<p>La pestaña <strong>Parámetros eDoc</strong> guarda la foto de emisión para Facturae:
+DIR3 de oficina contable, órgano gestor y unidad tramitadora, además de
+nombre y apellidos cuando el receptor es persona física. Se propone desde
+la ficha del cliente y puede corregirse para esa factura concreta.</p>
+<p>El botón <strong>Emitir eDoc</strong> genera un fichero Facturae firmado (<code>.xsig</code>) y
+guarda el XML firmado en la factura. Solo se emite desde facturas normales
+ya consolidadas, con certificado de empresa configurado y datos fiscales
+completos.</p>
+<p><img src="../img/04-borradores-edoc.png" alt="Parámetros eDoc del borrador" loading="lazy"></p>
+<hr>
+<h2 id="efectos-de-cobro">Efectos de cobro</h2>
+<p>Mantenimiento de vencimientos de cliente. Cada efecto representa un cobro
+pendiente, cobrado, remesado o conciliado, generado desde un borrador de
+venta mayor.</p>
+<p><img src="../img/04-efectos-cobro.png" alt="Efectos de cobro" loading="lazy"></p>
+<p>Acciones principales:</p>
+<ul><li><strong>Conciliar efecto</strong> — registra un cobro total o parcial, con fecha, importe, tipo y referencia.</li><li><strong>Fusionar efectos</strong> — agrupa efectos pendientes cuando se necesita regularizar varios vencimientos en uno.</li></ul>
+<p>Estados habituales:</p>
+<table>
+<thead><tr>
+<th>Estado</th>
+<th>Significado</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>PENDIENTE</strong></td><td>Vencimiento vivo, todavía no cobrado.</td></tr>
+<tr><td><strong>COBRADO</strong></td><td>Cobrado total o parcialmente.</td></tr>
+<tr><td><strong>REMESADO</strong></td><td>Incluido en una remesa de cobro.</td></tr>
+<tr><td><strong>CONCILIADO</strong></td><td>Fusionado o regularizado con otro efecto.</td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="remesas-de-cobro">Remesas de cobro</h2>
+<p>Agrupa efectos de cliente para gestionar cobros bancarios. La remesa
+recoge empresa, banco de cobro, fecha, número de efectos, total, cobro
+realizado y pendiente.</p>
+<p><img src="../img/04-remesas-cobro.png" alt="Remesas de cobro" loading="lazy"></p>
+<p>Acciones principales:</p>
+<ul><li><strong>Añadir efecto</strong> — abre la selección de efectos pendientes.</li><li><strong>Quitar efecto</strong> — retira el efecto seleccionado de la remesa.</li><li><strong>Conciliar efecto</strong> — registra el cobro de un efecto concreto.</li><li><strong>Conciliar remesa</strong> — registra el cobro de todos los efectos de la remesa.</li><li><strong>Asignar banco</strong> — fija o cambia el banco de cobro de la empresa.</li><li><strong>Fecha cobro</strong> — actualiza la fecha de cobro de la remesa.</li><li><strong>Generar SEPA</strong> — crea el fichero bancario cuando la remesa tiene los datos SEPA necesarios.</li></ul>
+<hr>
+<h2 id="cargar-efectos-en-remesa">Cargar efectos en remesa...</h2>
+<p>Acceso directo al selector de efectos pendientes para crear una remesa
+nueva o alimentar una remesa existente.</p>
+<p><img src="../img/04-cargar-efectos-remesa.png" alt="Cargar efectos en remesa de cobro" loading="lazy"></p>
+<p>Filtra por empresa y vencimiento máximo. Marca los efectos que quieras
+incluir y pulsa <strong>Cargar en remesa</strong>.</p>
+<hr>
+<h2 id="pedidos">Pedidos</h2>
+<p><img src="../img/04-pedidos.png" alt="Pedidos de venta" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[P]</code></p>
+<p>Mantenimiento de <strong>Pedidos de Venta</strong>. Registra lo que un cliente
+<strong>encarga</strong> (reserva de género). No mueve stock; sirve de base para generar
+el <strong>albarán</strong> de salida cuando se sirve el pedido.</p>
+<h3 id="importar-pedidos-de-prestashop">Importar pedidos de PrestaShop</h3>
+<p>El botón <strong>Importar de PrestaShop</strong> abre una ventana para incorporar de forma
+manual pedidos remotos. Esta función utiliza la URL y la clave API efectivas
+de <strong>Otros ▸ Parámetros del entorno ▸ PrestaShop</strong>; la credencial no se muestra
+en la ventana.</p>
+<p>Antes de empezar:</p>
+<ol><li>Entra con la empresa y el almacén de salida correctos. La empresa y el almacén del pedido se toman de la sesión actual; sin almacén no se importa.</li><li>Configura una URL HTTPS y una clave API exclusiva de mínimo privilegio. La clave necesita lectura de <code>orders</code>, <code>customers</code>, <code>addresses</code>, <code>states</code>, <code>carriers</code>, <code>order_states</code>, <code>customer_threads</code> y <code>customer_messages</code>.</li><li>Comprueba que la empresa tenga una configuración de IVA vigente en la fecha del pedido y revisa que este sea fiscalmente compatible con ella. Sin esa configuración no se importa, aunque el pedido no tenga portes.</li><li>Usa una instalación de laboratorio o una clave limitada a una única tienda. La importación actual no aplica el <strong>Id. tienda</strong> al listar pedidos.</li></ol>
+<p>Procedimiento:</p>
+<ol><li>Pulsa <strong>Conectar y listar</strong>. Factuzam consulta PrestaShop y carga el resumen de los pedidos accesibles para esa clave. La consulta actual no limita por fecha ni por estado; en tiendas con mucho histórico puede tardar.</li><li>Revisa las columnas y contrasta el estado remoto antes de seleccionar:</li></ol>
+<table>
+<thead><tr>
+<th>Columna</th>
+<th>Contenido</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Sel.</strong></td><td>Marca los pedidos que se intentarán importar.</td></tr>
+<tr><td><strong>ID PS</strong></td><td>Identificador numérico del pedido en PrestaShop.</td></tr>
+<tr><td><strong>Referencia</strong></td><td>Referencia comercial asignada por PrestaShop.</td></tr>
+<tr><td><strong>Fecha</strong></td><td>Fecha comunicada por la tienda.</td></tr>
+<tr><td><strong>Cliente</strong></td><td>Nombre del cliente remoto.</td></tr>
+<tr><td><strong>Total</strong></td><td>Total con impuestos comunicado por PrestaShop.</td></tr>
+<tr><td><strong>Estado</strong></td><td>Nombre del estado remoto; es informativo.</td></tr>
+<tr><td><strong>Importado?</strong></td><td><code>S</code> cuando Factuzam ya encuentra ese <code>ID PS</code>; <code>N</code> en caso contrario.</td></tr>
+</tbody>
+</table>
+<ol start="3"><li>No selecciones pedidos cancelados, reembolsados, de prueba ni cualquier estado que no deba servirse. La ventana todavía no bloquea automáticamente esos estados.</li><li>Marca las filas correctas y pulsa <strong>Importar selección</strong>.</li><li>Factuzam procesa los pedidos uno a uno. Si uno falla, muestra el error para ese identificador y continúa con los siguientes. Al terminar informa del número de pedidos importados y de errores.</li><li>Actualiza la lista de pedidos y revisa el documento local antes de crear el albarán. No des por correcta una importación solo porque el resumen termine sin errores.</li></ol>
+<p>La detección de duplicados comprueba actualmente el <code>ID PS</code>. Un pedido que ya
+figure importado se omite también si vuelve a marcarse. Esta protección evita
+la repetición ordinaria en una sola instalación, pero el identificador aún no
+está ligado al destino PrestaShop ni protegido por una clave única de base de
+datos. No deben ejecutarse dos importaciones concurrentes del mismo pedido.</p>
+<p>Durante la importación:</p>
+<ul><li>el pedido queda asociado a la empresa y al almacén de la sesión;</li><li>el cliente se busca primero por NIF y después por correo electrónico; si no se encuentra, se crea una ficha con los datos recibidos;</li><li>cada producto se intenta resolver por código de barras y por referencia; si no existe, puede crearse un artículo y un SKU locales;</li><li>los mensajes del pedido se copian cuando PrestaShop los proporciona; un error aislado en un mensaje no invalida el resto del pedido;</li><li>los importes de los productos se guardan con el tipo de IVA del artículo local y los porcentajes vigentes de la empresa.</li></ul>
+<h4 id="gastos-de-transporte-gastost">Gastos de transporte <code>GASTOS_T</code></h4>
+<p>Si el pedido tiene portes, Factuzam añade al final una línea de una unidad con
+estas reglas:</p>
+<ul><li>artículo y SKU: <code>GASTOS_T</code>;</li><li>descripción: <strong>GASTOS TRANSPORTE</strong>;</li><li>tipo de artículo: <strong>SERVICIO</strong>, sin variaciones, sin trazabilidad y con <strong>En web = No</strong>;</li><li>IVA: tipo normal de la empresa, calculado a partir de su configuración;</li><li>precio sin IVA, precio con IVA y base: los importes comunicados por PrestaShop.</li></ul>
+<p>El artículo y el SKU se crean la primera vez y se reutilizan después. Si alguno
+de esos códigos ya existe con un tipo, IVA, padre o estado incompatible, se
+cancela el pedido en lugar de transformar silenciosamente el maestro. También
+se cancela si los portes con y sin IVA no corresponden al IVA normal de la
+empresa. Cuando ambos importes son cero no se crea la línea.</p>
+<p><code>GASTOS_T</code> es un servicio: al pasar el pedido a albarán y después a factura
+conserva su tipo y su importe, pero no genera un movimiento de almacén. Las
+líneas de mercancía del mismo documento sí siguen el circuito normal de stock.</p>
+<blockquote><p><strong>Límites actuales y uso en producción</strong></p>
+<ul><li>La importación solo transmite URL y clave al lector remoto: todavía no filtra <code>orders</code> por <strong>Id. tienda</strong>. Una clave que abarque varias tiendas puede mezclar pedidos y hace la función <strong>NO-GO multitienda</strong>.</li><li>La correspondencia exacta del SKU o combinación remota con el SKU local no está cerrada para todos los casos. Deben revisarse especialmente productos sin EAN y combinaciones de talla o color antes de servirlos.</li><li>Las altas automáticas de cliente y artículos de producto ocurren antes de la transacción final del pedido. La atomicidad completa de todos los maestros sigue pendiente.</li><li>El IVA se resuelve para el grupo fiscal de la empresa y la fecha comunicada por PrestaShop. Revisa que los periodos fiscales no tengan huecos ni solapamientos antes de incorporar pedidos antiguos.</li><li>El botón exige el permiso genérico <strong>Insertar</strong> del mantenimiento de pedidos. No existe todavía una acción independiente para conceder solo la importación. Ese permiso autoriza también las altas automáticas necesarias de clientes, artículos, SKU/EAN y <code>GASTOS_T</code>, sin consultar por separado los permisos de alta de esos maestros; concédelo solo a personal autorizado.</li><li>Solo se materializan productos y portes. Los cupones o descuentos globales y el envoltorio no se convierten todavía en líneas locales; no importes un pedido que los contenga si la suma de las líneas no coincide con el total pagado en PrestaShop.</li><li>Importar un pedido no mueve ni descuenta stock físico y no sustituye una ingestión o reserva automática. Mantén <strong>Sincronizar stock y precios</strong> desmarcado en producción: una escritura absoluta podría reponer unidades ya vendidas en la web.</li><li>La batería funcional de importación, concurrencia, servicio y ciclo pedido → albarán → factura no está completada. Utiliza esta función en laboratorio y valida manualmente cliente, SKU, impuestos, portes y totales.</li></ul>
+<p>Consulta también <a href="15-integracion-prestashop.html">Integración con PrestaShop</a>,
+especialmente <a href="15-integracion-prestashop.html#11-seguridad-del-stock">Seguridad del stock</a>.</p></blockquote>
+<hr>
+<h2 id="albaranes">Albaranes</h2>
+<p><img src="../img/04-albaranes.png" alt="Albaranes de venta" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[A]</code></p>
+<p>Mantenimiento de <strong>Albaranes de Venta</strong>. Registra la <strong>salida real</strong> de
+mercancía hacia el cliente: al confirmarlo <strong>resta stock</strong> del almacén. Es
+el documento que después se <strong>factura</strong>.</p>
+<p>Desde los albaranes se pueden crear borradores por rango de fechas. El
+selector permite marcar varios albaranes pendientes y generar un borrador
+agrupado para el mismo cliente.</p>
+<p><img src="../img/04-albaranes-crear-borradores.png" alt="Crear borradores desde albaranes de venta" loading="lazy"></p>
+<hr>
+<h2 id="listados-ventas">Listados ▸ Ventas</h2>
+<p><img src="../img/04-listado-ventas.png" alt="Filtros del listado de ventas" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[V]</code></p>
+<p>Abre el <strong>generador de listados de ventas</strong>. Mediante un cuadro de
+<strong>filtros</strong> (rango de fechas, cliente, artículo, familia, serie…) genera un
+informe de las ventas realizadas, que se puede <strong>previsualizar, imprimir o
+exportar</strong>.</p>
+<p>Útil para análisis comercial: qué se ha vendido, a quién y en qué periodo.</p>
+<hr>
+<p><a href="03-menu-compras.html">◀ Menú Compras</a> · <a href="index.html">Índice</a> · <a href="05-menu-caja.html">Siguiente ▶ Menú TPV</a></p>
+</article>
+<footer>Manual de Factuzam · generat el 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

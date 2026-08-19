@@ -16,6 +16,7 @@ pendientes capturas de pantallas nuevas que todavía no están referenciadas:
 - importación de pedidos de PrestaShop: botón, selector y resultado;
 - parámetros y cola de PrestaShop, incluido el detalle HTTP;
 - cola Web Service Fzam y detalle de petición/respuesta;
+- selector de idioma, progreso de descarga y Editor de traducciones;
 - Histórico de Solicitudes de Traspaso y Facturas proforma;
 - Procesos auxiliares BBDD.
 

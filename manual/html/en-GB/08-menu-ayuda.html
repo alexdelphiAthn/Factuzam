@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>08 · Menú Ayuda — Factuzam User Manual</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menu">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>User manual</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Manual language"><a class="enlace-idioma" href="../08-menu-ayuda.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma activo" href="08-menu-ayuda.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/08-menu-ayuda.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/08-menu-ayuda.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Home</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></li><li><a href="01-conceptos-comunes.html">01 · Common concepts</a></li><li><a href="02-menu-archivo.html">02 · File menu</a></li><li><a href="03-menu-compras.html">03 · Purchases menu</a></li><li><a href="04-menu-ventas-mayor.html">04 · Wholesale menu</a></li><li><a href="05-menu-caja.html">05 · POS menu</a></li><li><a href="06-menu-almacen.html">06 · Warehouse menu</a></li><li><a href="07-menu-otros.html">07 · Other menu</a></li><li class="activo"><a href="08-menu-ayuda.html">08 · Help menu</a></li><li><a href="09-instalacion-windows.html">09 · Windows installation</a></li><li><a href="10-migracion-legacy.html">10 · Migration from legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></li><li><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="en-GB"><strong>Translation pending.</strong> This chapter is not yet available in English; the Spanish version is shown.</aside>
+<h1 id="08-menu-ayuda">08 · Menú Ayuda</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Ayuda</strong> reúne las consultas transversales de artículos y stock,
+la documentación, el soporte y la información de versión.</p>
+<p>Estructura del menú:</p>
+<pre><code>Ayuda
+├── Consulta de stocks
+├── Consulta de artículos similares
+├── Manual web
+├── Foro de soporte
+├── Envío de errores
+└── Acerca de</code></pre>
+<hr>
+<h2 id="consulta-de-stocks">Consulta de stocks</h2>
+<p><strong>Atajo global:</strong> <code>[Ctrl]+[U]</code></p>
+<p>Abre la consulta de existencias de <strong>Factuzam</strong> desde cualquier pantalla.
+Si el foco está sobre un artículo o una línea de documento, la consulta se
+abre ya situada en ese artículo/SKU. La ventana permanece encima mientras
+trabajas y se cierra con <code>[Esc]</code>.</p>
+<p><img src="../img/08-consulta-stocks.png" alt="Consulta de stocks de Factuzam por almacenes" loading="lazy"></p>
+<h3 id="localizar-el-articulo">Localizar el artículo</h3>
+<ul><li>Escribe un código de artículo, SKU, descripción o referencia reconocida y pulsa <code>[Intro]</code>. Si hay varias coincidencias, Factuzam abre un selector.</li><li>Usa el botón <code>...</code> para buscar por código, descripción, familia, temporada, proveedor, referencia del proveedor o PVP.</li><li>También puedes leer un <strong>código de barras</strong>; la consulta identifica el SKU y mantiene un historial para volver a los artículos consultados.</li></ul>
+<p>La cabecera muestra la descripción, la foto, propiedades, tarifas y
+proveedores del artículo. El último precio de compra solo aparece si el
+perfil permite ver costes. Al seleccionar un color se actualizan sus
+propiedades efectivas y su foto.</p>
+<h3 id="elegir-que-cantidad-consultar">Elegir qué cantidad consultar</h3>
+<p>El selector <strong>Estado del stock</strong> cambia la magnitud que aparece en la
+rejilla. Hay dos niveles de detalle:</p>
+<table>
+<thead><tr>
+<th>Modo</th>
+<th>Estados principales</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Simplificado</strong></td><td>Existencias, Entradas, Salidas, Pendiente de servir, Pendiente de recibir y Todos los estados.</td></tr>
+<tr><td><strong>Desglosado</strong></td><td>Existencias y pendientes, más el detalle de compras, traspasos, depósitos, ventas, regularizaciones, albaranes y prendas prestadas.</td></tr>
+</tbody>
+</table>
+<p>La leyenda inferior usa un color por estado y sirve como acceso directo:
+al pulsar un nombre, Factuzam selecciona ese estado y cambia a Simplificado
+o Desglosado cuando sea necesario. <strong>Todos los estados</strong> presenta una fila
+por estado para compararlos a la vez.</p>
+<h3 id="filtrar-y-leer-la-rejilla">Filtrar y leer la rejilla</h3>
+<ol><li>Marca uno o varios <strong>colores</strong> y <strong>almacenes</strong>. La selección múltiple permite comparar tiendas o variantes.</li><li>Usa <strong>Por almacenes</strong> para obtener una fila por almacén y tallas en columnas, o <strong>Por colores</strong> para obtener una fila por color.</li><li>Consulta las pestañas <strong>Fotos misma familia</strong>, <strong>Fotos mismo proveedor</strong> y <strong>Fotos misma temporada</strong> para localizar artículos relacionados visualmente. Esas pestañas se cargan al abrirlas para no retrasar la consulta principal.</li></ol>
+<p><img src="../img/08-consulta-stocks-estados.png" alt="Consulta de stocks mostrando todos los estados" loading="lazy"></p>
+<h3 id="acciones-desde-una-celda">Acciones desde una celda</h3>
+<ul><li><strong>Botón derecho ▸ Agregar a Documento de Trabajo...</strong> lleva el SKU y la cantidad de la celda a un documento nuevo o existente. Debe estar seleccionada una celda de <strong>Existencias</strong> y la combinación de almacén, color y talla tiene que identificar un único SKU.</li><li><strong>Op de Caja</strong> abre las operaciones de caja del SKU seleccionado en una celda de talla, útil para explicar de dónde procede una salida o venta.</li></ul>
+<blockquote><p>La consulta es informativa: cambiar de estado, color, almacén o vista no
+modifica el stock. Las existencias solo cambian mediante documentos y
+operaciones de Factuzam.</p></blockquote>
+<hr>
+<h2 id="consulta-de-articulos-similares">Consulta de artículos similares</h2>
+<p><strong>Atajo global:</strong> <code>[Ctrl]+[E]</code></p>
+<p>Abre la búsqueda avanzada de artículos y SKU desde cualquier pantalla.
+Permite localizar referencias por talla, color, código de barras, familia,
+proveedor, temporada, propiedades y proximidad de color. Consulta el
+procedimiento completo en
+<a href="01-conceptos-comunes.html#busqueda-de-datos-de-articulos-ctrle">Búsqueda de datos de artículos</a>.</p>
+<hr>
+<h2 id="manual-web">Manual web</h2>
+<p>Abre en el navegador <strong>este manual de usuario</strong> publicado en la web:</p>
+<p><a href="https://www.veryverifactu.com/manual/index.html">https://www.veryverifactu.com/manual/index.html</a></p>
+<p>Es la copia de la documentación desplegada para consulta desde cualquier
+puesto. Comprueba la <strong>fecha de generación</strong> que aparece en el pie: una
+versión local recién generada no llega a la web hasta que el administrador
+publique la carpeta <code>manual/html</code> completa. Si falta un capítulo reciente,
+consulta el manual incluido con la versión instalada o avisa al soporte.</p>
+<hr>
+<h2 id="proyecto-en-github-y-licencia">Proyecto en GitHub y licencia</h2>
+<p>El código fuente y el historial de desarrollo de Factuzam están publicados
+en el <strong>repositorio oficial de GitHub</strong>:</p>
+<p><a href="https://github.com/alexdelphiAthn/Factuzam">github.com/alexdelphiAthn/Factuzam</a></p>
+<p>El código original de Factuzam se distribuye bajo la <strong>Mozilla Public
+License 2.0 (<code>MPL-2.0</code>)</strong>, salvo los archivos identificados como código de
+terceros o sujetos a otra licencia. Esta licencia permite usar, modificar,
+distribuir y vender el programa. Si se distribuye un archivo cubierto que se
+ha modificado, el código fuente de ese archivo debe seguir disponible bajo
+la MPL 2.0.</p>
+<p>Los componentes comerciales y demás materiales de terceros conservan sus
+propias licencias. La licencia del código tampoco concede derechos sobre el
+nombre, los logotipos o las marcas de Factuzam.</p>
+<ul><li><a href="https://github.com/alexdelphiAthn/Factuzam/blob/main/LICENSE">Texto de la licencia del proyecto</a></li><li><a href="https://github.com/alexdelphiAthn/Factuzam/blob/main/LICENCIAS.md">Alcance y excepciones de licencia</a></li><li><a href="https://www.mozilla.org/MPL/2.0/">Información oficial de la MPL 2.0</a></li></ul>
+<blockquote><p>Este apartado es un resumen informativo. En caso de duda prevalecen el
+archivo <code>LICENSE</code>, el documento <code>LICENCIAS.md</code> y los avisos de licencia de
+cada componente.</p></blockquote>
+<hr>
+<h2 id="foro-de-soporte">Foro de soporte</h2>
+<p>Abre en el navegador el <strong>foro de soporte</strong> de Factuzam:</p>
+<p><a href="https://foro.veryverifactu.com/">https://foro.veryverifactu.com/</a></p>
+<p>Es el canal para plantear dudas de uso, comunicar incidencias y consultar
+respuestas a preguntas de otros usuarios. Al comunicar una incidencia,
+indica siempre la <strong>versión</strong> del programa (ver <em>Acerca de</em>).</p>
+<hr>
+<h2 id="envio-de-errores-administracion-y-seguimiento">Envío de errores: administración y seguimiento</h2>
+<p>Factuzam puede comunicar al soporte un error técnico y conservar su
+seguimiento dentro de la aplicación. El proceso tiene dos partes: el diálogo
+que aparece cuando se produce el error y la pantalla <strong>Ayuda ▸ Envío de
+errores</strong>, desde la que se consulta la respuesta del soporte.</p>
+<h3 id="comunicar-un-error">Comunicar un error</h3>
+<p>Cuando Factuzam detecta una excepción no controlada, muestra el detalle y
+prepara las evidencias disponibles.</p>
+<p><img src="../img/08-envio-error-dialogo.png" alt="Diálogo para enviar un error al soporte" loading="lazy"></p>
+<ol><li>Indica un <strong>email</strong> y un <strong>teléfono</strong> válidos para que soporte pueda contactar contigo.</li><li>Explica en <strong>¿Qué estaba haciendo cuando ocurrió?</strong> la operación, el documento afectado y el resultado esperado. Evita incluir contraseñas, claves API o datos que no sean necesarios para diagnosticar el problema.</li><li>Revisa el aviso de evidencias. Normalmente se adjuntan el detalle técnico, un pantallazo de la ventana principal y el tramo reciente del LOG.</li><li>Si aparece el aviso de LOG incompleto, pulsa <strong>Activar LOG completo</strong>, cierra el diálogo y repite la operación. Se activan para esa sesión las trazas SQL, de rendimiento y avanzada; el siguiente envío contendrá más información de diagnóstico.</li><li>Pulsa <strong>Enviar error al soporte</strong>. Conserva la <strong>referencia</strong> que devuelve el servicio, porque identifica la incidencia y su conversación.</li></ol>
+<p><strong>Copiar al portapapeles</strong> permite guardar o comunicar el detalle sin enviar
+las evidencias. Si marcas <strong>Enviar copia de seguridad protegida (ZIP)</strong>,
+Factuzam solicita y confirma una contraseña, crea la copia y sustituye el LOG
+por esa copia protegida en el envío. La contraseña no se envía ni se guarda:
+debes comunicarla por otro canal a <code>info@veryverifactu.com</code>, indicando la
+referencia. Preparar la copia puede tardar varios minutos.</p>
+<blockquote><p>Antes de enviar, ten en cuenta que el pantallazo, el LOG y, especialmente,
+la copia de seguridad pueden contener datos de la empresa. No marques la
+copia protegida si soporte no la necesita.</p></blockquote>
+<h3 id="consultar-y-administrar-los-envios">Consultar y administrar los envíos</h3>
+<p><img src="../img/08-errores-envios-lista.png" alt="Historial de errores enviados" loading="lazy"></p>
+<p>La pestaña <strong>Lista</strong> muestra primero los envíos más recientes. Es una consulta
+de seguimiento: no permite crear, editar ni borrar registros manualmente.
+Incluye la referencia, usuario, fecha y hora, estado, resultado HTTP, clase y
+mensaje del error, último comentario técnico y estado de las propuestas.</p>
+<ul><li>Un usuario normal solo consulta los errores que ha enviado con su usuario.</li><li>Un administrador consulta los envíos de todos los usuarios de la instalación.</li><li>La opción y sus acciones pueden estar limitadas por el perfil de permisos.</li></ul>
+<p>Selecciona un envío y abre la pestaña <strong>Ficha</strong>. Al entrar, Factuzam consulta
+automáticamente al servicio y actualiza el estado, los mensajes y las
+propuestas. La cabecera muestra también cuándo se realizó la última consulta
+y su resultado.</p>
+<h3 id="ficha-de-seguimiento">Ficha de seguimiento</h3>
+<p><img src="../img/08-error-seguimiento.png" alt="Conversación de una incidencia con soporte" loading="lazy"></p>
+<p>La ficha se divide en cuatro pestañas:</p>
+<table>
+<thead><tr>
+<th>Pestaña</th>
+<th>Contenido y uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Comunicación</strong></td><td>Historial fechado de mensajes del cliente y del equipo técnico. Permite actualizar, responder y abrir el seguimiento web.</td></tr>
+<tr><td><strong>Detalle técnico</strong></td><td>Mensaje y detalle completo de la excepción que originó el envío.</td></tr>
+<tr><td><strong>Script propuesto</strong></td><td>Descripción, SQL y huella SHA-256 de una corrección preparada por soporte.</td></tr>
+<tr><td><strong>Actualización propuesta</strong></td><td>Versión, archivo, tamaño, descripción, dirección HTTPS y huella SHA-256 de un ejecutable propuesto.</td></tr>
+</tbody>
+</table>
+<p>Las acciones de la ficha son:</p>
+<ul><li><strong>Actualizar mensajes / Actualizar estado</strong> vuelve a consultar el servicio.</li><li><strong>Responder al soporte / Enviar comentario</strong> añade un mensaje a la conversación y sincroniza la ficha.</li><li><strong>Abrir seguimiento web</strong> abre el enlace externo asociado a la referencia.</li><li><strong>Crear copia y ejecutar script</strong> solo se habilita cuando hay un script en estado <code>PROPUESTO</code>. Factuzam muestra su descripción, huella y SQL, pide confirmación, crea antes una copia de seguridad, comprueba la huella SHA-256 y comunica el resultado al soporte.</li><li><strong>Descargar, instalar y reiniciar</strong> solo se habilita ante una actualización en estado <code>PROPUESTO</code>. Antes de sustituir el ejecutable se comprueban HTTPS, tamaño, formato, arquitectura y huella SHA-256. Factuzam conserva el ejecutable anterior durante el cambio y reinicia la aplicación.</li></ul>
+<p><img src="../img/08-error-script-propuesto.png" alt="Script de corrección propuesto por soporte" loading="lazy"></p>
+<p><img src="../img/08-error-actualizacion-propuesta.png" alt="Actualización propuesta por soporte" loading="lazy"></p>
+<blockquote><p>Revisa siempre la descripción antes de aceptar un script o una
+actualización. Si la propuesta no corresponde a la incidencia, responde al
+soporte y espera una aclaración.</p></blockquote>
+<hr>
+<h2 id="acerca-de">Acerca de</h2>
+<p><img src="../img/08-acerca-de.png" alt="Pantalla Acerca de con la versión" loading="lazy"></p>
+<p>Muestra la <strong>pantalla de presentación</strong> con el logotipo, la información del
+producto y, sobre todo, el <strong>número de versión</strong> instalada.</p>
+<p>El dato de versión es importante para el <strong>soporte</strong>: cuando comuniques una
+incidencia, indica siempre la versión que aparece aquí. Tiene el formato:</p>
+<pre><code>1.0.15.AAAAMMDDHHMM.alpha</code></pre>
+<p>donde la parte central refleja la <strong>fecha y hora de la compilación</strong>.</p>
+<hr>
+<p><a href="07-menu-otros.html">◀ Menú Otros</a> · <a href="index.html">Índice</a> · <a href="09-instalacion-windows.html">Siguiente ▶ Instalación en Windows</a></p>
+</article>
+<footer>Factuzam User Manual · generated on 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Factuzam User Manual — Factuzam User Manual</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menu">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>User manual</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Manual language"><a class="enlace-idioma" href="../index.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma activo" href="index.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/index.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/index.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li class="activo"><a href="index.html">Home</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></li><li><a href="01-conceptos-comunes.html">01 · Common concepts</a></li><li><a href="02-menu-archivo.html">02 · File menu</a></li><li><a href="03-menu-compras.html">03 · Purchases menu</a></li><li><a href="04-menu-ventas-mayor.html">04 · Wholesale menu</a></li><li><a href="05-menu-caja.html">05 · POS menu</a></li><li><a href="06-menu-almacen.html">06 · Warehouse menu</a></li><li><a href="07-menu-otros.html">07 · Other menu</a></li><li><a href="08-menu-ayuda.html">08 · Help menu</a></li><li><a href="09-instalacion-windows.html">09 · Windows installation</a></li><li><a href="10-migracion-legacy.html">10 · Migration from legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></li><li><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></li></ul>
+</nav>
+<main>
+<article lang="en-GB">
+
+<h1 id="manual-de-usuario-factuzam">Factuzam User Manual</h1>
+<p>Welcome to the <strong>Factuzam</strong> user manual. Factuzam is a business management,
+invoicing and point-of-sale (POS) application for fashion and retail businesses
+(items with sizes, colours and attributes).</p>
+<p>This manual follows the application's <strong>main menu bar</strong>. Each chapter documents
+one menu and, within it, each menu item in turn: what it does, when to use it and
+the most relevant fields or steps.</p>
+<h2 id="obtener-la-demo">Getting the demo</h2>
+<p>The demo is distributed as a versioned installer. Always use the current link
+provided by Factuzam or by the installer; do not reuse the URL for an earlier
+build. If the website does not show an active download, ask support for the
+current package before continuing with this chapter.</p>
+<blockquote><p><strong>Practice in the DEMO program:</strong> when you start, sign in with the demo
+administrator account, create your own user and password under
+<a href="07-menu-otros.html#usuarios-grupos-y-perfiles">Otros ▸ Usuarios, Grupos y Perfiles</a>,
+assign it to the <strong>Administradores</strong> group, then sign in again from
+<em>Archivo ▸ Invocar login</em> so that you can work with your own account.</p></blockquote>
+<h2 id="proyecto-y-licencia">Project and licence</h2>
+<p>The Factuzam source code is available in the
+<a href="https://github.com/alexdelphiAthn/Factuzam">official GitHub repository</a>.
+The project's original code is distributed under the
+<a href="https://www.mozilla.org/MPL/2.0/">Mozilla Public License 2.0 (MPL-2.0)</a>,
+subject to the exceptions and conditions explained in the
+<a href="08-menu-ayuda.html#proyecto-en-github-y-licencia">Ayuda chapter</a>.</p>
+<hr>
+<h2 id="indice">Contents</h2>
+<table>
+<thead><tr>
+<th>Chapter</th>
+<th>Contents</th>
+</tr></thead>
+<tbody>
+<tr><td><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></td><td>Starting the application, signing in, configuring the database connection and the main screen.</td></tr>
+<tr><td><a href="01-conceptos-comunes.html">01 · Common concepts</a></td><td>How maintenance screens work: list, record, search, navigator, line modes with <code>[F1]</code> and export. <strong>Read this before the other chapters.</strong></td></tr>
+<tr><td><a href="02-menu-archivo.html">02 · Archivo menu</a></td><td>Master data: Empresas, Almacenes, Clientes, Proveedores, Artículos and Tablas Auxiliares.</td></tr>
+<tr><td><a href="03-menu-compras.html">03 · Compras menu</a></td><td>Purchase sessions, Pedidos, Albaranes, Devoluciones a proveedor and Facturas de compra.</td></tr>
+<tr><td><a href="04-menu-ventas-mayor.html">04 · Ventas Mayor menu</a></td><td>Wholesale invoicing: Borradores, receivables, Pedidos, Albaranes and sales reports.</td></tr>
+<tr><td><a href="05-menu-caja.html">05 · TPV menu</a></td><td>Point of sale: till, deposits, history, transfer requests, simplified drafts and pro forma invoices.</td></tr>
+<tr><td><a href="06-menu-almacen.html">06 · Almacén menu</a></td><td>Warehouse movements, Inventarios, Documentos de Trabajo and stock reports.</td></tr>
+<tr><td><a href="07-menu-otros.html">07 · Otros menu</a></td><td>Parameters, VAT, users/permissions, outbound queues, backups, Generador de procesos and Procesos auxiliares BBDD.</td></tr>
+<tr><td><a href="08-menu-ayuda.html">08 · Ayuda menu</a></td><td>Stock enquiry, web manual, GitHub, licence and administration of errors sent to support.</td></tr>
+<tr><td><a href="09-instalacion-windows.html">09 · Installation on Windows</a></td><td>MariaDB, initial database, workstation installation and getting started.</td></tr>
+<tr><td><a href="10-migracion-legacy.html">10 · Migration from legacy software</a></td><td>Moving data from the previous ERP (SQL Server) with Factuzam Migrator.</td></tr>
+<tr><td><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></td><td>Verifiable invoicing system: configuration, the queue available from Otros, QR codes and tax actions (cancel, correct and remedy).</td></tr>
+<tr><td><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></td><td>Summary of recent changes and where they are documented in the manual.</td></tr>
+<tr><td><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></td><td>Item photographs, daily sales enquiries and stocktaking from Android.</td></tr>
+<tr><td><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></td><td>Programming style, SOLID principles, layers, tests and the configurable SQL catalogue.</td></tr>
+<tr><td><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></td><td>Configuration, catalogue and queue, order import, prices by SKU and validation status.</td></tr>
+</tbody>
+</table>
+<hr>
+<h2 id="la-barra-de-menu-de-un-vistazo">The menu bar at a glance</h2>
+<table>
+<thead><tr>
+<th>Menu</th>
+<th>Main options</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Archivo</strong></td><td>Empresas, Almacenes, Clientes, Proveedores, Artículos, Tablas Auxiliares, Invocar login and Salir.</td></tr>
+<tr><td><strong>Compras</strong></td><td>Sesiones, Pedidos, Albaranes, Devoluciones, Crear borradores, Borradores, Efectos y Remesas de pago, Cargar efectos and Listados.</td></tr>
+<tr><td><strong>Ventas Mayor</strong></td><td>Pedidos, Albaranes, Borradores, Efectos y Remesas de cobro, Cargar efectos and Listados.</td></tr>
+<tr><td><strong>TPV</strong></td><td>Menú de Caja, Listados, Parámetros, Formas de pago, Depósitos, till history, Histórico de Solicitudes de Traspaso, Borradores Simplificados and Facturas proforma.</td></tr>
+<tr><td><strong>Almacén</strong></td><td>Movimientos, Inventarios, Documentos de Trabajo and Informes.</td></tr>
+<tr><td><strong>Otros</strong></td><td>Parámetros del entorno, IVA, Contadores, Formas de pago documentos, Usuarios y Perfiles, <strong>Colas de envíos</strong> (Verifactu, PrestaShop and Web Service Fzam), Copias de Seguridad, Generador de Procesos and Procesos auxiliares BBDD.</td></tr>
+<tr><td><strong>Verifactu</strong></td><td>Declaración Responsable and Verifactu Log. The queue is under <strong>Otros ▸ Colas de envíos ▸ Verifactu</strong>.</td></tr>
+<tr><td><strong>Ayuda</strong></td><td>Consulta de stocks, Artículos similares, Manual web, Foro de soporte, Envío de errores and Acerca de.</td></tr>
+</tbody>
+</table>
+<blockquote><p><strong>Note:</strong> the options shown depend on your <strong>user profile and assigned
+permissions</strong>. If an option is disabled or does not appear, ask the
+administrator (see
+<a href="07-menu-otros.html">Otros menu → Usuarios, Grupos y Perfiles</a>).</p></blockquote>
+<hr>
+<h2 id="convenciones-de-este-manual">Conventions used in this manual</h2>
+<ul><li><strong>Bold</strong> is used for the names of menus, buttons and on-screen fields.</li><li><code>Code</code> is used for technical names (tables, files and parameters).</li><li>The <code>▸</code> icons indicate a menu path, for example: <em>Archivo ▸ Tablas Auxiliares ▸ Tarifas</em>.</li><li>Keys are shown in square brackets, for example <code>[F12]</code>, <code>[Esc]</code> and <code>[Ctrl]+[A]</code>.</li></ul>
+</article>
+<footer>Factuzam User Manual · generated on 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

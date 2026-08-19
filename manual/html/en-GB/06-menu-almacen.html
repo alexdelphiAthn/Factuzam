@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>06 · Menú Almacén — Factuzam User Manual</title>
+<link rel="stylesheet" href="../estilo.css?v=101124fa0007">
+</head>
+<body>
+<button id="btnMenu" aria-label="Menu">☰</button>
+<nav id="lateral">
+<div class="marca">Factuzam<span>User manual</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Manual language"><a class="enlace-idioma" href="../06-menu-almacen.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma activo" href="06-menu-almacen.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="../ca-ES/06-menu-almacen.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="../zh-CN/06-menu-almacen.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
+<ul><li><a href="index.html">Home</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Access and first steps</a></li><li><a href="01-conceptos-comunes.html">01 · Common concepts</a></li><li><a href="02-menu-archivo.html">02 · File menu</a></li><li><a href="03-menu-compras.html">03 · Purchases menu</a></li><li><a href="04-menu-ventas-mayor.html">04 · Wholesale menu</a></li><li><a href="05-menu-caja.html">05 · POS menu</a></li><li class="activo"><a href="06-menu-almacen.html">06 · Warehouse menu</a></li><li><a href="07-menu-otros.html">07 · Other menu</a></li><li><a href="08-menu-ayuda.html">08 · Help menu</a></li><li><a href="09-instalacion-windows.html">09 · Windows installation</a></li><li><a href="10-migracion-legacy.html">10 · Migration from legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Changes and new features</a></li><li><a href="13-aplicaciones-moviles.html">13 · Mobile applications</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Architecture and development</a></li><li><a href="15-integracion-prestashop.html">15 · PrestaShop integration</a></li></ul>
+</nav>
+<main>
+<article lang="es-ES">
+<aside class="aviso-fallback" role="note" lang="en-GB"><strong>Translation pending.</strong> This chapter is not yet available in English; the Spanish version is shown.</aside>
+<h1 id="06-menu-almacen">06 · Menú Almacén</h1>
+<p><a href="index.html">◀ Volver al índice</a></p>
+<p>El menú <strong>Almacén</strong> controla las <strong>existencias (stock)</strong>: los movimientos
+que entran y salen, los recuentos físicos (inventarios) y los informes para
+analizar el stock.</p>
+<p>Estructura del menú:</p>
+<pre><code>Almacén
+├── Movimientos de almacén
+├── Inventarios
+├── Documentos de Trabajo
+└── Informes
+    ├── Balance de Almacén Horizontal
+    ├── Balance de Almacén sin tallas
+    └── Movimientos de ventas por artículos y fechas</code></pre>
+<blockquote><p>El stock se lleva <strong>por SKU y por almacén</strong>. Cada documento que mueve
+mercancía (albarán de compra/venta, devolución, inventario, traspaso)
+genera <strong>movimientos de almacén</strong>, que son el origen de verdad de las
+existencias.</p></blockquote>
+<hr>
+<h2 id="movimientos-de-almacen">Movimientos de almacén</h2>
+<p><img src="../img/06-movimientos.png" alt="Movimientos de almacén" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[M]</code></p>
+<p>Consulta y mantenimiento de los <strong>movimientos de stock</strong>: cada entrada o
+salida de un SKU en un almacén, con su fecha, cantidad, motivo y documento
+de origen.</p>
+<p>Sirve para:</p>
+<ul><li><strong>Auditar</strong> por qué el stock de un artículo es el que es (trazar entradas y salidas).</li><li>Registrar <strong>ajustes y traspasos</strong> manuales entre almacenes.</li></ul>
+<blockquote><p>Salvo ajustes puntuales, los movimientos no se crean a mano: los generan
+automáticamente los albaranes, devoluciones, ventas de caja e
+inventarios.</p></blockquote>
+<hr>
+<h2 id="inventarios">Inventarios</h2>
+<p><img src="../img/06-inventarios.png" alt="Inventario con su detalle de recuento" loading="lazy"></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Alt]+[I]</code></p>
+<p>Mantenimiento de <strong>Inventarios</strong> (recuentos físicos). Permite contar el
+stock real y <strong>regularizar</strong> las diferencias frente a lo que dice el
+sistema.</p>
+<p>Sub-pestañas:</p>
+<ul><li><strong>Detalle del inventario</strong> — líneas con el recuento por artículo/SKU (cantidad contada frente a cantidad teórica).</li><li><strong>Movimientos regularizados</strong> — los movimientos de ajuste que el inventario genera al confirmarse para cuadrar el stock teórico con el real.</li><li><strong>Otros</strong> — datos de cabecera (almacén, fecha, estado).</li></ul>
+<blockquote><p>Al <strong>confirmar</strong> un inventario, el sistema ajusta el stock automáticamente
+creando los movimientos de regularización necesarios. Revisa bien el
+recuento antes de confirmar.</p></blockquote>
+<h3 id="recuento-movil">Recuento móvil</h3>
+<p>Además de cargar el recuento desde Excel, el inventario puede enviarse a
+una app móvil de recuento mediante un servidor puente:</p>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Enviar a recuento móvil</strong></td><td>Publica el inventario como plantilla para los terminales de almacén.</td></tr>
+<tr><td><strong>Recoger recuento móvil</strong></td><td>Trae las lecturas escaneadas, rellena las cantidades físicas y deja el inventario listo para revisar.</td></tr>
+</tbody>
+</table>
+<p><img src="../img/06-inventarios-recuento-movil.png" alt="Inventario enviado a recuento móvil" loading="lazy"></p>
+<p>El recuento móvil no regulariza stock por sí solo. Primero se recogen las
+lecturas, se revisan las diferencias en Factuzam y después se aplica el
+inventario con el flujo normal.</p>
+<hr>
+<h2 id="documentos-de-trabajo">Documentos de Trabajo</h2>
+<p><img src="../img/06-documentos-trabajo.png" alt="Documentos de Trabajo con sus líneas" loading="lazy">
+<em>Documento de Trabajo con líneas cargadas por filtros y el menú Enviar a... desplegado.</em></p>
+<p><strong>Atajo de menú:</strong> <code>[Ctrl]+[W]</code></p>
+<p>Un <strong>Documento de Trabajo</strong> es una <strong>lista de trabajo de artículos/SKUs</strong>:
+un borrador personal donde vas apuntando referencias con cantidades (con
+una foto del stock en ese momento) para después <strong>convertirla en un
+documento real</strong> o imprimir etiquetas. Piensa en él como un "carrito"
+interno reutilizable: preparar una reposición, un recuento parcial, una
+selección para cambiar precios, un pedido que aún no sabes cómo acabará…</p>
+<p>La pantalla tiene dos pestañas de ámbito:</p>
+<ul><li><strong>Mis documentos</strong> — los documentos de los que eres <strong>propietario</strong>. Solo aquí puedes crear, editar y borrar.</li><li><strong>Compartidos conmigo</strong> — documentos de otros usuarios compartidos contigo o con tu grupo. Se abren en <strong>solo lectura</strong>.</li></ul>
+<h3 id="cabecera-y-lineas">Cabecera y líneas</h3>
+<p>La cabecera guarda <strong>Título</strong>, <strong>Tipo</strong> (por defecto <code>GENERAL</code>), <strong>Estado</strong>
+(por defecto <code>ABIERTO</code>), propietario, fecha, <strong>Empresa</strong> y <strong>Almacén</strong> (el
+almacén de referencia para el stock). Las líneas recogen:</p>
+<table>
+<thead><tr>
+<th>Columna</th>
+<th>Qué indica</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Artículo / SKU</strong></td><td>Referencia apuntada, con su descripción.</td></tr>
+<tr><td><strong>Almacén</strong></td><td>Almacén de la línea (por defecto el de la cabecera).</td></tr>
+<tr><td><strong>Stock</strong></td><td>Existencias del SKU <strong>en el momento de apuntarlo</strong> (ver <em>Instante stock</em>). No se recalcula solo.</td></tr>
+<tr><td><strong>Cantidad</strong></td><td>Unidades de trabajo de la línea (al leer un código, entra 1 por defecto).</td></tr>
+<tr><td><strong>Origen</strong></td><td>De dónde salió la línea: entrada manual, carga por filtros, consulta de stock…</td></tr>
+</tbody>
+</table>
+<p>Las líneas se teclean igual que en Inventarios: con <code>[F1]</code> se recorre
+<strong>Auto (desglose)</strong> → <strong>SKU</strong> → <strong>Tallas en línea</strong>. El cambio solo actúa
+en la pestaña <strong>Líneas</strong>; consulta la explicación común de los
+<a href="01-conceptos-comunes.html#cambiar-la-presentacion-de-las-lineas-con-f1">modos de líneas con F1</a>.</p>
+<h3 id="botones-de-la-pantalla">Botones de la pantalla</h3>
+<table>
+<thead><tr>
+<th>Botón</th>
+<th>Uso</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Listado</strong></td><td>Abre una vista previa de Excel con una línea por SKU, su foto de 300 × 300, familia, proveedor, temporada y precio de la primera tarifa activa. Desde la vista previa se puede guardar el libro <code>.xlsx</code>.</td></tr>
+<tr><td><strong>Cargar artículos...</strong></td><td><strong>Carga masiva por filtros</strong> (la misma pantalla de filtros que usan Inventarios y las sesiones de tarifas): familias en árbol, proveedores, propiedades/temporadas y almacenes, con opciones de solo activos, solo con stock y excluir lo ya cargado.</td></tr>
+<tr><td><strong>Compartir...</strong></td><td>Comparte el documento con un <strong>usuario</strong> o un <strong>grupo</strong> (permiso de lectura). Los destinatarios lo ven en su pestaña <em>Compartidos conmigo</em>. Solo el propietario puede compartir.</td></tr>
+<tr><td><strong>Imprimir etiquetas</strong></td><td>Abre la impresión de <strong>etiquetas de artículo</strong> con los SKUs del documento (elige tarifa y almacenes como en la impresión de etiquetas normal).</td></tr>
+<tr><td><strong>Enviar a...</strong></td><td>Convierte el documento en un documento real (ver abajo).</td></tr>
+</tbody>
+</table>
+<h3 id="enviar-a">Enviar a...</h3>
+<p>El botón <strong>Enviar a...</strong> despliega los destinos posibles. El documento debe
+estar grabado y tener líneas; el Documento de Trabajo <strong>no se consume</strong>: se
+puede reutilizar o enviar a varios destinos.</p>
+<table>
+<thead><tr>
+<th>Destino</th>
+<th>Qué crea</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Albarán de venta (mayor)...</strong></td><td>Un <strong>albarán de venta ABIERTO</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Los precios entran a 0: asigna cliente, tarifa y precios en el Mto de albaranes.</td></tr>
+<tr><td><strong>Factura de venta (mayor)...</strong></td><td>Una <strong>factura de venta en BORRADOR</strong> con las líneas y cantidades del documento (número del contador oficial o el que indiques). Asigna cliente, tarifa, precios e impuestos antes de consolidarla.</td></tr>
+<tr><td><strong>Venta TPV</strong></td><td>Vuelca los SKUs con sus cantidades en la <strong>venta de caja en curso</strong>. Requiere tener abierta <em>TPV ▸ Ventas</em>; los precios los resuelve el TPV con su tarifa.</td></tr>
+<tr><td><strong>Pedido de compra...</strong></td><td>Un <strong>pedido de compra ABIERTO</strong> con las líneas y cantidades del documento. Asigna proveedor, precios y condiciones de compra antes de tramitarlo.</td></tr>
+<tr><td><strong>Traspaso de caja...</strong></td><td>Abre la operativa habitual de <strong>TPV ▸ Traspasos</strong> en modo traspaso, con los artículos y cantidades precargados. El origen es la ubicación de Caja activa; allí se eligen almacén destino y empleado y se mantienen las validaciones de stock.</td></tr>
+<tr><td><strong>Petición de traspaso...</strong></td><td>Abre la misma operativa en modo petición, con los artículos y cantidades precargados. Allí se elige el almacén al que se solicita la mercancía; la petición no mueve stock hasta que se atiende.</td></tr>
+<tr><td><strong>Inventario...</strong></td><td>Un <strong>inventario ABIERTO</strong> donde la cantidad del documento entra como <strong>cantidad física</strong> y el stock apuntado como teórica. Después usa <em>Recalcular teórico/PMP</em> en Inventarios antes de aplicar.</td></tr>
+<tr><td><strong>Sesión de cambio de tarifas</strong></td><td>Una <strong>sesión de cambios de tarifa en BORRADOR</strong> con un artículo por línea. Abre <em>Tarifas ▸ Cambios</em> para elegir tarifas origen/destino, regla de cálculo y aplicar.</td></tr>
+</tbody>
+</table>
+<blockquote><p><strong>Añadir líneas desde otras pantallas:</strong> además de teclear o cargar por
+filtros, puedes apuntar referencias sin salir de donde estás con el menú
+contextual <strong>Agregar a Documento de Trabajo...</strong> disponible en la
+<strong>Consulta de stock</strong> (<code>[Ctrl]+[U]</code>) y en la
+<a href="01-conceptos-comunes.html#busqueda-de-datos-de-articulos-ctrle">Búsqueda de datos de artículos</a>
+(<code>[Ctrl]+[E]</code>).</p></blockquote>
+<hr>
+<h2 id="informes">Informes</h2>
+<h3 id="balance-de-almacen-horizontal">Balance de Almacén Horizontal</h3>
+<p><img src="../img/06-balance-horizontal.png" alt="Filtros e informe del balance con tallas" loading="lazy"></p>
+<p>Informe de existencias <strong>con desglose por tallas</strong> en columnas
+(horizontal). Muestra el stock de cada artículo repartido por sus
+variantes/tallas, ideal para artículos de moda. Se filtra (almacén,
+familia, fechas…), se previsualiza y se imprime/exporta.</p>
+<p>El filtro permite trabajar por:</p>
+<ul><li><strong>Modo</strong>: entre fechas o por acumulados.</li><li><strong>Bandas</strong>: existencias iniciales, entradas, ventas, existencias finales y, en modo desglosado, subtipos de movimiento.</li><li><strong>Almacenes, familias, proveedores, temporadas y artículos</strong>.</li><li><strong>Agrupaciones</strong> reordenables por almacén, proveedor, familia o temporada.</li></ul>
+<p>La pestaña <strong>Familias</strong> se muestra como árbol. Marcar una familia incluye
+también sus subfamilias.</p>
+<p>La vista preliminar presenta por artículo y color las tallas en columnas y
+separa las bandas de existencias, entradas y ventas, con cantidades, precios e
+importes.</p>
+<p><img src="../img/06-balance-horizontal-resultado.png" alt="Resultado del balance de almacén por tallas" loading="lazy"></p>
+<h3 id="balance-de-almacen-sin-tallas">Balance de Almacén sin tallas</h3>
+<p>Informe de existencias <strong>agregado por artículo</strong>, sin abrir el detalle de
+tallas. Vista resumida del stock cuando no interesa el desglose por
+variante.</p>
+<p><img src="../img/06-balance-sin-tallas.png" alt="Balance de almacén sin tallas" loading="lazy"></p>
+<p>Incluye artículos con o sin tallaje y usa el mismo sistema de filtros,
+bandas, agrupaciones y exportación a Excel que el balance horizontal.</p>
+<h3 id="movimientos-de-ventas-por-articulos-y-fechas">Movimientos de ventas por artículos y fechas</h3>
+<p>Informe de <strong>ventas por artículo</strong> en un rango de fechas: qué artículos se
+han vendido, en qué cantidad y periodo. Útil para análisis de rotación y
+reposición.</p>
+<p><img src="../img/06-movimientos-ventas-articulos.png" alt="Movimientos de ventas por artículos" loading="lazy"></p>
+<p>Además del periodo de ventas, puede filtrar por <strong>Inicio compras</strong> para
+analizar solo artículos cuya primera compra sea posterior a una fecha. El
+informe calcula ventas, coste, beneficio y dos márgenes: margen sobre lo
+vendido y margen considerando toda la compra como gasto.</p>
+<p>En <strong>Agrupaciones</strong> puede elegir <strong>Color</strong> en cualquiera de los tres niveles.
+Al hacerlo, cada artículo se desglosa en una fila por color —las tallas del
+mismo color permanecen consolidadas— y los importes, costes y márgenes se
+calculan para ese color. Sin seleccionar Color se mantiene el total agregado
+del artículo.</p>
+<p>Columnas del informe:</p>
+<table>
+<thead><tr>
+<th>Columna</th>
+<th>Qué indica</th>
+</tr></thead>
+<tbody>
+<tr><td><strong>Artículo</strong></td><td>Código y descripción del artículo. Al agrupar por Color también muestra el color de cada fila; si se agrupa por almacén, un mismo artículo puede aparecer en varios bloques de almacén.</td></tr>
+<tr><td><strong>Uni.Ent.</strong></td><td>Unidades compradas o entradas del artículo. Se toman de los movimientos de entrada de compra/albarán de entrada.</td></tr>
+<tr><td><strong>Imp.Ent.</strong></td><td>Importe de coste de esas entradas. Es el valor comprado, no el precio de venta.</td></tr>
+<tr><td><strong>Uds Vta</strong></td><td>Unidades vendidas dentro del periodo <strong>Desde / Hasta</strong> indicado en el filtro.</td></tr>
+<tr><td><strong>Imp Venta</strong></td><td>Importe real vendido en el periodo, con los descuentos ya aplicados y según las líneas de factura.</td></tr>
+<tr><td><strong>Imp Coste</strong></td><td>Coste estimado de las unidades vendidas. Se calcula multiplicando las unidades vendidas por el coste del artículo.</td></tr>
+<tr><td><strong>Beneficio</strong></td><td>Diferencia entre venta y coste de lo vendido: <strong>Imp Venta - Imp Coste</strong>.</td></tr>
+<tr><td><strong>% Bnf</strong></td><td>Beneficio sobre coste: <strong>Beneficio / Imp Coste x 100</strong>. Mide cuánto se gana respecto a lo que costó lo vendido.</td></tr>
+<tr><td><strong>Venta-Ent</strong></td><td>Diferencia entre lo vendido y todo lo comprado: <strong>Imp Venta - Imp.Ent.</strong>. Sirve para ver si la venta del periodo cubre la compra completa.</td></tr>
+<tr><td><strong>VentEnt%</strong></td><td>Porcentaje de <strong>Venta-Ent</strong> sobre el importe comprado: <strong>Venta-Ent / Imp.Ent. x 100</strong>.</td></tr>
+<tr><td><strong>Margen 1</strong></td><td>Margen de lo vendido: <strong>Beneficio / Imp Venta x 100</strong>. Es el margen comercial normal sobre la venta realizada.</td></tr>
+<tr><td><strong>Margen 2</strong></td><td>Margen contando toda la compra como gasto: <strong>Venta-Ent / Imp Venta x 100</strong>. Penaliza el stock que queda sin vender.</td></tr>
+<tr><td><strong>% V.dto</strong></td><td>Porcentaje de unidades vendidas respecto a las unidades entradas: <strong>Uds Vta / Uni.Ent. x 100</strong>.</td></tr>
+<tr><td><strong>% Vlast</strong></td><td>Relación entre importe vendido e importe comprado: <strong>Imp Venta / Imp.Ent. x 100</strong>.</td></tr>
+</tbody>
+</table>
+<p>En los totales por grupo y en el total general, las unidades e importes se
+suman. Los porcentajes y márgenes se recalculan a partir de esas sumas; no
+se suman ni se promedian los porcentajes de cada artículo.</p>
+<hr>
+<p><a href="05-menu-caja.html">◀ Menú TPV</a> · <a href="index.html">Índice</a> · <a href="07-menu-otros.html">Siguiente ▶ Menú Otros</a></p>
+</article>
+<footer>Factuzam User Manual · generated on 19/08/2026</footer>
+</main>
+<script>
+var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
+b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
+</script>
+</body>
+</html>

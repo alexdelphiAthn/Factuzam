@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es-ES">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>07 · Menú Otros — Manual de Factuzam</title>
-<link rel="stylesheet" href="estilo.css">
+<link rel="stylesheet" href="estilo.css?v=101124fa0007">
 </head>
 <body>
 <button id="btnMenu" aria-label="Menú">☰</button>
 <nav id="lateral">
 <div class="marca">Factuzam<span>Manual de usuario</span></div>
+<div class="selector-idiomas" role="navigation" aria-label="Idioma del manual"><a class="enlace-idioma activo" href="07-menu-otros.html" hreflang="es-ES" lang="es-ES" aria-label="Español (es-ES)" title="Español (es-ES)" aria-current="page"><span class="bandera-emoji" aria-hidden="true">🇪🇸</span><span class="codigo-idioma">ES</span></a><a class="enlace-idioma" href="en-GB/07-menu-otros.html" hreflang="en-GB" lang="en-GB" aria-label="English (en-GB)" title="English (en-GB)"><span class="bandera-emoji" aria-hidden="true">🇬🇧</span><span class="codigo-idioma">EN</span></a><a class="enlace-idioma" href="ca-ES/07-menu-otros.html" hreflang="ca-ES" lang="ca-ES" aria-label="Català (ca-ES)" title="Català (ca-ES)"><span class="bandera bandera-ca" aria-hidden="true"></span><span class="codigo-idioma">CA</span></a><a class="enlace-idioma" href="zh-CN/07-menu-otros.html" hreflang="zh-CN" lang="zh-CN" aria-label="中文 (zh-CN)" title="中文 (zh-CN)"><span class="bandera-emoji" aria-hidden="true">🇨🇳</span><span class="codigo-idioma">ZH</span></a></div>
 <ul><li><a href="index.html">Inicio</a></li><li><a href="00-acceso-y-primeros-pasos.html">00 · Acceso y primeros pasos</a></li><li><a href="01-conceptos-comunes.html">01 · Conceptos comunes</a></li><li><a href="02-menu-archivo.html">02 · Menú Archivo</a></li><li><a href="03-menu-compras.html">03 · Menú Compras</a></li><li><a href="04-menu-ventas-mayor.html">04 · Menú Ventas Mayor</a></li><li><a href="05-menu-caja.html">05 · Menú TPV</a></li><li><a href="06-menu-almacen.html">06 · Menú Almacén</a></li><li class="activo"><a href="07-menu-otros.html">07 · Menú Otros</a></li><li><a href="08-menu-ayuda.html">08 · Menú Ayuda</a></li><li><a href="09-instalacion-windows.html">09 · Instalación en Windows</a></li><li><a href="10-migracion-legacy.html">10 · Migración desde legacy</a></li><li><a href="11-verifactu.html">11 · Verifactu (AEAT)</a></li><li><a href="12-cambios-y-novedades.html">12 · Cambios y novedades</a></li><li><a href="13-aplicaciones-moviles.html">13 · Aplicaciones móviles</a></li><li><a href="14-arquitectura-y-desarrollo.html">14 · Arquitectura y desarrollo</a></li><li><a href="15-integracion-prestashop.html">15 · Integración con PrestaShop</a></li></ul>
 </nav>
 <main>
-<article>
+<article lang="es-ES">
+
 <h1 id="07-menu-otros">07 · Menú Otros</h1>
 <p><a href="index.html">◀ Volver al índice</a></p>
 <p>El menú <strong>Otros</strong> agrupa la <strong>administración y configuración</strong> de la
@@ -62,6 +64,7 @@ etc. Cada valor puede asignarse a un usuario, a un grupo o a <code>Todos</code>.
 <tr><td><strong>Servicios web</strong></td><td>URL (<code>appApiUrl</code>), credencial (<code>appApiToken</code>) y referencia de instalación (<code>appApiReferencia</code>) comunes para fotos, correo, ventas, SIF y recuentos; también ciclo y máximo de intentos de la cola de ventas.</td></tr>
 <tr><td><strong>Verifactu</strong></td><td>Modo fiscal, entorno, datos del SIF, ciclo de cola, URLs y parámetros de firma/reloj.</td></tr>
 <tr><td><strong>PrestaShop</strong></td><td>Conexión API, tienda, empresa, tarifa, cola, niveles de familia y checks <strong>Sincronizar stock y precios</strong>, <strong>Crear artículos en PrestaShop al darlos de alta</strong>, <strong>Activar artículos en PrestaShop al marcar En web</strong> y <strong>Hacer barrido periódicamente</strong>.</td></tr>
+<tr><td><strong>Apariencia</strong></td><td>Tema, paleta de color e idioma de la interfaz.</td></tr>
 <tr><td><strong>Caja</strong></td><td>Valores por defecto del TPV y comportamiento de arqueo.</td></tr>
 </tbody>
 </table>
@@ -93,12 +96,21 @@ exporta ese nivel con cualquier valor permitido.</p>
 <p>Antes de activar la integración, sigue la
 <a href="15-integracion-prestashop.html#14-lista-de-comprobacion-para-una-implantacion">lista de comprobación de la integración</a>.</p>
 <h3 id="idioma-y-traducciones">Idioma y traducciones</h3>
-<p>En la categoría <strong>Apariencia</strong>, el parámetro <strong>Idioma de la interfaz</strong>
-(<code>appIdioma</code>) selecciona el idioma de Factuzam. La lista contiene
-<code>es-ES</code>, los idiomas activos instalados en la base de datos —por ejemplo
-<code>en-GB</code> y <code>ca-ES</code>— y <code>qps-ploc</code>, reservado para pruebas de maquetación.</p>
+<p>La selección no es una opción independiente del menú. Su ruta exacta es
+<strong>Otros ▸ Parámetros del entorno ▸ Apariencia ▸ Idioma de la interfaz</strong>.
+El parámetro <code>appIdioma</code> ofrece siempre español (<code>es-ES</code>), inglés británico
+(<code>en-GB</code>), catalán (<code>ca-ES</code>) y chino simplificado (<code>zh-CN</code>), además de los
+idiomas activos que existan en la base de datos. <code>qps-ploc</code> queda reservado
+para pruebas de maquetación.</p>
 <p>Para cambiarlo:</p>
-<ol><li>Selecciona el usuario, grupo o alcance al que se aplicará el parámetro.</li><li>Abre <strong>Apariencia ▸ Idioma de la interfaz</strong>.</li><li>Elige el idioma y pulsa <strong>Grabar</strong>.</li><li>Cierra y vuelve a abrir Factuzam para aplicar el cambio completo.</li></ol>
+<ol><li>Selecciona el usuario, grupo o alcance al que se aplicará el parámetro.</li><li>Abre <strong>Apariencia ▸ Idioma de la interfaz</strong>.</li><li>Elige el idioma. Para <code>en-GB</code>, <code>ca-ES</code> o <code>zh-CN</code>, Factuzam abre el diálogo <strong>Descargar traducción</strong>. Si el paquete ya está instalado, lo reutiliza; en caso contrario, lo obtiene del servicio configurado mediante <code>appApiUrl</code> y <code>appApiToken</code>.</li><li>Espera a que termine la comprobación y pulsa <strong>Guardar (F12)</strong>. Las ventanas abiertas se actualizan en ese momento; cierra y vuelve a abrir Factuzam para aplicar el cambio completo a toda la sesión.</li></ol>
+<p>La descarga necesita conexión al servicio de Factuzam y un token con el
+ámbito <code>descargar:traducciones</code>. El ZIP autenticado solo se instala después
+de comprobar el idioma, la versión del contrato, el orden y tamaño de sus
+SQL y la huella SHA-256 declarada para cada archivo. Después de preparar el
+esquema, los SQL de datos se instalan en una transacción. Si falla la
+descarga, la validación o la instalación, se mantienen el idioma y el valor
+anteriores.</p>
 <p>El idioma afecta a formularios, menús, mensajes, controles Developer
 Express, tickets e informes FastReport que tengan traducción. Si falta una
 clave, un idioma no está activo o no se puede consultar la base de datos,
@@ -301,7 +313,11 @@ móvil en <a href="13-aplicaciones-moviles.html#puesta-en-marcha-administrador">
 <p><img src="img/07-copia-seguridad.png" alt="Diálogo de copia de seguridad" loading="lazy"></p>
 <p><strong>Atajo de menú:</strong> <code>[Ctrl]+[Y]</code></p>
 <p>Lanza una <strong>copia de seguridad</strong> de la base de datos. Genera un fichero de
-respaldo con todos los datos (clientes, artículos, documentos, stock…).</p>
+respaldo con los datos operativos (clientes, artículos, documentos, stock…).
+En <code>fza_traducciones</code> incluye únicamente los idiomas instalados desde un
+paquete descargable. El español compilado y los catálogos de trabajo no se
+duplican; si mantienes un idioma propio con <code>utlTraduc</code>, conserva también su
+SQL o una exportación administrativa independiente.</p>
 <blockquote><p>Realiza copias <strong>con regularidad</strong> y guárdalas en un lugar seguro y
 externo al equipo. Es tu única red de seguridad ante un fallo de disco o
 un borrado accidental.</p></blockquote>
@@ -384,6 +400,13 @@ copia de seguridad y evita usarla para el trabajo diario.</p></blockquote>
 <script>
 var b=document.getElementById('btnMenu'),l=document.getElementById('lateral');
 b.addEventListener('click',function(){l.classList.toggle('abierto');});
+document.querySelectorAll('.enlace-idioma').forEach(function(a){
+ a.addEventListener('click',function(){
+  if(window.location.hash){
+   a.href=a.href.split('#')[0]+window.location.hash;
+  }
+ });
+});
 </script>
 </body>
 </html>
