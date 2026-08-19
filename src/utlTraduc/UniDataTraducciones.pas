@@ -53,7 +53,7 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections, Data.DB,
-  cxLocalization, dxCore,
+  cxLocalization,
   inLibRegistroResourcestringTraducciones,
   inLibRegistroParametrosTraducciones,
   inLibdxSpreadSheetStrs_ESP, inLibMsgTraduc;
@@ -123,18 +123,12 @@ end;
 procedure RecopilarDevExpress(
   ACatalogo: TCatalogoImportacionTraduccion);
 var
-  AntesPersonalizadas: TDictionary<string, string>;
-  Contexto: string;
   IdiomaEspanol: TcxLanguage;
   Localizador: TcxLocalizer;
   Nombre: string;
-  Producto: TdxProductResourceStrings;
   Texto: string;
-  TextoAnterior: string;
   i: Integer;
-  IndiceProducto: Integer;
 begin
-  AntesPersonalizadas := TDictionary<string, string>.Create;
   Localizador := TcxLocalizer.Create(nil);
   try
     Localizador.StorageType := lstResource;
@@ -154,37 +148,21 @@ begin
           Texto,
           'CXLOCALIZATION.res');
       end;
-    IndiceProducto :=
-      dxResourceStringsRepository.GetProductIndexByName(
-        'ExpressSpreadSheet 2');
-    if IndiceProducto >= 0 then
-    begin
-      Producto := dxResourceStringsRepository.Products[
-        IndiceProducto];
-      for i := 0 to Producto.ResStringsCount - 1 do
-        AntesPersonalizadas.AddOrSetValue(
-          Producto.Names[i],
-          Producto.Values[i]);
-      ApplySpanishTranslation;
-      Contexto := 'src/Lib/inLibdxSpreadSheetStrs_ESP.pas';
-      for i := 0 to Producto.ResStringsCount - 1 do
+    EnumerarTraduccionesEspanolasDxSpreadSheet(
+      procedure(
+        const ANombre: string;
+        ARecurso: PResStringRec;
+        const ATexto: string)
       begin
-        Nombre := Producto.Names[i];
-        Texto := Producto.Values[i];
-        if AntesPersonalizadas.TryGetValue(
-             Nombre,
-             TextoAnterior) and
-           (Texto <> TextoAnterior) then
+        if Assigned(ARecurso) then
           AgregarEntradaImportacion(
             ACatalogo,
-            'DevExpress.' + Nombre,
-            Texto,
-            Contexto);
-      end;
-    end;
+            'DevExpress.' + ANombre,
+            ATexto,
+            'src/Lib/inLibdxSpreadSheetStrs_ESP.pas');
+      end);
   finally
     Localizador.Free;
-    AntesPersonalizadas.Free;
   end;
 end;
 
