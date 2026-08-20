@@ -409,15 +409,10 @@ begin
     if Result.Sku >= 0 then
       Exit;
   end;
-  Result.Sku := -1;
-  Result.Cantidad := -1;
+  Result.Sku := 0;
+  Result.Cantidad := 1;
   Result.PmpNuevo := -1;
   Result.FilaInicio := 0;
-  if Result.Sku < 0 then
-  begin
-    Result.Sku := 0;
-    Result.Cantidad := 1;
-  end;
 end;
 
 procedure AgregarIncidenciaImportacionInventario(
