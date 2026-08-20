@@ -1,14 +1,5 @@
 _____________________________________________________________
 
-PENDIENTE TÉCNICO - FACHADA inLibMsg (29/07/2026)
-Los 1.413 mensajes viven en inLibMsgComun, inLibMsgConfiguracion,
-inLibMsgArticulos, inLibMsgVentas, inLibMsgCompras, inLibMsgFacturas,
-inLibMsgCaja, inLibMsgIntegraciones e inLibMsgVerifactu.
-Migrar los uses por tandas a los catálogos de dominio y eliminar inLibMsg
-cuando no quede ningún consumidor. No añadir mensajes nuevos a la fachada.
-
-_____________________________________________________________
-
 PENDIENTE TÉCNICO - EXTENDER EL CATÁLOGO SQL POR PERFILES (29/07/2026)
 Las fases SQL-0, SQL-1, SQL-2.1, SQL-2.2, SQL-2.3a, SQL-2.3b1,
 SQL-2.3b2, SQL-2.3c y SQL-2.3d están terminadas. El registro contiene
@@ -77,13 +68,164 @@ DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3d_resultados.md.
 
 _____________________________________________________________
 
-PENDIENTE TÉCNICO - SQL EN FORMULARIO: COLA VERIFACTU (31/07/2026)
-TfrmMtoFacturasBase.PuedeConsultarEstadoColaVerifactu consulta
-INFORMATION_SCHEMA.COLUMNS con SQL literal dentro del formulario para
-comprobar el esquema de fza_verifactu_cola antes de componer el listado.
-Moverla al servicio de cola Verifactu (CrearServicioVerifactuColaUniDAC,
-implementación UniData*) como comprobación de esquema del propio
-contrato, y que el formulario pregunte al servicio. No abordarlo dentro
-del fascículo F2 de la Fase 3 (en curso por un hilo concurrente):
-fascículo propio, sin mezclar con la extracción de reglas.
+PENDIENTE TÉCNICO - PASCAL ANALYZER: CORRECCIONES DEL INFORME
+OPTIMIZATION (20/08/2026)
 
+Origen: Optimization Report de fzam.dpr generado con la versión de
+evaluación de Pascal Analyzer el 20/08/2026.
+
+La evaluación oculta identificadores que empiezan por J, K y L, reemplaza
+líneas por "xxxxxx" y trunca las listas. Los contadores globales no deben
+convertirse directamente en tareas. Antes de medir mejoras hay que separar
+código propio, terceros y código generado.
+
+PA-OPT-01 - DEPURAR EL ÁMBITO DEL ANALIZADOR
+Prioridad: PRECONDICIÓN.
+
+Analizar todas las unidades necesarias para resolver tipos y llamadas, pero
+excluir de los resultados:
+
+- src\3rdpartyComp;
+- las carpetas externas de JCL y JVCL;
+- src\Lib3par\DelphiZXIngQRCode.pas;
+- unidades generadas, entre ellas
+  src\Lib\inLibdxSpreadSheetStrs_ESP.pas;
+- temporales, cachés y laboratorios.
+
+No excluir todo src\Lib3par sin revisar antes si contiene adaptadores propios.
+Conservar en los resultados los formularios, librerías y DataModules escritos
+para Factuzam, aunque utilicen UniDAC.
+
+Guardar el proyecto PAP y sus recursos en
+factuzam_web\tests\pascal_analyzer. Escribir los informes desechables en una
+subcarpeta específica de factuzam_web\tmp y eliminarlos cuando dejen de ser
+necesarios. Ejecutar perfiles separados para Delphi 13 Win32 y Win64.
+
+Criterios de aceptación:
+
+- Status Report sin unidades propias inesperadamente no cargadas;
+- defines, search paths y plataforma equivalentes a fzam.dproj;
+- informe sin incidencias procedentes de JCL, JVCL, SynEdit, SynPDF o ZXing;
+- primera línea base de código propio archivada antes de crear trinquetes.
+
+PA-OPT-02 - DECLARAR COMO OUT EL RESULTADO DE AVS DE ARTÍCULO
+Prioridad: ALTA; cambio pequeño y aislable.
+
+Ámbito:
+
+- src\Caja\Lib\inLibCajaVentaOperacion.pas;
+- factuzam_web\tests\PruebasCajaVentaOperacion.pas.
+
+Cambiar AAvs de var a out en la declaración e implementación de
+CargarAvsValidosArticulo. El procedimiento no consume el valor recibido:
+primero lo vacía y después lo sustituye completamente. Mantener inicialmente
+el SetLength(AAvs, 0) explícito para que los caminos inválidos sigan dejando
+un resultado vacío.
+
+Criterios de aceptación:
+
+- declaración e implementación tienen la misma firma;
+- caso válido devuelve todos los AV en orden;
+- artículo vacío, orden fuera de rango y lookup ausente devuelven array vacío;
+- reutilizar una variable que ya contenía elementos no conserva valores;
+- DUnitX y compilación Release Win32/Win64 verdes.
+
+PA-OPT-03 - SUSTITUIR LA LISTA DE PARÁMETROS DE MOVIMIENTO DE ALMACÉN
+Prioridad: ALTA para Clean Code; no ejecutar como simple cambio de const.
+
+Ámbito inicial:
+
+- src\Caja\DataModules\UniDataCaja.pas;
+- nuevas pruebas en factuzam_web\tests.
+
+TdmCajaOpe.InsertarMovimientoAlmacen recibe aproximadamente veinte parámetros
+posicionales. Varios son strings intercambiables para empresa, almacén, caja,
+almacén contrario, documento, serie, número, SKU y usuario. El aviso de
+AAlmacen sin const es correcto, pero el riesgo real es poder intercambiar
+argumentos válidos sin que el compilador lo detecte.
+
+Introducir un record de solicitud de movimiento con campos nominales y
+pasarlo mediante const. Migrar las llamadas dentro de UniDataCaja por una
+reserva única. No cambiar SQL, procedimiento almacenado ni esquema dentro de
+este fascículo.
+
+Criterios de aceptación:
+
+- una sola entrada tipada sustituye la lista posicional;
+- cada campo conserva exactamente su parámetro de procedimiento almacenado;
+- se preservan los valores opcionales, la fecha, el número automático,
+  almacén contrario, cliente y artículo;
+- éxito, fallo y actualización opcional de FECHA conservan transacción y
+  propagación de excepciones;
+- pruebas de caracterización y Release Win32/Win64 verdes.
+
+PA-OPT-04 - UNIFICAR LA APERTURA DE QUERIES CON CRONÓMETRO
+Prioridad: MEDIA para duplicación y mantenibilidad; rendimiento irrelevante.
+
+Existen doce procedimientos locales AbrirConTiempo en:
+
+- UniDataArticulos;
+- UniDataAlbaranes;
+- UniDataAlbaranesCompra;
+- UniDataAtributosConjuntos;
+- UniDataClientes;
+- UniDataDevolucionesCompra;
+- UniDataEmpresas;
+- UniDataFacturasCompra;
+- UniDataFormasdePago;
+- UniDataPedidos;
+- UniDataProveedores;
+- UniDataVariaciones.
+
+Crear una utilidad pequeña y específica de la capa adaptadora UniDAC. No
+añadir esta responsabilidad a un formulario ni exponer TUniQuery fuera de la
+capa de persistencia. Integrar por tandas de unidades disjuntas.
+
+Criterios de aceptación:
+
+- no abre una query que ya está activa;
+- registra TAG, nombre, resultado OK y milisegundos;
+- ante excepción registra ERROR y el mensaje, y vuelve a lanzar la excepción;
+- no cambia el orden de apertura de datasets;
+- desaparecen las doce copias sin introducir un localizador global;
+- pruebas focales, MariaDB aplicable y Release Win32/Win64 verdes.
+
+PA-OPT-05 - AÑADIR CONST SOLO AL MODIFICAR UN CONTRATO
+Prioridad: BAJA y oportunista; no hacer una campaña masiva.
+
+Al tocar una firma por una tarea funcional, declarar const los strings,
+records o arrays que no se modifican, siempre que no sea override, callback o
+contrato externo incompatible.
+
+Caso conocido: PrepararValores debería tratar juntos AEmpresa, AAlmacen y
+ACaja. El cambio debe coordinar:
+
+- src\Caja\Lib\inLibCajaVentanasIntf.pas;
+- src\Caja\Forms\inMtoCajaOpe.pas;
+- implementación y consumidores de IOperacionCaja.
+
+No crear una tarea independiente solo para ahorrar recuentos de referencia.
+La aceptación requiere recompilación completa porque const forma parte del
+contrato.
+
+NO CREAR ISSUES INDEPENDIENTES PARA ESTOS AVISOS:
+
+- mover a declaración inline aArchivos en AnadirTiffsDirectorio;
+- reordenar ClaveCelda o CodigoMes únicamente para intentar inline;
+- retirar virtual de métodos no sobrescritos sin analizar otros proyectos y
+  puntos de extensión;
+- corregir OPTI2, OPTI3, OPTI4, OPTI5, OPTI6, OPTI9 u OPTI10 dentro de JCL,
+  JVCL, SynEdit, SynPDF, mORMot/Synopse o ZXing;
+- OPTI11, porque el informe actual registra cero variables administradas
+  declaradas inline dentro de bucles.
+
+BLOQUEOS DE CONCURRENCIA OBSERVADOS EL 20/08/2026:
+
+- src\Caja\Forms\inMtoCajaOpe.pas;
+- src\DataModules\UniDataAlbaranes.pas;
+- src\DataModules\UniDataAlbaranesCompra.pas;
+- src\DataModules\UniDataDevolucionesCompra.pas.
+
+Estos archivos contienen cambios ajenos. PA-OPT-04 y PA-OPT-05 no pueden
+reservarlos hasta que su propietario los libere. Antes de comenzar cualquier
+PA-OPT se debe volver a comprobar git status y publicar la reserva exacta.

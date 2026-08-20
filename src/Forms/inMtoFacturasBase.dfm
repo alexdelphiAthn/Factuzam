@@ -86,6 +86,7 @@
               Caption = 'Total Liquido'
               DataBinding.FieldName = 'TOTAL_LIQUIDO_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 157
             end
             object cxgrdbclmnGrdDBTabPrinCODIGO_CLIENTE_FACTURA: TcxGridDBColumn
@@ -235,6 +236,7 @@
               Caption = 'Total IVA Normal'
               DataBinding.FieldName = 'TOTAL_IVAN_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 159
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_REN_FACTURA: TcxGridDBColumn
@@ -254,12 +256,14 @@
               Caption = 'Total RE Normal'
               DataBinding.FieldName = 'TOTAL_REN_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 139
             end
             object cxgrdbclmnGrdDBTabPrinTOTAL_BASEI_IVAN_FACTURA: TcxGridDBColumn
               Caption = 'Total Base Imponible Normal'
               DataBinding.FieldName = 'TOTAL_BASEI_IVAN_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 264
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_IVAR_FACTURA: TcxGridDBColumn
@@ -279,6 +283,7 @@
               Caption = 'Total IVA Normal'
               DataBinding.FieldName = 'TOTAL_IVAR_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 164
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_RER_FACTURA: TcxGridDBColumn
@@ -298,12 +303,14 @@
               Caption = 'Total RE Reducido'
               DataBinding.FieldName = 'TOTAL_RER_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 172
             end
             object cxgrdbclmnGrdDBTabPrinTOTAL_BASEI_IVAR_FACTURA: TcxGridDBColumn
               Caption = 'Total Base Imponible Reducido'
               DataBinding.FieldName = 'TOTAL_BASEI_IVAR_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 284
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_IVAS_FACTURA: TcxGridDBColumn
@@ -323,6 +330,7 @@
               Caption = 'Total IVA SuperReducido'
               DataBinding.FieldName = 'TOTAL_IVAS_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 232
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_RES_FACTURA: TcxGridDBColumn
@@ -342,12 +350,14 @@
               Caption = 'Total RE SuperReducido'
               DataBinding.FieldName = 'TOTAL_RES_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 212
             end
             object cxgrdbclmnGrdDBTabPrinTOTAL_BASEI_IVAS_FACTURA: TcxGridDBColumn
               Caption = 'Total BI SuperReducido'
               DataBinding.FieldName = 'TOTAL_BASEI_IVAS_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 242
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_IVAE_FACTURA: TcxGridDBColumn
@@ -367,6 +377,7 @@
               Caption = 'Total Exento'
               DataBinding.FieldName = 'TOTAL_IVAE_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 116
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_REE_FACTURA: TcxGridDBColumn
@@ -386,12 +397,14 @@
               Caption = 'Total RE Exento'
               DataBinding.FieldName = 'TOTAL_REE_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 143
             end
             object cxgrdbclmnGrdDBTabPrinTOTAL_BASEI_IVAE_FACTURA: TcxGridDBColumn
               Caption = 'Total BI Exento'
               DataBinding.FieldName = 'TOTAL_BASEI_IVAE_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 148
             end
             object cxgrdbclmnGrdDBTabPrinPORCEN_RETENCION_FACTURA: TcxGridDBColumn
@@ -411,6 +424,7 @@
               Caption = 'Total Retenci'#243'n'
               DataBinding.FieldName = 'TOTAL_RETENCION_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 147
             end
             object cxgrdbclmnGrdDBTabPrinNRO_FACTURA_ABONO_FACTURA: TcxGridDBColumn
@@ -522,12 +536,14 @@
               Caption = 'Total Bases Imponibles'
               DataBinding.FieldName = 'TOTAL_BASES_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 199
             end
             object cxGrdDBTabPrinTOTAL_IMPUESTOS_FACTURA: TcxGridDBColumn
               Caption = 'Total Impuestos'
               DataBinding.FieldName = 'TOTAL_IMPUESTOS_FAC'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 146
             end
             object cxGrdDBTabPrinCONTADOR_LINEAS_FACTURA: TcxGridDBColumn
@@ -731,7 +747,7 @@
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding, dcoGroupsAlwaysExpanded, dcoInsertOnNewItemRowFocusing]
                   DataController.Summary.FooterSummaryItems = <
                     item
-                      Format = '##,##.00 '#8364
+                      Format = '#,##0.00 '#8364
                       Kind = skSum
                       Column = ctbTOTAL_FACTURA_LINEA
                     end
@@ -741,7 +757,7 @@
                       Column = ctbCANTIDAD_FACTURA_LINEA
                     end
                     item
-                      Format = '##,##.00 '#8364
+                      Format = '#,##0.00 '#8364
                       Kind = skSum
                       Column = ctbTOTAL_FACTURASIVA_LINEA
                     end>
@@ -837,6 +853,7 @@
                     Caption = 'Precio Coste'
                     DataBinding.FieldName = 'PRECIO_ULT_COMPRA_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Visible = False
                   end
                   object ctbDESCRIPCION_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
@@ -866,6 +883,7 @@
                     Caption = 'Precio Salida'
                     DataBinding.FieldName = 'PRECIO_SALIDA_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.OnEditValueChanged = tvLineasFacturaPRECIOSALIDA_FACTURA_LINEAPropertiesEditValueChanged
                   end
                   object ctbPORCEN_DTO_FACTURA_LINEA: TcxGridDBColumn
@@ -881,12 +899,14 @@
                     Caption = 'Menos Dto'
                     DataBinding.FieldName = 'PRECIO_DTO_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.OnEditValueChanged = tvLineasFacturaPRECIO_DTO_FACTURA_LINEAPropertiesEditValueChanged
                   end
                   object ctbPRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEA: TcxGridDBColumn
                     Caption = 'Precio Ud. sin IVA'
                     DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = False
                     Properties.OnEditValueChanged = cxgrdbclmntv1PRECIOVENTA_SIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged
                     Width = 162
@@ -931,6 +951,7 @@
                     Caption = 'Precio Ud. con IVA'
                     DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = False
                     Properties.OnEditValueChanged = cxgrdbclmntv1PRECIOVENTA_CIVA_ARTICULO_FACTURA_LINEAPropertiesEditValueChanged
                     Width = 166
@@ -939,6 +960,7 @@
                     Caption = 'Total con IVA'
                     DataBinding.FieldName = 'TOTAL_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Width = 172
                   end
@@ -946,6 +968,7 @@
                     Caption = 'Total Sin IVA'
                     DataBinding.FieldName = 'TOTAL_FAC_SIVA_FACLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.OnEditValueChanged = ctbTOTAL_FACTURASIVA_LINEAPropertiesEditValueChanged
                     Width = 125
                   end
@@ -1164,6 +1187,7 @@
                   Margins.Bottom = 4
                   DataBinding.DataField = 'TOTAL_LIQUIDO_FAC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   Properties.UseThousandSeparator = True
                   TabOrder = 11
@@ -1178,6 +1202,7 @@
                   Margins.Bottom = 4
                   DataBinding.DataField = 'TOTAL_RETENCION_FAC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 4
                   Width = 133
@@ -1226,6 +1251,7 @@
                   Margins.Bottom = 4
                   DataBinding.DataField = 'TOTAL_BASES_FAC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.DecimalPlaces = 2
                   Properties.ReadOnly = True
                   TabOrder = 0
@@ -1252,7 +1278,7 @@
                   DataBinding.DataField = 'TOTAL_IMPUESTOS_FAC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
-                  Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 1
                   Width = 133
@@ -1444,6 +1470,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
@@ -1454,6 +1481,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
@@ -1464,6 +1492,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
@@ -1474,6 +1503,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
@@ -1484,6 +1514,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_IVAN_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 13
@@ -1494,6 +1525,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_IVAR_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 14
@@ -1504,6 +1536,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_IVAS_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 15
@@ -1514,6 +1547,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_IVAE_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 16
@@ -1524,6 +1558,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_REN_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 17
@@ -1534,6 +1569,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_RER_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 18
@@ -1544,6 +1580,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_RES_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 19
@@ -1554,6 +1591,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_REE_FAC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 20
@@ -1831,7 +1869,7 @@
                     DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                     DataController.Summary.FooterSummaryItems = <
                       item
-                        Format = '##,##.00 '#8364
+                        Format = '#,##0.00 '#8364
                         Kind = skSum
                         Column = cxgrdbclmnRecibosEUROS_RECIBO
                       end>
@@ -1874,6 +1912,7 @@
                       Caption = 'Total Recibo'
                       DataBinding.FieldName = 'EUROS_RECIBO_REC'
                       PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DisplayFormat = '#,##0.00 '#8364
                       Width = 115
                     end
                     object cxgrdbclmnRecibosESTADO_RECIBO: TcxGridDBColumn
@@ -1939,6 +1978,8 @@
                     object cxgrdbclmnRecibosIMPORTE_LETRA_RECIBO: TcxGridDBColumn
                       Caption = 'Importe Letra'
                       DataBinding.FieldName = 'IMPORTE_LETRA_RECIBO_REC'
+                      PropertiesClassName = 'TcxCurrencyEditProperties'
+                      Properties.DisplayFormat = '#,##0.00 '#8364
                       Width = 366
                     end
                   end
@@ -2483,7 +2524,7 @@
                   DataController.Options = [dcoCaseInsensitive, dcoAssignGroupingValues, dcoAssignMasterDetailKeys, dcoSaveExpanding]
                   DataController.Summary.FooterSummaryItems = <
                     item
-                      Format = '##,##.00 '#8364
+                      Format = '#,##0.00 '#8364
                       Kind = skSum
                     end>
                   OptionsBehavior.AlwaysShowEditor = True
@@ -2587,12 +2628,14 @@
                     Caption = 'PMP'
                     DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 90
                   end
                   object cxgrdcMovFacTot: TcxGridDBColumn
                     Caption = 'Total Coste'
                     DataBinding.FieldName = 'TOTAL_COSTE_MOV'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 100
                   end
                 end

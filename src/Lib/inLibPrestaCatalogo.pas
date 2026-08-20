@@ -22,10 +22,18 @@ function CalcularClaveInstalacionPresta(
   const AUrlApi: string): string;
 function CrearTransportePresta(const AUrlApi,
   AClaveApi: string): ITransporteAltaPresta;
+function ResolverCombinacionEnInstantanea(
+  const ACombinaciones: TArray<TCombinacionPresta>;
+  const AReferencia: string;
+  AIdProducto: Integer): TCombinacionPresta;
+function ResolverStockEnInstantanea(
+  const AStocks: TArray<TStockDisponiblePresta>;
+  AIdProducto, AIdAtributo,
+  AIdTienda: Integer): TStockDisponiblePresta;
 
 type
   TClienteCatalogoPresta = class(TInterfacedObject,
-    IClienteCatalogoPresta)
+    IClienteCatalogoPresta, IClienteCatalogoPrestaInstantanea)
   private
     FTransporte: ITransportePresta;
     function SolicitarXml(const ARecurso: string): string;
@@ -40,6 +48,10 @@ type
       const ATransporte: ITransportePresta); overload;
     function BuscarProductoUnico(const AReferencia: string;
       AIdTienda: Integer): Integer;
+    function CargarCombinacionesProducto(AIdProducto,
+      AIdTienda: Integer): TArray<TCombinacionPresta>;
+    function CargarStocksProducto(AIdProducto,
+      AIdTienda: Integer): TArray<TStockDisponiblePresta>;
     function BuscarCombinacionUnica(const AReferencia: string;
       AIdProducto, AIdTienda: Integer): Integer;
     function ResolverStockDisponible(AIdProducto, AIdAtributo,
@@ -119,6 +131,12 @@ resourcestring
     'falta el nodo %s';
   SRespuestaStockIncoherente =
     'el stock no corresponde al producto y atributo solicitados';
+  SRespuestaCombinacionIncoherente =
+    'la combinación no corresponde al producto solicitado';
+  SRespuestaStockTiendaIncoherente =
+    'el stock no corresponde al producto y tienda solicitados';
+  SIdentificadorPrestaInvalido =
+    'el campo %s debe contener un identificador válido';
   SEstadoActivoPrestaInvalido =
     'el campo active no contiene 0 ni 1';
   SEstadoActivoProductoNoVerificado =
@@ -358,6 +376,40 @@ begin
     AElemento, ARecurso);
 end;
 
+function LeerCombinaciones(const AXml,
+  ARecurso: string): TArray<TCombinacionPresta>;
+var
+  iIndice: Integer;
+  iResultado: Integer;
+  oColeccion: IXMLNode;
+  oDocumento: IXMLDocument;
+  oNodo: IXMLNode;
+  rCombinacion: TCombinacionPresta;
+begin
+  oDocumento := CargarDocumento(AXml, ARecurso);
+  oColeccion := HijoObligatorio(oDocumento.DocumentElement,
+    CNombreCombinaciones, ARecurso);
+  SetLength(Result, oColeccion.ChildNodes.Count);
+  iResultado := 0;
+  for iIndice := 0 to oColeccion.ChildNodes.Count - 1 do
+  begin
+    oNodo := oColeccion.ChildNodes.Get(iIndice);
+    if SameText(oNodo.NodeName, CNombreCombinacion) then
+    begin
+      rCombinacion.Id := IdNodo(oNodo, ARecurso);
+      rCombinacion.IdProducto := EnteroCampo(oNodo,
+        'id_product', ARecurso);
+      rCombinacion.Referencia := TextoCampo(oNodo,
+        'reference', ARecurso);
+      rCombinacion.ImpactoPrecio := DecimalCampo(oNodo,
+        'price', ARecurso);
+      Result[iResultado] := rCombinacion;
+      Inc(iResultado);
+    end;
+  end;
+  SetLength(Result, iResultado);
+end;
+
 function LeerStocks(const AXml,
   ARecurso: string): TArray<TStockDisponiblePresta>;
 var
@@ -368,10 +420,10 @@ var
   oNodo: IXMLNode;
   rStock: TStockDisponiblePresta;
 begin
-  SetLength(Result, 0);
   oDocumento := CargarDocumento(AXml, ARecurso);
   oColeccion := HijoObligatorio(oDocumento.DocumentElement,
     CNombreStocks, ARecurso);
+  SetLength(Result, oColeccion.ChildNodes.Count);
   iResultado := 0;
   for iIndice := 0 to oColeccion.ChildNodes.Count - 1 do
   begin
@@ -386,11 +438,11 @@ begin
       rStock.IdGrupoTiendas := EnteroCampo(oNodo,
         'id_shop_group', ARecurso);
       rStock.Cantidad := EnteroCampo(oNodo, 'quantity', ARecurso);
-      SetLength(Result, iResultado + 1);
       Result[iResultado] := rStock;
       Inc(iResultado);
     end;
   end;
+  SetLength(Result, iResultado);
 end;
 
 function ElegirStock(const AStocks: TArray<TStockDisponiblePresta>;
@@ -423,6 +475,146 @@ begin
   if iCantidadExacta > 1 then
     raise ERecursoPrestaAmbiguo.Create(
       CNombreStock, AIdentificacion, iCantidadExacta);
+end;
+
+procedure ValidarCombinacionInstantanea(
+  const ACombinacion: TCombinacionPresta;
+  AIdProducto: Integer;
+  const ARecurso: string);
+begin
+  if ACombinacion.Id <= 0 then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SIdentificadorPrestaInvalido, ['id']));
+  if ACombinacion.IdProducto <= 0 then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SIdentificadorPrestaInvalido, ['id_product']));
+  if ACombinacion.IdProducto <> AIdProducto then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      SRespuestaCombinacionIncoherente);
+  if IsNan(ACombinacion.ImpactoPrecio) or
+     IsInfinite(ACombinacion.ImpactoPrecio) then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SDecimalPrestaInvalido, ['price']));
+end;
+
+procedure ValidarStockInstantanea(
+  const AStock: TStockDisponiblePresta;
+  AIdProducto, AIdTienda: Integer;
+  const ARecurso: string);
+begin
+  if AStock.Id <= 0 then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SIdentificadorPrestaInvalido, ['id']));
+  if AStock.IdProducto <= 0 then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SIdentificadorPrestaInvalido, ['id_product']));
+  if AStock.IdAtributo < 0 then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SEnteroPrestaInvalido, ['id_product_attribute']));
+  if AStock.IdGrupoTiendas < 0 then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      Format(SEnteroPrestaInvalido, ['id_shop_group']));
+  if (AStock.IdProducto <> AIdProducto) or
+     (AStock.IdTienda <> AIdTienda) then
+    raise ERespuestaPrestaInvalida.Create(
+      ARecurso,
+      SRespuestaStockTiendaIncoherente);
+end;
+
+function ResolverCombinacionEnInstantanea(
+  const ACombinaciones: TArray<TCombinacionPresta>;
+  const AReferencia: string;
+  AIdProducto: Integer): TCombinacionPresta;
+var
+  iCantidad: Integer;
+  iIndice: Integer;
+  sIdentificacion: string;
+begin
+  ComprobarReferencia(AReferencia);
+  ComprobarPositivo(AIdProducto, 'AIdProducto');
+  Result := Default(TCombinacionPresta);
+  iCantidad := 0;
+  iIndice := 0;
+  while iIndice <= High(ACombinaciones) do
+  begin
+    ValidarCombinacionInstantanea(
+      ACombinaciones[iIndice],
+      AIdProducto,
+      CNombreCombinaciones);
+    if SameText(
+         Trim(ACombinaciones[iIndice].Referencia),
+         Trim(AReferencia)) then
+    begin
+      Inc(iCantidad);
+      if iCantidad = 1 then
+        Result := ACombinaciones[iIndice];
+    end;
+    Inc(iIndice);
+  end;
+  sIdentificacion := Format(
+    'reference=%s, product=%d',
+    [AReferencia, AIdProducto]);
+  if iCantidad = 0 then
+    raise ERecursoPrestaNoEncontrado.Create(
+      CNombreCombinacion,
+      sIdentificacion);
+  if iCantidad > 1 then
+    raise ERecursoPrestaAmbiguo.Create(
+      CNombreCombinacion,
+      sIdentificacion,
+      iCantidad);
+end;
+
+function ResolverStockEnInstantanea(
+  const AStocks: TArray<TStockDisponiblePresta>;
+  AIdProducto, AIdAtributo,
+  AIdTienda: Integer): TStockDisponiblePresta;
+var
+  iCantidad: Integer;
+  iIndice: Integer;
+  sIdentificacion: string;
+begin
+  ComprobarPositivo(AIdProducto, 'AIdProducto');
+  ComprobarNoNegativo(AIdAtributo, 'AIdAtributo');
+  ComprobarPositivo(AIdTienda, 'AIdTienda');
+  Result := Default(TStockDisponiblePresta);
+  iCantidad := 0;
+  iIndice := 0;
+  while iIndice <= High(AStocks) do
+  begin
+    ValidarStockInstantanea(
+      AStocks[iIndice],
+      AIdProducto,
+      AIdTienda,
+      CNombreStocks);
+    if AStocks[iIndice].IdAtributo = AIdAtributo then
+    begin
+      Inc(iCantidad);
+      if iCantidad = 1 then
+        Result := AStocks[iIndice];
+    end;
+    Inc(iIndice);
+  end;
+  sIdentificacion := Format(
+    'product=%d, attribute=%d, shop=%d',
+    [AIdProducto, AIdAtributo, AIdTienda]);
+  if iCantidad = 0 then
+    raise ERecursoPrestaNoEncontrado.Create(
+      CNombreStock,
+      sIdentificacion);
+  if iCantidad > 1 then
+    raise ERecursoPrestaAmbiguo.Create(
+      CNombreStock,
+      sIdentificacion,
+      iCantidad);
 end;
 
 { TTransporteRestPresta }
@@ -633,6 +825,61 @@ begin
   sXml := SolicitarXml(sRecurso);
   Result := ResolverIdUnico(sXml, CNombreProductos, CNombreProducto,
     'reference=' + AReferencia, sRecurso);
+end;
+
+function TClienteCatalogoPresta.CargarCombinacionesProducto(
+  AIdProducto, AIdTienda: Integer): TArray<TCombinacionPresta>;
+var
+  iIndice: Integer;
+  sRecurso: string;
+begin
+  ComprobarPositivo(AIdProducto, 'AIdProducto');
+  ComprobarPositivo(AIdTienda, 'AIdTienda');
+  sRecurso := CNombreCombinaciones +
+    '?filter[id_product]=[' + IntToStr(AIdProducto) + ']' +
+    '&display=[id,id_product,reference,price]&id_shop=' +
+    IntToStr(AIdTienda);
+  Result := LeerCombinaciones(
+    SolicitarXml(sRecurso),
+    sRecurso);
+  iIndice := 0;
+  while iIndice <= High(Result) do
+  begin
+    ValidarCombinacionInstantanea(
+      Result[iIndice],
+      AIdProducto,
+      sRecurso);
+    Inc(iIndice);
+  end;
+end;
+
+function TClienteCatalogoPresta.CargarStocksProducto(
+  AIdProducto, AIdTienda: Integer):
+  TArray<TStockDisponiblePresta>;
+var
+  iIndice: Integer;
+  sRecurso: string;
+begin
+  ComprobarPositivo(AIdProducto, 'AIdProducto');
+  ComprobarPositivo(AIdTienda, 'AIdTienda');
+  sRecurso := CNombreStocks +
+    '?filter[id_product]=[' + IntToStr(AIdProducto) + ']' +
+    '&filter[id_shop]=[' + IntToStr(AIdTienda) + ']' +
+    '&display=[id,id_product,id_product_attribute,id_shop,' +
+    'id_shop_group,quantity]&id_shop=' + IntToStr(AIdTienda);
+  Result := LeerStocks(
+    SolicitarXml(sRecurso),
+    sRecurso);
+  iIndice := 0;
+  while iIndice <= High(Result) do
+  begin
+    ValidarStockInstantanea(
+      Result[iIndice],
+      AIdProducto,
+      AIdTienda,
+      sRecurso);
+    Inc(iIndice);
+  end;
 end;
 
 function TClienteCatalogoPresta.BuscarCombinacionUnica(

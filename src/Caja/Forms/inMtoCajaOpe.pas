@@ -548,6 +548,7 @@ implementation
 
 uses
   inLibGridCantidad,
+  inLibFormatoMonetario,
 
   inLibDevExp, inLibValoresAutomaticos,
   UniDataValoresAutomaticosRepositorio, inLibFacturas,
@@ -3488,6 +3489,9 @@ begin
   dbtvBusq.OptionsBehavior.IncSearchItem := nil;
   repSoloTexto.Properties.OnValidate := tvArticuloPropertiesValidate;
   repComboBox.Properties.OnCloseUp   := tvArticuloPropertiesCloseUp;
+  FormatearColumnaMonetaria(tvPrecioUni);
+  FormatearColumnaMonetaria(tvDescuentoMenos);
+  FormatearColumnaMonetaria(tvTotal);
 end;
 
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;

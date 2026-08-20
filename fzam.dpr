@@ -26,6 +26,7 @@ uses
   inLibHojaCalculoUtil in 'src\Lib\inLibHojaCalculoUtil.pas',
   inLibHojaCalculoDevEx in 'src\Lib\inLibHojaCalculoDevEx.pas',
   inLibFormatoExcel in 'src\Lib\inLibFormatoExcel.pas',
+  inLibFormatoMonetario in 'src\Lib\inLibFormatoMonetario.pas',
   inLibDir in 'src\Lib\inLibDir.pas',
   inLibGlobalVar in 'src\Lib\inLibGlobalVar.pas',
   inLibLogIntf in 'src\Lib\inLibLogIntf.pas',

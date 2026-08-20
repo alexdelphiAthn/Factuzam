@@ -14,8 +14,8 @@
 {      - Numeracion con TIPO_DOC = 'PC' (vs 'AB' de albaranes).                }
 {      - AfterPost de cabecera dispara GenerarPdteRecibirDesdePedido para      }
 {        sincronizar fza_articulos_pdte_recibir con las lineas actuales.      }
-{      - BeforeDelete de cabecera y lineas dispara BorrarPdteRecibir para     }
-{        no dejar filas huerfanas en fza_articulos_pdte_recibir.              }
+{      - BeforeDelete de linea retira su pendiente exacto; AfterDelete        }
+{        recalcula totales y regenera desde el estado persistido del pedido.  }
 {      - NO genera movimientos de stock — el pedido es compromiso, no         }
 {        entrada fisica. Los movs los genera el albaran cuando se cree        }
 {        desde el pedido via inLibPedidosCompra.CrearAlbaranDesdePedido.      }
@@ -61,6 +61,7 @@ type
     procedure unqryPedidosCompraLineasBeforePost(DataSet: TDataSet);
     procedure unqryPedidosCompraLineasAfterPost(DataSet: TDataSet);
     procedure unqryPedidosCompraLineasBeforeDelete(DataSet: TDataSet);
+    procedure unqryPedidosCompraLineasAfterDelete(DataSet: TDataSet);
   private
     FCalculandoTotales: Boolean;
     // True mientras DesempaquetarAtributosLineas postea lineas: cambio
@@ -875,20 +876,25 @@ var
 begin
   inherited;
   CalcularTotalesPedidoCompra;
-  // Tras editar una linea, resincronizamos las pendientes de recibir
-  // (cantidad de la linea puede haber cambiado). Durante la
-  // reorganizacion del modo de entrada se pospone al Finalizar:
-  // regenerar TODO el pedido por cada linea multiplica el coste.
-  sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-  sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-  if (sSerie <> '') and (sNumero <> '') then
+  // Si los totales han ensuciado la cabecera, su Post pasa por AfterPost y
+  // regenera los pendientes una sola vez. Si sigue en Browse, el cambio de
+  // linea puede afectar cantidades/SKU sin variar importes y se regenera
+  // directamente. La reorganizacion masiva conserva su aplazamiento.
+  if unqryTablaG.State in dsEditModes then
+    unqryTablaG.Post
+  else
   begin
-    if FReorganizandoLineas > 0 then
-      FReorganizacionPendiente := True
-    else
-      CrearPendientesPedidoCompraUniDAC(
-        ConexionPrincipal).GenerarPdteRecibirDesdePedido(
-          sSerie, sNumero, IdentidadSesion.Usuario);
+    sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+    sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+    if (sSerie <> '') and (sNumero <> '') then
+    begin
+      if FReorganizandoLineas > 0 then
+        FReorganizacionPendiente := True
+      else
+        CrearPendientesPedidoCompraUniDAC(
+          ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+            sSerie, sNumero, IdentidadSesion.Usuario);
+    end;
   end;
 end;
 
@@ -898,18 +904,32 @@ var
   sSerie, sNumero, sLinea: string;
 begin
   inherited;
-  // Borrar la fila concreta de fza_articulos_pdte_recibir antes de
-  // borrar la linea: la PK incluye LINEA_PDR asi que es seguro.
-  sSerie := unqryPedidosCompraLineas.FieldByName('SERIE_PEDC_PEDCLIN').AsString;
-  sNumero :=
-    unqryPedidosCompraLineas.FieldByName('NUMERO_PEDC_PEDCLIN').AsString;
-  sLinea  := unqryPedidosCompraLineas.FieldByName('LINEA_PEDCLIN').AsString;
+  // Retirar antes del Delete la fila exacta, cuando todavia estan
+  // disponibles las claves de la linea. AfterDelete recalcula la cabecera
+  // y regenera el conjunto desde el pedido ya persistido.
+  sSerie := unqryPedidosCompraLineas.FieldByName(
+    'SERIE_PEDC_PEDCLIN').AsString;
+  sNumero := unqryPedidosCompraLineas.FieldByName(
+    'NUMERO_PEDC_PEDCLIN').AsString;
+  sLinea := unqryPedidosCompraLineas.FieldByName(
+    'LINEA_PEDCLIN').AsString;
   if (sSerie <> '') and (sNumero <> '') then
-  begin
     CrearPendientesPedidoCompraUniDAC(
       ConexionPrincipal).BorrarPdteRecibirDesdePedido(
         sSerie, sNumero, sLinea);
-  end;
+end;
+
+procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterDelete(
+                                                       DataSet: TDataSet);
+begin
+  inherited;
+  CalcularTotalesPedidoCompra;
+  if unqryTablaG.State in dsEditModes then
+    unqryTablaG.Post
+  else if FReorganizandoLineas > 0 then
+    FReorganizacionPendiente := True
+  else
+    SincronizarPdteRecibir;
 end;
 
 function TdmPedidosCompra.ObtenerAlmacenesSql(
@@ -1473,12 +1493,17 @@ begin
     begin
       FReorganizacionPendiente := False;
       CalcularTotalesPedidoCompra;
-      sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
-      sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
-      if (sSerie <> '') and (sNumero <> '') then
-        CrearPendientesPedidoCompraUniDAC(
-          ConexionPrincipal).GenerarPdteRecibirDesdePedido(
-            sSerie, sNumero, IdentidadSesion.Usuario);
+      if unqryTablaG.State in dsEditModes then
+        unqryTablaG.Post
+      else
+      begin
+        sSerie  := unqryTablaG.FieldByName('SERIE_PEDC').AsString;
+        sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
+        if (sSerie <> '') and (sNumero <> '') then
+          CrearPendientesPedidoCompraUniDAC(
+            ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+              sSerie, sNumero, IdentidadSesion.Usuario);
+      end;
     end;
   end;
 end;

@@ -34,6 +34,13 @@ type
     Cantidad: Integer;
   end;
 
+  TCombinacionPresta = record
+    Id: Integer;
+    IdProducto: Integer;
+    Referencia: string;
+    ImpactoPrecio: Double;
+  end;
+
   EErrorCatalogoPresta = class(Exception);
 
   EErrorHttpPresta = class(EErrorCatalogoPresta)
@@ -128,6 +135,14 @@ type
     procedure AsegurarEstadoActivoProducto(
       AIdProducto, AIdTienda: Integer;
       AActivo: Boolean);
+  end;
+
+  IClienteCatalogoPrestaInstantanea = interface(IClienteCatalogoPresta)
+    ['{682A9867-F99A-4E85-AC5B-2267213B317D}']
+    function CargarCombinacionesProducto(AIdProducto,
+      AIdTienda: Integer): TArray<TCombinacionPresta>;
+    function CargarStocksProducto(AIdProducto,
+      AIdTienda: Integer): TArray<TStockDisponiblePresta>;
   end;
 
 implementation

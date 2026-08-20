@@ -63,8 +63,10 @@ type
   ECierreForzadoPrestaShop = class(Exception);
 
   TMapeoLineaPrestaShop = record
+    CantidadStock: Integer;
     IdCombinacion: Integer;
     IdStock: Integer;
+    ImpactoPrecio: Double;
     Omitir: Boolean;
   end;
 
@@ -146,7 +148,7 @@ type
     procedure LiberarTrabajoActual(AIdCola: Int64; const AToken: string);
     procedure ProcesarArticulo(
       const ATrabajo: TTrabajoArticuloPrestaShop;
-      const ACliente: IClienteCatalogoPresta;
+      const ACliente: IClienteCatalogoPrestaInstantanea;
       const AClienteAlta: IClienteCatalogoAltaPresta;
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure ProcesarDesactivacion(
@@ -154,14 +156,14 @@ type
       const ACliente: IClienteCatalogoPresta);
     function PrepararPlanArticulo(
       const ATrabajo: TTrabajoArticuloPrestaShop;
-      const ACliente: IClienteCatalogoPresta;
+      const ACliente: IClienteCatalogoPrestaInstantanea;
       ASincronizarStockPrecios: Boolean): TPlanArticuloPrestaShop;
     procedure EjecutarBarridoSiProcede(
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure ProcesarCiclo(ARecuperacion: Boolean);
     procedure ProcesarFila(
       AIdCola: Int64;
-      const ACliente: IClienteCatalogoPresta;
+      const ACliente: IClienteCatalogoPrestaInstantanea;
       const AClienteAlta: IClienteCatalogoAltaPresta;
       const ATransporteHistorial:
         ITransportePrestaShopConHistorial;
@@ -172,7 +174,7 @@ type
       const AMapeo: TMapeoLineaPrestaShop;
       const ACliente: IClienteCatalogoPresta);
     procedure ProcesarPendientes(
-      const ACliente: IClienteCatalogoPresta;
+      const ACliente: IClienteCatalogoPrestaInstantanea;
       const AClienteAlta: IClienteCatalogoAltaPresta;
       const ATransporteHistorial:
         ITransportePrestaShopConHistorial;
@@ -922,7 +924,7 @@ var
   bProcesar: Boolean;
   bSolicitaProcesado: Boolean;
   bTieneVisibilidad: Boolean;
-  oCliente: IClienteCatalogoPresta;
+  oCliente: IClienteCatalogoPrestaInstantanea;
   oClienteAlta: IClienteCatalogoAltaPresta;
   oConfiguracion: TConfiguracionGlobalPrestaShop;
   oTransporte: ITransporteAltaPresta;
@@ -1012,7 +1014,7 @@ begin
 end;
 
 procedure THiloPrestaShopCola.ProcesarPendientes(
-  const ACliente: IClienteCatalogoPresta;
+  const ACliente: IClienteCatalogoPrestaInstantanea;
   const AClienteAlta: IClienteCatalogoAltaPresta;
   const ATransporteHistorial:
     ITransportePrestaShopConHistorial;
@@ -1053,7 +1055,7 @@ end;
 
 procedure THiloPrestaShopCola.ProcesarFila(
   AIdCola: Int64;
-  const ACliente: IClienteCatalogoPresta;
+  const ACliente: IClienteCatalogoPrestaInstantanea;
   const AClienteAlta: IClienteCatalogoAltaPresta;
   const ATransporteHistorial:
     ITransportePrestaShopConHistorial;
@@ -1223,7 +1225,7 @@ end;
 
 procedure THiloPrestaShopCola.ProcesarArticulo(
   const ATrabajo: TTrabajoArticuloPrestaShop;
-  const ACliente: IClienteCatalogoPresta;
+  const ACliente: IClienteCatalogoPrestaInstantanea;
   const AClienteAlta: IClienteCatalogoAltaPresta;
   const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
@@ -1299,14 +1301,11 @@ begin
     while iLinea <= High(ATrabajo.Lineas) do
     begin
       if not oPlan.Lineas[iLinea].Omitir then
-      begin
-        AsegurarLease(ATrabajo);
         ProcesarLinea(
           ATrabajo,
           ATrabajo.Lineas[iLinea],
           oPlan.Lineas[iLinea],
           ACliente);
-      end;
       Inc(iLinea);
     end;
   end;
@@ -1323,11 +1322,16 @@ end;
 
 function THiloPrestaShopCola.PrepararPlanArticulo(
   const ATrabajo: TTrabajoArticuloPrestaShop;
-  const ACliente: IClienteCatalogoPresta;
+  const ACliente: IClienteCatalogoPrestaInstantanea;
   ASincronizarStockPrecios: Boolean): TPlanArticuloPrestaShop;
 var
+  aCombinaciones: TArray<TCombinacionPresta>;
+  aStocks: TArray<TStockDisponiblePresta>;
+  bNecesitaCombinaciones: Boolean;
+  bNecesitaStocks: Boolean;
   iAtributo: Integer;
   iLinea: Integer;
+  oCombinacion: TCombinacionPresta;
   oStock: TStockDisponiblePresta;
 begin
   Result := Default(TPlanArticuloPrestaShop);
@@ -1338,20 +1342,51 @@ begin
   AsegurarLease(ATrabajo);
   if ASincronizarStockPrecios then
   begin
+    bNecesitaCombinaciones := False;
+    bNecesitaStocks := False;
+    iLinea := 0;
+    while iLinea <= High(ATrabajo.Lineas) do
+    begin
+      if ATrabajo.Lineas[iLinea].EsCombinacion and
+         (ATrabajo.Lineas[iLinea].TienePrecio or
+          ATrabajo.Lineas[iLinea].TieneStock) then
+        bNecesitaCombinaciones := True;
+      if ATrabajo.Lineas[iLinea].TieneStock then
+        bNecesitaStocks := True;
+      Inc(iLinea);
+    end;
+    if bNecesitaCombinaciones then
+    begin
+      aCombinaciones := ACliente.CargarCombinacionesProducto(
+        Result.IdProducto,
+        ATrabajo.IdTienda);
+      AsegurarLease(ATrabajo);
+    end;
+    if bNecesitaStocks then
+    begin
+      aStocks := ACliente.CargarStocksProducto(
+        Result.IdProducto,
+        ATrabajo.IdTienda);
+      AsegurarLease(ATrabajo);
+    end;
     SetLength(Result.Lineas, Length(ATrabajo.Lineas));
     iLinea := 0;
     while iLinea <= High(ATrabajo.Lineas) do
     begin
       iAtributo := 0;
-      if ATrabajo.Lineas[iLinea].EsCombinacion then
+      if ATrabajo.Lineas[iLinea].EsCombinacion and
+         (ATrabajo.Lineas[iLinea].TienePrecio or
+          ATrabajo.Lineas[iLinea].TieneStock) then
       begin
-        AsegurarLease(ATrabajo);
         try
-          iAtributo := ACliente.BuscarCombinacionUnica(
+          oCombinacion := ResolverCombinacionEnInstantanea(
+            aCombinaciones,
             ATrabajo.Lineas[iLinea].CodigoSku,
-            Result.IdProducto,
-            ATrabajo.IdTienda);
+            Result.IdProducto);
+          iAtributo := oCombinacion.Id;
           Result.Lineas[iLinea].IdCombinacion := iAtributo;
+          Result.Lineas[iLinea].ImpactoPrecio :=
+            oCombinacion.ImpactoPrecio;
         except
           on E: ERecursoPrestaNoEncontrado do
           begin
@@ -1365,16 +1400,16 @@ begin
       if ATrabajo.Lineas[iLinea].TieneStock and
          (not Result.Lineas[iLinea].Omitir) then
       begin
-        AsegurarLease(ATrabajo);
-        oStock := ACliente.ResolverStockDisponible(
+        oStock := ResolverStockEnInstantanea(
+          aStocks,
           Result.IdProducto,
           iAtributo,
           ATrabajo.IdTienda);
         Result.Lineas[iLinea].IdStock := oStock.Id;
+        Result.Lineas[iLinea].CantidadStock := oStock.Cantidad;
       end;
       Inc(iLinea);
     end;
-    AsegurarLease(ATrabajo);
   end;
 end;
 
@@ -1391,10 +1426,7 @@ begin
   if ALinea.TienePrecio and ALinea.EsCombinacion then
   begin
     dImpacto := ALinea.Precio - ATrabajo.PrecioProducto;
-    AsegurarLease(ATrabajo);
-    dActual := ACliente.LeerImpactoPrecioCombinacion(
-      AMapeo.IdCombinacion,
-      ATrabajo.IdTienda);
+    dActual := AMapeo.ImpactoPrecio;
     if PrecioDiferente(dActual, dImpacto) then
     begin
       AsegurarLease(ATrabajo);
@@ -1414,10 +1446,7 @@ begin
   end;
   if ALinea.TieneStock then
   begin
-    AsegurarLease(ATrabajo);
-    iActual := ACliente.LeerCantidadStock(
-      AMapeo.IdStock,
-      ATrabajo.IdTienda);
+    iActual := AMapeo.CantidadStock;
     if iActual <> ALinea.Cantidad then
     begin
       AsegurarLease(ATrabajo);

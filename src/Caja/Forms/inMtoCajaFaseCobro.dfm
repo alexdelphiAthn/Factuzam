@@ -130,7 +130,7 @@
             Left = 334
             Top = 14
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -150,7 +150,7 @@
             Left = 334
             Top = 139
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -162,7 +162,7 @@
             Left = 334
             Top = 100
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -174,6 +174,7 @@
             Left = 334
             Top = 57
             Properties.Alignment.Horz = taRightJustify
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Style.Color = clCream
             TabOrder = 9
             Width = 171
@@ -230,7 +231,7 @@
             Left = 334
             Top = 17
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -242,7 +243,7 @@
             Left = 334
             Top = 54
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -289,7 +290,7 @@
             Left = 334
             Top = 10
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -301,7 +302,7 @@
             Left = 334
             Top = 54
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Properties.OnEditValueChanged = txtValeEmitidoPropertiesEditValueChanged
@@ -349,6 +350,7 @@
               Caption = 'Importe Entregado'
               DataBinding.FieldName = 'IMPORTE_ENTREGADO'
               PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364
               Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
               OnGetDisplayText = dbmImporteGetDisplayText
@@ -402,7 +404,7 @@
             Left = 341
             Top = 39
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
@@ -428,7 +430,7 @@
             Left = 341
             Top = 0
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 '#8364
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11

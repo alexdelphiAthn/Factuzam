@@ -70,7 +70,7 @@ uses
   cxDataStorage, cxDropDownEdit, cxEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBDataDefinitions,
   cxLookupEdit, cxDBLookupComboBox, cxLookupDBGrid, cxMemo, cxSpinEdit,
-  inLibGridCantidad;
+  inLibGridCantidad, inLibFormatoMonetario;
 
 function NuevaColumna(
   AVista: TcxGridDBTableView;
@@ -441,6 +441,13 @@ begin
   Result.Linea.Index := 0;
   if Assigned(Vendedor) then
     Vendedor.Index := 1;
+  FormatearColumnaMonetaria(Result.PrecioUltimaCompra);
+  FormatearColumnaMonetaria(Result.PrecioSalida);
+  FormatearColumnaMonetaria(Result.PrecioDescuento);
+  FormatearColumnaMonetaria(Result.PrecioVentaSinIva);
+  FormatearColumnaMonetaria(Result.PrecioVentaConIva);
+  FormatearColumnaMonetaria(Result.TotalConIva);
+  FormatearColumnaMonetaria(Result.TotalSinIva);
 end;
 
 end.

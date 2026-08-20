@@ -392,6 +392,7 @@ uses
   UniDataAplicacionArticuloCompra,
   inLibGridCantidad,
   inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  inLibFormatoMonetario,
   UniDataGen,
   inLibBusquedasCompra,
   inLibValidacionDocumento, UniDataValidacionDocumentoRepositorio,
@@ -778,7 +779,13 @@ begin
         bHuboCambios := dmmPedidosCompra.AbortarReorganizacionLineas;
     end;
     if bHuboCambios then
-      dmmPedidosCompra.SincronizarPdteRecibir;
+    begin
+      dmmPedidosCompra.CalcularTotalesPedidoCompra;
+      if dmmPedidosCompra.unqryTablaG.State in dsEditModes then
+        dmmPedidosCompra.unqryTablaG.Post
+      else
+        dmmPedidosCompra.SincronizarPdteRecibir;
+    end;
     FModoEntrada := nil;
   end;
   FreeAndNil(FPivote);
@@ -1973,7 +1980,7 @@ end;
 procedure TfrmMtoPedidosCompra.CrearColumnasHostPedidoCompra;
 var
   ColLinea, ColPedida, ColRecibida, ColARecibir,
-  ColTipoCantidad: TcxGridDBColumn;
+  ColTipoCantidad, ColPrecioCompra, ColTotal: TcxGridDBColumn;
 begin
   // Columnas propias del pedido de compra tras el ClearItems del
   // contrato (las del modo — articulo/SKU/color/tallas — ya existen).
@@ -2007,14 +2014,17 @@ begin
     VincularCantidadGrid(ColRecibida, ColTipoCantidad, UnidadesMedida);
     VincularCantidadGrid(ColARecibir, ColTipoCantidad, UnidadesMedida);
   end;
-  CrearColumnaHostDocumento(tvLineasPedido, 'Precio compra',
+  ColPrecioCompra := CrearColumnaHostDocumento(
+    tvLineasPedido, 'Precio compra',
     'PRECIO_COMPRA_CIVA_ARTICULO_PEDCLIN', 130, True);
   CrearColumnaHostDocumento(tvLineasPedido, '% IVA',
     'PORCENTAJE_IVA_PEDCLIN', 70, True);
-  CrearColumnaHostDocumento(tvLineasPedido, 'Total',
+  ColTotal := CrearColumnaHostDocumento(tvLineasPedido, 'Total',
     'TOTAL_PEDCLIN', 95, False);
   CrearColumnaHostDocumento(tvLineasPedido, 'Almacén',
     'CODIGO_ALMACEN_PEDCLIN', 80, True);
+  FormatearColumnaMonetaria(ColPrecioCompra);
+  FormatearColumnaMonetaria(ColTotal);
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).
   ColLinea.Index := 0;

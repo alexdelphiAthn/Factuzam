@@ -596,7 +596,13 @@ procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterPost(
 begin
   inherited;
   CalcularTotalesDevolucionCompra;
-  SincronizarMovimientos;
+  // El Post de una cabecera ensuciada por los totales pasa por su AfterPost
+  // y sincroniza una sola vez. La rama Browse conserva la sincronizacion de
+  // cambios de stock que no alteran el total fiscal.
+  if unqryTablaG.State in dsEditModes then
+    unqryTablaG.Post
+  else
+    SincronizarMovimientos;
 end;
 
 procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterDelete(
@@ -604,7 +610,10 @@ procedure TdmDevolucionesCompra.unqryDevolucionesCompraLineasAfterDelete(
 begin
   inherited;
   CalcularTotalesDevolucionCompra;
-  SincronizarMovimientos;
+  if unqryTablaG.State in dsEditModes then
+    unqryTablaG.Post
+  else
+    SincronizarMovimientos;
 end;
 
 procedure TdmDevolucionesCompra.GetCodigoAutoDevolucionCompra;

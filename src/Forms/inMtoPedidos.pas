@@ -361,6 +361,7 @@ uses
   inLibEntradaAlbaranVentaPersistenciaIntf,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
+  inLibFormatoMonetario,
   UniDataColumnasDocumentoRepositorio, UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgVentas, inLibMsgConfiguracion,
@@ -1446,15 +1447,6 @@ procedure TfrmMtoPedidos.CrearColumnasHostPedido;
     Result.Width := AAncho;
     Result.Options.Editing := AEditable;
   end;
-  procedure FormatearMoneda(ACol: TcxGridDBColumn);
-  var
-    Propiedades: TcxCurrencyEditProperties;
-  begin
-    ACol.PropertiesClass := TcxCurrencyEditProperties;
-    Propiedades := TcxCurrencyEditProperties(ACol.Properties);
-    Propiedades.DisplayFormat := '0.00 ' + #8364;
-    Propiedades.UseDisplayFormatWhenEditing := True;
-  end;
 var
   ColCant, ColTipo, ColLinea, ColAAlbaranar, ColImpIncl: TcxGridDBColumn;
   PropiedadesCheck: TcxCheckBoxProperties;
@@ -1475,10 +1467,10 @@ begin
     VincularCantidadGrid(ColAAlbaranar, ColTipo, UnidadesMedida);
     Col('Pendiente', 'CANTIDAD_PENDIENTE_A_ALBARANAR_PEDLIN', 90, False);
   end;
-  FormatearMoneda(Col('PVP S/IVA',
-                      'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 90, True));
-  FormatearMoneda(Col('PVP C/IVA',
-                      'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 90, True));
+  FormatearColumnaMonetaria(Col('PVP S/IVA',
+    'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN', 90, True));
+  FormatearColumnaMonetaria(Col('PVP C/IVA',
+    'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN', 90, True));
   Col('Tarifa', 'CODIGO_TAR_PEDLIN', 70, False);
   ColImpIncl := Col('Imp. incl.', 'ESIMP_INCL_TARIFA_PEDLIN', 75, False);
   ColImpIncl.PropertiesClass := TcxCheckBoxProperties;
@@ -1486,7 +1478,8 @@ begin
   PropiedadesCheck.ReadOnly := True;
   PropiedadesCheck.ValueChecked := 'S';
   PropiedadesCheck.ValueUnchecked := 'N';
-  FormatearMoneda(Col('Total', 'TOTAL_PEDLIN', 95, False));
+  FormatearColumnaMonetaria(
+    Col('Total', 'TOTAL_PEDLIN', 95, False));
   Col('Almacén', 'CODIGO_ALMACEN_PEDLIN', 75, True);
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).

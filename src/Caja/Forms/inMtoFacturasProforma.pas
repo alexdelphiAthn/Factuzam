@@ -114,7 +114,8 @@ resourcestring
 implementation
 
 uses
-  inLibFacturasProforma, inMtoModalImpFacturasProforma;
+  inLibFacturasProforma, inMtoModalImpFacturasProforma,
+  inLibFormatoMonetario;
 
 {$R *.dfm}
 
@@ -281,9 +282,12 @@ begin
     CrearColumna('ESTADO_DOCUMENTO', 'Estado', 100);
     CrearColumna('CANTIDAD_OPERACIONES', 'Operaciones', 90);
     CrearColumna('CANTIDAD_AJUSTES', 'Ajustes', 75);
-    CrearColumna('TOTAL_BASE', 'Base', 100);
-    CrearColumna('TOTAL_IMPUESTOS', 'Impuestos', 100);
-    CrearColumna('TOTAL_DOCUMENTO', 'Total', 110);
+    FormatearColumnaMonetaria(
+      CrearColumna('TOTAL_BASE', 'Base', 100));
+    FormatearColumnaMonetaria(
+      CrearColumna('TOTAL_IMPUESTOS', 'Impuestos', 100));
+    FormatearColumnaMonetaria(
+      CrearColumna('TOTAL_DOCUMENTO', 'Total', 110));
   end;
 end;
 

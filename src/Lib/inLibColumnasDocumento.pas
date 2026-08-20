@@ -184,7 +184,7 @@ implementation
 uses
   System.SysUtils, Winapi.Windows, cxDataStorage, cxButtonEdit,
   cxCurrencyEdit, inLibFotos, inLibMsgArticulos,
-  inLibMsgComun;
+  inLibMsgComun, inLibFormatoMonetario;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;
@@ -643,14 +643,16 @@ begin
   Result.ColPrecioCompra := CrearColumnaHostDocumento(
     AVista, 'Precio compra',
     'PRECIO_COMPRA_SIVA_ARTICULO_' + APrefijoLinea, 130, True);
+  FormatearColumnaMonetaria(Result.ColPrecioCompra);
   CrearColumnaHostDocumento(AVista, '% IVA',
     'PORCENTAJE_IVA_' + APrefijoLinea, 70, True);
   if AModo = mcsTallasHorPed then
     CrearColumnaHostDocumento(AVista, 'Total uds.',
       'TOTAL_' + APrefijoLinea, 100, False)
   else
-    CrearColumnaHostDocumento(AVista, 'Total',
-      'TOTAL_' + APrefijoLinea, 100, False);
+    FormatearColumnaMonetaria(
+      CrearColumnaHostDocumento(AVista, 'Total',
+        'TOTAL_' + APrefijoLinea, 100, False));
   CrearColumnaHostDocumento(AVista, 'Almacén',
     'CODIGO_ALMACEN_' + APrefijoLinea, 90, True);
   if Assigned(Result.ColLinea) then

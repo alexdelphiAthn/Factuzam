@@ -89,6 +89,8 @@
             object dbcGrdPedTOTAL_LIQUIDO_PED: TcxGridDBColumn
               Caption = 'Total'
               DataBinding.FieldName = 'TOTAL_LIQUIDO_PED'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 110
             end
           end
@@ -806,16 +808,22 @@
                   object cxgrdcPedLinPSIVA: TcxGridDBColumn
                     Caption = 'PVP S/IVA'
                     DataBinding.FieldName = 'PRECIO_VENTA_SIVA_ARTICULO_PEDLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 90
                   end
                   object cxgrdcPedLinPCIVA: TcxGridDBColumn
                     Caption = 'PVP C/IVA'
                     DataBinding.FieldName = 'PRECIO_VENTA_CIVA_ARTICULO_PEDLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 90
                   end
                   object cxgrdcPedLinTOT: TcxGridDBColumn
                     Caption = 'Total'
                     DataBinding.FieldName = 'TOTAL_PEDLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 100
                   end
                   object cxgrdcPedLinALM: TcxGridDBColumn
@@ -853,6 +861,7 @@
                   Top = 35
                   DataBinding.DataField = 'TOTAL_BASES_PED'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.DecimalPlaces = 2
                   Properties.ReadOnly = True
                   TabOrder = 1
@@ -871,7 +880,7 @@
                   DataBinding.DataField = 'TOTAL_IMPUESTOS_PED'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
-                  Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 3
                   Width = 133
@@ -907,6 +916,7 @@
                   Top = 154
                   DataBinding.DataField = 'TOTAL_RETENCION_PED'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 7
                   Width = 133
@@ -923,6 +933,7 @@
                   Top = 195
                   DataBinding.DataField = 'TOTAL_LIQUIDO_PED'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   Properties.UseThousandSeparator = True
                   TabOrder = 9
@@ -1087,6 +1098,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
@@ -1097,6 +1109,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
@@ -1107,6 +1120,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
@@ -1117,6 +1131,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
@@ -1127,6 +1142,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_IVAN_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 13
@@ -1137,6 +1153,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_IVAR_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 14
@@ -1147,6 +1164,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_IVAS_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 15
@@ -1157,6 +1175,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_IVAE_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 16
@@ -1167,6 +1186,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_REN_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 17
@@ -1177,6 +1197,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_RER_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 18
@@ -1187,6 +1208,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_RES_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 19
@@ -1197,6 +1219,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_REE_PED'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 20
@@ -1359,6 +1382,8 @@
                   object cxgrdcAlbTOTAL_LIQUIDO_ALB: TcxGridDBColumn
                     Caption = 'Total'
                     DataBinding.FieldName = 'TOTAL_LIQUIDO_ALB'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 110
                   end
                 end
@@ -1434,6 +1459,7 @@
             Top = 8
             DataBinding.DataField = 'TOTAL_BASES_PED'
             DataBinding.DataSource = dsTablaG
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.ReadOnly = True
             TabOrder = 0
             Width = 100
@@ -1450,6 +1476,7 @@
             Top = 8
             DataBinding.DataField = 'TOTAL_IMPUESTOS_PED'
             DataBinding.DataSource = dsTablaG
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.ReadOnly = True
             TabOrder = 1
             Width = 100
@@ -1466,6 +1493,7 @@
             Top = 8
             DataBinding.DataField = 'TOTAL_LIQUIDO_PED'
             DataBinding.DataSource = dsTablaG
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.ReadOnly = True
             TabOrder = 2
             Width = 130

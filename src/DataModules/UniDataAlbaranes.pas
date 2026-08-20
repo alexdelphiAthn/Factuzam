@@ -1137,7 +1137,13 @@ begin
     ConexionPrincipal.StartTransaction;
   try
     CalcularTotalesAlbaran;
-    SincronizarMovimientosSalida;
+    // Si el calculo cambia la cabecera, su AfterPost sincroniza los
+    // movimientos dentro de esta misma transaccion. Evita reconstruirlos
+    // de nuevo al volver al flujo de la linea.
+    if unqryTablaG.State in dsEditModes then
+      unqryTablaG.Post
+    else
+      SincronizarMovimientosSalida;
     if bTransaccionPropia and ConexionPrincipal.InTransaction then
     begin
       ConexionPrincipal.Commit;

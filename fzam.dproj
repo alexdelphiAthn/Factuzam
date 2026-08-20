@@ -178,6 +178,7 @@
         <DCCReference Include="src\Lib\inLibHojaCalculoUtil.pas"/>
         <DCCReference Include="src\Lib\inLibHojaCalculoDevEx.pas"/>
         <DCCReference Include="src\Lib\inLibFormatoExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibFormatoMonetario.pas"/>
         <DCCReference Include="src\Lib\inLibDir.pas"/>
         <DCCReference Include="src\Lib\inLibGlobalVar.pas"/>
         <DCCReference Include="src\Lib\inLibLogIntf.pas"/>

@@ -240,6 +240,7 @@ type
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
     // veria discrepancia con Activo).
     FInToggleClick   : Boolean;
+    FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FAfterOpenLineasOriginal: TDataSetNotifyEvent;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal, con el
@@ -596,8 +597,10 @@ begin
   // AfterPost del detail: cxGrid borra los Values[] no-bound al repintar.
   // Republicamos via el controlador y conservamos la logica original del
   // DM (CalcularTotalesAlbaranCompra).
+  FAfterPostLineasOriginal :=
+    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterPost;
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterPost :=
-                                             unqryLineasAfterPostHook;
+    unqryLineasAfterPostHook;
   FAfterOpenLineasOriginal :=
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterOpen;
   dmmAlbaranesCompra.unqryAlbaranesCompraLineas.AfterOpen :=
@@ -1009,10 +1012,15 @@ end;
 // (CalcularTotalesAlbaranCompra) con la republicacion del controlador.
 procedure TfrmMtoAlbaranesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
-  if Assigned(dmmAlbaranesCompra) then
+  if Assigned(FAfterPostLineasOriginal) then
+    FAfterPostLineasOriginal(DataSet)
+  else if Assigned(dmmAlbaranesCompra) then
   begin
     dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
-    dmmAlbaranesCompra.SincronizarMovimientos;
+    if dmmAlbaranesCompra.unqryTablaG.State in dsEditModes then
+      dmmAlbaranesCompra.unqryTablaG.Post
+    else
+      dmmAlbaranesCompra.SincronizarMovimientos;
   end;
   // En reorganizacion del modo de entrada la lib republica al final:
   // republicar por cada linea repite trabajo sin efecto visual.

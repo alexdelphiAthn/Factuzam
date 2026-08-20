@@ -32,6 +32,7 @@
     BeforePost = unqryPedidosCompraLineasBeforePost
     AfterPost = unqryPedidosCompraLineasAfterPost
     BeforeDelete = unqryPedidosCompraLineasBeforeDelete
+    AfterDelete = unqryPedidosCompraLineasAfterDelete
     Left = 520
     Top = 8
     ParamData = <

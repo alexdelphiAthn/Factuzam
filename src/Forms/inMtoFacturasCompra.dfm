@@ -449,7 +449,7 @@
                     Caption = 'Precio compra'
                     DataBinding.FieldName = 'PRECIO_COMPRA_SIVA_ARTICULO_FACCLIN'
                     PropertiesClassName = 'TcxCurrencyEditProperties'
-                    Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 110
                   end
                   object colLineaFaccPORCENTAJE_IVA: TcxGridDBColumn
@@ -497,6 +497,7 @@
                   Top = 35
                   DataBinding.DataField = 'TOTAL_BASES_FACC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.DecimalPlaces = 2
                   Properties.ReadOnly = True
                   TabOrder = 1
@@ -515,7 +516,7 @@
                   DataBinding.DataField = 'TOTAL_IMPUESTOS_FACC'
                   DataBinding.DataSource = dsTablaG
                   Properties.DecimalPlaces = 2
-                  Properties.DisplayFormat = ',0.00 '#8364';-,0.00 '#8364
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 3
                   Width = 133
@@ -551,6 +552,7 @@
                   Top = 154
                   DataBinding.DataField = 'TOTAL_RETENCION_FACC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 7
                   Width = 133
@@ -567,6 +569,7 @@
                   Top = 195
                   DataBinding.DataField = 'TOTAL_LIQUIDO_FACC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   Properties.UseThousandSeparator = True
                   TabOrder = 9
@@ -639,6 +642,7 @@
                   Top = 301
                   DataBinding.DataField = 'TOTAL_DTO_COMERCIAL_FACC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 15
                   Width = 91
@@ -667,6 +671,7 @@
                   Top = 325
                   DataBinding.DataField = 'TOTAL_DTO_FINANCIERO_FACC'
                   DataBinding.DataSource = dsTablaG
+                  Properties.DisplayFormat = '#,##0.00 '#8364
                   Properties.ReadOnly = True
                   TabOrder = 18
                   Width = 91
@@ -777,6 +782,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_BASEI_IVAN_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 9
@@ -802,6 +808,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_IVAN_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 13
@@ -827,6 +834,7 @@
                     Top = 78
                     DataBinding.DataField = 'TOTAL_REN_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 17
@@ -844,6 +852,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_BASEI_IVAR_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 10
@@ -869,6 +878,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_IVAR_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 14
@@ -894,6 +904,7 @@
                     Top = 132
                     DataBinding.DataField = 'TOTAL_RER_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 18
@@ -911,6 +922,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_BASEI_IVAS_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 11
@@ -936,6 +948,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_IVAS_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 15
@@ -961,6 +974,7 @@
                     Top = 180
                     DataBinding.DataField = 'TOTAL_RES_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 19
@@ -978,6 +992,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_BASEI_IVAE_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 12
@@ -1003,6 +1018,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_IVAE_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 16
@@ -1028,6 +1044,7 @@
                     Top = 228
                     DataBinding.DataField = 'TOTAL_REE_FACC'
                     DataBinding.DataSource = dsTablaG
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Properties.ReadOnly = True
                     Style.BorderStyle = ebsNone
                     TabOrder = 20
@@ -1108,16 +1125,22 @@
                   object colEfeImporte: TcxGridDBColumn
                     Caption = 'Importe'
                     DataBinding.FieldName = 'IMPORTE_EFEC'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 100
                   end
                   object colEfePagado: TcxGridDBColumn
                     Caption = 'Pagado'
                     DataBinding.FieldName = 'IMPORTE_PAGADO_EFEC'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 100
                   end
                   object colEfePendiente: TcxGridDBColumn
                     Caption = 'Pendiente'
                     DataBinding.FieldName = 'IMPORTE_PENDIENTE_EFEC'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.DisplayFormat = '#,##0.00 '#8364
                     Width = 100
                   end
                   object colEfeEstado: TcxGridDBColumn
@@ -1158,6 +1181,7 @@
             Top = 32
             DataBinding.DataField = 'TOTAL_BASES_FACC'
             DataBinding.DataSource = dsTablaG
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.ReadOnly = True
             TabOrder = 1
             Width = 140
@@ -1174,6 +1198,7 @@
             Top = 32
             DataBinding.DataField = 'TOTAL_IMPUESTOS_FACC'
             DataBinding.DataSource = dsTablaG
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.ReadOnly = True
             TabOrder = 3
             Width = 140
@@ -1190,6 +1215,7 @@
             Top = 32
             DataBinding.DataField = 'TOTAL_LIQUIDO_FACC'
             DataBinding.DataSource = dsTablaG
+            Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.ReadOnly = True
             TabOrder = 5
             Width = 160

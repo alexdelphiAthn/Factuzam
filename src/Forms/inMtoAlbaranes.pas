@@ -323,6 +323,7 @@ uses
   inLibUser,
   inLibColumnasSku,
   inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
+  inLibFormatoMonetario,
   UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas,
@@ -784,6 +785,7 @@ procedure TfrmMtoAlbaranes.CrearColumnasHostAlbaran;
   end;
 var
   ColCant, ColTipo, ColLinea, ColLote, ColCad: TcxGridDBColumn;
+  ColPrecioSinIva, ColPrecioConIva, ColTotal: TcxGridDBColumn;
   ColImpIncl: TcxGridDBColumn;
   bHayTrazables: Boolean;
   ds: TDataSet;
@@ -800,8 +802,10 @@ begin
   ColTipo.VisibleForCustomization := False;
   // Decimales de la cantidad segun la unidad de la linea (metros...).
   VincularCantidadGrid(ColCant, ColTipo, UnidadesMedida);
-  Col('PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 90, True);
-  Col('PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 90, True);
+  ColPrecioSinIva := Col(
+    'PVP S/IVA', 'PRECIO_VENTA_SIVA_ARTICULO_ALBLIN', 90, True);
+  ColPrecioConIva := Col(
+    'PVP C/IVA', 'PRECIO_VENTA_CIVA_ARTICULO_ALBLIN', 90, True);
   Col('Tarifa', 'CODIGO_TAR_ALBLIN', 70, False);
   ColImpIncl := Col('Imp. incl.', 'ESIMP_INCL_TARIFA_ALBLIN', 75, False);
   ColImpIncl.PropertiesClass := TcxCheckBoxProperties;
@@ -809,11 +813,14 @@ begin
   PropiedadesCheck.ReadOnly := True;
   PropiedadesCheck.ValueChecked := 'S';
   PropiedadesCheck.ValueUnchecked := 'N';
-  Col('Total', 'TOTAL_ALBLIN', 95, False);
+  ColTotal := Col('Total', 'TOTAL_ALBLIN', 95, False);
   Col('Almacén', 'CODIGO_ALMACEN_ALBLIN', 75, True);
   ColLote := Col('Lote', 'LOTE_ALBLIN', 80, True);
   ColCad := Col('F. Caducidad', 'FECHA_CADUCIDAD_ALBLIN', 90, True);
   Col('Facturada', 'ESFACTURADA_ALBLIN', 60, False);
+  FormatearColumnaMonetaria(ColPrecioSinIva);
+  FormatearColumnaMonetaria(ColPrecioConIva);
+  FormatearColumnaMonetaria(ColTotal);
   // Lote / caducidad solo aplican a articulos trazables y el DM los
   // limpia en el resto: se muestran unicamente si alguna linea del
   // albaran trae valor (siguen disponibles en la personalizacion).

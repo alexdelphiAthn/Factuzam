@@ -222,6 +222,7 @@ type
     // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
     // veria discrepancia con Activo).
     FInToggleClick   : Boolean;
+    FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FActualizandoColorPivot: Boolean;
     FColorPivotCodigos: TDictionary<string, string>;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
@@ -521,8 +522,10 @@ begin
   // AfterPost del detail: cxGrid borra los Values[] no-bound al repintar.
   // Republicamos via el controlador y conservamos la logica original del
   // DM (CalcularTotalesDevolucionCompra).
+  FAfterPostLineasOriginal :=
+    dmmDevolucionesCompra.unqryDevolucionesCompraLineas.AfterPost;
   dmmDevolucionesCompra.unqryDevolucionesCompraLineas.AfterPost :=
-                                             unqryLineasAfterPostHook;
+    unqryLineasAfterPostHook;
   FMostrarAtributos := False;
   FActualizandoColorPivot := False;
   RefrescarVisibilidadTallas;
@@ -867,19 +870,21 @@ var
   iFilas: Integer;
   bPivotActivo: Boolean;
 
-  procedure RefrescarTrasBorrado;
+  procedure RefrescarTrasBorrado(AProcesarNegocio: Boolean);
   begin
     if oLineas.Active and not oLineas.IsEmpty then
     begin
       oLineas.First;
     end;
-    dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-    dmmDevolucionesCompra.SincronizarMovimientos;
-    if Assigned(oCabecera) and
-       oCabecera.Active and
-       (oCabecera.State in dsEditModes) then
+    if AProcesarNegocio then
     begin
-      oCabecera.Post;
+      dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
+      if Assigned(oCabecera) and
+         oCabecera.Active and
+         (oCabecera.State in dsEditModes) then
+        oCabecera.Post
+      else
+        dmmDevolucionesCompra.SincronizarMovimientos;
     end;
     if bPivotActivo and
        Assigned(FPivote) and
@@ -941,7 +946,7 @@ begin
             begin
               oLineas.Open;
             end;
-            RefrescarTrasBorrado;
+            RefrescarTrasBorrado(iFilas > 0);
             if iFilas = 0 then
             begin
               MessageDlg(
@@ -967,7 +972,7 @@ begin
         else
         begin
           oLineas.Delete;
-          RefrescarTrasBorrado;
+          RefrescarTrasBorrado(False);
         end;
       end;
     end;
@@ -1480,10 +1485,15 @@ end;
 // (CalcularTotalesDevolucionCompra) con la republicacion del controlador.
 procedure TfrmMtoDevolucionesCompra.unqryLineasAfterPostHook(DataSet: TDataSet);
 begin
-  if Assigned(dmmDevolucionesCompra) then
+  if Assigned(FAfterPostLineasOriginal) then
+    FAfterPostLineasOriginal(DataSet)
+  else if Assigned(dmmDevolucionesCompra) then
   begin
     dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-    dmmDevolucionesCompra.SincronizarMovimientos;
+    if dmmDevolucionesCompra.unqryTablaG.State in dsEditModes then
+      dmmDevolucionesCompra.unqryTablaG.Post
+    else
+      dmmDevolucionesCompra.SincronizarMovimientos;
   end;
   ActualizarLabelPrendas;
   if Assigned(FPivote) and FPivote.Activo then
@@ -2036,10 +2046,7 @@ begin
     if Assigned(FPivote) and FPivote.Activo then
       BorrarGrupoColorPivotActual
     else
-    begin
       dmmDevolucionesCompra.unqryDevolucionesCompraLineas.Delete;
-      dmmDevolucionesCompra.CalcularTotalesDevolucionCompra;
-    end;
   end;
 end;
 

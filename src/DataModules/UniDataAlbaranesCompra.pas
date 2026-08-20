@@ -894,7 +894,14 @@ procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterPost(
 begin
   inherited;
   CalcularTotalesAlbaranCompra;
-  SincronizarMovimientos;
+  // Si los totales han dejado la cabecera en edicion, su Post ejecutara
+  // unqryTablaGAfterPost y reconstruira los movimientos una sola vez. Si
+  // los importes no han cambiado (p. ej. cambia un SKU manteniendo cantidad
+  // y precio), la cabecera sigue en Browse y hay que sincronizar aqui.
+  if unqryTablaG.State in dsEditModes then
+    unqryTablaG.Post
+  else
+    SincronizarMovimientos;
 end;
 
 procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterDelete(
@@ -902,7 +909,10 @@ procedure TdmAlbaranesCompra.unqryAlbaranesCompraLineasAfterDelete(
 begin
   inherited;
   CalcularTotalesAlbaranCompra;
-  SincronizarMovimientos;
+  if unqryTablaG.State in dsEditModes then
+    unqryTablaG.Post
+  else
+    SincronizarMovimientos;
 end;
 
 procedure TdmAlbaranesCompra.GetCodigoAutoAlbaranCompra;
@@ -1071,7 +1081,10 @@ begin
     begin
       FReorganizacionPendiente := False;
       CalcularTotalesAlbaranCompra;
-      SincronizarMovimientos;
+      if unqryTablaG.State in dsEditModes then
+        unqryTablaG.Post
+      else
+        SincronizarMovimientos;
     end;
   end;
 end;
