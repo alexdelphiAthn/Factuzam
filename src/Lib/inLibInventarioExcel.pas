@@ -315,6 +315,183 @@ end;
 //   IMPORTAR
 // =============================================================================
 
+type
+  TColumnasImportacionInventario = record
+    Sku: Integer;
+    Cantidad: Integer;
+    PmpNuevo: Integer;
+    FilaInicio: Integer;
+  end;
+
+  TEstadoLineaImportacionInventario = (
+    eliVacia,
+    eliInvalida,
+    eliValida);
+
+function TextoCeldaImportacionInventario(
+  const ALector: ILectorHojaCalculo;
+  AFila, ACol: Integer): string;
+var
+  Valor: Variant;
+begin
+  Result := '';
+  if ACol >= 0 then
+  begin
+    Valor := ALector.LeerCelda(AFila, ACol);
+    if not VarIsNull(Valor) then
+      Result := Trim(VarToStr(Valor));
+  end;
+end;
+
+function EsCabeceraSkuInventario(const ATexto: string): Boolean;
+begin
+  Result := (ATexto = 'SKU') or
+    (ATexto = 'CODIGO_UNIDAD') or
+    (ATexto = 'CODIGO UNIDAD') or
+    (ATexto = 'UNIDAD');
+end;
+
+function EsCabeceraCantidadInventario(const ATexto: string): Boolean;
+begin
+  Result := (ATexto = 'CANTIDAD') or
+    (ATexto = 'UDS') or
+    (ATexto = 'UDS. FISICAS') or
+    (ATexto = 'FISICAS') or
+    (ATexto = 'QTY');
+end;
+
+function EsCabeceraPmpInventario(const ATexto: string): Boolean;
+begin
+  Result := (ATexto = 'PMP NUEVO') or
+    (ATexto = 'PMP_NUEVO') or
+    (ATexto = 'PRECIO_MEDIO_NUEVO') or
+    (ATexto = 'PMP');
+end;
+
+function ColumnasImportacionInventario(
+  const ALector: ILectorHojaCalculo): TColumnasImportacionInventario;
+var
+  Columna: Integer;
+  Cabecera: string;
+begin
+  Result.Sku := -1;
+  Result.Cantidad := -1;
+  Result.PmpNuevo := -1;
+  Result.FilaInicio := 1;
+  for Columna := 0 to 20 do
+  begin
+    Cabecera := UpperCase(
+      TextoCeldaImportacionInventario(ALector, 0, Columna));
+    if EsCabeceraSkuInventario(Cabecera) then
+      Result.Sku := Columna
+    else if EsCabeceraCantidadInventario(Cabecera) then
+      Result.Cantidad := Columna
+    else if EsCabeceraPmpInventario(Cabecera) then
+      Result.PmpNuevo := Columna;
+  end;
+  if Result.Sku < 0 then
+  begin
+    Result.Sku := 0;
+    Result.Cantidad := 1;
+    Result.FilaInicio := 0;
+  end;
+end;
+
+procedure AgregarIncidenciaImportacionInventario(
+  var AIncidencias: TIncidenciasImportacionInventario;
+  AFila: Integer;
+  const ASku: string;
+  ACampo: TCampoIncidenciaImportacionInventario;
+  const AValor: string);
+var
+  Indice: Integer;
+begin
+  Indice := Length(AIncidencias);
+  SetLength(AIncidencias, Indice + 1);
+  AIncidencias[Indice].Fila := AFila;
+  AIncidencias[Indice].Sku := ASku;
+  AIncidencias[Indice].Campo := ACampo;
+  AIncidencias[Indice].Valor := AValor;
+end;
+
+function LeerCantidadImportacionInventario(
+  var ATexto: string;
+  out AValor: Double): Boolean;
+begin
+  if ATexto = '' then
+  begin
+    ATexto := '1';
+    AValor := 1;
+    Result := True;
+  end
+  else
+    Result := TryStrToFloat(ATexto, AValor);
+end;
+
+function LeerPmpImportacionInventario(
+  const ATexto: string;
+  out AValor: Double;
+  out ATienePmp: Boolean): Boolean;
+begin
+  ATienePmp := ATexto <> '';
+  Result := not ATienePmp or TryStrToFloat(ATexto, AValor);
+end;
+
+function LeerLineaImportacionInventario(
+  const ALector: ILectorHojaCalculo;
+  const AColumnas: TColumnasImportacionInventario;
+  AFila: Integer;
+  var AIncidencias: TIncidenciasImportacionInventario;
+  out ALinea: TLineaImportada;
+  out ATextoLista: string): TEstadoLineaImportacionInventario;
+var
+  CantidadValida: Boolean;
+  PmpValido: Boolean;
+  TextoCantidad: string;
+  TextoPmp: string;
+begin
+  ALinea := Default(TLineaImportada);
+  ATextoLista := '';
+  ALinea.Sku := TextoCeldaImportacionInventario(
+    ALector, AFila, AColumnas.Sku);
+  if ALinea.Sku = '' then
+    Exit(eliVacia);
+  TextoCantidad := TextoCeldaImportacionInventario(
+    ALector, AFila, AColumnas.Cantidad);
+  CantidadValida := LeerCantidadImportacionInventario(
+    TextoCantidad, ALinea.Cantidad);
+  if not CantidadValida then
+    AgregarIncidenciaImportacionInventario(
+      AIncidencias,
+      AFila + 1,
+      ALinea.Sku,
+      ciiCantidad,
+      TextoCantidad);
+  TextoPmp := TextoCeldaImportacionInventario(
+    ALector, AFila, AColumnas.PmpNuevo);
+  PmpValido := LeerPmpImportacionInventario(
+    TextoPmp, ALinea.PmpNuevo, ALinea.TienePmp);
+  if not PmpValido then
+    AgregarIncidenciaImportacionInventario(
+      AIncidencias,
+      AFila + 1,
+      ALinea.Sku,
+      ciiPmpNuevo,
+      TextoPmp);
+  if not (CantidadValida and PmpValido) then
+    Exit(eliInvalida);
+  ATextoLista := ALinea.Sku + '=' + TextoCantidad;
+  Result := eliValida;
+end;
+
+procedure AgregarLineaImportacionInventario(
+  var ALineas: TLineasImportadas;
+  const ALinea: TLineaImportada);
+begin
+  SetLength(ALineas, Length(ALineas) + 1);
+  ALineas[High(ALineas)] := ALinea;
+end;
+
 procedure ImportarInventarioDesdeSheet(
   const ALector: ILectorHojaCalculo;
   out ALineas: TLineasImportadas;
@@ -322,121 +499,38 @@ procedure ImportarInventarioDesdeSheet(
   out AIncidencias: TIncidenciasImportacionInventario;
   out AMsg: string);
 var
-  iColSku, iColCant, iColPmp: Integer;
-  r, c, iLastRow: Integer;
-  sSku, sCant, sPmp: string;
-  iLeidas, iVacias: Integer;
-  lin: TLineaImportada;
-  bCantidadValida, bPmpValido: Boolean;
-
-  function CellText(ARow, ACol: Integer): string;
-  var
-    vCelda: Variant;
-  begin
-    Result := '';
-    if ACol >= 0 then
-    begin
-      vCelda := ALector.LeerCelda(ARow, ACol);
-      if not VarIsNull(vCelda) then
-        Result := Trim(VarToStr(vCelda));
-    end;
-  end;
-
-  procedure AgregarIncidencia(
-    AFila: Integer;
-    const ASku: string;
-    ACampo: TCampoIncidenciaImportacionInventario;
-    const AValor: string);
-  var
-    iIncidencia: Integer;
-  begin
-    iIncidencia := Length(AIncidencias);
-    SetLength(AIncidencias, iIncidencia + 1);
-    AIncidencias[iIncidencia].Fila := AFila;
-    AIncidencias[iIncidencia].Sku := ASku;
-    AIncidencias[iIncidencia].Campo := ACampo;
-    AIncidencias[iIncidencia].Valor := AValor;
-  end;
-
+  Columnas: TColumnasImportacionInventario;
+  Estado: TEstadoLineaImportacionInventario;
+  Fila: Integer;
+  Linea: TLineaImportada;
+  LineasLeidas: Integer;
+  LineasVacias: Integer;
+  TextoLista: string;
 begin
   ALista := TStringList.Create;
   SetLength(ALineas, 0);
   SetLength(AIncidencias, 0);
   AMsg := '';
-  // Buscar columnas por cabecera (fila 0)
-  iColSku  := -1;
-  iColCant := -1;
-  iColPmp  := -1;
-  for c := 0 to 20 do
-  begin
-    var sHdr := UpperCase(CellText(0, c));
-    if (sHdr = 'SKU') or (sHdr = 'CODIGO_UNIDAD') or
-       (sHdr = 'CODIGO UNIDAD') or (sHdr = 'UNIDAD') then
-      iColSku := c
-    else if (sHdr = 'CANTIDAD') or
-            (sHdr = 'UDS') or (sHdr = 'UDS. FISICAS') or
-            (sHdr = 'FISICAS') or (sHdr = 'QTY') then
-      iColCant := c
-    else if (sHdr = 'PMP NUEVO') or (sHdr = 'PMP_NUEVO') or
-            (sHdr = 'PRECIO_MEDIO_NUEVO') or (sHdr = 'PMP') then
-      iColPmp := c;
-  end;
-  var iFilaInicio := 1;
-  if iColSku < 0 then
-  begin
-    iColSku := 0;
-    iColCant := 1;
-    iFilaInicio := 0;
-  end;
-  iLastRow := ALector.UltimaFila;
-  if iLastRow < iFilaInicio then
-  begin
-    AMsg := 'La hoja está vacía o no tiene datos.';
-  end
+  Columnas := ColumnasImportacionInventario(ALector);
+  if ALector.UltimaFila < Columnas.FilaInicio then
+    AMsg := 'La hoja está vacía o no tiene datos.'
   else
   begin
-    iLeidas := 0;
-    iVacias := 0;
-    for r := iFilaInicio to iLastRow do
+    LineasLeidas := 0;
+    LineasVacias := 0;
+    for Fila := Columnas.FilaInicio to ALector.UltimaFila do
     begin
-      sSku := CellText(r, iColSku);
-      if sSku = '' then
-        Inc(iVacias)
-      else
-      begin
-        sCant := CellText(r, iColCant);
-        lin := Default(TLineaImportada);
-        lin.Sku := sSku;
-        bCantidadValida := True;
-        if sCant = '' then
-        begin
-          sCant := '1';
-          lin.Cantidad := 1;
-        end
-        else if not TryStrToFloat(sCant, lin.Cantidad) then
-        begin
-          AgregarIncidencia(r + 1, sSku, ciiCantidad, sCant);
-          bCantidadValida := False;
-        end;
-        sPmp := CellText(r, iColPmp);
-        bPmpValido := True;
-        if sPmp <> '' then
-        begin
-          if TryStrToFloat(sPmp, lin.PmpNuevo) then
-            lin.TienePmp := True
-          else
+      Estado := LeerLineaImportacionInventario(
+        ALector, Columnas, Fila, AIncidencias, Linea, TextoLista);
+      case Estado of
+        eliVacia:
+          Inc(LineasVacias);
+        eliValida:
           begin
-            AgregarIncidencia(r + 1, sSku, ciiPmpNuevo, sPmp);
-            bPmpValido := False;
+            ALista.Add(TextoLista);
+            AgregarLineaImportacionInventario(ALineas, Linea);
+            Inc(LineasLeidas);
           end;
-        end;
-        if bCantidadValida and bPmpValido then
-        begin
-          ALista.Add(sSku + '=' + sCant);
-          SetLength(ALineas, Length(ALineas) + 1);
-          ALineas[High(ALineas)] := lin;
-          Inc(iLeidas);
-        end;
       end;
     end;
     if Length(AIncidencias) > 0 then
@@ -446,7 +540,7 @@ begin
     end
     else
       AMsg := Format('Leidas %d lineas (%d vacias ignoradas).',
-        [iLeidas, iVacias]);
+        [LineasLeidas, LineasVacias]);
   end;
 end;
 
