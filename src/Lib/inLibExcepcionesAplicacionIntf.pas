@@ -91,6 +91,8 @@ type
 
 function EsRuidoEditorInplace(
   E: Exception): Boolean;
+function EsValidacionEditorEsperada(
+  E: Exception): Boolean;
 function ConstruirDetalleExcepcionAplicacion(
   Sender: TObject;
   E: Exception;
@@ -103,7 +105,8 @@ function ConstruirDetalleExcepcionAplicacion(
 implementation
 
 uses
-  System.Classes;
+  System.Classes,
+  cxEdit;
 
 function EsRuidoEditorInplace(
   E: Exception): Boolean;
@@ -113,6 +116,13 @@ begin
     (Pos(
       'no tiene ventana principal',
       E.Message) > 0);
+end;
+
+function EsValidacionEditorEsperada(
+  E: Exception): Boolean;
+begin
+  Result := Assigned(E) and
+    (E is EcxEditValidationError);
 end;
 
 function ConstruirDetalleExcepcionAplicacion(

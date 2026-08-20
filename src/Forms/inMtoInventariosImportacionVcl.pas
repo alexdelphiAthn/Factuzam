@@ -35,12 +35,17 @@ type
     ErrorInventarioCerrado: string;
     ErrorArchivoNoExiste: string;
     ErrorSinDatos: string;
+    TituloIncidencias: string;
+    TextoIncidencias: string;
+    FormatoIncidenciaCantidad: string;
+    FormatoIncidenciaPmpNuevo: string;
     InfoLineasCsv: string;
     InfoResultado: string;
   end;
 
   TImportadorRecuentoInventarioVcl = class
   private
+    FPropietario: TComponent;
     FDialogo: TOpenDialog;
     FLineas: TClientDataSet;
     FAsegurarFechaRecuento: TProc;
@@ -50,12 +55,14 @@ type
     function LeerFichero(
       const AArchivo: string;
       out ALineas: TLineasImportacionInventario;
+      out AIncidencias: TStringList;
       out AMensaje: string): Boolean;
     procedure ImportarLineas(
       const ALineas: TLineasImportacionInventario;
       const AMensaje: string);
   public
     constructor Create(
+      APropietario: TComponent;
       ADialogo: TOpenDialog;
       ALineas: TClientDataSet;
       const AAsegurarFechaRecuento: TProc;
@@ -71,9 +78,11 @@ uses
   dxSpreadSheet,
   inLibHojaCalculoDevEx,
   inLibInventarioExcel,
-  inLibInventariosAplicacion;
+  inLibInventariosAplicacion,
+  inMtoModalScriptLog;
 
 constructor TImportadorRecuentoInventarioVcl.Create(
+  APropietario: TComponent;
   ADialogo: TOpenDialog;
   ALineas: TClientDataSet;
   const AAsegurarFechaRecuento: TProc;
@@ -82,6 +91,8 @@ constructor TImportadorRecuentoInventarioVcl.Create(
   const AMensajes: TMensajesImportacionInventario);
 begin
   inherited Create;
+  if APropietario = nil then
+    raise EArgumentNilException.Create('APropietario');
   if ADialogo = nil then
     raise EArgumentNilException.Create('ADialogo');
   if ALineas = nil then
@@ -92,6 +103,7 @@ begin
     raise EArgumentNilException.Create('ACargarSkusNuevos');
   if not Assigned(ARefrescar) then
     raise EArgumentNilException.Create('ARefrescar');
+  FPropietario := APropietario;
   FDialogo := ADialogo;
   FLineas := ALineas;
   FAsegurarFechaRecuento := AAsegurarFechaRecuento;
@@ -103,18 +115,22 @@ end;
 function TImportadorRecuentoInventarioVcl.LeerFichero(
   const AArchivo: string;
   out ALineas: TLineasImportacionInventario;
+  out AIncidencias: TStringList;
   out AMensaje: string): Boolean;
 var
   Lista: TStringList;
   LineasExcel: TLineasImportadas;
+  IncidenciasExcel: TIncidenciasImportacionInventario;
   Textos: TArray<string>;
   Hoja: TdxSpreadSheet;
   iLinea: Integer;
 begin
   SetLength(ALineas, 0);
+  AIncidencias := TStringList.Create;
   AMensaje := '';
   Lista := nil;
   SetLength(LineasExcel, 0);
+  SetLength(IncidenciasExcel, 0);
   try
     if SameText(ExtractFileExt(AArchivo), '.xlsx') or
        SameText(ExtractFileExt(AArchivo), '.xls') then
@@ -123,10 +139,30 @@ begin
       try
         Hoja.LoadFromFile(AArchivo);
         ImportarInventarioDesdeSheet(CrearLectorDevEx(Hoja),
-          LineasExcel, Lista, AMensaje);
+          LineasExcel, Lista, IncidenciasExcel, AMensaje);
       finally
         FreeAndNil(Hoja);
       end;
+      if Length(IncidenciasExcel) > 0 then
+      begin
+        AIncidencias.Add(FMensajes.TextoIncidencias);
+        AIncidencias.Add('');
+      end;
+      for iLinea := 0 to High(IncidenciasExcel) do
+        case IncidenciasExcel[iLinea].Campo of
+          ciiCantidad:
+            AIncidencias.Add(Format(
+              FMensajes.FormatoIncidenciaCantidad,
+              [IncidenciasExcel[iLinea].Fila,
+               IncidenciasExcel[iLinea].Sku,
+               IncidenciasExcel[iLinea].Valor]));
+          ciiPmpNuevo:
+            AIncidencias.Add(Format(
+              FMensajes.FormatoIncidenciaPmpNuevo,
+              [IncidenciasExcel[iLinea].Fila,
+               IncidenciasExcel[iLinea].Sku,
+               IncidenciasExcel[iLinea].Valor]));
+        end;
       SetLength(ALineas, Length(LineasExcel));
       for iLinea := 0 to High(LineasExcel) do
       begin
@@ -149,7 +185,8 @@ begin
       ALineas := LeerLineasImportacionCsvInventario(Textos);
       AMensaje := Format(FMensajes.InfoLineasCsv, [Lista.Count]);
     end;
-    Result := (Lista <> nil) and (Lista.Count > 0);
+    Result := (AIncidencias.Count = 0) and
+      (Lista <> nil) and (Lista.Count > 0);
   finally
     FreeAndNil(Lista);
   end;
@@ -194,23 +231,33 @@ procedure TImportadorRecuentoInventarioVcl.Ejecutar(
   APuedeEditar: Boolean);
 var
   Lineas: TLineasImportacionInventario;
+  Incidencias: TStringList;
   Mensaje: string;
 begin
+  Incidencias := nil;
   FDialogo.Filter :=
     'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|Todos (*.*)|*.*';
   FDialogo.DefaultExt := 'xlsx';
-  if not APuedeEditar then
-    ShowMessage(FMensajes.ErrorInventarioCerrado)
-  else if FDialogo.Execute then
-  begin
-    if not FileExists(FDialogo.FileName) then
-      ShowMessage(FMensajes.ErrorArchivoNoExiste)
-    else if LeerFichero(FDialogo.FileName, Lineas, Mensaje) then
-      ImportarLineas(Lineas, Mensaje)
-    else if Mensaje <> '' then
-      ShowMessage(Mensaje)
-    else
-      ShowMessage(FMensajes.ErrorSinDatos);
+  try
+    if not APuedeEditar then
+      ShowMessage(FMensajes.ErrorInventarioCerrado)
+    else if FDialogo.Execute then
+    begin
+      if not FileExists(FDialogo.FileName) then
+        ShowMessage(FMensajes.ErrorArchivoNoExiste)
+      else if LeerFichero(
+        FDialogo.FileName, Lineas, Incidencias, Mensaje) then
+        ImportarLineas(Lineas, Mensaje)
+      else if (Incidencias <> nil) and (Incidencias.Count > 0) then
+        TfrmMtoModalScriptLog.MostrarTexto(
+          FPropietario, FMensajes.TituloIncidencias, Incidencias)
+      else if Mensaje <> '' then
+        ShowMessage(Mensaje)
+      else
+        ShowMessage(FMensajes.ErrorSinDatos);
+    end;
+  finally
+    FreeAndNil(Incidencias);
   end;
 end;
 

@@ -530,10 +530,19 @@ begin
   MensajesImportacion.ErrorArchivoNoExiste :=
     SErrorArchivoImportacionInventarioNoExiste;
   MensajesImportacion.ErrorSinDatos := SErrorImportacionInventarioSinDatos;
+  MensajesImportacion.TituloIncidencias :=
+    STituloIncidenciasImportacionInventario;
+  MensajesImportacion.TextoIncidencias :=
+    STextoIncidenciasImportacionInventario;
+  MensajesImportacion.FormatoIncidenciaCantidad :=
+    SFormatoIncidenciaCantidadImportacionInventario;
+  MensajesImportacion.FormatoIncidenciaPmpNuevo :=
+    SFormatoIncidenciaPmpNuevoImportacionInventario;
   MensajesImportacion.InfoLineasCsv := SInfoLineasCsvInventarioLeidas;
   MensajesImportacion.InfoResultado := SInfoImportacionInventario;
   FreeAndNil(FImportadorRecuento);
   FImportadorRecuento := TImportadorRecuentoInventarioVcl.Create(
+    Self,
     dlgAbrir,
     dmmInventarios.cdsLineas,
     procedure

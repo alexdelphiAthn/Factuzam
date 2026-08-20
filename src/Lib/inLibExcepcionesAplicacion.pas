@@ -80,6 +80,9 @@ type
     procedure RegistrarDetalleSeguro(E: Exception;
       const ADetalle: string);
     procedure RegistrarRuidoSeguro(E: Exception);
+    procedure RegistrarValidacionSegura(Sender: TObject;
+      E: Exception);
+    procedure MostrarValidacion(E: Exception);
     procedure SalirAplicacionClick(Sender: TObject);
   public
     constructor Create(
@@ -157,6 +160,27 @@ begin
   end;
 end;
 
+procedure TGestorExcepcionesAplicacion.RegistrarValidacionSegura(
+  Sender: TObject;
+  E: Exception);
+var
+  sSender: string;
+begin
+  sSender := '(nil)';
+  if Assigned(Sender) then
+    sSender := Sender.ClassName;
+  try
+    FRegistroLog.RegistrarAviso(
+      'Validación de entrada ' + E.ClassName +
+      ' [' + sSender + ']: ' + E.Message);
+  except
+    on EFalloLog: Exception do
+      OutputDebugString(PChar(
+        'Factuzam: fallo al registrar validación: ' +
+        EFalloLog.Message));
+  end;
+end;
+
 procedure TGestorExcepcionesAplicacion.RegistrarDetalleSeguro(
   E: Exception;
   const ADetalle: string);
@@ -196,7 +220,12 @@ var
 begin
   if not FSalidaAplicacionSolicitada then
   begin
-    if EsRuidoEditorInplace(E) then
+    if EsValidacionEditorEsperada(E) then
+    begin
+      RegistrarValidacionSegura(Sender, E);
+      MostrarValidacion(E);
+    end
+    else if EsRuidoEditorInplace(E) then
       RegistrarRuidoSeguro(E)
     else
     begin
@@ -210,6 +239,23 @@ begin
           MostrarFallback(E);
       end;
     end;
+  end;
+end;
+
+procedure TGestorExcepcionesAplicacion.MostrarValidacion(
+  E: Exception);
+begin
+  try
+    MessageDlg(
+      E.Message,
+      mtWarning,
+      [mbOk],
+      0);
+  except
+    on EFalloUI: Exception do
+      OutputDebugString(PChar(
+        'Factuzam: fallo al mostrar validación: ' +
+        EFalloUI.Message));
   end;
 end;
 

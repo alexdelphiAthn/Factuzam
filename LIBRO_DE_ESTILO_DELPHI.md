@@ -2308,7 +2308,17 @@ en el ZIP diario correspondiente.
 
 Definido en `TfrmMtoPrincipal` y enganchado vía
 `Application.OnException := AppException` en `FormCreate`. Captura
-**cualquier** excepción no atrapada por bloques `try/except` y:
+las excepciones no atrapadas por bloques `try/except` y distingue dos
+categorías:
+
+- Una `EcxEditValidationError` es una validación de entrada esperada. Se
+  registra como aviso y se muestra únicamente su mensaje en un diálogo
+  breve. No genera evidencia ni abre el formulario técnico. Esta regla es
+  global y se aplica también a ventas, compras, inventarios, TPV y
+  traspasos.
+- Cualquier otra excepción sigue el circuito técnico descrito a
+  continuación. No se debe ampliar la categoría anterior por texto del
+  mensaje, `Sender` o clase base, porque ocultaría fallos reales.
 
 1. Construye un detalle completo (`ConstruirDetalleException`):
    aplicación + versión, fecha, usuario, empresa, almacén, caja,

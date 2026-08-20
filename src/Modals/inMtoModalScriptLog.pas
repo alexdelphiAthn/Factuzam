@@ -34,10 +34,18 @@ type
   private
     FOperacionEnCurso: Boolean;
     FOnCancelarOperacion: TNotifyEvent;
+    FExtensionFichero: string;
+    FFiltroFichero: string;
+    FPrefijoFichero: string;
     function ConfirmarCerrarOperacion: Boolean;
+    procedure ConfigurarComoTextoPlano;
   protected
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
+    class procedure MostrarTexto(
+      AOwner: TComponent;
+      const ATitulo: string;
+      ALineas: TStrings); static;
     function CloseQuery: Boolean; override;
     procedure AppendLine(const AText: string);
     procedure AppendLines(const ALines: TStrings);
@@ -60,9 +68,40 @@ begin
   inherited;
   KeyPreview := True;
   FOperacionEnCurso := False;
+  FExtensionFichero := 'sql';
+  FFiltroFichero := SCaptionFiltroArchivosSqlTexto;
+  FPrefijoFichero := 'log_script_';
   LogMemo.Highlighter := LogHigSQL;
   LogHigSQL.SQLDialect := sqlMySQL;
   LogHigSQL.Enabled := True;
+end;
+
+class procedure TfrmMtoModalScriptLog.MostrarTexto(
+  AOwner: TComponent;
+  const ATitulo: string;
+  ALineas: TStrings);
+var
+  Formulario: TfrmMtoModalScriptLog;
+begin
+  Formulario := TfrmMtoModalScriptLog.Create(AOwner);
+  try
+    Formulario.Caption := ATitulo;
+    Formulario.ConfigurarComoTextoPlano;
+    if ALineas <> nil then
+      Formulario.LogMemo.Lines.Assign(ALineas);
+    Formulario.ShowModal;
+  finally
+    FreeAndNil(Formulario);
+  end;
+end;
+
+procedure TfrmMtoModalScriptLog.ConfigurarComoTextoPlano;
+begin
+  FExtensionFichero := 'txt';
+  FFiltroFichero := SCaptionFiltroArchivosTexto;
+  FPrefijoFichero := 'log_';
+  LogMemo.Highlighter := nil;
+  LogHigSQL.Enabled := False;
 end;
 
 function TfrmMtoModalScriptLog.ConfirmarCerrarOperacion: Boolean;
@@ -130,9 +169,9 @@ begin
   dlg := TSaveDialog.Create(Self);
   try
     dlg.Title := STituloGuardarLogComo;
-    dlg.DefaultExt := 'sql';
-    dlg.Filter := SCaptionFiltroArchivosSqlTexto;
-    dlg.FileName := 'log_script_' +
+    dlg.DefaultExt := FExtensionFichero;
+    dlg.Filter := FFiltroFichero;
+    dlg.FileName := FPrefijoFichero +
                      FormatDateTime('yyyy_mm_dd_HH_nn_ss', Now);
     if dlg.Execute then
     begin

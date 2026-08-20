@@ -1243,6 +1243,30 @@ begin
       SErrorImportacionInventarioSinDatos);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'STituloIncidenciasImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STituloIncidenciasImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STextoIncidenciasImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STextoIncidenciasImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SFormatoIncidenciaCantidadImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SFormatoIncidenciaCantidadImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SFormatoIncidenciaPmpNuevoImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SFormatoIncidenciaPmpNuevoImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SInfoImportacionInventario',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -7565,6 +7589,12 @@ begin
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
       SCaptionFiltroArchivosSqlTexto);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SCaptionFiltroArchivosTexto',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SCaptionFiltroArchivosTexto);
   ARegistrar(
     'inLibMsgFacturas.' +
     'SErrorLecturasFacturasNoRegistradas',

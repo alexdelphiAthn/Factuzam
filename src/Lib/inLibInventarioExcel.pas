@@ -35,17 +35,33 @@ type
   end;
   TLineasImportadas = TArray<TLineaImportada>;
 
+  TCampoIncidenciaImportacionInventario = (
+    ciiCantidad,
+    ciiPmpNuevo);
+
+  TIncidenciaImportacionInventario = record
+    Fila: Integer;
+    Sku: string;
+    Campo: TCampoIncidenciaImportacionInventario;
+    Valor: string;
+  end;
+  TIncidenciasImportacionInventario =
+    TArray<TIncidenciaImportacionInventario>;
+
 procedure ExportarInventarioExcel(
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet);
 
 // Lee la hoja a través del lector (ILectorHojaCalculo). Busca columnas SKU,
 // Cantidad y PMP Nuevo por cabecera (fila 0). Si no encuentra cabecera, asume
-// col A=SKU, col B=Cantidad. Devuelve un array de registros y un mensaje.
+// col A=SKU, col B=Cantidad. Los valores no numericos se devuelven como
+// incidencias y dejan vacias ambas salidas de datos para impedir una
+// importacion parcial.
 procedure ImportarInventarioDesdeSheet(
   const ALector: ILectorHojaCalculo;
   out ALineas: TLineasImportadas;
   out ALista: TStringList;
+  out AIncidencias: TIncidenciasImportacionInventario;
   out AMsg: string);
 
 implementation
@@ -303,6 +319,7 @@ procedure ImportarInventarioDesdeSheet(
   const ALector: ILectorHojaCalculo;
   out ALineas: TLineasImportadas;
   out ALista: TStringList;
+  out AIncidencias: TIncidenciasImportacionInventario;
   out AMsg: string);
 var
   iColSku, iColCant, iColPmp: Integer;
@@ -310,6 +327,7 @@ var
   sSku, sCant, sPmp: string;
   iLeidas, iVacias: Integer;
   lin: TLineaImportada;
+  bCantidadValida, bPmpValido: Boolean;
 
   function CellText(ARow, ACol: Integer): string;
   var
@@ -324,9 +342,26 @@ var
     end;
   end;
 
+  procedure AgregarIncidencia(
+    AFila: Integer;
+    const ASku: string;
+    ACampo: TCampoIncidenciaImportacionInventario;
+    const AValor: string);
+  var
+    iIncidencia: Integer;
+  begin
+    iIncidencia := Length(AIncidencias);
+    SetLength(AIncidencias, iIncidencia + 1);
+    AIncidencias[iIncidencia].Fila := AFila;
+    AIncidencias[iIncidencia].Sku := ASku;
+    AIncidencias[iIncidencia].Campo := ACampo;
+    AIncidencias[iIncidencia].Valor := AValor;
+  end;
+
 begin
   ALista := TStringList.Create;
   SetLength(ALineas, 0);
+  SetLength(AIncidencias, 0);
   AMsg := '';
   // Buscar columnas por cabecera (fila 0)
   iColSku  := -1;
@@ -370,25 +405,48 @@ begin
       else
       begin
         sCant := CellText(r, iColCant);
-        if sCant = '' then
-          sCant := '1';
-        ALista.Add(sSku + '=' + sCant);
         lin := Default(TLineaImportada);
         lin.Sku := sSku;
-        lin.Cantidad := StrToFloatDef(sCant, 1);
+        bCantidadValida := True;
+        if sCant = '' then
+        begin
+          sCant := '1';
+          lin.Cantidad := 1;
+        end
+        else if not TryStrToFloat(sCant, lin.Cantidad) then
+        begin
+          AgregarIncidencia(r + 1, sSku, ciiCantidad, sCant);
+          bCantidadValida := False;
+        end;
         sPmp := CellText(r, iColPmp);
+        bPmpValido := True;
         if sPmp <> '' then
         begin
-          lin.PmpNuevo := StrToFloatDef(sPmp, 0);
-          lin.TienePmp := True;
+          if TryStrToFloat(sPmp, lin.PmpNuevo) then
+            lin.TienePmp := True
+          else
+          begin
+            AgregarIncidencia(r + 1, sSku, ciiPmpNuevo, sPmp);
+            bPmpValido := False;
+          end;
         end;
-        SetLength(ALineas, Length(ALineas) + 1);
-        ALineas[High(ALineas)] := lin;
-        Inc(iLeidas);
+        if bCantidadValida and bPmpValido then
+        begin
+          ALista.Add(sSku + '=' + sCant);
+          SetLength(ALineas, Length(ALineas) + 1);
+          ALineas[High(ALineas)] := lin;
+          Inc(iLeidas);
+        end;
       end;
     end;
-    AMsg := Format('Leidas %d lineas (%d vacias ignoradas).',
-      [iLeidas, iVacias]);
+    if Length(AIncidencias) > 0 then
+    begin
+      SetLength(ALineas, 0);
+      ALista.Clear;
+    end
+    else
+      AMsg := Format('Leidas %d lineas (%d vacias ignoradas).',
+        [iLeidas, iVacias]);
   end;
 end;
 

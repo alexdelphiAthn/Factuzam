@@ -525,6 +525,15 @@ resourcestring
     'El archivo no existe.';
   SErrorImportacionInventarioSinDatos =
     'No se encontraron datos para importar.';
+  STituloIncidenciasImportacionInventario =
+    'Incidencias en la importación del inventario';
+  STextoIncidenciasImportacionInventario =
+    'No se ha importado ninguna línea. Corrige estas incidencias en el ' +
+    'archivo y vuelve a intentarlo:';
+  SFormatoIncidenciaCantidadImportacionInventario =
+    'Fila %d | SKU: "%s" | Cantidad: "%s" | Debe ser un número válido.';
+  SFormatoIncidenciaPmpNuevoImportacionInventario =
+    'Fila %d | SKU: "%s" | PMP nuevo: "%s" | Debe ser un número válido.';
   SInfoImportacionInventario =
     '%s' + sLineBreak + '%d actualizados, %d nuevos insertados.';
   SErrorEnviarRecuentoInventarioNoAbierto =

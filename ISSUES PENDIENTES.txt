@@ -79,35 +79,6 @@ líneas por "xxxxxx" y trunca las listas. Los contadores globales no deben
 convertirse directamente en tareas. Antes de medir mejoras hay que separar
 código propio, terceros y código generado.
 
-PA-OPT-01 - DEPURAR EL ÁMBITO DEL ANALIZADOR
-Prioridad: PRECONDICIÓN.
-
-Analizar todas las unidades necesarias para resolver tipos y llamadas, pero
-excluir de los resultados:
-
-- src\3rdpartyComp;
-- las carpetas externas de JCL y JVCL;
-- src\Lib3par\DelphiZXIngQRCode.pas;
-- unidades generadas, entre ellas
-  src\Lib\inLibdxSpreadSheetStrs_ESP.pas;
-- temporales, cachés y laboratorios.
-
-No excluir todo src\Lib3par sin revisar antes si contiene adaptadores propios.
-Conservar en los resultados los formularios, librerías y DataModules escritos
-para Factuzam, aunque utilicen UniDAC.
-
-Guardar el proyecto PAP y sus recursos en
-factuzam_web\tests\pascal_analyzer. Escribir los informes desechables en una
-subcarpeta específica de factuzam_web\tmp y eliminarlos cuando dejen de ser
-necesarios. Ejecutar perfiles separados para Delphi 13 Win32 y Win64.
-
-Criterios de aceptación:
-
-- Status Report sin unidades propias inesperadamente no cargadas;
-- defines, search paths y plataforma equivalentes a fzam.dproj;
-- informe sin incidencias procedentes de JCL, JVCL, SynEdit, SynPDF o ZXing;
-- primera línea base de código propio archivada antes de crear trinquetes.
-
 PA-OPT-02 - DECLARAR COMO OUT EL RESULTADO DE AVS DE ARTÍCULO
 Prioridad: ALTA; cambio pequeño y aislable.
 

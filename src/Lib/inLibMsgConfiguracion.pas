@@ -340,6 +340,8 @@ resourcestring
   SCaptionFiltroArchivosSqlTexto =
     'Archivos SQL (*.sql)|*.sql|Archivos de texto (*.txt)|*.txt|' +
     'Todos los archivos (*.*)|*.*';
+  SCaptionFiltroArchivosTexto =
+    'Archivos de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*';
 implementation
 
 end.
