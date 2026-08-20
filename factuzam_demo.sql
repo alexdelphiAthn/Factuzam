@@ -15319,7 +15319,8 @@ BEGIN
     CALL PRC_FZA_MOVIMIENTOS_RECALCULO_PROPAGAR(v_CAMBIOS);
     SET v_PASADAS = v_PASADAS + 1;
   END WHILE;
-  IF v_CAMBIOS > 0 THEN
+  IF v_PASADAS >= 100 AND
+     EXISTS(SELECT 1 FROM tmp_movimientos_recalculo) THEN
     SIGNAL SQLSTATE '45000'
       SET MESSAGE_TEXT =
         'No converge la propagacion cronologica de traspasos';
