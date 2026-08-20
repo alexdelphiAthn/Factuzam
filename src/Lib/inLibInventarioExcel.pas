@@ -52,9 +52,9 @@ procedure ExportarInventarioExcel(
   ASheetControl: TdxSpreadSheet;
   const QMaster, QLineas: TDataSet);
 
-// Lee la hoja a través del lector (ILectorHojaCalculo). Busca columnas SKU,
-// Cantidad y PMP Nuevo por cabecera (fila 0). Si no encuentra cabecera, asume
-// col A=SKU, col B=Cantidad. Los valores no numericos se devuelven como
+// Lee la hoja a traves del lector (ILectorHojaCalculo). Busca las columnas
+// SKU, Cantidad y PMP Nuevo en las primeras filas. Si no encuentra cabecera,
+// asume col A=SKU y col B=Cantidad. Los valores no numericos se devuelven como
 // incidencias y dejan vacias ambas salidas de datos para impedir una
 // importacion parcial.
 procedure ImportarInventarioDesdeSheet(
@@ -67,10 +67,12 @@ procedure ImportarInventarioDesdeSheet(
 implementation
 
 uses
-  System.Variants;
+  System.Math, System.Variants;
 
 const
   FMT_EUR = '#,##0.00" '#$20AC'"';
+  MAX_FILA_CABECERA_IMPORTACION = 20;
+  MAX_COLUMNA_CABECERA_IMPORTACION = 20;
   COL_LINEA = 0;
   COL_ART   = 1;
   COL_SKU   = 2;
@@ -368,8 +370,9 @@ begin
     (ATexto = 'PMP');
 end;
 
-function ColumnasImportacionInventario(
-  const ALector: ILectorHojaCalculo): TColumnasImportacionInventario;
+function ColumnasImportacionInventarioEnFila(
+  const ALector: ILectorHojaCalculo;
+  AFila: Integer): TColumnasImportacionInventario;
 var
   Columna: Integer;
   Cabecera: string;
@@ -377,11 +380,11 @@ begin
   Result.Sku := -1;
   Result.Cantidad := -1;
   Result.PmpNuevo := -1;
-  Result.FilaInicio := 1;
-  for Columna := 0 to 20 do
+  Result.FilaInicio := AFila + 1;
+  for Columna := 0 to MAX_COLUMNA_CABECERA_IMPORTACION do
   begin
     Cabecera := UpperCase(
-      TextoCeldaImportacionInventario(ALector, 0, Columna));
+      TextoCeldaImportacionInventario(ALector, AFila, Columna));
     if EsCabeceraSkuInventario(Cabecera) then
       Result.Sku := Columna
     else if EsCabeceraCantidadInventario(Cabecera) then
@@ -389,11 +392,31 @@ begin
     else if EsCabeceraPmpInventario(Cabecera) then
       Result.PmpNuevo := Columna;
   end;
+end;
+
+function ColumnasImportacionInventario(
+  const ALector: ILectorHojaCalculo): TColumnasImportacionInventario;
+var
+  Fila: Integer;
+  UltimaFilaCabecera: Integer;
+begin
+  UltimaFilaCabecera := ALector.UltimaFila;
+  if UltimaFilaCabecera > MAX_FILA_CABECERA_IMPORTACION then
+    UltimaFilaCabecera := MAX_FILA_CABECERA_IMPORTACION;
+  for Fila := 0 to UltimaFilaCabecera do
+  begin
+    Result := ColumnasImportacionInventarioEnFila(ALector, Fila);
+    if Result.Sku >= 0 then
+      Exit;
+  end;
+  Result.Sku := -1;
+  Result.Cantidad := -1;
+  Result.PmpNuevo := -1;
+  Result.FilaInicio := 0;
   if Result.Sku < 0 then
   begin
     Result.Sku := 0;
     Result.Cantidad := 1;
-    Result.FilaInicio := 0;
   end;
 end;
 
@@ -425,7 +448,11 @@ begin
     Result := True;
   end
   else
+  begin
     Result := TryStrToFloat(ATexto, AValor);
+    if Result then
+      Result := not IsNan(AValor) and not IsInfinite(AValor);
+  end;
 end;
 
 function LeerPmpImportacionInventario(
@@ -434,7 +461,14 @@ function LeerPmpImportacionInventario(
   out ATienePmp: Boolean): Boolean;
 begin
   ATienePmp := ATexto <> '';
-  Result := not ATienePmp or TryStrToFloat(ATexto, AValor);
+  if not ATienePmp then
+    Result := True
+  else
+  begin
+    Result := TryStrToFloat(ATexto, AValor);
+    if Result then
+      Result := not IsNan(AValor) and not IsInfinite(AValor);
+  end;
 end;
 
 function LeerLineaImportacionInventario(
