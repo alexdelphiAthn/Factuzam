@@ -184,6 +184,8 @@ type
       const AAnterior, ANuevo, AUsuario: string);
     function SqlActualizacionAtributos(
       const ATabla, ACampoUnidad, ASufijo: string): string;
+    function SqlActualizacionDescripcion(
+      const ATabla, ACampoUnidad, ASufijo: string): string;
     procedure ActualizarInstantaneasColor(
       const AAnterior, ANuevo, AUsuario: string);
     function HayInstantaneasColorAntiguo(
@@ -909,6 +911,44 @@ begin
   end;
 end;
 
+function TRepositorioCambioArticuloColorUniDAC.SqlActualizacionDescripcion(
+  const ATabla, ACampoUnidad, ASufijo: string): string;
+var
+  i: Integer;
+  sCampo: string;
+  sCampoDescripcion: string;
+  sPartes: string;
+  sSeparador: string;
+begin
+  if SameText(ASufijo, 'DTL') then
+    sCampoDescripcion := 'DESCRIPCION_UNIDAD_DTL'
+  else
+    sCampoDescripcion := 'DESCRIPCION_VARIACION_' + ASufijo;
+  sPartes := '';
+  sSeparador := '';
+  if CampoExiste(ATabla, sCampoDescripcion) then
+  begin
+    for i := 1 to 5 do
+    begin
+      sCampo := 'ATTR' + IntToStr(i) + '_VALOR_' + ASufijo;
+      if CampoExiste(ATabla, sCampo) then
+      begin
+        sPartes := sPartes + sSeparador + 'NULLIF(TRIM(dato.`' +
+          sCampo + '`), '''')';
+        sSeparador := ', ';
+      end;
+    end;
+  end;
+  Result := '';
+  if sPartes <> '' then
+  begin
+    Result := 'UPDATE `' + ATabla + '` dato ' +
+      'JOIN `' + TABLA_TEMPORAL + '` mapa ON ' +
+      'mapa.`ORIGEN` = dato.`' + ACampoUnidad + '` SET dato.`' +
+      sCampoDescripcion + '` = CONCAT_WS('' / '', ' + sPartes + ')';
+  end;
+end;
+
 procedure TRepositorioCambioArticuloColorUniDAC.
   ActualizarInstantaneasColor(
     const AAnterior, ANuevo, AUsuario: string);
@@ -940,6 +980,12 @@ begin
           ['ANTERIOR', 'NUEVO', 'USUARIO'],
           [AAnterior, ANuevo, AUsuario]);
       end;
+      sSql := SqlActualizacionDescripcion(
+        sTabla,
+        sCampoUnidad,
+        sSufijo);
+      if sSql <> '' then
+        Ejecutar(sSql, [], []);
     end;
   end;
 end;
