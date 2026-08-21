@@ -80,6 +80,13 @@ begin
   Result   := False;
   ANumAlbc := '';
   AMensaje := '';
+  // La lectura de pendientes debe hacerse despues del mismo bloqueo que usa
+  // la reversion; asi no fija una instantanea anterior a otra recepcion.
+  if not BloquearPedidoCompra(AConn, ASeriePedc, ANumPedc) then
+  begin
+    AMensaje := SErrorPedidoCompraNoActivoCrearAlbaran;
+    Exit;
+  end;
   // Construye una celda por linea pendiente del almacen y delega en
   // CrearAlbaranDesdePedidoConCantidades: un unico camino de codigo
   // para el flujo "todo lo pendiente" y el flujo celda a celda del
@@ -575,32 +582,36 @@ begin
   ANumAlbc := '';
   if ValidarSolicitudRecepcionCeldas(
     ASeriePedc, ANumPedc, ACodigoAlm,
-    ACeldas, AMensaje) and
-    ReservarNumeroAlbaranCompra(
-      AConn, AUsuario, ANumAlbc, AMensaje) then
+    ACeldas, AMensaje) then
   begin
-    CrearCabeceraAlbaranPedido(
-      AConn, ASeriePedc, ANumPedc, ACodigoAlm,
-      ASerieAlbc, ANumAlbc, ARefPrv, AUsuario,
-      AFechaRecepcion, AIdPvTemporada);
-    iLineasCreadas := ProcesarCeldasRecepcionPedido(
-      AConn, ASeriePedc, ANumPedc, ACodigoAlm,
-      ASerieAlbc, ANumAlbc, AUsuario, ACeldas);
-    if iLineasCreadas = 0 then
+    if not BloquearPedidoCompra(AConn, ASeriePedc, ANumPedc) then
+      AMensaje := SErrorPedidoCompraNoActivoCrearAlbaran
+    else if ReservarNumeroAlbaranCompra(
+      AConn, AUsuario, ANumAlbc, AMensaje) then
     begin
-      AMensaje := SErrorCrearLineasAlbaranCompra;
-      BorrarCabeceraAlbaranCompra(
-        AConn, ASerieAlbc, ANumAlbc);
-    end
-    else
-    begin
-      FinalizarAlbaranCreado(
-        AConn, ASeriePedc, ANumPedc, ASerieAlbc,
-        ANumAlbc, AUsuario, AIdPvTemporada);
-      AMensaje := Format(
-        SInfoAlbaranCompraCreado,
-        [ASerieAlbc, ANumAlbc, iLineasCreadas]);
-      Result := True;
+      CrearCabeceraAlbaranPedido(
+        AConn, ASeriePedc, ANumPedc, ACodigoAlm,
+        ASerieAlbc, ANumAlbc, ARefPrv, AUsuario,
+        AFechaRecepcion, AIdPvTemporada);
+      iLineasCreadas := ProcesarCeldasRecepcionPedido(
+        AConn, ASeriePedc, ANumPedc, ACodigoAlm,
+        ASerieAlbc, ANumAlbc, AUsuario, ACeldas);
+      if iLineasCreadas = 0 then
+      begin
+        AMensaje := SErrorCrearLineasAlbaranCompra;
+        BorrarCabeceraAlbaranCompra(
+          AConn, ASerieAlbc, ANumAlbc);
+      end
+      else
+      begin
+        FinalizarAlbaranCreado(
+          AConn, ASeriePedc, ANumPedc, ASerieAlbc,
+          ANumAlbc, AUsuario, AIdPvTemporada);
+        AMensaje := Format(
+          SInfoAlbaranCompraCreado,
+          [ASerieAlbc, ANumAlbc, iLineasCreadas]);
+        Result := True;
+      end;
     end;
   end;
 end;
@@ -619,11 +630,29 @@ function TCreacionAlbaranPedidoCompraUniDAC.CrearAlbaranDesdePedido(
   AFechaRecepcion: TDateTime;
   AIdPvTemporada: Integer;
   out ANumAlbc, AMensaje: string): Boolean;
+var
+  EsTransaccionPropia: Boolean;
 begin
-  Result := CrearAlbaranDesdePedidoInterno(
-    FConexion, ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
-    AUsuario, ARefPrv, AFechaRecepcion, AIdPvTemporada,
-    ANumAlbc, AMensaje);
+  EsTransaccionPropia := not FConexion.InTransaction;
+  if EsTransaccionPropia then
+    FConexion.StartTransaction;
+  try
+    Result := CrearAlbaranDesdePedidoInterno(
+      FConexion, ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
+      AUsuario, ARefPrv, AFechaRecepcion, AIdPvTemporada,
+      ANumAlbc, AMensaje);
+    if EsTransaccionPropia then
+    begin
+      if Result then
+        FConexion.Commit
+      else
+        FConexion.Rollback;
+    end;
+  except
+    if EsTransaccionPropia and FConexion.InTransaction then
+      FConexion.Rollback;
+    raise;
+  end;
 end;
 
 function TCreacionAlbaranPedidoCompraUniDAC.
@@ -634,11 +663,29 @@ function TCreacionAlbaranPedidoCompraUniDAC.
   AIdPvTemporada: Integer;
   const ACeldas: TArray<TCeldaARecibir>;
   out ANumAlbc, AMensaje: string): Boolean;
+var
+  EsTransaccionPropia: Boolean;
 begin
-  Result := CrearAlbaranDesdePedidoConCantidadesInterno(
-    FConexion, ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
-    AUsuario, ARefPrv, AFechaRecepcion, AIdPvTemporada,
-    ACeldas, ANumAlbc, AMensaje);
+  EsTransaccionPropia := not FConexion.InTransaction;
+  if EsTransaccionPropia then
+    FConexion.StartTransaction;
+  try
+    Result := CrearAlbaranDesdePedidoConCantidadesInterno(
+      FConexion, ASeriePedc, ANumPedc, ACodigoAlm, ASerieAlbc,
+      AUsuario, ARefPrv, AFechaRecepcion, AIdPvTemporada,
+      ACeldas, ANumAlbc, AMensaje);
+    if EsTransaccionPropia then
+    begin
+      if Result then
+        FConexion.Commit
+      else
+        FConexion.Rollback;
+    end;
+  except
+    if EsTransaccionPropia and FConexion.InTransaction then
+      FConexion.Rollback;
+    raise;
+  end;
 end;
 
 function CrearCreacionAlbaranPedidoCompraUniDAC(

@@ -86,6 +86,7 @@ type
       TPendientesRecibirMaterializacion;
     function ExisteTabla(
       const ATabla: string): Boolean;
+    function BloqueosReversionVigentes: Boolean;
     function ConsultarDocumentosSesion(
       const ASerie, ANumero: string):
       TDocumentosReversionMaterializacion;
@@ -342,6 +343,9 @@ const
   SQL_EXISTE_TABLA =
     'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
     ' WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t';
+  SQL_BLOQUEOS_REVERSION_VIGENTES =
+    'SELECT COUNT(*) AS N ' +
+    '  FROM vi_reversion_sesiones_bloqueos_v1';
   SQL_DOCUMENTOS_REVERSION =
     'SELECT TIPO_DOC_SESDOC, SERIE_SESDOC, NUMERO_SESDOC ' +
     '  FROM fza_compras_sesiones_documentos ' +
@@ -384,23 +388,139 @@ const
     '  ) I ' +
     ' ORDER BY I.DOCUMENTO LIMIT 10 FOR UPDATE';
   SQL_SALIDAS_POSTERIORES_ALBARAN =
-    'SELECT DISTINCT CONCAT(V.TIPO_DOC_MOV, '' '', V.SERIE_DOC_MOV, ''/'', ' +
-    '       V.NUMERO_DOC_MOV, '', SKU '', V.CODIGO_UNIDAD_MOV, ' +
-    '       '', almacen '', V.CODIGO_ALM_MOV) AS DOCUMENTO ' +
-    '  FROM fza_movimientos_almacen C ' +
-    '  JOIN fza_movimientos_almacen V ' +
-    '    ON V.CODIGO_EMP_MOV = C.CODIGO_EMP_MOV ' +
-    '   AND V.CODIGO_ALM_MOV = C.CODIGO_ALM_MOV ' +
-    '   AND V.CODIGO_UNIDAD_MOV = C.CODIGO_UNIDAD_MOV ' +
-    ' WHERE C.TIPO_DOC_MOV = ''AC'' ' +
-    '   AND C.TIPO_MOV = ''E'' ' +
-    '   AND IFNULL(C.ESACTIVO_MOV, ''S'') = ''S'' ' +
-    '   AND C.SERIE_DOC_MOV = :s AND C.NUMERO_DOC_MOV = :n ' +
-    '   AND V.TIPO_MOV = ''S'' ' +
-    '   AND IFNULL(V.ESACTIVO_MOV, ''S'') = ''S'' ' +
-    '   AND COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) >= ' +
-    '       COALESCE(C.FECHA_MOV, C.INSTANTE_ALTA) ' +
-    ' ORDER BY DOCUMENTO LIMIT 10 FOR UPDATE';
+    'SELECT DISTINCT I.DOCUMENTO ' +
+    '  FROM ( ' +
+    '    SELECT CONCAT(''DATOS DE STOCK INCOMPLETOS linea '', ' +
+    '           L.LINEA_ALBCLIN, '', articulo '', ' +
+    '           IFNULL(L.CODIGO_ART_ALBCLIN, ''?''), '', SKU '', ' +
+    '           IFNULL(L.CODIGO_UNIDAD_ALBCLIN, ''?''), '', almacen '', ' +
+    '           IFNULL(COALESCE(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '                           H.CODIGO_ALM_ALBC), ''?'')) AS DOCUMENTO ' +
+    '      FROM fza_albaranes_compra H ' +
+    '      JOIN fza_albaranes_compra_lineas L ' +
+    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+    '       AND (IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '         OR IFNULL(COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC), '''') = '''') ' +
+    '    UNION ALL ' +
+    '    SELECT CONCAT(''MOVIMIENTO '', V.TIPO_DOC_MOV, '' '', ' +
+    '           IFNULL(V.SERIE_DOC_MOV, ''?''), ''/'', ' +
+    '           IFNULL(V.NUMERO_DOC_MOV, ''?''), '', SKU '', ' +
+    '           IFNULL(V.CODIGO_UNIDAD_MOV, ''?''), '', almacen '', ' +
+    '           IFNULL(V.CODIGO_ALM_MOV, ''?'')) AS DOCUMENTO ' +
+    '      FROM fza_albaranes_compra H ' +
+    '      JOIN fza_albaranes_compra_lineas L ' +
+    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      JOIN fza_movimientos_almacen V ' +
+    '        ON (IFNULL(COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC), '''') = '''' ' +
+    '         OR IFNULL(V.CODIGO_ALM_MOV, '''') = '''' ' +
+    '         OR V.CODIGO_ALM_MOV = COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC)) ' +
+    '       AND ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+    '         AND IFNULL(V.CODIGO_UNIDAD_MOV, '''') <> '''' ' +
+    '         AND V.CODIGO_UNIDAD_MOV = L.CODIGO_UNIDAD_ALBCLIN) ' +
+    '         OR ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '           OR IFNULL(V.CODIGO_UNIDAD_MOV, '''') = '''') ' +
+    '          AND V.CODIGO_ART_MOV = L.CODIGO_ART_ALBCLIN)) ' +
+    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+    '       AND V.TIPO_MOV = ''S'' ' +
+    '       AND IFNULL(V.ESACTIVO_MOV, ''S'') = ''S'' ' +
+    '       AND COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) >= ' +
+    '           COALESCE(H.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                    L.INSTANTE_ALTA, H.INSTANTE_ALTA, ' +
+    '                    CAST(H.FECHA_ALBC AS DATETIME)) ' +
+    '    UNION ALL ' +
+    '    SELECT CONCAT(''ALBARAN VENTA '', VH.SERIE_ALB, ''/'', ' +
+    '           VH.NUMERO_ALB, '' linea '', VL.LINEA_ALBLIN, '', SKU '', ' +
+    '           IFNULL(VL.CODIGO_UNIDAD_ALBLIN, ''?''), '', almacen '', ' +
+    '           IFNULL(COALESCE(NULLIF(VL.CODIGO_ALMACEN_ALBLIN, ''''), ' +
+    '                           VH.CODIGO_ALM_ALB), ''?''), ' +
+    '           '', cantidad '', IFNULL(VL.CANTIDAD_ALBLIN, 0)) ' +
+    '      FROM fza_albaranes_compra H ' +
+    '      JOIN fza_albaranes_compra_lineas L ' +
+    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      JOIN fza_albaranes_lineas VL ' +
+    '        ON ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+    '         AND IFNULL(VL.CODIGO_UNIDAD_ALBLIN, '''') <> '''' ' +
+    '         AND VL.CODIGO_UNIDAD_ALBLIN = L.CODIGO_UNIDAD_ALBCLIN) ' +
+    '         OR ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '           OR IFNULL(VL.CODIGO_UNIDAD_ALBLIN, '''') = '''') ' +
+    '          AND VL.CODIGO_ART_ALBLIN = L.CODIGO_ART_ALBCLIN)) ' +
+    '      JOIN fza_albaranes VH ' +
+    '        ON VH.SERIE_ALB = VL.SERIE_ALB_ALBLIN ' +
+    '       AND VH.NUMERO_ALB = VL.NUMERO_ALB_ALBLIN ' +
+    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+    '       AND IFNULL(VL.CANTIDAD_ALBLIN, 0) > 0 ' +
+    '       AND IFNULL(VH.ESTADO_ALB, '''') <> ''CANCELADO'' ' +
+    '       AND (IFNULL(COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC), '''') = '''' ' +
+    '         OR IFNULL(COALESCE(' +
+    '              NULLIF(VL.CODIGO_ALMACEN_ALBLIN, ''''), ' +
+    '              VH.CODIGO_ALM_ALB), '''') = '''' ' +
+    '         OR COALESCE(NULLIF(VL.CODIGO_ALMACEN_ALBLIN, ''''), ' +
+    '              VH.CODIGO_ALM_ALB) = COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC)) ' +
+    '       AND COALESCE(VH.INSTANTE_MOVIMIENTO_ALB, ' +
+    '                    VL.INSTANTE_ALTA, VH.INSTANTE_ALTA, ' +
+    '                    CAST(VH.FECHA_ALB AS DATETIME)) >= ' +
+    '           COALESCE(H.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                    L.INSTANTE_ALTA, H.INSTANTE_ALTA, ' +
+    '                    CAST(H.FECHA_ALBC AS DATETIME)) ' +
+    '    UNION ALL ' +
+    '    SELECT CONCAT(''FACTURA VENTA '', F.SERIE_FAC, ''/'', ' +
+    '           F.NUMERO_FAC, '' linea '', FL.LINEA_FACLIN, '', SKU '', ' +
+    '           IFNULL(FL.CODIGO_UNIDAD_FACLIN, ''?''), '', almacen '', ' +
+    '           IFNULL(COALESCE(NULLIF(FL.CODIGO_ALM_FACLIN, ''''), ' +
+    '                           F.CODIGO_ALM_FAC), ''?''), ' +
+    '           '', cantidad '', IFNULL(FL.CANTIDAD_FACLIN, 0)) ' +
+    '      FROM fza_albaranes_compra H ' +
+    '      JOIN fza_albaranes_compra_lineas L ' +
+    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      JOIN fza_facturas_lineas FL ' +
+    '        ON ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+    '         AND IFNULL(FL.CODIGO_UNIDAD_FACLIN, '''') <> '''' ' +
+    '         AND FL.CODIGO_UNIDAD_FACLIN = L.CODIGO_UNIDAD_ALBCLIN) ' +
+    '         OR ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '           OR IFNULL(FL.CODIGO_UNIDAD_FACLIN, '''') = '''') ' +
+    '          AND FL.CODIGO_ART_FACLIN = L.CODIGO_ART_ALBCLIN)) ' +
+    '      JOIN fza_facturas F ' +
+    '        ON F.SERIE_FAC = FL.SERIE_FAC_FACLIN ' +
+    '       AND F.NUMERO_FAC = FL.NUMERO_FAC_FACLIN ' +
+    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+    '       AND IFNULL(FL.CANTIDAD_FACLIN, 0) > 0 ' +
+    '       AND IFNULL(F.FASE_FAC, '''') <> ''CANCELADA'' ' +
+    '       AND (IFNULL(COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC), '''') = '''' ' +
+    '         OR IFNULL(COALESCE(NULLIF(FL.CODIGO_ALM_FACLIN, ''''), ' +
+    '                            F.CODIGO_ALM_FAC), '''') = '''' ' +
+    '         OR COALESCE(NULLIF(FL.CODIGO_ALM_FACLIN, ''''), ' +
+    '              F.CODIGO_ALM_FAC) = COALESCE(' +
+    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '              H.CODIGO_ALM_ALBC)) ' +
+    '       AND COALESCE(F.INSTANTECONSO_FAC, FL.INSTANTE_ALTA, ' +
+    '                    F.INSTANTE_ALTA, ' +
+    '                    CAST(F.FECHA_FAC AS DATETIME)) >= ' +
+    '           COALESCE(H.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                    L.INSTANTE_ALTA, H.INSTANTE_ALTA, ' +
+    '                    CAST(H.FECHA_ALBC AS DATETIME)) ' +
+    '  ) I ' +
+    ' ORDER BY I.DOCUMENTO LIMIT 10 FOR UPDATE';
   SQL_ALBARANES_PEDIDO =
     'SELECT DISTINCT I.TIPO_DOC_SESDOC, I.SERIE_SESDOC, ' +
     '       I.NUMERO_SESDOC ' +
@@ -580,6 +700,15 @@ begin
     'N');
 end;
 
+function DefinicionBloqueosReversionVigentes: TDefinicionSql;
+begin
+  Result := Definicion(
+    'BloqueosReversionVigentes',
+    SQL_BLOQUEOS_REVERSION_VIGENTES,
+    '',
+    'N');
+end;
+
 function DefinicionDocumentosReversion: TDefinicionSql;
 begin
   Result := Definicion(
@@ -630,7 +759,7 @@ end;
 class function TRepositorioLecturasMaterializacionComprasSesiones.
   DefinicionesSql: TDefinicionesSql;
 begin
-  SetLength(Result, 19);
+  SetLength(Result, 20);
   Result[0] := DefinicionSiguienteSecuenciaEan;
   Result[1] := DefinicionIdColorBasico;
   Result[2] := DefinicionValorColor;
@@ -646,10 +775,11 @@ begin
   Result[12] := DefinicionAlmacenes;
   Result[13] := DefinicionPendientesRecibir;
   Result[14] := DefinicionExisteTabla;
-  Result[15] := DefinicionDocumentosReversion;
-  Result[16] := DefinicionFacturasCompraAlbaran;
-  Result[17] := DefinicionSalidasPosterioresAlbaran;
-  Result[18] := DefinicionAlbaranesPedido;
+  Result[15] := DefinicionBloqueosReversionVigentes;
+  Result[16] := DefinicionDocumentosReversion;
+  Result[17] := DefinicionFacturasCompraAlbaran;
+  Result[18] := DefinicionSalidasPosterioresAlbaran;
+  Result[19] := DefinicionAlbaranesPedido;
 end;
 
 function TRepositorioLecturasMaterializacionComprasSesiones.
@@ -1277,6 +1407,36 @@ begin
         oConsulta.Connection := FConexion;
         oConsulta.SQL.Text := ASql;
         oConsulta.ParamByName('t').AsString := ATabla;
+        oConsulta.Open;
+        bResultado := oConsulta.FieldByName('N').AsInteger > 0;
+      finally
+        FreeAndNil(oConsulta);
+      end;
+    end,
+    FIncidenciasSql);
+  Result := bResultado;
+end;
+
+function TRepositorioLecturasMaterializacionComprasSesiones.
+  BloqueosReversionVigentes: Boolean;
+var
+  bResultado: Boolean;
+  oDefinicion: TDefinicionSql;
+begin
+  bResultado := False;
+  oDefinicion := DefinicionBloqueosReversionVigentes;
+  // Esta guarda destructiva debe usar siempre el SQL base canonico.
+  EjecutarLecturaSqlConFallback(
+    oDefinicion,
+    nil,
+    procedure(const ASql: string)
+    var
+      oConsulta: TUniQuery;
+    begin
+      oConsulta := TUniQuery.Create(nil);
+      try
+        oConsulta.Connection := FConexion;
+        oConsulta.SQL.Text := ASql;
         oConsulta.Open;
         bResultado := oConsulta.FieldByName('N').AsInteger > 0;
       finally

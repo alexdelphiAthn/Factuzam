@@ -142,6 +142,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_recibos`                        | `REC`     |
 | `fza_remesas_compra`                 | `REMC`    |
 | `fza_remesas_venta`                  | `REMV`    |
+| `fza_stock_bloqueos`                 | `STKBLQ`  |
 | `fza_tarifas`                        | `TAR`     |
 | `fza_tarifas_cambios`                | `TARC`    |
 | `fza_tarifas_cambios_lineas`         | `TARCLIN` |

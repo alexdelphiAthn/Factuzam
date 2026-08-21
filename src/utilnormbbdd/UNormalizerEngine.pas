@@ -294,6 +294,7 @@ begin
   AddSuf('fza_recibos',                         'REC');
   AddSuf('fza_remesas_compra',                  'REMC');
   AddSuf('fza_remesas_venta',                   'REMV');
+  AddSuf('fza_stock_bloqueos',                  'STKBLQ');
   AddSuf('fza_tarifas',                         'TAR');
   AddSuf('fza_tarifas_cambios',                 'TARC');
   AddSuf('fza_tarifas_cambios_lineas',          'TARCLIN');
@@ -385,6 +386,7 @@ begin
   AddOwn('fza_prestashop_cola',                ['PRESTASHOP','COLA']);
   AddOwn('fza_prestashop_cola_eventos',
          ['PRESTASHOP','COLA','EVENTO']);
+  AddOwn('fza_stock_bloqueos',                 ['STOCK','BLOQUEO']);
   AddOwn('fza_proveedores_familias',           ['FAMILIA']);
   AddOwn('fza_proveedores_familias_conjuntos', ['FAMILIA','CONJUNTO']);
   AddOwn('fza_familias_atributos',             ['ATRIBUTO']);

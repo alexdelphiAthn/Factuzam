@@ -351,6 +351,9 @@ resourcestring
   SErrorSesionNoCerradaParaReversion =
     'La sesion no esta CERRADA. Solo se pueden revertir sesiones ' +
     'materializadas.';
+  SErrorReversionSesionMigracionPendiente =
+    'No se puede revertir la sesion: falta aplicar la migracion ' +
+    'reversion_sesiones_bloqueos_concurrentes.sql en la base de datos.';
   SErrorReversionSesionConIncidencias =
     'No se puede revertir la sesion porque sus documentos tienen ' +
     'dependencias:' + sLineBreak + '%s' + sLineBreak +
@@ -358,8 +361,8 @@ resourcestring
   SIncidenciaReversionFacturaCompra =
     '- El albaran de compra %s esta incluido en la factura de compra %s.';
   SIncidenciaReversionSalidaPosterior =
-    '- El albaran de compra %s tiene una venta u otra salida posterior ' +
-    'que afecta al stock: %s.';
+    '- El albaran de compra %s no puede revertirse por una venta, otra ' +
+    'salida posterior o datos de stock no verificables: %s.';
   SIncidenciaReversionPedidoRecibido =
     '- El pedido de compra %s ya fue recibido o tiene un albaran ' +
     'dependiente: %s.';

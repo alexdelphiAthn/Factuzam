@@ -4327,6 +4327,12 @@ begin
       SErrorSesionNoCerradaParaReversion);
   ARegistrar(
     'inLibMsgCompras.' +
+    'SErrorReversionSesionMigracionPendiente',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorReversionSesionMigracionPendiente);
+  ARegistrar(
+    'inLibMsgCompras.' +
     'SErrorReversionSesionConIncidencias',
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.

@@ -147,6 +147,7 @@ uses
   inLibAlbaranesCompraMovimientos,
   inLibPrestaShopColaSenal,
   UniDataAlbaranesCompraMovimientos,
+  UniDataPedidosCompraAlbaranComun,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
@@ -1021,6 +1022,7 @@ end;
 
 procedure TdmAlbaranesCompra.SincronizarMovimientos;
 var
+  bTransaccionPropia: Boolean;
   sNumero: string;
   sSerie: string;
 begin
@@ -1037,16 +1039,31 @@ begin
       sNumero := Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString);
       if (sSerie <> '') and (sNumero <> '') and (sNumero <> '0') then
       begin
-        inLibAlbaranesCompraMovimientos.
-          RevertirMovimientosDesdeAlbaranCompra(
-          CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
-          sSerie, sNumero, IdentidadSesion.Usuario);
-        if HayLineasMovimiento(sSerie, sNumero) then
+        bTransaccionPropia := not unqryTablaG.Connection.InTransaction;
+        if bTransaccionPropia then
+          unqryTablaG.Connection.StartTransaction;
+        try
+          if not BloquearAlbaranCompra(
+            unqryTablaG.Connection, sSerie, sNumero) then
+            raise Exception.Create(SErrorAlbaranCompraNoActivo);
           inLibAlbaranesCompraMovimientos.
-            GenerarMovimientosDesdeAlbaranCompra(
-              CrearMovimientosAlbaranCompraUniDAC(
-                unqryTablaG.Connection),
-              sSerie, sNumero, IdentidadSesion.Usuario);
+            RevertirMovimientosDesdeAlbaranCompra(
+            CrearMovimientosAlbaranCompraUniDAC(unqryTablaG.Connection),
+            sSerie, sNumero, IdentidadSesion.Usuario);
+          if HayLineasMovimiento(sSerie, sNumero) then
+            inLibAlbaranesCompraMovimientos.
+              GenerarMovimientosDesdeAlbaranCompra(
+                CrearMovimientosAlbaranCompraUniDAC(
+                  unqryTablaG.Connection),
+                sSerie, sNumero, IdentidadSesion.Usuario);
+          if bTransaccionPropia then
+            unqryTablaG.Connection.Commit;
+        except
+          if bTransaccionPropia and
+             unqryTablaG.Connection.InTransaction then
+            unqryTablaG.Connection.Rollback;
+          raise;
+        end;
         RefrescarMovimientosProveedor;
         if not unqryTablaG.Connection.InTransaction then
           SolicitarProcesadoPrestaShop;

@@ -52,6 +52,7 @@ type
     TieneCeldasPedido: Boolean;
     TieneAlbaranes: Boolean;
     TieneCeldasAlbaran: Boolean;
+    TieneBloqueosStock: Boolean;
     TieneStockActual: Boolean;
   end;
   TReferenciasSesionReversion = record
@@ -92,6 +93,13 @@ begin
     ALecturas.ExisteTabla('fza_albaranes_compra_lineas');
   ATablas.TieneCeldasAlbaran :=
     ALecturas.ExisteTabla('fza_albaranes_compra_celdas');
+  ATablas.TieneBloqueosStock :=
+    ALecturas.ExisteTabla('fza_stock_bloqueos') and
+    ALecturas.ExisteTabla(
+      'vi_reversion_sesiones_bloqueos_v1');
+  if ATablas.TieneBloqueosStock then
+    ATablas.TieneBloqueosStock :=
+      ALecturas.BloqueosReversionVigentes;
   ATablas.TieneStockActual :=
     ALecturas.ExisteTabla('fza_articulos_stockactual');
 end;
@@ -390,12 +398,28 @@ procedure BloquearDocumentosReversion(
   const ADocumentos: TDocumentosReversionMaterializacion;
   const ATablas: TTablasReversion);
 var
+  bTieneAlbaranes: Boolean;
   iDocumento: Integer;
   q: TUniQuery;
 begin
   q := TUniQuery.Create(nil);
   try
     q.Connection := ADM.ConexionPrincipal;
+    // Todos los escritores toman primero el pedido y despues el albaran.
+    for iDocumento := 0 to High(ADocumentos) do
+    begin
+      if SameText(ADocumentos[iDocumento].Tipo, 'PEDC') and
+         ATablas.TienePedidos then
+      begin
+        q.SQL.Text :=
+          'SELECT SERIE_PEDC FROM fza_pedidos_compra ' +
+          ' WHERE SERIE_PEDC = :s AND NUMERO_PEDC = :n ' +
+          ' FOR UPDATE';
+        q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
+        q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
+        ConsumirBloqueo(q);
+      end;
+    end;
     for iDocumento := 0 to High(ADocumentos) do
     begin
       if SameText(ADocumentos[iDocumento].Tipo, 'ALBC') and
@@ -408,40 +432,86 @@ begin
         q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
         q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
         ConsumirBloqueo(q);
-        if ATablas.TieneStockActual then
-        begin
-          q.SQL.Text :=
-            'SELECT S.CODIGO_ALM_STK, S.CODIGO_UNIDAD_STK, ' +
-            '       S.LOTE_STK ' +
-            '  FROM fza_articulos_stockactual S ' +
-            '  JOIN fza_movimientos_almacen M ' +
-            '    ON M.CODIGO_ALM_MOV = S.CODIGO_ALM_STK ' +
-            '   AND M.CODIGO_UNIDAD_MOV = S.CODIGO_UNIDAD_STK ' +
-            '   AND IFNULL(M.LOTE_MOV, '''') = S.LOTE_STK ' +
-            ' WHERE M.TIPO_DOC_MOV = ''AC'' ' +
-            '   AND M.TIPO_MOV = ''E'' ' +
-            '   AND IFNULL(M.ESACTIVO_MOV, ''S'') = ''S'' ' +
-            '   AND M.SERIE_DOC_MOV = :s ' +
-            '   AND M.NUMERO_DOC_MOV = :n ' +
-            ' ORDER BY S.CODIGO_ALM_STK, S.CODIGO_UNIDAD_STK, ' +
-            '          S.LOTE_STK FOR UPDATE';
-          q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
-          q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
-          ConsumirBloqueo(q);
-        end;
-      end
-      else if SameText(ADocumentos[iDocumento].Tipo, 'PEDC') and
-              ATablas.TienePedidos then
-      begin
-        q.SQL.Text :=
-          'SELECT SERIE_PEDC FROM fza_pedidos_compra ' +
-          ' WHERE SERIE_PEDC = :s AND NUMERO_PEDC = :n ' +
-          ' FOR UPDATE';
-        q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
-        q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
-        ConsumirBloqueo(q);
       end;
     end;
+    q.SQL.Text :=
+      'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_documentos_albc';
+    q.ExecSQL;
+    q.SQL.Text :=
+      'CREATE TEMPORARY TABLE tmp_reversion_documentos_albc (' +
+      ' SERIE varchar(20) NOT NULL, ' +
+      ' NUMERO varchar(20) NOT NULL, ' +
+      ' PRIMARY KEY (SERIE, NUMERO)) ENGINE=MEMORY';
+    q.ExecSQL;
+    bTieneAlbaranes := False;
+    for iDocumento := 0 to High(ADocumentos) do
+    begin
+      if SameText(ADocumentos[iDocumento].Tipo, 'ALBC') and
+         ATablas.TieneAlbaranes then
+      begin
+        q.SQL.Text :=
+          'INSERT INTO tmp_reversion_documentos_albc (SERIE, NUMERO) ' +
+          'VALUES (:s, :n) ON DUPLICATE KEY UPDATE SERIE = VALUES(SERIE)';
+        q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
+        q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
+        q.ExecSQL;
+        bTieneAlbaranes := True;
+      end;
+    end;
+    if bTieneAlbaranes and ATablas.TieneBloqueosStock then
+    begin
+      q.SQL.Text :=
+        'INSERT INTO fza_stock_bloqueos (' +
+        ' CODIGO_ALM_STKBLQ, CODIGO_UNIDAD_STKBLQ, ' +
+        ' INSTANTE_ALTA, USUARIO_ALTA, ' +
+        ' INSTANTE_MODIF, USUARIO_MODIF) ' +
+        'SELECT DISTINCT ' +
+        '       COALESCE(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+        '                H.CODIGO_ALM_ALBC) AS ALM, ' +
+        '       L.CODIGO_UNIDAD_ALBCLIN AS SKU, NOW(), ' +
+        '       ''REVERSION_SESION'', NULL, NULL ' +
+        '  FROM fza_albaranes_compra H ' +
+        '  JOIN fza_albaranes_compra_lineas L ' +
+        '    ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+        '   AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+        '  JOIN tmp_reversion_documentos_albc D ' +
+        '    ON D.SERIE = H.SERIE_ALBC ' +
+        '   AND D.NUMERO = H.NUMERO_ALBC ' +
+        ' WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+        '   AND IFNULL(COALESCE(' +
+        '         NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+        '         H.CODIGO_ALM_ALBC), '''') <> '''' ' +
+        '   AND IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+        ' ORDER BY ALM, SKU ' +
+        'ON DUPLICATE KEY UPDATE ' +
+        ' CODIGO_ALM_STKBLQ = VALUES(CODIGO_ALM_STKBLQ)';
+      q.ExecSQL;
+    end;
+    if bTieneAlbaranes and ATablas.TieneStockActual then
+    begin
+      q.SQL.Text :=
+        'SELECT S.CODIGO_ALM_STK, S.CODIGO_UNIDAD_STK, ' +
+        '       S.LOTE_STK ' +
+        '  FROM fza_albaranes_compra H ' +
+        '  JOIN fza_albaranes_compra_lineas L ' +
+        '    ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+        '   AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+        '  JOIN tmp_reversion_documentos_albc D ' +
+        '    ON D.SERIE = H.SERIE_ALBC ' +
+        '   AND D.NUMERO = H.NUMERO_ALBC ' +
+        '  JOIN fza_articulos_stockactual S ' +
+        '    ON S.CODIGO_ALM_STK = COALESCE(' +
+        '         NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+        '         H.CODIGO_ALM_ALBC) ' +
+        '   AND S.CODIGO_UNIDAD_STK = L.CODIGO_UNIDAD_ALBCLIN ' +
+        ' WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+        ' ORDER BY S.CODIGO_ALM_STK, S.CODIGO_UNIDAD_STK, ' +
+        '          S.LOTE_STK FOR UPDATE';
+      ConsumirBloqueo(q);
+    end;
+    q.SQL.Text :=
+      'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_documentos_albc';
+    q.ExecSQL;
   finally
     FreeAndNil(q);
   end;
@@ -485,30 +555,35 @@ begin
     else
     begin
       ConsultarTablasReversion(ALecturas, Tablas);
-      oDocumentos := ObtenerDocumentosReversion(
-        ADM,
-        ALecturas,
-        Tablas.TieneDocumentos,
-        Referencias,
-        sDependencias);
-      if (sDependencias = '') and Tablas.TieneDocumentos then
-        sDependencias := ConsultarDocumentosCompartidos(
-          ADM,
-          oDocumentos,
-          Referencias);
-      if sDependencias = '' then
-      begin
-        BloquearDocumentosReversion(ADM, oDocumentos, Tablas);
-        sDependencias := ConsultarDependenciasReversion(
-          ALecturas,
-          oDocumentos);
-      end;
-      if sDependencias <> '' then
-        AMensajeError := Format(
-          SErrorReversionSesionConIncidencias,
-          [sDependencias])
+      if not Tablas.TieneBloqueosStock then
+        AMensajeError := SErrorReversionSesionMigracionPendiente
       else
-        Result := True;
+      begin
+        oDocumentos := ObtenerDocumentosReversion(
+          ADM,
+          ALecturas,
+          Tablas.TieneDocumentos,
+          Referencias,
+          sDependencias);
+        if (sDependencias = '') and Tablas.TieneDocumentos then
+          sDependencias := ConsultarDocumentosCompartidos(
+            ADM,
+            oDocumentos,
+            Referencias);
+        if sDependencias = '' then
+        begin
+          BloquearDocumentosReversion(ADM, oDocumentos, Tablas);
+          sDependencias := ConsultarDependenciasReversion(
+            ALecturas,
+            oDocumentos);
+        end;
+        if sDependencias <> '' then
+          AMensajeError := Format(
+            SErrorReversionSesionConIncidencias,
+            [sDependencias])
+        else
+          Result := True;
+      end;
     end;
   end;
 end;
@@ -697,6 +772,8 @@ begin
     Referencias) then
     raise Exception.Create(SErrorSesionNoCerradaParaRevertir);
   ConsultarTablasReversion(ALecturas, Tablas);
+  if not Tablas.TieneBloqueosStock then
+    raise Exception.Create(SErrorReversionSesionMigracionPendiente);
   oDocumentos := ObtenerDocumentosReversion(
     ADM,
     ALecturas,

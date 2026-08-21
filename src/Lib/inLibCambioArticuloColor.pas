@@ -30,6 +30,7 @@ uses
 const
   LONGITUD_MAXIMA_ARTICULO = 20;
   LONGITUD_MAXIMA_COLOR = 100;
+  LONGITUD_MAXIMA_USUARIO_AUDITORIA = 50;
   SEPARADOR_SKU = '/';
 
 type
@@ -47,8 +48,14 @@ type
     function CambiarArticulo(
       const AArticuloAntiguo, AArticuloNuevo, AUsuario: string):
       TResultadoCambioArticuloColor;
+    function FusionarArticulo(
+      const AArticuloAntiguo, AArticuloDestino, AUsuario: string):
+      TResultadoCambioArticuloColor;
     function CambiarColor(
       const AColorAntiguo, AColorNuevo, AUsuario: string):
+      TResultadoCambioArticuloColor;
+    function FusionarColor(
+      const AColorAntiguo, AColorDestino, AUsuario: string):
       TResultadoCambioArticuloColor;
   end;
 
@@ -85,7 +92,10 @@ var
 begin
   sAnterior := Trim(AArticuloAntiguo);
   sNuevo := Trim(AArticuloNuevo);
-  sUsuario := Trim(AUsuario);
+  sUsuario := Copy(
+    Trim(AUsuario),
+    1,
+    LONGITUD_MAXIMA_USUARIO_AUDITORIA);
   if DatosValidos(
        sAnterior,
        sNuevo,
@@ -113,7 +123,10 @@ var
 begin
   sAnterior := Trim(AColorAntiguo);
   sNuevo := Trim(AColorNuevo);
-  sUsuario := Trim(AUsuario);
+  sUsuario := Copy(
+    Trim(AUsuario),
+    1,
+    LONGITUD_MAXIMA_USUARIO_AUDITORIA);
   if DatosValidos(
        sAnterior,
        sNuevo,
@@ -123,6 +136,68 @@ begin
     Result := FRepositorio.CambiarColor(
       sAnterior,
       sNuevo,
+      sUsuario);
+  end
+  else
+  begin
+    Result := TResultadoCambioArticuloColor.Error(mcacDatosInvalidos);
+  end;
+end;
+
+function TServicioCambioArticuloColor.FusionarArticulo(
+  const AArticuloAntiguo, AArticuloDestino, AUsuario: string):
+  TResultadoCambioArticuloColor;
+var
+  sAnterior: string;
+  sDestino: string;
+  sUsuario: string;
+begin
+  sAnterior := Trim(AArticuloAntiguo);
+  sDestino := Trim(AArticuloDestino);
+  sUsuario := Copy(
+    Trim(AUsuario),
+    1,
+    LONGITUD_MAXIMA_USUARIO_AUDITORIA);
+  if DatosValidos(
+       sAnterior,
+       sDestino,
+       sUsuario,
+       LONGITUD_MAXIMA_ARTICULO) then
+  begin
+    Result := FRepositorio.FusionarArticulo(
+      sAnterior,
+      sDestino,
+      sUsuario);
+  end
+  else
+  begin
+    Result := TResultadoCambioArticuloColor.Error(mcacDatosInvalidos);
+  end;
+end;
+
+function TServicioCambioArticuloColor.FusionarColor(
+  const AColorAntiguo, AColorDestino, AUsuario: string):
+  TResultadoCambioArticuloColor;
+var
+  sAnterior: string;
+  sDestino: string;
+  sUsuario: string;
+begin
+  sAnterior := Trim(AColorAntiguo);
+  sDestino := Trim(AColorDestino);
+  sUsuario := Copy(
+    Trim(AUsuario),
+    1,
+    LONGITUD_MAXIMA_USUARIO_AUDITORIA);
+  if DatosValidos(
+       sAnterior,
+       sDestino,
+       sUsuario,
+       LONGITUD_MAXIMA_COLOR) then
+  begin
+    Result := FRepositorio.FusionarColor(
+      sAnterior,
+      sDestino,
       sUsuario);
   end
   else

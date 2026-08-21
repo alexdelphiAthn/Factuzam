@@ -15,6 +15,12 @@ unit UniDataPedidosCompraAlbaranComun;
 interface
 uses
   Uni;
+function BloquearPedidoCompra(
+  AConexion: TUniConnection;
+  const ASeriePedido, ANumeroPedido: string): Boolean;
+function BloquearAlbaranCompra(
+  AConexion: TUniConnection;
+  const ASerieAlbaran, ANumeroAlbaran: string): Boolean;
 procedure RecalcularTotalesAlbaranCompra(AConn: TUniConnection;
   const ASerieAlbc, ANumAlbc, AUsuario: string);
 procedure CerrarAlbaranCompra(AConexion: TUniConnection;
@@ -37,6 +43,52 @@ uses
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos,
   UniDataPedidosCompraPendientes;
+function BloquearPedidoCompra(
+  AConexion: TUniConnection;
+  const ASeriePedido, ANumeroPedido: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT SERIE_PEDC FROM fza_pedidos_compra ' +
+      ' WHERE SERIE_PEDC = :s AND NUMERO_PEDC = :n ' +
+      '   AND IFNULL(ESTADO_PEDC, '''') NOT IN ' +
+      '       (''CANCELADO'', ''RECIBIDO'') ' +
+      ' FOR UPDATE';
+    Consulta.ParamByName('s').AsString := ASeriePedido;
+    Consulta.ParamByName('n').AsString := ANumeroPedido;
+    Consulta.Open;
+    Result := not Consulta.IsEmpty;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+function BloquearAlbaranCompra(
+  AConexion: TUniConnection;
+  const ASerieAlbaran, ANumeroAlbaran: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT SERIE_ALBC FROM fza_albaranes_compra ' +
+      ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n ' +
+      '   AND IFNULL(ESTADO_ALBC, '''') NOT IN ' +
+      '       (''FACTURADO'', ''CANCELADO'') ' +
+      ' FOR UPDATE';
+    Consulta.ParamByName('s').AsString := ASerieAlbaran;
+    Consulta.ParamByName('n').AsString := ANumeroAlbaran;
+    Consulta.Open;
+    Result := not Consulta.IsEmpty;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
 procedure RecalcularTotalesAlbaranCompra(AConn: TUniConnection;
                                   const ASerieAlbc, ANumAlbc,
                                         AUsuario: string);

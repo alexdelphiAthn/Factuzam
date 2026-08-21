@@ -160,8 +160,8 @@
     Left = 20
     Top = 397
     object actCambiarArticulo: TAction
-      Caption = 'Cambiar art'#237'culo (F9)'
-      ShortCut = 120
+      Caption = 'Cambiar art'#237'culo (Ctrl+F9)'
+      ShortCut = 16504
       OnExecute = actCambiarArticuloExecute
     end
     object actCambiarColor: TAction

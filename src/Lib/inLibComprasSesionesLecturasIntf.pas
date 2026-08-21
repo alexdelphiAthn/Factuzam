@@ -135,6 +135,7 @@ type
     ['{6DD05B46-E5C9-4F89-9813-2BC8B7762A72}']
     function ExisteTabla(
       const ATabla: string): Boolean;
+    function BloqueosReversionVigentes: Boolean;
     function ConsultarDocumentosSesion(
       const ASerie, ANumero: string):
       TDocumentosReversionMaterializacion;

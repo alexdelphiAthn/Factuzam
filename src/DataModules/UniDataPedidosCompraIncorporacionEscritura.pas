@@ -30,6 +30,7 @@ type
     FSerieAlbaran: string;
     FSeriePedido: string;
     FUsuario: string;
+    function BloquearOrigenYDestino(out AMensaje: string): Boolean;
     function MaxLineaAlbaranCompra(
       AConn: TUniConnection;
       const ASerieAlbc, ANumAlbc: string): Integer;
@@ -111,6 +112,22 @@ begin
   FNumeroAlbaran := ANumeroAlbaran;
   FUsuario := AUsuario;
   FIdPvTemporada := AIdPvTemporada;
+end;
+
+function TEscrituraIncorporacionAlbaranCompra.BloquearOrigenYDestino(
+  out AMensaje: string): Boolean;
+begin
+  Result := BloquearPedidoCompra(
+    FConexion, FSeriePedido, FNumeroPedido);
+  if not Result then
+    AMensaje := SErrorPedidoCompraNoActivoCrearAlbaran;
+  if Result then
+  begin
+    Result := BloquearAlbaranCompra(
+      FConexion, FSerieAlbaran, FNumeroAlbaran);
+    if not Result then
+      AMensaje := SErrorAlbaranCompraNoActivo;
+  end;
 end;
 
 function TEscrituraIncorporacionAlbaranCompra.ValidarDestino(
@@ -356,7 +373,8 @@ begin
     if EsTransaccionPropia then
       FConexion.StartTransaction;
     try
-      if HayPendientes(AMensaje) then
+      if BloquearOrigenYDestino(AMensaje) and
+         HayPendientes(AMensaje) then
       begin
         iLineaAlbaran := MaxLineaAlbaranCompra(
           FConexion, FSerieAlbaran, FNumeroAlbaran);
@@ -433,78 +451,82 @@ begin
     if EsTransaccionPropia then
       FConexion.StartTransaction;
     try
-      iInsertadas := 0;
-      iLineaAlbaran := MaxLineaAlbaranCompra(
-        FConexion, FSerieAlbaran, FNumeroAlbaran);
-      oOrigen := nil;
-      oEscritura := nil;
-      oPendientes := nil;
-      try
-        oOrigen := TUniQuery.Create(nil);
-        oEscritura := TUniQuery.Create(nil);
-        oPendientes := TDictionary<string, Double>.Create;
-        oOrigen.Connection := FConexion;
-        oEscritura.Connection := FConexion;
-        ConfigurarOrigenLinea(oOrigen);
-        for oCelda in ACeldas do
-        begin
-          EsProcesable := SameText(oCelda.CodigoAlmacen, FAlmacen) and
-            (oCelda.Cantidad > 0);
-          if EsProcesable then
+      if BloquearOrigenYDestino(AMensaje) then
+      begin
+        iInsertadas := 0;
+        iLineaAlbaran := MaxLineaAlbaranCompra(
+          FConexion, FSerieAlbaran, FNumeroAlbaran);
+        oOrigen := nil;
+        oEscritura := nil;
+        oPendientes := nil;
+        try
+          oOrigen := TUniQuery.Create(nil);
+          oEscritura := TUniQuery.Create(nil);
+          oPendientes := TDictionary<string, Double>.Create;
+          oOrigen.Connection := FConexion;
+          oEscritura.Connection := FConexion;
+          ConfigurarOrigenLinea(oOrigen);
+          for oCelda in ACeldas do
           begin
-            oOrigen.Close;
-            oOrigen.ParamByName('SERIE').AsString := FSeriePedido;
-            oOrigen.ParamByName('NUMERO').AsString := FNumeroPedido;
-            oOrigen.ParamByName('LINEA').AsString := oCelda.LineaPedido;
-            oOrigen.Open;
-            if not oOrigen.Eof then
+            EsProcesable := SameText(oCelda.CodigoAlmacen, FAlmacen) and
+              (oCelda.Cantidad > 0);
+            if EsProcesable then
             begin
-              if not oPendientes.TryGetValue(
-                oCelda.LineaPedido, dPendiente) then
+              oOrigen.Close;
+              oOrigen.ParamByName('SERIE').AsString := FSeriePedido;
+              oOrigen.ParamByName('NUMERO').AsString := FNumeroPedido;
+              oOrigen.ParamByName('LINEA').AsString := oCelda.LineaPedido;
+              oOrigen.Open;
+              if not oOrigen.Eof then
               begin
-                dPendiente :=
-                  oOrigen.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
-                  oOrigen.FieldByName('CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
-                if dPendiente < 0 then
-                  dPendiente := 0;
-              end;
-              dCantidad := oCelda.Cantidad;
-              if dCantidad > dPendiente then
-                dCantidad := dPendiente;
-              oPendientes.AddOrSetValue(
-                oCelda.LineaPedido, dPendiente - dCantidad);
-              if dCantidad > 0 then
-              begin
-                Inc(iLineaAlbaran, 10);
-                sLineaAlbaran := Format('%.4d', [iLineaAlbaran]);
-                InsertarLinea(
-                  oOrigen,
-                  oEscritura,
-                  sLineaAlbaran,
-                  oCelda.LineaPedido,
-                  oCelda.CodigoSku,
-                  dCantidad);
-                ActualizarCantidadRecibida(
-                  oEscritura, oCelda.LineaPedido, dCantidad);
-                Inc(iInsertadas);
+                if not oPendientes.TryGetValue(
+                  oCelda.LineaPedido, dPendiente) then
+                begin
+                  dPendiente :=
+                    oOrigen.FieldByName('CANTIDAD_PEDCLIN').AsFloat -
+                    oOrigen.FieldByName(
+                      'CANTIDAD_RECIBIDA_PEDCLIN').AsFloat;
+                  if dPendiente < 0 then
+                    dPendiente := 0;
+                end;
+                dCantidad := oCelda.Cantidad;
+                if dCantidad > dPendiente then
+                  dCantidad := dPendiente;
+                oPendientes.AddOrSetValue(
+                  oCelda.LineaPedido, dPendiente - dCantidad);
+                if dCantidad > 0 then
+                begin
+                  Inc(iLineaAlbaran, 10);
+                  sLineaAlbaran := Format('%.4d', [iLineaAlbaran]);
+                  InsertarLinea(
+                    oOrigen,
+                    oEscritura,
+                    sLineaAlbaran,
+                    oCelda.LineaPedido,
+                    oCelda.CodigoSku,
+                    dCantidad);
+                  ActualizarCantidadRecibida(
+                    oEscritura, oCelda.LineaPedido, dCantidad);
+                  Inc(iInsertadas);
+                end;
               end;
             end;
           end;
+        finally
+          FreeAndNil(oPendientes);
+          FreeAndNil(oEscritura);
+          FreeAndNil(oOrigen);
         end;
-      finally
-        FreeAndNil(oPendientes);
-        FreeAndNil(oEscritura);
-        FreeAndNil(oOrigen);
-      end;
-      if iInsertadas = 0 then
-        AMensaje := SErrorIncorporarLineasAlbaranCompra
-      else
-      begin
-        CerrarAlbaran;
-        AMensaje := Format(
-          SInfoLineasIncorporadasAlbaranCompraConCantidad,
-          [FSerieAlbaran, FNumeroAlbaran, iInsertadas]);
-        Result := True;
+        if iInsertadas = 0 then
+          AMensaje := SErrorIncorporarLineasAlbaranCompra
+        else
+        begin
+          CerrarAlbaran;
+          AMensaje := Format(
+            SInfoLineasIncorporadasAlbaranCompraConCantidad,
+            [FSerieAlbaran, FNumeroAlbaran, iInsertadas]);
+          Result := True;
+        end;
       end;
       if EsTransaccionPropia then
         FConexion.Commit;

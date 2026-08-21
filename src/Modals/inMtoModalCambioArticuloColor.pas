@@ -54,6 +54,10 @@ type
     FUsuario: string;
     function ConfirmarCambio(
       const ATipo, AOrigen, ADestino: string): Boolean;
+    function ConfirmarFusionArticulo(
+      const AOrigen, ADestino: string): Boolean;
+    function ConfirmarFusionColor(
+      const AOrigen, ADestino: string): Boolean;
     function MensajeResultado(
       const AResultado: TResultadoCambioArticuloColor): string;
     function TipoMensajeResultado(
@@ -82,6 +86,9 @@ resourcestring
     sLineBreak + sLineBreak +
     'Ejecute esta utilidad sin otros usuarios trabajando y haga que ' +
     'reinicien Factuzam al terminar.';
+  SAdvertenciaCambioColor =
+    sLineBreak + sLineBreak + 'Se conservará el color básico y se ' +
+    'reiniciarán las descripciones específicas del color.';
   STipoArticuloCambio = 'artículo';
   STipoColorCambio = 'color';
   SInfoCambioCorrecto =
@@ -92,13 +99,26 @@ resourcestring
   SErrorOrigenCambioNoExiste =
     'No existe el artículo o color antiguo indicado.';
   SErrorDestinoCambioYaExiste =
-    'El artículo o color nuevo ya existe. No se ha realizado el cambio.';
+    'El artículo o color destino ya existe. No se ha realizado el cambio ' +
+    'ni la fusión.';
+  SPreguntaFusionarArticulo =
+    'El artículo destino "%s" ya existe.' + sLineBreak + sLineBreak +
+    '¿Desea fusionar "%s" dentro de ese artículo?' + sLineBreak +
+    sLineBreak + 'Se eliminará el maestro origen. Los datos principales ' +
+    'del destino prevalecerán; los SKU y la configuración compatible del ' +
+    'origen se incorporarán. Cualquier incompatibilidad, colisión o ' +
+    'ambigüedad cancelará toda la operación.';
+  SPreguntaFusionarColor =
+    'El color destino "%s" ya existe.' + sLineBreak + sLineBreak +
+    '¿Desea fusionar el color "%s" con él?' + sLineBreak + sLineBreak +
+    'Se perderán el color básico y las descripciones específicas del ' +
+    'color origen. Cualquier colisión cancelará toda la operación.';
   SErrorVentasImpidenCambio =
     'No se ha realizado ningún cambio porque existen ventas asociadas. ' +
     'La operación se ha cancelado por completo y no se puede forzar.';
   SErrorColisionUnidadesCambio =
-    'El cambio produciría unidades o SKU duplicados. No se ha modificado ' +
-    'ningún dato.';
+    'El cambio produciría unidades o SKU duplicados, ambiguos o de más ' +
+    'de 50 caracteres. No se ha modificado ningún dato.';
   SErrorDatosCambioInconsistentes =
     'Se han encontrado datos relacionados inconsistentes. La operación se ' +
     'ha cancelado por completo.';
@@ -108,11 +128,32 @@ resourcestring
   SErrorCambioDesconocido =
     'No se ha podido determinar el resultado del cambio.';
   SErrorCambioInesperado =
-    'No se ha podido realizar el cambio. No se ha confirmado ninguna ' +
-    'modificación.' + sLineBreak + sLineBreak + '%s';
+    'No se ha podido confirmar el estado final de la operación. Compruebe ' +
+    'el resultado antes de volver a intentarlo.' + sLineBreak + sLineBreak +
+    '%s';
 
 procedure ForceReferenceToClass(C: TClass);
 begin
+end;
+
+function TfrmModalCambioArticuloColor.ConfirmarFusionArticulo(
+  const AOrigen, ADestino: string): Boolean;
+begin
+  Result := MessageDlg(
+    Format(SPreguntaFusionarArticulo, [ADestino, AOrigen]),
+    mtWarning,
+    [mbYes, mbNo],
+    0) = mrYes;
+end;
+
+function TfrmModalCambioArticuloColor.ConfirmarFusionColor(
+  const AOrigen, ADestino: string): Boolean;
+begin
+  Result := MessageDlg(
+    Format(SPreguntaFusionarColor, [ADestino, AOrigen]),
+    mtWarning,
+    [mbYes, mbNo],
+    0) = mrYes;
 end;
 
 class procedure TfrmModalCambioArticuloColor.Ejecutar(
@@ -144,9 +185,16 @@ end;
 
 function TfrmModalCambioArticuloColor.ConfirmarCambio(
   const ATipo, AOrigen, ADestino: string): Boolean;
+var
+  sPregunta: string;
 begin
+  sPregunta := Format(
+    SPreguntaConfirmarCambio,
+    [ATipo, AOrigen, ADestino]);
+  if SameText(ATipo, STipoColorCambio) then
+    sPregunta := sPregunta + SAdvertenciaCambioColor;
   Result := MessageDlg(
-    Format(SPreguntaConfirmarCambio, [ATipo, AOrigen, ADestino]),
+    sPregunta,
     mtConfirmation,
     [mbYes, mbNo],
     0) = mrYes;
@@ -171,6 +219,19 @@ begin
           FUsuario);
       finally
         Screen.Cursor := crDefault;
+      end;
+      if (oResultado.Motivo = mcacDestinoYaExiste) and
+         ConfirmarFusionArticulo(sAnterior, sNuevo) then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          oResultado := FServicio.FusionarArticulo(
+            sAnterior,
+            sNuevo,
+            FUsuario);
+        finally
+          Screen.Cursor := crDefault;
+        end;
       end;
       MostrarResultado(oResultado);
       if oResultado.EsCorrecto then
@@ -205,6 +266,19 @@ begin
           FUsuario);
       finally
         Screen.Cursor := crDefault;
+      end;
+      if (oResultado.Motivo = mcacDestinoYaExiste) and
+         ConfirmarFusionColor(sAnterior, sNuevo) then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          oResultado := FServicio.FusionarColor(
+            sAnterior,
+            sNuevo,
+            FUsuario);
+        finally
+          Screen.Cursor := crDefault;
+        end;
       end;
       MostrarResultado(oResultado);
       if oResultado.EsCorrecto then

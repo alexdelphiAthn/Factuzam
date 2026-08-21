@@ -44,8 +44,14 @@ type
     function CambiarArticulo(
       const AArticuloAntiguo, AArticuloNuevo, AUsuario: string):
       TResultadoCambioArticuloColor;
+    function FusionarArticulo(
+      const AArticuloAntiguo, AArticuloDestino, AUsuario: string):
+      TResultadoCambioArticuloColor;
     function CambiarColor(
       const AColorAntiguo, AColorNuevo, AUsuario: string):
+      TResultadoCambioArticuloColor;
+    function FusionarColor(
+      const AColorAntiguo, AColorDestino, AUsuario: string):
       TResultadoCambioArticuloColor;
   end;
 
@@ -54,8 +60,14 @@ type
     function CambiarArticulo(
       const AArticuloAntiguo, AArticuloNuevo, AUsuario: string):
       TResultadoCambioArticuloColor;
+    function FusionarArticulo(
+      const AArticuloAntiguo, AArticuloDestino, AUsuario: string):
+      TResultadoCambioArticuloColor;
     function CambiarColor(
       const AColorAntiguo, AColorNuevo, AUsuario: string):
+      TResultadoCambioArticuloColor;
+    function FusionarColor(
+      const AColorAntiguo, AColorDestino, AUsuario: string):
       TResultadoCambioArticuloColor;
   end;
 
