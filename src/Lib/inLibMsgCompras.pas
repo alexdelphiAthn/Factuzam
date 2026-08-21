@@ -371,6 +371,8 @@ resourcestring
   SIncidenciaReversionReferenciaSinMapa =
     '- La referencia %s %s de la cabecera no aparece en el mapa de ' +
     'documentos de la sesion.';
+  SIncidenciaReversionDocumentoCompartido =
+    '- El documento %s %s tambien esta vinculado a la sesion %s.';
   SPreguntaRevertirSesionCompra =
     'Se borraran los pedidos, albaranes y movimientos de almacen creados ' +
     'por esta sesion, que volvera a BORRADOR.' + sLineBreak + sLineBreak +

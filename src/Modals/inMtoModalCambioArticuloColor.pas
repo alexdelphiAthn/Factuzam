@@ -102,6 +102,9 @@ resourcestring
   SErrorDatosCambioInconsistentes =
     'Se han encontrado datos relacionados inconsistentes. La operación se ' +
     'ha cancelado por completo.';
+  SErrorIntegracionExternaCambio =
+    'No se ha realizado el cambio porque el artículo o color está ' +
+    'publicado o pendiente de sincronización con PrestaShop.';
   SErrorCambioDesconocido =
     'No se ha podido determinar el resultado del cambio.';
   SErrorCambioInesperado =
@@ -237,6 +240,8 @@ begin
       Result := SErrorColisionUnidadesCambio;
     mcacDatosInconsistentes:
       Result := SErrorDatosCambioInconsistentes;
+    mcacIntegracionExterna:
+      Result := SErrorIntegracionExternaCambio;
     else
       Result := SErrorCambioDesconocido;
   end;
@@ -259,7 +264,8 @@ begin
       Result := mtWarning;
     mcacExistenVentas,
     mcacColisionUnidades,
-    mcacDatosInconsistentes:
+    mcacDatosInconsistentes,
+    mcacIntegracionExterna:
       Result := mtError;
     else
       Result := mtError;

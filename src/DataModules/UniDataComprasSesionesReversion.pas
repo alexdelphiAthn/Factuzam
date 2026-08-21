@@ -229,6 +229,54 @@ begin
     AIncidencias);
 end;
 
+function ConsultarDocumentosCompartidos(
+  ADM: TdmComprasSesiones;
+  const ADocumentos: TDocumentosReversionMaterializacion;
+  const AReferencias: TReferenciasSesionReversion): string;
+var
+  iDocumento: Integer;
+  q: TUniQuery;
+begin
+  Result := '';
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := ADM.ConexionPrincipal;
+    q.SQL.Text :=
+      'SELECT CONCAT(SERIE_SES_SESDOC, ''/'', ' +
+      '              NUMERO_SES_SESDOC) AS SESION ' +
+      '  FROM fza_compras_sesiones_documentos ' +
+      ' WHERE TIPO_DOC_SESDOC = :t ' +
+      '   AND SERIE_SESDOC = :sd AND NUMERO_SESDOC = :nd ' +
+      '   AND (SERIE_SES_SESDOC <> :ss ' +
+      '     OR NUMERO_SES_SESDOC <> :ns) ' +
+      ' ORDER BY SERIE_SES_SESDOC, NUMERO_SES_SESDOC ' +
+      ' LIMIT 10 FOR UPDATE';
+    for iDocumento := 0 to High(ADocumentos) do
+    begin
+      q.Close;
+      q.ParamByName('t').AsString := ADocumentos[iDocumento].Tipo;
+      q.ParamByName('sd').AsString := ADocumentos[iDocumento].Serie;
+      q.ParamByName('nd').AsString := ADocumentos[iDocumento].Numero;
+      q.ParamByName('ss').AsString := AReferencias.SerieSesion;
+      q.ParamByName('ns').AsString := AReferencias.NumeroSesion;
+      q.Open;
+      while not q.Eof do
+      begin
+        AnadirDetalle(
+          Result,
+          Format(
+            SIncidenciaReversionDocumentoCompartido,
+            [ADocumentos[iDocumento].Tipo,
+             TextoDocumento(ADocumentos[iDocumento]),
+             q.FieldByName('SESION').AsString]));
+        q.Next;
+      end;
+    end;
+  finally
+    FreeAndNil(q);
+  end;
+end;
+
 function ConsultarDependenciasReversion(
   const ALecturas: ILecturasReversionMaterializacion;
   const ADocumentos: TDocumentosReversionMaterializacion): string;
@@ -443,6 +491,11 @@ begin
         Tablas.TieneDocumentos,
         Referencias,
         sDependencias);
+      if (sDependencias = '') and Tablas.TieneDocumentos then
+        sDependencias := ConsultarDocumentosCompartidos(
+          ADM,
+          oDocumentos,
+          Referencias);
       if sDependencias = '' then
       begin
         BloquearDocumentosReversion(ADM, oDocumentos, Tablas);
@@ -650,6 +703,11 @@ begin
     Tablas.TieneDocumentos,
     Referencias,
     sIncidencias);
+  if (sIncidencias = '') and Tablas.TieneDocumentos then
+    sIncidencias := ConsultarDocumentosCompartidos(
+      ADM,
+      oDocumentos,
+      Referencias);
   if sIncidencias = '' then
   begin
     BloquearDocumentosReversion(ADM, oDocumentos, Tablas);

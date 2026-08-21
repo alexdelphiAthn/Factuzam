@@ -398,11 +398,8 @@ const
     '   AND C.SERIE_DOC_MOV = :s AND C.NUMERO_DOC_MOV = :n ' +
     '   AND V.TIPO_MOV = ''S'' ' +
     '   AND IFNULL(V.ESACTIVO_MOV, ''S'') = ''S'' ' +
-    '   AND (COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) > ' +
-    '        COALESCE(C.FECHA_MOV, C.INSTANTE_ALTA) ' +
-    '     OR (COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) = ' +
-    '         COALESCE(C.FECHA_MOV, C.INSTANTE_ALTA) ' +
-    '       AND V.NUMERO_MOV > C.NUMERO_MOV)) ' +
+    '   AND COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) >= ' +
+    '       COALESCE(C.FECHA_MOV, C.INSTANTE_ALTA) ' +
     ' ORDER BY DOCUMENTO LIMIT 10 FOR UPDATE';
   SQL_ALBARANES_PEDIDO =
     'SELECT DISTINCT I.TIPO_DOC_SESDOC, I.SERIE_SESDOC, ' +
@@ -1267,9 +1264,10 @@ var
 begin
   bResultado := False;
   oDefinicion := DefinicionExisteTabla;
+  // Las guardas destructivas deben usar siempre el SQL base canonico.
   EjecutarLecturaSqlConFallback(
     oDefinicion,
-    FCatalogoSql,
+    nil,
     procedure(const ASql: string)
     var
       oConsulta: TUniQuery;
@@ -1298,9 +1296,10 @@ var
   aResultado: TDocumentosReversionMaterializacion;
 begin
   aResultado := nil;
+  // Las guardas destructivas deben usar siempre el SQL base canonico.
   EjecutarLecturaSqlConFallback(
     ADefinicion,
-    FCatalogoSql,
+    nil,
     procedure(const ASql: string)
     var
       iIndice: Integer;
@@ -1353,9 +1352,10 @@ var
   aResultado: TArray<string>;
 begin
   aResultado := nil;
+  // Las guardas destructivas deben usar siempre el SQL base canonico.
   EjecutarLecturaSqlConFallback(
     ADefinicion,
-    FCatalogoSql,
+    nil,
     procedure(const ASql: string)
     var
       iIndice: Integer;

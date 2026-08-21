@@ -23,7 +23,8 @@ type
     mcacDestinoYaExiste,
     mcacExistenVentas,
     mcacColisionUnidades,
-    mcacDatosInconsistentes
+    mcacDatosInconsistentes,
+    mcacIntegracionExterna
   );
 
   TResultadoCambioArticuloColor = record

@@ -35,7 +35,7 @@ const
   REFERENCIA_SKU_MAESTRO =
     'fza_articulos_skus|CODIGO_UNIDAD_SKU';
 
-  REFERENCIAS_ARTICULO: array[0..30] of string = (
+  REFERENCIAS_ARTICULO: array[0..29] of string = (
     'fza_articulos_atributos_basicos|CODIGO_ART_AAB',
     'fza_articulos_conjuntos_asign|CODIGO_ART_ACA',
     'fza_articulos_fotos|CODIGO_ART_FOT',
@@ -63,7 +63,6 @@ const
     'fza_albaranes_lineas|CODIGO_ART_ALBLIN',
     'fza_proformas_caja_lineas|CODIGO_ART_PROCLIN',
     'fza_tarifas_cambios_lineas|CODIGO_ART_TARCLIN',
-    'fza_prestashop_cola|CODIGO_ART_PSCOLA',
     'fza_traspasos_solicitudes_lineas|CODIGO_ART_TRSOLLIN',
     'inv_catalogo|codigo_articulo',
     'inv_eventos|codigo_articulo'
@@ -162,6 +161,9 @@ type
     function HayVentasArticulo(
       const AArticuloAntiguo: string): Boolean;
     function HayVentasColor(const AColorAntiguo: string): Boolean;
+    function HayPrestaShopArticulo(
+      const AArticuloAntiguo: string): Boolean;
+    function HayPrestaShopColor: Boolean;
     function HayDestinoEnReferencias(
       const AReferencias: array of string): Boolean;
     function HayOrigenEnReferencias(
@@ -336,13 +338,22 @@ end;
 function TRepositorioCambioArticuloColorUniDAC.
   CondicionInstantaneaColor(
     const AAlias, ACampoValor, ACampoNombre, AParametro: string): string;
+var
+  sNombreVacioColor: string;
 begin
+  sNombreVacioColor := '';
+  if SameText(Copy(ACampoValor, 1, 6), 'ATTR1_') then
+  begin
+    sNombreVacioColor := ' OR TRIM(COALESCE(' + AAlias + '.`' +
+      ACampoNombre + '`, '''')) = ''''';
+  end;
   Result := '(TRIM(' + AAlias + '.`' + ACampoValor + '`) = TRIM(:' +
     AParametro + ') AND (UPPER(TRIM(' + AAlias + '.`' +
     ACampoNombre + '`)) IN (''COLOR'', ''CO'') OR EXISTS (' +
     'SELECT 1 FROM `fza_variaciones_atributos` va ' +
     'WHERE va.`ID_ATB_VA` = ''CO'' AND UPPER(TRIM(va.`NOMBRE_VA`)) = ' +
-    'UPPER(TRIM(' + AAlias + '.`' + ACampoNombre + '`)))))';
+    'UPPER(TRIM(' + AAlias + '.`' + ACampoNombre + '`)))' +
+    sNombreVacioColor + '))';
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.PrepararTablaTemporal;
@@ -354,7 +365,8 @@ begin
     '`DESTINO` varchar(255) NOT NULL, ' +
     '`ES_SKU` char(1) NOT NULL DEFAULT ''S'', ' +
     'PRIMARY KEY (`ORIGEN`), KEY `IDX_DESTINO` (`DESTINO`)' +
-    ') ENGINE=InnoDB',
+    ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ' +
+    'COLLATE=utf8mb4_spanish_ci',
     [],
     []);
 end;
@@ -487,22 +499,29 @@ begin
     'INSERT INTO `' + TABLA_TEMPORAL + '` ' +
     '(`ORIGEN`, `DESTINO`, `ES_SKU`) ' +
     'SELECT DISTINCT sku.`CODIGO_UNIDAD_SKU`, ' +
-    'CONCAT(sku.`CODIGO_ART_SKU`, ''/'', :NUEVO, ' +
+    'CONCAT(sku.`CODIGO_ART_SKU`, ''/'', ' +
+    'TRIM(BOTH ''/'' FROM REPLACE(CONCAT(''/'', ' +
     'SUBSTRING(sku.`CODIGO_UNIDAD_SKU`, ' +
-    'CHAR_LENGTH(sku.`CODIGO_ART_SKU`) + ' +
-    'CHAR_LENGTH(TRIM(av.`AV`)) + 2)), ''S'' ' +
+    'CHAR_LENGTH(sku.`CODIGO_ART_SKU`) + 2), ''/''), ' +
+    'CONCAT(''/'', TRIM(av.`AV`), ''/''), ' +
+    'CONCAT(''/'', :NUEVO, ''/'')))), ''S'' ' +
     'FROM `fza_articulos_skus` sku ' +
     'JOIN `fza_atributos_sku` sa ON ' +
     'sa.`CODIGO_UNIDAD_SKU_SA` = sku.`CODIGO_UNIDAD_SKU` ' +
     'JOIN `fza_atributos_valores` av ON av.`ID_AV` = sa.`ID_AV_SA` ' +
     'WHERE av.`ID_VA_AV` = ''CO'' ' +
     'AND TRIM(av.`AV`) = TRIM(:ANTERIOR) ' +
-    'AND (sku.`CODIGO_UNIDAD_SKU` = ' +
-    'CONCAT(sku.`CODIGO_ART_SKU`, ''/'', TRIM(av.`AV`)) ' +
-    'OR LEFT(sku.`CODIGO_UNIDAD_SKU`, ' +
-    'CHAR_LENGTH(sku.`CODIGO_ART_SKU`) + ' +
-    'CHAR_LENGTH(TRIM(av.`AV`)) + 2) = ' +
-    'CONCAT(sku.`CODIGO_ART_SKU`, ''/'', TRIM(av.`AV`), ''/''))',
+    'AND LEFT(sku.`CODIGO_UNIDAD_SKU`, ' +
+    'CHAR_LENGTH(sku.`CODIGO_ART_SKU`) + 1) = ' +
+    'CONCAT(sku.`CODIGO_ART_SKU`, ''/'') AND ' +
+    '(CHAR_LENGTH(CONCAT(''/'', SUBSTRING(' +
+    'sku.`CODIGO_UNIDAD_SKU`, ' +
+    'CHAR_LENGTH(sku.`CODIGO_ART_SKU`) + 2), ''/'')) - ' +
+    'CHAR_LENGTH(REPLACE(CONCAT(''/'', SUBSTRING(' +
+    'sku.`CODIGO_UNIDAD_SKU`, ' +
+    'CHAR_LENGTH(sku.`CODIGO_ART_SKU`) + 2), ''/''), ' +
+    'CONCAT(''/'', TRIM(av.`AV`), ''/''), ''''))) / ' +
+    'CHAR_LENGTH(CONCAT(''/'', TRIM(av.`AV`), ''/'')) = 1',
     ['ANTERIOR', 'NUEVO'],
     [AColorAntiguo, AColorNuevo]);
 end;
@@ -524,14 +543,15 @@ begin
       sSql := 'INSERT IGNORE INTO `' + TABLA_TEMPORAL + '` ' +
         '(`ORIGEN`, `DESTINO`, `ES_SKU`) ' +
         'SELECT DISTINCT dato.`' + sCampo + '`, ' +
-        'CONCAT(SUBSTRING_INDEX(dato.`' + sCampo + '`, ''/'', 1), ' +
-        '''/'', :NUEVO, ' +
-        'SUBSTRING(dato.`' + sCampo + '`, ' +
-        'CHAR_LENGTH(SUBSTRING_INDEX(dato.`' + sCampo +
-        '`, ''/'', 2)) + 1)), ''N'' FROM `' + sTabla + '` dato ' +
-        'WHERE LOCATE(''/'', dato.`' + sCampo + '`) > 0 AND ' +
-        'TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(dato.`' + sCampo +
-        '`, ''/'', 2), ''/'', -1)) = TRIM(:ANTERIOR)';
+        'CONCAT(aab.`CODIGO_ART_AAB`, ''/'', :NUEVO), ''N'' ' +
+        'FROM `' + sTabla + '` dato ' +
+        'JOIN `fza_articulos_atributos_basicos` aab ON ' +
+        'dato.`' + sCampo + '` = CONCAT(aab.`CODIGO_ART_AAB`, ' +
+        '''/'', TRIM(:ANTERIOR)) ' +
+        'JOIN `fza_atributos_valores` av ON ' +
+        'av.`ID_AV` = aab.`ID_AV_AAB` ' +
+        'WHERE av.`ID_VA_AV` = ''CO'' ' +
+        'AND TRIM(av.`AV`) = TRIM(:ANTERIOR)';
       Ejecutar(
         sSql,
         ['ANTERIOR', 'NUEVO'],
@@ -627,10 +647,11 @@ var
   sSql: string;
 begin
   sCondiciones := 'mapa.`ORIGEN` IS NOT NULL OR ' +
-    '(LOCATE(''/'', fl.`CODIGO_UNIDAD_FACLIN`) > 0 AND ' +
-    'TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(' +
-    'fl.`CODIGO_UNIDAD_FACLIN`, ''/'', 2), ''/'', -1)) = ' +
-    'TRIM(:COLOR))';
+    '(sku_actual.`CODIGO_UNIDAD_SKU` IS NULL AND ' +
+    'LOCATE(''/'', fl.`CODIGO_UNIDAD_FACLIN`) > 0 AND ' +
+    'LOCATE(CONCAT(''/'', TRIM(:COLOR), ''/''), ' +
+    'CONCAT(''/'', SUBSTRING(fl.`CODIGO_UNIDAD_FACLIN`, ' +
+    'LOCATE(''/'', fl.`CODIGO_UNIDAD_FACLIN`) + 1), ''/'')) > 0)';
   for i := 1 to 5 do
   begin
     sCampoValor := 'ATTR' + IntToStr(i) + '_VALOR_FACLIN';
@@ -644,12 +665,69 @@ begin
   sSql := 'SELECT fl.`CODIGO_UNIDAD_FACLIN` ' +
     'FROM `fza_facturas_lineas` fl ' +
     'LEFT JOIN `' + TABLA_TEMPORAL + '` mapa ON ' +
-    'mapa.`ORIGEN` = fl.`CODIGO_UNIDAD_FACLIN` WHERE ' +
+    'mapa.`ORIGEN` = fl.`CODIGO_UNIDAD_FACLIN` ' +
+    'LEFT JOIN `fza_articulos_skus` sku_actual ON ' +
+    'sku_actual.`CODIGO_UNIDAD_SKU` = fl.`CODIGO_UNIDAD_FACLIN` WHERE ' +
     sCondiciones + ' LIMIT 1 FOR UPDATE';
   Result := Existe(
     sSql,
     ['COLOR'],
     [AColorAntiguo]);
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.HayPrestaShopArticulo(
+  const AArticuloAntiguo: string): Boolean;
+begin
+  Result := False;
+  if CampoExiste('fza_articulos', 'ESWEB_ART') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_articulos` ' +
+      'WHERE `CODIGO_ART_ART` = :ARTICULO ' +
+      'AND UPPER(TRIM(COALESCE(`ESWEB_ART`, ''N''))) = ''S'' ' +
+      'LIMIT 1 FOR UPDATE',
+      ['ARTICULO'],
+      [AArticuloAntiguo]);
+  end;
+  if (not Result) and
+     CampoExiste('fza_prestashop_cola', 'CODIGO_ART_PSCOLA') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_prestashop_cola` ' +
+      'WHERE `CODIGO_ART_PSCOLA` = :ARTICULO LIMIT 1 FOR UPDATE',
+      ['ARTICULO'],
+      [AArticuloAntiguo]);
+  end;
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.HayPrestaShopColor:
+  Boolean;
+begin
+  Result := False;
+  if CampoExiste('fza_articulos', 'ESWEB_ART') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_articulos` art JOIN (' +
+      'SELECT DISTINCT SUBSTRING_INDEX(`ORIGEN`, ''/'', 1) `ARTICULO` ' +
+      'FROM `' + TABLA_TEMPORAL + '`) afectados ON ' +
+      'afectados.`ARTICULO` = art.`CODIGO_ART_ART` ' +
+      'WHERE UPPER(TRIM(COALESCE(art.`ESWEB_ART`, ''N''))) = ''S'' ' +
+      'LIMIT 1 FOR UPDATE',
+      [],
+      []);
+  end;
+  if (not Result) and
+     CampoExiste('fza_prestashop_cola', 'CODIGO_ART_PSCOLA') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_prestashop_cola` cola JOIN (' +
+      'SELECT DISTINCT SUBSTRING_INDEX(`ORIGEN`, ''/'', 1) `ARTICULO` ' +
+      'FROM `' + TABLA_TEMPORAL + '`) afectados ON ' +
+      'afectados.`ARTICULO` = cola.`CODIGO_ART_PSCOLA` ' +
+      'LIMIT 1 FOR UPDATE',
+      [],
+      []);
+  end;
 end;
 
 function TRepositorioCambioArticuloColorUniDAC.HayDestinoEnReferencias(
@@ -747,10 +825,15 @@ begin
       sSql := 'SELECT 1 FROM `' + sTabla + '` dato LEFT JOIN `' +
         TABLA_TEMPORAL + '` mapa ON ' +
         'mapa.`ORIGEN` = dato.`' + sCampo + '` ' +
+        'LEFT JOIN `fza_articulos_skus` sku_actual ON ' +
+        'sku_actual.`CODIGO_UNIDAD_SKU` = dato.`' + sCampo + '` ' +
         'WHERE mapa.`ORIGEN` IS NULL ' +
-        'AND LOCATE(''/'', dato.`' + sCampo + '`) > 0 AND ' +
-        'TRIM(SUBSTRING_INDEX(SUBSTRING_INDEX(dato.`' + sCampo +
-        '`, ''/'', 2), ''/'', -1)) = TRIM(:ANTERIOR) LIMIT 1';
+        'AND sku_actual.`CODIGO_UNIDAD_SKU` IS NULL ' +
+        'AND LOCATE(''/'', dato.`' + sCampo + '`) > 0 ' +
+        'AND LOCATE(CONCAT(''/'', TRIM(:ANTERIOR), ''/''), ' +
+        'CONCAT(''/'', SUBSTRING(dato.`' + sCampo + '`, ' +
+        'LOCATE(''/'', dato.`' + sCampo + '`) + 1), ''/'')) > 0 ' +
+        'LIMIT 1';
       Result := Existe(sSql, ['ANTERIOR'], [AColorAntiguo]);
     end;
     Inc(i);
@@ -1128,6 +1211,8 @@ begin
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
     else if HayVentasArticulo(AAnterior) then
       Result := TResultadoCambioArticuloColor.Error(mcacExistenVentas)
+    else if HayPrestaShopArticulo(AAnterior) then
+      Result := TResultadoCambioArticuloColor.Error(mcacIntegracionExterna)
     else if HayDestinoEnReferencias(REFERENCIAS_ARTICULO) or
             HayDestinoEnReferencias(REFERENCIAS_UNIDAD) then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
@@ -1166,6 +1251,8 @@ begin
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
     else if HayVentasColor(AAnterior) then
       Result := TResultadoCambioArticuloColor.Error(mcacExistenVentas)
+    else if HayPrestaShopColor then
+      Result := TResultadoCambioArticuloColor.Error(mcacIntegracionExterna)
     else if HayDestinoEnReferencias(REFERENCIAS_UNIDAD) then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
     else

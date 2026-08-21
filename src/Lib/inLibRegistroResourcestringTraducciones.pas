@@ -4339,10 +4339,10 @@ begin
       SIncidenciaReversionFacturaCompra);
   ARegistrar(
     'inLibMsgCompras.' +
-    'SIncidenciaReversionVentaPosterior',
+    'SIncidenciaReversionSalidaPosterior',
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.
-      SIncidenciaReversionVentaPosterior);
+      SIncidenciaReversionSalidaPosterior);
   ARegistrar(
     'inLibMsgCompras.' +
     'SIncidenciaReversionPedidoRecibido',
@@ -4367,6 +4367,12 @@ begin
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.
       SIncidenciaReversionReferenciaSinMapa);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionDocumentoCompartido',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionDocumentoCompartido);
   ARegistrar(
     'inLibMsgCompras.' +
     'SPreguntaRevertirSesionCompra',
