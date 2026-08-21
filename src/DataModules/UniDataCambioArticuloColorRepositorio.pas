@@ -868,12 +868,14 @@ var
   sCampoNombre: string;
   sCondicion: string;
   sCondiciones: string;
-  sSeparador: string;
+  sSeparadorCondiciones: string;
+  sSeparadorValores: string;
   sValores: string;
 begin
   sCondiciones := '';
   sValores := '';
-  sSeparador := '';
+  sSeparadorCondiciones := '';
+  sSeparadorValores := '';
   for i := 1 to 5 do
   begin
     sCampo := 'ATTR' + IntToStr(i) + '_VALOR_' + ASufijo;
@@ -886,15 +888,16 @@ begin
         sCampo,
         sCampoNombre,
         'ANTERIOR');
-      sValores := sValores + sSeparador + 'dato.`' + sCampo + '` = ' +
-        'CASE WHEN ' + sCondicion + ' THEN :NUEVO ELSE dato.`' +
+      sValores := sValores + sSeparadorValores + 'dato.`' + sCampo +
+        '` = CASE WHEN ' + sCondicion + ' THEN :NUEVO ELSE dato.`' +
         sCampo + '` END';
-      sCondiciones := sCondiciones + sSeparador + sCondicion;
-      sSeparador := ', ';
+      sCondiciones := sCondiciones + sSeparadorCondiciones + sCondicion;
+      sSeparadorValores := ', ';
+      sSeparadorCondiciones := ' OR ';
     end;
   end;
   if (sValores <> '') and CampoExiste(ATabla, 'USUARIO_MODIF') then
-    sValores := sValores + sSeparador +
+    sValores := sValores + sSeparadorValores +
       'dato.`USUARIO_MODIF` = :USUARIO';
   Result := '';
   if sValores <> '' then
@@ -902,11 +905,7 @@ begin
     Result := 'UPDATE `' + ATabla + '` dato ' +
       'JOIN `' + TABLA_TEMPORAL + '` mapa ON ' +
       'mapa.`ORIGEN` = dato.`' + ACampoUnidad + '` SET ' + sValores +
-      ' WHERE ' + StringReplace(
-        sCondiciones,
-        ', ',
-        ' OR ',
-        [rfReplaceAll]);
+      ' WHERE ' + sCondiciones;
   end;
 end;
 
