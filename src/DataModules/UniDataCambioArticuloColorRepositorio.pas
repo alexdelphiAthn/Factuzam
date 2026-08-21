@@ -132,6 +132,11 @@ type
       out ATabla, ACampoUnidad, ASufijo: string);
     function CondicionInstantaneaColor(
       const AAlias, ACampoValor, ACampoNombre, AParametro: string): string;
+    function ExpresionConteoValoresAtributos(
+      const ATabla, AAlias, ASufijo, AParametro: string): string;
+    function CondicionInstantaneaColorSegura(
+      const AAlias, ACampoValor, ACampoNombre, AParametro,
+      AConteoValores: string): string;
     procedure PrepararTablaTemporal;
     procedure EliminarTablaTemporal;
     procedure IniciarTransaccion;
@@ -161,6 +166,10 @@ type
     function HayVentasArticulo(
       const AArticuloAntiguo: string): Boolean;
     function HayVentasColor(const AColorAntiguo: string): Boolean;
+    function HayDestinoEnVentasArticulo(
+      const AArticuloNuevo: string): Boolean;
+    function HayDestinoEnVentasColor(
+      const AColorNuevo: string): Boolean;
     function HayPrestaShopArticulo(
       const AArticuloAntiguo: string): Boolean;
     function HayPrestaShopColor: Boolean;
@@ -193,6 +202,10 @@ type
     function HayInstantaneasColorAntiguo(
       const AColorAntiguo: string): Boolean;
     function HayInstantaneasColorSinMapa(
+      const AColorAntiguo: string): Boolean;
+    function HayInstantaneasColorAmbiguas(
+      const AColorAntiguo: string): Boolean;
+    function HayDescripcionesColorAmbiguas(
       const AColorAntiguo: string): Boolean;
     function ValidarCambioArticulo(
       const AAnterior, ANuevo: string): TResultadoCambioArticuloColor;
