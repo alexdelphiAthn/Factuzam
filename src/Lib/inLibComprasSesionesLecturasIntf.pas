@@ -74,6 +74,13 @@ type
   end;
   TPendientesRecibirMaterializacion =
     array of TPendienteRecibirMaterializacion;
+  TDocumentoReversionMaterializacion = record
+    Tipo: string;
+    Serie: string;
+    Numero: string;
+  end;
+  TDocumentosReversionMaterializacion =
+    array of TDocumentoReversionMaterializacion;
   ILecturasArticulosMaterializacion = interface
     ['{823D7E9F-C5CB-4132-9B95-FCE88EDB9F94}']
     function ObtenerSiguienteSecuenciaEan(
@@ -125,11 +132,19 @@ type
       TPendientesRecibirMaterializacion;
   end;
   ILecturasReversionMaterializacion = interface
-    ['{7D71F35B-BB96-4BE5-A1A8-24E3BF47C820}']
+    ['{6DD05B46-E5C9-4F89-9813-2BC8B7762A72}']
     function ExisteTabla(
       const ATabla: string): Boolean;
-    function ConsultarMovimientosHuerfanos(
-      const AEmpresa, AAlmacen: string): TArray<string>;
+    function ConsultarDocumentosSesion(
+      const ASerie, ANumero: string):
+      TDocumentosReversionMaterializacion;
+    function ConsultarFacturasCompraAlbaran(
+      const ASerie, ANumero: string): TArray<string>;
+    function ConsultarSalidasPosterioresAlbaran(
+      const ASerie, ANumero: string): TArray<string>;
+    function ConsultarAlbaranesPedido(
+      const ASerie, ANumero: string):
+      TDocumentosReversionMaterializacion;
   end;
   TLecturasAlbaranesMaterializacion = record
     Articulos: ILecturasArticulosMaterializacion;

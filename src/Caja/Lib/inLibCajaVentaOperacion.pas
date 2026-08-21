@@ -101,7 +101,7 @@ procedure CargarAvsValidosArticulo(
   const ACodArt: string;
   AOrden: Integer;
   const ALookup: IArticulosAtributosLookup;
-  var AAvs: TArray<string>);
+  out AAvs: TArray<string>);
 
 // Documento del cierre: factura completa -> serie de factura, tipo
 // NORMAL y su fecha; si no, la serie simplificada; y una devolucion
@@ -401,7 +401,7 @@ procedure CargarAvsValidosArticulo(
   const ACodArt: string;
   AOrden: Integer;
   const ALookup: IArticulosAtributosLookup;
-  var AAvs: TArray<string>);
+  out AAvs: TArray<string>);
 var
   Vals: TArray<TArticuloAtributoValor>;
   i: Integer;

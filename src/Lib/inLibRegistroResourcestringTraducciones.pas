@@ -4327,6 +4327,48 @@ begin
       SErrorSesionNoCerradaParaReversion);
   ARegistrar(
     'inLibMsgCompras.' +
+    'SErrorReversionSesionConIncidencias',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorReversionSesionConIncidencias);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionFacturaCompra',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionFacturaCompra);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionVentaPosterior',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionVentaPosterior);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionPedidoRecibido',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionPedidoRecibido);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionTipoDocumento',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionTipoDocumento);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionDocumentoIncompleto',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionDocumentoIncompleto);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SIncidenciaReversionReferenciaSinMapa',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SIncidenciaReversionReferenciaSinMapa);
+  ARegistrar(
+    'inLibMsgCompras.' +
     'SPreguntaRevertirSesionCompra',
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.

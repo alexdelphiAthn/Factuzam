@@ -195,6 +195,7 @@ function TPersistenciaMaterializacionComprasSesiones.
 begin
   Result := ValidarReversionSesion(
     FDataModule,
+    FLecturas.Reversion,
     AMensajeError);
 end;
 procedure TPersistenciaMaterializacionComprasSesiones.

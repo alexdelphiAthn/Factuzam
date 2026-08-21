@@ -351,9 +351,33 @@ resourcestring
   SErrorSesionNoCerradaParaReversion =
     'La sesion no esta CERRADA. Solo se pueden revertir sesiones ' +
     'materializadas.';
+  SErrorReversionSesionConIncidencias =
+    'No se puede revertir la sesion porque sus documentos tienen ' +
+    'dependencias:' + sLineBreak + '%s' + sLineBreak +
+    'No se ha modificado ningun dato.';
+  SIncidenciaReversionFacturaCompra =
+    '- El albaran de compra %s esta incluido en la factura de compra %s.';
+  SIncidenciaReversionSalidaPosterior =
+    '- El albaran de compra %s tiene una venta u otra salida posterior ' +
+    'que afecta al stock: %s.';
+  SIncidenciaReversionPedidoRecibido =
+    '- El pedido de compra %s ya fue recibido o tiene un albaran ' +
+    'dependiente: %s.';
+  SIncidenciaReversionTipoDocumento =
+    '- La sesion contiene un documento de tipo no soportado: %s %s.';
+  SIncidenciaReversionDocumentoIncompleto =
+    '- La sesion contiene una referencia %s incompleta (serie "%s", ' +
+    'numero "%s").';
+  SIncidenciaReversionReferenciaSinMapa =
+    '- La referencia %s %s de la cabecera no aparece en el mapa de ' +
+    'documentos de la sesion.';
   SPreguntaRevertirSesionCompra =
-    'Se borraran los movimientos de almacen creados por esta sesion y ' +
-    'volvera a BORRADOR.' + sLineBreak + sLineBreak +
+    'Se borraran los pedidos, albaranes y movimientos de almacen creados ' +
+    'por esta sesion, que volvera a BORRADOR.' + sLineBreak + sLineBreak +
+    'La operacion se bloqueara si esos documentos estan facturados, si ' +
+    'el pedido ya fue recibido o si hay ventas u otras salidas ' +
+    'posteriores de stock.' +
+    sLineBreak + sLineBreak +
     'Los articulos / SKUs / codigos de barras se conservan ' +
     '(re-materializar es idempotente).' + sLineBreak + sLineBreak +
     'Continuar?';

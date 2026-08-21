@@ -211,6 +211,7 @@ type
     UsuariosGruposyPerfiles1: TMenuItem;
     HacerCopiadeSeguridad1: TMenuItem;
     mnuEjecutarScript: TMenuItem;
+    mnuCambioArticuloColor: TMenuItem;
     mnuProcesosAuxiliaresBBDD: TMenuItem;
     mnuGeneradorProcesos: TMenuItem;
     mnuUsuarios: TMenuItem;
@@ -246,6 +247,7 @@ type
     // OnClick del item = MenuGenericoClick (sin handler nuevo).
     procedure MenuGenericoClick(Sender: TObject);
     procedure mnuEjecutarScriptClick(Sender: TObject);
+    procedure mnuCambioArticuloColorClick(Sender: TObject);
     procedure mnuProcesosAuxiliaresBBDDClick(Sender: TObject);
     procedure tmr1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
@@ -413,6 +415,9 @@ const
 resourcestring
   SErrorPantallaNoHeredaFrmBase =
     'La pantalla registrada no hereda de TfrmBase.';
+  SErrorCerrarPantallasCambioArticuloColor =
+    'Antes de cambiar un artículo o color debe cerrar todas las pantallas ' +
+    'de trabajo abiertas.';
   STituloCierreColaPrestaShop =
     'PrestaShop está enviando un artículo';
   STextoCierreColaPrestaShop =
@@ -1565,6 +1570,28 @@ begin
   inherited;
   if mnuProcesosAuxiliaresBBDD.Visible then
     MostrarProcesosAuxiliares(Self);
+end;
+
+procedure TfrmMtoPrincipal.mnuCambioArticuloColorClick(Sender: TObject);
+begin
+  inherited;
+  if pcPrincipal.PageCount > 0 then
+  begin
+    MessageDlg(
+      SErrorCerrarPantallasCambioArticuloColor,
+      mtWarning,
+      [mbOK],
+      0);
+  end
+  else if mnuCambioArticuloColor.Visible and
+     Assigned(FComposicion) and
+     Assigned(FComposicion.DmConn) then
+  begin
+    MostrarCambioArticuloColor(
+      Self,
+      FComposicion.DmConn.conUni,
+      FComposicion.ContextoSesion.Identidad.Usuario);
+  end;
 end;
 
 procedure TfrmMtoPrincipal.MenuGenericoClick(Sender: TObject);

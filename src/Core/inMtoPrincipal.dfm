@@ -2508,6 +2508,10 @@
         ShortCut = 16474
         OnClick = mnuEjecutarScriptClick
       end
+      object mnuCambioArticuloColor: TMenuItem
+        Caption = 'Cambio de art'#237'culo o color'
+        OnClick = mnuCambioArticuloColorClick
+      end
       object mnuGeneradorProcesos: TMenuItem
         Bitmap.Data = {
           36100000424D3610000000000000360000002800000020000000200000000100

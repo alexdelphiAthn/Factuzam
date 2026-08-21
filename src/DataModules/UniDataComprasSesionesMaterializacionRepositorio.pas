@@ -32,6 +32,13 @@ type
     FConexion: TUniConnection;
     FCatalogoSql: ICatalogoSql;
     FIncidenciasSql: IRegistroIncidenciasSql;
+    function ConsultarReferenciasDocumento(
+      const ADefinicion: TDefinicionSql;
+      const ASerie, ANumero: string): TArray<string>;
+    function ConsultarDocumentos(
+      const ADefinicion: TDefinicionSql;
+      const ASerie, ANumero: string):
+      TDocumentosReversionMaterializacion;
   public
     constructor Create(
       AConexion: TUniConnection;
@@ -79,8 +86,16 @@ type
       TPendientesRecibirMaterializacion;
     function ExisteTabla(
       const ATabla: string): Boolean;
-    function ConsultarMovimientosHuerfanos(
-      const AEmpresa, AAlmacen: string): TArray<string>;
+    function ConsultarDocumentosSesion(
+      const ASerie, ANumero: string):
+      TDocumentosReversionMaterializacion;
+    function ConsultarFacturasCompraAlbaran(
+      const ASerie, ANumero: string): TArray<string>;
+    function ConsultarSalidasPosterioresAlbaran(
+      const ASerie, ANumero: string): TArray<string>;
+    function ConsultarAlbaranesPedido(
+      const ASerie, ANumero: string):
+      TDocumentosReversionMaterializacion;
   end;
 
 implementation
@@ -327,16 +342,87 @@ const
   SQL_EXISTE_TABLA =
     'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
     ' WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = :t';
-  SQL_MOVIMIENTOS_HUERFANOS =
-    'SELECT MOV.NUMERO_MOV ' +
-    '  FROM fza_movimientos_almacen MOV ' +
-    '  LEFT JOIN fza_albaranes_compra ALBC ' +
-    '         ON ALBC.SERIE_ALBC = MOV.SERIE_DOC_MOV ' +
-    '        AND ALBC.NUMERO_ALBC = MOV.NUMERO_DOC_MOV ' +
-    ' WHERE MOV.TIPO_DOC_MOV = ''AC'' ' +
-    '   AND MOV.CODIGO_EMP_MOV = :emp ' +
-    '   AND MOV.CODIGO_ALM_MOV = :alm ' +
-    '   AND ALBC.NUMERO_ALBC IS NULL';
+  SQL_DOCUMENTOS_REVERSION =
+    'SELECT TIPO_DOC_SESDOC, SERIE_SESDOC, NUMERO_SESDOC ' +
+    '  FROM fza_compras_sesiones_documentos ' +
+    ' WHERE SERIE_SES_SESDOC = :s ' +
+    '   AND NUMERO_SES_SESDOC = :n ' +
+    ' ORDER BY TIPO_DOC_SESDOC, SERIE_SESDOC, NUMERO_SESDOC, ' +
+    '          CODIGO_ALM_SESDOC ' +
+    ' FOR UPDATE';
+  SQL_FACTURAS_COMPRA_ALBARAN =
+    'SELECT DISTINCT I.DOCUMENTO ' +
+    '  FROM ( ' +
+    '    SELECT CASE WHEN IFNULL(H.SERIE_FAC_ALBC, '''') <> '''' ' +
+    '                      OR IFNULL(H.NUMERO_FAC_ALBC, '''') <> '''' ' +
+    '                THEN CONCAT(IFNULL(H.SERIE_FAC_ALBC, ''?''), ''/'', ' +
+    '                            IFNULL(H.NUMERO_FAC_ALBC, ''?'')) ' +
+    '                ELSE ''(marcado como facturado)'' END AS DOCUMENTO ' +
+    '      FROM fza_albaranes_compra H ' +
+    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '       AND (H.ESTADO_ALBC = ''FACTURADO'' ' +
+    '         OR IFNULL(H.SERIE_FAC_ALBC, '''') <> '''' ' +
+    '         OR IFNULL(H.NUMERO_FAC_ALBC, '''') <> '''') ' +
+    '    UNION ALL ' +
+    '    SELECT CASE WHEN IFNULL(L.SERIE_FAC_ALBCLIN, '''') <> '''' ' +
+    '                      OR IFNULL(L.NUMERO_FAC_ALBCLIN, '''') <> '''' ' +
+    '                THEN CONCAT(IFNULL(L.SERIE_FAC_ALBCLIN, ''?''), ''/'', ' +
+    '                            IFNULL(L.NUMERO_FAC_ALBCLIN, ''?'')) ' +
+    '                ELSE ''(linea marcada como facturada)'' END ' +
+    '      FROM fza_albaranes_compra_lineas L ' +
+    '     WHERE L.SERIE_ALBC_ALBCLIN = :s ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = :n ' +
+    '       AND (IFNULL(L.ESFACTURADA_ALBCLIN, ''N'') = ''S'' ' +
+    '         OR IFNULL(L.SERIE_FAC_ALBCLIN, '''') <> '''' ' +
+    '         OR IFNULL(L.NUMERO_FAC_ALBCLIN, '''') <> '''') ' +
+    '    UNION ALL ' +
+    '    SELECT CONCAT(IFNULL(F.SERIE_FACC_FACCLIN, ''?''), ''/'', ' +
+    '                  IFNULL(F.NUMERO_FACC_FACCLIN, ''?'')) ' +
+    '      FROM fza_facturas_compra_lineas F ' +
+    '     WHERE F.SERIE_ALBC_FACCLIN = :s ' +
+    '       AND F.NUMERO_ALBC_FACCLIN = :n ' +
+    '  ) I ' +
+    ' ORDER BY I.DOCUMENTO LIMIT 10 FOR UPDATE';
+  SQL_SALIDAS_POSTERIORES_ALBARAN =
+    'SELECT DISTINCT CONCAT(V.TIPO_DOC_MOV, '' '', V.SERIE_DOC_MOV, ''/'', ' +
+    '       V.NUMERO_DOC_MOV, '', SKU '', V.CODIGO_UNIDAD_MOV, ' +
+    '       '', almacen '', V.CODIGO_ALM_MOV) AS DOCUMENTO ' +
+    '  FROM fza_movimientos_almacen C ' +
+    '  JOIN fza_movimientos_almacen V ' +
+    '    ON V.CODIGO_EMP_MOV = C.CODIGO_EMP_MOV ' +
+    '   AND V.CODIGO_ALM_MOV = C.CODIGO_ALM_MOV ' +
+    '   AND V.CODIGO_UNIDAD_MOV = C.CODIGO_UNIDAD_MOV ' +
+    ' WHERE C.TIPO_DOC_MOV = ''AC'' ' +
+    '   AND C.TIPO_MOV = ''E'' ' +
+    '   AND IFNULL(C.ESACTIVO_MOV, ''S'') = ''S'' ' +
+    '   AND C.SERIE_DOC_MOV = :s AND C.NUMERO_DOC_MOV = :n ' +
+    '   AND V.TIPO_MOV = ''S'' ' +
+    '   AND IFNULL(V.ESACTIVO_MOV, ''S'') = ''S'' ' +
+    '   AND (COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) > ' +
+    '        COALESCE(C.FECHA_MOV, C.INSTANTE_ALTA) ' +
+    '     OR (COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) = ' +
+    '         COALESCE(C.FECHA_MOV, C.INSTANTE_ALTA) ' +
+    '       AND V.NUMERO_MOV > C.NUMERO_MOV)) ' +
+    ' ORDER BY DOCUMENTO LIMIT 10 FOR UPDATE';
+  SQL_ALBARANES_PEDIDO =
+    'SELECT DISTINCT I.TIPO_DOC_SESDOC, I.SERIE_SESDOC, ' +
+    '       I.NUMERO_SESDOC ' +
+    '  FROM ( ' +
+    '    SELECT ''ALBC'' AS TIPO_DOC_SESDOC, ' +
+    '           H.SERIE_ALBC AS SERIE_SESDOC, ' +
+    '           H.NUMERO_ALBC AS NUMERO_SESDOC ' +
+    '      FROM fza_albaranes_compra H ' +
+    '     WHERE H.SERIE_PED_ALBC = :s AND H.NUMERO_PED_ALBC = :n ' +
+    '    UNION ALL ' +
+    '    SELECT ''ALBC'', L.SERIE_ALBC_ALBCLIN, ' +
+    '           L.NUMERO_ALBC_ALBCLIN ' +
+    '      FROM fza_albaranes_compra_lineas L ' +
+    '     WHERE L.SERIE_PEDC_ALBCLIN = :s ' +
+    '       AND L.NUMERO_PEDC_ALBCLIN = :n ' +
+    '  ) I ' +
+    ' WHERE IFNULL(I.SERIE_SESDOC, '''') <> '''' ' +
+    '   AND IFNULL(I.NUMERO_SESDOC, '''') <> '''' ' +
+    ' ORDER BY I.SERIE_SESDOC, I.NUMERO_SESDOC FOR UPDATE';
 
 function Definicion(
   const AOperacion, ASql, AParametros,
@@ -497,13 +583,40 @@ begin
     'N');
 end;
 
-function DefinicionMovimientosHuerfanos: TDefinicionSql;
+function DefinicionDocumentosReversion: TDefinicionSql;
 begin
   Result := Definicion(
-    'ConsultarMovimientosHuerfanos',
-    SQL_MOVIMIENTOS_HUERFANOS,
-    'emp,alm',
-    'NUMERO_MOV');
+    'ConsultarDocumentosSesion',
+    SQL_DOCUMENTOS_REVERSION,
+    's,n',
+    'TIPO_DOC_SESDOC,SERIE_SESDOC,NUMERO_SESDOC');
+end;
+
+function DefinicionFacturasCompraAlbaran: TDefinicionSql;
+begin
+  Result := Definicion(
+    'ConsultarFacturasCompraAlbaran',
+    SQL_FACTURAS_COMPRA_ALBARAN,
+    's,n',
+    'DOCUMENTO');
+end;
+
+function DefinicionSalidasPosterioresAlbaran: TDefinicionSql;
+begin
+  Result := Definicion(
+    'ConsultarSalidasPosterioresAlbaran',
+    SQL_SALIDAS_POSTERIORES_ALBARAN,
+    's,n',
+    'DOCUMENTO');
+end;
+
+function DefinicionAlbaranesPedido: TDefinicionSql;
+begin
+  Result := Definicion(
+    'ConsultarAlbaranesPedido',
+    SQL_ALBARANES_PEDIDO,
+    's,n',
+    'TIPO_DOC_SESDOC,SERIE_SESDOC,NUMERO_SESDOC');
 end;
 
 constructor TRepositorioLecturasMaterializacionComprasSesiones.Create(
@@ -520,7 +633,7 @@ end;
 class function TRepositorioLecturasMaterializacionComprasSesiones.
   DefinicionesSql: TDefinicionesSql;
 begin
-  SetLength(Result, 16);
+  SetLength(Result, 19);
   Result[0] := DefinicionSiguienteSecuenciaEan;
   Result[1] := DefinicionIdColorBasico;
   Result[2] := DefinicionValorColor;
@@ -536,7 +649,10 @@ begin
   Result[12] := DefinicionAlmacenes;
   Result[13] := DefinicionPendientesRecibir;
   Result[14] := DefinicionExisteTabla;
-  Result[15] := DefinicionMovimientosHuerfanos;
+  Result[15] := DefinicionDocumentosReversion;
+  Result[16] := DefinicionFacturasCompraAlbaran;
+  Result[17] := DefinicionSalidasPosterioresAlbaran;
+  Result[18] := DefinicionAlbaranesPedido;
 end;
 
 function TRepositorioLecturasMaterializacionComprasSesiones.
@@ -1174,16 +1290,16 @@ begin
 end;
 
 function TRepositorioLecturasMaterializacionComprasSesiones.
-  ConsultarMovimientosHuerfanos(
-  const AEmpresa, AAlmacen: string): TArray<string>;
+  ConsultarDocumentos(
+  const ADefinicion: TDefinicionSql;
+  const ASerie, ANumero: string):
+  TDocumentosReversionMaterializacion;
 var
-  aResultado: TArray<string>;
-  oDefinicion: TDefinicionSql;
+  aResultado: TDocumentosReversionMaterializacion;
 begin
   aResultado := nil;
-  oDefinicion := DefinicionMovimientosHuerfanos;
   EjecutarLecturaSqlConFallback(
-    oDefinicion,
+    ADefinicion,
     FCatalogoSql,
     procedure(const ASql: string)
     var
@@ -1194,15 +1310,19 @@ begin
       try
         oConsulta.Connection := FConexion;
         oConsulta.SQL.Text := ASql;
-        oConsulta.ParamByName('emp').AsString := AEmpresa;
-        oConsulta.ParamByName('alm').AsString := AAlmacen;
+        oConsulta.ParamByName('s').AsString := ASerie;
+        oConsulta.ParamByName('n').AsString := ANumero;
         oConsulta.Open;
         SetLength(aResultado, oConsulta.RecordCount);
         iIndice := 0;
         while not oConsulta.Eof do
         begin
-          aResultado[iIndice] :=
-            oConsulta.FieldByName('NUMERO_MOV').AsString;
+          aResultado[iIndice].Tipo :=
+            oConsulta.FieldByName('TIPO_DOC_SESDOC').AsString;
+          aResultado[iIndice].Serie :=
+            oConsulta.FieldByName('SERIE_SESDOC').AsString;
+          aResultado[iIndice].Numero :=
+            oConsulta.FieldByName('NUMERO_SESDOC').AsString;
           Inc(iIndice);
           oConsulta.Next;
         end;
@@ -1212,6 +1332,88 @@ begin
     end,
     FIncidenciasSql);
   Result := aResultado;
+end;
+
+function TRepositorioLecturasMaterializacionComprasSesiones.
+  ConsultarDocumentosSesion(
+  const ASerie, ANumero: string):
+  TDocumentosReversionMaterializacion;
+begin
+  Result := ConsultarDocumentos(
+    DefinicionDocumentosReversion,
+    ASerie,
+    ANumero);
+end;
+
+function TRepositorioLecturasMaterializacionComprasSesiones.
+  ConsultarReferenciasDocumento(
+  const ADefinicion: TDefinicionSql;
+  const ASerie, ANumero: string): TArray<string>;
+var
+  aResultado: TArray<string>;
+begin
+  aResultado := nil;
+  EjecutarLecturaSqlConFallback(
+    ADefinicion,
+    FCatalogoSql,
+    procedure(const ASql: string)
+    var
+      iIndice: Integer;
+      oConsulta: TUniQuery;
+    begin
+      oConsulta := TUniQuery.Create(nil);
+      try
+        oConsulta.Connection := FConexion;
+        oConsulta.SQL.Text := ASql;
+        oConsulta.ParamByName('s').AsString := ASerie;
+        oConsulta.ParamByName('n').AsString := ANumero;
+        oConsulta.Open;
+        SetLength(aResultado, oConsulta.RecordCount);
+        iIndice := 0;
+        while not oConsulta.Eof do
+        begin
+          aResultado[iIndice] :=
+            oConsulta.FieldByName('DOCUMENTO').AsString;
+          Inc(iIndice);
+          oConsulta.Next;
+        end;
+      finally
+        FreeAndNil(oConsulta);
+      end;
+    end,
+    FIncidenciasSql);
+  Result := aResultado;
+end;
+
+function TRepositorioLecturasMaterializacionComprasSesiones.
+  ConsultarFacturasCompraAlbaran(
+  const ASerie, ANumero: string): TArray<string>;
+begin
+  Result := ConsultarReferenciasDocumento(
+    DefinicionFacturasCompraAlbaran,
+    ASerie,
+    ANumero);
+end;
+
+function TRepositorioLecturasMaterializacionComprasSesiones.
+  ConsultarSalidasPosterioresAlbaran(
+  const ASerie, ANumero: string): TArray<string>;
+begin
+  Result := ConsultarReferenciasDocumento(
+    DefinicionSalidasPosterioresAlbaran,
+    ASerie,
+    ANumero);
+end;
+
+function TRepositorioLecturasMaterializacionComprasSesiones.
+  ConsultarAlbaranesPedido(
+  const ASerie, ANumero: string):
+  TDocumentosReversionMaterializacion;
+begin
+  Result := ConsultarDocumentos(
+    DefinicionAlbaranesPedido,
+    ASerie,
+    ANumero);
 end;
 
 end.

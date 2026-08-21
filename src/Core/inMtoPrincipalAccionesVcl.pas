@@ -13,7 +13,7 @@ unit inMtoPrincipalAccionesVcl;
 interface
 
 uses
-  System.Classes, Vcl.Forms, cxPC,
+  System.Classes, Vcl.Forms, cxPC, Uni,
   inLibLogIntf, inLibCargaEfectosRemesaPersistenciaIntf;
 
 type
@@ -24,6 +24,10 @@ procedure MostrarListadoDocumentosProveedor(AOwner: TComponent);
 procedure MostrarListadoEfectosPago(AOwner: TComponent);
 function FacturarAlbaranesCompra: Boolean;
 procedure MostrarProcesosAuxiliares(AOwner: TComponent);
+procedure MostrarCambioArticuloColor(
+  AOwner: TComponent;
+  AConexion: TUniConnection;
+  const AUsuario: string);
 procedure MostrarDeclaracionVerifactu(AOwner: TComponent);
 procedure MostrarBalanceAlmacenHorizontal;
 procedure MostrarBalanceAlmacenSinTallas;
@@ -51,6 +55,9 @@ uses
   inMtoModalImpEfectosPago,
   inMtoModalFacturarAlbaranes,
   inMtoModalProcesosAuxiliaresBBDD,
+  inMtoModalCambioArticuloColor,
+  inLibCambioArticuloColor,
+  UniDataCambioArticuloColorRepositorio,
   inMtoModalVerifactuDecl,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
@@ -110,6 +117,18 @@ end;
 procedure MostrarProcesosAuxiliares(AOwner: TComponent);
 begin
   TfrmModalProcesosAuxiliaresBBDD.Ejecutar(AOwner);
+end;
+
+procedure MostrarCambioArticuloColor(
+  AOwner: TComponent;
+  AConexion: TUniConnection;
+  const AUsuario: string);
+begin
+  TfrmModalCambioArticuloColor.Ejecutar(
+    AOwner,
+    CrearServicioCambioArticuloColor(
+      CrearRepositorioCambioArticuloColorUniDAC(AConexion)),
+    AUsuario);
 end;
 
 procedure MostrarDeclaracionVerifactu(AOwner: TComponent);

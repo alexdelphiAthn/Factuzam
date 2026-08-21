@@ -313,6 +313,10 @@
         <DCCReference Include="src\Lib\inLibGestorArticulosMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorCopiaLineasCompra.pas"/>
         <DCCReference Include="src\Lib\inLibLicenciaAplicacion.pas"/>
+        <DCCReference Include="src\Lib\inLibCambioArticuloColorIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCambioArticuloColor.pas"/>
+        <DCCReference
+            Include="src\DataModules\UniDataCambioArticuloColorRepositorio.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
         </DCCReference>
@@ -448,6 +452,9 @@
         <DCCReference Include="src\Modals\inMtoModalErrorAplicacion.pas"/>
         <DCCReference Include="src\Modals\inMtoModalProcesosAuxiliaresBBDD.pas">
             <Form>frmModalProcesosAuxiliaresBBDD</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCambioArticuloColor.pas">
+            <Form>frmModalCambioArticuloColor</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalMensajeTexto.pas"/>
         <DCCReference Include="src\Forms\inMtoErroresEnvios.pas">

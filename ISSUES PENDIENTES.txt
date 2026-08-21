@@ -82,6 +82,12 @@ código propio, terceros y código generado.
 PA-OPT-02 - DECLARAR COMO OUT EL RESULTADO DE AVS DE ARTÍCULO
 Prioridad: ALTA; cambio pequeño y aislable.
 
+Estado 21/08/2026: IMPLEMENTADO Y VERDE DE FORMA FOCAL.
+La declaración y la implementación usan out, y la prueba cubre éxito,
+artículo vacío, orden inválido, lookup ausente y reutilización de un array
+con datos. Compilación y DUnitX focales Release: 72/72 en Win32 y 72/72 en
+Win64. Solo falta repetir la barrera global sobre un árbol estable.
+
 Ámbito:
 
 - src\Caja\Lib\inLibCajaVentaOperacion.pas;
@@ -103,6 +109,13 @@ Criterios de aceptación:
 
 PA-OPT-03 - SUSTITUIR LA LISTA DE PARÁMETROS DE MOVIMIENTO DE ALMACÉN
 Prioridad: ALTA para Clean Code; no ejecutar como simple cambio de const.
+
+Estado 21/08/2026: IMPLEMENTADO Y VERDE DE FORMA FOCAL.
+Las cinco llamadas usan TSolicitudMovimientoAlmacenCaja, inicializan cada
+solicitud con Default y conservan el mapeo uno a uno de los 19 parámetros del
+procedimiento almacenado. La unidad real y cuatro pruebas de caracterización
+compilan y pasan en Release Win32 y Win64. Solo falta repetir la barrera
+global sobre un árbol estable.
 
 Ámbito inicial:
 
@@ -190,13 +203,23 @@ NO CREAR ISSUES INDEPENDIENTES PARA ESTOS AVISOS:
 - OPTI11, porque el informe actual registra cero variables administradas
   declaradas inline dentro de bucles.
 
-BLOQUEOS DE CONCURRENCIA OBSERVADOS EL 20/08/2026:
+BLOQUEOS DE VERIFICACIÓN OBSERVADOS EL 21/08/2026:
 
-- src\Caja\Forms\inMtoCajaOpe.pas;
-- src\DataModules\UniDataAlbaranes.pas;
-- src\DataModules\UniDataAlbaranesCompra.pas;
-- src\DataModules\UniDataDevolucionesCompra.pas.
+Durante esta ejecución han entrado cambios ajenos en la materialización y
+reversión de compras, el catálogo SQL y el cambio de color de artículos. No
+modificar ni corregir esos fascículos desde PA-OPT.
 
-Estos archivos contienen cambios ajenos. PA-OPT-04 y PA-OPT-05 no pueden
-reservarlos hasta que su propietario los libere. Antes de comenzar cualquier
-PA-OPT se debe volver a comprobar git status y publicar la reserva exacta.
+La barrera global no representa todavía una línea base estable:
+
+- fzam Release Win32/Win64 se detiene en las unidades de materialización de
+  compras que están siendo modificadas;
+- DUnitX completo Win32 compila y ejecuta 1.095 pruebas: pasan 1.092 y fallan
+  tres caracterizaciones ajenas, dos por el contador del catálogo SQL
+  126 -> 129 y una por ClasificarCambioParametro;
+- DUnitX completo Win64 se detiene en tres incompatibilidades ya existentes
+  de PruebasPedidoOcr.
+
+PA-OPT-02 y PA-OPT-03 no añaden fallos focales. Repetir la barrera global y
+retirar ambos bloques de este archivo cuando el árbol ajeno quede estable.
+Antes de comenzar PA-OPT-04 o PA-OPT-05 se debe volver a comprobar git status
+y publicar la reserva exacta.

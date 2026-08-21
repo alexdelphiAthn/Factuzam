@@ -203,6 +203,12 @@ uses
   inLibGestorCopiaLineasCompra in
     'src\Lib\inLibGestorCopiaLineasCompra.pas',
   inLibLicenciaAplicacion in 'src\Lib\inLibLicenciaAplicacion.pas',
+  inLibCambioArticuloColorIntf in
+    'src\Lib\inLibCambioArticuloColorIntf.pas',
+  inLibCambioArticuloColor in
+    'src\Lib\inLibCambioArticuloColor.pas',
+  UniDataCambioArticuloColorRepositorio in
+    'src\DataModules\UniDataCambioArticuloColorRepositorio.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
   inMtoLogon in 'src\Core\inMtoLogon.pas' {frmLogon},
   inMtoPrincipal in 'src\Core\inMtoPrincipal.pas' {frmMtoPrincipal},
@@ -269,6 +275,9 @@ uses
   inMtoModalProcesosAuxiliaresBBDD in
     'src\Modals\inMtoModalProcesosAuxiliaresBBDD.pas'
     {frmModalProcesosAuxiliaresBBDD},
+  inMtoModalCambioArticuloColor in
+    'src\Modals\inMtoModalCambioArticuloColor.pas'
+    {frmModalCambioArticuloColor},
   inMtoModalMensajeTexto in
     'src\Modals\inMtoModalMensajeTexto.pas',
   inMtoErroresEnvios in
