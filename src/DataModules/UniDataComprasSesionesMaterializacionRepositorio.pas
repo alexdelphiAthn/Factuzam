@@ -388,56 +388,112 @@ const
     '  ) I ' +
     ' ORDER BY I.DOCUMENTO LIMIT 10 FOR UPDATE';
   SQL_SALIDAS_POSTERIORES_ALBARAN =
+    'WITH ORIGEN AS ( ' +
+    '  SELECT L.LINEA_ALBCLIN AS LINEA, ' +
+    '         L.CODIGO_ART_ALBCLIN AS ARTICULO, ' +
+    '         L.CODIGO_UNIDAD_ALBCLIN AS SKU, ' +
+    '         L.CANTIDAD_ALBCLIN AS CANTIDAD, ' +
+    '         COALESCE(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '                  H.CODIGO_ALM_ALBC) AS ALMACEN, ' +
+    '         COALESCE(' +
+    '           NULLIF(H.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                  ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(CAST(H.FECHA_ALBC AS DATETIME), ' +
+    '                  ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(L.INSTANTE_ALTA, ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(H.INSTANTE_ALTA, ' +
+    '                  ''0000-00-00 00:00:00'')) AS INSTANTE ' +
+    '    FROM fza_albaranes_compra H ' +
+    '    JOIN fza_albaranes_compra_lineas L ' +
+    '      ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '     AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '   WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '     AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+    '     AND NOT EXISTS ( ' +
+    '           SELECT 1 FROM fza_albaranes_compra_celdas C ' +
+    '            WHERE C.SERIE_ALBC_ALBCCEL = L.SERIE_ALBC_ALBCLIN ' +
+    '              AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+    '              AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
+    '                  CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
+    '              AND C.CANTIDAD_ALBCCEL > 0) ' +
+    '  UNION ALL ' +
+    '  SELECT CONCAT(L.LINEA_ALBCLIN, ''/'', ' +
+    '                C.ID_FILA_ALBC_ALBCCEL, ''/'', ' +
+    '                C.ID_AV_PIVOT_ALBCCEL), ' +
+    '         L.CODIGO_ART_ALBCLIN, L.CODIGO_UNIDAD_ALBCLIN, ' +
+    '         C.CANTIDAD_ALBCCEL, ' +
+    '         COALESCE(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
+    '                  NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '                  H.CODIGO_ALM_ALBC), ' +
+    '         COALESCE(' +
+    '           NULLIF(H.INSTANTE_MOVIMIENTO_ALBC, ' +
+    '                  ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(CAST(H.FECHA_ALBC AS DATETIME), ' +
+    '                  ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(C.INSTANTE_ALTA, ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(L.INSTANTE_ALTA, ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(H.INSTANTE_ALTA, ' +
+    '                  ''0000-00-00 00:00:00'')) ' +
+    '    FROM fza_albaranes_compra H ' +
+    '    JOIN fza_albaranes_compra_lineas L ' +
+    '      ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '     AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '    JOIN fza_albaranes_compra_celdas C ' +
+    '      ON C.SERIE_ALBC_ALBCCEL = L.SERIE_ALBC_ALBCLIN ' +
+    '     AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+    '     AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
+    '         CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
+    '   WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
+    '     AND C.CANTIDAD_ALBCCEL > 0 ' +
+    '  UNION ALL ' +
+    '  SELECT CONCAT(''movimiento '', M.NUMERO_MOV), ' +
+    '         M.CODIGO_ART_MOV, M.CODIGO_UNIDAD_MOV, ' +
+    '         M.CANTIDAD_MOV, M.CODIGO_ALM_MOV, ' +
+    '         COALESCE(' +
+    '           NULLIF(M.FECHA_MOV, ''0000-00-00 00:00:00''), ' +
+    '           NULLIF(M.INSTANTE_ALTA, ''0000-00-00 00:00:00'')) ' +
+    '    FROM fza_movimientos_almacen M ' +
+    '   WHERE M.TIPO_DOC_MOV = ''AC'' ' +
+    '     AND M.SERIE_DOC_MOV = :s AND M.NUMERO_DOC_MOV = :n ' +
+    '     AND IFNULL(M.ESACTIVO_MOV, ''S'') = ''S'' ' +
+    ') ' +
     'SELECT DISTINCT I.DOCUMENTO ' +
     '  FROM ( ' +
-    '    SELECT CONCAT(''DATOS DE STOCK INCOMPLETOS linea '', ' +
-    '           L.LINEA_ALBCLIN, '', articulo '', ' +
-    '           IFNULL(L.CODIGO_ART_ALBCLIN, ''?''), '', SKU '', ' +
-    '           IFNULL(L.CODIGO_UNIDAD_ALBCLIN, ''?''), '', almacen '', ' +
-    '           IFNULL(COALESCE(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '                           H.CODIGO_ALM_ALBC), ''?'')) AS DOCUMENTO ' +
-    '      FROM fza_albaranes_compra H ' +
-    '      JOIN fza_albaranes_compra_lineas L ' +
-    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
-    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
-    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-    '       AND (IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
-    '         OR IFNULL(COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC), '''') = '''') ' +
+    '    SELECT CONCAT(''DATOS DE STOCK INCOMPLETOS origen '', ' +
+    '           O.LINEA, '', articulo '', IFNULL(O.ARTICULO, ''?''), ' +
+    '           '', SKU '', IFNULL(O.SKU, ''?''), '', almacen '', ' +
+    '           IFNULL(O.ALMACEN, ''?'')) AS DOCUMENTO ' +
+    '      FROM ORIGEN O ' +
+    '     WHERE IFNULL(O.SKU, '''') = '''' ' +
+    '        OR IFNULL(O.ALMACEN, '''') = '''' ' +
+    '        OR O.INSTANTE IS NULL ' +
     '    UNION ALL ' +
     '    SELECT CONCAT(''MOVIMIENTO '', V.TIPO_DOC_MOV, '' '', ' +
     '           IFNULL(V.SERIE_DOC_MOV, ''?''), ''/'', ' +
     '           IFNULL(V.NUMERO_DOC_MOV, ''?''), '', SKU '', ' +
     '           IFNULL(V.CODIGO_UNIDAD_MOV, ''?''), '', almacen '', ' +
     '           IFNULL(V.CODIGO_ALM_MOV, ''?'')) AS DOCUMENTO ' +
-    '      FROM fza_albaranes_compra H ' +
-    '      JOIN fza_albaranes_compra_lineas L ' +
-    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      FROM ORIGEN O ' +
     '      JOIN fza_movimientos_almacen V ' +
-    '        ON (IFNULL(COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC), '''') = '''' ' +
+    '        ON (IFNULL(O.ALMACEN, '''') = '''' ' +
     '         OR IFNULL(V.CODIGO_ALM_MOV, '''') = '''' ' +
-    '         OR V.CODIGO_ALM_MOV = COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC)) ' +
-    '       AND ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+    '         OR V.CODIGO_ALM_MOV = O.ALMACEN) ' +
+    '       AND ((IFNULL(O.SKU, '''') <> '''' ' +
     '         AND IFNULL(V.CODIGO_UNIDAD_MOV, '''') <> '''' ' +
-    '         AND V.CODIGO_UNIDAD_MOV = L.CODIGO_UNIDAD_ALBCLIN) ' +
-    '         OR ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '         AND V.CODIGO_UNIDAD_MOV = O.SKU) ' +
+    '         OR ((IFNULL(O.SKU, '''') = '''' ' +
     '           OR IFNULL(V.CODIGO_UNIDAD_MOV, '''') = '''') ' +
-    '          AND V.CODIGO_ART_MOV = L.CODIGO_ART_ALBCLIN)) ' +
-    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
-    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-    '       AND V.TIPO_MOV = ''S'' ' +
+    '          AND V.CODIGO_ART_MOV = O.ARTICULO)) ' +
+    '     WHERE V.TIPO_MOV = ''S'' ' +
     '       AND IFNULL(V.ESACTIVO_MOV, ''S'') = ''S'' ' +
-    '       AND COALESCE(V.FECHA_MOV, V.INSTANTE_ALTA) >= ' +
-    '           COALESCE(H.INSTANTE_MOVIMIENTO_ALBC, ' +
-    '                    L.INSTANTE_ALTA, H.INSTANTE_ALTA, ' +
-    '                    CAST(H.FECHA_ALBC AS DATETIME)) ' +
+    '       AND (COALESCE(' +
+    '              NULLIF(V.FECHA_MOV, ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(V.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00'')) IS NULL ' +
+    '         OR COALESCE(' +
+    '              NULLIF(V.FECHA_MOV, ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(V.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00'')) >= O.INSTANTE) ' +
     '    UNION ALL ' +
     '    SELECT CONCAT(''ALBARAN VENTA '', VH.SERIE_ALB, ''/'', ' +
     '           VH.NUMERO_ALB, '' linea '', VL.LINEA_ALBLIN, '', SKU '', ' +
@@ -445,40 +501,43 @@ const
     '           IFNULL(COALESCE(NULLIF(VL.CODIGO_ALMACEN_ALBLIN, ''''), ' +
     '                           VH.CODIGO_ALM_ALB), ''?''), ' +
     '           '', cantidad '', IFNULL(VL.CANTIDAD_ALBLIN, 0)) ' +
-    '      FROM fza_albaranes_compra H ' +
-    '      JOIN fza_albaranes_compra_lineas L ' +
-    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      FROM ORIGEN O ' +
     '      JOIN fza_albaranes_lineas VL ' +
-    '        ON ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+    '        ON ((IFNULL(O.SKU, '''') <> '''' ' +
     '         AND IFNULL(VL.CODIGO_UNIDAD_ALBLIN, '''') <> '''' ' +
-    '         AND VL.CODIGO_UNIDAD_ALBLIN = L.CODIGO_UNIDAD_ALBCLIN) ' +
-    '         OR ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '         AND VL.CODIGO_UNIDAD_ALBLIN = O.SKU) ' +
+    '         OR ((IFNULL(O.SKU, '''') = '''' ' +
     '           OR IFNULL(VL.CODIGO_UNIDAD_ALBLIN, '''') = '''') ' +
-    '          AND VL.CODIGO_ART_ALBLIN = L.CODIGO_ART_ALBCLIN)) ' +
+    '          AND VL.CODIGO_ART_ALBLIN = O.ARTICULO)) ' +
     '      JOIN fza_albaranes VH ' +
     '        ON VH.SERIE_ALB = VL.SERIE_ALB_ALBLIN ' +
     '       AND VH.NUMERO_ALB = VL.NUMERO_ALB_ALBLIN ' +
-    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
-    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-    '       AND IFNULL(VL.CANTIDAD_ALBLIN, 0) > 0 ' +
+    '     WHERE IFNULL(VL.CANTIDAD_ALBLIN, 0) > 0 ' +
     '       AND IFNULL(VH.ESTADO_ALB, '''') <> ''CANCELADO'' ' +
-    '       AND (IFNULL(COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC), '''') = '''' ' +
+    '       AND (IFNULL(O.ALMACEN, '''') = '''' ' +
     '         OR IFNULL(COALESCE(' +
     '              NULLIF(VL.CODIGO_ALMACEN_ALBLIN, ''''), ' +
     '              VH.CODIGO_ALM_ALB), '''') = '''' ' +
     '         OR COALESCE(NULLIF(VL.CODIGO_ALMACEN_ALBLIN, ''''), ' +
-    '              VH.CODIGO_ALM_ALB) = COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC)) ' +
-    '       AND COALESCE(VH.INSTANTE_MOVIMIENTO_ALB, ' +
-    '                    VL.INSTANTE_ALTA, VH.INSTANTE_ALTA, ' +
-    '                    CAST(VH.FECHA_ALB AS DATETIME)) >= ' +
-    '           COALESCE(H.INSTANTE_MOVIMIENTO_ALBC, ' +
-    '                    L.INSTANTE_ALTA, H.INSTANTE_ALTA, ' +
-    '                    CAST(H.FECHA_ALBC AS DATETIME)) ' +
+    '              VH.CODIGO_ALM_ALB) = O.ALMACEN) ' +
+    '       AND (COALESCE(' +
+    '              NULLIF(VH.INSTANTE_MOVIMIENTO_ALB, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(CAST(VH.FECHA_ALB AS DATETIME), ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(VL.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(VH.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00'')) IS NULL ' +
+    '         OR COALESCE(' +
+    '              NULLIF(VH.INSTANTE_MOVIMIENTO_ALB, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(CAST(VH.FECHA_ALB AS DATETIME), ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(VL.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(VH.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00'')) >= O.INSTANTE) ' +
     '    UNION ALL ' +
     '    SELECT CONCAT(''FACTURA VENTA '', F.SERIE_FAC, ''/'', ' +
     '           F.NUMERO_FAC, '' linea '', FL.LINEA_FACLIN, '', SKU '', ' +
@@ -486,39 +545,42 @@ const
     '           IFNULL(COALESCE(NULLIF(FL.CODIGO_ALM_FACLIN, ''''), ' +
     '                           F.CODIGO_ALM_FAC), ''?''), ' +
     '           '', cantidad '', IFNULL(FL.CANTIDAD_FACLIN, 0)) ' +
-    '      FROM fza_albaranes_compra H ' +
-    '      JOIN fza_albaranes_compra_lineas L ' +
-    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      FROM ORIGEN O ' +
     '      JOIN fza_facturas_lineas FL ' +
-    '        ON ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
+    '        ON ((IFNULL(O.SKU, '''') <> '''' ' +
     '         AND IFNULL(FL.CODIGO_UNIDAD_FACLIN, '''') <> '''' ' +
-    '         AND FL.CODIGO_UNIDAD_FACLIN = L.CODIGO_UNIDAD_ALBCLIN) ' +
-    '         OR ((IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') = '''' ' +
+    '         AND FL.CODIGO_UNIDAD_FACLIN = O.SKU) ' +
+    '         OR ((IFNULL(O.SKU, '''') = '''' ' +
     '           OR IFNULL(FL.CODIGO_UNIDAD_FACLIN, '''') = '''') ' +
-    '          AND FL.CODIGO_ART_FACLIN = L.CODIGO_ART_ALBCLIN)) ' +
+    '          AND FL.CODIGO_ART_FACLIN = O.ARTICULO)) ' +
     '      JOIN fza_facturas F ' +
     '        ON F.SERIE_FAC = FL.SERIE_FAC_FACLIN ' +
     '       AND F.NUMERO_FAC = FL.NUMERO_FAC_FACLIN ' +
-    '     WHERE H.SERIE_ALBC = :s AND H.NUMERO_ALBC = :n ' +
-    '       AND IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-    '       AND IFNULL(FL.CANTIDAD_FACLIN, 0) > 0 ' +
+    '     WHERE IFNULL(FL.CANTIDAD_FACLIN, 0) > 0 ' +
     '       AND IFNULL(F.FASE_FAC, '''') <> ''CANCELADA'' ' +
-    '       AND (IFNULL(COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC), '''') = '''' ' +
+    '       AND (IFNULL(O.ALMACEN, '''') = '''' ' +
     '         OR IFNULL(COALESCE(NULLIF(FL.CODIGO_ALM_FACLIN, ''''), ' +
     '                            F.CODIGO_ALM_FAC), '''') = '''' ' +
     '         OR COALESCE(NULLIF(FL.CODIGO_ALM_FACLIN, ''''), ' +
-    '              F.CODIGO_ALM_FAC) = COALESCE(' +
-    '              NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-    '              H.CODIGO_ALM_ALBC)) ' +
-    '       AND COALESCE(F.INSTANTECONSO_FAC, FL.INSTANTE_ALTA, ' +
-    '                    F.INSTANTE_ALTA, ' +
-    '                    CAST(F.FECHA_FAC AS DATETIME)) >= ' +
-    '           COALESCE(H.INSTANTE_MOVIMIENTO_ALBC, ' +
-    '                    L.INSTANTE_ALTA, H.INSTANTE_ALTA, ' +
-    '                    CAST(H.FECHA_ALBC AS DATETIME)) ' +
+    '              F.CODIGO_ALM_FAC) = O.ALMACEN) ' +
+    '       AND (COALESCE(' +
+    '              NULLIF(F.INSTANTECONSO_FAC, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(CAST(F.FECHA_FAC AS DATETIME), ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(FL.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(F.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00'')) IS NULL ' +
+    '         OR COALESCE(' +
+    '              NULLIF(F.INSTANTECONSO_FAC, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(CAST(F.FECHA_FAC AS DATETIME), ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(FL.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00''), ' +
+    '              NULLIF(F.INSTANTE_ALTA, ' +
+    '                     ''0000-00-00 00:00:00'')) >= O.INSTANTE) ' +
     '  ) I ' +
     ' ORDER BY I.DOCUMENTO LIMIT 10 FOR UPDATE';
   SQL_ALBARANES_PEDIDO =

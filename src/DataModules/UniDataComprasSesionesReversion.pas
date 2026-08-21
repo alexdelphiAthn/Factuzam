@@ -438,10 +438,19 @@ begin
       'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_documentos_albc';
     q.ExecSQL;
     q.SQL.Text :=
+      'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_claves_stock';
+    q.ExecSQL;
+    q.SQL.Text :=
       'CREATE TEMPORARY TABLE tmp_reversion_documentos_albc (' +
       ' SERIE varchar(20) NOT NULL, ' +
       ' NUMERO varchar(20) NOT NULL, ' +
       ' PRIMARY KEY (SERIE, NUMERO)) ENGINE=MEMORY';
+    q.ExecSQL;
+    q.SQL.Text :=
+      'CREATE TEMPORARY TABLE tmp_reversion_claves_stock (' +
+      ' ALM varchar(10) NOT NULL, ' +
+      ' SKU varchar(50) NOT NULL, ' +
+      ' PRIMARY KEY (ALM, SKU)) ENGINE=MEMORY';
     q.ExecSQL;
     bTieneAlbaranes := False;
     for iDocumento := 0 to High(ADocumentos) do
@@ -458,6 +467,67 @@ begin
         bTieneAlbaranes := True;
       end;
     end;
+    if bTieneAlbaranes then
+    begin
+      q.SQL.Text :=
+        'INSERT INTO tmp_reversion_claves_stock (ALM, SKU) ' +
+        'SELECT DISTINCT O.ALM, O.SKU ' +
+        '  FROM ( ' +
+        '    SELECT COALESCE(' +
+        '             NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+        '             H.CODIGO_ALM_ALBC) AS ALM, ' +
+        '           L.CODIGO_UNIDAD_ALBCLIN AS SKU ' +
+        '      FROM fza_albaranes_compra H ' +
+        '      JOIN fza_albaranes_compra_lineas L ' +
+        '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+        '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+        '      JOIN tmp_reversion_documentos_albc D ' +
+        '        ON D.SERIE = H.SERIE_ALBC ' +
+        '       AND D.NUMERO = H.NUMERO_ALBC ' +
+        '     WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+        '       AND NOT EXISTS ( ' +
+        '             SELECT 1 ' +
+        '               FROM fza_albaranes_compra_celdas C ' +
+        '              WHERE C.SERIE_ALBC_ALBCCEL = ' +
+        '                    L.SERIE_ALBC_ALBCLIN ' +
+        '                AND C.NUMERO_ALBC_ALBCCEL = ' +
+        '                    L.NUMERO_ALBC_ALBCLIN ' +
+        '                AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
+        '                    CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
+        '                AND C.CANTIDAD_ALBCCEL > 0) ' +
+        '    UNION ALL ' +
+        '    SELECT COALESCE(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
+        '                    NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+        '                    H.CODIGO_ALM_ALBC), ' +
+        '           L.CODIGO_UNIDAD_ALBCLIN ' +
+        '      FROM fza_albaranes_compra H ' +
+        '      JOIN fza_albaranes_compra_lineas L ' +
+        '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+        '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+        '      JOIN fza_albaranes_compra_celdas C ' +
+        '        ON C.SERIE_ALBC_ALBCCEL = L.SERIE_ALBC_ALBCLIN ' +
+        '       AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+        '       AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
+        '           CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
+        '      JOIN tmp_reversion_documentos_albc D ' +
+        '        ON D.SERIE = H.SERIE_ALBC ' +
+        '       AND D.NUMERO = H.NUMERO_ALBC ' +
+        '     WHERE C.CANTIDAD_ALBCCEL > 0 ' +
+        '    UNION ALL ' +
+        '    SELECT M.CODIGO_ALM_MOV, M.CODIGO_UNIDAD_MOV ' +
+        '      FROM fza_movimientos_almacen M ' +
+        '      JOIN tmp_reversion_documentos_albc D ' +
+        '        ON D.SERIE = M.SERIE_DOC_MOV ' +
+        '       AND D.NUMERO = M.NUMERO_DOC_MOV ' +
+        '     WHERE M.TIPO_DOC_MOV = ''AC'' ' +
+        '       AND IFNULL(M.ESACTIVO_MOV, ''S'') = ''S'' ' +
+        '  ) O ' +
+        ' WHERE IFNULL(O.ALM, '''') <> '''' ' +
+        '   AND IFNULL(O.SKU, '''') <> '''' ' +
+        ' ORDER BY O.ALM, O.SKU ' +
+        'ON DUPLICATE KEY UPDATE ALM = VALUES(ALM)';
+      q.ExecSQL;
+    end;
     if bTieneAlbaranes and ATablas.TieneBloqueosStock then
     begin
       q.SQL.Text :=
@@ -465,24 +535,10 @@ begin
         ' CODIGO_ALM_STKBLQ, CODIGO_UNIDAD_STKBLQ, ' +
         ' INSTANTE_ALTA, USUARIO_ALTA, ' +
         ' INSTANTE_MODIF, USUARIO_MODIF) ' +
-        'SELECT DISTINCT ' +
-        '       COALESCE(NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '                H.CODIGO_ALM_ALBC) AS ALM, ' +
-        '       L.CODIGO_UNIDAD_ALBCLIN AS SKU, NOW(), ' +
+        'SELECT K.ALM, K.SKU, NOW(), ' +
         '       ''REVERSION_SESION'', NULL, NULL ' +
-        '  FROM fza_albaranes_compra H ' +
-        '  JOIN fza_albaranes_compra_lineas L ' +
-        '    ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-        '   AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
-        '  JOIN tmp_reversion_documentos_albc D ' +
-        '    ON D.SERIE = H.SERIE_ALBC ' +
-        '   AND D.NUMERO = H.NUMERO_ALBC ' +
-        ' WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-        '   AND IFNULL(COALESCE(' +
-        '         NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '         H.CODIGO_ALM_ALBC), '''') <> '''' ' +
-        '   AND IFNULL(L.CODIGO_UNIDAD_ALBCLIN, '''') <> '''' ' +
-        ' ORDER BY ALM, SKU ' +
+        '  FROM tmp_reversion_claves_stock K ' +
+        ' ORDER BY K.ALM, K.SKU ' +
         'ON DUPLICATE KEY UPDATE ' +
         ' CODIGO_ALM_STKBLQ = VALUES(CODIGO_ALM_STKBLQ)';
       q.ExecSQL;
@@ -492,23 +548,17 @@ begin
       q.SQL.Text :=
         'SELECT S.CODIGO_ALM_STK, S.CODIGO_UNIDAD_STK, ' +
         '       S.LOTE_STK ' +
-        '  FROM fza_albaranes_compra H ' +
-        '  JOIN fza_albaranes_compra_lineas L ' +
-        '    ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-        '   AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
-        '  JOIN tmp_reversion_documentos_albc D ' +
-        '    ON D.SERIE = H.SERIE_ALBC ' +
-        '   AND D.NUMERO = H.NUMERO_ALBC ' +
+        '  FROM tmp_reversion_claves_stock K ' +
         '  JOIN fza_articulos_stockactual S ' +
-        '    ON S.CODIGO_ALM_STK = COALESCE(' +
-        '         NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '         H.CODIGO_ALM_ALBC) ' +
-        '   AND S.CODIGO_UNIDAD_STK = L.CODIGO_UNIDAD_ALBCLIN ' +
-        ' WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+        '    ON S.CODIGO_ALM_STK = K.ALM ' +
+        '   AND S.CODIGO_UNIDAD_STK = K.SKU ' +
         ' ORDER BY S.CODIGO_ALM_STK, S.CODIGO_UNIDAD_STK, ' +
         '          S.LOTE_STK FOR UPDATE';
       ConsumirBloqueo(q);
     end;
+    q.SQL.Text :=
+      'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_claves_stock';
+    q.ExecSQL;
     q.SQL.Text :=
       'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_documentos_albc';
     q.ExecSQL;
