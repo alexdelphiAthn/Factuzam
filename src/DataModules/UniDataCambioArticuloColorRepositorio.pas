@@ -2218,13 +2218,20 @@ begin
   try
     oConsulta.Connection := FConexion;
     oConsulta.SQL.Text :=
-      'SELECT DISTINCT movimiento.`CODIGO_EMP_MOV`, ' +
-      'movimiento.`CODIGO_ALM_MOV`, mapa.`DESTINO` FROM ' +
+      'SELECT DISTINCT COALESCE(almacen.`CODIGO_EMP_ALM`, '''') ' +
+      '`CODIGO_EMP_MOV`, ambito.`CODIGO_ALM` `CODIGO_ALM_MOV`, ' +
+      'ambito.`DESTINO` FROM (SELECT ' +
+      'mapa.`DESTINO`, movimiento.`CODIGO_ALM_MOV` `CODIGO_ALM` FROM ' +
       '`fza_movimientos_almacen` movimiento JOIN `' + TABLA_TEMPORAL +
       '` mapa ON mapa.`DESTINO` = movimiento.`CODIGO_UNIDAD_MOV` ' +
-      'WHERE mapa.`ES_SKU` = ''S'' ORDER BY ' +
-      'movimiento.`CODIGO_EMP_MOV`, movimiento.`CODIGO_ALM_MOV`, ' +
-      'mapa.`DESTINO`';
+      'WHERE mapa.`ES_SKU` = ''S'' AND ' +
+      'movimiento.`ESACTIVO_MOV` = ''S'' UNION SELECT mapa.`DESTINO`, ' +
+      'stock.`CODIGO_ALM_STK` FROM `fza_articulos_stockactual` stock ' +
+      'JOIN `' + TABLA_TEMPORAL + '` mapa ON mapa.`DESTINO` = ' +
+      'stock.`CODIGO_UNIDAD_STK` WHERE mapa.`ES_SKU` = ''S'') ambito ' +
+      'LEFT JOIN `fza_almacenes` almacen ON ' +
+      'almacen.`CODIGO_ALM_ALM` = ambito.`CODIGO_ALM` ORDER BY ' +
+      'ambito.`DESTINO`, `CODIGO_EMP_MOV`, `CODIGO_ALM_MOV`';
     oConsulta.Open;
     while not oConsulta.Eof do
     begin
