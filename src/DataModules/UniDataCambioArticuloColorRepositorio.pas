@@ -126,6 +126,14 @@ const
   );
 
 type
+  TDestinoPmp = record
+    Empresa: string;
+    Almacen: string;
+    Sku: string;
+  end;
+
+  TDestinosPmp = array of TDestinoPmp;
+
   TRepositorioCambioArticuloColorUniDAC = class(
     TInterfacedObject,
     IRepositorioCambioArticuloColor)
@@ -249,7 +257,7 @@ type
       const AArticuloOrigen, AArticuloDestino, AUsuario: string);
     procedure ConsolidarCodigosBarras(const AUsuario: string);
     procedure ConsolidarBloqueos(const AUsuario: string);
-    function ProcedimientoExiste(const ANombre: string): Boolean;
+    function ProcedimientoPmpFusionDisponible: Boolean;
     procedure RecalcularPmpDestinos;
     procedure ConsolidarReferenciasUnidad(const AUsuario: string);
     procedure DesactivarSkuOrigen(const AUsuario: string);
@@ -859,8 +867,7 @@ begin
     'color.`ID_VA_ACA` = ''CO'' ' +
     'JOIN `fza_variaciones_atributos` va_color ON ' +
     'va_color.`ID_VAR_VA` = sku.`CODIGO_VAR_SKU` AND ' +
-    'va_color.`ID_ATB_VA` = ''CO'' AND ' +
-    'UPPER(TRIM(COALESCE(sku.`ESACTIVO_SKU`, ''N''))) = ''S''';
+    'va_color.`ID_ATB_VA` = ''CO''';
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.ConstruirMapaArticulo(
@@ -2173,19 +2180,36 @@ begin
     [AUsuario]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ProcedimientoExiste(
-  const ANombre: string): Boolean;
+function TRepositorioCambioArticuloColorUniDAC.
+  ProcedimientoPmpFusionDisponible: Boolean;
 begin
   Result := Existe(
-    'SELECT 1 FROM `INFORMATION_SCHEMA`.`ROUTINES` WHERE ' +
-    '`ROUTINE_SCHEMA` = DATABASE() AND `ROUTINE_TYPE` = ''PROCEDURE'' ' +
-    'AND UPPER(`ROUTINE_NAME`) = UPPER(:NOMBRE) LIMIT 1',
-    ['NOMBRE'],
-    [ANombre]);
+    'SELECT 1 FROM `INFORMATION_SCHEMA`.`ROUTINES` rutina WHERE ' +
+    'rutina.`ROUTINE_SCHEMA` = DATABASE() AND ' +
+    'rutina.`ROUTINE_TYPE` = ''PROCEDURE'' AND ' +
+    'rutina.`ROUTINE_NAME` = ''PRC_FZA_FUSION_RECALCULAR_PMP'' AND ' +
+    '(SELECT COUNT(*) FROM `INFORMATION_SCHEMA`.`PARAMETERS` parametro ' +
+    'WHERE parametro.`SPECIFIC_SCHEMA` = rutina.`ROUTINE_SCHEMA` AND ' +
+    'parametro.`SPECIFIC_NAME` = rutina.`ROUTINE_NAME` AND ' +
+    'parametro.`PARAMETER_MODE` = ''IN'' AND (' +
+    '(parametro.`ORDINAL_POSITION` = 1 AND ' +
+    'UPPER(parametro.`PARAMETER_NAME`) = ''P_EMPRESA'') OR ' +
+    '(parametro.`ORDINAL_POSITION` = 2 AND ' +
+    'UPPER(parametro.`PARAMETER_NAME`) = ''P_ALMACEN'') OR ' +
+    '(parametro.`ORDINAL_POSITION` = 3 AND ' +
+    'UPPER(parametro.`PARAMETER_NAME`) = ''P_SKU''))) = 3 AND ' +
+    '(SELECT COUNT(*) FROM `INFORMATION_SCHEMA`.`PARAMETERS` parametro ' +
+    'WHERE parametro.`SPECIFIC_SCHEMA` = rutina.`ROUTINE_SCHEMA` AND ' +
+    'parametro.`SPECIFIC_NAME` = rutina.`ROUTINE_NAME` AND ' +
+    'parametro.`ORDINAL_POSITION` > 0) = 3 LIMIT 1',
+    [],
+    []);
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.RecalcularPmpDestinos;
 var
+  aDestinos: TDestinosPmp;
+  i: Integer;
   oConsulta: TUniQuery;
   oProcedimiento: TUniStoredProc;
 begin
@@ -2202,38 +2226,51 @@ begin
       'movimiento.`CODIGO_EMP_MOV`, movimiento.`CODIGO_ALM_MOV`, ' +
       'mapa.`DESTINO`';
     oConsulta.Open;
-    if not oConsulta.IsEmpty then
+    while not oConsulta.Eof do
     begin
-      if not ProcedimientoExiste('SP_RECALCULAR_PMP_SKU_ALMACEN') then
+      SetLength(aDestinos, Length(aDestinos) + 1);
+      aDestinos[High(aDestinos)].Empresa :=
+        oConsulta.FieldByName('CODIGO_EMP_MOV').AsString;
+      aDestinos[High(aDestinos)].Almacen :=
+        oConsulta.FieldByName('CODIGO_ALM_MOV').AsString;
+      aDestinos[High(aDestinos)].Sku :=
+        oConsulta.FieldByName('DESTINO').AsString;
+      oConsulta.Next;
+    end;
+    oConsulta.Close;
+    if Length(aDestinos) > 0 then
+    begin
+      if not ProcedimientoPmpFusionDisponible then
       begin
         raise Exception.Create(
-          'No está instalado SP_RECALCULAR_PMP_SKU_ALMACEN.');
+          'No está instalado PRC_FZA_FUSION_RECALCULAR_PMP con la ' +
+          'firma requerida.');
       end;
       oProcedimiento.Connection := FConexion;
-      oProcedimiento.StoredProcName := 'SP_RECALCULAR_PMP_SKU_ALMACEN';
+      oProcedimiento.StoredProcName :=
+        'PRC_FZA_FUSION_RECALCULAR_PMP';
       oProcedimiento.Params.Clear;
       oProcedimiento.Params.CreateParam(
         ftString,
-        'p_CodigoEmpresa',
+        'p_EMPRESA',
         ptInput);
       oProcedimiento.Params.CreateParam(
         ftString,
-        'p_CodigoSKU',
+        'p_ALMACEN',
         ptInput);
       oProcedimiento.Params.CreateParam(
         ftString,
-        'p_CodigoAlmacen',
+        'p_SKU',
         ptInput);
-      while not oConsulta.Eof do
+      for i := Low(aDestinos) to High(aDestinos) do
       begin
-        oProcedimiento.ParamByName('p_CodigoEmpresa').AsString :=
-          oConsulta.FieldByName('CODIGO_EMP_MOV').AsString;
-        oProcedimiento.ParamByName('p_CodigoSKU').AsString :=
-          oConsulta.FieldByName('DESTINO').AsString;
-        oProcedimiento.ParamByName('p_CodigoAlmacen').AsString :=
-          oConsulta.FieldByName('CODIGO_ALM_MOV').AsString;
+        oProcedimiento.ParamByName('p_EMPRESA').AsString :=
+          aDestinos[i].Empresa;
+        oProcedimiento.ParamByName('p_ALMACEN').AsString :=
+          aDestinos[i].Almacen;
+        oProcedimiento.ParamByName('p_SKU').AsString :=
+          aDestinos[i].Sku;
         oProcedimiento.ExecProc;
-        oConsulta.Next;
       end;
     end;
   finally

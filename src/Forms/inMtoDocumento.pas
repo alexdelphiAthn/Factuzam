@@ -53,6 +53,8 @@ uses
   System.SysUtils, inLibColumnasDocumento, inLibDocumento,
   inLibFiltroUsuario, inLibMsgCompras, inLibMsgComun;
 
+{$R *.dfm}
+
 destructor TfrmMtoDocumento.Destroy;
 begin
   FEstrategiaDocumento := nil;

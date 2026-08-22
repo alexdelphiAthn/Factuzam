@@ -444,7 +444,7 @@ type
     btnVerifactuAnular: TcxButton;
     btnVerifactuFacturar: TcxButton;
     btnVolverBorrador: TcxButton;
-    btnVerifactuResolverIncidencia: TcxResolverIncidenciaVerifactuButton;
+    btnVerifactuResolverIncidencia: TcxButton;
     procedure sbGrabarClick(Sender: TObject);
     procedure btnUpdateClienteClick(Sender: TObject);
     procedure sbNuevaFacturaClick(Sender: TObject);
@@ -503,6 +503,7 @@ type
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
     procedure btnExportarLineasClick(Sender: TObject);
     procedure btnVerifactuAnularClick(Sender: TObject);
+    procedure btnVerifactuResolverIncidenciaClick(Sender: TObject);
     procedure btnVerifactuFacturarClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
     procedure actArticuloExecute(Sender: TObject);
@@ -629,8 +630,6 @@ begin
   Result.Vista := AFormulario.FDependencias.Vista;
   Result.Usuario := AFormulario.IdentidadSesion.Usuario;
 end;
-
-
 
 function CrearContextoCobrosFacturaVcl(
   AFormulario: TfrmMtoFacturasBase): TContextoCobrosFacturaVcl;
@@ -1821,9 +1820,6 @@ begin
   dmmFacturas.ConfigurarServicios(
     FDependenciasInyeccion.ServiciosDataModule);
   dmmFacturas.TipoFacturaDefecto := TipoFacturaFiltro;
-  btnVerifactuResolverIncidencia.Configurar(
-    FDependenciasInyeccion.IncidenciaFiscal,
-    dsTablaG);
   ComponerPresentadoresFacturaVcl(Self);
   EnlazarAvisosFacturaVcl(Self);
   ConfigurarTablaPrincipalDocumento(
@@ -1910,6 +1906,15 @@ begin
         Self,
         'ANULACION',
         'Anulación'));
+end;
+procedure TfrmMtoFacturasBase.btnVerifactuResolverIncidenciaClick(
+  Sender: TObject);
+begin
+  ResolverIncidenciaVerifactuVcl(
+    Self,
+    btnVerifactuResolverIncidencia,
+    dsTablaG.DataSet,
+    FDependenciasInyeccion.IncidenciaFiscal);
 end;
 procedure TfrmMtoFacturasBase.btnVerifactuFacturarClick(Sender: TObject);
 begin

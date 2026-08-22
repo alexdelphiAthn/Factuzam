@@ -335,13 +335,16 @@
         <DCCReference Include="src\Forms\inMtoGen.pas">
             <Form>frmMtoGen</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoDocumento.pas">
+            <Form>frmMtoDocumento</Form>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoBusquedaDatos.pas">
             <Form>frmMtoBusquedaDatos</Form>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoFacturasIncidenciaFiscalVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasBase.pas">
             <Form>frmMtoFacturasBase</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoFacturasIncidenciaFiscalVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasConsolidacionVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasVistaVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasCobrosVcl.pas"/>
@@ -1257,7 +1260,6 @@
         <DCCReference Include="src\Forms\inMtoAlbaranes.pas">
             <Form>frmMtoAlbaranes</Form>
         </DCCReference>
-        <DCCReference Include="src\Forms\inMtoDocumento.pas"/>
         <DCCReference Include="src\DataModules\UniDataAlbaranes.pas">
             <Form>dmAlbaranes</Form>
             <DesignClass>TdmAlbaranes</DesignClass>

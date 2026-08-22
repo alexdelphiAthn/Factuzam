@@ -54,7 +54,8 @@ type
       ACodigoDestino, AUsuario: string);
     { Se admite un solo ámbito por tabla. El criterio debe incluir las filas
       origen y destino, y seguir siendo válido hasta CompletarOperacion. Los
-      ámbitos se añaden en orden maestro-hijo para invertirlos con seguridad. }
+      ámbitos se añaden en orden maestro-hijo para invertirlos con seguridad.
+      La condición debe ser literal y no depender de parámetros ni temporales. }
     procedure CapturarAntes(
       const ATabla, ACondicion: string;
       const ANombres, AValores: array of string);
@@ -398,19 +399,6 @@ begin
   end;
 end;
 
-procedure THistoricoCambioArticuloColorImpl.AsignarParametros(
-  AConsulta: TUniQuery;
-  const ANombres, AValores: array of string);
-var
-  i: Integer;
-begin
-  if Length(ANombres) <> Length(AValores) then
-    raise EArgumentException.Create(
-      'Los nombres y valores de parámetros no coinciden.');
-  for i := Low(ANombres) to High(ANombres) do
-    AConsulta.ParamByName(ANombres[i]).AsString := AValores[i];
-end;
-
 procedure THistoricoCambioArticuloColorImpl.ValidarIdentificador(
   const AIdentificador: string);
 var
@@ -457,6 +445,274 @@ begin
       [ATipoObjeto]);
 end;
 
+function THistoricoCambioArticuloColorImpl.
+  CondicionAmbitoEsPersistible(const ACondicion: string): Boolean;
+var
+  cCaracter: Char;
+  EnIdentificador: Boolean;
+  EnTexto: Boolean;
+  i: Integer;
+  sSinLiterales: string;
+  sToken: string;
+  sTokenMayusculas: string;
+
+  function TokenNoPermitido(const AToken: string): Boolean;
+  begin
+    sTokenMayusculas := UpperCase(AToken);
+    Result := (sTokenMayusculas = 'TEMP') or
+      (sTokenMayusculas = 'TMP') or
+      (sTokenMayusculas = 'TEMPORARY') or
+      (Copy(sTokenMayusculas, 1, 4) = 'TMP_') or
+      (Copy(sTokenMayusculas, 1, 5) = 'TEMP_') or
+      (sTokenMayusculas = 'DROP') or
+      (sTokenMayusculas = 'ALTER') or
+      (sTokenMayusculas = 'CREATE') or
+      (sTokenMayusculas = 'INSERT') or
+      (sTokenMayusculas = 'UPDATE') or
+      (sTokenMayusculas = 'DELETE') or
+      (sTokenMayusculas = 'REPLACE') or
+      (sTokenMayusculas = 'TRUNCATE') or
+      (sTokenMayusculas = 'CALL') or
+      (sTokenMayusculas = 'LOAD') or
+      (sTokenMayusculas = 'OUTFILE') or
+      (sTokenMayusculas = 'INFILE') or
+      (sTokenMayusculas = 'INTO');
+  end;
+
+begin
+  EnIdentificador := False;
+  EnTexto := False;
+  i := 1;
+  sSinLiterales := '';
+  while i <= Length(ACondicion) do
+  begin
+    cCaracter := ACondicion[i];
+    if EnTexto then
+    begin
+      sSinLiterales := sSinLiterales + ' ';
+      if cCaracter = '''' then
+      begin
+        if (i < Length(ACondicion)) and
+           (ACondicion[i + 1] = '''') then
+        begin
+          sSinLiterales := sSinLiterales + ' ';
+          Inc(i);
+        end
+        else
+          EnTexto := False;
+      end
+      else if (cCaracter = '\') and
+              (i < Length(ACondicion)) then
+      begin
+        sSinLiterales := sSinLiterales + ' ';
+        Inc(i);
+      end;
+    end
+    else if EnIdentificador then
+    begin
+      if cCaracter = '`' then
+      begin
+        EnIdentificador := False;
+        sSinLiterales := sSinLiterales + ' ';
+      end
+      else
+        sSinLiterales := sSinLiterales + cCaracter;
+    end
+    else if cCaracter = '''' then
+    begin
+      EnTexto := True;
+      sSinLiterales := sSinLiterales + ' ';
+    end
+    else if cCaracter = '`' then
+    begin
+      EnIdentificador := True;
+      sSinLiterales := sSinLiterales + ' ';
+    end
+    else
+      sSinLiterales := sSinLiterales + cCaracter;
+    Inc(i);
+  end;
+  Result := not EnTexto and not EnIdentificador;
+  Result := Result and (Pos(':', sSinLiterales) = 0);
+  Result := Result and (Pos('?', sSinLiterales) = 0);
+  Result := Result and (Pos('@', sSinLiterales) = 0);
+  Result := Result and (Pos('#', sSinLiterales) = 0);
+  Result := Result and (Pos(';', sSinLiterales) = 0);
+  Result := Result and (Pos('"', sSinLiterales) = 0);
+  Result := Result and (Pos('--', sSinLiterales) = 0);
+  Result := Result and (Pos('/*', sSinLiterales) = 0);
+  Result := Result and (Pos('*/', sSinLiterales) = 0);
+  sToken := '';
+  i := 1;
+  while Result and (i <= Length(sSinLiterales) + 1) do
+  begin
+    if (i <= Length(sSinLiterales)) and
+       CharInSet(
+         sSinLiterales[i],
+         ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
+      sToken := sToken + sSinLiterales[i]
+    else
+    begin
+      if sToken <> '' then
+        Result := not TokenNoPermitido(sToken);
+      sToken := '';
+    end;
+    Inc(i);
+  end;
+end;
+
+function THistoricoCambioArticuloColorImpl.CrearClaveAmbito(
+  const ACondicion: string): string;
+var
+  oJson: TJSONObject;
+begin
+  oJson := TJSONObject.Create;
+  try
+    oJson.AddPair(
+      'CONDICION',
+      TJSONString.Create(Trim(ACondicion)));
+    Result := oJson.ToJSON;
+  finally
+    oJson.Free;
+  end;
+end;
+
+function THistoricoCambioArticuloColorImpl.ExtraerCondicionAmbito(
+  const AClave: string): string;
+var
+  EsValida: Boolean;
+  oJson: TJSONObject;
+  oRaiz: TJSONValue;
+  oValor: TJSONValue;
+begin
+  Result := '';
+  EsValida := False;
+  oRaiz := TJSONObject.ParseJSONValue(AClave);
+  try
+    if oRaiz is TJSONObject then
+    begin
+      oJson := TJSONObject(oRaiz);
+      oValor := oJson.GetValue('CONDICION');
+      EsValida := (oJson.Count = 1) and
+        (oValor is TJSONString);
+      if EsValida then
+      begin
+        Result := oValor.Value;
+        EsValida := CondicionAmbitoEsPersistible(Result) and
+          (CrearClaveAmbito(Result) = AClave);
+      end;
+    end;
+  finally
+    oRaiz.Free;
+  end;
+  if not EsValida then
+    raise EHistoricoCambioArticuloColor.Create(
+      crhNoReversible,
+      'El histórico contiene un ámbito no persistible o alterado.');
+end;
+
+function THistoricoCambioArticuloColorImpl.CrearResumenAmbito(
+  AFilas: TObjectList<TFilaHistorico>): string;
+var
+  oBase: TStringBuilder;
+  oFila: TFilaHistorico;
+  oJson: TJSONObject;
+  sHuella: string;
+begin
+  oBase := TStringBuilder.Create;
+  oJson := TJSONObject.Create;
+  try
+    for oFila in AFilas do
+    begin
+      oBase.Append(oFila.HashClave);
+      oBase.Append(':');
+      oBase.Append(oFila.HashDatos);
+      oBase.Append(';');
+    end;
+    sHuella := CalcularHash(oBase.ToString);
+    oJson.AddPair(
+      'CANTIDAD',
+      TJSONNumber.Create(AFilas.Count));
+    oJson.AddPair(
+      'HUELLA',
+      TJSONString.Create(sHuella));
+    Result := oJson.ToJSON;
+  finally
+    oJson.Free;
+    oBase.Free;
+  end;
+end;
+
+function THistoricoCambioArticuloColorImpl.ResumenAmbitoEsValido(
+  const ADatos: string): Boolean;
+var
+  cCaracter: Char;
+  EsHuellaValida: Boolean;
+  i: Integer;
+  iCantidad: Integer;
+  oCanonico: TJSONObject;
+  oCantidad: TJSONValue;
+  oHuella: TJSONValue;
+  oJson: TJSONObject;
+  oRaiz: TJSONValue;
+begin
+  Result := False;
+  oRaiz := TJSONObject.ParseJSONValue(ADatos);
+  try
+    if oRaiz is TJSONObject then
+    begin
+      oJson := TJSONObject(oRaiz);
+      oCantidad := oJson.GetValue('CANTIDAD');
+      oHuella := oJson.GetValue('HUELLA');
+      Result := (oJson.Count = 2) and
+        (oCantidad is TJSONNumber) and
+        (oHuella is TJSONString) and
+        TryStrToInt(oCantidad.Value, iCantidad) and
+        (iCantidad >= 0);
+      if Result then
+      begin
+        EsHuellaValida := Length(oHuella.Value) = 64;
+        i := 1;
+        while EsHuellaValida and (i <= Length(oHuella.Value)) do
+        begin
+          cCaracter := oHuella.Value[i];
+          EsHuellaValida := CharInSet(cCaracter, ['0'..'9', 'a'..'f']);
+          Inc(i);
+        end;
+        Result := EsHuellaValida;
+      end;
+      if Result then
+      begin
+        oCanonico := TJSONObject.Create;
+        try
+          oCanonico.AddPair(
+            'CANTIDAD',
+            TJSONNumber.Create(iCantidad));
+          oCanonico.AddPair(
+            'HUELLA',
+            TJSONString.Create(oHuella.Value));
+          Result := oCanonico.ToJSON = ADatos;
+        finally
+          oCanonico.Free;
+        end;
+      end;
+    end;
+  finally
+    oRaiz.Free;
+  end;
+end;
+
+function THistoricoCambioArticuloColorImpl.CrearEstadoAmbito(
+  const ACondicion: string;
+  AFilas: TObjectList<TFilaHistorico>): TFilaHistorico;
+begin
+  Result := TFilaHistorico.Create;
+  Result.Clave := CrearClaveAmbito(ACondicion);
+  Result.HashClave := CalcularHash(Result.Clave);
+  Result.Datos := CrearResumenAmbito(AFilas);
+  Result.HashDatos := CalcularHash(Result.Datos);
+end;
+
 function THistoricoCambioArticuloColorImpl.GenerarUuid: string;
 var
   oGuid: TGUID;
@@ -473,16 +729,6 @@ function THistoricoCambioArticuloColorImpl.CalcularHash(
   const ATexto: string): string;
 begin
   Result := LowerCase(THashSHA2.GetHashString(ATexto));
-end;
-
-function THistoricoCambioArticuloColorImpl.CopiarValores(
-  const AValores: array of string): TArray<string>;
-var
-  i: Integer;
-begin
-  SetLength(Result, Length(AValores));
-  for i := Low(AValores) to High(AValores) do
-    Result[i] := AValores[i];
 end;
 
 function THistoricoCambioArticuloColorImpl.BuscarAmbito(
@@ -700,7 +946,8 @@ begin
 end;
 
 procedure THistoricoCambioArticuloColorImpl.CapturarFilas(
-  AAmbito: TAmbitoHistorico;
+  const ATabla, ACondicion: string;
+  AMetadatos: TMetadatosHistorico;
   ADestino: TObjectList<TFilaHistorico>;
   ABloquear: Boolean);
 var
@@ -711,26 +958,22 @@ begin
   oConsulta := NuevaConsulta;
   try
     oConsulta.SQL.Text := ConstruirSeleccion(
-      AAmbito.Tabla,
-      AAmbito.Condicion,
-      AAmbito.Metadatos,
+      ATabla,
+      ACondicion,
+      AMetadatos,
       ABloquear);
-    AsignarParametros(
-      oConsulta,
-      AAmbito.Nombres,
-      AAmbito.Valores);
     oConsulta.Open;
     while not oConsulta.Eof do
     begin
       oFila := TFilaHistorico.Create;
       oFila.Clave := CrearJsonFila(
         oConsulta,
-        AAmbito.Metadatos,
+        AMetadatos,
         True);
       oFila.HashClave := CalcularHash(oFila.Clave);
       oFila.Datos := CrearJsonFila(
         oConsulta,
-        AAmbito.Metadatos,
+        AMetadatos,
         False);
       oFila.HashDatos := CalcularHash(oFila.Datos);
       ADestino.Add(oFila);
@@ -1028,6 +1271,49 @@ begin
   end;
 end;
 
+procedure THistoricoCambioArticuloColorImpl.RegistrarAmbito(
+  AAmbito: TAmbitoHistorico;
+  ADespues: TObjectList<TFilaHistorico>);
+var
+  oAntes: TFilaHistorico;
+  oDespues: TFilaHistorico;
+  oDetalle: TDetalleHistorico;
+begin
+  oAntes := CrearEstadoAmbito(
+    AAmbito.Condicion,
+    AAmbito.Antes);
+  try
+    oDespues := CrearEstadoAmbito(
+      AAmbito.Condicion,
+      ADespues);
+    try
+      oDetalle := CrearDetalle(
+        REGISTRO_AMBITO,
+        ACCION_COMPROBAR,
+        oAntes,
+        oDespues,
+        AAmbito.Metadatos.Firma);
+      try
+        Inc(FOrden);
+        oDetalle.Orden := FOrden;
+        oDetalle.Tabla := AAmbito.Tabla;
+        InsertarDetalle(
+          FIdOperacion,
+          FTipoOperacion,
+          FTipoObjeto,
+          FUsuario,
+          oDetalle);
+      finally
+        oDetalle.Free;
+      end;
+    finally
+      oDespues.Free;
+    end;
+  finally
+    oAntes.Free;
+  end;
+end;
+
 procedure THistoricoCambioArticuloColorImpl.IniciarOperacion(
   const ATipoOperacion, ATipoObjeto, ACodigoOrigen,
   ACodigoDestino, AUsuario: string);
@@ -1088,14 +1374,24 @@ begin
   if Length(ANombres) <> Length(AValores) then
     raise EArgumentException.Create(
       'Los nombres y valores de parámetros no coinciden.');
+  if (Length(ANombres) <> 0) or (Length(AValores) <> 0) then
+    raise EArgumentException.Create(
+      'El ámbito histórico debe usar literales y no parámetros.');
+  if not CondicionAmbitoEsPersistible(ACondicion) then
+    raise EArgumentException.Create(
+      'El ámbito histórico no admite parámetros, variables, ' +
+      'referencias temporales ni sentencias no persistibles.');
   oAmbito := TAmbitoHistorico.Create;
   try
     oAmbito.Tabla := ATabla;
-    oAmbito.Condicion := ACondicion;
-    oAmbito.Nombres := CopiarValores(ANombres);
-    oAmbito.Valores := CopiarValores(AValores);
+    oAmbito.Condicion := Trim(ACondicion);
     oAmbito.Metadatos := CargarMetadatos(ATabla);
-    CapturarFilas(oAmbito, oAmbito.Antes, True);
+    CapturarFilas(
+      oAmbito.Tabla,
+      oAmbito.Condicion,
+      oAmbito.Metadatos,
+      oAmbito.Antes,
+      True);
     FAmbitos.Add(oAmbito);
   except
     oAmbito.Free;
@@ -1131,11 +1427,19 @@ begin
       finally
         oMetadatos.Free;
       end;
-      CapturarFilas(oAmbito, oDespues, False);
+      CapturarFilas(
+        oAmbito.Tabla,
+        oAmbito.Condicion,
+        oAmbito.Metadatos,
+        oDespues,
+        False);
       RegistrarDiferencias(
         oAmbito,
         oDespues,
         iCantidadFilas);
+      RegistrarAmbito(
+        oAmbito,
+        oDespues);
     end;
     MarcarCabeceraAplicada(
       FIdOperacion,
@@ -1273,64 +1577,110 @@ procedure THistoricoCambioArticuloColorImpl.ValidarDetalles(
   AOperacion: TOperacionHistorico;
   ADetalles: TObjectList<TDetalleHistorico>);
 var
+  EsFormaValida: Boolean;
   iCantidadFilas: Integer;
   iOrdenEsperado: Integer;
   oDetalle: TDetalleHistorico;
-  EsFormaValida: Boolean;
+  sCondicionAntes: string;
+  sCondicionDespues: string;
+  stAmbitos: TStringList;
+  stTablas: TStringList;
 begin
   iCantidadFilas := 0;
   iOrdenEsperado := 1;
-  for oDetalle in ADetalles do
-  begin
-    EsFormaValida := oDetalle.Orden = iOrdenEsperado;
-    EsFormaValida := EsFormaValida and
-      SameText(oDetalle.TipoOperacion, AOperacion.TipoOperacion);
-    EsFormaValida := EsFormaValida and
-      SameText(oDetalle.TipoObjeto, AOperacion.TipoObjeto);
-    EsFormaValida := EsFormaValida and
-      (oDetalle.FirmaEsquema <> '');
-    if oDetalle.TipoRegistro = REGISTRO_FILA then
+  stAmbitos := TStringList.Create;
+  stTablas := TStringList.Create;
+  try
+    stAmbitos.CaseSensitive := False;
+    stAmbitos.Duplicates := dupIgnore;
+    stAmbitos.Sorted := True;
+    stTablas.CaseSensitive := False;
+    stTablas.Duplicates := dupIgnore;
+    stTablas.Sorted := True;
+    for oDetalle in ADetalles do
     begin
-      Inc(iCantidadFilas);
-      if oDetalle.Accion = ACCION_INSERTAR then
+      stTablas.Add(oDetalle.Tabla);
+      EsFormaValida := oDetalle.Orden = iOrdenEsperado;
+      EsFormaValida := EsFormaValida and
+        SameText(oDetalle.TipoOperacion, AOperacion.TipoOperacion);
+      EsFormaValida := EsFormaValida and
+        SameText(oDetalle.TipoObjeto, AOperacion.TipoObjeto);
+      EsFormaValida := EsFormaValida and
+        (oDetalle.FirmaEsquema <> '');
+      if oDetalle.TipoRegistro = REGISTRO_FILA then
+      begin
+        Inc(iCantidadFilas);
+        if oDetalle.Accion = ACCION_INSERTAR then
+          EsFormaValida := EsFormaValida and
+            not oDetalle.TieneDatosAntes and
+            oDetalle.TieneDatosDespues
+        else if oDetalle.Accion = ACCION_ACTUALIZAR then
+          EsFormaValida := EsFormaValida and
+            oDetalle.TieneDatosAntes and
+            oDetalle.TieneDatosDespues
+        else if oDetalle.Accion = ACCION_ELIMINAR then
+          EsFormaValida := EsFormaValida and
+            oDetalle.TieneDatosAntes and
+            not oDetalle.TieneDatosDespues
+        else
+          EsFormaValida := False;
+      end
+      else if oDetalle.TipoRegistro = REGISTRO_GUARDA then
         EsFormaValida := EsFormaValida and
-          not oDetalle.TieneDatosAntes and
-          oDetalle.TieneDatosDespues
-      else if oDetalle.Accion = ACCION_ACTUALIZAR then
-        EsFormaValida := EsFormaValida and
+          (oDetalle.Accion = ACCION_COMPROBAR) and
           oDetalle.TieneDatosAntes and
           oDetalle.TieneDatosDespues
-      else if oDetalle.Accion = ACCION_ELIMINAR then
+      else if oDetalle.TipoRegistro = REGISTRO_AMBITO then
+      begin
         EsFormaValida := EsFormaValida and
+          (oDetalle.Accion = ACCION_COMPROBAR) and
+          oDetalle.TieneClaveAntes and
+          oDetalle.TieneClaveDespues and
           oDetalle.TieneDatosAntes and
-          not oDetalle.TieneDatosDespues
+          oDetalle.TieneDatosDespues;
+        if EsFormaValida then
+        begin
+          sCondicionAntes := ExtraerCondicionAmbito(
+            oDetalle.ClaveAntes);
+          sCondicionDespues := ExtraerCondicionAmbito(
+            oDetalle.ClaveDespues);
+          EsFormaValida := sCondicionAntes = sCondicionDespues;
+          EsFormaValida := EsFormaValida and
+            ResumenAmbitoEsValido(oDetalle.DatosAntes) and
+            ResumenAmbitoEsValido(oDetalle.DatosDespues) and
+            (stAmbitos.IndexOf(oDetalle.Tabla) < 0);
+          if EsFormaValida then
+            stAmbitos.Add(oDetalle.Tabla);
+        end;
+      end
       else
         EsFormaValida := False;
-    end
-    else if oDetalle.TipoRegistro = REGISTRO_GUARDA then
       EsFormaValida := EsFormaValida and
-        (oDetalle.Accion = ACCION_COMPROBAR) and
-        oDetalle.TieneDatosAntes and
-        oDetalle.TieneDatosDespues
-    else
-      EsFormaValida := False;
-    EsFormaValida := EsFormaValida and
-      (oDetalle.TieneClaveAntes = oDetalle.TieneDatosAntes) and
-      (oDetalle.TieneClaveDespues = oDetalle.TieneDatosDespues);
-    if oDetalle.TieneClaveAntes then
-      EsFormaValida := EsFormaValida and
-        (CalcularHash(oDetalle.ClaveAntes) = oDetalle.HashClaveAntes) and
-        (CalcularHash(oDetalle.DatosAntes) = oDetalle.HashAntes);
-    if oDetalle.TieneClaveDespues then
-      EsFormaValida := EsFormaValida and
-        (CalcularHash(oDetalle.ClaveDespues) =
-         oDetalle.HashClaveDespues) and
-        (CalcularHash(oDetalle.DatosDespues) = oDetalle.HashDespues);
-    if not EsFormaValida then
+        (oDetalle.TieneClaveAntes = oDetalle.TieneDatosAntes) and
+        (oDetalle.TieneClaveDespues = oDetalle.TieneDatosDespues);
+      if oDetalle.TieneClaveAntes then
+        EsFormaValida := EsFormaValida and
+          (CalcularHash(oDetalle.ClaveAntes) =
+           oDetalle.HashClaveAntes) and
+          (CalcularHash(oDetalle.DatosAntes) = oDetalle.HashAntes);
+      if oDetalle.TieneClaveDespues then
+        EsFormaValida := EsFormaValida and
+          (CalcularHash(oDetalle.ClaveDespues) =
+           oDetalle.HashClaveDespues) and
+          (CalcularHash(oDetalle.DatosDespues) = oDetalle.HashDespues);
+      if not EsFormaValida then
+        raise EHistoricoCambioArticuloColor.Create(
+          crhNoReversible,
+          'El detalle del histórico está incompleto o alterado.');
+      Inc(iOrdenEsperado);
+    end;
+    if stAmbitos.Count <> stTablas.Count then
       raise EHistoricoCambioArticuloColor.Create(
         crhNoReversible,
-        'El detalle del histórico está incompleto o alterado.');
-    Inc(iOrdenEsperado);
+        'El histórico no conserva todos sus ámbitos de filas.');
+  finally
+    stTablas.Free;
+    stAmbitos.Free;
   end;
   if iCantidadFilas <> AOperacion.CantidadFilas then
     raise EHistoricoCambioArticuloColor.Create(
@@ -1386,7 +1736,8 @@ begin
       'SELECT posterior.`ID_ACH` FROM `' + TABLA_HISTORICO +
       '` origen JOIN `' + TABLA_HISTORICO + '` posterior ON ' +
       'posterior.`TIPO_REGISTRO_ACH` IN (''' + REGISTRO_FILA +
-      ''', ''' + REGISTRO_GUARDA + ''') AND ' +
+      ''', ''' + REGISTRO_GUARDA + ''', ''' + REGISTRO_AMBITO +
+      ''') AND ' +
       'posterior.`TABLA_ACH` = origen.`TABLA_ACH` AND ' +
       sCoincidencia + ' JOIN `' + TABLA_HISTORICO + '` cabecera ON ' +
       'cabecera.`ID_OPERACION_ACH` = ' +
@@ -1584,6 +1935,53 @@ begin
   end;
 end;
 
+procedure THistoricoCambioArticuloColorImpl.ComprobarEstadoAmbito(
+  ADetalle: TDetalleHistorico;
+  AMetadatos: TMetadatosHistorico;
+  AComprobarDespues: Boolean);
+var
+  oFilas: TObjectList<TFilaHistorico>;
+  sClave: string;
+  sCondicion: string;
+  sDatosActuales: string;
+  sDatosEsperados: string;
+  sHashActual: string;
+  sHashEsperado: string;
+begin
+  if AComprobarDespues then
+  begin
+    sClave := ADetalle.ClaveDespues;
+    sDatosEsperados := ADetalle.DatosDespues;
+    sHashEsperado := ADetalle.HashDespues;
+  end
+  else
+  begin
+    sClave := ADetalle.ClaveAntes;
+    sDatosEsperados := ADetalle.DatosAntes;
+    sHashEsperado := ADetalle.HashAntes;
+  end;
+  sCondicion := ExtraerCondicionAmbito(sClave);
+  oFilas := TObjectList<TFilaHistorico>.Create(True);
+  try
+    CapturarFilas(
+      ADetalle.Tabla,
+      sCondicion,
+      AMetadatos,
+      oFilas,
+      True);
+    sDatosActuales := CrearResumenAmbito(oFilas);
+    sHashActual := CalcularHash(sDatosActuales);
+    if (sHashActual <> sHashEsperado) or
+       (sDatosActuales <> sDatosEsperados) then
+      raise EHistoricoCambioArticuloColor.Create(
+        crhDatosDivergentes,
+        'El ámbito histórico contiene filas nuevas, retiradas o ' +
+        'modificadas en ' + ADetalle.Tabla + '.');
+  finally
+    oFilas.Free;
+  end;
+end;
+
 procedure THistoricoCambioArticuloColorImpl.ComprobarEstadoActual(
   ADetalles: TObjectList<TDetalleHistorico>;
   AMetadatos: TObjectDictionary<string, TMetadatosHistorico>;
@@ -1602,44 +2000,52 @@ begin
   for oDetalle in ADetalles do
   begin
     oMetadatos := AMetadatos.Items[oDetalle.Tabla];
-    if AComprobarDespues then
-    begin
-      EsEsperada := oDetalle.TieneDatosDespues;
-      if oDetalle.TieneClaveDespues then
-        sClave := oDetalle.ClaveDespues
-      else
-        sClave := oDetalle.ClaveAntes;
-      sDatosEsperados := oDetalle.DatosDespues;
-      sHashEsperado := oDetalle.HashDespues;
-    end
+    if oDetalle.TipoRegistro = REGISTRO_AMBITO then
+      ComprobarEstadoAmbito(
+        oDetalle,
+        oMetadatos,
+        AComprobarDespues)
     else
     begin
-      EsEsperada := oDetalle.TieneDatosAntes;
-      if oDetalle.TieneClaveAntes then
-        sClave := oDetalle.ClaveAntes
+      if AComprobarDespues then
+      begin
+        EsEsperada := oDetalle.TieneDatosDespues;
+        if oDetalle.TieneClaveDespues then
+          sClave := oDetalle.ClaveDespues
+        else
+          sClave := oDetalle.ClaveAntes;
+        sDatosEsperados := oDetalle.DatosDespues;
+        sHashEsperado := oDetalle.HashDespues;
+      end
       else
-        sClave := oDetalle.ClaveDespues;
-      sDatosEsperados := oDetalle.DatosAntes;
-      sHashEsperado := oDetalle.HashAntes;
+      begin
+        EsEsperada := oDetalle.TieneDatosAntes;
+        if oDetalle.TieneClaveAntes then
+          sClave := oDetalle.ClaveAntes
+        else
+          sClave := oDetalle.ClaveDespues;
+        sDatosEsperados := oDetalle.DatosAntes;
+        sHashEsperado := oDetalle.HashAntes;
+      end;
+      EsPresente := ObtenerDatosActuales(
+        oDetalle.Tabla,
+        sClave,
+        oMetadatos,
+        sDatosActuales,
+        sHashActual);
+      if EsPresente <> EsEsperada then
+        raise EHistoricoCambioArticuloColor.Create(
+          crhDatosDivergentes,
+          'La fila histórica ya no tiene el estado esperado en ' +
+          oDetalle.Tabla + '.');
+      if EsEsperada and
+         ((sHashActual <> sHashEsperado) or
+          (sDatosActuales <> sDatosEsperados)) then
+        raise EHistoricoCambioArticuloColor.Create(
+          crhDatosDivergentes,
+          'La fila histórica fue modificada después en ' +
+          oDetalle.Tabla + '.');
     end;
-    EsPresente := ObtenerDatosActuales(
-      oDetalle.Tabla,
-      sClave,
-      oMetadatos,
-      sDatosActuales,
-      sHashActual);
-    if EsPresente <> EsEsperada then
-      raise EHistoricoCambioArticuloColor.Create(
-        crhDatosDivergentes,
-        'La fila histórica ya no tiene el estado esperado en ' +
-        oDetalle.Tabla + '.');
-    if EsEsperada and
-       ((sHashActual <> sHashEsperado) or
-        (sDatosActuales <> sDatosEsperados)) then
-      raise EHistoricoCambioArticuloColor.Create(
-        crhDatosDivergentes,
-        'La fila histórica fue modificada después en ' +
-        oDetalle.Tabla + '.');
   end;
 end;
 
@@ -1814,6 +2220,7 @@ var
   oDetalle: TDetalleHistorico;
   oMetadatos: TMetadatosHistorico;
 begin
+  { Las guardas y ámbitos se comprueban, pero nunca generan DML. }
   for i := ADetalles.Count - 1 downto 0 do
   begin
     oDetalle := ADetalles[i];

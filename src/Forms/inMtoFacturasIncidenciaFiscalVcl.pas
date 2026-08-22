@@ -18,64 +18,21 @@ uses
   Data.DB,
   cxButtons,
   inLibFacturasIncidenciaFiscalIntf;
-type
-  TcxResolverIncidenciaVerifactuButton = class(TcxButton)
-  private
-    FFuenteFacturas: TDataSource;
-    FServicio: IServicioIncidenciaFiscalFactura;
-  public
-    destructor Destroy; override;
-    procedure Configurar(
-      const AServicio: IServicioIncidenciaFiscalFactura;
-      AFuenteFacturas: TDataSource);
-    procedure Click; override;
-  end;
 procedure ActualizarBotonResolverIncidenciaVcl(
   ABoton: TcxButton;
   const ATipoFactura: string;
   AConsolidacion: TDataSet);
+procedure ResolverIncidenciaVerifactuVcl(
+  AOwner: TComponent;
+  ABoton: TcxButton;
+  AFacturas: TDataSet;
+  const AServicio: IServicioIncidenciaFiscalFactura);
 implementation
 uses
   System.SysUtils,
   Vcl.Dialogs,
   inLibFacturasIncidenciaFiscal,
   inMtoModalResolverIncidenciaVerifactu;
-procedure ResolverIncidenciaVerifactuVcl(
-  AOwner: TComponent;
-  ABoton: TcxButton;
-  AFacturas: TDataSet;
-  const AServicio: IServicioIncidenciaFiscalFactura); forward;
-destructor TcxResolverIncidenciaVerifactuButton.Destroy;
-begin
-  FServicio := nil;
-  FFuenteFacturas := nil;
-  inherited;
-end;
-procedure TcxResolverIncidenciaVerifactuButton.Configurar(
-  const AServicio: IServicioIncidenciaFiscalFactura;
-  AFuenteFacturas: TDataSource);
-begin
-  if not Assigned(AServicio) then
-    raise EArgumentNilException.Create('AServicio');
-  if not Assigned(AFuenteFacturas) then
-    raise EArgumentNilException.Create('AFuenteFacturas');
-  FServicio := AServicio;
-  FFuenteFacturas := AFuenteFacturas;
-end;
-procedure TcxResolverIncidenciaVerifactuButton.Click;
-begin
-  if not Assigned(FServicio) then
-    raise EInvalidOpException.Create(
-      'No se configuró el servicio de incidencia fiscal.');
-  if not Assigned(FFuenteFacturas) then
-    raise EInvalidOpException.Create(
-      'No se configuró el origen de facturas.');
-  ResolverIncidenciaVerifactuVcl(
-    Owner,
-    Self,
-    FFuenteFacturas.DataSet,
-    FServicio);
-end;
 procedure ActualizarBotonResolverIncidenciaVcl(
   ABoton: TcxButton;
   const ATipoFactura: string;

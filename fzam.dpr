@@ -221,11 +221,12 @@ uses
   inMtoPrincipalPresentacionInicio in
     'src\Core\inMtoPrincipalPresentacionInicio.pas',
   inMtoGen in 'src\Forms\inMtoGen.pas' {frmMtoGen},
+  inMtoDocumento in 'src\Forms\inMtoDocumento.pas' {frmMtoDocumento},
   inMtoBusquedaDatos in
     'src\Forms\inMtoBusquedaDatos.pas' {frmMtoBusquedaDatos},
-  inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
   inMtoFacturasIncidenciaFiscalVcl in
     'src\Forms\inMtoFacturasIncidenciaFiscalVcl.pas',
+  inMtoFacturasBase in 'src\Forms\inMtoFacturasBase.pas' {frmMtoFacturasBase},
   inMtoFacturasConsolidacionVcl in
     'src\Forms\inMtoFacturasConsolidacionVcl.pas',
   inMtoFacturasVistaVcl in 'src\Forms\inMtoFacturasVistaVcl.pas',
@@ -1022,7 +1023,6 @@ uses
   inMtoDepositosCliente in 'src\Forms\inMtoDepositosCliente.pas' {frmMtoDepositosCliente},
   UniDataDepositosCliente in 'src\DataModules\UniDataDepositosCliente.pas' {dmDepositosCliente: TDataModule},
   inMtoAlbaranes in 'src\Forms\inMtoAlbaranes.pas' {frmMtoAlbaranes},
-  inMtoDocumento in 'src\Forms\inMtoDocumento.pas',
   UniDataAlbaranes in 'src\DataModules\UniDataAlbaranes.pas' {dmAlbaranes: TdmAlbaranes},
   inLibAlbaranesVentaPresentacionArticulo in
     'src\Lib\inLibAlbaranesVentaPresentacionArticulo.pas',
