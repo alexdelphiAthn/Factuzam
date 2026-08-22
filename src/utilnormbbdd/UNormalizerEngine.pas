@@ -218,6 +218,7 @@ begin
   AddSuf('fza_almacenes',                       'ALM');
   AddSuf('fza_almacenes_cajas',                 'ALMCAJ');
   AddSuf('fza_articulos',                       'ART');
+  AddSuf('fza_articulos_cambios_historico',     'ACH');
   AddSuf('fza_articulos_conjuntos_asign',       'ACA');
   AddSuf('fza_articulos_familias',              'FAM');
   AddSuf('fza_articulos_propiedades',           'ARTPROP');
@@ -376,6 +377,9 @@ begin
   AddOwn('fza_articulos_proveedores',          ['PROVEEDOR']);
   AddOwn('fza_articulos_skus_costes',          ['COSTE']);
   AddOwn('fza_articulos_vinculos',             ['VINCULO']);
+  AddOwn('fza_articulos_cambios_historico',
+         ['ARTICULO','ARTICULOS','CAMBIO','CAMBIOS','COLOR','COLORES',
+          'HISTORICO']);
   AddOwn('fza_facturas_lineas',                ['FACTURA','LINEA']);
   AddOwn('fza_inventarios_lineas',             ['INVENTARIO','LINEA']);
   AddOwn('fza_pedidos_lineas',                 ['PEDIDO','LINEA']);

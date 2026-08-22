@@ -553,6 +553,8 @@ var
 begin
   oAdvertencias := TStringList.Create;
   try
+    if Trim(AResultado.Advertencias) <> '' then
+      oAdvertencias.Add(Trim(AResultado.Advertencias));
     PrepararFotosPedidoOcr(
       AEntorno,
       ATrabajo,
@@ -606,6 +608,15 @@ begin
   Trabajo := Default(TTrabajoImportacionPedidoOcr);
   ValidarSesionImportacionPedidoOcr(FEntorno, Trabajo);
   PrepararTrabajoPedidoOcr(FEntorno, AFicheroJson, Trabajo);
+  if Trabajo.Pedido.RequiereRevision then
+  begin
+    Result.Advertencias :=
+      'El OCR ha completado algunas cantidades mediante inferencias ' +
+      'seguras. Revise estas líneas:';
+    if Trim(Trabajo.Pedido.InferenciasValidacion) <> '' then
+      Result.Advertencias := Result.Advertencias + sLineBreak +
+        Trim(Trabajo.Pedido.InferenciasValidacion);
+  end;
   PersistirPedidoOcr(FEntorno, Trabajo);
   Result.Lineas := Length(Trabajo.Lineas);
   Result.LineasSinCodigo := Trabajo.LineasSinCodigo;

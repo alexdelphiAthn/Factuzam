@@ -57,6 +57,9 @@ type
     function FusionarColor(
       const AColorAntiguo, AColorDestino, AUsuario: string):
       TResultadoCambioArticuloColor;
+    function RevertirOperacion(
+      const AIdOperacion, AUsuario: string):
+      TResultadoReversionHistorico;
   end;
 
 constructor TServicioCambioArticuloColor.Create(
@@ -203,6 +206,27 @@ begin
   else
   begin
     Result := TResultadoCambioArticuloColor.Error(mcacDatosInvalidos);
+  end;
+end;
+
+function TServicioCambioArticuloColor.RevertirOperacion(
+  const AIdOperacion, AUsuario: string): TResultadoReversionHistorico;
+var
+  sIdOperacion: string;
+  sUsuario: string;
+begin
+  sIdOperacion := Trim(AIdOperacion);
+  sUsuario := Copy(
+    Trim(AUsuario),
+    1,
+    LONGITUD_MAXIMA_USUARIO_AUDITORIA);
+  if (Length(sIdOperacion) = 36) and (sUsuario <> '') then
+    Result := FRepositorio.RevertirOperacion(sIdOperacion, sUsuario)
+  else
+  begin
+    Result := TResultadoReversionHistorico.Error(
+      crhNoEncontrada,
+      'Debe indicar una operación histórica válida.');
   end;
 end;
 

@@ -18,7 +18,8 @@ interface
 
 uses
   Uni,
-  inLibCambioArticuloColorIntf;
+  inLibCambioArticuloColorIntf,
+  UniDataCambioArticuloColorHistorico;
 
 function CrearRepositorioCambioArticuloColorUniDAC(
   AConexion: TUniConnection): IRepositorioCambioArticuloColor;
@@ -34,6 +35,22 @@ const
   TABLA_TEMPORAL = 'tmp_fza_cambio_unidades';
   REFERENCIA_SKU_MAESTRO =
     'fza_articulos_skus|CODIGO_UNIDAD_SKU';
+  REFERENCIA_ATRIBUTOS_SKU =
+    'fza_atributos_sku|CODIGO_UNIDAD_SKU_SA';
+  REFERENCIA_COSTES_SKU =
+    'fza_articulos_skus_costes|CODIGO_UNIDAD_SKU_SKUC';
+  REFERENCIA_STOCK =
+    'fza_articulos_stockactual|CODIGO_UNIDAD_STK';
+  REFERENCIA_TARIFAS =
+    'fza_articulos_tarifas|CODIGO_UNIDAD_ARTTAR';
+  REFERENCIA_BARRAS =
+    'fza_codigos_barras|CODIGO_UNIDAD_CB';
+  REFERENCIA_BLOQUEOS =
+    'fza_stock_bloqueos|CODIGO_UNIDAD_STKBLQ';
+  REFERENCIA_ARTICULO_SKU =
+    'fza_articulos_skus|CODIGO_ART_SKU';
+  REFERENCIA_ARTICULO_PROVEEDOR =
+    'fza_articulos_proveedores|CODIGO_ART_AP';
 
   REFERENCIAS_ARTICULO: array[0..29] of string = (
     'fza_articulos_atributos_basicos|CODIGO_ART_AAB',
@@ -138,6 +155,12 @@ type
     function CondicionInstantaneaColorSegura(
       const AAlias, ACampoValor, ACampoNombre, AParametro: string;
       APosicion: Integer): string;
+    function LiteralTextoHistorico(const AValor: string): string;
+    function ListaUnidadesHistorico: string;
+    procedure CapturarHistorico(
+      AHistorico: THistoricoCambioArticuloColor;
+      const AOrigen, ADestino: string;
+      AEsArticulo: Boolean);
     procedure PrepararTablaTemporal;
     procedure EliminarTablaTemporal;
     procedure IniciarTransaccion;
@@ -149,6 +172,9 @@ type
       const AColorAntiguo, AColorNuevo: string);
     function ExisteArticulo(const AArticulo: string): Boolean;
     function ExisteColor(const AColor: string): Boolean;
+    function NumeroColoresActivos(const AColor: string): Integer;
+    function ArticuloRegistrado(const AArticulo: string): Boolean;
+    function ColorRegistrado(const AColor: string): Boolean;
     function ArticulosCoincidenEnBaseDatos(
       const AAnterior, ANuevo: string): Boolean;
     function ColoresCoincidenEnBaseDatos(
@@ -173,6 +199,12 @@ type
       const AColorAntiguo: string): Boolean;
     function MapaTieneCodigosLargos: Boolean;
     function MapaTieneDestinosDuplicados: Boolean;
+    function FusionUnidadesEsSegura(
+      const AColorDestino, AArticuloDestino: string;
+      AEsFusionArticulo: Boolean): Boolean;
+    function HayColisionUnidadesNoConsolidable(
+      const AArticuloDestino: string;
+      AEsFusionArticulo: Boolean): Boolean;
     function HayVentasArticulo(
       const AArticuloAntiguo: string): Boolean;
     function HayVentasColor(const AColorAntiguo: string): Boolean;
@@ -200,16 +232,37 @@ type
     procedure ActualizarReferenciasArticulo(
       const AAnterior, ANuevo, AUsuario: string);
     procedure ActualizarReferenciasUnidad(const AUsuario: string);
-    procedure ActualizarSkuMaestro(const AUsuario: string);
-    procedure ActualizarArticuloMaestro(
+    procedure CrearArticuloDestino(
       const AAnterior, ANuevo, AUsuario: string);
-    procedure EliminarArticuloMaestro(
-      const AArticuloAntiguo: string);
+    procedure CrearSkuDestino(
+      const AArticuloDestino, AUsuario: string;
+      AEsCambioArticulo: Boolean);
+    procedure PrepararAtributosSkuDestino(
+      const AColorDestino, AUsuario: string;
+      AEsFusionColor: Boolean);
+    procedure ConsolidarStock;
+    procedure ConsolidarCostes(const AUsuario: string);
+    procedure ConsolidarTarifas(
+      const AArticuloOrigen, AArticuloDestino, AUsuario: string;
+      AEsCambioArticulo: Boolean);
+    procedure ConsolidarProveedoresArticulo(
+      const AArticuloOrigen, AArticuloDestino, AUsuario: string);
+    procedure ConsolidarCodigosBarras(const AUsuario: string);
+    procedure ConsolidarBloqueos(const AUsuario: string);
+    function ProcedimientoExiste(const ANombre: string): Boolean;
+    procedure RecalcularPmpDestinos;
+    procedure ConsolidarReferenciasUnidad(const AUsuario: string);
+    procedure DesactivarSkuOrigen(const AUsuario: string);
+    procedure EliminarAtributosSkuOrigen;
+    procedure DesactivarArticuloMaestro(
+      const AArticuloAntiguo, AUsuario: string);
     procedure ActualizarColorMaestro(
       const AAnterior, ANuevo, AUsuario: string;
       AFusionar: Boolean);
     procedure LimpiarBasicosColorFusion(
-      const AColorAntiguo, AUsuario: string);
+      const AColorAntiguo, AColorDestino, AUsuario: string);
+    procedure ConsolidarCatalogoColor(
+      const AColorAntiguo, AColorDestino, AUsuario: string);
     function FusionColorEsSegura(
       const AAnterior, ANuevo: string): Boolean;
     function FusionArticuloEsSegura(
@@ -260,6 +313,9 @@ type
     function FusionarColor(
       const AColorAntiguo, AColorDestino, AUsuario: string):
       TResultadoCambioArticuloColor;
+    function RevertirOperacion(
+      const AIdOperacion, AUsuario: string):
+      TResultadoReversionHistorico;
   end;
 
 constructor TRepositorioCambioArticuloColorUniDAC.Create(
@@ -439,6 +495,179 @@ begin
     'UPPER(TRIM(' + AAlias + '.`' + ACampoNombre + '`)))))';
 end;
 
+function TRepositorioCambioArticuloColorUniDAC.LiteralTextoHistorico(
+  const AValor: string): string;
+var
+  byValor: TBytes;
+  i: Integer;
+  sHexadecimal: string;
+begin
+  byValor := TEncoding.UTF8.GetBytes(AValor);
+  sHexadecimal := '';
+  for i := 0 to Length(byValor) - 1 do
+    sHexadecimal := sHexadecimal + IntToHex(byValor[i], 2);
+  Result := 'CONVERT(UNHEX(''' + sHexadecimal +
+    ''') USING utf8mb4)';
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.
+  ListaUnidadesHistorico: string;
+var
+  oConsulta: TUniQuery;
+  sSeparador: string;
+begin
+  Result := '';
+  sSeparador := '';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text :=
+      'SELECT DISTINCT `CODIGO` FROM (SELECT HEX(`ORIGEN`) `CODIGO` ' +
+      'FROM `' + TABLA_TEMPORAL + '` UNION SELECT HEX(`DESTINO`) ' +
+      '`CODIGO` FROM `' + TABLA_TEMPORAL + '`) unidades ' +
+      'ORDER BY `CODIGO`';
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      Result := Result + sSeparador + 'CONVERT(UNHEX(''' +
+        oConsulta.FieldByName('CODIGO').AsString +
+        ''') USING utf8mb4)';
+      sSeparador := ', ';
+      oConsulta.Next;
+    end;
+  finally
+    oConsulta.Free;
+  end;
+  if Result = '' then
+    Result := 'NULL';
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.CapturarHistorico(
+  AHistorico: THistoricoCambioArticuloColor;
+  const AOrigen, ADestino: string;
+  AEsArticulo: Boolean);
+var
+  i: Integer;
+  iPosicion: Integer;
+  sCampo: string;
+  sCondicion: string;
+  sDestinoSql: string;
+  sListaUnidades: string;
+  sOrigenSql: string;
+  sTabla: string;
+  stCondiciones: TStringList;
+
+  procedure AgregarCondicion(
+    const ATabla, ACondicion: string);
+  var
+    iIndice: Integer;
+  begin
+    iIndice := stCondiciones.IndexOfName(ATabla);
+    if iIndice < 0 then
+      stCondiciones.Add(ATabla + '=' + ACondicion)
+    else
+      stCondiciones.ValueFromIndex[iIndice] :=
+        '(' + stCondiciones.ValueFromIndex[iIndice] + ') OR (' +
+        ACondicion + ')';
+  end;
+
+  procedure AgregarReferenciaArticulo(const AReferencia: string);
+  begin
+    SepararReferencia(AReferencia, sTabla, sCampo);
+    if CampoExiste(sTabla, sCampo) then
+    begin
+      AgregarCondicion(
+        sTabla,
+        '`' + sCampo + '` IN (' + sOrigenSql + ', ' +
+        sDestinoSql + ')');
+    end;
+  end;
+
+  procedure AgregarReferenciaUnidad(const AReferencia: string);
+  begin
+    SepararReferencia(AReferencia, sTabla, sCampo);
+    if CampoExiste(sTabla, sCampo) then
+    begin
+      AgregarCondicion(
+        sTabla,
+        '`' + sCampo + '` IN (' + sListaUnidades + ')');
+    end;
+  end;
+
+begin
+  if not Assigned(AHistorico) then
+    raise EArgumentNilException.Create('AHistorico');
+  sOrigenSql := LiteralTextoHistorico(AOrigen);
+  sDestinoSql := LiteralTextoHistorico(ADestino);
+  sListaUnidades := ListaUnidadesHistorico;
+  stCondiciones := TStringList.Create;
+  try
+    stCondiciones.CaseSensitive := False;
+    stCondiciones.NameValueSeparator := '=';
+    if AEsArticulo then
+    begin
+      AgregarCondicion(
+        'fza_articulos',
+        '`CODIGO_ART_ART` IN (' + sOrigenSql + ', ' +
+        sDestinoSql + ')');
+      AgregarCondicion(
+        'fza_articulos_skus',
+        '`CODIGO_ART_SKU` IN (' + sOrigenSql + ', ' +
+        sDestinoSql + ')');
+    end
+    else
+    begin
+      AgregarCondicion(
+        'fza_atributos_valores',
+        '`ID_VA_AV` = ''CO'' AND (TRIM(`AV`) = TRIM(' +
+        sOrigenSql + ') OR TRIM(`AV`) = TRIM(' + sDestinoSql + '))');
+    end;
+    AgregarReferenciaUnidad(REFERENCIA_SKU_MAESTRO);
+    AgregarReferenciaUnidad(REFERENCIA_ATRIBUTOS_SKU);
+    if AEsArticulo then
+    begin
+      for i := Low(REFERENCIAS_ARTICULO) to
+        High(REFERENCIAS_ARTICULO) do
+      begin
+        AgregarReferenciaArticulo(REFERENCIAS_ARTICULO[i]);
+      end;
+    end;
+    for i := Low(REFERENCIAS_UNIDAD) to High(REFERENCIAS_UNIDAD) do
+      AgregarReferenciaUnidad(REFERENCIAS_UNIDAD[i]);
+    if not AEsArticulo then
+    begin
+      sCondicion :=
+        '`ID_AV_AAB` IN (SELECT `ID_AV` FROM ' +
+        '`fza_atributos_valores` WHERE `ID_VA_AV` = ''CO'' AND (' +
+        'TRIM(`AV`) = TRIM(' + sOrigenSql + ') OR ' +
+        'TRIM(`AV`) = TRIM(' + sDestinoSql + ')))';
+      AgregarCondicion(
+        'fza_articulos_atributos_basicos',
+        sCondicion);
+      sCondicion :=
+        '`ID_AV_ACD` IN (SELECT `ID_AV` FROM ' +
+        '`fza_atributos_valores` WHERE `ID_VA_AV` = ''CO'' AND (' +
+        'TRIM(`AV`) = TRIM(' + sOrigenSql + ') OR ' +
+        'TRIM(`AV`) = TRIM(' + sDestinoSql + ')))';
+      AgregarCondicion(
+        'fza_atributos_conjuntos_det',
+        sCondicion);
+    end;
+    for i := 0 to stCondiciones.Count - 1 do
+    begin
+      iPosicion := Pos('=', stCondiciones[i]);
+      sTabla := Copy(stCondiciones[i], 1, iPosicion - 1);
+      sCondicion := Copy(
+        stCondiciones[i],
+        iPosicion + 1,
+        MaxInt);
+      AHistorico.CapturarAntes(sTabla, sCondicion, [], []);
+    end;
+  finally
+    stCondiciones.Free;
+  end;
+end;
+
 procedure TRepositorioCambioArticuloColorUniDAC.PrepararTablaTemporal;
 begin
   EliminarTablaTemporal;
@@ -447,6 +676,7 @@ begin
     '`ORIGEN` varchar(255) NOT NULL, ' +
     '`DESTINO` varchar(255) NOT NULL, ' +
     '`ES_SKU` char(1) NOT NULL DEFAULT ''S'', ' +
+    '`DESTINO_EXISTIA` char(1) NOT NULL DEFAULT ''N'', ' +
     '`POSICION_COLOR` smallint NULL, ' +
     'PRIMARY KEY (`ORIGEN`), KEY `IDX_DESTINO` (`DESTINO`)' +
     ') ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ' +
@@ -507,7 +737,8 @@ function TRepositorioCambioArticuloColorUniDAC.ExisteArticulo(
 begin
   Result := Existe(
     'SELECT 1 FROM `fza_articulos` ' +
-    'WHERE `CODIGO_ART_ART` = :ARTICULO LIMIT 1',
+    'WHERE `CODIGO_ART_ART` = :ARTICULO ' +
+    'AND UPPER(TRIM(COALESCE(`ESACTIVO_ART`, ''N''))) = ''S'' LIMIT 1',
     ['ARTICULO'],
     [AArticulo]);
 end;
@@ -517,7 +748,39 @@ function TRepositorioCambioArticuloColorUniDAC.ExisteColor(
 begin
   Result := Existe(
     'SELECT 1 FROM `fza_atributos_valores` ' +
-    'WHERE `ID_VA_AV` = ''CO'' AND TRIM(`AV`) = TRIM(:COLOR) LIMIT 1',
+    'WHERE `ID_VA_AV` = ''CO'' AND TRIM(`AV`) = TRIM(:COLOR) ' +
+    'AND UPPER(TRIM(COALESCE(`ESACTIVO_AV`, ''N''))) = ''S'' LIMIT 1',
+    ['COLOR'],
+    [AColor]);
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.NumeroColoresActivos(
+  const AColor: string): Integer;
+begin
+  Result := EscalarEntero(
+    'SELECT COUNT(*) FROM `fza_atributos_valores` ' +
+    'WHERE `ID_VA_AV` = ''CO'' AND TRIM(`AV`) = TRIM(:COLOR) ' +
+    'AND UPPER(TRIM(COALESCE(`ESACTIVO_AV`, ''N''))) = ''S''',
+    ['COLOR'],
+    [AColor]);
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.ArticuloRegistrado(
+  const AArticulo: string): Boolean;
+begin
+  Result := Existe(
+    'SELECT 1 FROM `fza_articulos` WHERE ' +
+    '`CODIGO_ART_ART` = :ARTICULO LIMIT 1',
+    ['ARTICULO'],
+    [AArticulo]);
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.ColorRegistrado(
+  const AColor: string): Boolean;
+begin
+  Result := Existe(
+    'SELECT 1 FROM `fza_atributos_valores` WHERE ' +
+    '`ID_VA_AV` = ''CO'' AND TRIM(`AV`) = TRIM(:COLOR) LIMIT 1',
     ['COLOR'],
     [AColor]);
 end;
@@ -596,7 +859,8 @@ begin
     'color.`ID_VA_ACA` = ''CO'' ' +
     'JOIN `fza_variaciones_atributos` va_color ON ' +
     'va_color.`ID_VAR_VA` = sku.`CODIGO_VAR_SKU` AND ' +
-    'va_color.`ID_ATB_VA` = ''CO''';
+    'va_color.`ID_ATB_VA` = ''CO'' AND ' +
+    'UPPER(TRIM(COALESCE(sku.`ESACTIVO_SKU`, ''N''))) = ''S''';
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.ConstruirMapaArticulo(
@@ -860,6 +1124,170 @@ begin
     []);
 end;
 
+function TRepositorioCambioArticuloColorUniDAC.
+  FusionUnidadesEsSegura(
+    const AColorDestino, AArticuloDestino: string;
+    AEsFusionArticulo: Boolean): Boolean;
+var
+  sArticuloEsperado: string;
+  sCondicionAtributos: string;
+begin
+  if AEsFusionArticulo then
+    sArticuloEsperado := ':ARTICULO'
+  else
+    sArticuloEsperado := 'origen.`CODIGO_ART_SKU`';
+  Result := not Existe(
+    'SELECT 1 FROM `' + TABLA_TEMPORAL + '` mapa ' +
+    'JOIN `fza_articulos_skus` origen ON ' +
+    'origen.`CODIGO_UNIDAD_SKU` = mapa.`ORIGEN` ' +
+    'JOIN `fza_articulos_skus` destino ON ' +
+    'destino.`CODIGO_UNIDAD_SKU` = mapa.`DESTINO` ' +
+    'WHERE mapa.`ES_SKU` = ''S'' AND (' +
+    '(UPPER(TRIM(COALESCE(origen.`ESACTIVO_SKU`, ''N''))) = ''S'' ' +
+    'AND UPPER(TRIM(COALESCE(' +
+    'destino.`ESACTIVO_SKU`, ''N''))) <> ''S'') OR ' +
+    'destino.`CODIGO_ART_SKU` <> ' + sArticuloEsperado + ' OR NOT (' +
+    'destino.`CODIGO_VAR_SKU` <=> origen.`CODIGO_VAR_SKU`)) LIMIT 1',
+    ['ARTICULO'],
+    [AArticuloDestino]);
+  if Result then
+  begin
+    if AEsFusionArticulo then
+    begin
+      sCondicionAtributos :=
+        'EXISTS (SELECT 1 FROM `fza_atributos_sku` sa WHERE ' +
+        'sa.`CODIGO_UNIDAD_SKU_SA` = mapa.`ORIGEN` AND NOT EXISTS (' +
+        'SELECT 1 FROM `fza_atributos_sku` sd WHERE ' +
+        'sd.`CODIGO_UNIDAD_SKU_SA` = mapa.`DESTINO` AND ' +
+        'sd.`ID_AV_SA` = sa.`ID_AV_SA`)) OR EXISTS (SELECT 1 FROM ' +
+        '`fza_atributos_sku` sd WHERE sd.`CODIGO_UNIDAD_SKU_SA` = ' +
+        'mapa.`DESTINO` AND NOT EXISTS (SELECT 1 FROM ' +
+        '`fza_atributos_sku` sa WHERE sa.`CODIGO_UNIDAD_SKU_SA` = ' +
+        'mapa.`ORIGEN` AND sa.`ID_AV_SA` = sd.`ID_AV_SA`))';
+    end
+    else
+    begin
+      sCondicionAtributos :=
+        'EXISTS (SELECT 1 FROM `fza_atributos_sku` sa JOIN ' +
+        '`fza_atributos_valores` av ON av.`ID_AV` = sa.`ID_AV_SA` ' +
+        'WHERE sa.`CODIGO_UNIDAD_SKU_SA` = mapa.`ORIGEN` AND ' +
+        'av.`ID_VA_AV` <> ''CO'' AND NOT EXISTS (SELECT 1 FROM ' +
+        '`fza_atributos_sku` sd WHERE sd.`CODIGO_UNIDAD_SKU_SA` = ' +
+        'mapa.`DESTINO` AND sd.`ID_AV_SA` = sa.`ID_AV_SA`)) OR ' +
+        'EXISTS (SELECT 1 FROM `fza_atributos_sku` sd JOIN ' +
+        '`fza_atributos_valores` av ON av.`ID_AV` = sd.`ID_AV_SA` ' +
+        'WHERE sd.`CODIGO_UNIDAD_SKU_SA` = mapa.`DESTINO` AND ' +
+        'av.`ID_VA_AV` <> ''CO'' AND NOT EXISTS (SELECT 1 FROM ' +
+        '`fza_atributos_sku` sa WHERE sa.`CODIGO_UNIDAD_SKU_SA` = ' +
+        'mapa.`ORIGEN` AND sa.`ID_AV_SA` = sd.`ID_AV_SA`)) OR ' +
+        '(SELECT COUNT(*) FROM `fza_atributos_sku` sd JOIN ' +
+        '`fza_atributos_valores` av ON av.`ID_AV` = sd.`ID_AV_SA` ' +
+        'WHERE sd.`CODIGO_UNIDAD_SKU_SA` = mapa.`DESTINO` AND ' +
+        'av.`ID_VA_AV` = ''CO'' AND TRIM(av.`AV`) = ' +
+        'TRIM(:COLOR)) <> 1';
+    end;
+    Result := not Existe(
+      'SELECT 1 FROM `' + TABLA_TEMPORAL + '` mapa ' +
+      'JOIN `fza_articulos_skus` destino ON ' +
+      'destino.`CODIGO_UNIDAD_SKU` = mapa.`DESTINO` WHERE ' +
+      'mapa.`ES_SKU` = ''S'' AND (' + sCondicionAtributos + ') LIMIT 1',
+      ['COLOR'],
+      [AColorDestino]);
+  end;
+  if Result then
+  begin
+    Result := not Existe(
+      'SELECT 1 FROM `' + TABLA_TEMPORAL + '` mapa JOIN ' +
+      '`fza_articulos_stockactual` origen ON ' +
+      'origen.`CODIGO_UNIDAD_STK` = mapa.`ORIGEN` JOIN ' +
+      '`fza_articulos_stockactual` destino ON ' +
+      'destino.`CODIGO_UNIDAD_STK` = mapa.`DESTINO` AND ' +
+      'destino.`CODIGO_ALM_STK` = origen.`CODIGO_ALM_STK` AND ' +
+      'destino.`LOTE_STK` = origen.`LOTE_STK` WHERE ' +
+      'mapa.`ES_SKU` = ''S'' AND NOT (' +
+      'destino.`FECHA_CADUCIDAD_STK` <=> ' +
+      'origen.`FECHA_CADUCIDAD_STK`) LIMIT 1',
+      [],
+      []);
+  end;
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.
+  HayColisionUnidadesNoConsolidable(
+    const AArticuloDestino: string;
+    AEsFusionArticulo: Boolean): Boolean;
+var
+  sArticuloDestino: string;
+begin
+  if AEsFusionArticulo then
+    sArticuloDestino := ':ARTICULO'
+  else
+    sArticuloDestino := 'origen.`CODIGO_ART_FOT`';
+  Result := False;
+  if CampoExiste('fza_articulos_fotos', 'CODIGO_UNIDAD_FOT') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_articulos_fotos` origen JOIN `' +
+      TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+      'origen.`CODIGO_UNIDAD_FOT` JOIN `fza_articulos_fotos` destino ' +
+      'ON destino.`CODIGO_UNIDAD_FOT` = mapa.`DESTINO` AND ' +
+      'destino.`CODIGO_ART_FOT` = ' + sArticuloDestino + ' LIMIT 1',
+      ['ARTICULO'],
+      [AArticuloDestino]);
+  end;
+  if (not Result) and
+     CampoExiste('fza_articulos_propiedades',
+       'CODIGO_UNIDAD_ARTPROP') then
+  begin
+    if AEsFusionArticulo then
+      sArticuloDestino := ':ARTICULO'
+    else
+      sArticuloDestino := 'origen.`CODIGO_ART_ART`';
+    Result := Existe(
+      'SELECT 1 FROM `fza_articulos_propiedades` origen JOIN `' +
+      TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+      'origen.`CODIGO_UNIDAD_ARTPROP` JOIN ' +
+      '`fza_articulos_propiedades` destino ON ' +
+      'destino.`CODIGO_UNIDAD_ARTPROP` = mapa.`DESTINO` AND ' +
+      'destino.`CODIGO_ART_ART` = ' + sArticuloDestino + ' AND ' +
+      'destino.`CODIGO_PROP_ARTPROP` = ' +
+      'origen.`CODIGO_PROP_ARTPROP` LIMIT 1',
+      ['ARTICULO'],
+      [AArticuloDestino]);
+  end;
+  if (not Result) and
+     CampoExiste('fza_articulos_pdte_recibir', 'CODIGO_UNIDAD_PDR') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_articulos_pdte_recibir` origen JOIN `' +
+      TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+      'origen.`CODIGO_UNIDAD_PDR` JOIN ' +
+      '`fza_articulos_pdte_recibir` destino ON ' +
+      'destino.`CODIGO_UNIDAD_PDR` = mapa.`DESTINO` AND ' +
+      'destino.`CODIGO_ALM_PDR` = origen.`CODIGO_ALM_PDR` AND ' +
+      'destino.`SERIE_DOC_PDR` = origen.`SERIE_DOC_PDR` AND ' +
+      'destino.`NUMERO_DOC_PDR` = origen.`NUMERO_DOC_PDR` AND ' +
+      'destino.`LINEA_PDR` = origen.`LINEA_PDR` LIMIT 1',
+      [],
+      []);
+  end;
+  if (not Result) and
+     CampoExiste('fza_compras_sesiones_fotos', 'CODIGO_UNIDAD_CSF') then
+  begin
+    Result := Existe(
+      'SELECT 1 FROM `fza_compras_sesiones_fotos` origen JOIN `' +
+      TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+      'origen.`CODIGO_UNIDAD_CSF` JOIN ' +
+      '`fza_compras_sesiones_fotos` destino ON ' +
+      'destino.`CODIGO_UNIDAD_CSF` = mapa.`DESTINO` AND ' +
+      'destino.`SERIE_SES_CSF` = origen.`SERIE_SES_CSF` AND ' +
+      'destino.`NUMERO_SES_CSF` = origen.`NUMERO_SES_CSF` AND ' +
+      'destino.`LINEA_CSF` = origen.`LINEA_CSF` LIMIT 1',
+      [],
+      []);
+  end;
+end;
+
 function TRepositorioCambioArticuloColorUniDAC.HayVentasArticulo(
   const AArticuloAntiguo: string): Boolean;
 begin
@@ -887,7 +1315,9 @@ var
   sSql: string;
 begin
   sCondiciones := 'mapa.`ORIGEN` IS NOT NULL OR ' +
-    '(sku_actual.`CODIGO_UNIDAD_SKU` IS NULL AND ' +
+    '((sku_actual.`CODIGO_UNIDAD_SKU` IS NULL OR ' +
+    'UPPER(TRIM(COALESCE(' +
+    'sku_actual.`ESACTIVO_SKU`, ''N''))) <> ''S'') AND ' +
     'LOCATE(''/'', fl.`CODIGO_UNIDAD_FACLIN`) > 0 AND ' +
     'LOCATE(CONCAT(''/'', TRIM(:COLOR), ''/''), ' +
     'CONCAT(''/'', SUBSTRING(fl.`CODIGO_UNIDAD_FACLIN`, ' +
@@ -961,7 +1391,9 @@ begin
     'fl.`CODIGO_UNIDAD_FACLIN` AND ' +
     'av_destino.`ID_VA_AV` = ''CO'' AND ' +
     'TRIM(av_destino.`AV`) = TRIM(:COLOR)) OR ' +
-    '(sku_actual.`CODIGO_UNIDAD_SKU` IS NULL AND ' +
+    '((sku_actual.`CODIGO_UNIDAD_SKU` IS NULL OR ' +
+    'UPPER(TRIM(COALESCE(' +
+    'sku_actual.`ESACTIVO_SKU`, ''N''))) <> ''S'') AND ' +
     'LOCATE(''/'', fl.`CODIGO_UNIDAD_FACLIN`) > 0 AND ' +
     'LOCATE(CONCAT(''/'', TRIM(:COLOR), ''/''), ' +
     'CONCAT(''/'', SUBSTRING(fl.`CODIGO_UNIDAD_FACLIN`, ' +
@@ -1165,13 +1597,19 @@ begin
   i := Low(AReferencias);
   while (i <= High(AReferencias)) and not Result do
   begin
-    SepararReferencia(AReferencias[i], sTabla, sCampo);
-    if CampoExiste(sTabla, sCampo) then
+    if (AReferencias[i] <> REFERENCIA_SKU_MAESTRO) and
+       (AReferencias[i] <> REFERENCIA_COSTES_SKU) and
+       (AReferencias[i] <> REFERENCIA_ARTICULO_SKU) and
+       (AReferencias[i] <> REFERENCIA_ARTICULO_PROVEEDOR) then
     begin
-      sSql := 'SELECT 1 FROM `' + sTabla + '` dato ' +
-        'JOIN `' + TABLA_TEMPORAL + '` mapa ON ' +
-        'mapa.`ORIGEN` = dato.`' + sCampo + '` LIMIT 1';
-      Result := Existe(sSql, [], []);
+      SepararReferencia(AReferencias[i], sTabla, sCampo);
+      if CampoExiste(sTabla, sCampo) then
+      begin
+        sSql := 'SELECT 1 FROM `' + sTabla + '` dato ' +
+          'JOIN `' + TABLA_TEMPORAL + '` mapa ON ' +
+          'mapa.`ORIGEN` = dato.`' + sCampo + '` LIMIT 1';
+        Result := Existe(sSql, [], []);
+      end;
     end;
     Inc(i);
   end;
@@ -1286,15 +1724,19 @@ var
 begin
   for i := Low(REFERENCIAS_ARTICULO) to High(REFERENCIAS_ARTICULO) do
   begin
-    SepararReferencia(REFERENCIAS_ARTICULO[i], sTabla, sCampo);
-    if CampoExiste(sTabla, sCampo) then
+    if (REFERENCIAS_ARTICULO[i] <> REFERENCIA_ARTICULO_SKU) and
+       (REFERENCIAS_ARTICULO[i] <> REFERENCIA_ARTICULO_PROVEEDOR) then
     begin
-      ActualizarCampoPorValor(
-        sTabla,
-        sCampo,
-        AAnterior,
-        ANuevo,
-        AUsuario);
+      SepararReferencia(REFERENCIAS_ARTICULO[i], sTabla, sCampo);
+      if CampoExiste(sTabla, sCampo) then
+      begin
+        ActualizarCampoPorValor(
+          sTabla,
+          sCampo,
+          AAnterior,
+          ANuevo,
+          AUsuario);
+      end;
     end;
   end;
 end;
@@ -1308,7 +1750,13 @@ var
 begin
   for i := Low(REFERENCIAS_UNIDAD) to High(REFERENCIAS_UNIDAD) do
   begin
-    if REFERENCIAS_UNIDAD[i] <> REFERENCIA_SKU_MAESTRO then
+    if (REFERENCIAS_UNIDAD[i] <> REFERENCIA_SKU_MAESTRO) and
+       (REFERENCIAS_UNIDAD[i] <> REFERENCIA_ATRIBUTOS_SKU) and
+       (REFERENCIAS_UNIDAD[i] <> REFERENCIA_COSTES_SKU) and
+       (REFERENCIAS_UNIDAD[i] <> REFERENCIA_STOCK) and
+       (REFERENCIAS_UNIDAD[i] <> REFERENCIA_TARIFAS) and
+       (REFERENCIAS_UNIDAD[i] <> REFERENCIA_BARRAS) and
+       (REFERENCIAS_UNIDAD[i] <> REFERENCIA_BLOQUEOS) then
     begin
       SepararReferencia(REFERENCIAS_UNIDAD[i], sTabla, sCampo);
       if CampoExiste(sTabla, sCampo) then
@@ -1317,37 +1765,519 @@ begin
   end;
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.ActualizarSkuMaestro(
-  const AUsuario: string);
-begin
-  ActualizarCampoPorMapa(
-    'fza_articulos_skus',
-    'CODIGO_UNIDAD_SKU',
-    AUsuario);
-end;
-
-procedure TRepositorioCambioArticuloColorUniDAC.ActualizarArticuloMaestro(
+procedure TRepositorioCambioArticuloColorUniDAC.CrearArticuloDestino(
   const AAnterior, ANuevo, AUsuario: string);
 begin
-  ActualizarCampoPorValor(
-    'fza_articulos',
-    'CODIGO_ART_ART',
-    AAnterior,
-    ANuevo,
-    AUsuario);
+  Ejecutar(
+    'INSERT INTO `fza_articulos` (`CODIGO_ART_ART`, `ESACTIVO_ART`, ' +
+    '`ESWEB_ART`, `TIPO_ART`, `DESCRIPCION_ART`, `CODIGO_FAM_ART`, ' +
+    '`TIPO_IVA_ART`, `ESACTIVO_FIJO_ART`, `TIPO_CANTIDAD_ART`, ' +
+    '`ESVARIACION_ART`, `ESTRAZABLE_ART`, `ORDEN_ART`, ' +
+    '`INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, ' +
+    '`USUARIO_MODIF`, `TIPO_VARIACION_ART`) SELECT :NUEVO, ''S'', ' +
+    '`ESWEB_ART`, `TIPO_ART`, `DESCRIPCION_ART`, `CODIGO_FAM_ART`, ' +
+    '`TIPO_IVA_ART`, `ESACTIVO_FIJO_ART`, `TIPO_CANTIDAD_ART`, ' +
+    '`ESVARIACION_ART`, `ESTRAZABLE_ART`, `ORDEN_ART`, ' +
+    'CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :USUARIO, :USUARIO, ' +
+    '`TIPO_VARIACION_ART` FROM `fza_articulos` WHERE ' +
+    '`CODIGO_ART_ART` = :ANTERIOR',
+    ['ANTERIOR', 'NUEVO', 'USUARIO'],
+    [AAnterior, ANuevo, AUsuario]);
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.EliminarArticuloMaestro(
-  const AArticuloAntiguo: string);
+procedure TRepositorioCambioArticuloColorUniDAC.CrearSkuDestino(
+  const AArticuloDestino, AUsuario: string;
+  AEsCambioArticulo: Boolean);
+var
+  sArticulo: string;
 begin
   Ejecutar(
-    'DELETE FROM `fza_articulos` WHERE `CODIGO_ART_ART` = :ARTICULO',
+    'UPDATE `' + TABLA_TEMPORAL + '` mapa LEFT JOIN ' +
+    '`fza_articulos_skus` destino ON destino.`CODIGO_UNIDAD_SKU` = ' +
+    'mapa.`DESTINO` SET mapa.`DESTINO_EXISTIA` = CASE WHEN ' +
+    'destino.`CODIGO_UNIDAD_SKU` IS NULL THEN ''N'' ELSE ''S'' END ' +
+    'WHERE mapa.`ES_SKU` = ''S''',
+    [],
+    []);
+  if AEsCambioArticulo then
+    sArticulo := ':ARTICULO'
+  else
+    sArticulo := 'origen.`CODIGO_ART_SKU`';
+  Ejecutar(
+    'INSERT INTO `fza_articulos_skus` (`CODIGO_UNIDAD_SKU`, ' +
+    '`CODIGO_ART_SKU`, `CODIGO_VAR_SKU`, `ESACTIVO_SKU`, ' +
+    '`INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, ' +
+    '`USUARIO_MODIF`) SELECT mapa.`DESTINO`, ' + sArticulo + ', ' +
+    'origen.`CODIGO_VAR_SKU`, CASE WHEN UPPER(TRIM(COALESCE(' +
+    'origen.`ESACTIVO_SKU`, ''N''))) = ''S'' THEN ''S'' ELSE ''N'' END, ' +
+    'CURRENT_TIMESTAMP, ' +
+    'CURRENT_TIMESTAMP, :USUARIO, :USUARIO FROM ' +
+    '`fza_articulos_skus` origen JOIN `' + TABLA_TEMPORAL + '` mapa ' +
+    'ON mapa.`ORIGEN` = origen.`CODIGO_UNIDAD_SKU` LEFT JOIN ' +
+    '`fza_articulos_skus` destino ON destino.`CODIGO_UNIDAD_SKU` = ' +
+    'mapa.`DESTINO` WHERE mapa.`ES_SKU` = ''S'' AND ' +
+    'destino.`CODIGO_UNIDAD_SKU` IS NULL',
+    ['ARTICULO', 'USUARIO'],
+    [AArticuloDestino, AUsuario]);
+  Ejecutar(
+    'UPDATE `fza_articulos_skus` destino JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`DESTINO` = destino.`CODIGO_UNIDAD_SKU` JOIN ' +
+    '`fza_articulos_skus` origen ON origen.`CODIGO_UNIDAD_SKU` = ' +
+    'mapa.`ORIGEN` SET destino.`ESACTIVO_SKU` = CASE WHEN ' +
+    'UPPER(TRIM(COALESCE(origen.`ESACTIVO_SKU`, ''N''))) = ''S'' ' +
+    'THEN ''S'' ELSE destino.`ESACTIVO_SKU` END, ' +
+    'destino.`INSTANTE_MODIF` = CURRENT_TIMESTAMP, ' +
+    'destino.`USUARIO_MODIF` = :USUARIO WHERE mapa.`ES_SKU` = ''S''',
+    ['USUARIO'],
+    [AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.
+  PrepararAtributosSkuDestino(
+    const AColorDestino, AUsuario: string;
+    AEsFusionColor: Boolean);
+var
+  sFiltro: string;
+begin
+  sFiltro := '';
+  if AEsFusionColor then
+    sFiltro := 'AND av.`ID_VA_AV` <> ''CO'' ';
+  Ejecutar(
+    'INSERT IGNORE INTO `fza_atributos_sku` ' +
+    '(`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_MODIF`, ' +
+    '`INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) SELECT ' +
+    'mapa.`DESTINO`, sa.`ID_AV_SA`, CURRENT_TIMESTAMP, ' +
+    'CURRENT_TIMESTAMP, :USUARIO, :USUARIO FROM ' +
+    '`fza_atributos_sku` sa JOIN `fza_atributos_valores` av ON ' +
+    'av.`ID_AV` = sa.`ID_AV_SA` JOIN `' + TABLA_TEMPORAL + '` mapa ' +
+    'ON mapa.`ORIGEN` = sa.`CODIGO_UNIDAD_SKU_SA` WHERE ' +
+    'mapa.`ES_SKU` = ''S'' ' + sFiltro,
+    ['USUARIO'],
+    [AUsuario]);
+  if AEsFusionColor then
+  begin
+    Ejecutar(
+      'INSERT IGNORE INTO `fza_atributos_sku` ' +
+      '(`CODIGO_UNIDAD_SKU_SA`, `ID_AV_SA`, `INSTANTE_MODIF`, ' +
+      '`INSTANTE_ALTA`, `USUARIO_ALTA`, `USUARIO_MODIF`) SELECT ' +
+      'mapa.`DESTINO`, COALESCE((SELECT MIN(sa.`ID_AV_SA`) FROM ' +
+      '`fza_atributos_sku` sa JOIN `fza_atributos_valores` av ON ' +
+      'av.`ID_AV` = sa.`ID_AV_SA` WHERE ' +
+      'sa.`CODIGO_UNIDAD_SKU_SA` = mapa.`DESTINO` AND ' +
+      'av.`ID_VA_AV` = ''CO'' AND TRIM(av.`AV`) = TRIM(:COLOR) AND ' +
+      'UPPER(TRIM(COALESCE(av.`ESACTIVO_AV`, ''N''))) = ''S''), ' +
+      '(SELECT av.`ID_AV` FROM `fza_atributos_valores` av WHERE ' +
+      'av.`ID_VA_AV` = ''CO'' AND TRIM(av.`AV`) = TRIM(:COLOR) AND ' +
+      'UPPER(TRIM(COALESCE(av.`ESACTIVO_AV`, ''N''))) = ''S'' ' +
+      'ORDER BY av.`ID_ATB_AV` IS NULL, av.`ID_AV` LIMIT 1)), ' +
+      'CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, :USUARIO, :USUARIO ' +
+      'FROM `' + TABLA_TEMPORAL + '` mapa WHERE mapa.`ES_SKU` = ''S''',
+      ['COLOR', 'USUARIO'],
+      [AColorDestino, AUsuario]);
+  end;
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.ConsolidarStock;
+const
+  CAMPOS =
+    '`CANTIDAD_STK`, `VALOR_TOTAL_STK`, ' +
+    '`CANTIDAD_PTE_RECIBIR_STK`, `CANTIDAD_PTE_SERVIR_STK`, ' +
+    '`CANTIDAD_PTE_TRASPASAR_STK`, ' +
+    '`CANTIDAD_PTE_RECTRASPASAR_STK`, `CANTIDAD_ENT_COMPRA_STK`, ' +
+    '`CANTIDAD_ENT_TRASPASO_STK`, `CANTIDAD_SAL_TRASPASO_STK`, ' +
+    '`CANTIDAD_ENT_DEPOSITO_STK`, `CANTIDAD_SAL_DEPOSITO_STK`, ' +
+    '`CANTIDAD_SAL_VENTA_STK`, `CANTIDAD_ENT_REGULAR_STK`, ' +
+    '`CANTIDAD_SAL_ALBVENTA_STK`, `CANTIDAD_ENT_ALBENTRADA_STK`';
+  VALORES =
+    'origen.`CANTIDAD_STK`, origen.`VALOR_TOTAL_STK`, ' +
+    'origen.`CANTIDAD_PTE_RECIBIR_STK`, ' +
+    'origen.`CANTIDAD_PTE_SERVIR_STK`, ' +
+    'origen.`CANTIDAD_PTE_TRASPASAR_STK`, ' +
+    'origen.`CANTIDAD_PTE_RECTRASPASAR_STK`, ' +
+    'origen.`CANTIDAD_ENT_COMPRA_STK`, ' +
+    'origen.`CANTIDAD_ENT_TRASPASO_STK`, ' +
+    'origen.`CANTIDAD_SAL_TRASPASO_STK`, ' +
+    'origen.`CANTIDAD_ENT_DEPOSITO_STK`, ' +
+    'origen.`CANTIDAD_SAL_DEPOSITO_STK`, ' +
+    'origen.`CANTIDAD_SAL_VENTA_STK`, ' +
+    'origen.`CANTIDAD_ENT_REGULAR_STK`, ' +
+    'origen.`CANTIDAD_SAL_ALBVENTA_STK`, ' +
+    'origen.`CANTIDAD_ENT_ALBENTRADA_STK`';
+  ACUMULAR =
+    '`CANTIDAD_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_STK`), 0), ' +
+    '`VALOR_TOTAL_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`VALOR_TOTAL_STK`, 0) + ' +
+    'COALESCE(VALUES(`VALOR_TOTAL_STK`), 0), ' +
+    '`CANTIDAD_PTE_RECIBIR_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_PTE_RECIBIR_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_PTE_RECIBIR_STK`), 0), ' +
+    '`CANTIDAD_PTE_SERVIR_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_PTE_SERVIR_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_PTE_SERVIR_STK`), 0), ' +
+    '`CANTIDAD_PTE_TRASPASAR_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_PTE_TRASPASAR_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_PTE_TRASPASAR_STK`), 0), ' +
+    '`CANTIDAD_PTE_RECTRASPASAR_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_PTE_RECTRASPASAR_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_PTE_RECTRASPASAR_STK`), 0), ' +
+    '`CANTIDAD_ENT_COMPRA_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_ENT_COMPRA_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_ENT_COMPRA_STK`), 0), ' +
+    '`CANTIDAD_ENT_TRASPASO_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_ENT_TRASPASO_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_ENT_TRASPASO_STK`), 0), ' +
+    '`CANTIDAD_SAL_TRASPASO_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_SAL_TRASPASO_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_SAL_TRASPASO_STK`), 0), ' +
+    '`CANTIDAD_ENT_DEPOSITO_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_ENT_DEPOSITO_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_ENT_DEPOSITO_STK`), 0), ' +
+    '`CANTIDAD_SAL_DEPOSITO_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_SAL_DEPOSITO_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_SAL_DEPOSITO_STK`), 0), ' +
+    '`CANTIDAD_SAL_VENTA_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_SAL_VENTA_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_SAL_VENTA_STK`), 0), ' +
+    '`CANTIDAD_ENT_REGULAR_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_ENT_REGULAR_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_ENT_REGULAR_STK`), 0), ' +
+    '`CANTIDAD_SAL_ALBVENTA_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_SAL_ALBVENTA_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_SAL_ALBVENTA_STK`), 0), ' +
+    '`CANTIDAD_ENT_ALBENTRADA_STK` = COALESCE(' +
+    '`fza_articulos_stockactual`.`CANTIDAD_ENT_ALBENTRADA_STK`, 0) + ' +
+    'COALESCE(VALUES(`CANTIDAD_ENT_ALBENTRADA_STK`), 0)';
+begin
+  Ejecutar(
+    'INSERT INTO `fza_articulos_stockactual` (`CODIGO_ALM_STK`, ' +
+    '`CODIGO_UNIDAD_STK`, `LOTE_STK`, `FECHA_CADUCIDAD_STK`, ' +
+    CAMPOS + ', `PRECIO_MEDIO_STK`) SELECT origen.`CODIGO_ALM_STK`, ' +
+    'mapa.`DESTINO`, origen.`LOTE_STK`, ' +
+    'origen.`FECHA_CADUCIDAD_STK`, ' + VALORES + ', ' +
+    'origen.`PRECIO_MEDIO_STK` FROM `fza_articulos_stockactual` origen ' +
+    'JOIN `' + TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+    'origen.`CODIGO_UNIDAD_STK` WHERE mapa.`ES_SKU` = ''S'' ' +
+    'ON DUPLICATE KEY UPDATE ' + ACUMULAR + ', `PRECIO_MEDIO_STK` = ' +
+    'IF(`fza_articulos_stockactual`.`CANTIDAD_STK` > 0, ' +
+    '`fza_articulos_stockactual`.`VALOR_TOTAL_STK` / ' +
+    '`fza_articulos_stockactual`.`CANTIDAD_STK`, 0)',
+    [],
+    []);
+  Ejecutar(
+    'DELETE origen FROM `fza_articulos_stockactual` origen JOIN `' +
+    TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+    'origen.`CODIGO_UNIDAD_STK` WHERE mapa.`ES_SKU` = ''S''',
+    [],
+    []);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.ConsolidarCostes(
+  const AUsuario: string);
+begin
+  Ejecutar(
+    'INSERT INTO `fza_articulos_skus_costes` ' +
+    '(`CODIGO_UNIDAD_SKU_SKUC`, `PRECIO_ULT_COMPRA_SKUC`, ' +
+    '`FECHA_ULT_COMPRA_SKUC`, `INSTANTE_MODIF`, `INSTANTE_ALTA`, ' +
+    '`USUARIO_ALTA`, `USUARIO_MODIF`) SELECT mapa.`DESTINO`, ' +
+    'origen.`PRECIO_ULT_COMPRA_SKUC`, ' +
+    'origen.`FECHA_ULT_COMPRA_SKUC`, CURRENT_TIMESTAMP, ' +
+    'CURRENT_TIMESTAMP, :USUARIO, :USUARIO FROM ' +
+    '`fza_articulos_skus_costes` origen JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`ORIGEN` = origen.`CODIGO_UNIDAD_SKU_SKUC` ' +
+    'LEFT JOIN `fza_articulos_skus_costes` destino ON ' +
+    'destino.`CODIGO_UNIDAD_SKU_SKUC` = mapa.`DESTINO` WHERE ' +
+    'mapa.`ES_SKU` = ''S'' AND ' +
+    'destino.`CODIGO_UNIDAD_SKU_SKUC` IS NULL',
+    ['USUARIO'],
+    [AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.ConsolidarTarifas(
+  const AArticuloOrigen, AArticuloDestino, AUsuario: string;
+  AEsCambioArticulo: Boolean);
+var
+  sAmbitoDestino: string;
+  sMasAntigua: string;
+  sSolapan: string;
+begin
+  if AEsCambioArticulo then
+  begin
+    Ejecutar(
+      'UPDATE `fza_articulos_tarifas` dato LEFT JOIN `' +
+      TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+      'dato.`CODIGO_UNIDAD_ARTTAR` SET dato.`CODIGO_UNIDAD_ARTTAR` = ' +
+      'COALESCE(mapa.`DESTINO`, dato.`CODIGO_UNIDAD_ARTTAR`), ' +
+      'dato.`CODIGO_ART_ARTTAR` = :ARTICULO, ' +
+      'dato.`INSTANTE_MODIF` = dato.`INSTANTE_MODIF`, ' +
+      'dato.`USUARIO_MODIF` = :USUARIO WHERE ' +
+      'dato.`CODIGO_ART_ARTTAR` = :ORIGEN',
+      ['ORIGEN', 'ARTICULO', 'USUARIO'],
+      [AArticuloOrigen, AArticuloDestino, AUsuario]);
+    sAmbitoDestino :=
+      'antigua.`CODIGO_ART_ARTTAR` = :ARTICULO';
+  end
+  else
+  begin
+    Ejecutar(
+      'UPDATE `fza_articulos_tarifas` dato JOIN `' + TABLA_TEMPORAL +
+      '` mapa ON mapa.`ORIGEN` = dato.`CODIGO_UNIDAD_ARTTAR` SET ' +
+      'dato.`CODIGO_UNIDAD_ARTTAR` = mapa.`DESTINO`, ' +
+      'dato.`INSTANTE_MODIF` = dato.`INSTANTE_MODIF`, ' +
+      'dato.`USUARIO_MODIF` = :USUARIO WHERE mapa.`ES_SKU` = ''S''',
+      ['USUARIO'],
+      [AUsuario]);
+    sAmbitoDestino :=
+      'EXISTS (SELECT 1 FROM `' + TABLA_TEMPORAL + '` mapa WHERE ' +
+      'mapa.`ES_SKU` = ''S'' AND mapa.`DESTINO` = ' +
+      'antigua.`CODIGO_UNIDAD_ARTTAR`)';
+  end;
+  sSolapan :=
+    'COALESCE(antigua.`FECHA_DESDE_ARTTAR`, ''1000-01-01'') <= ' +
+    'COALESCE(reciente.`FECHA_HASTA_ARTTAR`, ''9999-12-31'') AND ' +
+    'COALESCE(reciente.`FECHA_DESDE_ARTTAR`, ''1000-01-01'') <= ' +
+    'COALESCE(antigua.`FECHA_HASTA_ARTTAR`, ''9999-12-31'')';
+  sMasAntigua :=
+    '(COALESCE(antigua.`FECHA_DESDE_ARTTAR`, ''1000-01-01'') < ' +
+    'COALESCE(reciente.`FECHA_DESDE_ARTTAR`, ''1000-01-01'') OR (' +
+    'antigua.`FECHA_DESDE_ARTTAR` <=> ' +
+    'reciente.`FECHA_DESDE_ARTTAR`) AND (' +
+    'COALESCE(antigua.`INSTANTE_MODIF`, antigua.`INSTANTE_ALTA`) < ' +
+    'COALESCE(reciente.`INSTANTE_MODIF`, reciente.`INSTANTE_ALTA`) ' +
+    'OR (COALESCE(antigua.`INSTANTE_MODIF`, ' +
+    'antigua.`INSTANTE_ALTA`) <=> ' +
+    'COALESCE(reciente.`INSTANTE_MODIF`, reciente.`INSTANTE_ALTA`)) ' +
+    'AND antigua.`CODIGO_UNICO_ARTTAR` < ' +
+    'reciente.`CODIGO_UNICO_ARTTAR`))';
+  Ejecutar(
+    'DELETE antigua FROM `fza_articulos_tarifas` antigua JOIN ' +
+    '`fza_articulos_tarifas` reciente ON ' +
+    'reciente.`CODIGO_ART_ARTTAR` = antigua.`CODIGO_ART_ARTTAR` AND ' +
+    'reciente.`CODIGO_UNIDAD_ARTTAR` = ' +
+    'antigua.`CODIGO_UNIDAD_ARTTAR` AND ' +
+    'reciente.`CODIGO_TAR_ARTTAR` <=> ' +
+    'antigua.`CODIGO_TAR_ARTTAR` AND ' +
+    'reciente.`CODIGO_UNICO_ARTTAR` <> ' +
+    'antigua.`CODIGO_UNICO_ARTTAR` WHERE ' + sSolapan + ' AND ' +
+    sMasAntigua + ' AND ' + sAmbitoDestino,
     ['ARTICULO'],
-    [AArticuloAntiguo]);
+    [AArticuloDestino]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.
+  ConsolidarProveedoresArticulo(
+    const AArticuloOrigen, AArticuloDestino, AUsuario: string);
+begin
+  Ejecutar(
+    'INSERT INTO `fza_articulos_proveedores` (`CODIGO_PRV_AP`, ' +
+    '`CODIGO_ART_AP`, `REF_PROVEEDOR_AP`, `PRECIO_ULT_COMPRA_AP`, ' +
+    '`FECHA_VALIDEZ_AP`, `ESPROVEEDORPRINCIPAL_AP`, ' +
+    '`INSTANTE_MODIF`, `INSTANTE_ALTA`, `USUARIO_ALTA`, ' +
+    '`USUARIO_MODIF`) SELECT origen.`CODIGO_PRV_AP`, :DESTINO, ' +
+    'origen.`REF_PROVEEDOR_AP`, origen.`PRECIO_ULT_COMPRA_AP`, ' +
+    'origen.`FECHA_VALIDEZ_AP`, CASE WHEN EXISTS (SELECT 1 FROM ' +
+    '`fza_articulos_proveedores` principal WHERE ' +
+    'principal.`CODIGO_ART_AP` = :DESTINO AND ' +
+    'principal.`ESPROVEEDORPRINCIPAL_AP` = ''S'') THEN ''N'' ELSE ' +
+    'origen.`ESPROVEEDORPRINCIPAL_AP` END, CURRENT_TIMESTAMP, ' +
+    'CURRENT_TIMESTAMP, :USUARIO, :USUARIO FROM ' +
+    '`fza_articulos_proveedores` origen LEFT JOIN ' +
+    '`fza_articulos_proveedores` destino ON ' +
+    'destino.`CODIGO_PRV_AP` = origen.`CODIGO_PRV_AP` AND ' +
+    'destino.`CODIGO_ART_AP` = :DESTINO WHERE ' +
+    'origen.`CODIGO_ART_AP` = :ORIGEN AND ' +
+    'destino.`CODIGO_PRV_AP` IS NULL',
+    ['ORIGEN', 'DESTINO', 'USUARIO'],
+    [AArticuloOrigen, AArticuloDestino, AUsuario]);
+  Ejecutar(
+    'UPDATE `fza_articulos_proveedores` dato JOIN (SELECT ' +
+    '`CODIGO_ART_AP`, COALESCE(MIN(CASE WHEN ' +
+    '`ESPROVEEDORPRINCIPAL_AP` = ''S'' THEN `CODIGO_PRV_AP` END), ' +
+    'MIN(`CODIGO_PRV_AP`)) `PROVEEDOR_PRINCIPAL` FROM ' +
+    '`fza_articulos_proveedores` WHERE `CODIGO_ART_AP` = :DESTINO ' +
+    'GROUP BY `CODIGO_ART_AP`) elegido ON elegido.`CODIGO_ART_AP` = ' +
+    'dato.`CODIGO_ART_AP` SET dato.`ESPROVEEDORPRINCIPAL_AP` = ' +
+    'CASE WHEN dato.`CODIGO_PRV_AP` = elegido.`PROVEEDOR_PRINCIPAL` ' +
+    'THEN ''S'' ELSE ''N'' END, dato.`INSTANTE_MODIF` = ' +
+    'CURRENT_TIMESTAMP, dato.`USUARIO_MODIF` = :USUARIO WHERE ' +
+    'dato.`CODIGO_ART_AP` = :DESTINO',
+    ['DESTINO', 'USUARIO'],
+    [AArticuloDestino, AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.ConsolidarCodigosBarras(
+  const AUsuario: string);
+begin
+  Ejecutar(
+    'DELETE origen FROM `fza_codigos_barras` origen JOIN `' +
+    TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+    'origen.`CODIGO_UNIDAD_CB` JOIN `fza_codigos_barras` destino ON ' +
+    'destino.`CODIGO_UNIDAD_CB` = mapa.`DESTINO` AND ' +
+    'destino.`CODIGO_BARRAS_CB` = origen.`CODIGO_BARRAS_CB` AND ' +
+    'destino.`TIPO_CODIGO_CB` <=> origen.`TIPO_CODIGO_CB` WHERE ' +
+    'mapa.`ES_SKU` = ''S''',
+    [],
+    []);
+  Ejecutar(
+    'UPDATE `fza_codigos_barras` origen JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`ORIGEN` = origen.`CODIGO_UNIDAD_CB` SET ' +
+    'origen.`ESPRINCIPAL_CB` = ''N'' WHERE mapa.`ES_SKU` = ''S'' AND ' +
+    'EXISTS (SELECT 1 FROM `fza_codigos_barras` destino WHERE ' +
+    'destino.`CODIGO_UNIDAD_CB` = mapa.`DESTINO` AND ' +
+    'destino.`ESPRINCIPAL_CB` = ''S'')',
+    [],
+    []);
+  Ejecutar(
+    'UPDATE `fza_codigos_barras` dato JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`ORIGEN` = dato.`CODIGO_UNIDAD_CB` SET ' +
+    'dato.`CODIGO_UNIDAD_CB` = mapa.`DESTINO`, ' +
+    'dato.`INSTANTE_MODIF` = CURRENT_TIMESTAMP, ' +
+    'dato.`USUARIO_MODIF` = :USUARIO WHERE mapa.`ES_SKU` = ''S''',
+    ['USUARIO'],
+    [AUsuario]);
+  Ejecutar(
+    'UPDATE `fza_codigos_barras` dato JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`DESTINO` = dato.`CODIGO_UNIDAD_CB` JOIN (' +
+    'SELECT `CODIGO_UNIDAD_CB`, COALESCE(MIN(CASE WHEN ' +
+    '`ESPRINCIPAL_CB` = ''S'' THEN `ID_CB` END), MIN(`ID_CB`)) ' +
+    '`ID_PRINCIPAL` FROM `fza_codigos_barras` GROUP BY ' +
+    '`CODIGO_UNIDAD_CB`) elegido ON elegido.`CODIGO_UNIDAD_CB` = ' +
+    'dato.`CODIGO_UNIDAD_CB` SET dato.`ESPRINCIPAL_CB` = CASE WHEN ' +
+    'dato.`ID_CB` = elegido.`ID_PRINCIPAL` THEN ''S'' ELSE ''N'' END, ' +
+    'dato.`INSTANTE_MODIF` = CURRENT_TIMESTAMP, ' +
+    'dato.`USUARIO_MODIF` = :USUARIO WHERE mapa.`ES_SKU` = ''S''',
+    ['USUARIO'],
+    [AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.ConsolidarBloqueos(
+  const AUsuario: string);
+begin
+  Ejecutar(
+    'DELETE origen FROM `fza_stock_bloqueos` origen JOIN `' +
+    TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
+    'origen.`CODIGO_UNIDAD_STKBLQ` JOIN `fza_stock_bloqueos` destino ' +
+    'ON destino.`CODIGO_UNIDAD_STKBLQ` = mapa.`DESTINO` AND ' +
+    'destino.`CODIGO_ALM_STKBLQ` = origen.`CODIGO_ALM_STKBLQ` WHERE ' +
+    'mapa.`ES_SKU` = ''S''',
+    [],
+    []);
+  Ejecutar(
+    'UPDATE `fza_stock_bloqueos` dato JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`ORIGEN` = dato.`CODIGO_UNIDAD_STKBLQ` SET ' +
+    'dato.`CODIGO_UNIDAD_STKBLQ` = mapa.`DESTINO`, ' +
+    'dato.`INSTANTE_MODIF` = CURRENT_TIMESTAMP, ' +
+    'dato.`USUARIO_MODIF` = :USUARIO WHERE mapa.`ES_SKU` = ''S''',
+    ['USUARIO'],
+    [AUsuario]);
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.ProcedimientoExiste(
+  const ANombre: string): Boolean;
+begin
+  Result := Existe(
+    'SELECT 1 FROM `INFORMATION_SCHEMA`.`ROUTINES` WHERE ' +
+    '`ROUTINE_SCHEMA` = DATABASE() AND `ROUTINE_TYPE` = ''PROCEDURE'' ' +
+    'AND UPPER(`ROUTINE_NAME`) = UPPER(:NOMBRE) LIMIT 1',
+    ['NOMBRE'],
+    [ANombre]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.RecalcularPmpDestinos;
+var
+  oConsulta: TUniQuery;
+  oProcedimiento: TUniStoredProc;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  oProcedimiento := TUniStoredProc.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text :=
+      'SELECT DISTINCT movimiento.`CODIGO_EMP_MOV`, ' +
+      'movimiento.`CODIGO_ALM_MOV`, mapa.`DESTINO` FROM ' +
+      '`fza_movimientos_almacen` movimiento JOIN `' + TABLA_TEMPORAL +
+      '` mapa ON mapa.`DESTINO` = movimiento.`CODIGO_UNIDAD_MOV` ' +
+      'WHERE mapa.`ES_SKU` = ''S'' ORDER BY ' +
+      'movimiento.`CODIGO_EMP_MOV`, movimiento.`CODIGO_ALM_MOV`, ' +
+      'mapa.`DESTINO`';
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+    begin
+      if not ProcedimientoExiste('SP_RECALCULAR_PMP_SKU_ALMACEN') then
+      begin
+        raise Exception.Create(
+          'No está instalado SP_RECALCULAR_PMP_SKU_ALMACEN.');
+      end;
+      oProcedimiento.Connection := FConexion;
+      oProcedimiento.StoredProcName := 'SP_RECALCULAR_PMP_SKU_ALMACEN';
+      oProcedimiento.Params.Clear;
+      oProcedimiento.Params.CreateParam(
+        ftString,
+        'p_CodigoEmpresa',
+        ptInput);
+      oProcedimiento.Params.CreateParam(
+        ftString,
+        'p_CodigoSKU',
+        ptInput);
+      oProcedimiento.Params.CreateParam(
+        ftString,
+        'p_CodigoAlmacen',
+        ptInput);
+      while not oConsulta.Eof do
+      begin
+        oProcedimiento.ParamByName('p_CodigoEmpresa').AsString :=
+          oConsulta.FieldByName('CODIGO_EMP_MOV').AsString;
+        oProcedimiento.ParamByName('p_CodigoSKU').AsString :=
+          oConsulta.FieldByName('DESTINO').AsString;
+        oProcedimiento.ParamByName('p_CodigoAlmacen').AsString :=
+          oConsulta.FieldByName('CODIGO_ALM_MOV').AsString;
+        oProcedimiento.ExecProc;
+        oConsulta.Next;
+      end;
+    end;
+  finally
+    oProcedimiento.Free;
+    oConsulta.Free;
+  end;
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.
+  ConsolidarReferenciasUnidad(const AUsuario: string);
+begin
+  ConsolidarStock;
+  ConsolidarCostes(AUsuario);
+  ConsolidarCodigosBarras(AUsuario);
+  ConsolidarBloqueos(AUsuario);
+  ActualizarReferenciasUnidad(AUsuario);
+  RecalcularPmpDestinos;
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.DesactivarSkuOrigen(
+  const AUsuario: string);
+begin
+  Ejecutar(
+    'UPDATE `fza_articulos_skus` origen JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`ORIGEN` = origen.`CODIGO_UNIDAD_SKU` SET ' +
+    'origen.`ESACTIVO_SKU` = ''N'', ' +
+    'origen.`INSTANTE_MODIF` = CURRENT_TIMESTAMP, ' +
+    'origen.`USUARIO_MODIF` = :USUARIO WHERE mapa.`ES_SKU` = ''S''',
+    ['USUARIO'],
+    [AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.EliminarAtributosSkuOrigen;
+begin
+  Ejecutar(
+    'DELETE sa FROM `fza_atributos_sku` sa JOIN `' + TABLA_TEMPORAL +
+    '` mapa ON mapa.`ORIGEN` = sa.`CODIGO_UNIDAD_SKU_SA` WHERE ' +
+    'mapa.`ES_SKU` = ''S''',
+    [],
+    []);
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.LimpiarBasicosColorFusion(
-  const AColorAntiguo, AUsuario: string);
+  const AColorAntiguo, AColorDestino, AUsuario: string);
 begin
   Ejecutar(
     'UPDATE `fza_articulos_atributos_basicos` aab ' +
@@ -1355,26 +2285,105 @@ begin
     'SET aab.`ID_ATB_AAB` = NULL, ' +
     'aab.`DESCRIPCION_AAB` = NULL, ' +
     'aab.`USUARIO_MODIF` = :USUARIO ' +
-    'WHERE av.`ID_VA_AV` = ''CO'' ' +
-    'AND TRIM(av.`AV`) = TRIM(:ANTERIOR)',
-    ['ANTERIOR', 'USUARIO'],
-    [AColorAntiguo, AUsuario]);
+    'WHERE av.`ID_VA_AV` = ''CO'' AND (' +
+    'TRIM(av.`AV`) = TRIM(:ANTERIOR) OR ' +
+    'TRIM(av.`AV`) = TRIM(:DESTINO))',
+    ['ANTERIOR', 'DESTINO', 'USUARIO'],
+    [AColorAntiguo, AColorDestino, AUsuario]);
   Ejecutar(
     'UPDATE `fza_atributos_conjuntos_det` acd ' +
     'JOIN `fza_atributos_valores` av ON av.`ID_AV` = acd.`ID_AV_ACD` ' +
     'SET acd.`ID_ATB_ACD` = NULL, ' +
     'acd.`USUARIO_MODIF` = :USUARIO ' +
-    'WHERE av.`ID_VA_AV` = ''CO'' ' +
-    'AND TRIM(av.`AV`) = TRIM(:ANTERIOR)',
-    ['ANTERIOR', 'USUARIO'],
-    [AColorAntiguo, AUsuario]);
+    'WHERE av.`ID_VA_AV` = ''CO'' AND (' +
+    'TRIM(av.`AV`) = TRIM(:ANTERIOR) OR ' +
+    'TRIM(av.`AV`) = TRIM(:DESTINO))',
+    ['ANTERIOR', 'DESTINO', 'USUARIO'],
+    [AColorAntiguo, AColorDestino, AUsuario]);
   Ejecutar(
     'UPDATE `fza_atributos_valores` SET `ID_ATB_AV` = NULL, ' +
     '`DESCRIPCION_AV` = NULL, ' +
     '`USUARIO_MODIF` = :USUARIO WHERE `ID_VA_AV` = ''CO'' ' +
-    'AND TRIM(`AV`) = TRIM(:ANTERIOR)',
-    ['ANTERIOR', 'USUARIO'],
-    [AColorAntiguo, AUsuario]);
+    'AND (TRIM(`AV`) = TRIM(:ANTERIOR) OR ' +
+    'TRIM(`AV`) = TRIM(:DESTINO))',
+    ['ANTERIOR', 'DESTINO', 'USUARIO'],
+    [AColorAntiguo, AColorDestino, AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.DesactivarArticuloMaestro(
+  const AArticuloAntiguo, AUsuario: string);
+begin
+  Ejecutar(
+    'UPDATE `fza_articulos` SET `ESACTIVO_ART` = ''N'', ' +
+    '`INSTANTE_MODIF` = CURRENT_TIMESTAMP, `USUARIO_MODIF` = :USUARIO ' +
+    'WHERE `CODIGO_ART_ART` = :ARTICULO',
+    ['ARTICULO', 'USUARIO'],
+    [AArticuloAntiguo, AUsuario]);
+end;
+
+procedure TRepositorioCambioArticuloColorUniDAC.ConsolidarCatalogoColor(
+  const AColorAntiguo, AColorDestino, AUsuario: string);
+const
+  SQL_ID_DESTINO =
+    '(SELECT destino.`ID_AV` FROM `fza_atributos_valores` destino ' +
+    'WHERE destino.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(destino.`AV`) = TRIM(:DESTINO) AND ' +
+    'UPPER(TRIM(COALESCE(destino.`ESACTIVO_AV`, ''N''))) = ''S'' ' +
+    'ORDER BY destino.`ID_ATB_AV` IS NULL, destino.`ID_AV` LIMIT 1)';
+begin
+  Ejecutar(
+    'DELETE origen FROM `fza_articulos_atributos_basicos` origen ' +
+    'JOIN `fza_atributos_valores` av_origen ON ' +
+    'av_origen.`ID_AV` = origen.`ID_AV_AAB` AND ' +
+    'av_origen.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(av_origen.`AV`) = TRIM(:ANTERIOR) WHERE EXISTS (' +
+    'SELECT 1 FROM `fza_articulos_atributos_basicos` dato JOIN ' +
+    '`fza_atributos_valores` av_destino ON ' +
+    'av_destino.`ID_AV` = dato.`ID_AV_AAB` WHERE ' +
+    'dato.`CODIGO_ART_AAB` = origen.`CODIGO_ART_AAB` AND ' +
+    'av_destino.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(av_destino.`AV`) = TRIM(:DESTINO))',
+    ['ANTERIOR', 'DESTINO'],
+    [AColorAntiguo, AColorDestino]);
+  Ejecutar(
+    'UPDATE `fza_articulos_atributos_basicos` origen JOIN ' +
+    '`fza_atributos_valores` av_origen ON ' +
+    'av_origen.`ID_AV` = origen.`ID_AV_AAB` SET ' +
+    'origen.`ID_AV_AAB` = ' + SQL_ID_DESTINO + ', ' +
+    'origen.`ID_ATB_AAB` = NULL, origen.`DESCRIPCION_AAB` = NULL, ' +
+    'origen.`USUARIO_MODIF` = :USUARIO WHERE ' +
+    'av_origen.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(av_origen.`AV`) = TRIM(:ANTERIOR)',
+    ['ANTERIOR', 'DESTINO', 'USUARIO'],
+    [AColorAntiguo, AColorDestino, AUsuario]);
+  Ejecutar(
+    'DELETE origen FROM `fza_atributos_conjuntos_det` origen JOIN ' +
+    '`fza_atributos_valores` av_origen ON ' +
+    'av_origen.`ID_AV` = origen.`ID_AV_ACD` AND ' +
+    'av_origen.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(av_origen.`AV`) = TRIM(:ANTERIOR) WHERE EXISTS (' +
+    'SELECT 1 FROM `fza_atributos_conjuntos_det` dato JOIN ' +
+    '`fza_atributos_valores` av_destino ON ' +
+    'av_destino.`ID_AV` = dato.`ID_AV_ACD` WHERE ' +
+    'dato.`ID_AC_ACD` = origen.`ID_AC_ACD` AND ' +
+    'av_destino.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(av_destino.`AV`) = TRIM(:DESTINO))',
+    ['ANTERIOR', 'DESTINO'],
+    [AColorAntiguo, AColorDestino]);
+  Ejecutar(
+    'UPDATE `fza_atributos_conjuntos_det` origen JOIN ' +
+    '`fza_atributos_valores` av_origen ON ' +
+    'av_origen.`ID_AV` = origen.`ID_AV_ACD` SET ' +
+    'origen.`ID_AV_ACD` = ' + SQL_ID_DESTINO + ', ' +
+    'origen.`ID_ATB_ACD` = NULL, origen.`USUARIO_MODIF` = :USUARIO ' +
+    'WHERE av_origen.`ID_VA_AV` = ''CO'' AND ' +
+    'TRIM(av_origen.`AV`) = TRIM(:ANTERIOR)',
+    ['ANTERIOR', 'DESTINO', 'USUARIO'],
+    [AColorAntiguo, AColorDestino, AUsuario]);
+  LimpiarBasicosColorFusion(
+    AColorAntiguo,
+    AColorDestino,
+    AUsuario);
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.ActualizarColorMaestro(
@@ -1384,7 +2393,17 @@ var
   sAuditoria: string;
 begin
   if AFusionar then
-    LimpiarBasicosColorFusion(AAnterior, AUsuario)
+  begin
+    ConsolidarCatalogoColor(AAnterior, ANuevo, AUsuario);
+    Ejecutar(
+      'UPDATE `fza_atributos_valores` SET `ESACTIVO_AV` = ''N'', ' +
+      '`ID_ATB_AV` = NULL, `DESCRIPCION_AV` = NULL, ' +
+      '`INSTANTE_MODIF` = CURRENT_TIMESTAMP, ' +
+      '`USUARIO_MODIF` = :USUARIO WHERE `ID_VA_AV` = ''CO'' AND ' +
+      'TRIM(`AV`) = TRIM(:ANTERIOR)',
+      ['ANTERIOR', 'USUARIO'],
+      [AAnterior, AUsuario]);
+  end
   else
   begin
     Ejecutar(
@@ -1398,18 +2417,20 @@ begin
       ['ANTERIOR', 'USUARIO'],
       [AAnterior, AUsuario]);
   end;
-  sAuditoria := '';
-  if CampoExiste('fza_atributos_valores', 'INSTANTE_MODIF') then
-    sAuditoria := ', `INSTANTE_MODIF` = CURRENT_TIMESTAMP';
-  if CampoExiste('fza_atributos_valores', 'USUARIO_MODIF') then
-    sAuditoria := sAuditoria + ', `USUARIO_MODIF` = :USUARIO';
-  Ejecutar(
-    'UPDATE `fza_atributos_valores` SET `AV` = :NUEVO, ' +
-    '`DESCRIPCION_AV` = NULL' +
-    sAuditoria + ' WHERE `ID_VA_AV` = ''CO'' ' +
-    'AND TRIM(`AV`) = TRIM(:ANTERIOR)',
-    ['ANTERIOR', 'NUEVO', 'USUARIO'],
-    [AAnterior, ANuevo, AUsuario]);
+  if not AFusionar then
+  begin
+    sAuditoria := '';
+    if CampoExiste('fza_atributos_valores', 'INSTANTE_MODIF') then
+      sAuditoria := ', `INSTANTE_MODIF` = CURRENT_TIMESTAMP';
+    if CampoExiste('fza_atributos_valores', 'USUARIO_MODIF') then
+      sAuditoria := sAuditoria + ', `USUARIO_MODIF` = :USUARIO';
+    Ejecutar(
+      'UPDATE `fza_atributos_valores` SET `AV` = :NUEVO, ' +
+      '`DESCRIPCION_AV` = NULL' + sAuditoria + ' WHERE ' +
+      '`ID_VA_AV` = ''CO'' AND TRIM(`AV`) = TRIM(:ANTERIOR)',
+      ['ANTERIOR', 'NUEVO', 'USUARIO'],
+      [AAnterior, ANuevo, AUsuario]);
+  end;
 end;
 
 function TRepositorioCambioArticuloColorUniDAC.FusionColorEsSegura(
@@ -1449,39 +2470,9 @@ begin
       [AAnterior]);
   end;
   if Result then
-  begin
-    Result := not Existe(
-      'SELECT 1 FROM `fza_articulos_atributos_basicos` origen ' +
-      'JOIN `fza_atributos_valores` av_origen ON ' +
-      'av_origen.`ID_AV` = origen.`ID_AV_AAB` AND ' +
-      'av_origen.`ID_VA_AV` = ''CO'' AND ' +
-      'TRIM(av_origen.`AV`) = TRIM(:ANTERIOR) ' +
-      'JOIN `fza_articulos_atributos_basicos` destino ON ' +
-      'destino.`CODIGO_ART_AAB` = origen.`CODIGO_ART_AAB` ' +
-      'JOIN `fza_atributos_valores` av_destino ON ' +
-      'av_destino.`ID_AV` = destino.`ID_AV_AAB` AND ' +
-      'av_destino.`ID_VA_AV` = ''CO'' AND ' +
-      'TRIM(av_destino.`AV`) = TRIM(:NUEVO) LIMIT 1',
-      ['ANTERIOR', 'NUEVO'],
-      [AAnterior, ANuevo]);
-  end;
+    Result := FusionUnidadesEsSegura(ANuevo, '', False);
   if Result then
-  begin
-    Result := not Existe(
-      'SELECT 1 FROM `fza_atributos_conjuntos_det` origen ' +
-      'JOIN `fza_atributos_valores` av_origen ON ' +
-      'av_origen.`ID_AV` = origen.`ID_AV_ACD` AND ' +
-      'av_origen.`ID_VA_AV` = ''CO'' AND ' +
-      'TRIM(av_origen.`AV`) = TRIM(:ANTERIOR) ' +
-      'JOIN `fza_atributos_conjuntos_det` destino ON ' +
-      'destino.`ID_AC_ACD` = origen.`ID_AC_ACD` ' +
-      'JOIN `fza_atributos_valores` av_destino ON ' +
-      'av_destino.`ID_AV` = destino.`ID_AV_ACD` AND ' +
-      'av_destino.`ID_VA_AV` = ''CO'' AND ' +
-      'TRIM(av_destino.`AV`) = TRIM(:NUEVO) LIMIT 1',
-      ['ANTERIOR', 'NUEVO'],
-      [AAnterior, ANuevo]);
-  end;
+    Result := not HayColisionUnidadesNoConsolidable('', False);
 end;
 
 function TRepositorioCambioArticuloColorUniDAC.FusionArticuloEsSegura(
@@ -1537,26 +2528,23 @@ begin
   if Result then
   begin
     Result := not Existe(
-      'SELECT 1 FROM `fza_articulos_conjuntos_asign` origen ' +
-      'JOIN `fza_articulos_conjuntos_asign` destino ON ' +
-      'destino.`CODIGO_ART_ACA` = :NUEVO AND ' +
-      'destino.`ID_VA_ACA` = origen.`ID_VA_ACA` ' +
-      'WHERE origen.`CODIGO_ART_ACA` = :ANTERIOR AND NOT (' +
-      'origen.`ID_AC_ACA` <=> destino.`ID_AC_ACA` AND ' +
-      'origen.`ORDEN_ACA` <=> destino.`ORDEN_ACA` AND ' +
-      'origen.`ESGENERACION_AUTO_ACA` <=> ' +
-      'destino.`ESGENERACION_AUTO_ACA`) LIMIT 1',
-      ['ANTERIOR', 'NUEVO'],
-      [AAnterior, ANuevo]);
-  end;
-  if Result then
-  begin
-    Result := not Existe(
-      'SELECT 1 FROM `fza_articulos_proveedores` origen ' +
-      'JOIN `fza_articulos_proveedores` destino ON ' +
-      'destino.`CODIGO_ART_AP` = :NUEVO AND ' +
-      'destino.`CODIGO_PRV_AP` = origen.`CODIGO_PRV_AP` ' +
-      'WHERE origen.`CODIGO_ART_AP` = :ANTERIOR LIMIT 1',
+      'SELECT 1 FROM `fza_articulos_conjuntos_asign` dato WHERE (' +
+      'dato.`CODIGO_ART_ACA` = :ANTERIOR AND NOT EXISTS (SELECT 1 ' +
+      'FROM `fza_articulos_conjuntos_asign` otro WHERE ' +
+      'otro.`CODIGO_ART_ACA` = :NUEVO AND ' +
+      'otro.`ID_VA_ACA` = dato.`ID_VA_ACA` AND ' +
+      'otro.`ID_AC_ACA` <=> dato.`ID_AC_ACA` AND ' +
+      'otro.`ORDEN_ACA` <=> dato.`ORDEN_ACA` AND ' +
+      'otro.`ESGENERACION_AUTO_ACA` <=> ' +
+      'dato.`ESGENERACION_AUTO_ACA`)) OR (' +
+      'dato.`CODIGO_ART_ACA` = :NUEVO AND NOT EXISTS (SELECT 1 ' +
+      'FROM `fza_articulos_conjuntos_asign` otro WHERE ' +
+      'otro.`CODIGO_ART_ACA` = :ANTERIOR AND ' +
+      'otro.`ID_VA_ACA` = dato.`ID_VA_ACA` AND ' +
+      'otro.`ID_AC_ACA` <=> dato.`ID_AC_ACA` AND ' +
+      'otro.`ORDEN_ACA` <=> dato.`ORDEN_ACA` AND ' +
+      'otro.`ESGENERACION_AUTO_ACA` <=> ' +
+      'dato.`ESGENERACION_AUTO_ACA`)) LIMIT 1',
       ['ANTERIOR', 'NUEVO'],
       [AAnterior, ANuevo]);
   end;
@@ -1608,21 +2596,6 @@ begin
   if Result then
   begin
     Result := not Existe(
-      'SELECT 1 FROM `fza_articulos_tarifas` origen LEFT JOIN `' +
-      TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
-      'origen.`CODIGO_UNIDAD_ARTTAR` ' +
-      'JOIN `fza_articulos_tarifas` destino ON ' +
-      'destino.`CODIGO_ART_ARTTAR` = :NUEVO AND ' +
-      'destino.`CODIGO_TAR_ARTTAR` = origen.`CODIGO_TAR_ARTTAR` AND ' +
-      'COALESCE(destino.`CODIGO_UNIDAD_ARTTAR`, '''') = COALESCE(' +
-      'mapa.`DESTINO`, origen.`CODIGO_UNIDAD_ARTTAR`, '''') ' +
-      'WHERE origen.`CODIGO_ART_ARTTAR` = :ANTERIOR LIMIT 1',
-      ['ANTERIOR', 'NUEVO'],
-      [AAnterior, ANuevo]);
-  end;
-  if Result then
-  begin
-    Result := not Existe(
       'SELECT 1 FROM `fza_articulos_vinculos` origen WHERE ' +
       '(origen.`CODIGO_ART_PADRE_ARTVIN` = :ANTERIOR OR ' +
       'origen.`CODIGO_ART_HIJO_ARTVIN` = :ANTERIOR) AND (' +
@@ -1641,6 +2614,10 @@ begin
       ['ANTERIOR', 'NUEVO'],
       [AAnterior, ANuevo]);
   end;
+  if Result then
+    Result := FusionUnidadesEsSegura('', ANuevo, True);
+  if Result then
+    Result := not HayColisionUnidadesNoConsolidable(ANuevo, True);
 end;
 
 procedure TRepositorioCambioArticuloColorUniDAC.PrepararFusionArticulo(
@@ -2174,6 +3151,12 @@ begin
   end
   else if (not AFusionar) and ExisteArticulo(ANuevo) then
     Result := TResultadoCambioArticuloColor.Error(mcacDestinoYaExiste)
+  else if (not AFusionar) and ArticuloRegistrado(ANuevo) then
+  begin
+    Result := TResultadoCambioArticuloColor.Error(
+      mcacDatosInconsistentes,
+      'El código de artículo destino está reservado por un histórico.');
+  end
   else
   begin
     ConstruirMapaArticulo(AAnterior, ANuevo);
@@ -2207,9 +3190,9 @@ begin
         mcacDatosInconsistentes,
         'Los artículos tienen datos maestros incompatibles.');
     end
-    else if ((not AFusionar) and
-             HayDestinoEnReferencias(REFERENCIAS_ARTICULO)) or
-            HayDestinoEnReferencias(REFERENCIAS_UNIDAD) then
+    else if (not AFusionar) and
+            (HayDestinoEnReferencias(REFERENCIAS_ARTICULO) or
+             HayDestinoEnReferencias(REFERENCIAS_UNIDAD)) then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
     else
       Result := TResultadoCambioArticuloColor.Correcto(NumeroSkuMapa);
@@ -2230,14 +3213,32 @@ begin
   end
   else if not ExisteColor(AAnterior) then
     Result := TResultadoCambioArticuloColor.Error(mcacOrigenNoExiste)
+  else if NumeroColoresActivos(AAnterior) <> 1 then
+  begin
+    Result := TResultadoCambioArticuloColor.Error(
+      mcacDatosInconsistentes,
+      'El color origen tiene más de una identidad activa.');
+  end
   else if AFusionar and (not ExisteColor(ANuevo)) then
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
       'El color destino de la fusión no existe.');
   end
+  else if AFusionar and (NumeroColoresActivos(ANuevo) <> 1) then
+  begin
+    Result := TResultadoCambioArticuloColor.Error(
+      mcacDatosInconsistentes,
+      'El color destino tiene más de una identidad activa.');
+  end
   else if (not AFusionar) and ExisteColor(ANuevo) then
     Result := TResultadoCambioArticuloColor.Error(mcacDestinoYaExiste)
+  else if (not AFusionar) and ColorRegistrado(ANuevo) then
+  begin
+    Result := TResultadoCambioArticuloColor.Error(
+      mcacDatosInconsistentes,
+      'El color destino está reservado por un histórico.');
+  end
   else
   begin
     ConstruirMapaColor(AAnterior, ANuevo);
@@ -2272,7 +3273,7 @@ begin
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'El color origen y el destino coinciden en SKU o conjuntos.');
+        'Los SKU de los colores tienen datos incompatibles.');
     end
     else if MapaTieneCodigosLargos or MapaTieneDestinosDuplicados then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
@@ -2284,7 +3285,8 @@ begin
     else if HayDestinoEnVentasColor(ANuevo) or
             HayDestinoMapaEnVentas then
       Result := TResultadoCambioArticuloColor.Error(mcacExistenVentas)
-    else if HayDestinoEnReferencias(REFERENCIAS_UNIDAD) then
+    else if (not AFusionar) and
+            HayDestinoEnReferencias(REFERENCIAS_UNIDAD) then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
     else
       Result := TResultadoCambioArticuloColor.Correcto(NumeroSkuMapa);
@@ -2335,7 +3337,11 @@ end;
 function TRepositorioCambioArticuloColorUniDAC.EjecutarCambioArticulo(
   const AArticuloAntiguo, AArticuloNuevo, AUsuario: string;
   AFusionar: Boolean): TResultadoCambioArticuloColor;
+var
+  oHistorico: THistoricoCambioArticuloColor;
+  sTipoOperacion: string;
 begin
+  oHistorico := nil;
   if FConexion.InTransaction then
   begin
     Result := TResultadoCambioArticuloColor.Error(
@@ -2354,28 +3360,65 @@ begin
           AFusionar);
         if Result.EsCorrecto then
         begin
+          oHistorico := THistoricoCambioArticuloColor.Create(FConexion);
+          if AFusionar then
+            sTipoOperacion := TIPO_FUSION_ARTICULO
+          else
+            sTipoOperacion := TIPO_CAMBIO_ARTICULO;
+          oHistorico.IniciarOperacion(
+            sTipoOperacion,
+            OBJETO_ARTICULO,
+            AArticuloAntiguo,
+            AArticuloNuevo,
+            AUsuario);
+          CapturarHistorico(
+            oHistorico,
+            AArticuloAntiguo,
+            AArticuloNuevo,
+            True);
+          if not AFusionar then
+          begin
+            CrearArticuloDestino(
+              AArticuloAntiguo,
+              AArticuloNuevo,
+              AUsuario);
+          end;
           if AFusionar then
             PrepararFusionArticulo(
               AArticuloAntiguo,
               AArticuloNuevo);
-          ActualizarReferenciasUnidad(AUsuario);
-          ActualizarSkuMaestro(AUsuario);
+          CrearSkuDestino(AArticuloNuevo, AUsuario, True);
+          PrepararAtributosSkuDestino('', AUsuario, False);
+          ConsolidarTarifas(
+            AArticuloAntiguo,
+            AArticuloNuevo,
+            AUsuario,
+            True);
+          ConsolidarReferenciasUnidad(AUsuario);
+          EliminarAtributosSkuOrigen;
+          DesactivarSkuOrigen(AUsuario);
+          ConsolidarProveedoresArticulo(
+            AArticuloAntiguo,
+            AArticuloNuevo,
+            AUsuario);
           ActualizarReferenciasArticulo(
             AArticuloAntiguo,
             AArticuloNuevo,
             AUsuario);
-          if AFusionar then
-            EliminarArticuloMaestro(AArticuloAntiguo)
-          else
-            ActualizarArticuloMaestro(
-              AArticuloAntiguo,
-              AArticuloNuevo,
-              AUsuario);
+          DesactivarArticuloMaestro(AArticuloAntiguo, AUsuario);
           if not VerificarCambioArticulo(AArticuloAntiguo) then
           begin
             Result := TResultadoCambioArticuloColor.Error(
               mcacDatosInconsistentes,
               'Persisten referencias al código de artículo antiguo.');
+          end;
+          if Result.EsCorrecto then
+          begin
+            oHistorico.CompletarOperacion(
+              Result.UnidadesAfectadas,
+              'SKU origen inactivos; costes conservados; tarifa más ' +
+              'reciente y PMP histórico recalculado.');
+            Result.IdOperacion := oHistorico.IdOperacion;
           end;
         end;
         FinalizarTransaccion(Result);
@@ -2385,6 +3428,7 @@ begin
         raise;
       end;
     finally
+      oHistorico.Free;
       EliminarTablaTemporal;
     end;
   end;
@@ -2415,7 +3459,11 @@ end;
 function TRepositorioCambioArticuloColorUniDAC.EjecutarCambioColor(
   const AColorAntiguo, AColorNuevo, AUsuario: string;
   AFusionar: Boolean): TResultadoCambioArticuloColor;
+var
+  oHistorico: THistoricoCambioArticuloColor;
+  sTipoOperacion: string;
 begin
+  oHistorico := nil;
   if FConexion.InTransaction then
   begin
     Result := TResultadoCambioArticuloColor.Error(
@@ -2434,12 +3482,35 @@ begin
           AFusionar);
         if Result.EsCorrecto then
         begin
+          oHistorico := THistoricoCambioArticuloColor.Create(FConexion);
+          if AFusionar then
+            sTipoOperacion := TIPO_FUSION_COLOR
+          else
+            sTipoOperacion := TIPO_CAMBIO_COLOR;
+          oHistorico.IniciarOperacion(
+            sTipoOperacion,
+            OBJETO_COLOR,
+            AColorAntiguo,
+            AColorNuevo,
+            AUsuario);
+          CapturarHistorico(
+            oHistorico,
+            AColorAntiguo,
+            AColorNuevo,
+            False);
           ActualizarInstantaneasColor(
             AColorAntiguo,
             AColorNuevo,
             AUsuario);
-          ActualizarReferenciasUnidad(AUsuario);
-          ActualizarSkuMaestro(AUsuario);
+          CrearSkuDestino('', AUsuario, False);
+          PrepararAtributosSkuDestino(
+            AColorNuevo,
+            AUsuario,
+            AFusionar);
+          ConsolidarTarifas('', '', AUsuario, False);
+          ConsolidarReferenciasUnidad(AUsuario);
+          EliminarAtributosSkuOrigen;
+          DesactivarSkuOrigen(AUsuario);
           ActualizarColorMaestro(
             AColorAntiguo,
             AColorNuevo,
@@ -2451,6 +3522,14 @@ begin
               mcacDatosInconsistentes,
               'Persisten referencias al color antiguo.');
           end;
+          if Result.EsCorrecto then
+          begin
+            oHistorico.CompletarOperacion(
+              Result.UnidadesAfectadas,
+              'SKU origen inactivos; costes conservados; tarifa más ' +
+              'reciente y PMP histórico recalculado.');
+            Result.IdOperacion := oHistorico.IdOperacion;
+          end;
         end;
         FinalizarTransaccion(Result);
       except
@@ -2459,8 +3538,22 @@ begin
         raise;
       end;
     finally
+      oHistorico.Free;
       EliminarTablaTemporal;
     end;
+  end;
+end;
+
+function TRepositorioCambioArticuloColorUniDAC.RevertirOperacion(
+  const AIdOperacion, AUsuario: string): TResultadoReversionHistorico;
+var
+  oHistorico: THistoricoCambioArticuloColor;
+begin
+  oHistorico := THistoricoCambioArticuloColor.Create(FConexion);
+  try
+    Result := oHistorico.Revertir(AIdOperacion, AUsuario);
+  finally
+    oHistorico.Free;
   end;
 end;
 

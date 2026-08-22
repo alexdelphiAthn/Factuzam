@@ -44,6 +44,7 @@ Cuando crees una tabla nueva, **registra su sufijo** aquí y en el código del n
 | `fza_almacenes_cajas`                | `ALMCAJ`  |
 | `fza_articulos`                      | `ART`     |
 | `fza_articulos_atributos_basicos`    | `AAB`     |
+| `fza_articulos_cambios_historico`    | `ACH`     |
 | `fza_articulos_conjuntos_asign`      | `ACA`     |
 | `fza_articulos_familias`             | `FAM`     |
 | `fza_articulos_propiedades`          | `ARTPROP` |

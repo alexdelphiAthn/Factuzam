@@ -316,6 +316,8 @@
         <DCCReference Include="src\Lib\inLibCambioArticuloColorIntf.pas"/>
         <DCCReference Include="src\Lib\inLibCambioArticuloColor.pas"/>
         <DCCReference
+            Include="src\DataModules\UniDataCambioArticuloColorHistorico.pas"/>
+        <DCCReference
             Include="src\DataModules\UniDataCambioArticuloColorRepositorio.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>

@@ -28,6 +28,7 @@ type
     Color: string;
     ColorDetectado: string;
     CodigoFoto: string;
+    FotoAusente: Boolean;
     Tallas: TTallasPedidoOcr;
     Cantidad: Double;
     PrecioCompra: Double;
@@ -41,6 +42,11 @@ type
     ReferenciaDocumento: string;
     FechaPedido: string;
     FechaTope: string;
+    TieneValidacion: Boolean;
+    Cuadra: Boolean;
+    RequiereRevision: Boolean;
+    AdvertenciasValidacion: string;
+    InferenciasValidacion: string;
     Lineas: TLineasPedidoOcr;
     PaginasOriginales: TArray<string>;
     FicheroJson: string;
@@ -49,6 +55,13 @@ type
   private
     class function LeerTextoSeguro(AObjeto: TObject;
       const AClave: string): string; static;
+    class function LeerBooleanoSeguro(AObjeto: TObject;
+      const AClave: string; ADefecto: Boolean): Boolean; static;
+    class function LeerListaTextos(AObjeto: TObject;
+      const AClave: string): string; static;
+    class function LeerInferencias(AObjeto: TObject): string; static;
+    class procedure LeerValidacion(AObjeto: TObject;
+      var APedido: TPedidoOcr); static;
     class function LeerLinea(AObjeto: TObject): TLineaPedidoOcr; static;
     class function SonEquivalentes(const APrimera,
       ASegunda: TLineaPedidoOcr): Boolean; static;
@@ -110,6 +123,166 @@ begin
   end;
 end;
 
+class function TLectorPedidoOcr.LeerBooleanoSeguro(AObjeto: TObject;
+  const AClave: string; ADefecto: Boolean): Boolean;
+var
+  oJson: TJSONObject;
+  oValor: TJSONValue;
+begin
+  Result := ADefecto;
+  if AObjeto is TJSONObject then
+  begin
+    oJson := TJSONObject(AObjeto);
+    oValor := oJson.GetValue(AClave);
+    if oValor is TJSONBool then
+      Result := TJSONBool(oValor).AsBoolean;
+  end;
+end;
+
+class function TLectorPedidoOcr.LeerListaTextos(AObjeto: TObject;
+  const AClave: string): string;
+var
+  iValor: Integer;
+  oJson: TJSONObject;
+  oLista: TJSONArray;
+  oTextos: TStringList;
+  oValor: TJSONValue;
+  sTexto: string;
+begin
+  Result := '';
+  if AObjeto is TJSONObject then
+  begin
+    oJson := TJSONObject(AObjeto);
+    if oJson.GetValue(AClave) is TJSONArray then
+    begin
+      oLista := TJSONArray(oJson.GetValue(AClave));
+      oTextos := TStringList.Create;
+      try
+        for iValor := 0 to oLista.Count - 1 do
+        begin
+          oValor := oLista.Items[iValor];
+          if Assigned(oValor) and (not (oValor is TJSONNull)) and
+             (not (oValor is TJSONObject)) and
+             (not (oValor is TJSONArray)) then
+          begin
+            sTexto := Trim(oValor.Value);
+            if sTexto <> '' then
+              oTextos.Add(sTexto);
+          end;
+        end;
+        Result := Trim(oTextos.Text);
+      finally
+        oTextos.Free;
+      end;
+    end;
+  end;
+end;
+
+class function TLectorPedidoOcr.LeerInferencias(
+  AObjeto: TObject): string;
+var
+  iInferencia: Integer;
+  oInferencia: TJSONObject;
+  oInferencias: TJSONArray;
+  oJson: TJSONObject;
+  oTextos: TStringList;
+  sCantidad: string;
+  sColor: string;
+  sLinea: string;
+  sModelo: string;
+  sOrigen: string;
+  sTalla: string;
+begin
+  Result := '';
+  if AObjeto is TJSONObject then
+  begin
+    oJson := TJSONObject(AObjeto);
+    if oJson.GetValue('inferencias') is TJSONArray then
+    begin
+      oInferencias := TJSONArray(oJson.GetValue('inferencias'));
+      oTextos := TStringList.Create;
+      try
+        for iInferencia := 0 to oInferencias.Count - 1 do
+        begin
+          if oInferencias.Items[iInferencia] is TJSONObject then
+          begin
+            oInferencia := TJSONObject(oInferencias.Items[iInferencia]);
+            sLinea := LeerTextoSeguro(oInferencia, 'linea');
+            sModelo := LeerTextoSeguro(oInferencia, 'modelo');
+            sColor := LeerTextoSeguro(oInferencia, 'color');
+            sTalla := LeerTextoSeguro(oInferencia, 'talla');
+            sCantidad := LeerTextoSeguro(oInferencia, 'cantidad');
+            sOrigen := LeerTextoSeguro(oInferencia, 'origen');
+            if SameText(sOrigen, 'total_linea_y_celda_ocr_fusionada') then
+              sOrigen := 'total de línea y celda OCR fusionada'
+            else if SameText(
+              sOrigen, 'total_pedido_y_celda_ocr_fusionada') then
+              sOrigen := 'total del pedido y celda OCR fusionada';
+            if sLinea = '' then
+              sLinea := '?';
+            if sModelo = '' then
+              sModelo := '?';
+            if sColor = '' then
+              sColor := '?';
+            if sTalla = '' then
+              sTalla := '?';
+            if sCantidad = '' then
+              sCantidad := '?';
+            if sOrigen = '' then
+              sOrigen := 'inferencia OCR';
+            oTextos.Add(Format(
+              'Línea %s, modelo %s, color %s, talla %s: ' +
+              'cantidad %s (%s).',
+              [sLinea, sModelo, sColor, sTalla, sCantidad, sOrigen]));
+          end;
+        end;
+        Result := Trim(oTextos.Text);
+      finally
+        oTextos.Free;
+      end;
+    end;
+  end;
+end;
+
+class procedure TLectorPedidoOcr.LeerValidacion(AObjeto: TObject;
+  var APedido: TPedidoOcr);
+var
+  oRaiz: TJSONObject;
+  oValidacion: TJSONObject;
+  oValor: TJSONValue;
+  sMotivo: string;
+begin
+  if not (AObjeto is TJSONObject) then
+    raise Exception.Create(
+      'El fichero no contiene un objeto JSON válido.');
+  oRaiz := TJSONObject(AObjeto);
+  oValor := oRaiz.GetValue('validacion');
+  if Assigned(oValor) then
+  begin
+    APedido.TieneValidacion := True;
+    if not (oValor is TJSONObject) then
+      raise Exception.Create(
+        'El bloque de validación del OCR no contiene un objeto válido.');
+    oValidacion := TJSONObject(oValor);
+    APedido.Cuadra := LeerBooleanoSeguro(oValidacion, 'cuadra', False);
+    APedido.RequiereRevision := LeerBooleanoSeguro(
+      oValidacion, 'requiere_revision', False);
+    APedido.AdvertenciasValidacion := LeerListaTextos(
+      oValidacion, 'advertencias');
+    APedido.InferenciasValidacion := LeerInferencias(oValidacion);
+    if not APedido.Cuadra then
+    begin
+      sMotivo := Trim(APedido.AdvertenciasValidacion);
+      if sMotivo = '' then
+        sMotivo :=
+          'El extractor no pudo verificar las cantidades e importes.';
+      raise Exception.Create(
+        'El OCR no ha superado la validación del pedido.' +
+        sLineBreak + sMotivo);
+    end;
+  end;
+end;
+
 class function TLectorPedidoOcr.LeerLinea(
   AObjeto: TObject): TLineaPedidoOcr;
 var
@@ -117,6 +290,7 @@ var
   oJson: TJSONObject;
   oListaTallas: TJSONArray;
   oTalla: TJSONObject;
+  oValorFotoAusente: TJSONValue;
   oValorPvp: TJSONValue;
   TallaLeida: TTallaPedidoOcr;
 begin
@@ -130,6 +304,9 @@ begin
     Result.ColorDetectado := LeerTextoSeguro(
       oJson, 'color_detectado');
     Result.CodigoFoto := LeerTextoSeguro(oJson, 'codigo_foto');
+    oValorFotoAusente := oJson.GetValue('foto_ausente');
+    Result.FotoAusente := (oValorFotoAusente is TJSONBool) and
+      TJSONBool(oValorFotoAusente).AsBoolean;
     Result.PrecioCompra := JsonDoubleODefecto(
       oJson, 'precio_unitario', 0);
     Result.Pvp := JsonDoubleODefecto(oJson, 'pvp', 0);
@@ -219,6 +396,11 @@ begin
         SumarTalla(ALineas[iLinea], ALinea.Tallas[iTalla]);
       if ALineas[iLinea].CodigoFoto = '' then
         ALineas[iLinea].CodigoFoto := ALinea.CodigoFoto;
+      if ALineas[iLinea].CodigoFoto <> '' then
+        ALineas[iLinea].FotoAusente := False
+      else
+        ALineas[iLinea].FotoAusente :=
+          ALineas[iLinea].FotoAusente or ALinea.FotoAusente;
       if ALineas[iLinea].Descripcion = '' then
         ALineas[iLinea].Descripcion := ALinea.Descripcion;
       if ALineas[iLinea].ColorDetectado = '' then
@@ -255,7 +437,8 @@ begin
     end;
     for iLinea := 0 to High(ALineas) do
     begin
-      if Trim(ALineas[iLinea].CodigoFoto) = '' then
+      if (Trim(ALineas[iLinea].CodigoFoto) = '') and
+         (not ALineas[iLinea].FotoAusente) then
       begin
         sModelo := UpperCase(Trim(ALineas[iLinea].Modelo));
         if oFotosPorModelo.TryGetValue(sModelo, sCodigoFoto) then
@@ -302,6 +485,7 @@ begin
       Result.RazonSocialProveedor := LeerTextoSeguro(
         oProveedor, 'razon_social');
     end;
+    LeerValidacion(oRaiz, Result);
     if not (oRaiz.GetValue('detalle') is TJSONArray) then
       raise Exception.Create('El JSON no contiene el array detalle.');
     oDetalle := TJSONArray(oRaiz.GetValue('detalle'));

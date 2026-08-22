@@ -207,6 +207,8 @@ uses
     'src\Lib\inLibCambioArticuloColorIntf.pas',
   inLibCambioArticuloColor in
     'src\Lib\inLibCambioArticuloColor.pas',
+  UniDataCambioArticuloColorHistorico in
+    'src\DataModules\UniDataCambioArticuloColorHistorico.pas',
   UniDataCambioArticuloColorRepositorio in
     'src\DataModules\UniDataCambioArticuloColorRepositorio.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},

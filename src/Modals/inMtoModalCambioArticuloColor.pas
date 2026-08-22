@@ -104,15 +104,18 @@ resourcestring
   SPreguntaFusionarArticulo =
     'El artículo destino "%s" ya existe.' + sLineBreak + sLineBreak +
     '¿Desea fusionar "%s" dentro de ese artículo?' + sLineBreak +
-    sLineBreak + 'Se eliminará el maestro origen. Los datos principales ' +
-    'del destino prevalecerán; los SKU y la configuración compatible del ' +
-    'origen se incorporarán. Cualquier incompatibilidad, colisión o ' +
-    'ambigüedad cancelará toda la operación.';
+    sLineBreak + 'El artículo y sus SKU antiguos se conservarán ' +
+    'desactivados. Los documentos y movimientos pasarán al destino; el ' +
+    'PMP se recalculará con todo el histórico combinado y prevalecerá la ' +
+    'tarifa de venta más reciente. Si existe una factura o una colisión ' +
+    'no conciliable, se cancelará toda la operación.';
   SPreguntaFusionarColor =
     'El color destino "%s" ya existe.' + sLineBreak + sLineBreak +
     '¿Desea fusionar el color "%s" con él?' + sLineBreak + sLineBreak +
-    'Se perderán el color básico y las descripciones específicas del ' +
-    'color origen. Cualquier colisión cancelará toda la operación.';
+    'Los SKU antiguos se conservarán desactivados y se perderá la ' +
+    'clasificación de color básico del color fusionado. Los movimientos ' +
+    'se recalcularán históricamente. Si existe una factura o una colisión ' +
+    'no conciliable, se cancelará toda la operación.';
   SErrorVentasImpidenCambio =
     'No se ha realizado ningún cambio porque existen ventas asociadas. ' +
     'La operación se ha cancelado por completo y no se puede forzar.';
