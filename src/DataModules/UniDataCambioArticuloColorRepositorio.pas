@@ -2218,17 +2218,30 @@ begin
   try
     oConsulta.Connection := FConexion;
     oConsulta.SQL.Text :=
-      'SELECT DISTINCT COALESCE(almacen.`CODIGO_EMP_ALM`, '''') ' +
+      'SELECT DISTINCT COALESCE(ambito.`CODIGO_EMP`, ' +
+      'almacen.`CODIGO_EMP_ALM`, '''') ' +
       '`CODIGO_EMP_MOV`, ambito.`CODIGO_ALM` `CODIGO_ALM_MOV`, ' +
       'ambito.`DESTINO` FROM (SELECT ' +
-      'mapa.`DESTINO`, movimiento.`CODIGO_ALM_MOV` `CODIGO_ALM` FROM ' +
+      'mapa.`DESTINO`, movimiento.`CODIGO_EMP_MOV` `CODIGO_EMP`, ' +
+      'movimiento.`CODIGO_ALM_MOV` `CODIGO_ALM` FROM ' +
       '`fza_movimientos_almacen` movimiento JOIN `' + TABLA_TEMPORAL +
       '` mapa ON mapa.`DESTINO` = movimiento.`CODIGO_UNIDAD_MOV` ' +
       'WHERE mapa.`ES_SKU` = ''S'' AND ' +
       'movimiento.`ESACTIVO_MOV` = ''S'' UNION SELECT mapa.`DESTINO`, ' +
-      'stock.`CODIGO_ALM_STK` FROM `fza_articulos_stockactual` stock ' +
+      'NULL, stock.`CODIGO_ALM_STK` FROM ' +
+      '`fza_articulos_stockactual` stock ' +
       'JOIN `' + TABLA_TEMPORAL + '` mapa ON mapa.`DESTINO` = ' +
-      'stock.`CODIGO_UNIDAD_STK` WHERE mapa.`ES_SKU` = ''S'') ambito ' +
+      'stock.`CODIGO_UNIDAD_STK` WHERE mapa.`ES_SKU` = ''S'' UNION ' +
+      'SELECT mapa.`DESTINO`, linea.`CODIGO_EMP_INVLIN`, ' +
+      'linea.`CODIGO_ALM_INVLIN` FROM ' +
+      '`fza_inventarios_lineas` linea JOIN `fza_inventarios` inventario ' +
+      'ON inventario.`CODIGO_EMP_INV` = linea.`CODIGO_EMP_INVLIN` AND ' +
+      'inventario.`CODIGO_ALM_INV` = linea.`CODIGO_ALM_INVLIN` AND ' +
+      'inventario.`SERIE_INV` = linea.`SERIE_INV_INVLIN` AND ' +
+      'inventario.`NUMERO_INV` = linea.`NUMERO_INV_INVLIN` JOIN `' +
+      TABLA_TEMPORAL + '` mapa ON mapa.`DESTINO` = ' +
+      'linea.`CODIGO_UNIDAD_INVLIN` WHERE mapa.`ES_SKU` = ''S'' AND ' +
+      'inventario.`ESTADO_INV` = ''APLICADO'') ambito ' +
       'LEFT JOIN `fza_almacenes` almacen ON ' +
       'almacen.`CODIGO_ALM_ALM` = ambito.`CODIGO_ALM` ORDER BY ' +
       'ambito.`DESTINO`, `CODIGO_EMP_MOV`, `CODIGO_ALM_MOV`';
