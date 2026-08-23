@@ -96,6 +96,21 @@ resourcestring
     'No se pudo preparar la conexión para la copia: %s';
   SErrorPublicarComandoCopiaSeguridad =
     'No se pudo guardar la copia en su destino: %s';
+  SErrorFormatoComandoCopiaSeguridad =
+    'El archivo temporal no contiene una copia cifrada válida.';
+  SInfoComandoCopiaSeguridadInicio =
+    'Inicio de copia de seguridad por línea de comandos.';
+  SInfoComandoCopiaSeguridadConexion =
+    'Preparando la conexión configurada para la copia.';
+  SInfoComandoCopiaSeguridadConexionPreparada =
+    'Conexión preparada correctamente.';
+  SInfoComandoCopiaSeguridadDestino =
+    'Destino de la copia: %s';
+  SInfoComandoCopiaSeguridadGeneracion =
+    'Generando la copia cifrada temporal.';
+  SInfoComandoCopiaSeguridadPublicacion =
+    'Copia cifrada generada. Publicando el archivo de destino; si ya ' +
+    'existe, se reemplazará.';
   SInfoComandoCopiaSeguridadCompletado =
     'Copia de seguridad completada: %s';
   SRestauracionCancelada =

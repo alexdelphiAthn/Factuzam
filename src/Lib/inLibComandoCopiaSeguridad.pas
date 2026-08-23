@@ -63,7 +63,6 @@ implementation
 
 uses
   System.Character,
-  System.IOUtils,
   System.StrUtils,
   inLibCifrado;
 
@@ -117,8 +116,7 @@ end;
 
 function EsCaracterIdentificador(ACaracter: Char): Boolean;
 begin
-  Result := TCharacter.IsLetterOrDigit(ACaracter) or
-            (ACaracter = '_');
+  Result := ACaracter.IsLetterOrDigit;
 end;
 
 function ReemplazarTokenDelimitado(
@@ -334,26 +332,53 @@ procedure ResolverClaveSolicitud(
   var ASolicitud: TSolicitudComandoCopiaSeguridad);
 var
   bContrasenaExplicita: Boolean;
+  bMarcadorLiteral: Boolean;
   bTieneMarcador: Boolean;
   sClaveCifrada: string;
   sMarcador: string;
+  sRutaRegistroLiteral: string;
 begin
   bContrasenaExplicita := Length(AParametros) = 3;
-  bTieneMarcador := IntentarExtraerMarcadorClave(
-    ASolicitud.RutaDestino,
-    sMarcador,
-    ASolicitud.RutaRegistro);
   if bContrasenaExplicita then
     ASolicitud.Contrasena := AParametros[2]
   else
     ASolicitud.Contrasena := AClavesPredeterminadas.Contrasena;
+  sRutaRegistroLiteral := ReemplazarToken(
+    ASolicitud.RutaDestino,
+    MARCADOR_CLAVE,
+    '***');
+  bMarcadorLiteral :=
+    sRutaRegistroLiteral <> ASolicitud.RutaDestino;
+  bTieneMarcador := False;
+  if bMarcadorLiteral then
+    ASolicitud.RutaRegistro := sRutaRegistroLiteral
+  else
+  begin
+    bTieneMarcador := IntentarExtraerMarcadorClave(
+      ASolicitud.RutaDestino,
+      sMarcador,
+      ASolicitud.RutaRegistro);
+  end;
   sClaveCifrada := '';
-  if bTieneMarcador then
+  if bMarcadorLiteral then
   begin
     if bContrasenaExplicita then
       sClaveCifrada := CifrarAES(ASolicitud.Contrasena)
-    else if SameText(sMarcador, MARCADOR_CLAVE) then
-      sClaveCifrada := AClavesPredeterminadas.ClaveCifrada
+    else
+      sClaveCifrada := AClavesPredeterminadas.ClaveCifrada;
+    if (ASolicitud.Contrasena <> '') and
+       (sClaveCifrada <> '') then
+    begin
+      ASolicitud.RutaDestino := ReemplazarToken(
+        ASolicitud.RutaDestino,
+        MARCADOR_CLAVE,
+        CodificarClaveCifradaParaRuta(sClaveCifrada));
+    end;
+  end
+  else if bTieneMarcador then
+  begin
+    if bContrasenaExplicita then
+      sClaveCifrada := CifrarAES(ASolicitud.Contrasena)
     else
     begin
       sClaveCifrada := DecodificarClaveCifradaDeRuta(sMarcador);
@@ -369,7 +394,8 @@ begin
   end;
   if ASolicitud.Contrasena = '' then
     ASolicitud.Error := eccsClave;
-  if bTieneMarcador and (sClaveCifrada = '') then
+  if (bMarcadorLiteral or bTieneMarcador) and
+     (sClaveCifrada = '') then
     ASolicitud.Error := eccsClave;
 end;
 

@@ -6955,6 +6955,48 @@ begin
       SErrorPublicarComandoCopiaSeguridad);
   ARegistrar(
     'inLibMsgConfiguracion.' +
+    'SErrorFormatoComandoCopiaSeguridad',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorFormatoComandoCopiaSeguridad);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoComandoCopiaSeguridadInicio',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoComandoCopiaSeguridadInicio);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoComandoCopiaSeguridadConexion',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoComandoCopiaSeguridadConexion);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoComandoCopiaSeguridadConexionPreparada',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoComandoCopiaSeguridadConexionPreparada);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoComandoCopiaSeguridadDestino',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoComandoCopiaSeguridadDestino);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoComandoCopiaSeguridadGeneracion',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoComandoCopiaSeguridadGeneracion);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoComandoCopiaSeguridadPublicacion',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoComandoCopiaSeguridadPublicacion);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
     'SInfoComandoCopiaSeguridadCompletado',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
