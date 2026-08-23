@@ -146,6 +146,7 @@ uses
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
+  UniDataAperturaConsultas,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
@@ -215,40 +216,19 @@ end;
 procedure TdmFacturasCompra.AbrirDetalles;
 const
   TAG = 'FacturasCompra.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
   RefrescarAlmacenes('');
-  AbrirConTiempo(unqryFacturasCompraLineas,
-                 'unqryFacturasCompraLineas');
-  AbrirConTiempo(unqryEfectos, 'unqryEfectos');
-  AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
+  AbrirConsultaConTiempo(
+    unqryFacturasCompraLineas, TAG, 'unqryFacturasCompraLineas',
+    RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryEfectos, TAG, 'unqryEfectos', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFormasPago, TAG, 'unqryFormasPago', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

@@ -74,7 +74,7 @@ begin
   if bEsAdministrador then
   begin
     oTipoFichero.DisplayName := SCaptionFiltroCopiasSqlCifradas;
-    oTipoFichero.FileMask := '*.sql;*.crypt';
+    oTipoFichero.FileMask := '*.sql;*.zip;*.crypt';
     AContexto.Dialogo.DefaultExtension := 'sql';
   end
   else
@@ -137,14 +137,18 @@ class function TCoordinadorRestauracionCopiasVcl.ConfirmarCopiaPrevia(
   const ARutaFichero: string): Boolean;
 var
   bCifrada: Boolean;
+  bCopiaCompleta: Boolean;
   bRequiereCopia: Boolean;
   iRespuesta: Integer;
   sPregunta: string;
 begin
   bCifrada := AContexto.CasoUso.RequiereContrasena(ARutaFichero);
-  bRequiereCopia := bCifrada;
+  bCopiaCompleta := bCifrada or SameText(
+    ExtractFileExt(ARutaFichero),
+    '.zip');
+  bRequiereCopia := bCopiaCompleta;
   sPregunta := SPreguntaCopiaAntesRestaurarCifrada;
-  if not bCifrada then
+  if not bCopiaCompleta then
   begin
     bRequiereCopia := AContexto.ComprobarDDL(
       LeerCabeceraSql(ARutaFichero));

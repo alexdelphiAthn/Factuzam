@@ -1,14 +1,13 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inMtoComandoCopiaSeguridad                                   }
-{    Tipo:       Coordinador de aplicación                                    }
+{    Tipo:       Formulario (Core)                                             }
 { Versión:       1.0.0                                                         }
 {   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
 {  SPDX-License-Identifier: MPL-2.0                                            }
-{                                                                              }
 {  Descripción:                                                                }
 {    Ejecuta la copia de seguridad solicitada por línea de comandos.           }
 {******************************************************************************}
@@ -29,6 +28,7 @@ implementation
 uses
   System.Classes,
   System.IOUtils,
+  System.StrUtils,
   System.SysUtils,
   Winapi.Windows,
   Uni,
@@ -38,7 +38,9 @@ uses
   inLibComandoCopiaSeguridad,
   inLibCopiasSeguridad,
   inLibCopiasSeguridadIntf,
-  inLibMsgConfiguracion;
+  inLibLineaComandos,
+  inLibMsgConfiguracion,
+  inLibSalidaComandos;
 
 const
   SALIDA_COMANDO_ERROR_INESPERADO = 1;
@@ -65,17 +67,6 @@ begin
   Result.CodigoSalida := ACodigoSalida;
   Result.EsError := ACodigoSalida <> 0;
   Result.Mensaje := AMensaje;
-end;
-
-function ObtenerParametrosProceso: TArray<string>;
-var
-  iIndice: Integer;
-begin
-  SetLength(Result, ParamCount);
-  for iIndice := 1 to ParamCount do
-  begin
-    Result[iIndice - 1] := ParamStr(iIndice);
-  end;
 end;
 
 function MensajeErrorSolicitudCopia(
@@ -111,6 +102,33 @@ begin
   end;
 end;
 
+function CrearResultadoErrorSolicitud(
+  AError: TErrorComandoCopiaSeguridad
+): TResultadoComandoCopiaSeguridad;
+begin
+  Result := CrearResultadoComandoCopiaSeguridad(
+    CodigoErrorSolicitudCopia(AError),
+    MensajeErrorSolicitudCopia(AError));
+end;
+
+function InterpretarSolicitudPrevia(
+  const AParametros: TArray<string>;
+  AInstante: TDateTime
+): TSolicitudComandoCopiaSeguridad;
+var
+  ClavesValidacion: TClavesPredeterminadasCopiaSeguridad;
+begin
+  ClavesValidacion := Default(
+    TClavesPredeterminadasCopiaSeguridad);
+  ClavesValidacion.Contrasena := 'validacion';
+  ClavesValidacion.ClaveCifrada := CifrarAES(
+    ClavesValidacion.Contrasena);
+  Result := InterpretarComandoCopiaSeguridad(
+    AParametros,
+    AInstante,
+    ClavesValidacion);
+end;
+
 procedure PrepararDirectorioCopia(const ARutaFichero: string);
 var
   sDirectorio: string;
@@ -133,8 +151,10 @@ end;
 
 function EsCopiaTemporalValida(const ARutaFichero: string): Boolean;
 var
+  iLinea: Integer;
   oLector: TStreamReader;
   sCabecera: string;
+  sLinea: string;
 begin
   Result := FileExists(ARutaFichero);
   if Result then
@@ -146,6 +166,19 @@ begin
     try
       sCabecera := oLector.ReadLine;
       Result := EsFormatoCifradoActual(sCabecera);
+      iLinea := 1;
+      while Result and (iLinea <= 4) do
+      begin
+        Result := not oLector.EndOfStream;
+        if Result then
+        begin
+          sLinea := Trim(oLector.ReadLine);
+          Result := sLinea <> '';
+        end;
+        Inc(iLinea);
+      end;
+      if Result then
+        Result := not oLector.EndOfStream;
     finally
       FreeAndNil(oLector);
     end;
@@ -165,15 +198,78 @@ begin
     AError := SysErrorMessage(GetLastError);
 end;
 
+function ObtenerValorOcultoSolicitud(
+  const ASolicitud: TSolicitudComandoCopiaSeguridad): string;
+var
+  iMarcador: Integer;
+  sPrefijo: string;
+  sSufijo: string;
+begin
+  Result := '';
+  iMarcador := Pos('***', ASolicitud.RutaRegistro);
+  if (iMarcador > 0) and
+     (PosEx('***', ASolicitud.RutaRegistro, iMarcador + 3) = 0) then
+  begin
+    sPrefijo := Copy(
+      ASolicitud.RutaRegistro,
+      1,
+      iMarcador - 1);
+    sSufijo := Copy(
+      ASolicitud.RutaRegistro,
+      iMarcador + 3,
+      MaxInt);
+    if StartsText(sPrefijo, ASolicitud.RutaDestino) and
+       EndsText(sSufijo, ASolicitud.RutaDestino) then
+    begin
+      Result := Copy(
+        ASolicitud.RutaDestino,
+        Length(sPrefijo) + 1,
+        Length(ASolicitud.RutaDestino) -
+          Length(sPrefijo) - Length(sSufijo));
+    end;
+  end;
+end;
+
+function OcultarDetalleSolicitud(
+  const ADetalle: string;
+  const ASolicitud: TSolicitudComandoCopiaSeguridad): string;
+var
+  sDirectorioDestino: string;
+  sDirectorioRegistro: string;
+  sValorOculto: string;
+begin
+  Result := ReplaceText(
+    ADetalle,
+    ASolicitud.RutaDestino,
+    ASolicitud.RutaRegistro);
+  sDirectorioDestino := ExcludeTrailingPathDelimiter(
+    ExtractFilePath(ASolicitud.RutaDestino));
+  sDirectorioRegistro := ExcludeTrailingPathDelimiter(
+    ExtractFilePath(ASolicitud.RutaRegistro));
+  if sDirectorioDestino <> sDirectorioRegistro then
+  begin
+    Result := ReplaceText(
+      Result,
+      sDirectorioDestino,
+      sDirectorioRegistro);
+  end;
+  sValorOculto := ObtenerValorOcultoSolicitud(ASolicitud);
+  if sValorOculto <> '' then
+    Result := ReplaceText(Result, sValorOculto, '***');
+  if ASolicitud.Contrasena <> '' then
+    Result := ReplaceText(Result, ASolicitud.Contrasena, '***');
+end;
+
 function CrearErrorPublicacion(
-  const ADetalle: string
+  const ADetalle: string;
+  const ASolicitud: TSolicitudComandoCopiaSeguridad
 ): TResultadoComandoCopiaSeguridad;
 begin
   Result := CrearResultadoComandoCopiaSeguridad(
     SALIDA_COMANDO_PUBLICACION,
     Format(
       SErrorPublicarComandoCopiaSeguridad,
-      [ADetalle]));
+      [OcultarDetalleSolicitud(ADetalle, ASolicitud)]));
 end;
 
 function PublicarCopiaTemporal(
@@ -186,8 +282,11 @@ var
 begin
   if not EsCopiaTemporalValida(ARutaTemporal) then
   begin
-    Result := CrearErrorPublicacion(
-      SErrorFormatoComandoCopiaSeguridad);
+    Result := CrearResultadoComandoCopiaSeguridad(
+      SALIDA_COMANDO_COPIA,
+      Format(
+        SErrorCrearCopiaSeguridad,
+        [SErrorFormatoComandoCopiaSeguridad]));
   end
   else
   begin
@@ -205,7 +304,29 @@ begin
           [ASolicitud.RutaRegistro]));
     end
     else
-      Result := CrearErrorPublicacion(sError);
+      Result := CrearErrorPublicacion(sError, ASolicitud);
+  end;
+end;
+
+function CrearCopiaTemporal(
+  AConexion: TUniConnection;
+  const ARutaTemporal: string;
+  const ASolicitud: TSolicitudComandoCopiaSeguridad;
+  out AError: string): TResultadoCopiaSeguridad;
+begin
+  try
+    Result := CrearCopiaProtegidaConexion(
+      AConexion,
+      ARutaTemporal,
+      ASolicitud.Contrasena,
+      nil,
+      AError);
+  except
+    on E: Exception do
+    begin
+      AError := E.Message;
+      Result := rcsFallida;
+    end;
   end;
 end;
 
@@ -231,11 +352,10 @@ begin
         ASolicitud.RutaDestino);
       ARegistroLog.RegistrarInformacion(
         SInfoComandoCopiaSeguridadGeneracion);
-      oResultadoCopia := CrearCopiaProtegidaConexion(
+      oResultadoCopia := CrearCopiaTemporal(
         AConexion,
         sRutaTemporal,
-        ASolicitud.Contrasena,
-        nil,
+        ASolicitud,
         sError);
       if oResultadoCopia = rcsCompletada then
       begin
@@ -248,11 +368,15 @@ begin
       begin
         Result := CrearResultadoComandoCopiaSeguridad(
           SALIDA_COMANDO_COPIA,
-          Format(SErrorCrearCopiaSeguridad, [sError]));
+          Format(
+            SErrorCrearCopiaSeguridad,
+            [OcultarDetalleSolicitud(sError, ASolicitud)]));
       end;
     except
       on E: Exception do
-        Result := CrearErrorPublicacion(E.Message);
+        Result := CrearErrorPublicacion(
+          E.Message,
+          ASolicitud);
     end;
   finally
     if (sRutaTemporal <> '') and
@@ -266,23 +390,19 @@ end;
 function EjecutarConConexion(
   AConexion: TdmConn;
   const AParametros: TArray<string>;
+  AInstante: TDateTime;
   const ARegistroLog: IRegistroLog
 ): TResultadoComandoCopiaSeguridad;
 var
   oClaves: TClavesPredeterminadasCopiaSeguridad;
   oSolicitud: TSolicitudComandoCopiaSeguridad;
 begin
-  ARegistroLog.RegistrarInformacion(
-    SInfoComandoCopiaSeguridadConexion);
-  AConexion.conUni.Connect;
-  ARegistroLog.RegistrarInformacion(
-    SInfoComandoCopiaSeguridadConexionPreparada);
   oClaves := Default(TClavesPredeterminadasCopiaSeguridad);
   oClaves.Contrasena := AConexion.conUni.Password;
   oClaves.ClaveCifrada := CifrarAES(oClaves.Contrasena);
   oSolicitud := InterpretarComandoCopiaSeguridad(
     AParametros,
-    Now,
+    AInstante,
     oClaves);
   if oSolicitud.EsValida then
   begin
@@ -293,9 +413,81 @@ begin
   end
   else
   begin
-    Result := CrearResultadoComandoCopiaSeguridad(
-      CodigoErrorSolicitudCopia(oSolicitud.Error),
-      MensajeErrorSolicitudCopia(oSolicitud.Error));
+    Result := CrearResultadoErrorSolicitud(
+      oSolicitud.Error);
+  end;
+end;
+
+function IntentarPrepararConexion(
+  out AConexion: TdmConn;
+  const ARegistroLog: IRegistroLog;
+  out AError: string): Boolean;
+begin
+  AConexion := nil;
+  AError := '';
+  try
+    ARegistroLog.RegistrarInformacion(
+      SInfoComandoCopiaSeguridadConexion);
+    AConexion := TdmConn.Create(nil);
+    AConexion.conUni.Connect;
+    ARegistroLog.RegistrarInformacion(
+      Format(
+        SInfoComandoCopiaSeguridadConexionPreparada,
+        [AConexion.conUni.Server, AConexion.conUni.Database]));
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      AError := E.Message;
+      FreeAndNil(AConexion);
+      Result := False;
+    end;
+  end;
+end;
+
+function EjecutarComandoValidado(
+  const AParametros: TArray<string>;
+  AInstante: TDateTime;
+  const ARegistroLog: IRegistroLog
+): TResultadoComandoCopiaSeguridad;
+var
+  oConexion: TdmConn;
+  sError: string;
+begin
+  oConexion := nil;
+  try
+    if IntentarPrepararConexion(
+      oConexion,
+      ARegistroLog,
+      sError) then
+    begin
+      try
+        Result := EjecutarConConexion(
+          oConexion,
+          AParametros,
+          AInstante,
+          ARegistroLog);
+      except
+        on E: Exception do
+        begin
+          Result := CrearResultadoComandoCopiaSeguridad(
+            SALIDA_COMANDO_ERROR_INESPERADO,
+            Format(
+              SErrorInesperadoComandoCopiaSeguridad,
+              [E.Message]));
+        end;
+      end;
+    end
+    else
+    begin
+      Result := CrearResultadoComandoCopiaSeguridad(
+        SALIDA_COMANDO_CONEXION,
+        Format(
+          SErrorConexionComandoCopiaSeguridad,
+          [sError]));
+    end;
+  finally
+    FreeAndNil(oConexion);
   end;
 end;
 
@@ -304,8 +496,10 @@ function EjecutarComandoCopiaSeguridad(
   const ARegistroLog: IRegistroLog
 ): TResultadoComandoCopiaSeguridad;
 var
-  oConexion: TdmConn;
+  dtInstante: TDateTime;
+  SolicitudPrevia: TSolicitudComandoCopiaSeguridad;
 begin
+  dtInstante := Now;
   ARegistroLog.RegistrarInformacion(
     SInfoComandoCopiaSeguridadInicio);
   if not EsSintaxisComandoCopiaSeguridadValida(AParametros) then
@@ -316,72 +510,47 @@ begin
   end
   else
   begin
-    oConexion := nil;
-    try
-      try
-        oConexion := TdmConn.Create(nil);
-        Result := EjecutarConConexion(
-          oConexion,
-          AParametros,
-          ARegistroLog);
-      except
-        on E: Exception do
-        begin
-          Result := CrearResultadoComandoCopiaSeguridad(
-            SALIDA_COMANDO_CONEXION,
-            Format(
-              SErrorConexionComandoCopiaSeguridad,
-              [E.Message]));
-        end;
-      end;
-    finally
-      FreeAndNil(oConexion);
-    end;
+    SolicitudPrevia := InterpretarSolicitudPrevia(
+      AParametros,
+      dtInstante);
+    if SolicitudPrevia.EsValida then
+    begin
+      ARegistroLog.RegistrarInformacion(
+        SInfoComandoCopiaSeguridadParametrosValidados);
+      Result := EjecutarComandoValidado(
+        AParametros,
+        dtInstante,
+        ARegistroLog);
+    end
+    else
+      Result := CrearResultadoErrorSolicitud(
+        SolicitudPrevia.Error);
   end;
-end;
-
-procedure EscribirResultadoComando(
-  const AResultado: TResultadoComandoCopiaSeguridad);
-var
-  aTexto: TBytes;
-  hCanal: THandle;
-  iEscritos: Cardinal;
-begin
-  if AResultado.EsError then
-    hCanal := GetStdHandle(STD_ERROR_HANDLE)
-  else
-    hCanal := GetStdHandle(STD_OUTPUT_HANDLE);
-  aTexto := TEncoding.UTF8.GetBytes(
-    AResultado.Mensaje + sLineBreak);
-  if (hCanal <> 0) and
-     (hCanal <> INVALID_HANDLE_VALUE) and
-     (Length(aTexto) > 0) then
-  begin
-    WriteFile(
-      hCanal,
-      aTexto[0],
-      Length(aTexto),
-      iEscritos,
-      nil);
-  end;
-  OutputDebugString(PChar(AResultado.Mensaje));
 end;
 
 procedure RegistrarResultadoComando(
   const AResultado: TResultadoComandoCopiaSeguridad;
   const ARegistroLog: IRegistroLog);
 begin
-  if AResultado.EsError then
-    ARegistroLog.RegistrarError(AResultado.Mensaje)
-  else
-    ARegistroLog.RegistrarInformacion(AResultado.Mensaje);
-  EscribirResultadoComando(AResultado);
+  try
+    EscribirMensajeComando(
+      AResultado.Mensaje,
+      AResultado.EsError);
+  except
+  end;
+  try
+    if AResultado.EsError then
+      ARegistroLog.RegistrarError(AResultado.Mensaje)
+    else
+      ARegistroLog.RegistrarInformacion(AResultado.Mensaje);
+  except
+  end;
 end;
 
 function EsProcesoComandoCopiaSeguridad: Boolean;
 begin
   Result := EsComandoCopiaSeguridad(
-    ObtenerParametrosProceso);
+    ObtenerParametrosLineaComandos);
 end;
 
 function EjecutarProcesoComandoCopiaSeguridad(
@@ -390,9 +559,20 @@ function EjecutarProcesoComandoCopiaSeguridad(
 var
   oResultado: TResultadoComandoCopiaSeguridad;
 begin
-  oResultado := EjecutarComandoCopiaSeguridad(
-    ObtenerParametrosProceso,
-    ARegistroLog);
+  try
+    oResultado := EjecutarComandoCopiaSeguridad(
+      ObtenerParametrosLineaComandos,
+      ARegistroLog);
+  except
+    on E: Exception do
+    begin
+      oResultado := CrearResultadoComandoCopiaSeguridad(
+        SALIDA_COMANDO_ERROR_INESPERADO,
+        Format(
+          SErrorInesperadoComandoCopiaSeguridad,
+          [E.Message]));
+    end;
+  end;
   RegistrarResultadoComando(
     oResultado,
     ARegistroLog);

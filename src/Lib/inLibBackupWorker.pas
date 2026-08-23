@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibBackupWorker                                             }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.2.0                                                         }
-{   Fecha:       04/08/2026                                                    }
+{ Versión:       1.3.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
@@ -33,7 +33,7 @@ type
     FUser: string;
     FPassword: string;
     FRutaFichero: string;
-    FEncriptar: Boolean;
+    FModo: TModoProteccionCopia;
     FPassEncriptar: string;
     FResultado: TResultadoCopiaSeguridad;
     FError: string;
@@ -59,7 +59,7 @@ type
       APort: Integer;
       const ADatabase, AUser, APassword: string;
       const ARutaFichero: string;
-      AEncriptar: Boolean;
+      AModo: TModoProteccionCopia;
       const APassEncriptar: string;
       const AFabricaPersistencia:
         IFabricaPersistenciaBackup = nil);
@@ -77,7 +77,7 @@ type
     FUser: string;
     FPassword: string;
     FRutaFichero: string;
-    FDesencriptar: Boolean;
+    FModo: TModoProteccionCopia;
     FPassDesencriptar: string;
     FResultado: TResultadoCopiaSeguridad;
     FError: string;
@@ -109,7 +109,7 @@ type
       const ADatabase, AUser, APassword: string;
       const ARutaFichero: string;
       const APassDesencriptar: string;
-      ADesencriptar: Boolean = False;
+      AModo: TModoProteccionCopia;
       const AFabricaPersistencia:
         IFabricaPersistenciaBackup = nil);
     destructor Destroy; override;
@@ -124,18 +124,17 @@ function CrearCopiaSeguridadBD(
   APort: Integer;
   const ADatabase, AUser, APassword: string;
   const ARutaFichero: string;
-  AEncriptar: Boolean;
+  AModo: TModoProteccionCopia;
   const APassEncriptar: string;
   AOnProgreso: TWorkerProgresoEvent;
   out AError: string;
-  AComprimirAntesCifrado: Boolean = True;
   const AFabricaPersistencia:
     IFabricaPersistenciaBackup = nil): TResultadoCopiaSeguridad;
 
 implementation
 
 uses
-  Core_Interfaces, ScriptWriters, System.StrUtils,
+  Core_Interfaces, ScriptWriters, System.IOUtils, System.StrUtils,
   inLibCifradoCopias,
   inLibMsgConfiguracion;
 
@@ -178,59 +177,112 @@ begin
   Result.ExtendedInsertRows := 500;
 end;
 
-function CrearWriterBackup(
+function CrearRutaScriptBackup(
   const ARutaFichero: string;
-  AEncriptar: Boolean): IScriptWriter;
+  AModo: TModoProteccionCopia): string;
+var
+  sDirectorio: string;
 begin
-  if AEncriptar then
-  begin
-    Result := TScriptWriter.Create('');
-  end
+  if AModo = mpcTextoPlano then
+    Result := ARutaFichero
   else
   begin
-    Result := TScriptWriter.Create(ARutaFichero);
+    sDirectorio := ExtractFilePath(ARutaFichero);
+    if sDirectorio = '' then
+      sDirectorio := GetCurrentDir;
+    Result := TPath.Combine(
+      sDirectorio,
+      'fzam_sql_' + TGUID.NewGuid.ToString + '.tmp');
   end;
 end;
 
-procedure GuardarCopiaCifrada(
-  const AWriter: IScriptWriter;
-  const ARutaFichero, APassEncriptar: string;
-  AComprimirAntesCifrado: Boolean);
-var
-  sContenido: string;
-  stTexto: TStringList;
+function ObtenerContenidoCopia(
+  const ARutaScript: string): string;
 begin
-  sContenido := AWriter.GetScript;
-  sContenido := StringReplace(
-    sContenido,
+  Result := TFile.ReadAllText(
+    ARutaScript,
+    TEncoding.UTF8);
+  Result := StringReplace(
+    Result,
     'DEFINER=`root`@`localhost`',
     '',
     [rfReplaceAll, rfIgnoreCase]);
-  if AComprimirAntesCifrado then
-  begin
-    sContenido := CifrarCopiaSeguridadComprimida(
-      sContenido,
-      APassEncriptar);
-  end
-  else
-  begin
-    sContenido := CifrarCopiaSeguridad(
-      sContenido,
-      APassEncriptar);
-  end;
-  stTexto := TStringList.Create;
+end;
+
+procedure GuardarBytesCopia(
+  const ARutaFichero: string;
+  const ADatos: TBytes);
+var
+  oFichero: TFileStream;
+begin
+  oFichero := TFileStream.Create(ARutaFichero, fmCreate);
   try
-    stTexto.Text := sContenido;
-    stTexto.SaveToFile(ARutaFichero);
+    if Length(ADatos) > 0 then
+      oFichero.WriteBuffer(ADatos[0], Length(ADatos));
   finally
-    FreeAndNil(stTexto);
+    FreeAndNil(oFichero);
+  end;
+end;
+
+procedure GuardarTextoCopia(
+  const ARutaFichero, AContenido: string);
+begin
+  GuardarBytesCopia(
+    ARutaFichero,
+    TEncoding.UTF8.GetBytes(AContenido));
+end;
+
+procedure GuardarCopiaGenerada(
+  const ARutaScript, ARutaFichero, APassEncriptar: string;
+  AModo: TModoProteccionCopia);
+var
+  aZip: TBytes;
+  sContenido: string;
+begin
+  if AModo <> mpcTextoPlano then
+  begin
+    sContenido := ObtenerContenidoCopia(ARutaScript);
+    case AModo of
+      mpcZip:
+      begin
+        aZip := EmpaquetarCopiaSeguridadZip(
+          TEncoding.UTF8.GetBytes(sContenido));
+        GuardarBytesCopia(ARutaFichero, aZip);
+      end;
+      mpcCifrada:
+        GuardarTextoCopia(
+          ARutaFichero,
+          CifrarCopiaSeguridadComprimida(
+            sContenido,
+            APassEncriptar));
+    end;
+  end;
+end;
+
+procedure NotificarGuardadoCopia(
+  AModo: TModoProteccionCopia;
+  AOnProgreso: TWorkerProgresoEvent);
+var
+  sEtapa: string;
+begin
+  if Assigned(AOnProgreso) then
+  begin
+    case AModo of
+      mpcTextoPlano:
+        sEtapa := SProgresoGuardandoCopiaTextoPlano;
+      mpcZip:
+        sEtapa := SProgresoComprimiendoCopiaZip;
+      mpcCifrada:
+        sEtapa := SProgresoComprimiendoCifrandoCopia;
+    end;
+    AOnProgreso(sEtapa, 1, 1, 1, 1);
   end;
 end;
 
 procedure GenerarCopia(
   const APersistencia: IPersistenciaCopiaBackup;
   const ARutaFichero, APassEncriptar: string;
-  AEncriptar, AComprimirAntesCifrado: Boolean;
+  AModo: TModoProteccionCopia;
   AOnProgreso: TWorkerProgresoEvent);
 var
   oEngine: TDBBackupEngine;
@@ -238,14 +290,19 @@ var
   oFiltrosDatos: TStringList;
   oIncluirTablas: TStringList;
   oWriter: IScriptWriter;
+  sRutaScript: string;
 begin
   oIncluirTablas := TStringList.Create;
   oExcluirTablas := TStringList.Create;
   oFiltrosDatos := TStringList.Create;
+  oEngine := nil;
+  sRutaScript := CrearRutaScriptBackup(
+    ARutaFichero,
+    AModo);
   try
     oFiltrosDatos.Values['fza_traducciones'] :=
       APersistencia.ObtenerFiltroTraducciones;
-    oWriter := CrearWriterBackup(ARutaFichero, AEncriptar);
+    oWriter := TScriptWriter.Create(sRutaScript);
     oEngine := TDBBackupEngine.Create(
       APersistencia.ObtenerServiciosLectura,
       oWriter,
@@ -257,18 +314,24 @@ begin
     try
       oEngine.OnProgress := AOnProgreso;
       oEngine.GenerateBackup;
-      if AEncriptar then
-      begin
-        GuardarCopiaCifrada(
-          oWriter,
-          ARutaFichero,
-          APassEncriptar,
-          AComprimirAntesCifrado);
-      end;
+      FreeAndNil(oEngine);
+      oWriter := nil;
+      NotificarGuardadoCopia(AModo, AOnProgreso);
+      GuardarCopiaGenerada(
+        sRutaScript,
+        ARutaFichero,
+        APassEncriptar,
+        AModo);
     finally
       FreeAndNil(oEngine);
     end;
   finally
+    oWriter := nil;
+    if (AModo <> mpcTextoPlano) and
+       FileExists(sRutaScript) then
+    begin
+      System.SysUtils.DeleteFile(sRutaScript);
+    end;
     FreeAndNil(oFiltrosDatos);
     FreeAndNil(oExcluirTablas);
     FreeAndNil(oIncluirTablas);
@@ -280,11 +343,10 @@ function CrearCopiaSeguridadBD(
   APort: Integer;
   const ADatabase, AUser, APassword: string;
   const ARutaFichero: string;
-  AEncriptar: Boolean;
+  AModo: TModoProteccionCopia;
   const APassEncriptar: string;
   AOnProgreso: TWorkerProgresoEvent;
   out AError: string;
-  AComprimirAntesCifrado: Boolean;
   const AFabricaPersistencia: IFabricaPersistenciaBackup):
   TResultadoCopiaSeguridad;
 var
@@ -306,8 +368,7 @@ begin
       oPersistencia,
       ARutaFichero,
       APassEncriptar,
-      AEncriptar,
-      AComprimirAntesCifrado,
+      AModo,
       AOnProgreso);
     Result := rcsCompletada;
   except
@@ -332,7 +393,7 @@ constructor TBackupWorker.Create(
   APort: Integer;
   const ADatabase, AUser, APassword: string;
   const ARutaFichero: string;
-  AEncriptar: Boolean;
+  AModo: TModoProteccionCopia;
   const APassEncriptar: string;
   const AFabricaPersistencia: IFabricaPersistenciaBackup);
 begin
@@ -344,7 +405,7 @@ begin
   FUser := AUser;
   FPassword := APassword;
   FRutaFichero := ARutaFichero;
-  FEncriptar := AEncriptar;
+  FModo := AModo;
   FPassEncriptar := APassEncriptar;
   FFabricaPersistencia := AFabricaPersistencia;
   FResultado := rcsFallida;
@@ -398,11 +459,10 @@ begin
       FUser,
       FPassword,
       FRutaFichero,
-      FEncriptar,
+      FModo,
       FPassEncriptar,
       EngineProgress,
       FError,
-      True,
       FFabricaPersistencia);
   finally
     Synchronize(SyncFinalizar);
@@ -415,7 +475,7 @@ constructor TRestoreWorker.Create(
   const ADatabase, AUser, APassword: string;
   const ARutaFichero: string;
   const APassDesencriptar: string;
-  ADesencriptar: Boolean;
+  AModo: TModoProteccionCopia;
   const AFabricaPersistencia: IFabricaPersistenciaBackup);
 begin
   inherited Create(True);
@@ -426,7 +486,7 @@ begin
   FUser := AUser;
   FPassword := APassword;
   FRutaFichero := ARutaFichero;
-  FDesencriptar := ADesencriptar;
+  FModo := AModo;
   FPassDesencriptar := APassDesencriptar;
   FFabricaPersistencia := AFabricaPersistencia;
   FResultado := rcsFallida;
@@ -464,10 +524,12 @@ end;
 
 function TRestoreWorker.CrearFlujoRestauracion: TStream;
 var
+  aDatos: TBytes;
   sContenido: string;
   stTexto: TStringList;
 begin
-  if FDesencriptar then
+  sContenido := '';
+  if FModo = mpcCifrada then
   begin
     stTexto := TStringList.Create;
     try
@@ -478,17 +540,26 @@ begin
     finally
       FreeAndNil(stTexto);
     end;
+  end
+  else if FModo = mpcZip then
+  begin
+    aDatos := TFile.ReadAllBytes(FRutaFichero);
+    aDatos := DesempaquetarCopiaSeguridadZip(aDatos);
+    sContenido := TEncoding.UTF8.GetString(aDatos);
+  end;
+  if FModo = mpcTextoPlano then
+  begin
+    Result := TFileStream.Create(
+      FRutaFichero,
+      fmOpenRead or fmShareDenyWrite);
+  end
+  else
+  begin
     if Trim(sContenido) = '' then
     begin
       raise Exception.Create(SErrorDesencriptarCopia);
     end;
     Result := TStringStream.Create(sContenido, TEncoding.UTF8);
-  end
-  else
-  begin
-    Result := TFileStream.Create(
-      FRutaFichero,
-      fmOpenRead or fmShareDenyWrite);
   end;
 end;
 

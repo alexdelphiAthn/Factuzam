@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inLibCopiasSeguridadIntf                                      }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Contratos para crear y restaurar copias de seguridad.                     }
 {******************************************************************************}
@@ -21,8 +21,10 @@ uses
 type
   TModoProteccionCopia = (
     mpcTextoPlano,
+    mpcZip,
     mpcCifrada
   );
+  TModosProteccionCopia = set of TModoProteccionCopia;
   TResultadoCopiaSeguridad = (
     rcsCompletada,
     rcsCancelada,

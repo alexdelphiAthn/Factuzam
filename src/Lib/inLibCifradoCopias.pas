@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inLibCifradoCopias                                            }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       02/08/2026                                                    }
+{ Versión:       1.3.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Cifrado autenticado, comprimido y versionado para copias de seguridad.    }
 {******************************************************************************}
@@ -28,6 +28,12 @@ function CifrarCopiaSeguridad(
 function CifrarCopiaSeguridadComprimida(
   const ADatos, AContrasena: string
 ): string;
+function EmpaquetarCopiaSeguridadZip(
+  const ADatos: TBytes
+): TBytes;
+function DesempaquetarCopiaSeguridadZip(
+  const ADatos: TBytes
+): TBytes;
 function DescifrarCopiaSeguridad(
   const ADatos, AContrasena: string
 ): string;
@@ -40,6 +46,7 @@ uses
   System.Hash,
   System.NetEncoding,
   System.StrUtils,
+  System.Zip,
   System.ZLib,
   DCPcrypt2,
   DCPrijndael,
@@ -47,7 +54,9 @@ uses
 
 const
   CABECERA_CIFRADO = 'FZAM_COPIA_CIFRADA_V2';
-  CABECERA_CIFRADO_COMPRIMIDO = 'FZAM_COPIA_CIFRADA_V3';
+  CABECERA_CIFRADO_ZLIB = 'FZAM_COPIA_CIFRADA_V3';
+  CABECERA_CIFRADO_ZIP = 'FZAM_COPIA_CIFRADA_V3_ZIP';
+  NOMBRE_ENTRADA_ZIP = 'copia.sql';
   ITERACIONES_PBKDF2 = 100000;
   LONGITUD_SAL = 16;
   LONGITUD_VECTOR = 16;
@@ -57,6 +66,22 @@ const
   PROVEEDOR_RSA_AES = 24;
   VERIFICAR_CONTEXTO = $F0000000;
   MAXIMO_DATOS_DESCOMPRIMIDOS = 1024 * 1024 * 1024;
+
+type
+  TFormatoCifradoCopia = (
+    fccDesconocido,
+    fccV2,
+    fccV3ZLib,
+    fccV3Zip
+  );
+  TSobreCifradoCopia = record
+    Cabecera: string;
+    Iteraciones: Integer;
+    Sal: TBytes;
+    Vector: TBytes;
+    Mac: TBytes;
+    Cifrado: TBytes;
+  end;
 
 function FzaCryptAcquireContextW(
   var AProveedor: NativeUInt;
@@ -289,11 +314,19 @@ end;
 
 function CrearDatosAutenticados(
   AIteraciones: Integer;
-  const ASal, AVector, ACifrado: TBytes
+  const ASal, AVector, ACifrado: TBytes;
+  const ACabeceraAutenticada: string
 ): TBytes;
 begin
-  Result := TEncoding.ASCII.GetBytes(
-    IntToStr(AIteraciones));
+  Result := nil;
+  if ACabeceraAutenticada <> '' then
+  begin
+    Result := TEncoding.ASCII.GetBytes(
+      ACabeceraAutenticada + #0);
+  end;
+  Result := ConcatenarBytes(
+    Result,
+    TEncoding.ASCII.GetBytes(IntToStr(AIteraciones)));
   Result := ConcatenarBytes(Result, ASal);
   Result := ConcatenarBytes(Result, AVector);
   Result := ConcatenarBytes(Result, ACifrado);
@@ -317,30 +350,46 @@ begin
   end;
 end;
 
-function ComprimirBytes(const ADatos: TBytes): TBytes;
+function EmpaquetarCopiaSeguridadZip(
+  const ADatos: TBytes): TBytes;
 var
-  Destino: TMemoryStream;
-  Compresor: TZCompressionStream;
+  oDestino: TMemoryStream;
+  oZip: TZipFile;
 begin
-  Destino := TMemoryStream.Create;
+  if Length(ADatos) = 0 then
+  begin
+    raise ECifradoCopia.Create(
+      'El script que se va a comprimir está vacío.');
+  end;
+  if UInt64(Length(ADatos)) >
+     UInt64(MAXIMO_DATOS_DESCOMPRIMIDOS) then
+  begin
+    raise ECifradoCopia.Create(
+      'La copia descomprimida supera el tamaño permitido.');
+  end;
+  oDestino := TMemoryStream.Create;
+  oZip := TZipFile.Create;
   try
-    Compresor := TZCompressionStream.Create(clMax, Destino);
+    oZip.Open(oDestino, zmWrite);
     try
-      if Length(ADatos) > 0 then
-        Compresor.WriteBuffer(ADatos[0], Length(ADatos));
+      oZip.Add(
+        ADatos,
+        NOMBRE_ENTRADA_ZIP,
+        zcDeflate);
     finally
-      FreeAndNil(Compresor);
+      oZip.Close;
     end;
-    SetLength(Result, Destino.Size);
-    Destino.Position := 0;
-    if Destino.Size > 0 then
-      Destino.ReadBuffer(Result[0], Destino.Size);
+    SetLength(Result, oDestino.Size);
+    oDestino.Position := 0;
+    if oDestino.Size > 0 then
+      oDestino.ReadBuffer(Result[0], oDestino.Size);
   finally
-    FreeAndNil(Destino);
+    FreeAndNil(oZip);
+    FreeAndNil(oDestino);
   end;
 end;
 
-function DescomprimirBytes(const ADatos: TBytes): TBytes;
+function DescomprimirZLibBytes(const ADatos: TBytes): TBytes;
 var
   Buffer: TBytes;
   Destino: TMemoryStream;
@@ -378,17 +427,116 @@ begin
   end;
 end;
 
+function DesempaquetarCopiaSeguridadZip(
+  const ADatos: TBytes): TBytes;
+var
+  oCabecera: TZipHeader;
+  oOrigen: TBytesStream;
+  oZip: TZipFile;
+begin
+  oOrigen := TBytesStream.Create(ADatos);
+  oZip := TZipFile.Create;
+  try
+    try
+      oZip.Open(oOrigen, zmRead);
+      if oZip.FileCount <> 1 then
+      begin
+        raise ECifradoCopia.Create(
+          'El ZIP de la copia debe contener un único archivo.');
+      end;
+      if not SameText(
+        oZip.FileName[0],
+        NOMBRE_ENTRADA_ZIP) then
+      begin
+        raise ECifradoCopia.Create(
+          'El ZIP de la copia no contiene el script esperado.');
+      end;
+      oCabecera := oZip.FileInfo[0];
+      if oCabecera.UncompressedSize64 = 0 then
+      begin
+        raise ECifradoCopia.Create(
+          'El script contenido en el ZIP está vacío.');
+      end;
+      if oCabecera.UncompressedSize64 >
+         UInt64(MAXIMO_DATOS_DESCOMPRIMIDOS) then
+      begin
+        raise ECifradoCopia.Create(
+          'La copia descomprimida supera el tamaño permitido.');
+      end;
+      oZip.Read(0, Result);
+    except
+      on E: EZipException do
+      begin
+        raise ECifradoCopia.Create(
+          'El ZIP de la copia no es válido: ' + E.Message);
+      end;
+    end;
+  finally
+    FreeAndNil(oZip);
+    FreeAndNil(oOrigen);
+  end;
+end;
+
+function ObtenerCabeceraCifrado(const ADatos: string): string;
+var
+  iFinCabecera: Integer;
+begin
+  Result := TrimLeft(ADatos);
+  iFinCabecera := Pos(#10, Result);
+  if iFinCabecera = 0 then
+    iFinCabecera := Pos(#13, Result);
+  if iFinCabecera > 0 then
+    Result := Copy(Result, 1, iFinCabecera - 1);
+  Result := Trim(Result);
+end;
+
+function ResolverFormatoCifrado(
+  const ADatos: string
+): TFormatoCifradoCopia;
+var
+  sCabecera: string;
+begin
+  sCabecera := ObtenerCabeceraCifrado(ADatos);
+  if SameText(CABECERA_CIFRADO, sCabecera) then
+    Result := fccV2
+  else if SameText(CABECERA_CIFRADO_ZLIB, sCabecera) then
+    Result := fccV3ZLib
+  else if SameText(CABECERA_CIFRADO_ZIP, sCabecera) then
+    Result := fccV3Zip
+  else
+    Result := fccDesconocido;
+end;
+
 function EsFormatoCifradoActual(const ADatos: string): Boolean;
 begin
-  Result := StartsText(CABECERA_CIFRADO, TrimLeft(ADatos)) or
-            StartsText(
-              CABECERA_CIFRADO_COMPRIMIDO,
-              TrimLeft(ADatos));
+  Result := ResolverFormatoCifrado(ADatos) <>
+    fccDesconocido;
+end;
+
+procedure PrepararOrigenCifrado(
+  const ADatos: string;
+  AFormato: TFormatoCifradoCopia;
+  out AOrigen: TBytes;
+  out ACabecera: string);
+begin
+  AOrigen := TEncoding.UTF8.GetBytes(ADatos);
+  case AFormato of
+    fccV2:
+      ACabecera := CABECERA_CIFRADO;
+    fccV3Zip:
+    begin
+      AOrigen := EmpaquetarCopiaSeguridadZip(AOrigen);
+      ACabecera := CABECERA_CIFRADO_ZIP;
+    end;
+  else
+    raise ECifradoCopia.Create(
+      'El formato solicitado para la copia no es válido.');
+  end;
 end;
 
 function CifrarCopiaSeguridadInterna(
   const ADatos, AContrasena: string;
-  AComprimir: Boolean): string;
+  AFormato: TFormatoCifradoCopia): string;
 var
   aCifrado: TBytes;
   aClaveCifrado: TBytes;
@@ -418,14 +566,11 @@ begin
     aClaves,
     LONGITUD_CLAVE,
     LONGITUD_CLAVE);
-  aOrigen := TEncoding.UTF8.GetBytes(ADatos);
-  if AComprimir then
-  begin
-    aOrigen := ComprimirBytes(aOrigen);
-    sCabecera := CABECERA_CIFRADO_COMPRIMIDO;
-  end
-  else
-    sCabecera := CABECERA_CIFRADO;
+  PrepararOrigenCifrado(
+    ADatos,
+    AFormato,
+    aOrigen,
+    sCabecera);
   aCifrado := CifrarAESBytes(
     aOrigen,
     aClaveCifrado,
@@ -434,7 +579,8 @@ begin
     ITERACIONES_PBKDF2,
     aSal,
     aVector,
-    aCifrado);
+    aCifrado,
+    IfThen(AFormato = fccV3Zip, sCabecera, ''));
   aMac := THashSHA2.GetHMACAsBytes(
     aDatosAutenticados,
     aClaveMac);
@@ -452,7 +598,7 @@ begin
   Result := CifrarCopiaSeguridadInterna(
     ADatos,
     AContrasena,
-    False);
+    fccV2);
 end;
 
 function CifrarCopiaSeguridadComprimida(
@@ -461,33 +607,16 @@ begin
   Result := CifrarCopiaSeguridadInterna(
     ADatos,
     AContrasena,
-    True);
+    fccV3Zip);
 end;
 
-function DescifrarFormatoActual(
-  const ADatos, AContrasena: string
-): string;
+function LeerSobreCifrado(
+  const ADatos: string;
+  AFormato: TFormatoCifradoCopia): TSobreCifradoCopia;
 var
-  aCifrado: TBytes;
-  aClaveCifrado: TBytes;
-  aClaveMac: TBytes;
-  aClaves: TBytes;
-  aDatosAutenticados: TBytes;
-  aMacCalculado: TBytes;
-  aMacGuardado: TBytes;
-  aPlano: TBytes;
-  aSal: TBytes;
-  aVector: TBytes;
-  bComprimida: Boolean;
-  iIteraciones: Integer;
   oLineas: TStringList;
-  sCabecera: string;
 begin
-  if Trim(AContrasena) = '' then
-  begin
-    raise ECifradoCopia.Create(
-      'Debe indicar la contraseña de la copia.');
-  end;
+  Result := Default(TSobreCifradoCopia);
   oLineas := TStringList.Create;
   try
     oLineas.Text := ADatos;
@@ -496,81 +625,123 @@ begin
       raise ECifradoCopia.Create(
         'La cabecera de la copia cifrada está incompleta.');
     end;
-    sCabecera := Trim(oLineas[0]);
-    bComprimida := SameText(
-      sCabecera,
-      CABECERA_CIFRADO_COMPRIMIDO);
-    if not SameText(sCabecera, CABECERA_CIFRADO) and
-       not bComprimida then
+    Result.Cabecera := Trim(oLineas[0]);
+    if ResolverFormatoCifrado(Result.Cabecera) <> AFormato then
     begin
       raise ECifradoCopia.Create(
         'La versión de la copia cifrada no es compatible.');
     end;
-    iIteraciones := StrToIntDef(
+    Result.Iteraciones := StrToIntDef(
       Trim(oLineas[1]),
       0);
-    if (iIteraciones < 10000) or
-       (iIteraciones > 1000000) then
+    if (Result.Iteraciones < 10000) or
+       (Result.Iteraciones > 1000000) then
     begin
       raise ECifradoCopia.Create(
         'El número de iteraciones de la copia no es válido.');
     end;
-    aSal := DecodificarBase64(Trim(oLineas[2]));
-    aVector := DecodificarBase64(Trim(oLineas[3]));
-    aMacGuardado := DecodificarBase64(Trim(oLineas[4]));
-    aCifrado := DecodificarBase64(Trim(oLineas[5]));
+    Result.Sal := DecodificarBase64(Trim(oLineas[2]));
+    Result.Vector := DecodificarBase64(Trim(oLineas[3]));
+    Result.Mac := DecodificarBase64(Trim(oLineas[4]));
+    Result.Cifrado := DecodificarBase64(Trim(oLineas[5]));
   finally
     FreeAndNil(oLineas);
   end;
-  if (Length(aSal) <> LONGITUD_SAL) or
-     (Length(aVector) <> LONGITUD_VECTOR) or
-     (Length(aMacGuardado) <> LONGITUD_CLAVE) then
+end;
+
+procedure ValidarDimensionesSobre(
+  const ASobre: TSobreCifradoCopia);
+begin
+  if (Length(ASobre.Sal) <> LONGITUD_SAL) or
+     (Length(ASobre.Vector) <> LONGITUD_VECTOR) or
+     (Length(ASobre.Mac) <> LONGITUD_CLAVE) then
   begin
     raise ECifradoCopia.Create(
       'Los metadatos de la copia cifrada no son válidos.');
   end;
+end;
+
+function ObtenerClaveCifradoValidada(
+  const ASobre: TSobreCifradoCopia;
+  const AContrasena: string;
+  AFormato: TFormatoCifradoCopia): TBytes;
+var
+  aClaveMac: TBytes;
+  aClaves: TBytes;
+  aDatosAutenticados: TBytes;
+  aMacCalculado: TBytes;
+begin
   aClaves := DerivarClavePBKDF2(
     AContrasena,
-    aSal,
-    iIteraciones,
+    ASobre.Sal,
+    ASobre.Iteraciones,
     LONGITUD_CLAVES);
-  aClaveCifrado := Copy(aClaves, 0, LONGITUD_CLAVE);
+  Result := Copy(aClaves, 0, LONGITUD_CLAVE);
   aClaveMac := Copy(
     aClaves,
     LONGITUD_CLAVE,
     LONGITUD_CLAVE);
   aDatosAutenticados := CrearDatosAutenticados(
-    iIteraciones,
-    aSal,
-    aVector,
-    aCifrado);
+    ASobre.Iteraciones,
+    ASobre.Sal,
+    ASobre.Vector,
+    ASobre.Cifrado,
+    IfThen(AFormato = fccV3Zip, ASobre.Cabecera, ''));
   aMacCalculado := THashSHA2.GetHMACAsBytes(
     aDatosAutenticados,
     aClaveMac);
-  if not ComparacionConstante(
-    aMacCalculado,
-    aMacGuardado) then
+  if not ComparacionConstante(aMacCalculado, ASobre.Mac) then
   begin
     raise ECifradoCopia.Create(
       'La contraseña no es correcta o la copia está dañada.');
   end;
+end;
+
+function DescifrarFormatoActual(
+  const ADatos, AContrasena: string;
+  AFormato: TFormatoCifradoCopia
+): string;
+var
+  aClaveCifrado: TBytes;
+  aPlano: TBytes;
+  Sobre: TSobreCifradoCopia;
+begin
+  if Trim(AContrasena) = '' then
+  begin
+    raise ECifradoCopia.Create(
+      'Debe indicar la contraseña de la copia.');
+  end;
+  Sobre := LeerSobreCifrado(ADatos, AFormato);
+  ValidarDimensionesSobre(Sobre);
+  aClaveCifrado := ObtenerClaveCifradoValidada(
+    Sobre,
+    AContrasena,
+    AFormato);
   aPlano := DescifrarAESBytes(
-    aCifrado,
+    Sobre.Cifrado,
     aClaveCifrado,
-    aVector);
-  if bComprimida then
-    aPlano := DescomprimirBytes(aPlano);
+    Sobre.Vector);
+  case AFormato of
+    fccV3ZLib:
+      aPlano := DescomprimirZLibBytes(aPlano);
+    fccV3Zip:
+      aPlano := DesempaquetarCopiaSeguridadZip(aPlano);
+  end;
   Result := TEncoding.UTF8.GetString(aPlano);
 end;
 
 function DescifrarCopiaSeguridad(
   const ADatos, AContrasena: string): string;
+var
+  Formato: TFormatoCifradoCopia;
 begin
-  if EsFormatoCifradoActual(ADatos) then
+  Formato := ResolverFormatoCifrado(ADatos);
+  if Formato <> fccDesconocido then
   begin
     Result := DescifrarFormatoActual(
       ADatos,
-      AContrasena);
+      AContrasena,
+      Formato);
   end
   else
   begin

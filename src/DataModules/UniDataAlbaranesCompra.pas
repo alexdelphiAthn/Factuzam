@@ -144,6 +144,7 @@ uses
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
+  UniDataAperturaConsultas,
   inLibAlbaranesCompraMovimientos,
   inLibPrestaShopColaSenal,
   UniDataAlbaranesCompraMovimientos,
@@ -391,41 +392,20 @@ end;
 procedure TdmAlbaranesCompra.AbrirDetalles;
 const
   TAG = 'AlbaranesCompra.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
   RefrescarAlmacenes(UbicacionSesion.Empresa);
-  AbrirConTiempo(unqryAlbaranesCompraLineas,
-                 'unqryAlbaranesCompraLineas');
-  AbrirConTiempo(unqryMovimientosProveedor,
-                 'unqryMovimientosProveedor');
-  AbrirConTiempo(unqryFormasPago, 'unqryFormasPago');
+  AbrirConsultaConTiempo(
+    unqryAlbaranesCompraLineas, TAG, 'unqryAlbaranesCompraLineas',
+    RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryMovimientosProveedor, TAG, 'unqryMovimientosProveedor',
+    RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFormasPago, TAG, 'unqryFormasPago', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

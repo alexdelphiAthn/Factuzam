@@ -89,12 +89,18 @@ uses
   inLibCadenas, inLibDatasets,
   UniDataValoresAutomaticosRepositorio,
   System.Diagnostics,
+  UniDataAperturaConsultas,
   inLibFormatoDocumento, inLibIBAN, inLibMsgComun,
   inLibMsgFacturas, UniDataPrestaShopEncolado;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+resourcestring
+  SErrorFormatoDocumentoConComa =
+    'El formato de documentos no puede contener una coma. La coma está ' +
+    'reservada para separar facturas en los procesos por lotes.';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -578,30 +584,6 @@ end;
 procedure TdmEmpresas.AbrirDetalles;
 const
   TAG = 'Empresas.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
@@ -610,8 +592,10 @@ begin
   // Solo lookups. Las queries de detail (Retenciones, Series,
   // FacturasEmpresas, FacturasLineasEmpresas) son lazy: se abren al
   // activar su pestaña via AsegurarXxxAbierta.
-  AbrirConTiempo(unqryPaises, 'unqryPaises');
-  AbrirConTiempo(unqryIvas,   'unqryIvas');
+  AbrirConsultaConTiempo(
+    unqryPaises, TAG, 'unqryPaises', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryIvas, TAG, 'unqryIvas', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
@@ -771,6 +755,7 @@ var
   bError:Boolean;
   sCodigoAnterior: string;
   sCodigoEmpresa, sRazonSocial:String;
+  sFormatoDocumento: string;
   function FindField(const ANombre: string): TField;
   begin
     Result := unqryTablaG.FindField(ANombre);
@@ -788,9 +773,16 @@ begin
          unqryRetenciones.Post;
   if FindField('FORMATO_DOCUMENTO_EMP') <> nil then
     begin
-      if Trim(FindField('FORMATO_DOCUMENTO_EMP').AsString) = '' then
-        FindField('FORMATO_DOCUMENTO_EMP').AsString :=
-          FORMATO_DOCUMENTO_DEFECTO;
+      sFormatoDocumento := Trim(
+        FindField('FORMATO_DOCUMENTO_EMP').AsString);
+      if sFormatoDocumento = '' then
+        sFormatoDocumento := FORMATO_DOCUMENTO_DEFECTO;
+      if Pos(',', sFormatoDocumento) > 0 then
+      begin
+        raise ERangeError.Create(SErrorFormatoDocumentoConComa);
+      end;
+      FindField('FORMATO_DOCUMENTO_EMP').AsString :=
+        sFormatoDocumento;
     end;
     if FindField('TEXTO_PIE_TICKET_CAJA_1_EMP') <> nil then
       FindField('TEXTO_PIE_TICKET_CAJA_1_EMP').AsString :=

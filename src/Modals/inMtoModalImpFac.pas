@@ -230,7 +230,14 @@ end;
 
 procedure TfrmPrintFac.ConfigurarNombrePDF;
 begin
-  frxpdfxprtPedWeb.FileName := ObtenerNombreFactura(dmFac.unqrytablaG);
+  frxpdfxprtPedWeb.FileName := '';
+  if (dmFac <> nil) and
+     dmFac.unqryFacPrint.Active and
+     (not dmFac.unqryFacPrint.IsEmpty) then
+  begin
+    frxpdfxprtPedWeb.FileName :=
+      ObtenerNombreFactura(dmFac.unqryFacPrint);
+  end;
 end;
 
 procedure TfrmPrintFac.PdfExportado(const ARuta: string);
@@ -271,6 +278,7 @@ end;
 
 function TfrmPrintFac.ObtenerNombreFactura(ADataSet: TDataSet): string;
 var
+  iCaracter: Integer;
   RazonSocialCorta: string;
   sDocumento: string;
   sFecha: string;
@@ -302,6 +310,16 @@ begin
   sDocumento := StringReplace(sDocumento, ']', '_', [rfReplaceAll]);
   Result := sFecha + '_' + sDocumento + '_' + RazonSocialCorta + '_' +
                           TotalFormateado;
+  iCaracter := 1;
+  while iCaracter <= Length(Result) do
+  begin
+    if CharInSet(Result[iCaracter],
+      [#0..#31, '<', '>', ':', '"', '/', '\', '|', '?', '*']) then
+    begin
+      Result[iCaracter] := '_';
+    end;
+    Inc(iCaracter);
+  end;
 end;
 
 procedure TfrmPrintFac.preparar_consulta;

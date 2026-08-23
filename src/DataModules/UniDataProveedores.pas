@@ -85,6 +85,7 @@ implementation
 uses
   inLibDocumentoFiscal,
   UniDataValoresAutomaticosRepositorio, System.Diagnostics,
+  UniDataAperturaConsultas,
   inLibMsgCompras;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -112,35 +113,14 @@ end;
 procedure TdmProveedores.AbrirDetalles;
 const
   TAG = 'Proveedores.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG, Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
   // Articulos/LinFacturasArticulos/Kits/Pagos son lazy. Paises es un
   // lookup pequeno que el combo del domicilio fiscal necesita ya abierto.
-  AbrirConTiempo(unqryPaises, 'unqryPaises');
+  AbrirConsultaConTiempo(
+    unqryPaises, TAG, 'unqryPaises', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

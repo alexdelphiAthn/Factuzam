@@ -139,6 +139,7 @@ implementation
 uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics,
+  UniDataAperturaConsultas,
   System.UITypes, inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
   inLibVentasImpuestos, UniDataImpuestosRepositorio,
@@ -369,41 +370,22 @@ end;
 procedure TdmAlbaranes.AbrirDetalles;
 const
   TAG = 'Albaranes.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
   RefrescarAlmacenes(UbicacionSesion.Empresa);
-  AbrirConTiempo(unqryAlbaranesLineas, 'unqryAlbaranesLineas');
-  AbrirConTiempo(unqryFacturas,        'unqryFacturas');
-  AbrirConTiempo(unqryMovimientosAlb,  'unqryMovimientosAlb');
-  AbrirConTiempo(unqryFormasPago,      'unqryFormasPago');
-  AbrirConTiempo(unqryTarifas,         'unqryTarifas');
+  AbrirConsultaConTiempo(
+    unqryAlbaranesLineas, TAG, 'unqryAlbaranesLineas', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFacturas, TAG, 'unqryFacturas', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryMovimientosAlb, TAG, 'unqryMovimientosAlb', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFormasPago, TAG, 'unqryFormasPago', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryTarifas, TAG, 'unqryTarifas', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

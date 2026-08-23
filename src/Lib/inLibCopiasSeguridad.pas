@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inLibCopiasSeguridad                                          }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       02/08/2026                                                    }
+{ Versión:       1.2.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Servicio de creación y restauración segura de copias de la BBDD.          }
 {******************************************************************************}
@@ -30,9 +30,6 @@ type
     FContextoSesion: IContextoSesionAplicacion;
     FConexion: TUniConnection;
     function EsAdministrador: Boolean;
-    procedure ValidarConexion;
-    procedure ValidarContrasena(
-      const AContrasena: string);
   public
     constructor Create(
       const AContextoSesion: IContextoSesionAplicacion;
@@ -85,29 +82,38 @@ implementation
 uses
   System.SysUtils,
   inLibBackupWorker,
-  inLibCopiasSeguridadReglas;
+  inLibCopiasSeguridadReglas,
+  inLibMsgConfiguracion;
 
-procedure ValidarCopiaConexion(
-  AConexion: TUniConnection;
-  AEncriptar: Boolean;
-  const AContrasena: string);
+procedure ValidarConexionCopia(AConexion: TUniConnection);
 begin
   if not Assigned(AConexion) then
   begin
     raise EInvalidOpException.Create(
-      'No hay una conexión disponible para la copia de seguridad.');
+      SErrorConexionCopiaNoDisponible);
   end;
-  if AEncriptar and (Trim(AContrasena) = '') then
-  begin
-    raise EArgumentException.Create(
-      'La contraseña de la copia no puede estar vacía.');
-  end;
+end;
+
+procedure ValidarContrasenaCopia(const AContrasena: string);
+begin
+  if Trim(AContrasena) = '' then
+    raise EArgumentException.Create(SErrorContrasenaCopiaVacia);
+end;
+
+procedure ValidarCopiaConexion(
+  AConexion: TUniConnection;
+  AModo: TModoProteccionCopia;
+  const AContrasena: string);
+begin
+  ValidarConexionCopia(AConexion);
+  if AModo = mpcCifrada then
+    ValidarContrasenaCopia(AContrasena);
 end;
 
 function CrearWorkerCopiaConexion(
   AConexion: TUniConnection;
   const ARutaFichero, AContrasena: string;
-  AEncriptar: Boolean;
+  AModo: TModoProteccionCopia;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   AOnFinalizar: TFinalizarCopiaSeguridadEvent): TThread;
 var
@@ -115,7 +121,7 @@ var
 begin
   ValidarCopiaConexion(
     AConexion,
-    AEncriptar,
+    AModo,
     AContrasena);
   oWorker := TBackupWorker.Create(
     AConexion.Server,
@@ -124,7 +130,7 @@ begin
     AConexion.Username,
     AConexion.Password,
     ARutaFichero,
-    AEncriptar,
+    AModo,
     AContrasena);
   try
     oWorker.OnProgreso := AOnProgreso;
@@ -139,7 +145,7 @@ end;
 procedure IniciarCopiaConexion(
   AConexion: TUniConnection;
   const ARutaFichero, AContrasena: string;
-  AEncriptar: Boolean;
+  AModo: TModoProteccionCopia;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   AOnFinalizar: TFinalizarCopiaSeguridadEvent;
   out AWorker: TThread);
@@ -148,7 +154,7 @@ begin
     AConexion,
     ARutaFichero,
     AContrasena,
-    AEncriptar,
+    AModo,
     AOnProgreso,
     AOnFinalizar);
   try
@@ -162,13 +168,13 @@ end;
 function CrearCopiaConexion(
   AConexion: TUniConnection;
   const ARutaFichero, AContrasena: string;
-  AEncriptar: Boolean;
+  AModo: TModoProteccionCopia;
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   out AError: string): TResultadoCopiaSeguridad;
 begin
   ValidarCopiaConexion(
     AConexion,
-    AEncriptar,
+    AModo,
     AContrasena);
   Result := CrearCopiaSeguridadBD(
     AConexion.Server,
@@ -177,7 +183,7 @@ begin
     AConexion.Username,
     AConexion.Password,
     ARutaFichero,
-    AEncriptar,
+    AModo,
     AContrasena,
     AOnProgreso,
     AError);
@@ -193,7 +199,7 @@ begin
     AConexion,
     ARutaFichero,
     AContrasena,
-    True,
+    mpcCifrada,
     AOnProgreso,
     AOnFinalizar);
 end;
@@ -208,7 +214,7 @@ begin
     AConexion,
     ARutaFichero,
     AContrasena,
-    True,
+    mpcCifrada,
     AOnProgreso,
     AError);
 end;
@@ -232,22 +238,19 @@ begin
   Result := FContextoSesion.Identidad.EsAdministrador;
 end;
 
-procedure TRepositorioCopiasSeguridadUniDAC.ValidarConexion;
+function ResolverModoCreacionCopia(
+  AEsAdministrador: Boolean;
+  const ARutaFichero: string): TModoProteccionCopia;
 begin
-  if not Assigned(FConexion) then
-  begin
-    raise EInvalidOpException.Create(
-      'No hay una conexión disponible para la copia de seguridad.');
-  end;
-end;
-
-procedure TRepositorioCopiasSeguridadUniDAC.ValidarContrasena(
-  const AContrasena: string);
-begin
-  if Trim(AContrasena) = '' then
+  if not TPoliticaCopiasSeguridad.IntentarObtenerModo(
+    ARutaFichero,
+    Result) or
+     not TPoliticaCopiasSeguridad.PuedeCrear(
+       AEsAdministrador,
+       Result) then
   begin
     raise EArgumentException.Create(
-      'La contraseña de la copia no puede estar vacía.');
+      SErrorFormatoCreacionCopiaNoPermitido);
   end;
 end;
 
@@ -285,14 +288,20 @@ procedure TRepositorioCopiasSeguridadUniDAC.IniciarCopia(
   AOnFinalizar: TFinalizarCopiaSeguridadEvent;
   out AWorker: TThread);
 var
-  bEncriptar: Boolean;
+  Modo: TModoProteccionCopia;
+  sContrasenaCopia: string;
 begin
-  bEncriptar := ModoCreacion = mpcCifrada;
+  Modo := ResolverModoCreacionCopia(
+    EsAdministrador,
+    ARutaFichero);
+  sContrasenaCopia := '';
+  if Modo = mpcCifrada then
+    sContrasenaCopia := FConexion.Password;
   IniciarCopiaConexion(
     FConexion,
     ARutaFichero,
-    AContrasena,
-    bEncriptar,
+    sContrasenaCopia,
+    Modo,
     AOnProgreso,
     AOnFinalizar,
     AWorker);
@@ -304,18 +313,24 @@ procedure TRepositorioCopiasSeguridadUniDAC.IniciarRestauracion(
   AOnFinalizar: TFinalizarCopiaSeguridadEvent;
   out AWorker: TThread);
 var
-  bDesencriptar: Boolean;
+  Modo: TModoProteccionCopia;
   oWorker: TRestoreWorker;
 begin
-  ValidarConexion;
+  ValidarConexionCopia(FConexion);
   if not PuedeRestaurar(ARutaFichero) then
   begin
     raise EArgumentException.Create(
       'El usuario no puede restaurar este tipo de archivo.');
   end;
-  bDesencriptar := RequiereContrasena(ARutaFichero);
-  if bDesencriptar then
-    ValidarContrasena(AContrasena);
+  if not TPoliticaCopiasSeguridad.IntentarObtenerModo(
+    ARutaFichero,
+    Modo) then
+  begin
+    raise EArgumentException.Create(
+      SErrorTipoRestauracionNoPermitido);
+  end;
+  if Modo = mpcCifrada then
+    ValidarContrasenaCopia(AContrasena);
   AWorker := nil;
   oWorker := TRestoreWorker.Create(
     FConexion.Server,
@@ -325,7 +340,7 @@ begin
     FConexion.Password,
     ARutaFichero,
     AContrasena,
-    bDesencriptar);
+    Modo);
   try
     oWorker.OnProgreso := AOnProgreso;
     oWorker.OnFinalizar := AOnFinalizar;
@@ -343,14 +358,20 @@ function TRepositorioCopiasSeguridadUniDAC.CrearCopia(
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   out AError: string): TResultadoCopiaSeguridad;
 var
-  bEncriptar: Boolean;
+  Modo: TModoProteccionCopia;
+  sContrasenaCopia: string;
 begin
-  bEncriptar := ModoCreacion = mpcCifrada;
+  Modo := ResolverModoCreacionCopia(
+    EsAdministrador,
+    ARutaFichero);
+  sContrasenaCopia := '';
+  if Modo = mpcCifrada then
+    sContrasenaCopia := FConexion.Password;
   Result := CrearCopiaConexion(
     FConexion,
     ARutaFichero,
-    AContrasena,
-    bEncriptar,
+    sContrasenaCopia,
+    Modo,
     AOnProgreso,
     AError);
 end;

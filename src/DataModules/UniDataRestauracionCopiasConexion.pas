@@ -29,7 +29,9 @@ uses
   System.SysUtils,
   Data.DB,
   inLibBackupWorker,
-  inLibConexionesUniDAC;
+  inLibCopiasSeguridadReglas,
+  inLibConexionesUniDAC,
+  inLibMsgConfiguracion;
 
 type
   TRepositorioRestauracionConexionUniDAC = class(
@@ -90,13 +92,17 @@ procedure TRepositorioRestauracionConexionUniDAC.Iniciar(
   AOnProgreso: TProgresoCopiaSeguridadEvent;
   AOnFinalizar: TFinalizarCopiaSeguridadEvent);
 var
-  bDesencriptar: Boolean;
+  Modo: TModoProteccionCopia;
   oWorker: TRestoreWorker;
 begin
+  if not TPoliticaCopiasSeguridad.IntentarObtenerModo(
+    ASolicitud.RutaFichero,
+    Modo) then
+  begin
+    raise EArgumentException.Create(
+      SErrorFormatoCopiaNoCompatible);
+  end;
   PrepararConexion(ASolicitud);
-  bDesencriptar := SameText(
-    ExtractFileExt(ASolicitud.RutaFichero),
-    '.crypt');
   oWorker := TRestoreWorker.Create(
     ASolicitud.Host,
     ASolicitud.Puerto,
@@ -105,7 +111,7 @@ begin
     ASolicitud.ContrasenaConexion,
     ASolicitud.RutaFichero,
     ASolicitud.ContrasenaCopia,
-    bDesencriptar);
+    Modo);
   try
     oWorker.OnProgreso := AOnProgreso;
     oWorker.OnFinalizar := AOnFinalizar;

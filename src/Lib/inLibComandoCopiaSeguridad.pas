@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibComandoCopiaSeguridad                                   }
 {    Tipo:       Librería                                                      }
@@ -10,6 +10,7 @@
 {  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Interpreta y valida el comando de copia de seguridad no interactiva.      }
+{    Solo crea copias; la restauración nunca obtiene la clave desde el nombre. }
 {******************************************************************************}
 unit inLibComandoCopiaSeguridad;
 
@@ -64,7 +65,7 @@ implementation
 uses
   System.Character,
   System.StrUtils,
-  inLibCifrado;
+  inLibLineaComandos;
 
 const
   CONMUTADOR_COPIA_SEGURIDAD = 'copiaseguridad';
@@ -80,38 +81,79 @@ const
     'sábado'
   );
 
-function NormalizarConmutador(const AParametro: string): string;
+function EsParametroComandoCopiaSeguridad(
+  const AParametro: string): Boolean;
 begin
-  Result := Trim(AParametro);
-  while (Result <> '') and
-        CharInSet(Result[1], ['/', '-']) do
+  Result := SameText(
+    NormalizarConmutador(AParametro),
+    CONMUTADOR_COPIA_SEGURIDAD);
+end;
+
+function IndiceComandoCopiaSeguridad(
+  const AParametros: TArray<string>): Integer;
+begin
+  Result := -1;
+  if (Length(AParametros) > 0) and
+     EsParametroComandoCopiaSeguridad(AParametros[0]) then
   begin
-    Delete(Result, 1, 1);
+    Result := 0;
+  end
+  else if (Length(AParametros) > 1) and
+          EsParametroComandoCopiaSeguridad(AParametros[1]) then
+  begin
+    Result := 1;
+  end;
+end;
+
+function ObtenerParametrosComandoCopiaSeguridad(
+  const AParametros: TArray<string>): TArray<string>;
+var
+  iIndice: Integer;
+  iIndiceComando: Integer;
+begin
+  iIndiceComando := IndiceComandoCopiaSeguridad(AParametros);
+  if iIndiceComando >= 0 then
+  begin
+    SetLength(Result, Length(AParametros) - iIndiceComando);
+    for iIndice := iIndiceComando to High(AParametros) do
+    begin
+      Result[iIndice - iIndiceComando] := AParametros[iIndice];
+    end;
   end;
 end;
 
 function EsComandoCopiaSeguridad(
   const AParametros: TArray<string>): Boolean;
 begin
-  Result := Length(AParametros) > 0;
+  Result := IndiceComandoCopiaSeguridad(AParametros) >= 0;
+end;
+
+function EsSintaxisParametrosComandoValida(
+  const AParametros: TArray<string>): Boolean;
+begin
+  Result := (Length(AParametros) = 2) and
+            EsParametroComandoCopiaSeguridad(AParametros[0]);
   if Result then
-  begin
-    Result := SameText(
-      NormalizarConmutador(AParametros[0]),
-      CONMUTADOR_COPIA_SEGURIDAD);
-  end;
+    Result := Trim(AParametros[1]) <> '';
 end;
 
 function EsSintaxisComandoCopiaSeguridadValida(
   const AParametros: TArray<string>): Boolean;
+var
+  aParametrosComando: TArray<string>;
+  iIndiceComando: Integer;
 begin
-  Result := EsComandoCopiaSeguridad(AParametros) and
-            (Length(AParametros) >= 2) and
-            (Length(AParametros) <= 3);
+  iIndiceComando := IndiceComandoCopiaSeguridad(AParametros);
+  aParametrosComando := ObtenerParametrosComandoCopiaSeguridad(
+    AParametros);
+  Result := (iIndiceComando >= 0) and
+            ((iIndiceComando = 0) or
+             EsParametroPerfilValido(AParametros[0]));
   if Result then
-    Result := Trim(AParametros[1]) <> '';
-  if Result and (Length(AParametros) = 3) then
-    Result := Trim(AParametros[2]) <> '';
+  begin
+    Result := EsSintaxisParametrosComandoValida(
+      aParametrosComando);
+  end;
 end;
 
 function EsCaracterIdentificador(ACaracter: Char): Boolean;
@@ -217,15 +259,58 @@ begin
   Result := ReplaceText(Result, '%25', '%');
 end;
 
+function EsCaracterBase64(ACaracter: Char): Boolean;
+begin
+  Result := CharInSet(
+    ACaracter,
+    ['A'..'Z', 'a'..'z', '0'..'9', '+', '/', '=']);
+end;
+
+function TieneFormatoClaveCifradaRuta(
+  const AClaveCifrada: string): Boolean;
+var
+  bEnRelleno: Boolean;
+  cCaracter: Char;
+  iIndice: Integer;
+  iRelleno: Integer;
+  sClaveDecodificada: string;
+begin
+  sClaveDecodificada := DecodificarClaveCifradaDeRuta(
+    AClaveCifrada);
+  Result := (Length(sClaveDecodificada) >= 24) and
+            (Length(sClaveDecodificada) mod 4 = 0);
+  bEnRelleno := False;
+  iIndice := 1;
+  iRelleno := 0;
+  while Result and (iIndice <= Length(sClaveDecodificada)) do
+  begin
+    cCaracter := sClaveDecodificada[iIndice];
+    Result := EsCaracterBase64(cCaracter);
+    if Result then
+    begin
+      if cCaracter = '=' then
+      begin
+        bEnRelleno := True;
+        Inc(iRelleno);
+        Result := iRelleno <= 2;
+      end
+      else if bEnRelleno then
+        Result := False;
+    end;
+    Inc(iIndice);
+  end;
+end;
+
 function IntentarExtraerMarcadorClave(
   const ARuta: string;
-  out AMarcador, ARutaRegistro: string): Boolean;
+  out ARutaRegistro: string): Boolean;
 var
   iFinMarcador: Integer;
+  sMarcador: string;
   sNombre: string;
   sNombreRegistro: string;
 begin
-  AMarcador := '';
+  sMarcador := '';
   ARutaRegistro := ARuta;
   Result := False;
   sNombre := ExtractFileName(ARuta);
@@ -235,11 +320,15 @@ begin
     Result := iFinMarcador > 2;
     if Result then
     begin
-      AMarcador := Copy(sNombre, 2, iFinMarcador - 2);
-      sNombreRegistro := '_***_' +
-        Copy(sNombre, iFinMarcador + 1, MaxInt);
-      ARutaRegistro := ExtractFilePath(ARuta) +
-        sNombreRegistro;
+      sMarcador := Copy(sNombre, 2, iFinMarcador - 2);
+      Result := TieneFormatoClaveCifradaRuta(sMarcador);
+      if Result then
+      begin
+        sNombreRegistro := '_***_' +
+          Copy(sNombre, iFinMarcador + 1, MaxInt);
+        ARutaRegistro := ExtractFilePath(ARuta) +
+          sNombreRegistro;
+      end
     end;
   end;
 end;
@@ -278,6 +367,9 @@ function EsRutaAbsolutaWindows(const ARuta: string): Boolean;
 var
   bRutaUnidad: Boolean;
   bRutaUnc: Boolean;
+  iFinRecurso: Integer;
+  iFinServidor: Integer;
+  sRutaUnc: string;
 begin
   bRutaUnidad := (Length(ARuta) >= 3) and
     CharInSet(UpCase(ARuta[1]), ['A'..'Z']) and
@@ -285,6 +377,19 @@ begin
   bRutaUnc := StartsText('\\', ARuta) and
     not StartsText('\\?\', ARuta) and
     not StartsText('\\.\', ARuta);
+  if bRutaUnc then
+  begin
+    sRutaUnc := Copy(ARuta, 3, MaxInt);
+    iFinServidor := Pos('\', sRutaUnc);
+    bRutaUnc := iFinServidor > 1;
+    if bRutaUnc then
+    begin
+      Delete(sRutaUnc, 1, iFinServidor);
+      iFinRecurso := Pos('\', sRutaUnc);
+      bRutaUnc := (iFinRecurso > 1) and
+                  (iFinRecurso < Length(sRutaUnc));
+    end;
+  end;
   Result := bRutaUnidad or bRutaUnc;
 end;
 
@@ -325,26 +430,12 @@ begin
     Result := eccsExtension;
 end;
 
-function ObtenerClaveCifradaSolicitud(
-  AContrasenaExplicita: Boolean;
-  const AContrasena, AClavePredeterminada: string): string;
-begin
-  if AContrasenaExplicita then
-    Result := CifrarAES(AContrasena)
-  else
-    Result := AClavePredeterminada;
-end;
-
 procedure AplicarMarcadorLiteral(
-  AContrasenaExplicita: Boolean;
   const AClavePredeterminada: string;
   var ASolicitud: TSolicitudComandoCopiaSeguridad;
   out AClaveCifrada: string);
 begin
-  AClaveCifrada := ObtenerClaveCifradaSolicitud(
-    AContrasenaExplicita,
-    ASolicitud.Contrasena,
-    AClavePredeterminada);
+  AClaveCifrada := AClavePredeterminada;
   if (ASolicitud.Contrasena <> '') and
      (AClaveCifrada <> '') then
   begin
@@ -356,18 +447,11 @@ begin
 end;
 
 procedure AplicarMarcadorCifrado(
-  AContrasenaExplicita: Boolean;
-  const AMarcador: string;
+  const AClavePredeterminada: string;
   var ASolicitud: TSolicitudComandoCopiaSeguridad;
   out AClaveCifrada: string);
 begin
-  if AContrasenaExplicita then
-    AClaveCifrada := CifrarAES(ASolicitud.Contrasena)
-  else
-  begin
-    AClaveCifrada := DecodificarClaveCifradaDeRuta(AMarcador);
-    ASolicitud.Contrasena := DescifrarAES(AClaveCifrada);
-  end;
+  AClaveCifrada := AClavePredeterminada;
   if (ASolicitud.Contrasena <> '') and
      (AClaveCifrada <> '') then
   begin
@@ -378,23 +462,16 @@ begin
 end;
 
 procedure ResolverClaveSolicitud(
-  const AParametros: TArray<string>;
   const AClavesPredeterminadas:
     TClavesPredeterminadasCopiaSeguridad;
   var ASolicitud: TSolicitudComandoCopiaSeguridad);
 var
-  bContrasenaExplicita: Boolean;
   bMarcadorLiteral: Boolean;
   bTieneMarcador: Boolean;
   sClaveCifrada: string;
-  sMarcador: string;
   sRutaRegistroLiteral: string;
 begin
-  bContrasenaExplicita := Length(AParametros) = 3;
-  if bContrasenaExplicita then
-    ASolicitud.Contrasena := AParametros[2]
-  else
-    ASolicitud.Contrasena := AClavesPredeterminadas.Contrasena;
+  ASolicitud.Contrasena := AClavesPredeterminadas.Contrasena;
   sRutaRegistroLiteral := ReemplazarToken(
     ASolicitud.RutaDestino,
     MARCADOR_CLAVE,
@@ -408,14 +485,12 @@ begin
   begin
     bTieneMarcador := IntentarExtraerMarcadorClave(
       ASolicitud.RutaDestino,
-      sMarcador,
       ASolicitud.RutaRegistro);
   end;
   sClaveCifrada := '';
   if bMarcadorLiteral then
   begin
     AplicarMarcadorLiteral(
-      bContrasenaExplicita,
       AClavesPredeterminadas.ClaveCifrada,
       ASolicitud,
       sClaveCifrada);
@@ -423,8 +498,7 @@ begin
   else if bTieneMarcador then
   begin
     AplicarMarcadorCifrado(
-      bContrasenaExplicita,
-      sMarcador,
+      AClavesPredeterminadas.ClaveCifrada,
       ASolicitud,
       sClaveCifrada);
   end;
@@ -441,19 +515,22 @@ function InterpretarComandoCopiaSeguridad(
   const AClavesPredeterminadas:
     TClavesPredeterminadasCopiaSeguridad
 ): TSolicitudComandoCopiaSeguridad;
+var
+  aParametrosComando: TArray<string>;
 begin
   Result := Default(TSolicitudComandoCopiaSeguridad);
   Result.EsComando := EsComandoCopiaSeguridad(AParametros);
   if Result.EsComando then
   begin
+    aParametrosComando := ObtenerParametrosComandoCopiaSeguridad(
+      AParametros);
     if EsSintaxisComandoCopiaSeguridadValida(AParametros) then
     begin
       Result.RutaDestino := ResolverPlantillaCopiaSeguridad(
-        Trim(AParametros[1]),
+        Trim(aParametrosComando[1]),
         AInstante);
       Result.RutaRegistro := Result.RutaDestino;
       ResolverClaveSolicitud(
-        AParametros,
         AClavesPredeterminadas,
         Result);
       if Result.Error = eccsNinguno then

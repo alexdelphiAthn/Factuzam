@@ -1742,7 +1742,7 @@
                   Top = 229
                   Caption = 
                     'Tokens: Serie y NroDocumento. Ej.: Serie.NroDocumento o NroDocum' +
-                    'ento.Serie'
+                    'ento.Serie. La coma no est'#225' permitida.'
                   Properties.WordWrap = True
                   TabOrder = 17
                   Transparent = True

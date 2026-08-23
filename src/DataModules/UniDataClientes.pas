@@ -75,6 +75,7 @@ uses
   UniDataValoresAutomaticosRepositorio,
 
   System.Diagnostics,
+  UniDataAperturaConsultas,
   inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas;
 
@@ -148,30 +149,6 @@ end;
 procedure TdmClientes.AbrirDetalles;
 const
   TAG = 'Clientes.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
@@ -179,10 +156,14 @@ begin
   sw := TStopwatch.StartNew;
   // Solo lookups. Historia (FacturasClientes+Lineas) y Depositos son
   // lazy: se abren al activar la pestaña Historia/Prestamos.
-  AbrirConTiempo(unqryPaises,    'unqryPaises');
-  AbrirConTiempo(unqryFormaPago, 'unqryFormaPago');
-  AbrirConTiempo(unqryEmpresasBancos, 'unqryEmpresasBancos');
-  AbrirConTiempo(unqryTarifas,   'unqryTarifas');
+  AbrirConsultaConTiempo(
+    unqryPaises, TAG, 'unqryPaises', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFormaPago, TAG, 'unqryFormaPago', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryEmpresasBancos, TAG, 'unqryEmpresasBancos', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryTarifas, TAG, 'unqryTarifas', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

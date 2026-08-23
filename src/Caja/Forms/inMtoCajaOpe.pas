@@ -523,7 +523,7 @@ type
     // articulo/SKU no existe o esta descatalogado.
     function CargarSkuExterno(const ASku: string;
                               ACant: Double): Boolean;
-    procedure PrepararValores(AEmpresa, AAlmacen, ACaja: string;
+    procedure PrepararValores(const AEmpresa, AAlmacen, ACaja: string;
                               AFecha: TDateTime);
     procedure CargarDevolucion(
       const ASerie, ANumero, AEmpresaOrigen,
@@ -1359,8 +1359,9 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeCaja.PrepararValores(AEmpresa, AAlmacen, ACaja: string;
-                                         AFecha: TDateTime);
+procedure TfrmMtoOpeCaja.PrepararValores(
+  const AEmpresa, AAlmacen, ACaja: string;
+  AFecha: TDateTime);
 var
   EmpleadoAnterior, NombreEmpleadoAnterior: string;
   EmpleadoInicial, NombreEmpleadoInicial: string;

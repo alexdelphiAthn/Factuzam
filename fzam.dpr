@@ -47,6 +47,18 @@ uses
     'src\Lib\inLibComandoCopiaSeguridad.pas',
   inMtoComandoCopiaSeguridad in
     'src\Core\inMtoComandoCopiaSeguridad.pas',
+  inLibLineaComandos in
+    'src\Lib\inLibLineaComandos.pas',
+  inLibSalidaComandos in
+    'src\Lib\inLibSalidaComandos.pas',
+  inLibComandoAyuda in
+    'src\Lib\inLibComandoAyuda.pas',
+  inMtoComandoAyuda in
+    'src\Core\inMtoComandoAyuda.pas',
+  inLibComandoImprimirFacturas in
+    'src\Lib\inLibComandoImprimirFacturas.pas',
+  inMtoComandoImprimirFacturas in
+    'src\Core\inMtoComandoImprimirFacturas.pas',
   inLibConfiguracionIni in 'src\Lib\inLibConfiguracionIni.pas',
   inLibDatasets in 'src\Lib\inLibDatasets.pas',
   inLibValoresAutomaticos in 'src\Lib\inLibValoresAutomaticos.pas',
@@ -468,6 +480,8 @@ uses
   inLibWizardEditarPersistenciaIntf in
     'src\Lib\inLibWizardEditarPersistenciaIntf.pas',
   UniDataGen in 'src\DataModules\UniDataGen.pas' {dmBase: TDataModule},
+  UniDataAperturaConsultas in
+    'src\DataModules\UniDataAperturaConsultas.pas',
   UniDataArticulos in 'src\DataModules\UniDataArticulos.pas' {dmArticulos: TdmArticulos},
   UniDataClientes in 'src\DataModules\UniDataClientes.pas' {dmClientes: TdmClientes},
   UniDataContadores in 'src\DataModules\UniDataContadores.pas' {dmContadores: dmContadores},
@@ -1600,6 +1614,7 @@ uses
 
 function CrearContextoSesionInicial(
   const ARegistroLog: IRegistroLog;
+  AForzarCredenciales: Boolean;
   out AContextoSesion: IContextoSesionAplicacion;
   out AResultadoLicencia: TResultadoLicenciaAplicacion): Boolean;
 var
@@ -1617,7 +1632,8 @@ begin
     if not frmLogon.DebeCerrarAplicacion then
     begin
       AutoLoginCorrecto := False;
-      if frmLogon.IsInitializeAuto then
+      if (not AForzarCredenciales) and
+         frmLogon.IsInitializeAuto then
       begin
         frmLogon.btnAceptarClick(nil);
         AutoLoginCorrecto :=
@@ -1640,6 +1656,16 @@ begin
   end;
 end;
 
+procedure CerrarLogAplicacionSeguro(
+  var ARegistroLog: IRegistroLog);
+begin
+  try
+    ARegistroLog := nil;
+    inLibLog.LiberarLog;
+  except
+  end;
+end;
+
 begin
   var ContextoSesionInicial: IContextoSesionAplicacion;
   var GestorContextoCierre: IGestorContextoSesion;
@@ -1647,43 +1673,73 @@ begin
   var RegistroLogAplicacion: IRegistroLog;
   var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
   var EsModoComandoCopiaSeguridad: Boolean;
+  var EsModoComandoImprimirFacturas: Boolean;
+  var CodigoSalidaComandoAyuda: Cardinal;
   var CodigoSalidaComandoCopia: Cardinal;
+  var CodigoSalidaComandoImpresion: Cardinal;
+  if EsProcesoComandoAyuda then
+  begin
+    CodigoSalidaComandoAyuda := EjecutarProcesoComandoAyuda;
+    ExitProcess(CodigoSalidaComandoAyuda);
+  end;
   EsModoComandoCopiaSeguridad :=
     EsProcesoComandoCopiaSeguridad;
-  if not EsModoComandoCopiaSeguridad then
+  EsModoComandoImprimirFacturas :=
+    EsProcesoComandoImprimirFacturas;
+  if (not EsModoComandoCopiaSeguridad) and
+     (not EsModoComandoImprimirFacturas) then
+  begin
     ProcesarArranqueActualizacionSoporte;
+  end;
 //  {$IFDEF DEBUG}
 //      ReportMemoryLeaksOnShutdown := True;
 //  {$ENDIF}
-  // Tracking de excepciones con JCL: rellena E.StackTrace al lanzar
-  // cualquier excepcion. AppException en inMtoPrincipal ya vuelca el
-  // detalle (incluido el stack) al log y al modal del usuario.
-  Include(JclStackTrackingOptions, stStack);
-  Include(JclStackTrackingOptions, stStaticModuleList);
-  JclStartExceptionTracking;
-  TdxDiacriticStringOptions.ComparisonMode :=
-                                   TdxDiacriticStringComparisonMode.Insensitive;
-  TdxDiacriticStringOptions.NormalizationMode :=
-                                     TdxDiacriticStringNormalizationMode.System;
-  Application.Initialize;
-  ConfigurarLecturasAtributosPaleta(LecturasAtributosPaleta);
-  Application.MainFormOnTaskbar := True;
-  Application.Title := 'Fzam';
-  RegistroLogAplicacion := CrearRegistroLog;
+  try
+    // Tracking de excepciones con JCL: rellena E.StackTrace al lanzar
+    // cualquier excepcion. AppException en inMtoPrincipal ya vuelca el
+    // detalle (incluido el stack) al log y al modal del usuario.
+    Include(JclStackTrackingOptions, stStack);
+    Include(JclStackTrackingOptions, stStaticModuleList);
+    JclStartExceptionTracking;
+    TdxDiacriticStringOptions.ComparisonMode :=
+      TdxDiacriticStringComparisonMode.Insensitive;
+    TdxDiacriticStringOptions.NormalizationMode :=
+      TdxDiacriticStringNormalizationMode.System;
+    Application.Initialize;
+    ConfigurarLecturasAtributosPaleta(LecturasAtributosPaleta);
+    Application.MainFormOnTaskbar := True;
+    Application.Title := 'Fzam';
+    RegistroLogAplicacion := CrearRegistroLog;
   if EsModoComandoCopiaSeguridad then
   begin
     CodigoSalidaComandoCopia :=
       EjecutarProcesoComandoCopiaSeguridad(
-      RegistroLogAplicacion);
-    RegistroLogAplicacion := nil;
-    inLibLog.LiberarLog;
+        RegistroLogAplicacion);
+    try
+      RegistroLogAplicacion := nil;
+      inLibLog.LiberarLog;
+    except
+    end;
     ExitProcess(CodigoSalidaComandoCopia);
   end;
-  if CrearContextoSesionInicial(
-    RegistroLogAplicacion,
-    ContextoSesionInicial,
-    ResultadoLicenciaInicial) then
+  if EsModoComandoImprimirFacturas then
   begin
+    CodigoSalidaComandoImpresion :=
+      ValidarSintaxisProcesoComandoImprimirFacturas(
+        RegistroLogAplicacion);
+    if CodigoSalidaComandoImpresion <> 0 then
+    begin
+      CerrarLogAplicacionSeguro(RegistroLogAplicacion);
+      ExitProcess(CodigoSalidaComandoImpresion);
+    end;
+  end;
+  try
+    if CrearContextoSesionInicial(
+      RegistroLogAplicacion,
+      EsModoComandoImprimirFacturas,
+      ContextoSesionInicial,
+      ResultadoLicenciaInicial) then
+    begin
     // Fuente global para toda la aplicacion
     Application.DefaultFont.Name   := 'Lucida Sans';
     Application.DefaultFont.Height := -15;
@@ -1701,6 +1757,36 @@ begin
       CrearSolicitudPermisoLayoutMto,
       CrearPreviewTicketMto,
       CrearProveedorPreviewExcelMto);
+    if EsModoComandoImprimirFacturas then
+    begin
+      try
+        CodigoSalidaComandoImpresion :=
+          EjecutarProcesoComandoImprimirFacturas(
+            Principal,
+            Principal.ConexionPrincipal,
+            ContextoSesionInicial,
+            Principal.ParametrosApp,
+            Principal.Permisos,
+            RegistroLogAplicacion);
+      finally
+        if Supports(
+          ContextoSesionInicial,
+          IGestorContextoSesion,
+          GestorContextoCierre
+        ) then
+        begin
+          GestorContextoCierre.MarcarCierreAplicacion;
+        end;
+        TVerifactuCola.DetenerHilo;
+      end;
+      try
+        RegistroLogAplicacion.RegistrarInformacion(
+          'Salida del proceso /imprimirfacturas');
+      except
+      end;
+      CerrarLogAplicacionSeguro(RegistroLogAplicacion);
+      ExitProcess(CodigoSalidaComandoImpresion);
+    end;
     // Diagnóstico: con /teststack se encola una excepción de prueba
     // para verificar JCL stack trace + AppException + log + modal.
   if FindCmdLineSwitch('teststack', True) then
@@ -1731,6 +1817,52 @@ begin
     RegistroLogAplicacion.RegistrarInformacion('Salida del proceso');
     RegistroLogAplicacion := nil;
     inLibLog.LiberarLog;
-    ExitProcess(0);
+      ExitProcess(0);
+    end;
+    if EsModoComandoImprimirFacturas then
+    begin
+      CodigoSalidaComandoImpresion :=
+        FinalizarProcesoComandoImprimirFacturasSinSesion(
+          RegistroLogAplicacion);
+      CerrarLogAplicacionSeguro(RegistroLogAplicacion);
+      ExitProcess(CodigoSalidaComandoImpresion);
+    end;
+  except
+    on E: Exception do
+    begin
+      if not EsModoComandoImprimirFacturas then
+        raise;
+      try
+        if Supports(
+          ContextoSesionInicial,
+          IGestorContextoSesion,
+          GestorContextoCierre
+        ) then
+        begin
+          GestorContextoCierre.MarcarCierreAplicacion;
+        end;
+        TVerifactuCola.DetenerHilo;
+      except
+      end;
+      CodigoSalidaComandoImpresion :=
+        FinalizarProcesoComandoImprimirFacturasConError(
+          RegistroLogAplicacion,
+          E.ClassName + ': ' + E.Message);
+      CerrarLogAplicacionSeguro(RegistroLogAplicacion);
+      ExitProcess(CodigoSalidaComandoImpresion);
+    end;
+    end;
+  except
+    on E: Exception do
+    begin
+      if not EsModoComandoImprimirFacturas then
+        raise;
+      CodigoSalidaComandoImpresion :=
+        FinalizarProcesoComandoImprimirFacturasConError(
+          RegistroLogAplicacion,
+          E.ClassName + ': ' + E.Message);
+      CerrarLogAplicacionSeguro(RegistroLogAplicacion);
+      ExitProcess(CodigoSalidaComandoImpresion);
+    end;
   end;
 end.

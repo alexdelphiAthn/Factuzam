@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inMtoLogonRestauracionVcl                                    }
 {    Tipo:       Adaptador VCL                                                 }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       02/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Recoge la restauración solicitada desde la pantalla de conexión.          }
 {******************************************************************************}
@@ -41,6 +41,11 @@ type
   private
     class procedure ConfigurarDialogo(
       ADialogo: TFileOpenDialog); static;
+    class function SolicitarContrasenaCopia(
+      ADialogo: TFileOpenDialog;
+      const ARutaFichero: string;
+      out AContrasena: string
+    ): Boolean; static;
   public
     class procedure Ejecutar(
       const AContexto: TContextoLogonRestauracionVcl); static;
@@ -50,6 +55,7 @@ implementation
 
 uses
   System.SysUtils,
+  inMtoModalContrasenaCopia,
   inLibDir,
   inLibMsgComun,
   inLibMsgConfiguracion;
@@ -63,7 +69,7 @@ begin
   ADialogo.FileTypes.Clear;
   oTipoFichero := ADialogo.FileTypes.Add;
   oTipoFichero.DisplayName := SCaptionFiltroCopiasSqlEncriptadas;
-  oTipoFichero.FileMask := '*.sql;*.crypt';
+  oTipoFichero.FileMask := '*.sql;*.zip;*.crypt';
   oTipoFichero := ADialogo.FileTypes.Add;
   oTipoFichero.DisplayName := SCaptionFiltroTodosArchivos;
   oTipoFichero.FileMask := '*.*';
@@ -71,34 +77,56 @@ begin
   ADialogo.DefaultFolder := GetUserDeskFolder;
 end;
 
+class function TCoordinadorLogonRestauracionVcl.
+  SolicitarContrasenaCopia(
+    ADialogo: TFileOpenDialog;
+    const ARutaFichero: string;
+    out AContrasena: string): Boolean;
+begin
+  AContrasena := '';
+  Result := True;
+  if SameText(ExtractFileExt(ARutaFichero), '.crypt') then
+  begin
+    Result := TfrmModalContrasenaCopia.SolicitarExistente(
+      ADialogo.Owner,
+      AContrasena);
+  end;
+end;
+
 class procedure TCoordinadorLogonRestauracionVcl.Ejecutar(
   const AContexto: TContextoLogonRestauracionVcl);
 var
+  bContinuar: Boolean;
   oSolicitud: TSolicitudRestauracionConexion;
   sContrasena: string;
+  sContrasenaCopia: string;
 begin
   sContrasena := InputBox(SGetPassBBDD, '', '');
   AContexto.EstablecerContrasena(sContrasena);
   ConfigurarDialogo(AContexto.Dialogo);
   if AContexto.Dialogo.Execute then
   begin
-    oSolicitud := Default(TSolicitudRestauracionConexion);
-    oSolicitud.Host := AContexto.Host;
-    oSolicitud.Puerto := StrToIntDef(AContexto.Puerto, 3306);
-    oSolicitud.BaseDatos := AContexto.BaseDatos;
-    oSolicitud.Usuario := AContexto.Usuario;
-    oSolicitud.ContrasenaConexion := sContrasena;
-    oSolicitud.RutaFichero := AContexto.Dialogo.FileName;
-    if SameText(
-         ExtractFileExt(oSolicitud.RutaFichero),
-         '.crypt') then
-      oSolicitud.ContrasenaCopia := sContrasena;
-    AContexto.MostrarPreparacion();
-    AContexto.CasoUso.Ejecutar(
-      oSolicitud,
-      AContexto.OnPrepararWorker,
-      AContexto.OnProgreso,
-      AContexto.OnFinalizar);
+    bContinuar := SolicitarContrasenaCopia(
+      AContexto.Dialogo,
+      AContexto.Dialogo.FileName,
+      sContrasenaCopia);
+    if bContinuar then
+    begin
+      oSolicitud := Default(TSolicitudRestauracionConexion);
+      oSolicitud.Host := AContexto.Host;
+      oSolicitud.Puerto := StrToIntDef(AContexto.Puerto, 3306);
+      oSolicitud.BaseDatos := AContexto.BaseDatos;
+      oSolicitud.Usuario := AContexto.Usuario;
+      oSolicitud.ContrasenaConexion := sContrasena;
+      oSolicitud.RutaFichero := AContexto.Dialogo.FileName;
+      oSolicitud.ContrasenaCopia := sContrasenaCopia;
+      AContexto.MostrarPreparacion();
+      AContexto.CasoUso.Ejecutar(
+        oSolicitud,
+        AContexto.OnPrepararWorker,
+        AContexto.OnProgreso,
+        AContexto.OnFinalizar);
+    end;
   end
   else
     ShowMessage(SCargaScriptCancelada);

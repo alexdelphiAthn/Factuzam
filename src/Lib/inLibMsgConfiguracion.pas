@@ -82,32 +82,80 @@ resourcestring
   SOperacionCancelada = 'Operación cancelada.';
   SCopiaSeguridadGuardada =
     'La copia se guardó exitosamente';
+  SProgresoGuardandoCopiaTextoPlano =
+    'Guardando copia en texto plano';
+  SProgresoComprimiendoCopiaZip =
+    'Comprimiendo copia en ZIP';
+  SProgresoComprimiendoCifrandoCopia =
+    'Comprimiendo ZIP y cifrando copia';
   SErrorCrearCopiaSeguridad =
     'No se pudo crear la copia de seguridad.' + sLineBreak + '%s';
+  SErrorConexionCopiaNoDisponible =
+    'No hay una conexión disponible para la copia de seguridad.';
+  SErrorFormatoCreacionCopiaNoPermitido =
+    'El formato elegido para la copia de seguridad no está permitido.';
+  SErrorFormatoCopiaNoCompatible =
+    'El formato de la copia no es compatible.';
   SErrorSintaxisComandoCopiaSeguridad =
-    'Uso: fzam.exe /copiaseguridad "<ruta>.crypt" ["contraseña"].';
+    'Uso: fzam.exe [perfil.ini] /copiaseguridad "<ruta>.crypt".';
+  SErrorSintaxisComandoImprimirFacturas =
+    'Uso: fzam.exe /imprimirfacturas ' +
+    '"SERIE\NUMERO, SERIE\NUMERO" ["Formato"] "C:\destino". ' +
+    'Si se omite el formato o se pasa "", se usa Predeterminado.';
+  SAyudaComandos =
+    'Factuzam - opciones de ejecución' + sLineBreak +
+    sLineBreak +
+    '1. Aplicación interactiva' + sLineBreak +
+    '   fzam.exe [perfil.ini]' + sLineBreak +
+    '   Abre Factuzam. El nombre simple del perfil .ini es opcional.' +
+    sLineBreak + sLineBreak +
+    '2. Copia de seguridad cifrada' + sLineBreak +
+    '   %s' + sLineBreak +
+    '   Genera SQL, lo comprime en ZIP y cifra el resultado con la ' +
+    'contraseña de la conexión.' + sLineBreak +
+    '   La plantilla admite DIASEMANA, DIAMES, MES, AÑO, {ANO} y ' +
+    'CLAVE. Sobrescribe el destino.' + sLineBreak +
+    '   No se admite la contraseña como argumento.' +
+    sLineBreak + sLineBreak +
+    '3. Impresión de facturas en PDF' + sLineBreak +
+    '   %s' + sLineBreak +
+    '   Acepta una o varias referencias y un formato opcional. Solicita ' +
+    'una sesión autenticada.' + sLineBreak +
+    sLineBreak +
+    '4. Ayuda' + sLineBreak +
+    '   fzam.exe /?' + sLineBreak +
+    '   fzam.exe /help' + sLineBreak +
+    '   Muestra este texto en la consola y termina con código 0.' +
+    sLineBreak + sLineBreak +
+    'En línea de comandos, la copia siempre se genera como ZIP cifrado ' +
+    '(.crypt). SQL y ZIP sin cifrar solo están disponibles desde el menú ' +
+    'para administradores.';
   SErrorRutaComandoCopiaSeguridad =
     'La ruta de la copia de seguridad no es válida.';
   SErrorExtensionComandoCopiaSeguridad =
     'El destino de la copia debe tener extensión .crypt.';
   SErrorClaveComandoCopiaSeguridad =
-    'La contraseña cifrada de la copia no es válida.';
+    'La contraseña configurada para la conexión de la BBDD no es válida.';
   SErrorConexionComandoCopiaSeguridad =
     'No se pudo preparar la conexión para la copia: %s';
+  SErrorInesperadoComandoCopiaSeguridad =
+    'Error inesperado al preparar la copia de seguridad: %s';
   SErrorPublicarComandoCopiaSeguridad =
     'No se pudo guardar la copia en su destino: %s';
   SErrorFormatoComandoCopiaSeguridad =
     'El archivo temporal no contiene una copia cifrada válida.';
   SInfoComandoCopiaSeguridadInicio =
     'Inicio de copia de seguridad por línea de comandos.';
+  SInfoComandoCopiaSeguridadParametrosValidados =
+    'Parámetros de la copia validados correctamente.';
   SInfoComandoCopiaSeguridadConexion =
     'Preparando la conexión configurada para la copia.';
   SInfoComandoCopiaSeguridadConexionPreparada =
-    'Conexión preparada correctamente.';
+    'Conexión preparada: servidor %s; base de datos %s.';
   SInfoComandoCopiaSeguridadDestino =
     'Destino de la copia: %s';
   SInfoComandoCopiaSeguridadGeneracion =
-    'Generando la copia cifrada temporal.';
+    'Generando el SQL, comprimiéndolo en ZIP y cifrándolo.';
   SInfoComandoCopiaSeguridadPublicacion =
     'Copia cifrada generada. Publicando el archivo de destino; si ya ' +
     'existe, se reemplazará.';
@@ -196,7 +244,7 @@ resourcestring
     'NO son reversibles en caso de error.' + sLineBreak + sLineBreak +
     '¿Deseas realizar una copia de seguridad antes de continuar?';
   SPreguntaCopiaAntesRestaurarCifrada =
-    'La copia cifrada puede reemplazar datos y estructura de la base de ' +
+    'La copia puede reemplazar datos y estructura de la base de ' +
     'datos.' + sLineBreak + sLineBreak +
     '¿Deseas realizar una copia de seguridad antes de continuar?';
   SInfoScriptCancelado =
@@ -336,10 +384,13 @@ resourcestring
   STituloCargarCopiaSeguridad = 'Cargar copia de seguridad';
   STituloRestaurarCopiaEjecutarScript =
     'Restaurar copia o ejecutar script';
-  SCaptionFiltroCopiasSqlEncriptadas = 'Copias SQL o encriptadas';
+  SCaptionFiltroCopiasSqlEncriptadas =
+    'Copias SQL, ZIP o encriptadas';
   SCaptionFiltroCopiasCifradas = 'Copias cifradas';
+  SCaptionFiltroCopiasZip = 'Copias ZIP';
   SCaptionFiltroArchivosSql = 'Archivos SQL';
-  SCaptionFiltroCopiasSqlCifradas = 'Copias SQL o cifradas';
+  SCaptionFiltroCopiasSqlCifradas =
+    'Copias SQL, ZIP o cifradas';
   SCaptionFiltroCopiasScriptsCifrados =
     'Copias o scripts cifrados';
   SCaptionPreparandoCopiaSeguridad =

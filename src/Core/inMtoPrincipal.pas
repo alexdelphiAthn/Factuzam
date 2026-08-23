@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inMtoPrincipal                                                }
 {    Tipo:       Formulario (Core)                                             }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       06/02/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Esta unidad proporciona la lógica necesaria para presentar la pantalla    }
 {    Principal de entrada al programa donde está el menú con todas las opcio-  }
@@ -313,8 +313,13 @@ type
     procedure AppException(Sender: TObject; E: Exception);
     procedure AplicarPermisosMenu;
     procedure AvisarFalloCargaPermisos(const ADetalle: string);
+    procedure ConfigurarTiposDestinoCopia(
+      AEsAdministrador: Boolean);
+    function ModoDestinoCopia(
+      AEsAdministrador: Boolean
+    ): TModoProteccionCopia;
     function SolicitarDestinoCopia(
-      out ARutaFichero, AContrasena: string
+      out ARutaFichero: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
     function ConsultarDecisionCierrePrestaShop:
@@ -367,6 +372,7 @@ uses inLibWin,
   inLibMsgCaja,
   inLibMsgComun,
   inLibMsgConfiguracion,
+  inLibCopiasSeguridadReglas,
   inLibDir,
   inMtoCajaMenu,
   inMtoBusquedaDatos,
@@ -377,7 +383,6 @@ uses inLibWin,
   inMtoGen,
   inMtoFotoArticulo,
   System.RegularExpressions,
-  inMtoModalContrasenaCopia,
   inMtoModalErrorAplicacion,
   inMtoPrincipalCertificadosVcl;
 
@@ -722,69 +727,86 @@ begin
     ShowMto(Self, 'Tarifas');
 end;
 
-function TfrmMtoPrincipal.SolicitarDestinoCopia(
-  out ARutaFichero, AContrasena: string): Boolean;
+procedure TfrmMtoPrincipal.ConfigurarTiposDestinoCopia(
+  AEsAdministrador: Boolean);
 var
-  bCifrada: Boolean;
-  sExtension: string;
   oTipoFichero: TFileTypeItem;
 begin
+  saveDialog.FileTypes.Clear;
+  if AEsAdministrador then
+  begin
+    oTipoFichero := saveDialog.FileTypes.Add;
+    oTipoFichero.DisplayName := SCaptionFiltroArchivosSql;
+    oTipoFichero.FileMask := '*.sql';
+    oTipoFichero := saveDialog.FileTypes.Add;
+    oTipoFichero.DisplayName := SCaptionFiltroCopiasZip;
+    oTipoFichero.FileMask := '*.zip';
+  end;
+  oTipoFichero := saveDialog.FileTypes.Add;
+  oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
+  oTipoFichero.FileMask := '*.crypt';
+  saveDialog.FileTypeIndex := 1;
+end;
+
+function TfrmMtoPrincipal.ModoDestinoCopia(
+  AEsAdministrador: Boolean): TModoProteccionCopia;
+begin
+  Result := mpcCifrada;
+  if AEsAdministrador then
+  begin
+    case saveDialog.FileTypeIndex of
+      1:
+        Result := mpcTextoPlano;
+      2:
+        Result := mpcZip;
+      3:
+        Result := mpcCifrada;
+    end;
+  end;
+end;
+
+function TfrmMtoPrincipal.SolicitarDestinoCopia(
+  out ARutaFichero: string): Boolean;
+var
+  bEsAdministrador: Boolean;
+  Modo: TModoProteccionCopia;
+  sExtension: string;
+begin
   ARutaFichero := '';
-  AContrasena := '';
-  sExtension := FCoordinadorOperaciones.ExtensionCreacionCopia;
-  bCifrada := FCoordinadorOperaciones.ModoCreacionCopia =
-    mpcCifrada;
+  bEsAdministrador := FCoordinadorOperaciones.ModoCreacionCopia =
+    mpcTextoPlano;
+  Modo := FCoordinadorOperaciones.ModoCreacionCopia;
+  sExtension := TPoliticaCopiasSeguridad.ExtensionModo(Modo);
   saveDialog.Title := STituloGuardarCopiaSeguridad;
-  saveDialog.DefaultExtension := Copy(
-    sExtension,
-    2,
-    MaxInt);
+  saveDialog.DefaultExtension := Copy(sExtension, 2, MaxInt);
   saveDialog.DefaultFolder := ParametrosApp.GetPath(
     'appDirCopiasSeguridad');
   saveDialog.Options := saveDialog.Options +
     [fdoStrictFileTypes, fdoOverwritePrompt];
-  saveDialog.FileTypes.Clear;
-  oTipoFichero := saveDialog.FileTypes.Add;
-  if bCifrada then
-  begin
-    oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
-    oTipoFichero.FileMask := '*.crypt';
-  end
-  else
-  begin
-    oTipoFichero.DisplayName := SCaptionFiltroArchivosSql;
-    oTipoFichero.FileMask := '*.sql';
-  end;
+  ConfigurarTiposDestinoCopia(bEsAdministrador);
   saveDialog.FileName := 'copiaseguridad' +
     FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) +
     sExtension;
   Result := saveDialog.Execute;
   if Result then
   begin
+    Modo := ModoDestinoCopia(bEsAdministrador);
+    sExtension := TPoliticaCopiasSeguridad.ExtensionModo(Modo);
     ARutaFichero := ChangeFileExt(
       saveDialog.FileName,
       sExtension);
-    if bCifrada then
-    begin
-      Result := TfrmModalContrasenaCopia.SolicitarNueva(
-        Self,
-        AContrasena);
-    end;
   end;
 end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 var
-  sContrasena: string;
   sRutaFichero: string;
 begin
-  if SolicitarDestinoCopia(
-    sRutaFichero,
-    sContrasena) then
+  if SolicitarDestinoCopia(sRutaFichero) then
   begin
     FCoordinadorOperaciones.IniciarCopia(
       sRutaFichero,
-      sContrasena);
+      '');
   end;
 end;
 
@@ -998,16 +1020,13 @@ end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScript: Boolean;
 var
-  sContrasena: string;
   sRutaFichero: string;
 begin
-  Result := SolicitarDestinoCopia(
-    sRutaFichero,
-    sContrasena);
+  Result := SolicitarDestinoCopia(sRutaFichero);
   if Result then
     Result := FCoordinadorOperaciones.CrearCopia(
       sRutaFichero,
-      sContrasena);
+      '');
 end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScriptSoporte: Boolean;

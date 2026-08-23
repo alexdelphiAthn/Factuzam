@@ -66,7 +66,8 @@ type
 implementation
 
 uses
-  System.Diagnostics, System.Variants, inLibMsgArticulos;
+  System.Diagnostics, System.Variants,
+  UniDataAperturaConsultas, inLibMsgArticulos;
 
 const
   SQL_BUSCAR_VALOR =
@@ -370,42 +371,26 @@ end;
 procedure TdmAtributosConjuntos.AbrirDetalles;
 const
   TAG = 'AtributosConjuntos.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-      swQ := TStopwatch.StartNew;
-      try
-        qry.Open;
-        RegistroLog.RegistrarRendimiento(
-          TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-      except
-        on E: Exception do
-        begin
-          RegistroLog.RegistrarRendimiento(
-            TAG, Nombre + ' ERROR=' + E.Message,
-            swQ.ElapsedMilliseconds);
-          raise;
-        end;
-      end;
-    end;
-  end;
-
 var sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  AbrirConTiempo(unqryValoresLookup,          'unqryValoresLookup');
+  AbrirConsultaConTiempo(
+    unqryValoresLookup, TAG, 'unqryValoresLookup', RegistroLog);
   if unqryTablaG.Active then
     FiltrarValoresLookup(
       unqryTablaG.FieldByName('ID_VA_AC').AsString);
-  AbrirConTiempo(unqryVariacionesLookup,      'unqryVariacionesLookup');
-  AbrirConTiempo(unqryAtributosLookup,        'unqryAtributosLookup');
-  AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
-  AbrirConTiempo(unqryConjuntoDetalle,        'unqryConjuntoDetalle');
-  AbrirConTiempo(unqryArticulosConjunto,      'unqryArticulosConjunto');
+  AbrirConsultaConTiempo(
+    unqryVariacionesLookup, TAG, 'unqryVariacionesLookup', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryAtributosLookup, TAG, 'unqryAtributosLookup', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryAtributosBasicosLookup, TAG, 'unqryAtributosBasicosLookup',
+    RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryConjuntoDetalle, TAG, 'unqryConjuntoDetalle', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryArticulosConjunto, TAG, 'unqryArticulosConjunto', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

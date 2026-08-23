@@ -207,6 +207,7 @@ implementation
 uses
 
   System.Diagnostics,
+  UniDataAperturaConsultas,
   inLibCadenas, inLibDatasets,
   inLibLogIntf,
   inLibPrestaShopColaSenal,
@@ -1027,30 +1028,6 @@ end;
 procedure TdmArticulos.AbrirDetalles;
 const
   TAG = 'Articulos.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
   saveAfterScroll: TDataSetNotifyEvent;
@@ -1066,21 +1043,39 @@ begin
   saveAfterScroll := unqryStockArticulos.AfterScroll;
   unqryStockArticulos.AfterScroll := nil;
   try
-    AbrirConTiempo(unqryTiposIVA,               'unqryTiposIVA');
-    AbrirConTiempo(unqryFamiliaArticulos,       'unqryFamiliaArticulos');
-    AbrirConTiempo(unqryVariaciones,            'unqryVariaciones');
-    AbrirConTiempo(unqryAtributosBasicosLookup, 'unqryAtributosBasicosLookup');
-    AbrirConTiempo(unqryUnidadesMedidaLookup,   'unqryUnidadesMedidaLookup');
+    AbrirConsultaConTiempo(
+      unqryTiposIVA, TAG, 'unqryTiposIVA', RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryFamiliaArticulos, TAG, 'unqryFamiliaArticulos', RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryVariaciones, TAG, 'unqryVariaciones', RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryAtributosBasicosLookup, TAG, 'unqryAtributosBasicosLookup',
+      RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryUnidadesMedidaLookup, TAG, 'unqryUnidadesMedidaLookup',
+      RegistroLog);
     // unqryTarifasArticulos NO se abre aqui: la vista tarda ~6s
     // (subqueries DEPENDENT, ver EXPLAIN). Se abre solo cuando el
     // usuario va a la pestaña tsTarifas, via AsegurarTarifasAbiertas.
-    AbrirConTiempo(unqryProveedoresArticulos,   'unqryProveedoresArticulos');
-    AbrirConTiempo(unqryLinFacturasArticulos,   'unqryLinFacturasArticulos');
-    AbrirConTiempo(unqryVariacionesArticulos,   'unqryVariacionesArticulos');
-    AbrirConTiempo(unqrySkus,                   'unqrySkus');
-    AbrirConTiempo(unqryStockArticulos,         'unqryStockArticulos');
-    AbrirConTiempo(unqryMovimientosArticulos,   'unqryMovimientosArticulos');
-    AbrirConTiempo(unqryDetallesAtributos,      'unqryDetallesAtributos');
+    AbrirConsultaConTiempo(
+      unqryProveedoresArticulos, TAG, 'unqryProveedoresArticulos',
+      RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryLinFacturasArticulos, TAG, 'unqryLinFacturasArticulos',
+      RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryVariacionesArticulos, TAG, 'unqryVariacionesArticulos',
+      RegistroLog);
+    AbrirConsultaConTiempo(
+      unqrySkus, TAG, 'unqrySkus', RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryStockArticulos, TAG, 'unqryStockArticulos', RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryMovimientosArticulos, TAG, 'unqryMovimientosArticulos',
+      RegistroLog);
+    AbrirConsultaConTiempo(
+      unqryDetallesAtributos, TAG, 'unqryDetallesAtributos', RegistroLog);
   finally
     unqryStockArticulos.AfterScroll := saveAfterScroll;
   end;

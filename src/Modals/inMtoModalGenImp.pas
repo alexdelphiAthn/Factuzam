@@ -112,12 +112,15 @@ type
     procedure SeleccionarFormato(
       const AFormatoPredeterminado: string;
       out AAccion: string);
+    function CargarFormatoGuardado(
+      const AFormato: string): Boolean;
     procedure CargarFormatoElegido(const AAccion: string);
   protected
     function TraducirContenidoInforme: Boolean; virtual;
     procedure PdfExportado(const ARuta: string); virtual;
     property FormatoElegido: string read sElegido;
   public
+    destructor Destroy; override;
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
     procedure DeleteForm(sElegido:String;form:TfrmMtoModalGenImpEle);
     procedure EliminarFormatoImpresion(
@@ -130,6 +133,15 @@ type
     // ('qrverifactu') en cada iteración del informe
     procedure ReportBeforePrintConQR(Component: TfrxReportComponent);
     procedure Consultar_Formularios(bForzarSeleccion: Boolean = False);
+    // Selecciona un formato sin mostrar el modal. Se usa en procesos
+    // automatizados que ya reciben el nombre como argumento.
+    function SeleccionarFormatoSinDialogo(
+      const AFormato: string): Boolean;
+    // Exporta el informe usando los datos que el llamador ya ha preparado.
+    // Evita ejecutar dos veces la consulta en los procesos por lotes.
+    function ExportarPdfPreparado(
+      const ARuta: string;
+      ANotificarExportacion: Boolean = True): Boolean;
     // Crea en runtime un dataset auxiliar por cada guia configurada en
     // fza_informes_guias para Self.Name, enlazandolo MasterSource-style
     // al frxDBDataset master y exponiendolo al frxrprt1.
@@ -173,6 +185,19 @@ uses
   UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
+
+destructor TfrmPrint.Destroy;
+begin
+  try
+    try
+      CerrarGuiasRuntime;
+    finally
+      FreeAndNil(FRestauracionesGuias);
+    end;
+  finally
+    inherited Destroy;
+  end;
+end;
 
 function TfrmPrint.RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet;
 begin
@@ -793,6 +818,18 @@ begin
 end;
 
 function TfrmPrint.ExportarPdfActual(const ARuta: string): Boolean;
+begin
+  Result := False;
+  if (sElegido <> '') and (Trim(ARuta) <> '') then
+  begin
+    Preparar_consulta;
+    Result := ExportarPdfPreparado(ARuta);
+  end;
+end;
+
+function TfrmPrint.ExportarPdfPreparado(
+  const ARuta: string;
+  ANotificarExportacion: Boolean): Boolean;
 var
   bMostrarDialogo: Boolean;
   sDirectorioPrevio: string;
@@ -801,7 +838,6 @@ begin
   Result := False;
   if (sElegido <> '') and (Trim(ARuta) <> '') then
   begin
-    Preparar_consulta;
     AfterReportLoaded;
     AbrirGuiasRuntime(True);
     OnGuiasAplicadas;
@@ -810,13 +846,17 @@ begin
     sDirectorioPrevio := frxpdfxprtPedWeb.DefaultPath;
     sFicheroPrevio := frxpdfxprtPedWeb.FileName;
     try
-      frxrprt1.PrepareReport(True);
-      frxpdfxprtPedWeb.ShowDialog := False;
-      frxpdfxprtPedWeb.DefaultPath := ExtractFilePath(ARuta);
-      frxpdfxprtPedWeb.FileName := ARuta;
-      frxrprt1.Export(frxpdfxprtPedWeb);
-      Result := FileExists(ARuta);
+      Result := frxrprt1.PrepareReport(True) and
+                (frxrprt1.PreviewPages.Count > 0);
       if Result then
+      begin
+        frxpdfxprtPedWeb.ShowDialog := False;
+        frxpdfxprtPedWeb.DefaultPath := ExtractFilePath(ARuta);
+        frxpdfxprtPedWeb.FileName := ARuta;
+        Result := frxrprt1.Export(frxpdfxprtPedWeb) and
+                  FileExists(ARuta);
+      end;
+      if Result and ANotificarExportacion then
         PdfExportado(ARuta);
     finally
       frxpdfxprtPedWeb.ShowDialog := bMostrarDialogo;
@@ -989,27 +1029,35 @@ begin
   end;
 end;
 
-procedure TfrmPrint.CargarFormatoElegido(const AAccion: string);
+function TfrmPrint.CargarFormatoGuardado(
+  const AFormato: string): Boolean;
 var
   Flujo: TMemoryStream;
 begin
+  Result := False;
+  Flujo := TMemoryStream.Create;
+  try
+    if LeerBlobFormato(AFormato, Flujo) then
+    begin
+      frxrprt1.LoadFromStream(Flujo);
+      FInformeEsPersonalizado := True;
+      FInformeTraducido := False;
+      Result := True;
+    end;
+  finally
+    FreeAndNil(Flujo);
+  end;
+end;
+
+procedure TfrmPrint.CargarFormatoElegido(const AAccion: string);
+begin
   if AAccion = 'S' then
   begin
-    Flujo := TMemoryStream.Create;
-    try
-      if LeerBlobFormato(sElegido, Flujo) then
-      begin
-        frxrprt1.LoadFromStream(Flujo);
-        FInformeEsPersonalizado := True;
-      end
-      else
-      begin
-        frxrprt1.AssignAll(frxReportOrigen);
-        FInformeEsPersonalizado := False;
-      end;
+    if not CargarFormatoGuardado(sElegido) then
+    begin
+      frxrprt1.AssignAll(frxReportOrigen);
+      FInformeEsPersonalizado := False;
       FInformeTraducido := False;
-    finally
-      FreeAndNil(Flujo);
     end;
   end
   else if AAccion = 'O' then
@@ -1017,6 +1065,29 @@ begin
     frxrprt1.AssignAll(frxReportOrigen);
     FInformeEsPersonalizado := False;
     FInformeTraducido := False;
+  end;
+end;
+
+function TfrmPrint.SeleccionarFormatoSinDialogo(
+  const AFormato: string): Boolean;
+var
+  sFormato: string;
+begin
+  Result := False;
+  sElegido := '';
+  sFormato := Trim(AFormato);
+  if SameText(sFormato, 'Predeterminado') then
+  begin
+    sElegido := 'Predeterminado';
+    CargarFormatoElegido('O');
+    Result := True;
+  end
+  else if sFormato <> '' then
+  begin
+    sElegido := sFormato;
+    Result := CargarFormatoGuardado(sFormato);
+    if not Result then
+      sElegido := '';
   end;
 end;
 

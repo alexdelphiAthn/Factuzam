@@ -194,6 +194,12 @@
         <DCCReference Include="src\Lib\inLibCifradoCopias.pas"/>
         <DCCReference Include="src\Lib\inLibComandoCopiaSeguridad.pas"/>
         <DCCReference Include="src\Core\inMtoComandoCopiaSeguridad.pas"/>
+        <DCCReference Include="src\Lib\inLibLineaComandos.pas"/>
+        <DCCReference Include="src\Lib\inLibSalidaComandos.pas"/>
+        <DCCReference Include="src\Lib\inLibComandoAyuda.pas"/>
+        <DCCReference Include="src\Core\inMtoComandoAyuda.pas"/>
+        <DCCReference Include="src\Lib\inLibComandoImprimirFacturas.pas"/>
+        <DCCReference Include="src\Core\inMtoComandoImprimirFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticos.pas"/>
@@ -628,6 +634,7 @@
             <Form>dmBase</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataAperturaConsultas.pas"/>
         <DCCReference Include="src\DataModules\UniDataArticulos.pas">
             <Form>dmArticulos</Form>
             <DesignClass>TdmArticulos</DesignClass>

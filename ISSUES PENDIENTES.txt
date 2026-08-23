@@ -1,147 +1,92 @@
 _____________________________________________________________
 
-PENDIENTE TÉCNICO - EXTENDER EL CATÁLOGO SQL POR PERFILES (29/07/2026)
-Las fases SQL-0, SQL-1, SQL-2.1, SQL-2.2, SQL-2.3a, SQL-2.3b1,
-SQL-2.3b2, SQL-2.3c y SQL-2.3d están terminadas. El registro contiene
-89 definiciones de once repositorios: 85 lecturas personalizables con
-fallback, dos comprobaciones técnicas de esquema y dos escrituras de
-Facturas que permanecen pesSoloBase.
-Las implementaciones concretas están en DataModules. Los antiguos
-inLibArticulosResolver, inLibArticulosValidador e
-inLibArticulosAtributosLookup son fachadas sin SQL.
-inLibTraspasoTicket conserva la composición visual del ticket, pero depende
-de IRepositorioTraspasoTicket y ya no conoce UniDAC ni contiene SQL.
-inLibArqueo es una fachada de alias sin SQL. El cálculo principal depende de
-IRepositorioArqueoCaja; su implementación UniDAC registra nueve lecturas
-personalizables y una comprobación de esquema pesSoloBase.
-inLibArqueoTicket conserva únicamente la composición térmica y depende de
-IRepositorioArqueoTicket. Sus once lecturas de cabecera, resúmenes e
-históricos son personalizables con fallback. El resumen por sección comparte
-una consulta estable parametrizada por :pNIVELES entre pantalla y ticket.
-inLibTiraCajaTicket conserva la composición térmica y Excel, pero ya no
-conoce UniDAC ni SQL. Sus diez construcciones se consolidan en siete
-operaciones personalizables; ticket y Excel comparten detalles y cursor
-maestro mediante IRepositorioTiraCajaTicket.
-inLibGenerarTicketBD conserva la composición térmica y PDF de reimpresiones,
-resguardos y recordatorios, pero ya no recibe TUniConnection ni contiene
-SQL. Sus catorce lecturas directas y las dos dependencias del pie de ticket
-quedan detrás de IRepositorioTicketsCaja. Hay quince operaciones
-personalizables; la comprobación de columnas del pie permanece pesSoloBase.
-Cada formulario conserva su interruptor oGetSQLFromDB. Si está a False,
-usa siempre el SQL base; si está a True, consulta el catálogo compartido
-KEY_USUPER=SQL_REPOSITORIOS. Las operaciones se identifican mediante
-SUBKEY_USUPER=SQL__Repositorio__Operacion, por lo que una definición puede
-ser utilizada por varias pantallas sin duplicarla.
-Un fallo al publicar o cargar el perfil, una validación incorrecta o un
-error al ejecutar el SQL personalizado o la ausencia de campos reales en
-el dataset provoca fallback al SQL base. El reintento automático solo se
-permite en lecturas. Para escrituras será obligatorio ejecutar el intento
-dentro de una transacción y hacer Rollback antes del fallback.
-La línea base conjunta tras SQL-2.3d es 317 construcciones en 65 unidades y
-queda
-protegida por scripts/comprobar_sql_en_dominio.ps1. El inventario completo
-está en DESARROLLOS EN CURSO/inventario_sql_dominio_sql2_3d.csv.
-SQL-2.3d elimina directamente catorce construcciones y una unidad.
-Pendiente desde SQL-2.4: continuar con lecturas de Facturas y
-exportaciones. No
-abordar escrituras de cierre hasta fijar límites transaccionales y pruebas
-de rollback.
-Administración y procedimiento documentados en MANUAL_SQL_PERFILES.md.
-Plan de ejecución detallado en
-DESARROLLOS EN CURSO/plan_expansion_catalogo_sql.md.
-Resultado de SQL-1 documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql1_resultados.md.
-Resultado de SQL-2.1 documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_1_resultados.md.
-Resultado de SQL-2.2 documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_2_resultados.md.
-Resultado de SQL-2.3a documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3a_resultados.md.
-Resultado de SQL-2.3b1 documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b1_resultados.md.
-Resultado de SQL-2.3b2 documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3b2_resultados.md.
-Resultado de SQL-2.3c documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3c_resultados.md.
-Resultado de SQL-2.3d documentado en
-DESARROLLOS EN CURSO/refactorizacion_fase_sql2_3d_resultados.md.
+PENDIENTE TÉCNICO - PREPARAR LA MIGRACIÓN A POSTGRESQL Y CONEXIONES
+FLEXIBLES (23/08/2026)
+
+Objetivo estratégico: migrar Factuzam de MariaDB/MySQL a PostgreSQL sin que
+un cambio de motor obligue a modificar formularios, lógica de negocio ni
+casos de uso. MariaDB debe seguir funcionando durante la transición y hasta
+que exista una decisión de corte y un procedimiento de rollback probado.
+
+Mantener UniDAC como tecnología de acceso. La aplicación debe seleccionar el
+provider, el perfil de conexión y las capacidades del motor en la raíz de
+composición. No repartir comprobaciones del tipo "si es PostgreSQL" por los
+formularios, servicios o repositorios.
+
+Principios de diseño:
+
+- definir un perfil de conexión independiente del motor con servidor, puerto,
+  base de datos, esquema, usuario, SSL, timeouts y opciones del pool;
+- crear las TUniConnection mediante una fábrica o adaptador central, usando el
+  provider MySQL o PostgreSQL según el perfil activo;
+- no exponer credenciales en código, ficheros versionados, mensajes o logs;
+- mantener UI y dominio detrás de contratos; TUniConnection, TUniQuery y los
+  providers deben permanecer en la capa adaptadora;
+- encapsular diferencias de dialecto y capacidades: comillas, LIMIT,
+  IFNULL/COALESCE, fechas, autoincrementos, RETURNING, JSON, bloqueos,
+  INFORMATION_SCHEMA y llamadas a procedimientos;
+- seleccionar y validar el SQL base y personalizado del catálogo según el
+  motor activo; no ejecutar en PostgreSQL una definición escrita para MySQL;
+- preservar límites transaccionales, aislamiento, rollback y propagación de
+  errores con el mismo contrato observable en ambos motores.
+
+Regla para el SQL incluido dentro del código:
+
+- todo SQL embebido en Pascal, incluidos SQL.Text, SQL.Add, constantes,
+  macros y fragmentos concatenados, debe ser compatible con MariaDB y
+  PostgreSQL tanto en sintaxis como en resultado observable;
+- si una operación no puede expresarse de forma portable, debe salir del
+  código común y resolverse mediante el adaptador o catálogo del motor;
+- mientras exista SQL embebido no compatible, registrarlo obligatoriamente en
+  DESARROLLOS EN CURSO/inventario_sql_no_compatible_postgresql.csv;
+- el inventario debe indicar unidad, método, operación, fragmento o rasgo no
+  compatible, motivo, motores afectados, alternativa prevista, responsable,
+  estado y prueba necesaria;
+- no se admite SQL específico de MariaDB/MySQL o PostgreSQL que no figure en
+  ese inventario y no tenga una estrategia de sustitución.
+
+Guión de aplicación:
+
+1. Inventariar conexiones creadas directamente, dependencias de
+   TMySQLUniProvider, todo SQL embebido y el SQL específico de MariaDB/MySQL.
+2. Definir el contrato de perfil, motor y capacidades, y centralizar la
+   creación y prueba de conexiones sin cambiar todavía el motor productivo.
+3. Extraer adaptadores de dialecto en los repositorios y hacer que el catálogo
+   SQL pueda resolver definiciones base por motor. Migrar primero las entradas
+   del inventario de SQL no compatible con mayor impacto.
+4. Ejecutar la misma batería de contratos contra MariaDB y PostgreSQL
+   desechables, incluyendo transacciones, concurrencia, importes, fechas,
+   Unicode y errores de conexión.
+5. Crear en DESARROLLOS EN CURSO los scripts PostgreSQL idempotentes y una
+   migración de datos repetible, con conciliación de recuentos y totales.
+6. Ensayar corte, validación y rollback antes de habilitar PostgreSQL en una
+   instalación real. No mantener escritura dual en producción sin un diseño
+   específico de consistencia y recuperación.
+
+Criterios de aceptación:
+
+- cambiar de MariaDB a PostgreSQL requiere configuración y composición, no
+  cambios en formularios ni casos de uso;
+- ninguna credencial ni provider concreto queda codificado fuera de la capa
+  de infraestructura;
+- las pruebas de contrato de conexión, repositorios y transacciones pasan en
+  ambos motores;
+- todo SQL que permanece embebido pasa pruebas equivalentes en MariaDB y
+  PostgreSQL, o figura en el inventario de no compatibles;
+- ninguna construcción específica de motor queda embebida y sin registrar;
+- el catálogo rechaza SQL de un dialecto distinto al motor activo;
+- la migración de esquema y datos es repetible, auditable y tiene rollback;
+- existe una lista explícita de funcionalidades todavía no portables antes
+  de autorizar el corte definitivo.
+
+No convertir esta tarea en una sustitución masiva de strings SQL. Empezar por
+la conexión y los contratos, migrar por repositorios y conservar una sola
+responsabilidad por fascículo.
 
 _____________________________________________________________
 
 PENDIENTE TÉCNICO - PASCAL ANALYZER: CORRECCIONES DEL INFORME
 OPTIMIZATION (20/08/2026)
-
-Origen: Optimization Report de fzam.dpr generado con la versión de
-evaluación de Pascal Analyzer el 20/08/2026.
-
-La evaluación oculta identificadores que empiezan por J, K y L, reemplaza
-líneas por "xxxxxx" y trunca las listas. Los contadores globales no deben
-convertirse directamente en tareas. Antes de medir mejoras hay que separar
-código propio, terceros y código generado.
-
-PA-OPT-02 - DECLARAR COMO OUT EL RESULTADO DE AVS DE ARTÍCULO
-Prioridad: ALTA; cambio pequeño y aislable.
-
-Estado 21/08/2026: IMPLEMENTADO Y VERDE DE FORMA FOCAL.
-La declaración y la implementación usan out, y la prueba cubre éxito,
-artículo vacío, orden inválido, lookup ausente y reutilización de un array
-con datos. Compilación y DUnitX focales Release: 72/72 en Win32 y 72/72 en
-Win64. Solo falta repetir la barrera global sobre un árbol estable.
-
-Ámbito:
-
-- src\Caja\Lib\inLibCajaVentaOperacion.pas;
-- factuzam_web\tests\PruebasCajaVentaOperacion.pas.
-
-Cambiar AAvs de var a out en la declaración e implementación de
-CargarAvsValidosArticulo. El procedimiento no consume el valor recibido:
-primero lo vacía y después lo sustituye completamente. Mantener inicialmente
-el SetLength(AAvs, 0) explícito para que los caminos inválidos sigan dejando
-un resultado vacío.
-
-Criterios de aceptación:
-
-- declaración e implementación tienen la misma firma;
-- caso válido devuelve todos los AV en orden;
-- artículo vacío, orden fuera de rango y lookup ausente devuelven array vacío;
-- reutilizar una variable que ya contenía elementos no conserva valores;
-- DUnitX y compilación Release Win32/Win64 verdes.
-
-PA-OPT-03 - SUSTITUIR LA LISTA DE PARÁMETROS DE MOVIMIENTO DE ALMACÉN
-Prioridad: ALTA para Clean Code; no ejecutar como simple cambio de const.
-
-Estado 21/08/2026: IMPLEMENTADO Y VERDE DE FORMA FOCAL.
-Las cinco llamadas usan TSolicitudMovimientoAlmacenCaja, inicializan cada
-solicitud con Default y conservan el mapeo uno a uno de los 19 parámetros del
-procedimiento almacenado. La unidad real y cuatro pruebas de caracterización
-compilan y pasan en Release Win32 y Win64. Solo falta repetir la barrera
-global sobre un árbol estable.
-
-Ámbito inicial:
-
-- src\Caja\DataModules\UniDataCaja.pas;
-- nuevas pruebas en factuzam_web\tests.
-
-TdmCajaOpe.InsertarMovimientoAlmacen recibe aproximadamente veinte parámetros
-posicionales. Varios son strings intercambiables para empresa, almacén, caja,
-almacén contrario, documento, serie, número, SKU y usuario. El aviso de
-AAlmacen sin const es correcto, pero el riesgo real es poder intercambiar
-argumentos válidos sin que el compilador lo detecte.
-
-Introducir un record de solicitud de movimiento con campos nominales y
-pasarlo mediante const. Migrar las llamadas dentro de UniDataCaja por una
-reserva única. No cambiar SQL, procedimiento almacenado ni esquema dentro de
-este fascículo.
-
-Criterios de aceptación:
-
-- una sola entrada tipada sustituye la lista posicional;
-- cada campo conserva exactamente su parámetro de procedimiento almacenado;
-- se preservan los valores opcionales, la fecha, el número automático,
-  almacén contrario, cliente y artículo;
-- éxito, fallo y actualización opcional de FECHA conservan transacción y
-  propagación de excepciones;
-- pruebas de caracterización y Release Win32/Win64 verdes.
 
 PA-OPT-04 - UNIFICAR LA APERTURA DE QUERIES CON CRONÓMETRO
 Prioridad: MEDIA para duplicación y mantenibilidad; rendimiento irrelevante.
@@ -174,24 +119,6 @@ Criterios de aceptación:
 - desaparecen las doce copias sin introducir un localizador global;
 - pruebas focales, MariaDB aplicable y Release Win32/Win64 verdes.
 
-PA-OPT-05 - AÑADIR CONST SOLO AL MODIFICAR UN CONTRATO
-Prioridad: BAJA y oportunista; no hacer una campaña masiva.
-
-Al tocar una firma por una tarea funcional, declarar const los strings,
-records o arrays que no se modifican, siempre que no sea override, callback o
-contrato externo incompatible.
-
-Caso conocido: PrepararValores debería tratar juntos AEmpresa, AAlmacen y
-ACaja. El cambio debe coordinar:
-
-- src\Caja\Lib\inLibCajaVentanasIntf.pas;
-- src\Caja\Forms\inMtoCajaOpe.pas;
-- implementación y consumidores de IOperacionCaja.
-
-No crear una tarea independiente solo para ahorrar recuentos de referencia.
-La aceptación requiere recompilación completa porque const forma parte del
-contrato.
-
 NO CREAR ISSUES INDEPENDIENTES PARA ESTOS AVISOS:
 
 - mover a declaración inline aArchivos en AnadirTiffsDirectorio;
@@ -219,7 +146,5 @@ La barrera global no representa todavía una línea base estable:
 - DUnitX completo Win64 se detiene en tres incompatibilidades ya existentes
   de PruebasPedidoOcr.
 
-PA-OPT-02 y PA-OPT-03 no añaden fallos focales. Repetir la barrera global y
-retirar ambos bloques de este archivo cuando el árbol ajeno quede estable.
-Antes de comenzar PA-OPT-04 o PA-OPT-05 se debe volver a comprobar git status
-y publicar la reserva exacta.
+Antes de comenzar PA-OPT-04 se debe volver a comprobar git status y publicar
+la reserva exacta.

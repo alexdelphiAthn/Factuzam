@@ -145,6 +145,7 @@ implementation
 uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics, System.UITypes,
+  UniDataAperturaConsultas,
   inLibVentasImpuestos, UniDataImpuestosRepositorio,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio, JclDebug,
@@ -465,41 +466,23 @@ end;
 procedure TdmPedidos.AbrirDetalles;
 const
   TAG = 'Pedidos.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-      swQ := TStopwatch.StartNew;
-      try
-        qry.Open;
-        RegistroLog.RegistrarRendimiento(
-          TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-      except
-        on E: Exception do
-        begin
-          RegistroLog.RegistrarRendimiento(TAG,
-            Nombre + ' ERROR=' + E.Message,
-            swQ.ElapsedMilliseconds);
-          raise;
-        end;
-      end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  AbrirConTiempo(unqryPedidosLineas, 'unqryPedidosLineas');
-  AbrirConTiempo(unqryAlbaranes,     'unqryAlbaranes');
-  AbrirConTiempo(unqryMensajes,      'unqryMensajes');
-  AbrirConTiempo(unqryFormasPago,    'unqryFormasPago');
-  AbrirConTiempo(unqryAlmacenesPed,  'unqryAlmacenesPed');
-  AbrirConTiempo(unqryTarifas,       'unqryTarifas');
+  AbrirConsultaConTiempo(
+    unqryPedidosLineas, TAG, 'unqryPedidosLineas', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryAlbaranes, TAG, 'unqryAlbaranes', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryMensajes, TAG, 'unqryMensajes', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFormasPago, TAG, 'unqryFormasPago', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryAlmacenesPed, TAG, 'unqryAlmacenesPed', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryTarifas, TAG, 'unqryTarifas', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

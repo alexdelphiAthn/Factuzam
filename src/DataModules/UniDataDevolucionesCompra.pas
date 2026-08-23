@@ -126,6 +126,7 @@ implementation
 uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics, System.UITypes,
+  UniDataAperturaConsultas,
   inLibDevolucionesCompraMovimientos,
   UniDataDevolucionesCompraMovimientos,
   inLibContadorLineas,
@@ -199,40 +200,18 @@ end;
 procedure TdmDevolucionesCompra.AbrirDetalles;
 const
   TAG = 'DevolucionesCompra.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var
-    swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-    swQ := TStopwatch.StartNew;
-    try
-      qry.Open;
-      RegistroLog.RegistrarRendimiento(
-        TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarRendimiento(TAG,
-          Nombre + ' ERROR=' + E.Message,
-          swQ.ElapsedMilliseconds);
-        raise;
-      end;
-    end;
-    end;
-  end;
-
 var
   sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
   RefrescarAlmacenes(UbicacionSesion.Empresa);
-  AbrirConTiempo(unqryDevolucionesCompraLineas,
-                 'unqryDevolucionesCompraLineas');
-  AbrirConTiempo(unqryMovimientosProveedor,
-                 'unqryMovimientosProveedor');
+  AbrirConsultaConTiempo(
+    unqryDevolucionesCompraLineas, TAG,
+    'unqryDevolucionesCompraLineas', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryMovimientosProveedor, TAG, 'unqryMovimientosProveedor',
+    RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 

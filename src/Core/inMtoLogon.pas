@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inMtoLogon                                                    }
 {    Tipo:       Formulario (Core)                                             }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       06/02/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Esta unidad tiene la primera pantalla donde se autentifica el usuario.    }
 {    Presenta la primera pantalla de autenficación de usuario. También permite }
@@ -140,6 +140,7 @@ type
     procedure BackupFinalizar(AResultado: TResultadoCopiaSeguridad;
                               const AError: string;
                               ALogBuffer: TStringList);
+    procedure ConfigurarDialogoCopiaProtegida;
     procedure RestoreFinalizar(AResultado: TResultadoCopiaSeguridad;
                                const AError: string;
                                ALogBuffer: TStringList);
@@ -961,6 +962,26 @@ begin
   FWorkerOperacion := AWorker;
 end;
 
+procedure TfrmLogon.ConfigurarDialogoCopiaProtegida;
+var
+  oTipoFichero: TFileTypeItem;
+begin
+  saveDialog.Title := STituloGuardarCopiaSeguridad;
+  saveDialog.DefaultFolder := GetCurrentDir;
+  saveDialog.DefaultExtension := 'crypt';
+  saveDialog.Options := saveDialog.Options +
+    [fdoStrictFileTypes];
+  saveDialog.FileTypes.Clear;
+  oTipoFichero := saveDialog.FileTypes.Add;
+  oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
+  oTipoFichero.FileMask := '*.crypt';
+  saveDialog.FileTypeIndex := 1;
+  saveDialog.FileName := 'copiaseguridad_' +
+    CodificarClaveCifradaParaRuta(
+      CifrarAES(FPasswordConexion)) +
+    FormatDateTime('_dd_mm', Now) + '.crypt';
+end;
+
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
 var
   iButtonSel: Integer;
@@ -972,14 +993,12 @@ begin
     edtPortBD.Text,
     edtNomBD.Text);
   iButtonSel := 0;
-  saveDialog.Title := STituloGuardarCopiaSeguridad;
-  saveDialog.DefaultFolder := GetCurrentDir;
-  saveDialog.DefaultExtension := '.crypt';
-  savedialog.FileName := 'copiaseguridad_' +
-    CodificarClaveCifradaParaRuta(FPasswordConexionEncriptado) +
-    FormatDateTime('_dd_mm', Now) + '.crypt';
+  ConfigurarDialogoCopiaProtegida;
   if (saveDialog.Execute) then
   begin
+    saveDialog.FileName := ChangeFileExt(
+      saveDialog.FileName,
+      '.crypt');
     if FileExists(savedialog.FileName) then
     begin
       iButtonSel := MessageDlg(SPreguntaReemplazarFichero,

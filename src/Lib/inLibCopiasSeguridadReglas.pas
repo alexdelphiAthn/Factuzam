@@ -2,12 +2,12 @@
 {                                                                              }
 {  Módulo:       inLibCopiasSeguridadReglas                                    }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
-{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
-{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Política de protección y restauración según el grupo del usuario.         }
 {******************************************************************************}
@@ -27,6 +27,20 @@ type
     class function ExtensionCreacion(
       AEsAdministrador: Boolean
     ): string; static;
+    class function ExtensionModo(
+      AModo: TModoProteccionCopia
+    ): string; static;
+    class function ModosCreacion(
+      AEsAdministrador: Boolean
+    ): TModosProteccionCopia; static;
+    class function PuedeCrear(
+      AEsAdministrador: Boolean;
+      AModo: TModoProteccionCopia
+    ): Boolean; static;
+    class function IntentarObtenerModo(
+      const ARutaFichero: string;
+      out AModo: TModoProteccionCopia
+    ): Boolean; static;
     class function EsCopiaCifrada(
       const ARutaFichero: string
     ): Boolean; static;
@@ -53,10 +67,56 @@ end;
 class function TPoliticaCopiasSeguridad.ExtensionCreacion(
   AEsAdministrador: Boolean): string;
 begin
-  if ModoCreacion(AEsAdministrador) = mpcTextoPlano then
-    Result := '.sql'
+  Result := ExtensionModo(ModoCreacion(AEsAdministrador));
+end;
+
+class function TPoliticaCopiasSeguridad.ExtensionModo(
+  AModo: TModoProteccionCopia): string;
+begin
+  case AModo of
+    mpcTextoPlano:
+      Result := '.sql';
+    mpcZip:
+      Result := '.zip';
+    mpcCifrada:
+      Result := '.crypt';
+  end;
+end;
+
+class function TPoliticaCopiasSeguridad.ModosCreacion(
+  AEsAdministrador: Boolean): TModosProteccionCopia;
+begin
+  if AEsAdministrador then
+  begin
+    Result := [mpcTextoPlano, mpcZip, mpcCifrada];
+  end
   else
-    Result := '.crypt';
+    Result := [mpcCifrada];
+end;
+
+class function TPoliticaCopiasSeguridad.PuedeCrear(
+  AEsAdministrador: Boolean;
+  AModo: TModoProteccionCopia): Boolean;
+begin
+  Result := AModo in ModosCreacion(AEsAdministrador);
+end;
+
+class function TPoliticaCopiasSeguridad.IntentarObtenerModo(
+  const ARutaFichero: string;
+  out AModo: TModoProteccionCopia): Boolean;
+var
+  sExtension: string;
+begin
+  sExtension := ExtractFileExt(ARutaFichero);
+  Result := SameText(sExtension, '.sql') or
+            SameText(sExtension, '.zip') or
+            SameText(sExtension, '.crypt');
+  if SameText(sExtension, '.sql') then
+    AModo := mpcTextoPlano
+  else if SameText(sExtension, '.zip') then
+    AModo := mpcZip
+  else
+    AModo := mpcCifrada;
 end;
 
 class function TPoliticaCopiasSeguridad.EsCopiaCifrada(
@@ -75,7 +135,9 @@ var
 begin
   sExtension := ExtractFileExt(ARutaFichero);
   Result := EsCopiaCifrada(ARutaFichero);
-  if AEsAdministrador and SameText(sExtension, '.sql') then
+  if AEsAdministrador and
+     (SameText(sExtension, '.sql') or
+      SameText(sExtension, '.zip')) then
     Result := True;
 end;
 

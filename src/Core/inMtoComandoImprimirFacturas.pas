@@ -1,0 +1,1310 @@
+{******************************************************************************}
+{                                                                              }
+{  Módulo:       inMtoComandoImprimirFacturas                                  }
+{    Tipo:       Coordinador de aplicación                                    }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       23/08/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{                                                                              }
+{  Descripción:                                                                }
+{    Genera por línea de comandos los PDF de facturas autorizadas para la     }
+{    sesión activa, usando el mismo informe y exportador que la aplicación.    }
+{******************************************************************************}
+unit inMtoComandoImprimirFacturas;
+
+interface
+
+uses
+  System.Classes,
+  inLibContextoSesionIntf,
+  inLibLogIntf,
+  inLibParametrosIntf,
+  inLibPermisosIntf,
+  Uni;
+
+type
+  TResultadoComandoImprimirFacturas = record
+    CodigoSalida: Cardinal;
+    EsError: Boolean;
+    Mensaje: string;
+  end;
+
+function EsProcesoComandoImprimirFacturas: Boolean;
+function ValidarSintaxisProcesoComandoImprimirFacturas(
+  const ARegistroLog: IRegistroLog
+): Cardinal;
+function EjecutarComandoImprimirFacturas(
+  const AParametros: TArray<string>;
+  AOwnerSesion: TComponent;
+  AConexion: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog
+): TResultadoComandoImprimirFacturas;
+function EjecutarProcesoComandoImprimirFacturas(
+  AOwnerSesion: TComponent;
+  AConexion: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog
+): Cardinal;
+function FinalizarProcesoComandoImprimirFacturasSinSesion(
+  const ARegistroLog: IRegistroLog
+): Cardinal;
+function FinalizarProcesoComandoImprimirFacturasConError(
+  const ARegistroLog: IRegistroLog;
+  const AMensaje: string
+): Cardinal;
+
+implementation
+
+uses
+  System.Hash,
+  System.IOUtils,
+  System.SysUtils,
+  Winapi.Windows,
+  Vcl.Forms,
+  Data.DB,
+  inLibComandoImprimirFacturas,
+  inLibFiltroUsuario,
+  inLibLineaComandos,
+  inLibMsgConfiguracion,
+  inLibSalidaComandos,
+  inLibVerifactu,
+  inMtoModalImpFac,
+  UniDataFacturas;
+
+const
+  SALIDA_COMANDO_IMPRESION_ERROR = 1;
+  SALIDA_COMANDO_IMPRESION_SINTAXIS = 2;
+  SALIDA_COMANDO_IMPRESION_DIRECTORIO = 3;
+  SALIDA_COMANDO_IMPRESION_AUTORIZACION = 4;
+  SALIDA_COMANDO_IMPRESION_FACTURA = 5;
+  SALIDA_COMANDO_IMPRESION_FORMATO = 6;
+  SALIDA_COMANDO_IMPRESION_EXPORTACION = 7;
+  SALIDA_COMANDO_IMPRESION_SESION = 8;
+
+resourcestring
+  SErrorListaComandoImprimirFacturas =
+    'Lista de facturas no válida: %s.';
+  SErrorDirectorioComandoImprimirFacturas =
+    'No se puede preparar el directorio de destino "%s".';
+  SErrorFormatoComandoImprimirFacturas =
+    'El formato de factura "%s" no existe o no está disponible para ' +
+    'el usuario actual.';
+  SErrorFacturaNoEncontradaComando =
+    'La factura %s no existe.';
+  SErrorFacturaFueraAmbitoComando =
+    'La factura %s no pertenece al ámbito de empresa, almacén y caja ' +
+    'permitido al usuario %s.';
+  SErrorPermisoFacturaComando =
+    'El usuario %s no tiene permiso para imprimir la factura %s.';
+  SErrorTipoFacturaComando =
+    'La factura %s tiene un tipo no admitido: %s.';
+  SErrorFacturaNoAutorizadaComando =
+    'La factura %s no está disponible o el usuario %s no está autorizado ' +
+    'para imprimirla.';
+  SErrorFacturaNoConsolidadaComando =
+    'La factura %s no está consolidada y VeriFactu ONLINE está activo.';
+  SErrorPrepararFacturaComando =
+    'No se pudieron obtener los datos de impresión de la factura %s.';
+  SErrorExportarFacturaComando =
+    'No se pudo generar el PDF de la factura %s en "%s".';
+  SErrorPublicarFacturaComando =
+    'No se pudo publicar el PDF de la factura %s en "%s": %s.';
+  SErrorColisionNombrePdfComando =
+    'Las facturas del lote producen el mismo nombre de salida: "%s".';
+  SErrorBloqueoNombrePdfComando =
+    'Otro proceso está generando el mismo PDF o no se pudo bloquear su ' +
+    'nombre de salida: "%s". %s';
+  SErrorSesionComandoImprimirFacturas =
+    'No se ha iniciado sesión. La autenticación fue cancelada o no pudo ' +
+    'completarse.';
+  SErrorServiciosComandoImprimirFacturas =
+    'La sesión o los servicios necesarios para imprimir no están disponibles.';
+  SInfoDetectadoComandoImprimirFacturas =
+    'Detectado /imprimirfacturas. Se valida la sintaxis antes del inicio de ' +
+    'sesión.';
+  SInfoSintaxisValidaComandoImprimirFacturas =
+    'Sintaxis válida. Facturas solicitadas: %d. Formato: %s. Destino: %s.';
+  SInfoSolicitudSesionComandoImprimirFacturas =
+    'La sintaxis es válida. Se requiere una sesión autenticada para continuar.';
+  SInfoInicioComandoImprimirFacturas =
+    'Inicio de /imprimirfacturas. Usuario: %s. Grupo: %s. Facturas: %d. ' +
+    'Formato: %s.';
+  SInfoUbicacionComandoImprimirFacturas =
+    'Ubicación de sesión. Empresa: %s. Almacén: %s. Caja: %s.';
+  SInfoPoliticaComandoImprimirFacturas =
+    'Política de impresión. VeriFactu ONLINE: %s. Permiso factura: %s. ' +
+    'Permiso factura simplificada: %s.';
+  SInfoAmbitoComandoImprimirFacturas =
+    'Ámbito aplicado. Empresa: %s. Almacén: %s. Caja: %s.';
+  SInfoInicioValidacionComandoImprimirFacturas =
+    'Se inicia la prevalidación completa de %d facturas.';
+  SInfoConsultaFacturaComandoImprimirFacturas =
+    'Validación %d/%d. Se consulta la factura %s.';
+  SInfoDatosFacturaComandoImprimirFacturas =
+    'Factura %s localizada. Tipo: %s. Consolidada: %s. Empresa: %s. ' +
+    'Almacén: %s. Caja: %s.';
+  SInfoFacturaAutorizadaComandoImprimirFacturas =
+    'Factura %s autorizada.';
+  SInfoFinValidacionComandoImprimirFacturas =
+    'Prevalidación completa superada. No se ha generado todavía ningún PDF.';
+  SInfoDirectorioExisteComandoImprimirFacturas =
+    'El directorio de destino ya existe: %s.';
+  SInfoCrearDirectorioComandoImprimirFacturas =
+    'El directorio no existe. Se intenta crearlo: %s.';
+  SInfoDirectorioPreparadoComandoImprimirFacturas =
+    'Directorio de destino preparado: %s.';
+  SInfoCrearImpresorComandoImprimirFacturas =
+    'Se crean el módulo de datos y el impresor exclusivos del lote.';
+  SInfoConexionImpresorComandoImprimirFacturas =
+    'Las consultas del lote se asignan a la conexión de la sesión del ' +
+    'proceso.';
+  SInfoFuentesComandoImprimirFacturas =
+    'Exportador PDF configurado con fuentes embebidas.';
+  SInfoModoArchivoComandoImprimirFacturas =
+    'Modo de exportación: solo archivo. No se modifica el BLOB de la ' +
+    'factura ni se encola un adjunto para servicios externos.';
+  SInfoCargarFormatoComandoImprimirFacturas =
+    'Se comprueba y carga el formato visible "%s".';
+  SInfoFormatoCargadoComandoImprimirFacturas =
+    'Formato "%s" cargado correctamente.';
+  SInfoPrepararFacturaComandoImprimirFacturas =
+    'Impresión %d/%d. Se preparan los datos de %s.';
+  SInfoDatosPreparadosComandoImprimirFacturas =
+    'Datos de impresión preparados para %s.';
+  SInfoNombrePdfComandoImprimirFacturas =
+    'ObtenerNombreFactura ha producido "%s" para %s.';
+  SInfoPdfExistenteComandoImprimirFacturas =
+    'El PDF de destino ya existe y será sustituido: %s.';
+  SInfoExportarPdfComandoImprimirFacturas =
+    'Se exporta %s a PDF en "%s".';
+  SInfoPdfTemporalComandoImprimirFacturas =
+    'Se genera primero un PDF temporal único para %s.';
+  SInfoBloqueoPdfComandoImprimirFacturas =
+    'Bloqueo exclusivo adquirido para publicar "%s".';
+  SInfoLiberarBloqueoPdfComandoImprimirFacturas =
+    'Bloqueo exclusivo liberado para "%s".';
+  SAvisoEliminarPdfTemporalComandoImprimirFacturas =
+    'No se pudo eliminar el PDF temporal "%s": %s.';
+  SInfoPdfFacturaComando =
+    'PDF generado y comprobado para %s: %s (%d bytes).';
+  SInfoLoteParcialComandoImprimirFacturas =
+    ' Antes del error se completaron %d de %d PDF.';
+  SInfoCerrarImpresorComandoImprimirFacturas =
+    'Se liberan el impresor y el módulo de datos del lote.';
+  SInfoFinComandoImprimirFacturas =
+    'Generados %d PDF de factura en "%s" con el usuario %s.';
+
+procedure RegistrarInformacionSeguro(
+  const ARegistroLog: IRegistroLog;
+  const AMensaje: string);
+begin
+  if Assigned(ARegistroLog) then
+  begin
+    try
+      ARegistroLog.RegistrarInformacion(AMensaje);
+    except
+    end;
+  end;
+end;
+
+procedure RegistrarAvisoSeguro(
+  const ARegistroLog: IRegistroLog;
+  const AMensaje: string);
+begin
+  if Assigned(ARegistroLog) then
+  begin
+    try
+      ARegistroLog.RegistrarAviso(AMensaje);
+    except
+    end;
+  end;
+end;
+
+procedure RegistrarErrorSeguro(
+  const ARegistroLog: IRegistroLog;
+  const AMensaje: string);
+begin
+  if Assigned(ARegistroLog) then
+  begin
+    try
+      ARegistroLog.RegistrarError(AMensaje);
+    except
+    end;
+  end;
+end;
+
+function TextoSiNo(AValor: Boolean): string;
+begin
+  if AValor then
+    Result := 'Sí'
+  else
+    Result := 'No';
+end;
+
+function TextoAmbito(const AValor: string): string;
+begin
+  Result := Trim(AValor);
+  if Result = '' then
+    Result := '(sin restricción)';
+end;
+
+function CrearRutaTemporalPdf(const ARutaFinal: string): string;
+var
+  oIdentificador: TGUID;
+  sIdentificador: string;
+begin
+  CreateGUID(oIdentificador);
+  sIdentificador := GUIDToString(oIdentificador);
+  sIdentificador := StringReplace(
+    sIdentificador,
+    '{',
+    '',
+    [rfReplaceAll]);
+  sIdentificador := StringReplace(
+    sIdentificador,
+    '}',
+    '',
+    [rfReplaceAll]);
+  Result := TPath.Combine(
+    ExtractFilePath(ARutaFinal),
+    '.fzam-pdf-' + IntToStr(GetCurrentProcessId) + '-' +
+    sIdentificador + '.pdf');
+end;
+
+function EsPdfValido(
+  const ARuta: string;
+  out ATamano: Int64): Boolean;
+const
+  TAMANO_COLA_PDF = 4096;
+  TAMANO_MINIMO_PDF = 256;
+var
+  aCabecera: array[0..4] of Byte;
+  aCola: TBytes;
+  bFinEncontrado: Boolean;
+  iIndice: Integer;
+  iTamanoCola: Integer;
+  oFlujo: TFileStream;
+begin
+  Result := False;
+  ATamano := 0;
+  if FileExists(ARuta) then
+  begin
+    oFlujo := TFileStream.Create(
+      ARuta,
+      fmOpenRead or fmShareDenyWrite);
+    try
+      ATamano := oFlujo.Size;
+      if ATamano >= TAMANO_MINIMO_PDF then
+      begin
+        oFlujo.ReadBuffer(aCabecera, Length(aCabecera));
+        Result := (aCabecera[0] = Ord('%')) and
+                  (aCabecera[1] = Ord('P')) and
+                  (aCabecera[2] = Ord('D')) and
+                  (aCabecera[3] = Ord('F')) and
+                  (aCabecera[4] = Ord('-'));
+        if Result then
+        begin
+          if ATamano > TAMANO_COLA_PDF then
+            iTamanoCola := TAMANO_COLA_PDF
+          else
+            iTamanoCola := Integer(ATamano);
+          SetLength(aCola, iTamanoCola);
+          oFlujo.Position := ATamano - iTamanoCola;
+          oFlujo.ReadBuffer(aCola[0], iTamanoCola);
+          bFinEncontrado := False;
+          iIndice := 0;
+          while (iIndice <= Length(aCola) - 5) and
+                not bFinEncontrado do
+          begin
+            bFinEncontrado :=
+              (aCola[iIndice] = Ord('%')) and
+              (aCola[iIndice + 1] = Ord('%')) and
+              (aCola[iIndice + 2] = Ord('E')) and
+              (aCola[iIndice + 3] = Ord('O')) and
+              (aCola[iIndice + 4] = Ord('F'));
+            Inc(iIndice);
+          end;
+          Result := bFinEncontrado;
+        end;
+      end;
+    finally
+      FreeAndNil(oFlujo);
+    end;
+  end;
+end;
+
+function PublicarPdfTemporal(
+  const ARutaTemporal, ARutaFinal: string;
+  out AError: string): Boolean;
+var
+  iError: Cardinal;
+begin
+  AError := '';
+  SetLastError(ERROR_SUCCESS);
+  Result := MoveFileEx(
+    PChar(ARutaTemporal),
+    PChar(ARutaFinal),
+    MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH);
+  if not Result then
+  begin
+    iError := GetLastError;
+    AError := SysErrorMessage(iError);
+  end;
+end;
+
+function IntentarBloquearRutaPdf(
+  const ARuta: string;
+  out ABloqueo: THandle;
+  out AError: string): Boolean;
+var
+  iEspera: Cardinal;
+  sNombreMutex: string;
+  sRutaNormalizada: string;
+begin
+  Result := False;
+  ABloqueo := 0;
+  AError := '';
+  try
+    sRutaNormalizada := UpperCase(TPath.GetFullPath(ARuta));
+    sNombreMutex := 'Local\Factuzam-ImprimirFactura-' +
+      THashSHA2.GetHashString(sRutaNormalizada);
+    SetLastError(ERROR_SUCCESS);
+    ABloqueo := CreateMutex(nil, False, PChar(sNombreMutex));
+    if ABloqueo = 0 then
+      AError := SysErrorMessage(GetLastError)
+    else
+    begin
+      iEspera := WaitForSingleObject(ABloqueo, 0);
+      Result := (iEspera = WAIT_OBJECT_0) or
+                (iEspera = WAIT_ABANDONED);
+      if not Result then
+      begin
+        if iEspera = WAIT_TIMEOUT then
+          AError := 'El nombre está bloqueado por otro proceso.'
+        else
+          AError := SysErrorMessage(GetLastError);
+        CloseHandle(ABloqueo);
+        ABloqueo := 0;
+      end;
+    end;
+  except
+    on E: Exception do
+    begin
+      AError := E.ClassName + ': ' + E.Message;
+      if ABloqueo <> 0 then
+      begin
+        CloseHandle(ABloqueo);
+        ABloqueo := 0;
+      end;
+    end;
+  end;
+end;
+
+procedure LiberarBloqueoRutaPdf(var ABloqueo: THandle);
+begin
+  if ABloqueo <> 0 then
+  begin
+    ReleaseMutex(ABloqueo);
+    CloseHandle(ABloqueo);
+    ABloqueo := 0;
+  end;
+end;
+
+function CrearResultado(
+  ACodigoSalida: Cardinal;
+  const AMensaje: string
+): TResultadoComandoImprimirFacturas;
+begin
+  Result := Default(TResultadoComandoImprimirFacturas);
+  Result.CodigoSalida := ACodigoSalida;
+  Result.EsError := ACodigoSalida <> 0;
+  Result.Mensaje := AMensaje;
+end;
+
+function EsProcesoComandoImprimirFacturas: Boolean;
+begin
+  Result := EsComandoImprimirFacturas(
+    ObtenerParametrosLineaComandos);
+end;
+
+function MensajeErrorSolicitud(
+  const ASolicitud: TSolicitudComandoImprimirFacturas): string;
+begin
+  case ASolicitud.Error of
+    ecifListaVacia,
+    ecifReferenciaInvalida,
+    ecifReferenciaDuplicada:
+      Result := Format(
+        SErrorListaComandoImprimirFacturas,
+        [ASolicitud.DetalleError]);
+    ecifFormato:
+      Result := Format(
+        SErrorFormatoComandoImprimirFacturas,
+        [ASolicitud.Formato]);
+    ecifDirectorio:
+      Result := Format(
+        SErrorDirectorioComandoImprimirFacturas,
+        [ASolicitud.DirectorioDestino]);
+  else
+    Result := SErrorSintaxisComandoImprimirFacturas;
+  end;
+end;
+
+function CodigoErrorSolicitud(
+  AError: TErrorComandoImprimirFacturas): Cardinal;
+begin
+  case AError of
+    ecifDirectorio:
+      Result := SALIDA_COMANDO_IMPRESION_DIRECTORIO;
+    ecifFormato:
+      Result := SALIDA_COMANDO_IMPRESION_FORMATO;
+  else
+    Result := SALIDA_COMANDO_IMPRESION_SINTAXIS;
+  end;
+end;
+
+function CrearContextoAutorizacion(
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion
+): TContextoAutorizacionComandoFactura;
+begin
+  Result := Default(TContextoAutorizacionComandoFactura);
+  Result.VerifactuOnline := VerifactuActivo(AParametrosApp);
+  Result.PuedeImprimirNormal := Assigned(APermisos) and
+    APermisos.TienePermiso(
+      CodigoPermisoMto('Facturas', apmImprimir),
+      paPermitir);
+  Result.PuedeImprimirSimplificada := Assigned(APermisos) and
+    APermisos.TienePermiso(
+      CodigoPermisoMto('FacturasSimplif', apmImprimir),
+      paPermitir);
+  Result.EmpresaRestringida := EmpresaRestringida(
+    AContextoSesion,
+    AParametrosApp);
+  Result.AlmacenRestringido := AlmacenRestringido(
+    AContextoSesion,
+    AParametrosApp);
+  Result.CajaRestringida := CajaRestringida(
+    AContextoSesion,
+    AParametrosApp);
+end;
+
+procedure PrepararConsultaAutorizacion(
+  AConsulta: TUniQuery;
+  AConexion: TUniConnection);
+begin
+  AConsulta.Connection := AConexion;
+  AConsulta.SQL.Text :=
+    'SELECT TIPO_FAC, ESCONSOLIDADA_FAC, CODIGO_EMP_FAC, ' +
+    'CODIGO_ALM_FAC, CODIGO_CAJA_FAC ' +
+    'FROM fza_facturas ' +
+    'WHERE SERIE_FAC = :SERIE AND NUMERO_FAC = :NUMERO ' +
+    'LIMIT 1';
+end;
+
+function LeerDatosAutorizacion(
+  AConsulta: TUniQuery;
+  const AReferencia: TReferenciaComandoFactura
+): TDatosAutorizacionComandoFactura;
+begin
+  Result := Default(TDatosAutorizacionComandoFactura);
+  AConsulta.Close;
+  AConsulta.ParamByName('SERIE').AsString := AReferencia.Serie;
+  AConsulta.ParamByName('NUMERO').AsString := AReferencia.Numero;
+  AConsulta.Open;
+  Result.Existe := not AConsulta.IsEmpty;
+  if Result.Existe then
+  begin
+    Result.Consolidada := SameText(
+      AConsulta.FieldByName('ESCONSOLIDADA_FAC').AsString,
+      'S');
+    Result.TipoFactura :=
+      AConsulta.FieldByName('TIPO_FAC').AsString;
+    Result.CodigoEmpresa :=
+      AConsulta.FieldByName('CODIGO_EMP_FAC').AsString;
+    Result.CodigoAlmacen :=
+      AConsulta.FieldByName('CODIGO_ALM_FAC').AsString;
+    Result.CodigoCaja :=
+      AConsulta.FieldByName('CODIGO_CAJA_FAC').AsString;
+  end;
+end;
+
+function LeerDatosAutorizacionDataSet(
+  ADataSet: TDataSet): TDatosAutorizacionComandoFactura;
+begin
+  Result := Default(TDatosAutorizacionComandoFactura);
+  Result.Existe := Assigned(ADataSet) and
+                   ADataSet.Active and
+                   not ADataSet.IsEmpty;
+  if Result.Existe then
+  begin
+    Result.Consolidada := SameText(
+      ADataSet.FieldByName('ESCONSOLIDADA_FAC').AsString,
+      'S');
+    Result.TipoFactura :=
+      ADataSet.FieldByName('TIPO_FAC').AsString;
+    Result.CodigoEmpresa :=
+      ADataSet.FieldByName('CODIGO_EMP_FAC').AsString;
+    Result.CodigoAlmacen :=
+      ADataSet.FieldByName('CODIGO_ALM_FAC').AsString;
+    Result.CodigoCaja :=
+      ADataSet.FieldByName('CODIGO_CAJA_FAC').AsString;
+  end;
+end;
+
+function DataSetCorrespondeAReferencia(
+  ADataSet: TDataSet;
+  const AReferencia: TReferenciaComandoFactura): Boolean;
+begin
+  Result := Assigned(ADataSet) and
+            ADataSet.Active and
+            not ADataSet.IsEmpty and
+            SameText(
+              ADataSet.FieldByName('SERIE_FAC').AsString,
+              AReferencia.Serie) and
+            SameText(
+              ADataSet.FieldByName('NUMERO_FAC').AsString,
+              AReferencia.Numero);
+end;
+
+function CrearErrorAutorizacion(
+  ARechazo: TRechazoComandoFactura;
+  const AReferencia: TReferenciaComandoFactura;
+  const AUsuario: string
+): TResultadoComandoImprimirFacturas;
+begin
+  case ARechazo of
+    rcifNoEncontrada:
+      Result := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_FACTURA,
+        Format(
+          SErrorFacturaNoAutorizadaComando,
+          [AReferencia.Texto, AUsuario]));
+    rcifFueraDeAmbito:
+      Result := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_AUTORIZACION,
+        Format(
+          SErrorFacturaNoAutorizadaComando,
+          [AReferencia.Texto, AUsuario]));
+    rcifSinPermiso:
+      Result := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_AUTORIZACION,
+        Format(
+          SErrorFacturaNoAutorizadaComando,
+          [AReferencia.Texto, AUsuario]));
+    rcifTipoNoAdmitido:
+      Result := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_AUTORIZACION,
+        Format(
+          SErrorFacturaNoAutorizadaComando,
+          [AReferencia.Texto, AUsuario]));
+    rcifNoConsolidada:
+      Result := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_FACTURA,
+        Format(
+          SErrorFacturaNoConsolidadaComando,
+          [AReferencia.Texto]));
+  else
+    Result := CrearResultado(0, '');
+  end;
+end;
+
+function ValidarFacturasSolicitadas(
+  AConexion: TUniConnection;
+  const ASolicitud: TSolicitudComandoImprimirFacturas;
+  const AContexto: TContextoAutorizacionComandoFactura;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog
+): TResultadoComandoImprimirFacturas;
+var
+  iFactura: Integer;
+  oConsulta: TUniQuery;
+  oDatos: TDatosAutorizacionComandoFactura;
+  oRechazo: TRechazoComandoFactura;
+begin
+  Result := CrearResultado(0, '');
+  RegistrarInformacionSeguro(
+    ARegistroLog,
+    Format(
+      SInfoInicioValidacionComandoImprimirFacturas,
+      [Length(ASolicitud.Referencias)]));
+  oConsulta := TUniQuery.Create(nil);
+  try
+    PrepararConsultaAutorizacion(oConsulta, AConexion);
+    iFactura := 0;
+    while (iFactura <= High(ASolicitud.Referencias)) and
+          not Result.EsError do
+    begin
+      RegistrarInformacionSeguro(
+        ARegistroLog,
+        Format(
+          SInfoConsultaFacturaComandoImprimirFacturas,
+          [iFactura + 1,
+           Length(ASolicitud.Referencias),
+           ASolicitud.Referencias[iFactura].Texto]));
+      oDatos := LeerDatosAutorizacion(
+        oConsulta,
+        ASolicitud.Referencias[iFactura]);
+      oRechazo := EvaluarAutorizacionComandoFactura(
+        oDatos,
+        AContexto);
+      if oRechazo <> rcifNinguno then
+      begin
+        case oRechazo of
+          rcifNoEncontrada:
+            RegistrarAvisoSeguro(
+              ARegistroLog,
+              Format(
+                SErrorFacturaNoEncontradaComando,
+                [ASolicitud.Referencias[iFactura].Texto]));
+          rcifFueraDeAmbito:
+            RegistrarAvisoSeguro(
+              ARegistroLog,
+              Format(
+                SErrorFacturaFueraAmbitoComando,
+                [ASolicitud.Referencias[iFactura].Texto, AUsuario]));
+          rcifSinPermiso:
+            RegistrarAvisoSeguro(
+              ARegistroLog,
+              Format(
+                SErrorPermisoFacturaComando,
+                [AUsuario, ASolicitud.Referencias[iFactura].Texto]));
+          rcifTipoNoAdmitido:
+            RegistrarAvisoSeguro(
+              ARegistroLog,
+              Format(
+                SErrorTipoFacturaComando,
+                [ASolicitud.Referencias[iFactura].Texto,
+                 oDatos.TipoFactura]));
+          rcifNoConsolidada:
+            RegistrarAvisoSeguro(
+              ARegistroLog,
+              Format(
+                SErrorFacturaNoConsolidadaComando,
+                [ASolicitud.Referencias[iFactura].Texto]));
+        end;
+        Result := CrearErrorAutorizacion(
+          oRechazo,
+          ASolicitud.Referencias[iFactura],
+          AUsuario);
+      end;
+      if oRechazo = rcifNinguno then
+      begin
+        RegistrarInformacionSeguro(
+          ARegistroLog,
+          Format(
+            SInfoDatosFacturaComandoImprimirFacturas,
+            [ASolicitud.Referencias[iFactura].Texto,
+             oDatos.TipoFactura,
+             TextoSiNo(oDatos.Consolidada),
+             TextoAmbito(oDatos.CodigoEmpresa),
+             TextoAmbito(oDatos.CodigoAlmacen),
+             TextoAmbito(oDatos.CodigoCaja)]));
+        RegistrarInformacionSeguro(
+          ARegistroLog,
+          Format(
+            SInfoFacturaAutorizadaComandoImprimirFacturas,
+            [ASolicitud.Referencias[iFactura].Texto]));
+      end;
+      Inc(iFactura);
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  if not Result.EsError then
+  begin
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      SInfoFinValidacionComandoImprimirFacturas);
+  end;
+end;
+
+function PrepararDirectorio(
+  const ARuta: string;
+  const ARegistroLog: IRegistroLog): Boolean;
+begin
+  Result := DirectoryExists(ARuta);
+  if Result then
+  begin
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(SInfoDirectorioExisteComandoImprimirFacturas, [ARuta]));
+  end
+  else
+  begin
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(SInfoCrearDirectorioComandoImprimirFacturas, [ARuta]));
+    try
+      Result := ForceDirectories(ARuta);
+    except
+      on E: Exception do
+        Result := False;
+    end;
+  end;
+  if Result then
+  begin
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(SInfoDirectorioPreparadoComandoImprimirFacturas, [ARuta]));
+  end;
+end;
+
+function ExportarFacturas(
+  const ASolicitud: TSolicitudComandoImprimirFacturas;
+  AOwnerSesion: TComponent;
+  AConexion: TUniConnection;
+  const AContextoAutorizacion: TContextoAutorizacionComandoFactura;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog
+): TResultadoComandoImprimirFacturas;
+var
+  iFactura: Integer;
+  iGeneradas: Integer;
+  iTamanoPdf: Int64;
+  hBloqueoPdf: THandle;
+  oConsultaAutorizacion: TUniQuery;
+  oDatosAutorizacion: TDatosAutorizacionComandoFactura;
+  oDatosFactura: TdmFacturas;
+  oFormulario: TfrmPrintFac;
+  oRechazo: TRechazoComandoFactura;
+  oRutasGeneradas: TStringList;
+  sErrorBloqueo: string;
+  sErrorPublicacion: string;
+  sNombrePdf: string;
+  sRutaPdf: string;
+  sRutaTemporal: string;
+begin
+  Result := CrearResultado(0, '');
+  RegistrarInformacionSeguro(
+    ARegistroLog,
+    SInfoCrearImpresorComandoImprimirFacturas);
+  iGeneradas := 0;
+  oDatosFactura := nil;
+  oFormulario := nil;
+  oConsultaAutorizacion := nil;
+  oRutasGeneradas := TStringList.Create;
+  try
+    oRutasGeneradas.CaseSensitive := False;
+    oDatosFactura := TdmFacturas.Create(AOwnerSesion);
+    oDatosFactura.ReasignarConexion(AConexion);
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      SInfoConexionImpresorComandoImprimirFacturas);
+    oFormulario := TfrmPrintFac.Create(AOwnerSesion);
+    oFormulario.dmFac := oDatosFactura;
+    oFormulario.rbActual.Checked := True;
+    oFormulario.rbRangoFechas.Checked := False;
+    oFormulario.frxpdfxprtPedWeb.EmbeddedFonts := True;
+    oFormulario.frxpdfxprtPedWeb.ShowProgress := False;
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      SInfoFuentesComandoImprimirFacturas);
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      SInfoModoArchivoComandoImprimirFacturas);
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(
+        SInfoCargarFormatoComandoImprimirFacturas,
+        [ASolicitud.Formato]));
+    if not oFormulario.SeleccionarFormatoSinDialogo(
+      ASolicitud.Formato) then
+    begin
+      Result := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_FORMATO,
+        Format(
+          SErrorFormatoComandoImprimirFacturas,
+          [ASolicitud.Formato]));
+    end;
+    if not Result.EsError then
+    begin
+      RegistrarInformacionSeguro(
+        ARegistroLog,
+        Format(
+          SInfoFormatoCargadoComandoImprimirFacturas,
+          [ASolicitud.Formato]));
+      if not PrepararDirectorio(
+        ASolicitud.DirectorioDestino,
+        ARegistroLog) then
+      begin
+        Result := CrearResultado(
+          SALIDA_COMANDO_IMPRESION_DIRECTORIO,
+          Format(
+            SErrorDirectorioComandoImprimirFacturas,
+            [ASolicitud.DirectorioDestino]));
+      end;
+    end;
+    if not Result.EsError then
+    begin
+      oConsultaAutorizacion := TUniQuery.Create(nil);
+      PrepararConsultaAutorizacion(
+        oConsultaAutorizacion,
+        AConexion);
+    end;
+    iFactura := 0;
+    while (iFactura <= High(ASolicitud.Referencias)) and
+          not Result.EsError do
+    begin
+      RegistrarInformacionSeguro(
+        ARegistroLog,
+        Format(
+          SInfoPrepararFacturaComandoImprimirFacturas,
+          [iFactura + 1,
+           Length(ASolicitud.Referencias),
+           ASolicitud.Referencias[iFactura].Texto]));
+      oDatosAutorizacion := LeerDatosAutorizacion(
+        oConsultaAutorizacion,
+        ASolicitud.Referencias[iFactura]);
+      oRechazo := EvaluarAutorizacionComandoFactura(
+        oDatosAutorizacion,
+        AContextoAutorizacion);
+      if oRechazo <> rcifNinguno then
+      begin
+        RegistrarAvisoSeguro(
+          ARegistroLog,
+          'La autorización ha cambiado después de la prevalidación para ' +
+          ASolicitud.Referencias[iFactura].Texto + '.');
+        Result := CrearErrorAutorizacion(
+          oRechazo,
+          ASolicitud.Referencias[iFactura],
+          AUsuario);
+      end
+      else
+      begin
+        oFormulario.edtSerie.Text :=
+          ASolicitud.Referencias[iFactura].Serie;
+        oFormulario.edtNroFac.Text :=
+          ASolicitud.Referencias[iFactura].Numero;
+        oFormulario.preparar_consulta;
+        if not DataSetCorrespondeAReferencia(
+          oDatosFactura.unqryFacPrint,
+          ASolicitud.Referencias[iFactura]) then
+        begin
+          Result := CrearResultado(
+            SALIDA_COMANDO_IMPRESION_FACTURA,
+            Format(
+              SErrorPrepararFacturaComando,
+              [ASolicitud.Referencias[iFactura].Texto]));
+        end
+        else
+        begin
+          oDatosAutorizacion := LeerDatosAutorizacionDataSet(
+            oDatosFactura.unqryFacPrint);
+          oRechazo := EvaluarAutorizacionComandoFactura(
+            oDatosAutorizacion,
+            AContextoAutorizacion);
+          if oRechazo <> rcifNinguno then
+          begin
+            RegistrarAvisoSeguro(
+              ARegistroLog,
+              'Los datos de impresión ya no cumplen la autorización para ' +
+              ASolicitud.Referencias[iFactura].Texto + '.');
+            Result := CrearErrorAutorizacion(
+              oRechazo,
+              ASolicitud.Referencias[iFactura],
+              AUsuario);
+          end
+          else
+          begin
+            RegistrarInformacionSeguro(
+              ARegistroLog,
+              Format(
+                SInfoDatosPreparadosComandoImprimirFacturas,
+                [ASolicitud.Referencias[iFactura].Texto]));
+            sNombrePdf := oFormulario.ObtenerNombreFactura(
+              oDatosFactura.unqryFacPrint) + '.pdf';
+            RegistrarInformacionSeguro(
+              ARegistroLog,
+              Format(
+                SInfoNombrePdfComandoImprimirFacturas,
+                [sNombrePdf, ASolicitud.Referencias[iFactura].Texto]));
+            sRutaPdf := TPath.Combine(
+              ASolicitud.DirectorioDestino,
+              sNombrePdf);
+            if oRutasGeneradas.IndexOf(sRutaPdf) >= 0 then
+            begin
+              Result := CrearResultado(
+                SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                Format(
+                  SErrorColisionNombrePdfComando,
+                  [sRutaPdf]));
+            end;
+          end;
+          if not Result.EsError then
+          begin
+            if not IntentarBloquearRutaPdf(
+              sRutaPdf,
+              hBloqueoPdf,
+              sErrorBloqueo) then
+            begin
+              Result := CrearResultado(
+                SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                Format(
+                  SErrorBloqueoNombrePdfComando,
+                  [sRutaPdf, sErrorBloqueo]));
+            end;
+            if not Result.EsError then
+            begin
+              RegistrarInformacionSeguro(
+                ARegistroLog,
+                Format(
+                  SInfoBloqueoPdfComandoImprimirFacturas,
+                  [sRutaPdf]));
+              try
+                if FileExists(sRutaPdf) then
+                begin
+                  RegistrarAvisoSeguro(
+                    ARegistroLog,
+                    Format(
+                      SInfoPdfExistenteComandoImprimirFacturas,
+                      [sRutaPdf]));
+                end;
+                RegistrarInformacionSeguro(
+                  ARegistroLog,
+                  Format(
+                    SInfoExportarPdfComandoImprimirFacturas,
+                    [ASolicitud.Referencias[iFactura].Texto, sRutaPdf]));
+                sRutaTemporal := CrearRutaTemporalPdf(sRutaPdf);
+                RegistrarInformacionSeguro(
+                  ARegistroLog,
+                  Format(
+                    SInfoPdfTemporalComandoImprimirFacturas,
+                    [ASolicitud.Referencias[iFactura].Texto]));
+                try
+                  try
+                    if not oFormulario.ExportarPdfPreparado(
+                      sRutaTemporal,
+                      False) then
+                    begin
+                      Result := CrearResultado(
+                        SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                        Format(
+                          SErrorExportarFacturaComando,
+                          [ASolicitud.Referencias[iFactura].Texto, sRutaPdf]));
+                    end;
+                    if not Result.EsError and
+                       not EsPdfValido(sRutaTemporal, iTamanoPdf) then
+                    begin
+                      Result := CrearResultado(
+                        SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                        Format(
+                          SErrorExportarFacturaComando,
+                          [ASolicitud.Referencias[iFactura].Texto, sRutaPdf]));
+                    end;
+                    if not Result.EsError and
+                       not PublicarPdfTemporal(
+                         sRutaTemporal,
+                         sRutaPdf,
+                         sErrorPublicacion) then
+                    begin
+                      Result := CrearResultado(
+                        SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                        Format(
+                          SErrorPublicarFacturaComando,
+                          [ASolicitud.Referencias[iFactura].Texto,
+                           sRutaPdf,
+                           sErrorPublicacion]));
+                    end;
+                    if not Result.EsError and
+                       not EsPdfValido(sRutaPdf, iTamanoPdf) then
+                    begin
+                      Result := CrearResultado(
+                        SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                        Format(
+                          SErrorExportarFacturaComando,
+                          [ASolicitud.Referencias[iFactura].Texto, sRutaPdf]));
+                    end;
+                    if not Result.EsError then
+                    begin
+                      oRutasGeneradas.Add(sRutaPdf);
+                      Inc(iGeneradas);
+                      RegistrarInformacionSeguro(
+                        ARegistroLog,
+                        Format(
+                          SInfoPdfFacturaComando,
+                          [ASolicitud.Referencias[iFactura].Texto,
+                           sRutaPdf,
+                           iTamanoPdf]));
+                    end;
+                  except
+                    on E: Exception do
+                    begin
+                      Result := CrearResultado(
+                        SALIDA_COMANDO_IMPRESION_EXPORTACION,
+                        Format(
+                          SErrorExportarFacturaComando,
+                          [ASolicitud.Referencias[iFactura].Texto, sRutaPdf]) +
+                        ' ' + E.ClassName + ': ' + E.Message);
+                    end;
+                  end;
+                finally
+                  if FileExists(sRutaTemporal) then
+                  begin
+                    try
+                      SetLastError(ERROR_SUCCESS);
+                      if not System.SysUtils.DeleteFile(sRutaTemporal) then
+                      begin
+                        RegistrarAvisoSeguro(
+                          ARegistroLog,
+                          Format(
+                            SAvisoEliminarPdfTemporalComandoImprimirFacturas,
+                            [sRutaTemporal, SysErrorMessage(GetLastError)]));
+                      end;
+                    except
+                      on E: Exception do
+                      begin
+                        RegistrarAvisoSeguro(
+                          ARegistroLog,
+                          Format(
+                            SAvisoEliminarPdfTemporalComandoImprimirFacturas,
+                            [sRutaTemporal, E.ClassName + ': ' + E.Message]));
+                      end;
+                    end;
+                  end;
+                end;
+              finally
+                LiberarBloqueoRutaPdf(hBloqueoPdf);
+                RegistrarInformacionSeguro(
+                  ARegistroLog,
+                  Format(
+                    SInfoLiberarBloqueoPdfComandoImprimirFacturas,
+                    [sRutaPdf]));
+              end;
+            end;
+          end;
+        end;
+      end;
+      Inc(iFactura);
+    end;
+    if Result.EsError and (iGeneradas > 0) then
+    begin
+      Result.Mensaje := Result.Mensaje +
+        Format(
+          SInfoLoteParcialComandoImprimirFacturas,
+          [iGeneradas, Length(ASolicitud.Referencias)]);
+    end;
+  finally
+    FreeAndNil(oFormulario);
+    FreeAndNil(oConsultaAutorizacion);
+    FreeAndNil(oDatosFactura);
+    FreeAndNil(oRutasGeneradas);
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      SInfoCerrarImpresorComandoImprimirFacturas);
+  end;
+end;
+
+function EjecutarComandoImprimirFacturas(
+  const AParametros: TArray<string>;
+  AOwnerSesion: TComponent;
+  AConexion: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog
+): TResultadoComandoImprimirFacturas;
+var
+  oAutorizacion: TContextoAutorizacionComandoFactura;
+  oSolicitud: TSolicitudComandoImprimirFacturas;
+  sUsuario: string;
+begin
+  RegistrarInformacionSeguro(
+    ARegistroLog,
+    SInfoDetectadoComandoImprimirFacturas);
+  oSolicitud := InterpretarComandoImprimirFacturas(AParametros);
+  if not oSolicitud.EsValida then
+  begin
+    Result := CrearResultado(
+      CodigoErrorSolicitud(oSolicitud.Error),
+      MensajeErrorSolicitud(oSolicitud));
+  end
+  else if (not Assigned(AOwnerSesion)) or
+          (not Assigned(AConexion)) or
+          (not Assigned(AContextoSesion)) or
+          (not Assigned(AParametrosApp)) then
+  begin
+    Result := CrearResultado(
+      SALIDA_COMANDO_IMPRESION_SESION,
+      SErrorServiciosComandoImprimirFacturas);
+  end
+  else
+  begin
+    sUsuario := AContextoSesion.Identidad.Usuario;
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(
+        SInfoInicioComandoImprimirFacturas,
+        [sUsuario,
+         AContextoSesion.Identidad.Grupo,
+         Length(oSolicitud.Referencias),
+         oSolicitud.Formato]));
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(
+        SInfoUbicacionComandoImprimirFacturas,
+        [TextoAmbito(AContextoSesion.Ubicacion.Empresa),
+         TextoAmbito(AContextoSesion.Ubicacion.Almacen),
+         TextoAmbito(AContextoSesion.Ubicacion.Caja)]));
+    oAutorizacion := CrearContextoAutorizacion(
+      AContextoSesion,
+      AParametrosApp,
+      APermisos);
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(
+        SInfoPoliticaComandoImprimirFacturas,
+        [TextoSiNo(oAutorizacion.VerifactuOnline),
+         TextoSiNo(oAutorizacion.PuedeImprimirNormal),
+         TextoSiNo(oAutorizacion.PuedeImprimirSimplificada)]));
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(
+        SInfoAmbitoComandoImprimirFacturas,
+        [TextoAmbito(oAutorizacion.EmpresaRestringida),
+         TextoAmbito(oAutorizacion.AlmacenRestringido),
+         TextoAmbito(oAutorizacion.CajaRestringida)]));
+    Result := ValidarFacturasSolicitadas(
+      AConexion,
+      oSolicitud,
+      oAutorizacion,
+      sUsuario,
+      ARegistroLog);
+    if not Result.EsError then
+    begin
+      Result := ExportarFacturas(
+        oSolicitud,
+        AOwnerSesion,
+        AConexion,
+        oAutorizacion,
+        sUsuario,
+        ARegistroLog);
+    end;
+    if not Result.EsError then
+    begin
+      Result := CrearResultado(
+        0,
+        Format(
+          SInfoFinComandoImprimirFacturas,
+          [Length(oSolicitud.Referencias),
+           oSolicitud.DirectorioDestino,
+           sUsuario]));
+    end;
+  end;
+end;
+
+procedure RegistrarResultadoComando(
+  const AResultado: TResultadoComandoImprimirFacturas;
+  const ARegistroLog: IRegistroLog);
+begin
+  if AResultado.EsError then
+    RegistrarErrorSeguro(ARegistroLog, AResultado.Mensaje)
+  else
+    RegistrarInformacionSeguro(ARegistroLog, AResultado.Mensaje);
+  EscribirMensajeComando(
+    AResultado.Mensaje,
+    AResultado.EsError);
+end;
+
+function ValidarSintaxisProcesoComandoImprimirFacturas(
+  const ARegistroLog: IRegistroLog): Cardinal;
+var
+  oResultado: TResultadoComandoImprimirFacturas;
+  oSolicitud: TSolicitudComandoImprimirFacturas;
+begin
+  Result := 0;
+  RegistrarInformacionSeguro(
+    ARegistroLog,
+    SInfoDetectadoComandoImprimirFacturas);
+  oSolicitud := InterpretarComandoImprimirFacturas(
+    ObtenerParametrosLineaComandos);
+  if not oSolicitud.EsValida then
+  begin
+    oResultado := CrearResultado(
+      CodigoErrorSolicitud(oSolicitud.Error),
+      MensajeErrorSolicitud(oSolicitud));
+    RegistrarResultadoComando(oResultado, ARegistroLog);
+    Result := oResultado.CodigoSalida;
+  end
+  else
+  begin
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      Format(
+        SInfoSintaxisValidaComandoImprimirFacturas,
+        [Length(oSolicitud.Referencias),
+         oSolicitud.Formato,
+         oSolicitud.DirectorioDestino]));
+    RegistrarInformacionSeguro(
+      ARegistroLog,
+      SInfoSolicitudSesionComandoImprimirFacturas);
+  end;
+end;
+
+function EjecutarProcesoComandoImprimirFacturas(
+  AOwnerSesion: TComponent;
+  AConexion: TUniConnection;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog
+): Cardinal;
+var
+  oResultado: TResultadoComandoImprimirFacturas;
+begin
+  try
+    oResultado := EjecutarComandoImprimirFacturas(
+      ObtenerParametrosLineaComandos,
+      AOwnerSesion,
+      AConexion,
+      AContextoSesion,
+      AParametrosApp,
+      APermisos,
+      ARegistroLog);
+  except
+    on E: Exception do
+    begin
+      oResultado := CrearResultado(
+        SALIDA_COMANDO_IMPRESION_ERROR,
+        E.ClassName + ': ' + E.Message);
+    end;
+  end;
+  RegistrarResultadoComando(oResultado, ARegistroLog);
+  Result := oResultado.CodigoSalida;
+end;
+
+function FinalizarProcesoComandoImprimirFacturasSinSesion(
+  const ARegistroLog: IRegistroLog): Cardinal;
+var
+  oResultado: TResultadoComandoImprimirFacturas;
+begin
+  oResultado := CrearResultado(
+    SALIDA_COMANDO_IMPRESION_SESION,
+    SErrorSesionComandoImprimirFacturas);
+  RegistrarResultadoComando(oResultado, ARegistroLog);
+  Result := oResultado.CodigoSalida;
+end;
+
+function FinalizarProcesoComandoImprimirFacturasConError(
+  const ARegistroLog: IRegistroLog;
+  const AMensaje: string): Cardinal;
+var
+  oResultado: TResultadoComandoImprimirFacturas;
+begin
+  oResultado := CrearResultado(
+    SALIDA_COMANDO_IMPRESION_ERROR,
+    AMensaje);
+  RegistrarResultadoComando(oResultado, ARegistroLog);
+  Result := oResultado.CodigoSalida;
+end;
+
+end.

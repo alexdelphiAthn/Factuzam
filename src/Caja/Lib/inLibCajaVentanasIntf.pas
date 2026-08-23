@@ -44,7 +44,7 @@ type
       const ASku: string;
       ACant: Double): Boolean;
     procedure PrepararValores(
-      AEmpresa, AAlmacen, ACaja: string;
+      const AEmpresa, AAlmacen, ACaja: string;
       AFecha: TDateTime);
     procedure CargarDevolucion(
       const ASerie, ANumero, AEmpresaOrigen,

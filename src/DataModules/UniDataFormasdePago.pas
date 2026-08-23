@@ -45,7 +45,8 @@ type
 implementation
 
 uses
-  System.Diagnostics, inLibMsgComun, inLibMsgFacturas;
+  System.Diagnostics, UniDataAperturaConsultas,
+  inLibMsgComun, inLibMsgFacturas;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -85,35 +86,14 @@ end;
 procedure TdmFormasdePago.AbrirDetalles;
 const
   TAG = 'FormasdePago.AbrirDetalles';
-
-  procedure AbrirConTiempo(qry: TUniQuery; const Nombre: string);
-  var swQ: TStopwatch;
-  begin
-    if not qry.Active then
-    begin
-      swQ := TStopwatch.StartNew;
-      try
-        qry.Open;
-        RegistroLog.RegistrarRendimiento(
-          TAG, Nombre + ' OK', swQ.ElapsedMilliseconds);
-      except
-        on E: Exception do
-        begin
-          RegistroLog.RegistrarRendimiento(
-            TAG, Nombre + ' ERROR=' + E.Message,
-            swQ.ElapsedMilliseconds);
-          raise;
-        end;
-      end;
-    end;
-  end;
-
 var sw: TStopwatch;
 begin
   inherited;
   sw := TStopwatch.StartNew;
-  AbrirConTiempo(unqryFacturas,       'unqryFacturas');
-  AbrirConTiempo(unqryFacturasLineas, 'unqryFacturasLineas');
+  AbrirConsultaConTiempo(
+    unqryFacturas, TAG, 'unqryFacturas', RegistroLog);
+  AbrirConsultaConTiempo(
+    unqryFacturasLineas, TAG, 'unqryFacturasLineas', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
 end;
 
