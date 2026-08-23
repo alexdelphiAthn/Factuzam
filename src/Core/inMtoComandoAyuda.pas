@@ -1,6 +1,6 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inMtoComandoAyuda                                              }
+{  Módulo:       inMtoComandoAyuda                                             }
 {    Tipo:       Coordinador de aplicación                                     }
 { Versión:       1.0.0                                                         }
 {   Fecha:       23/08/2026                                                    }
@@ -22,7 +22,6 @@ function EjecutarProcesoComandoAyuda: Cardinal;
 implementation
 
 uses
-  Winapi.Windows,
   inLibComandoAyuda,
   inLibLineaComandos,
   inLibSalidaComandos;
@@ -37,14 +36,7 @@ var
   sAyuda: string;
 begin
   sAyuda := CrearTextoAyudaComandos;
-  if not EscribirMensajeComando(sAyuda, False) then
-  begin
-    MessageBox(
-      0,
-      PChar(sAyuda),
-      'Ayuda de Factuzam',
-      MB_OK or MB_ICONINFORMATION);
-  end;
+  EscribirMensajeComando(sAyuda, False);
   Result := 0;
 end;
 

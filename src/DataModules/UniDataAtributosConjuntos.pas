@@ -414,7 +414,8 @@ begin
   inherited;
   if unqryTablaG.State in [dsEdit, dsInsert] then
     raise Exception.Create(
-      'Graba primero los datos de la colección antes de modificar sus valores.');
+      'Graba primero los datos de la colección antes de modificar ' +
+      'sus valores.');
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
     raise Exception.Create(SErrorValorColeccionAtributosObligatorio);
   iIdConjunto := unqryTablaG.FieldByName('ID_AC').AsInteger;
