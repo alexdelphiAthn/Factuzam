@@ -193,6 +193,7 @@
         <DCCReference Include="src\Lib\inLibCifrado.pas"/>
         <DCCReference Include="src\Lib\inLibCifradoCopias.pas"/>
         <DCCReference Include="src\Lib\inLibComandoCopiaSeguridad.pas"/>
+        <DCCReference Include="src\Core\inMtoComandoCopiaSeguridad.pas"/>
         <DCCReference Include="src\Lib\inLibConfiguracionIni.pas"/>
         <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticos.pas"/>
