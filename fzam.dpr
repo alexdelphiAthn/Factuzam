@@ -18,6 +18,7 @@ uses
   {$ENDIF }
   Sysutils,
   Classes,
+  System.IOUtils,
   dxCore,
   JclDebug,
   JclHookExcept,
@@ -43,6 +44,8 @@ uses
   inLibCadenas in 'src\Lib\inLibCadenas.pas',
   inLibCifrado in 'src\Lib\inLibCifrado.pas',
   inLibCifradoCopias in 'src\Lib\inLibCifradoCopias.pas',
+  inLibComandoCopiaSeguridad in
+    'src\Lib\inLibComandoCopiaSeguridad.pas',
   inLibConfiguracionIni in 'src\Lib\inLibConfiguracionIni.pas',
   inLibDatasets in 'src\Lib\inLibDatasets.pas',
   inLibValoresAutomaticos in 'src\Lib\inLibValoresAutomaticos.pas',

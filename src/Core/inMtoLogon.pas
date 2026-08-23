@@ -179,7 +179,8 @@ uses  inLibWin,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
-      inLibBackupWorker,
+      inLibComandoCopiaSeguridad,
+      inLibCopiasSeguridad,
       inLibRestauracionCopiasConexion,
       UniDataRestauracionCopiasConexion,
       inMtoLogonRestauracionVcl,
@@ -963,7 +964,7 @@ end;
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
 var
   iButtonSel: Integer;
-  Worker: TBackupWorker;
+  oWorker: TThread;
 begin
   ConfigurarYConectarMySQL(FConexionLogon, edtUserBD.Text,
     FPasswordConexion,
@@ -974,8 +975,9 @@ begin
   saveDialog.Title := STituloGuardarCopiaSeguridad;
   saveDialog.DefaultFolder := GetCurrentDir;
   saveDialog.DefaultExtension := '.crypt';
-  savedialog.FileName := 'copiaseguridad_' + FPasswordConexionEncriptado +
-                                       FormatDateTime('_dd_mm', Now) + '.crypt';
+  savedialog.FileName := 'copiaseguridad_' +
+    CodificarClaveCifradaParaRuta(FPasswordConexionEncriptado) +
+    FormatDateTime('_dd_mm', Now) + '.crypt';
   if (saveDialog.Execute) then
   begin
     if FileExists(savedialog.FileName) then
@@ -986,20 +988,21 @@ begin
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
       MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
-      Worker := TBackupWorker.Create(
-        edtHostName.Text,
-        StrToIntDef(edtPortBD.Text, 3306),
-        edtNomBD.Text,
-        edtUserBD.Text,
-        FPasswordConexion,
+      oWorker := CrearWorkerCopiaProtegidaConexion(
+        FConexionLogon,
         saveDialog.FileName,
-        True,
-        FPasswordConexion);
-      Worker.OnProgreso := WorkerProgreso;
-      Worker.OnFinalizar := BackupFinalizar;
+        FPasswordConexion,
+        WorkerProgreso,
+        BackupFinalizar);
       FCancelaOperacionSolicitada := False;
-      FWorkerOperacion := Worker;
-      Worker.Start;
+      FWorkerOperacion := oWorker;
+      try
+        oWorker.Start;
+      except
+        FWorkerOperacion := nil;
+        FreeAndNil(oWorker);
+        raise;
+      end;
     end;
   end
   else

@@ -531,9 +531,11 @@ resourcestring
     'No se ha importado ninguna línea. Corrige estas incidencias en el ' +
     'archivo y vuelve a intentarlo:';
   SFormatoIncidenciaCantidadImportacionInventario =
-    'Fila %d | SKU: "%s" | Cantidad: "%s" | Debe ser un número válido.';
+    'Fila %d | SKU: "%s" | Cantidad: "%s" | Debe ser un número válido ' +
+    'mayor o igual que cero.';
   SFormatoIncidenciaPmpNuevoImportacionInventario =
-    'Fila %d | SKU: "%s" | PMP nuevo: "%s" | Debe ser un número válido.';
+    'Fila %d | SKU: "%s" | PMP nuevo: "%s" | Debe ser un número válido ' +
+    'mayor o igual que cero.';
   SInfoImportacionInventario =
     '%s' + sLineBreak + '%d actualizados, %d nuevos insertados.';
   SErrorEnviarRecuentoInventarioNoAbierto =

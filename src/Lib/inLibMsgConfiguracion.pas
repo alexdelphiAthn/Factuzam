@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibMsgConfiguracion                                         }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       29/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -84,6 +84,20 @@ resourcestring
     'La copia se guardó exitosamente';
   SErrorCrearCopiaSeguridad =
     'No se pudo crear la copia de seguridad.' + sLineBreak + '%s';
+  SErrorSintaxisComandoCopiaSeguridad =
+    'Uso: fzam.exe /copiaseguridad "<ruta>.crypt" ["contraseña"].';
+  SErrorRutaComandoCopiaSeguridad =
+    'La ruta de la copia de seguridad no es válida.';
+  SErrorExtensionComandoCopiaSeguridad =
+    'El destino de la copia debe tener extensión .crypt.';
+  SErrorClaveComandoCopiaSeguridad =
+    'La contraseña cifrada de la copia no es válida.';
+  SErrorConexionComandoCopiaSeguridad =
+    'No se pudo preparar la conexión para la copia: %s';
+  SErrorPublicarComandoCopiaSeguridad =
+    'No se pudo guardar la copia en su destino: %s';
+  SInfoComandoCopiaSeguridadCompletado =
+    'Copia de seguridad completada: %s';
   SRestauracionCancelada =
     'Operación cancelada. La base de datos puede haber quedado ' +
     'parcialmente restaurada.';

@@ -17,7 +17,7 @@ unit inLibBuscarImpresora;
 interface
 
 uses
-  Classes, Windows, WinSpool, SysUtils, StrUtils, vcl.Printers,
+  Classes, Windows, WinSpool, SysUtils, StrUtils,
   inLibContextoSesionIntf, inLibParametrosIntf;
 
 function ObtenerSesionImpresora(const NombreImpresora: string): string;
@@ -40,6 +40,22 @@ function GetImpresoraCaja(
 
 implementation
 
+function EstaImpresoraDisponible(const ANombreImpresora: string): Boolean;
+var
+  oImpresoras: TStringList;
+begin
+  Result := not SameText(ANombreImpresora, 'DEBUG');
+  if Result then
+  begin
+    oImpresoras := ObtenerListaImpresoras;
+    try
+      Result := oImpresoras.IndexOf(ANombreImpresora) >= 0;
+    finally
+      FreeAndNil(oImpresoras);
+    end;
+  end;
+end;
+
 function GetImpresoraCaja(
   const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion): string;
@@ -58,13 +74,16 @@ end;
 function ObtenerImpresoraPorPatronCached(const PatronBusqueda,
                                                ArchivoCache: string): string;
 var
-  FCache: TextFile;
   Linea, SesionCache, ImpresoraCache, ModoCache: string;
+  ArchivoCacheLectura: TFileStream;
+  LineasCache: TStringList;
   Partes: TStringList;
   CacheValida: Boolean;
 begin
   Result := '';
   CacheValida := False;
+  ArchivoCacheLectura := nil;
+  LineasCache := TStringList.Create;
   Partes := TStringList.Create;
   Partes.Delimiter := ',';
   Partes.StrictDelimiter := True;
@@ -72,13 +91,14 @@ begin
     // 1. Intentar leer e identificar si la caché es válida
     if FileExists(ArchivoCache) then
     begin
-      AssignFile(FCache, ArchivoCache);
-      FileMode := fmOpenRead or fmShareDenyNone;
-      Reset(FCache);
+      ArchivoCacheLectura := TFileStream.Create(
+        ArchivoCache,
+        fmOpenRead or fmShareDenyNone);
       try
-        if not Eof(FCache) then
+        LineasCache.LoadFromStream(ArchivoCacheLectura);
+        if LineasCache.Count > 0 then
         begin
-          Readln(FCache, Linea);
+          Linea := LineasCache[0];
           Partes.DelimitedText := Linea;
           if Partes.Count >= 3 then
           begin
@@ -92,13 +112,13 @@ begin
             CacheValida := (ImpresoraCache <> '') and
                            ((SameText(ImpresoraCache, 'DEBUG') and
                              SameText(PatronBusqueda, 'DEBUG')) or
-                            (Printer.Printers.IndexOf(ImpresoraCache) >= 0));
+                            EstaImpresoraDisponible(ImpresoraCache));
             if CacheValida then
               Result := ImpresoraCache;
           end;
         end;
       finally
-        CloseFile(FCache);
+        FreeAndNil(ArchivoCacheLectura);
       end;
     end;
     // 2. Si la caché no existe o no es válida, buscar la impresora
@@ -110,6 +130,7 @@ begin
         Result := BuscarImpresoraPorPatrones(PatronBusqueda);
     end;
   finally
+    FreeAndNil(LineasCache);
     FreeAndNil(Partes);
   end;
 end;
@@ -438,7 +459,7 @@ begin
               ImpresoraCache := Trim(Partes[2]);
               CacheValida := (ImpresoraCache <> '') and
                              ((SameText(ImpresoraCache, 'DEBUG')) or
-                              (Printer.Printers.IndexOf(ImpresoraCache) >= 0));
+                              EstaImpresoraDisponible(ImpresoraCache));
               if CacheValida then
               begin
 //                EscribirLog('Cache [Sesion' + SesionCache + ']: ' +

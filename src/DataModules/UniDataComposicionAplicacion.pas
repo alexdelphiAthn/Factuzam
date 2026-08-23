@@ -748,7 +748,7 @@ begin
     Result := PrecargarCachesSerie;
   FUnidades.Cargar;
   FRegistroLog.RegistrarInformacion(
-    'Arranque: impresora de caja resuelta = "' +
+    'Arranque: detección diferida de impresora de caja; valor actual = "' +
     FServiciosParametrosCaja.Lectura.ImpresoraCaja + '"');
 end;
 

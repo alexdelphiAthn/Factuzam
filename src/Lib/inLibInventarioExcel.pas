@@ -54,9 +54,9 @@ procedure ExportarInventarioExcel(
 
 // Lee la hoja a traves del lector (ILectorHojaCalculo). Busca las columnas
 // SKU, Cantidad y PMP Nuevo en las primeras filas. Si no encuentra cabecera,
-// asume col A=SKU y col B=Cantidad. Los valores no numericos se devuelven como
-// incidencias y dejan vacias ambas salidas de datos para impedir una
-// importacion parcial.
+// asume col A=SKU y col B=Cantidad. Los valores no numericos, no finitos o
+// negativos se devuelven como incidencias y dejan vacias ambas salidas de
+// datos para impedir una importacion parcial.
 procedure ImportarInventarioDesdeSheet(
   const ALector: ILectorHojaCalculo;
   out ALineas: TLineasImportadas;
@@ -446,7 +446,8 @@ begin
   begin
     Result := TryStrToFloat(ATexto, AValor);
     if Result then
-      Result := not IsNan(AValor) and not IsInfinite(AValor);
+      Result := not IsNan(AValor) and not IsInfinite(AValor) and
+        (AValor >= 0);
   end;
 end;
 
@@ -462,7 +463,8 @@ begin
   begin
     Result := TryStrToFloat(ATexto, AValor);
     if Result then
-      Result := not IsNan(AValor) and not IsInfinite(AValor);
+      Result := not IsNan(AValor) and not IsInfinite(AValor) and
+        (AValor >= 0);
   end;
 end;
 
