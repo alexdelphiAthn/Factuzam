@@ -76,7 +76,8 @@ uses
   System.Generics.Collections,
   inLibGlobalVar, inLibMsgIntegraciones,
   inLibVentasWsJson, inLibFactuzamApi,
-  inLibColasHistorialIntf, inLibVentasWsColaHistorialIntf;
+  inLibColasHistorialIntf, inLibVentasWsColaHistorialIntf,
+  inLibErroresHttp;
 
 type
   THiloVentasWsCola = class(TThread)
@@ -93,7 +94,7 @@ type
     procedure EsperarCiclo;
     procedure EsperarSegundos(ASegundos: Integer);
     procedure ProcesarPendientes;
-    procedure ProcesarFila(AIdCola: Int64);
+    function ProcesarFila(AIdCola: Int64): Boolean;
     function EnviarConHistorial(
       AIdCola: Int64;
       const AFila: TFilaVentasWsCola;
@@ -101,7 +102,7 @@ type
     procedure RegistrarIntentoSeguro(
       const AIntento: TIntentoVentasWsCola);
     procedure GuardarError(AIdCola: Int64; const AMensaje: string;
-      AIntentos: Integer);
+      AIntentos: Integer; AConsumirIntento: Boolean);
   protected
     procedure Execute; override;
   public
@@ -115,6 +116,7 @@ type
   end;
 
 const
+  CSegundosReintentoSinConexion = 300;
   cContenidoBase64Omitido =
     '[OMITIDO DEL HISTORIAL: CONTENIDO BINARIO/BASE64]';
   cContenidoSensibleOmitido =
@@ -542,7 +544,8 @@ begin
     while (iIndice <= High(aPendientes)) and (not Terminated) and
           (not FContextoSesion.CerrandoAplicacion) do
     begin
-      ProcesarFila(aPendientes[iIndice]);
+      if not ProcesarFila(aPendientes[iIndice]) then
+        Break;
       Inc(iIndice);
     end;
   end
@@ -556,15 +559,17 @@ begin
   end;
 end;
 
-procedure THiloVentasWsCola.ProcesarFila(AIdCola: Int64);
+function THiloVentasWsCola.ProcesarFila(AIdCola: Int64): Boolean;
 var
   oFila: TFilaVentasWsCola;
   oResultado: TResultadoFactuzamApi;
   sContenido: string;
   sHuella: string;
 begin
+  Result := True;
   if FRepositorio.MarcarProcesando(AIdCola, FUsuario) then
   begin
+    oFila := Default(TFilaVentasWsCola);
     oFila := FRepositorio.LeerFila(AIdCola);
     try
       sContenido := oFila.Contenido;
@@ -585,10 +590,16 @@ begin
         FRepositorio.MarcarEnviada(
           AIdCola, oResultado.IdPeticion, FUsuario)
       else
-        GuardarError(AIdCola, oResultado.Mensaje, oFila.Intentos);
+        GuardarError(
+          AIdCola, oResultado.Mensaje, oFila.Intentos, True);
     except
+      on E: EConexionHttpTemporal do
+      begin
+        GuardarError(AIdCola, E.Message, oFila.Intentos, False);
+        Result := False;
+      end;
       on E: Exception do
-        GuardarError(AIdCola, E.Message, oFila.Intentos);
+        GuardarError(AIdCola, E.Message, oFila.Intentos, True);
     end;
   end;
 end;
@@ -624,6 +635,11 @@ begin
         oIntento.RecursoHttp,
         AContenido);
     except
+      on E: EConexionHttpTemporal do
+      begin
+        Result.Mensaje := E.Message;
+        raise;
+      end;
       on E: Exception do
         Result.Mensaje := E.Message;
     end;
@@ -689,26 +705,40 @@ begin
 end;
 
 procedure THiloVentasWsCola.GuardarError(AIdCola: Int64;
-  const AMensaje: string; AIntentos: Integer);
+  const AMensaje: string; AIntentos: Integer;
+  AConsumirIntento: Boolean);
 var
   iEspera: Integer;
   iMaxIntentos: Integer;
   sEstado: string;
 begin
-  // Política de reintentos: espera exponencial con tope y paso a ERROR
-  // al agotar los intentos configurados.
-  iMaxIntentos :=
-    FParametrosApp.GetInt('appVentasWsMaxIntentos', 20);
-  if AIntentos > 6 then
-    iEspera := 60 * 64
-  else
-    iEspera := 60 * (1 shl AIntentos);
-  if (AIntentos + 1) >= iMaxIntentos then
-    sEstado := 'ERROR'
-  else
+  if not AConsumirIntento then
+  begin
+    // Una caída del transporte no contamina el presupuesto de errores
+    // funcionales y se reintenta sin máximo.
+    iEspera := CSegundosReintentoSinConexion;
     sEstado := 'PENDIENTE';
+  end
+  else
+  begin
+    // Los errores contabilizables conservan el backoff y el máximo.
+    iMaxIntentos :=
+      FParametrosApp.GetInt('appVentasWsMaxIntentos', 20);
+    if AIntentos > 6 then
+      iEspera := 60 * 64
+    else
+      iEspera := 60 * (1 shl AIntentos);
+    if (AIntentos + 1) >= iMaxIntentos then
+      sEstado := 'ERROR'
+    else
+      sEstado := 'PENDIENTE';
+  end;
   FRepositorio.GuardarErrorIntento(
-    AIdCola, sEstado, iEspera, AMensaje, FUsuario);
+    AIdCola, sEstado, iEspera, AMensaje, FUsuario, AConsumirIntento);
+  if (not AConsumirIntento) and Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarAviso(
+      'Cola de ventas WS aplazada por falta de conexión; ' +
+      'el intento no se contabiliza: ' + AMensaje);
 end;
 
 end.

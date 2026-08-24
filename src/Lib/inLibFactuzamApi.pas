@@ -74,7 +74,7 @@ implementation
 uses
   System.Classes, System.JSON, System.NetEncoding,
   System.Net.HttpClient, System.Net.URLClient,
-  inLibMsgIntegraciones;
+  inLibMsgIntegraciones, inLibErroresHttp;
 
 { Crea el cliente HTTP con los tiempos de espera y la credencial ya
   puestos. Todas las llamadas de la API comparten esta configuración. }
@@ -235,6 +235,7 @@ var
   oCuerpo: TStringStream;
   oHttp: THTTPClient;
   oRespuesta: IHTTPResponse;
+  sRespuesta: string;
 begin
   Result.Ok := False;
   Result.EstadoHttp := 0;
@@ -249,13 +250,23 @@ begin
     try
       oCuerpo := TStringStream.Create(AContenido, TEncoding.UTF8);
       try
-        oRespuesta := oHttp.Post(
-          ComponerUrl(AParametrosApp, ARuta), oCuerpo, nil,
-          [TNetHeader.Create('Content-Type',
-                             'application/json; charset=utf-8'),
-           TNetHeader.Create('Accept', 'application/json')]);
+        try
+          oRespuesta := oHttp.Post(
+            ComponerUrl(AParametrosApp, ARuta), oCuerpo, nil,
+            [TNetHeader.Create('Content-Type',
+                               'application/json; charset=utf-8'),
+             TNetHeader.Create('Accept', 'application/json')]);
+          sRespuesta := oRespuesta.ContentAsString(TEncoding.UTF8);
+        except
+          on E: Exception do
+          begin
+            if EsFalloTemporalTransporteHttp(E) then
+              raise EConexionHttpTemporal.Create(E.Message);
+            raise;
+          end;
+        end;
         Result := LeerRespuesta(
-          oRespuesta.ContentAsString(TEncoding.UTF8),
+          sRespuesta,
           oRespuesta.StatusCode,
           SInfoEventoFactuzamApiRecibido);
       finally

@@ -113,7 +113,7 @@
       'select * from VistaClientes')
     Options.StrictUpdate = False
     Options.UpdateAllFields = True
-    Active = True
+    Active = False
     Left = 304
     Top = 224
   end
@@ -123,11 +123,9 @@
     Database = 'prueba'
     Username = 'root'
     Server = '127.0.0.1'
-    Connected = True
     LoginPrompt = False
     Left = 432
     Top = 224
-    EncryptedPassword = 'A5FF9EFF92FF90FF8DFF9EFFCDFFCFFFCDFFCCFF'
   end
   object MySQLUniProvider1: TMySQLUniProvider
     Left = 552

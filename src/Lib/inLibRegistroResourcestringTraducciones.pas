@@ -17,9 +17,13 @@ uses
   inLibMsgCaja,
   inLibMsgCompras,
   inLibMsgComun,
+  inLibMsgConexion,
   inLibMsgConfiguracion,
   inLibMsgFacturas,
   inLibMsgIntegraciones,
+  inLibMsgLogon,
+  inLibMsgSql,
+  inLibMsgSqlSeguro,
   inLibMsgTickets,
   inLibMsgVentas,
   inLibMsgVerifactu,
@@ -6732,6 +6736,324 @@ begin
     @inLibMsgComun.
       STituloSeleccionarColumnas);
   ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorMotorBBDDNoReconocido',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorMotorBBDDNoReconocido);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorMotorBBDDNoSoportado',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorMotorBBDDNoSoportado);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorModoSSLNoSoportado',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorModoSSLNoSoportado);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorValorPerfilNoBooleano',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorValorPerfilNoBooleano);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorValorPerfilNoEntero',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorValorPerfilNoEntero);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorRutaPerfilConexionObligatoria',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorRutaPerfilConexionObligatoria);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorPerfilConexionNoValido',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorPerfilConexionNoValido);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorReferenciaCredencialObligatoria',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorReferenciaCredencialObligatoria);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorReferenciaCredencialAjena',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorReferenciaCredencialAjena);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorCredencialLegadaInvalida',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorCredencialLegadaInvalida);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorLeerCredencialConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorLeerCredencialConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorFormatoCredencialConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorFormatoCredencialConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorGuardarCredencialConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorGuardarCredencialConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorEliminarCredencialConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorEliminarCredencialConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorEliminarCredencialLegadaIni',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorEliminarCredencialLegadaIni);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionMotorBBDD',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionMotorBBDD);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionIdPerfilConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionIdPerfilConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionServidorConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionServidorConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPuertoConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPuertoConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionBaseDatosConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionBaseDatosConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionEsquemaPostgreSQL',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionEsquemaPostgreSQL);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionEsquemaMotor',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionEsquemaMotor);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionUsuarioConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionUsuarioConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionModoSSLConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionModoSSLConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionTimeoutConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionTimeoutConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionTimeoutComando',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionTimeoutComando);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolMinimoNegativo',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolMinimoNegativo);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolMaximoNegativo',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolMaximoNegativo);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolEsperaNegativa',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolEsperaNegativa);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolVidaNegativa',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolVidaNegativa);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolVidaFueraDeRango',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolVidaFueraDeRango);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolMaximoCero',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolMaximoCero);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolMinimoMayorMaximo',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolMinimoMayorMaximo);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionPoolEsperaCero',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionPoolEsperaCero);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionCertificadosSinSSL',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionCertificadosSinSSL);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionCertificadoCA',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionCertificadoCA);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SValidacionCertificadoCliente',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SValidacionCertificadoCliente);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SDescripcionPerfilConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SDescripcionPerfilConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SDescripcionEsquemaConexion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SDescripcionEsquemaConexion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConexionPrincipalNoAsignada',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConexionPrincipalNoAsignada);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorFabricaConexionesNoAsignada',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorFabricaConexionesNoAsignada);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorFabricaSinRutaConfiguracion',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorFabricaSinRutaConfiguracion);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConexionNoAsignada',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConexionNoAsignada);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorSSLMySQLNoSoportado',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorSSLMySQLNoSoportado);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorSSLPostgreSQLVerificacionCompletaNoDisponible',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorSSLPostgreSQLVerificacionCompletaNoDisponible);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConsultaCampoDesconocido',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConsultaCampoDesconocido);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConsultaTablaNoExiste',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConsultaTablaNoExiste);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConsultaTablaYaExiste',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConsultaTablaYaExiste);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConsultaProcedimientoYaExiste',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConsultaProcedimientoYaExiste);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConexionServidorMotor',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConexionServidorMotor);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConexionPerdidaMotor',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConexionPerdidaMotor);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SErrorConexionMotorSinDetalle',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SErrorConexionMotorSinDetalle);
+  ARegistrar(
+    'inLibMsgConexion.' +
+    'SDetalleErrorMotorBBDD',
+    'src/Lib/inLibMsgConexion.pas',
+    @inLibMsgConexion.
+      SDetalleErrorMotorBBDD);
+  ARegistrar(
     'inLibMsgConfiguracion.' +
     'SErrorDecryptPassBBDD',
     'src/Lib/inLibMsgConfiguracion.pas',
@@ -8449,6 +8771,48 @@ begin
       SErrorGuardarFacturaAntesImprimir);
   ARegistrar(
     'inLibMsgFacturas.' +
+    'SErrorFacturasFiltradasVacias',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorFacturasFiltradasVacias);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorCambiosPendientesProcesarFiltradas',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorCambiosPendientesProcesarFiltradas);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorServicioLoteImpresionFacturas',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorServicioLoteImpresionFacturas);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorLoteImpresionFacturas',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorLoteImpresionFacturas);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SInfoLoteImpresionFacturas',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SInfoLoteImpresionFacturas);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SErrorGuardarTrabajoLote',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SErrorGuardarTrabajoLote);
+  ARegistrar(
+    'inLibMsgFacturas.' +
+    'SInfoTrabajoLoteGuardado',
+    'src/Lib/inLibMsgFacturas.pas',
+    @inLibMsgFacturas.
+      SInfoTrabajoLoteGuardado);
+  ARegistrar(
+    'inLibMsgFacturas.' +
     'SInfoEfectoMarcadoDevuelto',
     'src/Lib/inLibMsgFacturas.pas',
     @inLibMsgFacturas.
@@ -9221,6 +9585,96 @@ begin
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.
       SCaptionErrorImportandoPedido);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SErrorBaseDatosAutenticacionNoDisponible',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SErrorBaseDatosAutenticacionNoDisponible);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SResultadoCredencialesInvalidas',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SResultadoCredencialesInvalidas);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SResultadoAutenticacionCorrecta',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SResultadoAutenticacionCorrecta);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorTextoSqlVacio',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorTextoSqlVacio);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorOrdenSqlVacio',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorOrdenSqlVacio);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorCantidadLimiteSql',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorCantidadLimiteSql);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorDesplazamientoSql',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorDesplazamientoSql);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorNombreSqlVacio',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorNombreSqlVacio);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorLongitudRellenoSql',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorLongitudRellenoSql);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorAgregacionDistinctSqlNoSoportada',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorAgregacionDistinctSqlNoSoportada);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorVarianteSqlMotorNoDisponible',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorVarianteSqlMotorNoDisponible);
+  ARegistrar(
+    'inLibMsgSql.' +
+    'SErrorMotorConexionPendiente',
+    'src/Lib/inLibMsgSql.pas',
+    @inLibMsgSql.
+      SErrorMotorConexionPendiente);
+  ARegistrar(
+    'inLibMsgSqlSeguro.' +
+    'SErrorDialectoSqlNoAsignado',
+    'src/Lib/inLibMsgSqlSeguro.pas',
+    @inLibMsgSqlSeguro.
+      SErrorDialectoSqlNoAsignado);
+  ARegistrar(
+    'inLibMsgSqlSeguro.' +
+    'SIdentificadorSqlNoPermitido',
+    'src/Lib/inLibMsgSqlSeguro.pas',
+    @inLibMsgSqlSeguro.
+      SIdentificadorSqlNoPermitido);
+  ARegistrar(
+    'inLibMsgSqlSeguro.' +
+    'SIdentificadorSqlInvalido',
+    'src/Lib/inLibMsgSqlSeguro.pas',
+    @inLibMsgSqlSeguro.
+      SIdentificadorSqlInvalido);
   ARegistrar(
     'inLibMsgTickets.' +
     'STicketRegaloNumero',

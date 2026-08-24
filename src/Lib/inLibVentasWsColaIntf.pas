@@ -59,7 +59,8 @@ type
       AIdCola: Int64;
       const AEstado: string;
       AEsperaSegundos: Integer;
-      const AMensaje, AUsuario: string);
+      const AMensaje, AUsuario: string;
+      AConsumirIntento: Boolean = True);
   end;
   ISesionVentasWs = interface
     ['{06E365D5-63CF-48D0-9D6E-165A815DBB77}']

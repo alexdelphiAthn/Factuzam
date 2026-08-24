@@ -17,6 +17,7 @@ interface
 
 uses
   Uni, inLibRepositoriosPantallaIntf, inLibParametrosIntf,
+  inLibConexionPerfilIntf,
   inLibContextoSesionIntf, inLibPerfilesUsuarioIntf,
   inLibLogIntf, inLibPreviewTicket,
   UniDataRepositoriosArticulosPantalla,
@@ -32,7 +33,8 @@ function CrearServiciosSqlPantallaUniDAC(
   const ANombrePantalla: string;
   const APerfilesLectura: ILectorPerfilesUsuario;
   const APerfilesEscritura: IEscritorPerfilesUsuario;
-  const ARegistroLog: IRegistroLog): TServiciosSqlPantalla;
+  const ARegistroLog: IRegistroLog;
+  AMotor: TMotorBBDD = mbMariaDB): TServiciosSqlPantalla;
 function CrearRepositoriosArticulosPantallaUniDAC(
   AConexion: TUniConnection;
   const AParametrosCaja: IParametrosCaja;
@@ -83,7 +85,8 @@ function CrearServiciosSqlPantallaUniDAC(
   const ANombrePantalla: string;
   const APerfilesLectura: ILectorPerfilesUsuario;
   const APerfilesEscritura: IEscritorPerfilesUsuario;
-  const ARegistroLog: IRegistroLog): TServiciosSqlPantalla;
+  const ARegistroLog: IRegistroLog;
+  AMotor: TMotorBBDD): TServiciosSqlPantalla;
 var
   bCatalogoActivo: Boolean;
 begin
@@ -110,7 +113,8 @@ begin
     bCatalogoActivo,
     Result.Catalogo,
     Result.Incidencias,
-    ARegistroLog);
+    ARegistroLog,
+    AMotor);
 end;
 
 function CrearRepositoriosArticulosPantallaUniDAC(

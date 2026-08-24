@@ -213,6 +213,8 @@ type
     FCatalogoProcesos: ICatalogoGeneradorProcesos;
     FServicioProcesos: TServicioGeneradorProcesos;
     FDatosVistaFija: TDataSet;
+    FSqlVistaFija: string;
+    FNombreContenidoMetadato: string;
     // Suscritos a los avisos del DM (el DM ya no toca la UI).
     procedure NuevoProcesoDesdeDM(Sender: TObject);
     procedure ProcesoCambiadoDesdeDM(Sender: TObject);
@@ -238,6 +240,9 @@ type
     procedure EditorExit(Sender: TObject);
     procedure SafeSetScrollBar(SB: TScrollBar;
                                AMax, APageSize, APosition: Integer);
+    procedure BloquearEdicionVistaFija;
+    procedure BloquearEdicionContenidoMetadato;
+    procedure AvisarEdicionTablaProtegida(const ATabla: string);
     procedure LimpiarPestanasResultado;
     function CrearPestanaResultado(const ACaption: string): TcxTabSheet;
     function CrearPestanaVistaDatos(const ACaption: string;
@@ -263,6 +268,7 @@ uses
 
   inLibDir,
   inLibMsgComun, inLibMsgConfiguracion,
+  inLibProteccionDatosFacturacion,
   Vcl.Clipbrd,
   ts.Editor.CodeFormatters,
   UniDataGeneradorProcesosRepositorio;
@@ -737,9 +743,51 @@ begin
   end;
 end;
 
+procedure TfrmMtoGeneradorProcesos.AvisarEdicionTablaProtegida(
+  const ATabla: string);
+begin
+  MessageDlg(
+    Format(
+      SErrorModificacionTablaFacturacionProtegida,
+      ['EDICION', ATabla]),
+    mtWarning,
+    [mbOK],
+    0);
+end;
+
+procedure TfrmMtoGeneradorProcesos.BloquearEdicionVistaFija;
+begin
+  tvVista.OptionsData.Editing := False;
+  tvVista.OptionsData.Inserting := False;
+  tvVista.OptionsData.Deleting := False;
+  tvVista.OptionsData.Appending := False;
+  btnEditar.Enabled := False;
+end;
+
+procedure TfrmMtoGeneradorProcesos.BloquearEdicionContenidoMetadato;
+begin
+  tvMetadatostvVista.OptionsData.Editing := False;
+  tvMetadatostvVista.OptionsData.Inserting := False;
+  tvMetadatostvVista.OptionsData.Deleting := False;
+  tvMetadatostvVista.OptionsData.Appending := False;
+  btnEditarMeta.Enabled := False;
+end;
+
 procedure TfrmMtoGeneradorProcesos.btnEditarClick(Sender: TObject);
+var
+  TablaProtegida: string;
 begin
   inherited;
+  if SqlReferenciaTablaFacturacionProtegida(
+       FSqlVistaFija,
+       TablaProtegida) then
+  begin
+    BloquearEdicionVistaFija;
+    AvisarEdicionTablaProtegida(TablaProtegida);
+    Exit;
+  end;
+  if not Assigned(FDatosVistaFija) then
+    Exit;
   tvVista.OptionsData.Editing := True;
   tvVista.OptionsData.Inserting := True;
   tvVista.OptionsData.Deleting := True;
@@ -749,6 +797,15 @@ end;
 procedure TfrmMtoGeneradorProcesos.btnEditarMetaClick(Sender: TObject);
 begin
   inherited;
+  if EsTablaFacturacionProtegida(FNombreContenidoMetadato) then
+  begin
+    BloquearEdicionContenidoMetadato;
+    AvisarEdicionTablaProtegida(FNombreContenidoMetadato);
+    Exit;
+  end;
+  if (FNombreContenidoMetadato = '') or
+     not dmmGeneradorProcesos.unqryContenido.Active then
+    Exit;
   tvMetadatostvVista.OptionsData.Editing := True;
   tvMetadatostvVista.OptionsData.Inserting := True;
   tvMetadatostvVista.OptionsData.Deleting := True;
@@ -759,6 +816,8 @@ procedure TfrmMtoGeneradorProcesos.LimpiarPestanasResultado;
 var
   i: Integer;
 begin
+  BloquearEdicionVistaFija;
+  FSqlVistaFija := '';
   if Assigned(FDatosVistaFija) then
   begin
     dmmGeneradorProcesos.dsVista.DataSet := nil;
@@ -971,6 +1030,8 @@ begin
           tvVista.ClearItems;
           tvVista.DataController.CreateAllItems();
           tvVista.ApplyBestFit();
+          btnEditar.Enabled :=
+            not SqlReferenciaTablaFacturacionProtegida(FSqlVistaFija);
           PrimeraPestana := tsVistaDatos;
         end
         else if not Assigned(PrimeraPestana) then
@@ -1034,10 +1095,20 @@ begin
   if Trim(Script) <> '' then
   begin
     LimpiarPestanasResultado;
-    Ejecucion := FServicioProcesos.Ejecutar(
-      Script,
-      ConfirmarContinuacionProceso);
-    PresentarEjecucionProceso(Ejecucion);
+    FSqlVistaFija := Script;
+    try
+      Ejecucion := FServicioProcesos.Ejecutar(
+        Script,
+        ConfirmarContinuacionProceso);
+      PresentarEjecucionProceso(Ejecucion);
+    except
+      on E: EModificacionTablaFacturacionProtegida do
+      begin
+        FSqlVistaFija := '';
+        cxmResul.Lines.Add('-- [BLOQUEADO] ' + E.Message);
+        MessageDlg(E.Message, mtWarning, [mbOK], 0);
+      end;
+    end;
   end;
 end;
 
@@ -1188,6 +1259,10 @@ begin
   tvMetadatostvVista.DataController.DataSource :=
                                                dmmGeneradorProcesos.dsContenido;
   tvVista.DataController.DataSource := dmmGeneradorProcesos.dsVista;
+  FSqlVistaFija := '';
+  FNombreContenidoMetadato := '';
+  BloquearEdicionVistaFija;
+  BloquearEdicionContenidoMetadato;
   pcPestana.ActivePage := tsSQL;
   pkFieldName := 'CODIGO_GENERADOR_PROCESO_GP';
   // Asegúrate de que las opciones predeterminadas estén configuradas
@@ -1202,6 +1277,11 @@ begin
   inherited;
   // Reset automatico de las pestañas de resultados al volver a mostrar el Mto
   LimpiarPestanasResultado;
+  BloquearEdicionContenidoMetadato;
+  btnEditarMeta.Enabled :=
+    dmmGeneradorProcesos.unqryContenido.Active and
+    (FNombreContenidoMetadato <> '') and
+    not EsTablaFacturacionProtegida(FNombreContenidoMetadato);
 end;
 
 destructor TfrmMtoGeneradorProcesos.Destroy;
@@ -1515,10 +1595,15 @@ begin
     if (Tipo = '1') or (Tipo = '2') then
     begin
       pcMetadato.ActivePage := tsContenido;
+      BloquearEdicionContenidoMetadato;
+      FNombreContenidoMetadato := '';
       tvMetadatostvVista.ClearItems;
       FCatalogoProcesos.CargarContenido(Nombre);
+      FNombreContenidoMetadato := Nombre;
       tvMetadatostvVista.DataController.CreateAllItems();
       tvMetadatostvVista.ApplyBestFit();
+      btnEditarMeta.Enabled :=
+        not EsTablaFacturacionProtegida(FNombreContenidoMetadato);
     end
     else if Tipo = '3' then
     begin

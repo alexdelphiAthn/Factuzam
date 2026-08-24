@@ -16,10 +16,12 @@ unit inMtoComandoCopiaSeguridad;
 interface
 
 uses
+  inLibConexionesIntf,
   inLibLogIntf;
 
 function EsProcesoComandoCopiaSeguridad: Boolean;
 function EjecutarProcesoComandoCopiaSeguridad(
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const ARegistroLog: IRegistroLog
 ): Cardinal;
 
@@ -27,18 +29,18 @@ implementation
 
 uses
   System.Classes,
+  System.Hash,
   System.IOUtils,
   System.StrUtils,
   System.SysUtils,
   Winapi.Windows,
   Uni,
-  UniDataConn,
-  inLibCifrado,
   inLibCifradoCopias,
   inLibComandoCopiaSeguridad,
   inLibCopiasSeguridad,
   inLibCopiasSeguridadIntf,
   inLibLineaComandos,
+  inLibMsgConexion,
   inLibMsgConfiguracion,
   inLibSalidaComandos;
 
@@ -121,7 +123,7 @@ begin
   ClavesValidacion := Default(
     TClavesPredeterminadasCopiaSeguridad);
   ClavesValidacion.Contrasena := 'validacion';
-  ClavesValidacion.ClaveCifrada := CifrarAES(
+  ClavesValidacion.ClaveCifrada := THashSHA2.GetHashString(
     ClavesValidacion.Contrasena);
   Result := InterpretarComandoCopiaSeguridad(
     AParametros,
@@ -388,7 +390,7 @@ begin
 end;
 
 function EjecutarConConexion(
-  AConexion: TdmConn;
+  AConexion: TUniConnection;
   const AParametros: TArray<string>;
   AInstante: TDateTime;
   const ARegistroLog: IRegistroLog
@@ -398,8 +400,9 @@ var
   oSolicitud: TSolicitudComandoCopiaSeguridad;
 begin
   oClaves := Default(TClavesPredeterminadasCopiaSeguridad);
-  oClaves.Contrasena := AConexion.conUni.Password;
-  oClaves.ClaveCifrada := CifrarAES(oClaves.Contrasena);
+  oClaves.Contrasena := AConexion.Password;
+  oClaves.ClaveCifrada := THashSHA2.GetHashString(
+    oClaves.Contrasena);
   oSolicitud := InterpretarComandoCopiaSeguridad(
     AParametros,
     AInstante,
@@ -407,7 +410,7 @@ begin
   if oSolicitud.EsValida then
   begin
     Result := EjecutarSolicitudCopiaSeguridad(
-      AConexion.conUni,
+      AConexion,
       oSolicitud,
       ARegistroLog);
   end
@@ -419,7 +422,8 @@ begin
 end;
 
 function IntentarPrepararConexion(
-  out AConexion: TdmConn;
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
+  out AConexion: TUniConnection;
   const ARegistroLog: IRegistroLog;
   out AError: string): Boolean;
 begin
@@ -428,12 +432,12 @@ begin
   try
     ARegistroLog.RegistrarInformacion(
       SInfoComandoCopiaSeguridadConexion);
-    AConexion := TdmConn.Create(nil);
-    AConexion.conUni.Connect;
+    AConexion := AFabricaConexiones.CrearConexion(nil);
+    AFabricaConexiones.Conectar(AConexion);
     ARegistroLog.RegistrarInformacion(
       Format(
         SInfoComandoCopiaSeguridadConexionPreparada,
-        [AConexion.conUni.Server, AConexion.conUni.Database]));
+        [AConexion.Server, AConexion.Database]));
     Result := True;
   except
     on E: Exception do
@@ -448,15 +452,17 @@ end;
 function EjecutarComandoValidado(
   const AParametros: TArray<string>;
   AInstante: TDateTime;
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const ARegistroLog: IRegistroLog
 ): TResultadoComandoCopiaSeguridad;
 var
-  oConexion: TdmConn;
+  oConexion: TUniConnection;
   sError: string;
 begin
   oConexion := nil;
   try
     if IntentarPrepararConexion(
+      AFabricaConexiones,
       oConexion,
       ARegistroLog,
       sError) then
@@ -493,12 +499,16 @@ end;
 
 function EjecutarComandoCopiaSeguridad(
   const AParametros: TArray<string>;
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const ARegistroLog: IRegistroLog
 ): TResultadoComandoCopiaSeguridad;
 var
   dtInstante: TDateTime;
   SolicitudPrevia: TSolicitudComandoCopiaSeguridad;
 begin
+  if not Assigned(AFabricaConexiones) then
+    raise EArgumentNilException.Create(
+      SErrorFabricaConexionesNoAsignada);
   dtInstante := Now;
   ARegistroLog.RegistrarInformacion(
     SInfoComandoCopiaSeguridadInicio);
@@ -520,6 +530,7 @@ begin
       Result := EjecutarComandoValidado(
         AParametros,
         dtInstante,
+        AFabricaConexiones,
         ARegistroLog);
     end
     else
@@ -554,6 +565,7 @@ begin
 end;
 
 function EjecutarProcesoComandoCopiaSeguridad(
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const ARegistroLog: IRegistroLog
 ): Cardinal;
 var
@@ -562,6 +574,7 @@ begin
   try
     oResultado := EjecutarComandoCopiaSeguridad(
       ObtenerParametrosLineaComandos,
+      AFabricaConexiones,
       ARegistroLog);
   except
     on E: Exception do

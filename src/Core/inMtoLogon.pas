@@ -11,7 +11,7 @@
 {  Descripción:                                                                }
 {    Esta unidad tiene la primera pantalla donde se autentifica el usuario.    }
 {    Presenta la primera pantalla de autenficación de usuario. También permite }
-{    Configurar la conexión a MySQL/MariaDB con su contraseña. Hace copias     }
+{    Configurar un perfil de conexión de BBDD sin conocer su provider.         }
 {******************************************************************************}
 unit inMtoLogon;
 
@@ -45,11 +45,12 @@ uses
   inLibContextoSesionIntf, inLibLicenciaAplicacion,
   inLibCopiasSeguridadIntf,
   inLibRestauracionCopiasConexionIntf,
+  inLibConexionPerfilIntf,
+  inLibConexionesIntf,
   inLibLogonAplicacionIntf,
   inLibArranqueAplicacion;
 
 type
-  EPassWordCorrupt = class(Exception);
   TfrmLogon = class(TfrmBase, IPasosPreparacionLogon)
     lblUsuario: TcxLabel;
     lblContrasena: TcxLabel;
@@ -95,7 +96,6 @@ type
     procedure btnRecoverClick(Sender: TObject);
     procedure edtPassBDExit(Sender: TObject);
     procedure edtPortBDPropertiesChange(Sender: TObject);
-    procedure leerini;
     procedure GetIniValues;
   private
     FProgressPanel: TPanel;
@@ -105,8 +105,10 @@ type
     FCerrarAplicacion: Boolean;
     FEnOperacionLarga: Boolean;
     FCancelaOperacionSolicitada: Boolean;
-    FPasswordConexion: string;
-    FPasswordConexionEncriptado: string;
+    FFabricaConexiones: IFabricaConexionesUniDAC;
+    FPerfilConexionPendiente: TPerfilConexion;
+    FCredencialConexionPendiente: string;
+    FConfiguracionConexionPendiente: Boolean;
     FResultadoInicioSesion: TResultadoInicioSesion;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
     FCasoUsoRestauracion: ICasoUsoRestauracionConexion;
@@ -122,7 +124,21 @@ type
     procedure AplicarTraduccionesPantalla;
     function ResolverErrorScriptLogon(
       const ASentencia, AError: string): TDecisionErrorScriptLogon;
-    procedure escribirini;
+    procedure CargarPerfilConexion;
+    function CrearPerfilConexionFormulario(
+      const ABaseDatos: string): TPerfilConexion;
+    function ConexionCoincideConPerfil(
+      const APerfil: TPerfilConexion): Boolean;
+    function PerfilFormularioCoincideConConfigurado: Boolean;
+    procedure ConectarPerfilTemporal(
+      const APerfil: TPerfilConexion;
+      const ACredencial: string;
+      APrepararGuardado: Boolean);
+    procedure ConectarPerfilFormulario(
+      const ABaseDatos: string;
+      APrepararGuardado: Boolean);
+    procedure ConfirmarConfiguracionConexionVerificada;
+    procedure DescartarConfiguracionConexionPendiente;
     procedure SetIniValues;
     procedure BloquearPantallaOperacion;
     procedure DesbloquearPantallaOperacion;
@@ -150,6 +166,9 @@ type
     function ProcesarLicenciaAplicacion: Boolean;
     procedure InvalidarResultadoInicioSesion;
   public
+    constructor Create(
+      AOwner: TComponent;
+      const AFabricaConexiones: IFabricaConexionesUniDAC); reintroduce;
     destructor Destroy; override;
     function IsInitializeAuto:Boolean;
     function DebeCerrarAplicacion:Boolean;
@@ -164,28 +183,27 @@ implementation
 uses  inLibWin,
       inLibCifrado,
       inLibConfiguracionIni,
-      inLibConexionesUniDAC,
       inLibTraducciones,
       inLibTraduccionesFastReport,
       inLibMsgComun,
       inLibMsgConfiguracion,
+      inLibMsgConexion,
       inLibDir,
 
       Backup.Engine,
       Backup.Types,
-      Providers_MySQL,
-      Providers_MySQL_Helpers,
       ScriptWriters,
       Core_Interfaces,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
-      inLibComandoCopiaSeguridad,
+      inMtoModalContrasenaCopia,
       inLibCopiasSeguridad,
       inLibRestauracionCopiasConexion,
       UniDataRestauracionCopiasConexion,
       inMtoLogonRestauracionVcl,
       inLibLogonAplicacion,
+      inLibProteccionDatosFacturacion,
       UniDataLogonRepositorio,
       UniDataTraduccionesRepositorio,
       UniDataDBStructureRepositorio,
@@ -208,7 +226,7 @@ begin
   Result.EstablecerContrasena :=
     procedure(const AContrasena: string)
     begin
-      AFormulario.FPasswordConexion := AContrasena;
+      AFormulario.edtPassBD.Text := AContrasena;
     end;
   Result.MostrarPreparacion :=
     procedure
@@ -219,6 +237,17 @@ begin
 end;
 
 {$R *.dfm}
+
+constructor TfrmLogon.Create(
+  AOwner: TComponent;
+  const AFabricaConexiones: IFabricaConexionesUniDAC);
+begin
+  if not Assigned(AFabricaConexiones) then
+    raise EArgumentNilException.Create(
+      SErrorFabricaConexionesNoAsignada);
+  FFabricaConexiones := AFabricaConexiones;
+  inherited Create(AOwner);
+end;
 
 procedure TfrmLogon.AplicarTraduccionesPantalla;
 begin
@@ -251,47 +280,69 @@ begin
 end;
 
 procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
+var
+  sCredencial: string;
+  oPerfilFormulario: TPerfilConexion;
+  oPerfilAdministrativo: TPerfilConexion;
 begin
-  FPasswordConexion := InputBox(SSolicitudPassBBDD, '', '');
-  ConfigurarYConectarMySQL(FConexionLogon, edtUserBD.Text,
-    FPasswordConexion,
-    edtHostName.Text,
-    edtPortBD.Text,
-    'information_schema');
+  sCredencial := InputBox(SSolicitudPassBBDD, '', '');
+  DescartarConfiguracionConexionPendiente;
+  try
+    oPerfilFormulario := CrearPerfilConexionFormulario(
+      edtNomBD.Text);
+    oPerfilAdministrativo :=
+      FFabricaConexiones.CrearPerfilAdministrativo(
+        oPerfilFormulario);
+    ConectarPerfilTemporal(
+      oPerfilAdministrativo,
+      sCredencial,
+      False);
+    if ExisteEsquemaLogonUniDAC(
+         FConexionLogon,
+         edtNomBD.Text) then
+    begin
+      ConectarPerfilTemporal(
+        oPerfilFormulario,
+        sCredencial,
+        True);
+    end;
+    opendialog.Title := STituloCargarScript;
+    opendialog.DefaultExtension := 'sql';
+    openDialog.DefaultFolder := GetUserDeskFolder;
 
-  if ExisteEsquemaLogonUniDAC(FConexionLogon, edtNomBD.Text) then
-  begin
+    if openDialog.Execute then
+    begin
+      try
+        EjecutarScriptLogonUniDAC(
+          FConexionLogon,
+          opendialog.FileName,
+          ResolverErrorScriptLogon);
+      except
+        on E: EModificacionTablaFacturacionProtegida do
+        begin
+          RegistroLog.RegistrarAviso(E.Message);
+          MessageDlg(E.Message, mtWarning, [mbOK], 0);
+          Exit;
+        end;
+      end;
+      if FConfiguracionConexionPendiente then
+        ConfirmarConfiguracionConexionVerificada;
+      RegistroLog.RegistrarInformacion(
+        'El script se ejecutó exitosamente');
+      ShowMessage(SScriptEjecutado);
+    end
+    else
+    begin
+      DescartarConfiguracionConexionPendiente;
+      RegistroLog.RegistrarInformacion(
+        'El script no fue ejecutado');
+      ShowMessage(SScriptNoEjecutado);
+    end;
+  finally
+    DescartarConfiguracionConexionPendiente;
     if FConexionLogon.Connected then
       FConexionLogon.Disconnect;
-    ConfigurarYConectarMySQL(
-      FConexionLogon,
-      edtUserBD.Text,
-      FPasswordConexion,
-      edtHostName.Text,
-      edtPortBD.Text,
-      edtNomBD.Text);
   end;
-  opendialog.Title := STituloCargarScript;
-  opendialog.DefaultExtension := 'sql';
-  openDialog.DefaultFolder := GetUserDeskFolder;
-
-  if openDialog.Execute then
-  begin
-    EjecutarScriptLogonUniDAC(
-      FConexionLogon,
-      opendialog.FileName,
-      ResolverErrorScriptLogon);
-    RegistroLog.RegistrarInformacion('El script se ejecutó exitosamente');
-    ShowMessage(SScriptEjecutado);
-  end
-  else
-  begin
-    RegistroLog.RegistrarInformacion('El script no fue ejecutado');
-    ShowMessage(SScriptNoEjecutado);
-  end;
-
-  if FConexionLogon.Connected then
-    FConexionLogon.Disconnect;
 end;
 
 procedure TfrmLogon.FormCreate(Sender: TObject);
@@ -305,6 +356,7 @@ procedure TfrmLogon.PrepararLogon;
 begin
   InvalidarResultadoInicioSesion;
   CrearRepositorioLogonUniDAC(
+    FFabricaConexiones,
     FRepositorioLogon,
     FConexionLogon);
   FAplicacionLogon := CrearAplicacionLogon(FRepositorioLogon);
@@ -322,6 +374,8 @@ begin
   FCerrarAplicacion := False;
   FEnOperacionLarga := False;
   FCancelaOperacionSolicitada := False;
+  FConfiguracionConexionPendiente := False;
+  FCredencialConexionPendiente := '';
   FWorkerOperacion := nil;
   FResultadoLicencia :=
     TResultadoLicenciaAplicacion.CrearNoComprobada;
@@ -329,39 +383,135 @@ begin
   edtUser.Text := '';
 
   GetIniValues;
+  CargarPerfilConexion;
+end;
 
-  FPasswordConexionEncriptado := LeerCadenaIni('ConnData',
-                         'PasswordEn',
-                         '2qJFaDfegP/9y6RDno1FRg==',
-                         GetUserFolder);
-  if (FPasswordConexionEncriptado.Length > 2) then
+procedure TfrmLogon.CargarPerfilConexion;
+var
+  oPerfil: TPerfilConexion;
+begin
+  oPerfil := FFabricaConexiones.Perfil;
+  edtHostName.Text := oPerfil.Servidor;
+  edtPortBD.Text := IntToStr(oPerfil.Puerto);
+  edtNomBD.Text := oPerfil.BaseDatos;
+  edtUserBD.Text := oPerfil.Usuario;
+  edtPassBD.Text := '';
+end;
+
+function TfrmLogon.CrearPerfilConexionFormulario(
+  const ABaseDatos: string): TPerfilConexion;
+begin
+  Result := FFabricaConexiones.Perfil;
+  Result.Servidor := Trim(edtHostName.Text);
+  Result.Puerto := StrToIntDef(Trim(edtPortBD.Text), 0);
+  Result.BaseDatos := Trim(ABaseDatos);
+  Result.Usuario := Trim(edtUserBD.Text);
+end;
+
+function TfrmLogon.ConexionCoincideConPerfil(
+  const APerfil: TPerfilConexion): Boolean;
+begin
+  Result := Assigned(FConexionLogon) and
+    FConexionLogon.Connected and
+    SameText(FConexionLogon.Server, APerfil.Servidor) and
+    (FConexionLogon.Port = APerfil.Puerto) and
+    SameText(FConexionLogon.Database, APerfil.BaseDatos) and
+    SameText(FConexionLogon.Username, APerfil.Usuario);
+end;
+
+function TfrmLogon.PerfilFormularioCoincideConConfigurado: Boolean;
+var
+  oConfigurado: TPerfilConexion;
+  oFormulario: TPerfilConexion;
+begin
+  oConfigurado := FFabricaConexiones.Perfil;
+  oFormulario := CrearPerfilConexionFormulario(
+    edtNomBD.Text);
+  Result := (oFormulario.Motor = oConfigurado.Motor) and
+    SameText(oFormulario.Servidor, oConfigurado.Servidor) and
+    (oFormulario.Puerto = oConfigurado.Puerto) and
+    SameText(oFormulario.BaseDatos, oConfigurado.BaseDatos) and
+    SameText(oFormulario.Usuario, oConfigurado.Usuario);
+end;
+
+procedure TfrmLogon.ConectarPerfilTemporal(
+  const APerfil: TPerfilConexion;
+  const ACredencial: string;
+  APrepararGuardado: Boolean);
+begin
+  DescartarConfiguracionConexionPendiente;
+  if FConexionLogon.Connected then
+    FConexionLogon.Disconnect;
+  FFabricaConexiones.ConectarTemporal(
+    FConexionLogon,
+    APerfil,
+    ACredencial);
+  if APrepararGuardado then
   begin
-    try
-      FPasswordConexion := DescifrarAES(
-        FPasswordConexionEncriptado);
-    except
-      on E: Exception do
-        raise EPassWordCorrupt.Create(SErrorDecryptPassBBDD);
-    end;
+    FPerfilConexionPendiente := APerfil;
+    FCredencialConexionPendiente := ACredencial;
+    FConfiguracionConexionPendiente := True;
   end;
+end;
+
+procedure TfrmLogon.ConectarPerfilFormulario(
+  const ABaseDatos: string;
+  APrepararGuardado: Boolean);
+var
+  sCredencial: string;
+begin
+  sCredencial := edtPassBD.Text;
+  if (sCredencial = '') and
+     SameText(ABaseDatos, edtNomBD.Text) and
+     PerfilFormularioCoincideConConfigurado then
+  begin
+    DescartarConfiguracionConexionPendiente;
+    if FConexionLogon.Connected then
+      FConexionLogon.Disconnect;
+    FFabricaConexiones.Conectar(FConexionLogon);
+  end
+  else
+  begin
+    ConectarPerfilTemporal(
+      CrearPerfilConexionFormulario(ABaseDatos),
+      sCredencial,
+      APrepararGuardado);
+  end;
+end;
+
+procedure TfrmLogon.ConfirmarConfiguracionConexionVerificada;
+begin
+  if FConfiguracionConexionPendiente then
+  begin
+    FFabricaConexiones.ActualizarConfiguracion(
+      FPerfilConexionPendiente,
+      FCredencialConexionPendiente);
+  end;
+  FFabricaConexiones.GuardarConfiguracion;
+  edtPassBD.Text := '';
+  DescartarConfiguracionConexionPendiente;
+end;
+
+procedure TfrmLogon.DescartarConfiguracionConexionPendiente;
+begin
+  FConfiguracionConexionPendiente := False;
+  FPerfilConexionPendiente := Default(TPerfilConexion);
+  FCredencialConexionPendiente := '';
 end;
 
 function TfrmLogon.ConectarServidorLogon: Boolean;
 begin
-  // --- 1. Conexión a information_schema para validar estructura ---
   Result := True;
   try
-    ConfigurarYConectarMySQL(FConexionLogon,
-                             edtUserBD.Text,
-                             FPasswordConexion,
-                             edtHostName.Text,
-                             edtPortBD.Text,
-                             'information_schema');
+    ConectarPerfilFormulario(
+      edtNomBD.Text,
+      True);
   except
     on E: Exception do
     begin
-      RegistroLog.RegistrarError('Fallo al conectar al servidor MySQL: ' +
-                            E.ClassName + ': ' + E.Message);
+      DescartarConfiguracionConexionPendiente;
+      RegistroLog.RegistrarError(
+        Format(SErrorConexionServidorBBDD, [E.Message]));
       ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
       chkAuto.Checked := False;
       EscribirCadenaIni(
@@ -394,28 +544,33 @@ begin
       btnConfClick(Self);
     if FConexionLogon.Connected then
       FConexionLogon.Disconnect;
+    DescartarConfiguracionConexionPendiente;
     Result := False;
   end;
 end;
 
 function TfrmLogon.ConectarAplicacionLogon: Boolean;
+var
+  oPerfil: TPerfilConexion;
 begin
   Result := True;
-  if FConexionLogon.Connected then
-    FConexionLogon.Disconnect;
   try
-    ConfigurarYConectarMySQL(FConexionLogon,
-                             edtUserBD.Text,
-                             FPasswordConexion,
-                             edtHostName.Text,
-                             edtPortBD.Text,
-                             edtNomBD.Text);
+    oPerfil := CrearPerfilConexionFormulario(
+      edtNomBD.Text);
+    if not ConexionCoincideConPerfil(oPerfil) then
+    begin
+      ConectarPerfilFormulario(
+        edtNomBD.Text,
+        True);
+    end;
+    ConfirmarConfiguracionConexionVerificada;
   except
     on E: Exception do
     begin
+      DescartarConfiguracionConexionPendiente;
       RegistroLog.RegistrarError(
-        'Fallo al conectar a ' + edtNomBD.Text + ': ' +
-        E.ClassName + ': ' + E.Message);
+        Format(SErrorConexionBBDD,
+          [edtNomBD.Text, E.Message]));
       ShowMessage(Format(SErrorConexionBBDD,
                          [edtNomBD.Text, E.Message]));
       chkAuto.Checked := False;
@@ -461,89 +616,56 @@ end;
 function TfrmLogon.ConexionAplicacionPreparada: Boolean;
 var
   CheckResult: TDBStructureCheckResult;
-  bServidorConectado: Boolean;
-  sPasswordConexion: string;
+  oPerfil: TPerfilConexion;
 begin
   Result := False;
-  sPasswordConexion := FPasswordConexion;
-  if edtPassBD.Text <> '' then
-    sPasswordConexion := edtPassBD.Text;
-  if FConexionLogon.Connected and
-     SameText(FConexionLogon.Database, edtNomBD.Text) then
-    Result := True
-  else
-  begin
-    if FConexionLogon.Connected then
-      FConexionLogon.Disconnect;
-    bServidorConectado := False;
-    try
-      ConfigurarYConectarMySQL(FConexionLogon,
-                               edtUserBD.Text,
-                               sPasswordConexion,
-                               edtHostName.Text,
-                               edtPortBD.Text,
-                               'information_schema');
-      bServidorConectado := True;
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarError('Fallo al conectar al servidor MySQL: ' +
-                              E.ClassName + ': ' + E.Message);
-        ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
-        chkAuto.Checked := False;
-        EscribirCadenaIni(
-          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-        if not pnlBBDD.Visible then
-          btnConfClick(Self);
-      end;
-    end;
-    if bServidorConectado then
+  oPerfil := CrearPerfilConexionFormulario(
+    edtNomBD.Text);
+  try
+    if ConexionCoincideConPerfil(oPerfil) and
+       (edtPassBD.Text = '') then
     begin
-      CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
-        FConexionLogon,
-        edtNomBD.Text);
-      if not CheckResult.IsOK then
-      begin
-        RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
-                              CheckResult.FormattedMessage);
-        ShowMessage(Format(SErrorEstructuraBBDD,
-                           [CheckResult.FormattedMessage]));
-        chkAuto.Checked := False;
-        EscribirCadenaIni(
-          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-        if not pnlBBDD.Visible then
-          btnConfClick(Self);
-        if FConexionLogon.Connected then
-          FConexionLogon.Disconnect;
-      end
-      else
-      begin
-        if FConexionLogon.Connected then
-          FConexionLogon.Disconnect;
-        try
-          ConfigurarYConectarMySQL(FConexionLogon,
-                                   edtUserBD.Text,
-                                   sPasswordConexion,
-                                   edtHostName.Text,
-                                   edtPortBD.Text,
-                                   edtNomBD.Text);
-          FPasswordConexion := sPasswordConexion;
-          Result := True;
-        except
-          on E: Exception do
-          begin
-            RegistroLog.RegistrarError('Fallo al conectar a ' + edtNomBD.Text +
-                                  ': ' + E.ClassName + ': ' + E.Message);
-            ShowMessage(Format(SErrorConexionBBDD,
-                               [edtNomBD.Text, E.Message]));
-            chkAuto.Checked := False;
-            EscribirCadenaIni(
-              'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-            if not pnlBBDD.Visible then
-              btnConfClick(Self);
-          end;
-        end;
-      end;
+      ConfirmarConfiguracionConexionVerificada;
+      Exit(True);
+    end;
+    ConectarPerfilFormulario(
+      edtNomBD.Text,
+      True);
+    CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
+      FConexionLogon,
+      edtNomBD.Text);
+    if not CheckResult.IsOK then
+    begin
+      RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
+                            CheckResult.FormattedMessage);
+      ShowMessage(Format(SErrorEstructuraBBDD,
+                         [CheckResult.FormattedMessage]));
+      chkAuto.Checked := False;
+      EscribirCadenaIni(
+        'UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      if not pnlBBDD.Visible then
+        btnConfClick(Self);
+      if FConexionLogon.Connected then
+        FConexionLogon.Disconnect;
+      DescartarConfiguracionConexionPendiente;
+      Exit;
+    end;
+    ConfirmarConfiguracionConexionVerificada;
+    Result := True;
+  except
+    on E: Exception do
+    begin
+      DescartarConfiguracionConexionPendiente;
+      RegistroLog.RegistrarError(
+        Format(SErrorConexionBBDD,
+          [edtNomBD.Text, E.Message]));
+      ShowMessage(Format(SErrorConexionBBDD,
+                         [edtNomBD.Text, E.Message]));
+      chkAuto.Checked := False;
+      EscribirCadenaIni(
+        'UserInfo', 'AutoLogin', 'No', GetUserFolder);
+      if not pnlBBDD.Visible then
+        btnConfClick(Self);
     end;
   end;
 end;
@@ -900,7 +1022,9 @@ procedure TfrmLogon.BackupFinalizar(
 begin
   FWorkerOperacion := nil;
   FCasoUsoRestauracion := CrearCasoUsoRestauracionConexion(
-    CrearRepositorioRestauracionConexionUniDAC(FConexionLogon));
+    CrearRepositorioRestauracionConexionUniDAC(
+      FConexionLogon,
+      FFabricaConexiones));
   FCancelaOperacionSolicitada := False;
   OcultarBarraProgreso;
   if AResultado = rcsCancelada then
@@ -976,22 +1100,23 @@ begin
   oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
   oTipoFichero.FileMask := '*.crypt';
   saveDialog.FileTypeIndex := 1;
-  saveDialog.FileName := 'copiaseguridad_' +
-    CodificarClaveCifradaParaRuta(
-      CifrarAES(FPasswordConexion)) +
-    FormatDateTime('_dd_mm', Now) + '.crypt';
+  saveDialog.FileName := 'copiaseguridad' +
+    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.crypt';
 end;
 
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
 var
   iButtonSel: Integer;
   oWorker: TThread;
+  sContrasenaCopia: string;
 begin
-  ConfigurarYConectarMySQL(FConexionLogon, edtUserBD.Text,
-    FPasswordConexion,
-    edtHostName.Text,
-    edtPortBD.Text,
-    edtNomBD.Text);
+  if not TfrmModalContrasenaCopia.SolicitarNueva(
+           Self,
+           sContrasenaCopia) then
+    Exit;
+  ConectarPerfilFormulario(
+    edtNomBD.Text,
+    True);
   iButtonSel := 0;
   ConfigurarDialogoCopiaProtegida;
   if (saveDialog.Execute) then
@@ -1006,11 +1131,12 @@ begin
     end;
     if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
     begin
+      ConfirmarConfiguracionConexionVerificada;
       MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
       oWorker := CrearWorkerCopiaProtegidaConexion(
         FConexionLogon,
         saveDialog.FileName,
-        FPasswordConexion,
+        sContrasenaCopia,
         WorkerProgreso,
         BackupFinalizar);
       FCancelaOperacionSolicitada := False;
@@ -1020,15 +1146,21 @@ begin
       except
         FWorkerOperacion := nil;
         FreeAndNil(oWorker);
+        DescartarConfiguracionConexionPendiente;
         raise;
       end;
     end;
+    if (iButtonSel <> mrYes) and
+       FileExists(saveDialog.FileName) then
+      DescartarConfiguracionConexionPendiente;
   end
   else
   begin
+    DescartarConfiguracionConexionPendiente;
     RegistroLog.RegistrarError('La copia se canceló');
     ShowMessage(SCopiaSeguridadCancelada);
   end;
+  sContrasenaCopia := '';
 end;
 
 procedure TfrmLogon.btnRecoverClick(Sender: TObject);
@@ -1039,13 +1171,10 @@ end;
 
 procedure TfrmLogon.btnTestClick(Sender: TObject);
 begin
-  escribirini;
-  ConfigurarYConectarMySQL(FConexionLogon,
-                            edtUserBD.Text,
-                            FPasswordConexion,
-                            edtHostName.Text,
-                            edtPortBD.Text,
-                            edtNomBD.Text);
+  ConectarPerfilFormulario(
+    edtNomBD.Text,
+    True);
+  ConfirmarConfiguracionConexionVerificada;
   RegistroLog.RegistrarInformacion(SconnSuccBBDD);
   ShowMessage(SConnSuccBBDD);
 end;
@@ -1142,41 +1271,6 @@ procedure TfrmLogon.edtPortBDPropertiesChange(Sender: TObject);
 begin
 end;
 
-procedure TfrmLogon.escribirini;
-begin
-  EscribirCadenaIni(
-    'ConnData', 'HostName', edtHostName.Text, GetUserFolder);
-  EscribirCadenaIni(
-    'ConnData', 'Database', edtNomBD.Text, GetUserFolder);
-  EscribirCadenaIni(
-    'ConnData', 'User', edtUserBD.Text, GetUserFolder);
-  EscribirCadenaIni(
-    'ConnData', 'Puerto', edtPortBD.Text, GetUserFolder);
-  if (edtPassBD.Text <> '') then
-  begin
-    FPasswordConexion := edtPassBD.Text;
-    FPasswordConexionEncriptado := CifrarAES(
-      FPasswordConexion);
-    EscribirCadenaIni(
-      'ConnData',
-      'PasswordEn',
-      FPasswordConexionEncriptado,
-      GetUserFolder);
-  end;
-end;
-
-procedure tfrmLogon.leerini;
-begin
-  edtHostName.Text := LeerCadenaIni('ConnData', 'HostName', '127.0.0.1',
-                                                                 GetUserFolder);
-  edtNomBD.Text := LeerCadenaIni('ConnData', 'Database', 'factuzam',
-                                                                 GetUserFolder);
-  edtUserBD.Text := LeerCadenaIni(
-    'ConnData', 'User', 'root', GetUserFolder);
-  edtPortBD.Text := LeerCadenaIni(
-    'ConnData', 'Puerto', '3306', GetUserFolder);
-end;
-
 procedure TfrmLogon.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -1218,7 +1312,6 @@ begin
   if (chkAuto.Checked = True) then
       EscribirCadenaIni(
         'UserInfo', 'AutoLogin', 'Yes', GetUserFolder);
-  escribirini;
 end;
 
 procedure TfrmLogon.GetIniValues;
@@ -1256,10 +1349,9 @@ begin
     chkRememberPassword.Checked := True;
     edtPass.Text := DescifrarAES(LeerCadenaIni('UserInfo',
                                            'PasswordEn',
-                                           'q7heHfD7ENowuvRQhW56Og==',
+                                           '',
                                            GetUserFolder));
   end;
-  leerini;
   RegistroLog.RegistrarInformacion('Leyendo archivo ini de usuario');
 end;
 
@@ -1287,12 +1379,13 @@ begin
   FAplicacionLogon := nil;
   FRepositorioLogon := nil;
   FConexionLogon := nil;
+  FFabricaConexiones := nil;
   inherited;
 end;
 
 procedure TfrmLogon.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
-  SetIniValues;
+  DescartarConfiguracionConexionPendiente;
   AsignarTraducciones(nil);
   if (FConexionLogon.Connected = true) then
     FConexionLogon.Disconnect;

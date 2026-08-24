@@ -20,7 +20,7 @@ interface
 uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, Winapi.Windows, Data.DB, MemDS, DBAccess,
-  Uni, Datasnap.DBClient, Datasnap.Provider, UniProvider, MySQLUniProvider,
+  Uni, Datasnap.DBClient, Datasnap.Provider,
   UniDataGen, Vcl.Controls, System.UITypes;
 
 type

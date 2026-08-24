@@ -246,6 +246,24 @@ resourcestring
     'imprimirlo en este modo fiscal.';
   SErrorGuardarFacturaAntesImprimir =
     'No se pudo guardar la factura antes de imprimir: %s';
+  SErrorFacturasFiltradasVacias =
+    'No hay facturas en el resultado filtrado.';
+  SErrorCambiosPendientesProcesarFiltradas =
+    'Guarde o cancele los cambios de la factura antes de procesar ' +
+    'el resultado filtrado.';
+  SErrorServicioLoteImpresionFacturas =
+    'No está disponible el servicio de impresión por lotes.';
+  SErrorLoteImpresionFacturas =
+    'La impresión por lotes se detuvo tras enviar %d de %d facturas.' +
+    sLineBreak + '%s';
+  SInfoLoteImpresionFacturas =
+    'Impresión por lotes finalizada.' + sLineBreak +
+    'Facturas enviadas: %d.' + sLineBreak +
+    'Omitidas por no estar consolidadas: %d.';
+  SErrorGuardarTrabajoLote =
+    'No se pudo generar trabajo_lote.txt: %s';
+  SInfoTrabajoLoteGuardado =
+    'Resultado guardado en:' + sLineBreak + '%s';
   SInfoEfectoMarcadoDevuelto =
     'Efecto marcado como devuelto.';
   SErrorMarcarEfectoDevuelto =

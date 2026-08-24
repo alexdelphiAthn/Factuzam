@@ -59,6 +59,7 @@ uses
   inLibColumnasSkuIntf, inLibGridPivoteVenta,
   inLibFacturasServiciosIntf,
   inLibFacturasAplicacionIntf,
+  inLibComandoImprimirFacturas,
   inLibDocumento, inLibDocumentoIntf,
   inLibFacturasColumnasPresentacion,
   inLibFacturasLineasEdicion,
@@ -572,6 +573,8 @@ type
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
     // Graba el borrador pendiente antes de sacar la copia impresa.
     procedure GuardarPendienteAntesDeImprimir;
+    function ObtenerReferenciasFiltradas:
+      TReferenciasComandoFactura;
     // Carga perezosa de sub-pestañas detail. Cada pestaña abre su query
     // solo cuando el usuario la activa.
     procedure PcDetailChange(Sender: TObject);
@@ -1001,7 +1004,14 @@ begin
         Configuracion.Editable := AEstado.Editable;
         Configuracion.ActualizarAcciones := AEstado.ActualizarAcciones;
         Configuracion.PuedeConsolidar := AEstado.PuedeConsolidar;
-        Configuracion.PuedeImprimir := AEstado.PuedeImprimir;
+        // El modal permite actuar sobre todas las filas filtradas aunque la
+        // fila enfocada sea todavía un borrador. La opción "Actual" se
+        // deshabilita después si esa fila no cumple la política fiscal.
+        Configuracion.PuedeImprimir :=
+          AFormulario.PuedeImprimir and
+          Assigned(AFormulario.dsTablaG.DataSet) and
+          AFormulario.dsTablaG.DataSet.Active and
+          not AFormulario.dsTablaG.DataSet.IsEmpty;
         Controles := Default(TControlesEstadoFiscalFactura);
         Controles.DataSourceCabecera := AFormulario.dsTablaG;
         Controles.VistaLineas := AFormulario.tvLineasFactura;
@@ -1667,17 +1677,117 @@ begin
   end;
 end;
 
+function TfrmMtoFacturasBase.ObtenerReferenciasFiltradas:
+  TReferenciasComandoFactura;
+var
+  iFila: Integer;
+  iRegistro: Integer;
+  oClaves: TStringList;
+  oDataSet: TDataSet;
+  oLista: TList<TReferenciaComandoFactura>;
+  oMarcador: TBookmark;
+  oReferencia: TReferenciaComandoFactura;
+  sClave: string;
+  sNumero: string;
+  sSerie: string;
+begin
+  Result := nil;
+  oDataSet := cxGrdDBTabPrin.DataController.DataSet;
+  if (oDataSet = nil) or not oDataSet.Active then
+    Exit;
+  if (oDataSet.State in dsEditModes) or
+     (Assigned(dmmFacturas) and
+      Assigned(dmmFacturas.unqryLinFac) and
+      (dmmFacturas.unqryLinFac.State in dsEditModes)) or
+     (Assigned(dmmFacturas) and
+      Assigned(dmmFacturas.unqryRecibos) and
+      (dmmFacturas.unqryRecibos.State in dsEditModes)) then
+    raise EInvalidOpException.Create(
+      SErrorCambiosPendientesProcesarFiltradas);
+  if tmrBusqGlobal.Enabled then
+    tmrBusqGlobalTimer(tmrBusqGlobal);
+  oDataSet := cxGrdDBTabPrin.DataController.DataSet;
+  if (oDataSet = nil) or not oDataSet.Active then
+    Exit;
+  if oDataSet.State in dsEditModes then
+    raise EInvalidOpException.Create(
+      SErrorCambiosPendientesProcesarFiltradas);
+
+  oMarcador := nil;
+  if not oDataSet.IsEmpty then
+  begin
+    oMarcador := oDataSet.GetBookmark;
+    oDataSet.DisableControls;
+    try
+      // UniDAC obtiene la consulta por bloques. Last fuerza que el filtro
+      // local del grid pueda evaluar también los registros aún no leídos.
+      oDataSet.Last;
+      if oDataSet.BookmarkValid(oMarcador) then
+        oDataSet.GotoBookmark(oMarcador);
+    finally
+      oDataSet.EnableControls;
+      oDataSet.FreeBookmark(oMarcador);
+    end;
+    cxGrdDBTabPrin.DataController.Refresh;
+  end;
+
+  oLista := TList<TReferenciaComandoFactura>.Create;
+  oClaves := TStringList.Create;
+  try
+    oClaves.CaseSensitive := False;
+    oClaves.Sorted := True;
+    for iFila := 0 to
+      cxGrdDBTabPrin.DataController.FilteredRecordCount - 1 do
+    begin
+      iRegistro :=
+        cxGrdDBTabPrin.DataController.FilteredRecordIndex[iFila];
+      sSerie := Trim(VarToStr(
+        cxGrdDBTabPrin.DataController.Values[
+          iRegistro,
+          cxgrdbclmnGrdDBTabPrinSERIE_FACTURA.Index]));
+      sNumero := Trim(VarToStr(
+        cxGrdDBTabPrin.DataController.Values[
+          iRegistro,
+          cxgrdbclmnGrdDBTabPrinNRO_FACTURA.Index]));
+      if (sSerie <> '') and (sNumero <> '') then
+      begin
+        oReferencia := TReferenciaComandoFactura.Crear(
+          sSerie, sNumero);
+        sClave := UpperCase(sSerie) + #1 + UpperCase(sNumero);
+        if oClaves.IndexOf(sClave) < 0 then
+        begin
+          oClaves.Add(sClave);
+          oLista.Add(oReferencia);
+        end;
+      end;
+    end;
+    Result := oLista.ToArray;
+  finally
+    FreeAndNil(oClaves);
+    FreeAndNil(oLista);
+  end;
+end;
+
 procedure TfrmMtoFacturasBase.sbImprimirClick(Sender: TObject);
 begin
   inherited;
   ImprimirFacturaVcl(
+    Self,
     dmmFacturas,
     dsTablaG.DataSet,
+    Conexiones,
+    ContextoSesion,
     ParametrosApp,
+    Permisos,
+    RegistroLog,
     PuedeImprimir,
     procedure
     begin
       GuardarPendienteAntesDeImprimir;
+    end,
+    function: TReferenciasComandoFactura
+    begin
+      Result := ObtenerReferenciasFiltradas;
     end);
 end;
 

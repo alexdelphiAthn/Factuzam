@@ -17,7 +17,7 @@
       '  NOMBRE_META_META,'
       '  PARENT_META'
       'FROM fza_metadatos'
-      'WHERE PARENT_META = 1'
+      'WHERE PARENT_META = :pTIPO'
       'ORDER BY NOMBRE_META_META')
     AutoCalcFields = False
     Left = 112

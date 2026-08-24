@@ -19,6 +19,8 @@ interface
 
 uses
   System.Classes,
+  inLibComandoImprimirFacturas,
+  inLibConexionesIntf,
   inLibContextoSesionIntf,
   inLibLogIntf,
   inLibParametrosIntf,
@@ -31,6 +33,14 @@ type
     EsError: Boolean;
     Mensaje: string;
   end;
+  TResultadoLoteImpresionFacturas = record
+    Solicitadas: Integer;
+    Impresas: Integer;
+    OmitidasNoConsolidadas: Integer;
+    Error: string;
+  end;
+  TFinalizarLoteImpresionFacturas = reference to procedure(
+    const AResultado: TResultadoLoteImpresionFacturas);
 
 function EsProcesoComandoImprimirFacturas: Boolean;
 function ValidarSintaxisProcesoComandoImprimirFacturas(
@@ -45,6 +55,18 @@ function EjecutarComandoImprimirFacturas(
   const APermisos: IPermisosAplicacion;
   const ARegistroLog: IRegistroLog
 ): TResultadoComandoImprimirFacturas;
+procedure IniciarLoteImpresionFacturas(
+  const AReferencias: TReferenciasComandoFactura;
+  const AFormato, AImpresoraConfigurada: string;
+  AOwnerSesion: TComponent;
+  AConexionPrincipal: TUniConnection;
+  const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  const AAlFinalizar: TFinalizarLoteImpresionFacturas);
+procedure DetenerLoteImpresionFacturasAlCerrar;
 function EjecutarProcesoComandoImprimirFacturas(
   AOwnerSesion: TComponent;
   AConexion: TUniConnection;
@@ -64,13 +86,15 @@ function FinalizarProcesoComandoImprimirFacturasConError(
 implementation
 
 uses
+  System.Generics.Collections,
   System.Hash,
   System.IOUtils,
+  System.SyncObjs,
   System.SysUtils,
   Winapi.Windows,
   Vcl.Forms,
   Data.DB,
-  inLibComandoImprimirFacturas,
+  frPrinter,
   inLibFiltroUsuario,
   inLibLineaComandos,
   inLibMsgConfiguracion,
@@ -78,6 +102,14 @@ uses
   inLibVerifactu,
   inMtoModalImpFac,
   UniDataFacturas;
+
+type
+  TEstadoFacturaImpresionLote = (
+    efilImpresa,
+    efilOmitidaNoConsolidada,
+    efilError
+  );
+  TThreadAcceso = class(TThread);
 
 const
   SALIDA_COMANDO_IMPRESION_ERROR = 1;
@@ -201,6 +233,39 @@ resourcestring
     'Se liberan el impresor y el módulo de datos del lote.';
   SInfoFinComandoImprimirFacturas =
     'Generados %d PDF de factura en "%s" con el usuario %s.';
+  SErrorSinImpresoraLoteFacturas =
+    'No hay ninguna impresora de documentos disponible.';
+  SErrorImpresoraLoteFacturasNoExiste =
+    'La impresora de documentos "%s" no está disponible.';
+  SErrorIniciarLoteImpresionFacturas =
+    'No se pudo iniciar la impresión por lotes: %s';
+  SErrorLoteImpresionFacturasEnCurso =
+    'Ya hay una impresión por lotes en curso.';
+  SErrorLoteImpresionFacturasCerrando =
+    'No se puede iniciar la impresión por lotes porque la aplicación se ' +
+    'está cerrando.';
+  SErrorImprimirFacturaLote =
+    'No se pudo enviar la factura %s a la impresora "%s".';
+  SInfoInicioLoteImpresionFacturas =
+    'Se inicia en segundo plano la impresión de %d facturas filtradas.';
+  SInfoOmitirFacturaNoConsolidadaLote =
+    'La factura %s se omite porque no está consolidada.';
+  SInfoFacturaEnviadaLote =
+    'Factura %s enviada a la impresora "%s".';
+  SInfoFinLoteImpresionFacturas =
+    'Impresión por lotes finalizada. Solicitadas: %d. Impresas: %d. ' +
+    'Omitidas no consolidadas: %d.';
+
+var
+  GBloqueoLoteImpresionFacturas: TCriticalSection;
+  GHiloLoteImpresionFacturas: TThread;
+  GInicioLoteImpresionFacturasEnCurso: Boolean;
+  GCierreLoteImpresionFacturas: Boolean;
+
+function HiloLoteTerminado(AHilo: TThread): Boolean;
+begin
+  Result := Assigned(AHilo) and TThreadAcceso(AHilo).Terminated;
+end;
 
 procedure RegistrarInformacionSeguro(
   const ARegistroLog: IRegistroLog;
@@ -728,6 +793,213 @@ begin
   end;
 end;
 
+function ResolverImpresoraLote(
+  const AConfigurada: string;
+  out AImpresora, AError: string): Boolean;
+begin
+  Result := False;
+  AImpresora := '';
+  AError := '';
+  try
+    if (frxPrinters = nil) or
+       not frxPrinters.HasPhysicalPrinters then
+    begin
+      AError := SErrorSinImpresoraLoteFacturas;
+      Exit;
+    end;
+    AImpresora := Trim(AConfigurada);
+    if AImpresora = '' then
+    begin
+      if frxPrinters.Printer <> nil then
+        AImpresora := Trim(frxPrinters.Printer.Name);
+    end
+    else if frxPrinters.IndexOf(AImpresora) < 0 then
+    begin
+      AError := Format(
+        SErrorImpresoraLoteFacturasNoExiste,
+        [AImpresora]);
+      Exit;
+    end;
+    if AImpresora = '' then
+      AError := SErrorSinImpresoraLoteFacturas
+    else
+      Result := True;
+  except
+    on E: Exception do
+      AError := E.ClassName + ': ' + E.Message;
+  end;
+end;
+
+function PrevalidarLoteImpresionFacturas(
+  AConexion: TUniConnection;
+  const AReferencias: TReferenciasComandoFactura;
+  const AContexto: TContextoAutorizacionComandoFactura;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog;
+  AHilo: TThread;
+  out AConsolidadas: TReferenciasComandoFactura;
+  out AOmitidas: Integer;
+  out AError: string): Boolean;
+var
+  iFactura: Integer;
+  oConsulta: TUniQuery;
+  oDatos: TDatosAutorizacionComandoFactura;
+  oLista: TList<TReferenciaComandoFactura>;
+  oRechazo: TRechazoComandoFactura;
+begin
+  Result := False;
+  AConsolidadas := nil;
+  AOmitidas := 0;
+  AError := '';
+  oConsulta := TUniQuery.Create(nil);
+  oLista := TList<TReferenciaComandoFactura>.Create;
+  try
+    PrepararConsultaAutorizacion(oConsulta, AConexion);
+    for iFactura := 0 to High(AReferencias) do
+    begin
+      if HiloLoteTerminado(AHilo) then
+        Exit;
+      oDatos := LeerDatosAutorizacion(
+        oConsulta, AReferencias[iFactura]);
+      oRechazo := EvaluarAutorizacionComandoFactura(
+        oDatos, AContexto);
+      if oRechazo <> rcifNinguno then
+      begin
+        AError := CrearErrorAutorizacion(
+          oRechazo, AReferencias[iFactura], AUsuario).Mensaje;
+        Exit;
+      end;
+      if not oDatos.Consolidada then
+      begin
+        Inc(AOmitidas);
+        RegistrarInformacionSeguro(
+          ARegistroLog,
+          Format(
+            SInfoOmitirFacturaNoConsolidadaLote,
+            [AReferencias[iFactura].Texto]));
+      end
+      else
+        oLista.Add(AReferencias[iFactura]);
+    end;
+    AConsolidadas := oLista.ToArray;
+    Result := True;
+  finally
+    FreeAndNil(oLista);
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function ImprimirFacturaConsolidada(
+  const AReferencia: TReferenciaComandoFactura;
+  const AFormato, AImpresora: string;
+  AOwnerSesion: TComponent;
+  AConexion: TUniConnection;
+  const AContexto: TContextoAutorizacionComandoFactura;
+  const AUsuario: string;
+  const ARegistroLog: IRegistroLog;
+  out AError: string): TEstadoFacturaImpresionLote;
+var
+  oConsulta: TUniQuery;
+  oDatos: TDatosAutorizacionComandoFactura;
+  oDatosFactura: TdmFacturas;
+  oFormulario: TfrmPrintFac;
+  oRechazo: TRechazoComandoFactura;
+begin
+  Result := efilError;
+  AError := '';
+  oConsulta := nil;
+  oDatosFactura := nil;
+  oFormulario := nil;
+  try
+    try
+      if (AOwnerSesion = nil) or
+       (csDestroying in AOwnerSesion.ComponentState) or
+       (AConexion = nil) or not AConexion.Connected then
+      begin
+        AError := SErrorServiciosComandoImprimirFacturas;
+        Exit;
+      end;
+      oConsulta := TUniQuery.Create(nil);
+      PrepararConsultaAutorizacion(oConsulta, AConexion);
+      oDatos := LeerDatosAutorizacion(oConsulta, AReferencia);
+      oRechazo := EvaluarAutorizacionComandoFactura(oDatos, AContexto);
+      if oRechazo <> rcifNinguno then
+      begin
+        AError := CrearErrorAutorizacion(
+          oRechazo, AReferencia, AUsuario).Mensaje;
+        Exit;
+      end;
+      if not oDatos.Consolidada then
+      begin
+        Result := efilOmitidaNoConsolidada;
+        Exit;
+      end;
+
+      oDatosFactura := TdmFacturas.Create(AOwnerSesion);
+      oDatosFactura.ReasignarConexion(AConexion);
+      oFormulario := TfrmPrintFac.Create(AOwnerSesion);
+      oFormulario.ConfigurarDataModule(oDatosFactura);
+      oFormulario.rbActual.Checked := True;
+      oFormulario.rbProcesarFiltrados.Checked := False;
+      if not oFormulario.SeleccionarFormatoSinDialogo(AFormato) then
+      begin
+        AError := Format(
+          SErrorFormatoComandoImprimirFacturas,
+          [AFormato]);
+        Exit;
+      end;
+      oFormulario.edtSerie.Text := AReferencia.Serie;
+      oFormulario.edtNroFac.Text := AReferencia.Numero;
+      oFormulario.preparar_consulta;
+      if not DataSetCorrespondeAReferencia(
+        oDatosFactura.unqryFacPrint, AReferencia) then
+      begin
+        AError := Format(
+          SErrorPrepararFacturaComando,
+          [AReferencia.Texto]);
+        Exit;
+      end;
+      oDatos := LeerDatosAutorizacionDataSet(
+        oDatosFactura.unqryFacPrint);
+      oRechazo := EvaluarAutorizacionComandoFactura(oDatos, AContexto);
+      if oRechazo <> rcifNinguno then
+      begin
+        AError := CrearErrorAutorizacion(
+          oRechazo, AReferencia, AUsuario).Mensaje;
+        Exit;
+      end;
+      if not oDatos.Consolidada then
+      begin
+        Result := efilOmitidaNoConsolidada;
+        Exit;
+      end;
+      if not oFormulario.ImprimirPreparadoEn(AImpresora) then
+      begin
+        AError := Format(
+          SErrorImprimirFacturaLote,
+          [AReferencia.Texto, AImpresora]);
+        Exit;
+      end;
+      RegistrarInformacionSeguro(
+        ARegistroLog,
+        Format(
+          SInfoFacturaEnviadaLote,
+          [AReferencia.Texto, AImpresora]));
+      Result := efilImpresa;
+    except
+      on E: Exception do
+        AError := Format(
+          SErrorImprimirFacturaLote,
+          [AReferencia.Texto, AImpresora]) + ' ' +
+          E.ClassName + ': ' + E.Message;
+    end;
+  finally
+    FreeAndNil(oFormulario);
+    FreeAndNil(oDatosFactura);
+    FreeAndNil(oConsulta);
+  end;
+end;
+
 function PrepararDirectorio(
   const ARuta: string;
   const ARegistroLog: IRegistroLog): Boolean;
@@ -801,9 +1073,9 @@ begin
       ARegistroLog,
       SInfoConexionImpresorComandoImprimirFacturas);
     oFormulario := TfrmPrintFac.Create(AOwnerSesion);
-    oFormulario.dmFac := oDatosFactura;
+    oFormulario.ConfigurarDataModule(oDatosFactura);
     oFormulario.rbActual.Checked := True;
-    oFormulario.rbRangoFechas.Checked := False;
+    oFormulario.rbProcesarFiltrados.Checked := False;
     oFormulario.frxpdfxprtPedWeb.EmbeddedFonts := True;
     oFormulario.frxpdfxprtPedWeb.ShowProgress := False;
     RegistrarInformacionSeguro(
@@ -1202,6 +1474,318 @@ begin
   end;
 end;
 
+function ReservarInicioLoteImpresionFacturas(
+  out AError: string): Boolean;
+var
+  oHiloFinalizado: TThread;
+begin
+  Result := False;
+  AError := '';
+  oHiloFinalizado := nil;
+  GBloqueoLoteImpresionFacturas.Acquire;
+  try
+    if Assigned(GHiloLoteImpresionFacturas) and
+       (WaitForSingleObject(
+          GHiloLoteImpresionFacturas.Handle, 0) = WAIT_OBJECT_0) then
+    begin
+      oHiloFinalizado := GHiloLoteImpresionFacturas;
+      GHiloLoteImpresionFacturas := nil;
+    end;
+    if GCierreLoteImpresionFacturas then
+      AError := SErrorLoteImpresionFacturasCerrando
+    else if GInicioLoteImpresionFacturasEnCurso or
+            Assigned(GHiloLoteImpresionFacturas) then
+      AError := SErrorLoteImpresionFacturasEnCurso
+    else
+    begin
+      GInicioLoteImpresionFacturasEnCurso := True;
+      Result := True;
+    end;
+  finally
+    GBloqueoLoteImpresionFacturas.Release;
+  end;
+  FreeAndNil(oHiloFinalizado);
+end;
+
+procedure LiberarReservaInicioLoteImpresionFacturas;
+begin
+  GBloqueoLoteImpresionFacturas.Acquire;
+  try
+    GInicioLoteImpresionFacturasEnCurso := False;
+  finally
+    GBloqueoLoteImpresionFacturas.Release;
+  end;
+end;
+
+procedure PublicarEIniciarHiloLoteImpresionFacturas(AHilo: TThread);
+begin
+  GBloqueoLoteImpresionFacturas.Acquire;
+  try
+    GHiloLoteImpresionFacturas := AHilo;
+    if GCierreLoteImpresionFacturas then
+      AHilo.Terminate;
+    try
+      AHilo.Start;
+    except
+      GHiloLoteImpresionFacturas := nil;
+      raise;
+    end;
+    GInicioLoteImpresionFacturasEnCurso := False;
+  finally
+    GBloqueoLoteImpresionFacturas.Release;
+  end;
+end;
+
+procedure DetenerLoteImpresionFacturasAlCerrar;
+var
+  bInicioEnCurso: Boolean;
+  iEspera: Cardinal;
+  oHilo: TThread;
+begin
+  oHilo := nil;
+  repeat
+    GBloqueoLoteImpresionFacturas.Acquire;
+    try
+      GCierreLoteImpresionFacturas := True;
+      bInicioEnCurso := GInicioLoteImpresionFacturasEnCurso;
+      if not bInicioEnCurso then
+      begin
+        oHilo := GHiloLoteImpresionFacturas;
+        GHiloLoteImpresionFacturas := nil;
+        if Assigned(oHilo) then
+          oHilo.Terminate;
+      end;
+    finally
+      GBloqueoLoteImpresionFacturas.Release;
+    end;
+    if bInicioEnCurso then
+    begin
+      // No se bombea la cola de mensajes VCL durante el cierre. Solo se
+      // atienden los Synchronize que el trabajador necesita para terminar.
+      CheckSynchronize(0);
+      Sleep(1);
+    end;
+  until not bInicioEnCurso;
+
+  if not Assigned(oHilo) then
+    Exit;
+  repeat
+    iEspera := WaitForSingleObject(oHilo.Handle, 10);
+    if iEspera = WAIT_TIMEOUT then
+      CheckSynchronize(0);
+  until iEspera <> WAIT_TIMEOUT;
+  oHilo.WaitFor;
+  FreeAndNil(oHilo);
+end;
+
+procedure IniciarLoteImpresionFacturas(
+  const AReferencias: TReferenciasComandoFactura;
+  const AFormato, AImpresoraConfigurada: string;
+  AOwnerSesion: TComponent;
+  AConexionPrincipal: TUniConnection;
+  const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametrosApp: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  const AAlFinalizar: TFinalizarLoteImpresionFacturas);
+var
+  oAutorizacion: TContextoAutorizacionComandoFactura;
+  oHilo: TThread;
+  oReferencias: TReferenciasComandoFactura;
+  oResultado: TResultadoLoteImpresionFacturas;
+  sImpresora: string;
+  sUsuario: string;
+  bInicioReservado: Boolean;
+
+  procedure FinalizarSinHilo(const AError: string);
+  begin
+    oResultado.Error := AError;
+    RegistrarErrorSeguro(ARegistroLog, AError);
+    if Assigned(AAlFinalizar) then
+      AAlFinalizar(oResultado);
+  end;
+
+begin
+  oResultado := Default(TResultadoLoteImpresionFacturas);
+  oResultado.Solicitadas := Length(AReferencias);
+  oHilo := nil;
+  bInicioReservado := ReservarInicioLoteImpresionFacturas(
+    oResultado.Error);
+  if not bInicioReservado then
+  begin
+    FinalizarSinHilo(oResultado.Error);
+    Exit;
+  end;
+  try
+  if Length(AReferencias) = 0 then
+  begin
+    FinalizarSinHilo(Format(
+      SErrorListaComandoImprimirFacturas,
+      ['lista vacía']));
+    Exit;
+  end;
+  if (AOwnerSesion = nil) or
+     (AConexionPrincipal = nil) or
+     not AConexionPrincipal.Connected or
+     not Assigned(AConexiones) or
+     not Assigned(AContextoSesion) or
+     not Assigned(AParametrosApp) then
+  begin
+    FinalizarSinHilo(SErrorServiciosComandoImprimirFacturas);
+    Exit;
+  end;
+  if not ResolverImpresoraLote(
+    AImpresoraConfigurada, sImpresora, oResultado.Error) then
+  begin
+    FinalizarSinHilo(oResultado.Error);
+    Exit;
+  end;
+
+  oReferencias := System.Copy(
+    AReferencias, 0, Length(AReferencias));
+  sUsuario := AContextoSesion.Identidad.Usuario;
+  oAutorizacion := CrearContextoAutorizacion(
+    AContextoSesion, AParametrosApp, APermisos);
+  // El lote fisico omite siempre los borradores. La autorizacion restante
+  // (tipo, permiso y ambito) se evalua antes de empezar y antes de cada envio.
+  oAutorizacion.VerifactuOnline := False;
+  RegistrarInformacionSeguro(
+    ARegistroLog,
+    Format(
+      SInfoInicioLoteImpresionFacturas,
+      [Length(oReferencias)]));
+  try
+    oHilo := TThread.CreateAnonymousThread(
+      procedure
+      var
+        bPrevalidado: Boolean;
+        iFactura: Integer;
+        oConexionFondo: TUniConnection;
+        oConsolidadas: TReferenciasComandoFactura;
+        oEstadoFactura: TEstadoFacturaImpresionLote;
+        sErrorFactura: string;
+      begin
+        oConexionFondo := nil;
+        try
+          try
+            if HiloLoteTerminado(oHilo) or
+               AContextoSesion.CerrandoAplicacion then
+              Exit;
+            oConexionFondo := AConexiones.CrearConexion(
+              nil, uctSegundoPlano);
+            bPrevalidado := PrevalidarLoteImpresionFacturas(
+              oConexionFondo,
+              oReferencias,
+              oAutorizacion,
+              sUsuario,
+              ARegistroLog,
+              oHilo,
+              oConsolidadas,
+              oResultado.OmitidasNoConsolidadas,
+              oResultado.Error);
+            // La conexión secundaria solo sirve para la prevalidación. Se
+            // libera antes de comenzar a esperar al spooler documento a
+            // documento.
+            FreeAndNil(oConexionFondo);
+            if bPrevalidado and not HiloLoteTerminado(oHilo) then
+            begin
+              for iFactura := 0 to High(oConsolidadas) do
+              begin
+                if HiloLoteTerminado(oHilo) or
+                   AContextoSesion.CerrandoAplicacion or
+                   Application.Terminated then
+                  Break;
+                sErrorFactura := '';
+                oEstadoFactura := efilError;
+                TThread.Synchronize(nil,
+                  procedure
+                  begin
+                    if not HiloLoteTerminado(oHilo) and
+                       not AContextoSesion.CerrandoAplicacion and
+                       not Application.Terminated then
+                    begin
+                      oEstadoFactura := ImprimirFacturaConsolidada(
+                        oConsolidadas[iFactura],
+                        AFormato,
+                        sImpresora,
+                        AOwnerSesion,
+                        AConexionPrincipal,
+                        oAutorizacion,
+                        sUsuario,
+                        ARegistroLog,
+                        sErrorFactura);
+                    end;
+                  end);
+                if HiloLoteTerminado(oHilo) or
+                   AContextoSesion.CerrandoAplicacion or
+                   Application.Terminated then
+                  Break;
+                case oEstadoFactura of
+                  efilImpresa:
+                    Inc(oResultado.Impresas);
+                  efilOmitidaNoConsolidada:
+                    Inc(oResultado.OmitidasNoConsolidadas);
+                  efilError:
+                    begin
+                      oResultado.Error := sErrorFactura;
+                      Break;
+                    end;
+                end;
+              end;
+            end;
+          except
+            on E: Exception do
+              oResultado.Error := E.ClassName + ': ' + E.Message;
+          end;
+        finally
+          FreeAndNil(oConexionFondo);
+        end;
+
+        if HiloLoteTerminado(oHilo) or
+           AContextoSesion.CerrandoAplicacion or
+           Application.Terminated then
+          Exit;
+        if oResultado.Error <> '' then
+          RegistrarErrorSeguro(ARegistroLog, oResultado.Error)
+        else
+          RegistrarInformacionSeguro(
+            ARegistroLog,
+            Format(
+              SInfoFinLoteImpresionFacturas,
+              [oResultado.Solicitadas,
+               oResultado.Impresas,
+               oResultado.OmitidasNoConsolidadas]));
+        if Assigned(AAlFinalizar) then
+        begin
+          TThread.Queue(nil,
+            procedure
+            begin
+              if not AContextoSesion.CerrandoAplicacion and
+                 not Application.Terminated then
+                AAlFinalizar(oResultado);
+            end);
+        end;
+      end);
+    oHilo.FreeOnTerminate := False;
+    PublicarEIniciarHiloLoteImpresionFacturas(oHilo);
+    bInicioReservado := False;
+  except
+    on E: Exception do
+    begin
+      if bInicioReservado then
+        FreeAndNil(oHilo);
+      FinalizarSinHilo(Format(
+        SErrorIniciarLoteImpresionFacturas,
+        [E.Message]));
+    end;
+  end;
+  finally
+    if bInicioReservado then
+      LiberarReservaInicioLoteImpresionFacturas;
+  end;
+end;
+
 procedure RegistrarResultadoComando(
   const AResultado: TResultadoComandoImprimirFacturas;
   const ARegistroLog: IRegistroLog);
@@ -1306,5 +1890,12 @@ begin
   RegistrarResultadoComando(oResultado, ARegistroLog);
   Result := oResultado.CodigoSalida;
 end;
+
+initialization
+  GBloqueoLoteImpresionFacturas := TCriticalSection.Create;
+
+finalization
+  DetenerLoteImpresionFacturasAlCerrar;
+  FreeAndNil(GBloqueoLoteImpresionFacturas);
 
 end.

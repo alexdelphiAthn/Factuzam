@@ -68,12 +68,9 @@ begin
   ADialogo.Title := STituloCargarCopiaSeguridad;
   ADialogo.FileTypes.Clear;
   oTipoFichero := ADialogo.FileTypes.Add;
-  oTipoFichero.DisplayName := SCaptionFiltroCopiasSqlEncriptadas;
-  oTipoFichero.FileMask := '*.sql;*.zip;*.crypt';
-  oTipoFichero := ADialogo.FileTypes.Add;
-  oTipoFichero.DisplayName := SCaptionFiltroTodosArchivos;
-  oTipoFichero.FileMask := '*.*';
-  ADialogo.DefaultExtension := 'sql';
+  oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
+  oTipoFichero.FileMask := '*.crypt';
+  ADialogo.DefaultExtension := 'crypt';
   ADialogo.DefaultFolder := GetUserDeskFolder;
 end;
 

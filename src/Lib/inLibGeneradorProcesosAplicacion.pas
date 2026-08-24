@@ -72,7 +72,8 @@ implementation
 
 uses
   System.Classes,
-  System.SysUtils;
+  System.SysUtils,
+  inLibProteccionDatosFacturacion;
 
 function PrimeraLineaUtilProceso(const ASQL: string): string;
 var
@@ -133,6 +134,10 @@ var
 begin
   Result := Default(TResultadoEjecucionProceso);
   Sentencias := FRepositorio.SepararSentencias(Trim(AScript));
+  // Se valida el lote completo antes de ejecutar la primera sentencia para
+  // impedir que un script mixto deje cambios parciales antes del bloqueo.
+  for I := 0 to Length(Sentencias) - 1 do
+    ValidarSqlSinModificacionesFacturacion(Sentencias[I]);
   for I := 0 to Length(Sentencias) - 1 do
   begin
     if not Result.Cancelada then

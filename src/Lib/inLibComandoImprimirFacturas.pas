@@ -79,6 +79,9 @@ function EsComandoImprimirFacturas(
 function InterpretarComandoImprimirFacturas(
   const AParametros: TArray<string>
 ): TSolicitudComandoImprimirFacturas;
+function SerializarReferenciasComandoFacturas(
+  const AReferencias: TReferenciasComandoFactura
+): string;
 function EvaluarAutorizacionComandoFactura(
   const ADatos: TDatosAutorizacionComandoFactura;
   const AContexto: TContextoAutorizacionComandoFactura
@@ -106,6 +109,24 @@ end;
 function TReferenciaComandoFactura.Texto: string;
 begin
   Result := Serie + '\' + Numero;
+end;
+
+function SerializarReferenciasComandoFacturas(
+  const AReferencias: TReferenciasComandoFactura): string;
+var
+  iReferencia: Integer;
+  oLista: TStringList;
+begin
+  oLista := TStringList.Create;
+  try
+    oLista.StrictDelimiter := True;
+    oLista.Delimiter := ',';
+    for iReferencia := 0 to High(AReferencias) do
+      oLista.Add(AReferencias[iReferencia].Texto);
+    Result := oLista.DelimitedText;
+  finally
+    FreeAndNil(oLista);
+  end;
 end;
 
 function EsComandoImprimirFacturas(

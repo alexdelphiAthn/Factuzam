@@ -17,11 +17,14 @@ interface
 
 uses
   Uni,
+  inLibConexionesIntf,
   inLibCopiasSeguridadIntf,
   inLibRestauracionCopiasConexionIntf;
 
 function CrearRepositorioRestauracionConexionUniDAC(
-  AConexion: TUniConnection): IRepositorioRestauracionConexion;
+  AConexion: TUniConnection;
+  const AFabricaConexiones: IFabricaConexionesUniDAC
+): IRepositorioRestauracionConexion;
 
 implementation
 
@@ -29,8 +32,9 @@ uses
   System.SysUtils,
   Data.DB,
   inLibBackupWorker,
+  inLibConexionPerfilIntf,
   inLibCopiasSeguridadReglas,
-  inLibConexionesUniDAC,
+  inLibMsgConexion,
   inLibMsgConfiguracion;
 
 type
@@ -39,10 +43,13 @@ type
     IRepositorioRestauracionConexion)
   private
     FConexion: TUniConnection;
+    FFabricaConexiones: IFabricaConexionesUniDAC;
     procedure PrepararConexion(
       const ASolicitud: TSolicitudRestauracionConexion);
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(
+      AConexion: TUniConnection;
+      const AFabricaConexiones: IFabricaConexionesUniDAC);
     procedure Iniciar(
       const ASolicitud: TSolicitudRestauracionConexion;
       AOnPrepararWorker: TPrepararWorkerRestauracionEvent;
@@ -51,26 +58,36 @@ type
   end;
 
 constructor TRepositorioRestauracionConexionUniDAC.Create(
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const AFabricaConexiones: IFabricaConexionesUniDAC);
 begin
   inherited Create;
   if not Assigned(AConexion) then
-    raise EArgumentNilException.Create('AConexion');
+    raise EArgumentNilException.Create(
+      SErrorConexionNoAsignada);
+  if not Assigned(AFabricaConexiones) then
+    raise EArgumentNilException.Create(
+      SErrorFabricaConexionesNoAsignada);
   FConexion := AConexion;
+  FFabricaConexiones := AFabricaConexiones;
 end;
 
 procedure TRepositorioRestauracionConexionUniDAC.PrepararConexion(
   const ASolicitud: TSolicitudRestauracionConexion);
 var
   oConsulta: TUniQuery;
+  oPerfilTemporal: TPerfilConexion;
 begin
-  ConfigurarYConectarMySQL(
+  oPerfilTemporal := FFabricaConexiones.Perfil;
+  oPerfilTemporal.Servidor := ASolicitud.Host;
+  oPerfilTemporal.Puerto := ASolicitud.Puerto;
+  oPerfilTemporal.Usuario := ASolicitud.Usuario;
+  oPerfilTemporal := FFabricaConexiones.CrearPerfilAdministrativo(
+    oPerfilTemporal);
+  FFabricaConexiones.ConectarTemporal(
     FConexion,
-    ASolicitud.Usuario,
-    ASolicitud.ContrasenaConexion,
-    ASolicitud.Host,
-    IntToStr(ASolicitud.Puerto),
-    'information_schema');
+    oPerfilTemporal,
+    ASolicitud.ContrasenaConexion);
   oConsulta := TUniQuery.Create(nil);
   try
     oConsulta.Connection := FConexion;
@@ -102,6 +119,13 @@ begin
     raise EArgumentException.Create(
       SErrorFormatoCopiaNoCompatible);
   end;
+  if not TPoliticaCopiasSeguridad.PuedeRestaurar(
+           False,
+           ASolicitud.RutaFichero) then
+  begin
+    raise EArgumentException.Create(
+      SErrorTipoRestauracionNoPermitido);
+  end;
   PrepararConexion(ASolicitud);
   oWorker := TRestoreWorker.Create(
     ASolicitud.Host,
@@ -127,9 +151,13 @@ begin
 end;
 
 function CrearRepositorioRestauracionConexionUniDAC(
-  AConexion: TUniConnection): IRepositorioRestauracionConexion;
+  AConexion: TUniConnection;
+  const AFabricaConexiones: IFabricaConexionesUniDAC
+): IRepositorioRestauracionConexion;
 begin
-  Result := TRepositorioRestauracionConexionUniDAC.Create(AConexion);
+  Result := TRepositorioRestauracionConexionUniDAC.Create(
+    AConexion,
+    AFabricaConexiones);
 end;
 
 end.

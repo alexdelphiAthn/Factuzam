@@ -49,6 +49,7 @@ uses
   Vcl.ComCtrls, JvExComCtrls, JvStatusBar, Vcl.AppEvnts,
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
   inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto,
+  inLibConexionesIntf,
   inLibLicenciaAplicacion, inLibAnfitrionMtoIntf,
   inLibCajaVentanasIntf, inLibPermisosIntf,
   inLibCopiasSeguridadIntf,
@@ -273,6 +274,7 @@ type
     FRelanzarLoginPendiente: Boolean;
     FFalloCargaPermisosAvisado: Boolean;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
+    FFabricaConexiones: IFabricaConexionesUniDAC;
     FComposicion: TComposicionAplicacion;
     FInyeccionMantenimientos: TInyeccionMantenimientosRaiz;
     FInyeccionCaja: TInyeccionCajaRaiz;
@@ -319,7 +321,8 @@ type
       AEsAdministrador: Boolean
     ): TModoProteccionCopia;
     function SolicitarDestinoCopia(
-      out ARutaFichero: string
+      out ARutaFichero: string;
+      out AContrasena: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
     function ConsultarDecisionCierrePrestaShop:
@@ -340,6 +343,7 @@ type
     FormManager : TEmbeddedFormManager;
     destructor Destroy; override;
     procedure InicializarAplicacion(
+      const AFabricaConexiones: IFabricaConexionesUniDAC;
       const AContextoSesion: IContextoSesionAplicacion;
       const AResultadoLicencia: TResultadoLicenciaAplicacion);
     procedure FormResize(Sender: TObject);
@@ -379,12 +383,14 @@ uses inLibWin,
   inLibGenerarTicketCaja,
   inMtoPrincipalAccionesVcl,
   inMtoModalScriptLog,
+  inMtoModalContrasenaCopia,
   inMtoRestauracionCopiasVcl,
   inMtoGen,
   inMtoFotoArticulo,
   System.RegularExpressions,
   inMtoModalErrorAplicacion,
-  inMtoPrincipalCertificadosVcl;
+  inMtoPrincipalCertificadosVcl,
+  inMtoComandoImprimirFacturas;
 
 function CrearContextoRestauracionCopiasVcl(
   AFormulario: TfrmMtoPrincipal): TContextoRestauracionCopiasVcl;
@@ -559,6 +565,7 @@ begin
     CrearPresentacionExcepcionesAplicacionVcl);
   FComposicion := TComposicionAplicacion.Create(
     Self,
+    FFabricaConexiones,
     ContextoSesion,
     RegistroLog,
     PreviewTicket,
@@ -676,9 +683,11 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.InicializarAplicacion(
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const AContextoSesion: IContextoSesionAplicacion;
   const AResultadoLicencia: TResultadoLicenciaAplicacion);
 begin
+  FFabricaConexiones := AFabricaConexiones;
   CrearCasoUsoArranqueAplicacion(
     Self as IPasosArranqueAplicacion).Ejecutar(
       AContextoSesion,
@@ -766,13 +775,15 @@ begin
 end;
 
 function TfrmMtoPrincipal.SolicitarDestinoCopia(
-  out ARutaFichero: string): Boolean;
+  out ARutaFichero: string;
+  out AContrasena: string): Boolean;
 var
   bEsAdministrador: Boolean;
   Modo: TModoProteccionCopia;
   sExtension: string;
 begin
   ARutaFichero := '';
+  AContrasena := '';
   bEsAdministrador := FCoordinadorOperaciones.ModoCreacionCopia =
     mpcTextoPlano;
   Modo := FCoordinadorOperaciones.ModoCreacionCopia;
@@ -795,19 +806,27 @@ begin
     ARutaFichero := ChangeFileExt(
       saveDialog.FileName,
       sExtension);
+    if Modo = mpcCifrada then
+      Result := TfrmModalContrasenaCopia.SolicitarNueva(
+        Self,
+        AContrasena);
   end;
 end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 var
+  sContrasena: string;
   sRutaFichero: string;
 begin
-  if SolicitarDestinoCopia(sRutaFichero) then
+  if SolicitarDestinoCopia(
+       sRutaFichero,
+       sContrasena) then
   begin
     FCoordinadorOperaciones.IniciarCopia(
       sRutaFichero,
-      '');
+      sContrasena);
   end;
+  sContrasena := '';
 end;
 
 // validar iban online https://www.iban.com
@@ -1020,13 +1039,17 @@ end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScript: Boolean;
 var
+  sContrasena: string;
   sRutaFichero: string;
 begin
-  Result := SolicitarDestinoCopia(sRutaFichero);
+  Result := SolicitarDestinoCopia(
+    sRutaFichero,
+    sContrasena);
   if Result then
     Result := FCoordinadorOperaciones.CrearCopia(
       sRutaFichero,
-      '');
+      sContrasena);
+  sContrasena := '';
 end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScriptSoporte: Boolean;
@@ -1055,6 +1078,7 @@ begin
   FGestorExcepciones := nil;
   FreeAndNil(FPresentacionInicio);
   FreeAndNil(FComposicion);
+  FFabricaConexiones := nil;
   inherited;
 end;
 
@@ -1145,6 +1169,9 @@ begin
     GestorContexto
   ) then
     GestorContexto.MarcarCierreAplicacion;
+  // El lote usa Synchronize para mantener VCL/FastReport en el hilo
+  // principal. Se cancela y espera antes de invalidar las conexiones.
+  DetenerLoteImpresionFacturasAlCerrar;
   if Assigned(FComposicion) then
   begin
     FComposicion.RegistrarCierreFiscal;
@@ -1181,6 +1208,7 @@ begin
     AsignarInformesGuiasCache(nil);
     FCoordinadorOperaciones := nil;
     FreeAndNil(FComposicion);
+    FFabricaConexiones := nil;
     if Assigned(FAppEvents) then
     begin
       FAppEvents.OnException := nil;

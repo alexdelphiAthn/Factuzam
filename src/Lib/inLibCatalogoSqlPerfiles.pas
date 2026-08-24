@@ -16,7 +16,9 @@ unit inLibCatalogoSqlPerfiles;
 interface
 
 uses
-  inLibCatalogoSqlIntf, inLibPerfilesUsuarioIntf;
+  inLibCatalogoSqlIntf,
+  inLibConexionPerfilIntf,
+  inLibPerfilesUsuarioIntf;
 
 type
   TCatalogoSqlPerfiles = class(
@@ -24,10 +26,15 @@ type
     ICatalogoSql)
   private
     FPerfil: TProfileDicc;
+    FMotor: TMotorBBDD;
     function PerfilActivo(const AValor: string): Boolean;
   public
-    constructor Create(APerfil: TProfileDicc);
+    constructor Create(APerfil: TProfileDicc); overload;
+    constructor Create(
+      APerfil: TProfileDicc;
+      AMotor: TMotorBBDD); overload;
     destructor Destroy; override;
+    function GetMotor: TMotorBBDD;
     function Resolver(
       const ADefinicion: TDefinicionSql): TSqlResuelto;
   end;
@@ -40,16 +47,29 @@ uses
 
 constructor TCatalogoSqlPerfiles.Create(
   APerfil: TProfileDicc);
+begin
+  Create(APerfil, mbMariaDB);
+end;
+
+constructor TCatalogoSqlPerfiles.Create(
+  APerfil: TProfileDicc;
+  AMotor: TMotorBBDD);
 var
   oPar: TPair<string, TDictValue>;
 begin
   inherited Create;
+  FMotor := AMotor;
   FPerfil := TProfileDicc.Create;
   if Assigned(APerfil) then
   begin
     for oPar in APerfil do
       FPerfil.AddOrSetValue(oPar.Key, oPar.Value);
   end;
+end;
+
+function TCatalogoSqlPerfiles.GetMotor: TMotorBBDD;
+begin
+  Result := FMotor;
 end;
 
 destructor TCatalogoSqlPerfiles.Destroy;
@@ -73,7 +93,9 @@ var
   sClave: string;
   sSqlPerfil: string;
 begin
-  Result := ResolverSqlBase(ADefinicion);
+  Result := ResolverSqlBaseMotor(
+    ADefinicion,
+    FMotor);
   sClave := ClavePerfilSql(ADefinicion);
   if (ADefinicion.Politica <> pesSoloBase) and
      Assigned(FPerfil) and
@@ -82,7 +104,9 @@ begin
   begin
     sSqlPerfil := string(oValor.sValueText);
     oValidacion := ValidarSql(
-      ADefinicion, sSqlPerfil);
+      ADefinicion,
+      sSqlPerfil,
+      FMotor);
     if oValidacion.EsValido then
     begin
       Result.Texto := sSqlPerfil;
@@ -90,10 +114,13 @@ begin
       Result.MotivoSqlBase := '';
       Result.Origen := osPerfil;
       Result.Politica := ADefinicion.Politica;
+      Result.Motor := FMotor;
     end
     else
-      Result := ResolverSqlBase(
-        ADefinicion, oValidacion.Mensaje);
+      Result := ResolverSqlBaseMotor(
+        ADefinicion,
+        FMotor,
+        oValidacion.Mensaje);
   end;
 end;
 

@@ -74,6 +74,10 @@ uses
   inLibUnitForm in 'src\Lib\inLibUnitForm.pas',
   inLibMsgComun in 'src\Lib\inLibMsgComun.pas',
   inLibMsgConfiguracion in 'src\Lib\inLibMsgConfiguracion.pas',
+  inLibMsgConexion in 'src\Lib\inLibMsgConexion.pas',
+  inLibMsgLogon in 'src\Lib\inLibMsgLogon.pas',
+  inLibMsgSql in 'src\Lib\inLibMsgSql.pas',
+  inLibMsgSqlSeguro in 'src\Lib\inLibMsgSqlSeguro.pas',
   inLibMsgArticulos in 'src\Lib\inLibMsgArticulos.pas',
   inLibMsgVentas in 'src\Lib\inLibMsgVentas.pas',
   inLibMsgCompras in 'src\Lib\inLibMsgCompras.pas',
@@ -197,6 +201,13 @@ uses
     'src\Lib\inLibTraduccionesFastReport.pas',
   inLibParametrosIntf in 'src\Lib\inLibParametrosIntf.pas',
   inLibParametrosBase in 'src\Lib\inLibParametrosBase.pas',
+  inLibConexionPerfilIntf in 'src\Lib\inLibConexionPerfilIntf.pas',
+  inLibConexionPerfil in 'src\Lib\inLibConexionPerfil.pas',
+  inLibDialectoSqlIntf in 'src\Lib\inLibDialectoSqlIntf.pas',
+  inLibDialectosSql in 'src\Lib\inLibDialectosSql.pas',
+  inLibCredencialesConexionWindows in
+    'src\Lib\inLibCredencialesConexionWindows.pas',
+  inLibConexionPerfilIni in 'src\Lib\inLibConexionPerfilIni.pas',
   inLibConexionesIntf in 'src\Lib\inLibConexionesIntf.pas',
   inLibConexionesUniDAC in 'src\Lib\inLibConexionesUniDAC.pas',
   inLibAuditoriaDatosIntf in 'src\Lib\inLibAuditoriaDatosIntf.pas',
@@ -332,6 +343,8 @@ uses
   inMtoModalImpDocsProveedor in 'src\Modals\inMtoModalImpDocsProveedor.pas' {frmPrintDocsProveedor},
   inMtoModalImpEfectosPago in 'src\Modals\inMtoModalImpEfectosPago.pas' {frmPrintEfectosPago},
   inMtoSplash in 'src\Core\inMtoSplash.pas' {frmSplash},
+  UniDataConexionFabrica in
+    'src\DataModules\UniDataConexionFabrica.pas',
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
   UniDataComposicionAplicacion in
     'src\DataModules\UniDataComposicionAplicacion.pas',
@@ -415,6 +428,8 @@ uses
     'src\Lib\inLibVentasPantallaIntf.pas',
   UniDataGeneradorProcesosRepositorio in
     'src\DataModules\UniDataGeneradorProcesosRepositorio.pas',
+  inLibPlanEjecucionMariaDB in
+    'src\Lib\inLibPlanEjecucionMariaDB.pas',
   UniDataMetadatosBBDDRepositorio in
     'src\DataModules\UniDataMetadatosBBDDRepositorio.pas',
   UniDataInformeBalanceSinTallasRepositorio in
@@ -445,6 +460,8 @@ uses
     'src\DataModules\UniDataWizardEditarRepositorio.pas',
   inLibGeneradorProcesosAplicacion in
     'src\Lib\inLibGeneradorProcesosAplicacion.pas',
+  inLibProteccionDatosFacturacion in
+    'src\Lib\inLibProteccionDatosFacturacion.pas',
   inLibMetadatosBBDDIntf in
     'src\Lib\inLibMetadatosBBDDIntf.pas',
   inLibInformeBalanceSinTallasPersistenciaIntf in
@@ -891,6 +908,7 @@ uses
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
   inLibFactuzamApi in 'src\Lib\inLibFactuzamApi.pas',
+  inLibErroresHttp in 'src\Lib\inLibErroresHttp.pas',
   inLibTraduccionesDescarga in
     'src\Lib\inLibTraduccionesDescarga.pas',
   inLibVentasWsJsonIntf in 'src\Lib\inLibVentasWsJsonIntf.pas',
@@ -1613,6 +1631,7 @@ uses
 
 
 function CrearContextoSesionInicial(
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const ARegistroLog: IRegistroLog;
   AForzarCredenciales: Boolean;
   out AContextoSesion: IContextoSesionAplicacion;
@@ -1626,7 +1645,9 @@ begin
   AContextoSesion := nil;
   AResultadoLicencia :=
     TResultadoLicenciaAplicacion.CrearNoComprobada;
-  frmLogon := TfrmLogon.Create(Application);
+  frmLogon := TfrmLogon.Create(
+    Application,
+    AFabricaConexiones);
   frmLogon.AsignarRegistroLog(ARegistroLog);
   try
     if not frmLogon.DebeCerrarAplicacion then
@@ -1668,6 +1689,7 @@ end;
 
 begin
   var ContextoSesionInicial: IContextoSesionAplicacion;
+  var FabricaConexiones: IFabricaConexionesUniDAC;
   var GestorContextoCierre: IGestorContextoSesion;
   var Principal: TfrmMtoPrincipal;
   var RegistroLogAplicacion: IRegistroLog;
@@ -1712,8 +1734,11 @@ begin
     RegistroLogAplicacion := CrearRegistroLog;
   if EsModoComandoCopiaSeguridad then
   begin
+    FabricaConexiones :=
+      CrearFabricaConexionesAplicacionUniDAC(GetUserFolder);
     CodigoSalidaComandoCopia :=
       EjecutarProcesoComandoCopiaSeguridad(
+        FabricaConexiones,
         RegistroLogAplicacion);
     try
       RegistroLogAplicacion := nil;
@@ -1733,8 +1758,11 @@ begin
       ExitProcess(CodigoSalidaComandoImpresion);
     end;
   end;
+  FabricaConexiones :=
+    CrearFabricaConexionesAplicacionUniDAC(GetUserFolder);
   try
     if CrearContextoSesionInicial(
+      FabricaConexiones,
       RegistroLogAplicacion,
       EsModoComandoImprimirFacturas,
       ContextoSesionInicial,
@@ -1748,6 +1776,7 @@ begin
     Application.CreateForm(TfrmMtoPrincipal, Principal);
     Principal.AsignarRegistroLog(RegistroLogAplicacion);
     Principal.InicializarAplicacion(
+      FabricaConexiones,
       ContextoSesionInicial,
       ResultadoLicenciaInicial);
     Principal.AsignarServiciosVisuales(

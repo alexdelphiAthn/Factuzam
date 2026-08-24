@@ -26,7 +26,9 @@ implementation
 
 uses
   System.SysUtils,
-  inLibCopiasSeguridadIntf;
+  inLibCopiasSeguridadIntf,
+  inLibCopiasSeguridadReglas,
+  inLibMsgConfiguracion;
 
 type
   TCasoUsoRestauracionConexion = class(
@@ -74,6 +76,13 @@ begin
   if Trim(ASolicitud.RutaFichero) = '' then
     raise EArgumentException.Create(
       'La ruta de la copia no puede estar vacía.');
+  if not TPoliticaCopiasSeguridad.PuedeRestaurar(
+           False,
+           ASolicitud.RutaFichero) then
+  begin
+    raise EArgumentException.Create(
+      SErrorTipoRestauracionNoPermitido);
+  end;
   FRepositorio.Iniciar(
     ASolicitud,
     AOnPrepararWorker,

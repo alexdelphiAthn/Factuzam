@@ -55,8 +55,10 @@ implementation
 uses
   Winapi.Windows, System.SysUtils, inLibVerifactu,
   inLibVerifactuTipos, inLibVerifactuEnvio,
-  UniDataVerifactuColaResultados;
+  UniDataVerifactuColaResultados, inLibErroresHttp;
 const
+  CResultadoFilaSinConexion = -1;
+  CSegundosReintentoSinConexion = 300;
   fidvfcola       = 'ID_VFCOLA';
   fserievfcola    = 'SERIE_FAC_VFCOLA';
   fnumerovfcola   = 'NUMERO_FAC_VFCOLA';
@@ -300,6 +302,10 @@ begin
                                 Qry.FieldByName(fnumerovfcola).AsString,
                                 Qry.FieldByName(ftipoopvfcola).AsString,
                                 Qry.FieldByName(fintentosvfcola).AsInteger);
+        // Un fallo de transporte abre el circuito hasta el ciclo siguiente;
+        // no se prueban las demás filas durante la misma caída.
+        if iEspera = CResultadoFilaSinConexion then
+          Break;
         // Control de flujo de la AEAT entre envíos consecutivos
         if iEspera > 0 then
           EsperarSegundos(iEspera);
@@ -384,6 +390,18 @@ begin
           FContexto.RegistroLog);
       end;
     except
+      on E: EConexionHttpTemporal do
+      begin
+        if FConn.InTransaction then
+          FConn.Rollback;
+        TResultadosVerifactuColaUniDAC.GuardarEnvioError(
+          FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
+          FContexto.Usuario,
+          AIdCola, ASerie, ANumero, E.Message, AIntentos,
+          FContexto.RegistroLog, True,
+          CSegundosReintentoSinConexion);
+        Result := CResultadoFilaSinConexion;
+      end;
       on E: Exception do
       begin
         if FConn.InTransaction then

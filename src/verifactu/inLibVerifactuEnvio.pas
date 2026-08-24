@@ -86,7 +86,8 @@ uses
   System.Net.URLClient, Data.DB,
   inLibGlobalVar, inLibVerifactu, inLibVerifactuInstalacion,
   inLibMsgFacturas, inLibMsgVerifactu, inLibXades,
-  inLibVerifactuConstruccionEnvio, inLibVerifactuDesgloseFiscal;
+  inLibVerifactuConstruccionEnvio, inLibVerifactuDesgloseFiscal,
+  inLibErroresHttp;
 
 const
   // Endpoints oficiales del servicio SOAP de Verifactu. Con certificado
@@ -980,11 +981,20 @@ begin
     oHttp.ConnectionTimeout := 30000;
     oHttp.ResponseTimeout   := 90000;
     oHttp.OnNeedClientCertificate := oSelector.Seleccionar;
-    oResp := oHttp.Post(AUrl, oCuerpo, nil,
-      [TNetHeader.Create('Content-Type', 'text/xml; charset=utf-8'),
-       TNetHeader.Create('SOAPAction', '""')]);
-    AStatus    := oResp.StatusCode;
-    ARespuesta := oResp.ContentAsString(TEncoding.UTF8);
+    try
+      oResp := oHttp.Post(AUrl, oCuerpo, nil,
+        [TNetHeader.Create('Content-Type', 'text/xml; charset=utf-8'),
+         TNetHeader.Create('SOAPAction', '""')]);
+      AStatus    := oResp.StatusCode;
+      ARespuesta := oResp.ContentAsString(TEncoding.UTF8);
+    except
+      on E: Exception do
+      begin
+        if EsFalloTemporalTransporteHttp(E) then
+          raise EConexionHttpTemporal.Create(E.Message);
+        raise;
+      end;
+    end;
   finally
     FreeAndNil(oCuerpo);
     FreeAndNil(oSelector);

@@ -32,12 +32,10 @@ implementation
 
 uses
   Winapi.ShlObj, Winapi.Windows,
-  System.IniFiles, System.SysUtils,
-  inLibCifrado, inLibMsgTraduc;
-
-const
-  CLAVE_PREDETERMINADA_CIFRADA =
-    '2qJFaDfegP/9y6RDno1FRg==';
+  System.SysUtils,
+  inLibConexionPerfilIni,
+  inLibConexionPerfilIntf,
+  inLibMsgTraduc;
 
 function CarpetaConfiguracionFactuzam: string;
 var
@@ -74,44 +72,21 @@ end;
 function LeerConfiguracionConexionFactuzam(
   const ARutaIni: string): TConfiguracionConexionTraduc;
 var
-  Ini: TIniFile;
-  ClaveCifrada: string;
+  Configuracion: TConfiguracionConexionResuelta;
 begin
   if not FileExists(ARutaIni) then
     raise Exception.CreateFmt(
       SErrorIniFactuzamNoExiste,
       [ARutaIni]);
-  Ini := TIniFile.Create(ARutaIni);
-  try
-    Result.BaseDatos := Ini.ReadString(
-      'ConnData',
-      'Database',
-      'factuzam');
-    Result.Servidor := Ini.ReadString(
-      'ConnData',
-      'HostName',
-      '127.0.0.1');
-    Result.Usuario := Ini.ReadString(
-      'ConnData',
-      'User',
-      'root');
-    Result.Puerto := StrToIntDef(
-      Ini.ReadString(
-        'ConnData',
-        'Puerto',
-        '3306'),
-      3306);
-    ClaveCifrada := Ini.ReadString(
-      'ConnData',
-      'PasswordEn',
-      CLAVE_PREDETERMINADA_CIFRADA);
-    Result.Clave := DescifrarAES(ClaveCifrada);
-    if (ClaveCifrada <> '') and
-       (Result.Clave = '') then
-      raise Exception.Create(SErrorClaveIniFactuzam);
-  finally
-    FreeAndNil(Ini);
-  end;
+  Configuracion := CargarConfiguracionConexionIni(ARutaIni);
+  if Configuracion.Perfil.Motor <> mbMariaDB then
+    raise EInvalidOpException.Create(
+      SErrorMotorConexionEditorNoSoportado);
+  Result.BaseDatos := Configuracion.Perfil.BaseDatos;
+  Result.Servidor := Configuracion.Perfil.Servidor;
+  Result.Usuario := Configuracion.Perfil.Usuario;
+  Result.Puerto := Configuracion.Perfil.Puerto;
+  Result.Clave := Configuracion.Credencial;
 end;
 
 end.

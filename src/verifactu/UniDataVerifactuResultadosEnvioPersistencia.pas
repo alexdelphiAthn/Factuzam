@@ -383,13 +383,18 @@ begin
     oQry.SQL.Text :=
       ' UPDATE fza_verifactu_cola ' +
       ' SET ESTADO_VFCOLA = :ESTADO, ' +
-      '     CONTADOR_INTENTOS_VFCOLA = CONTADOR_INTENTOS_VFCOLA + 1, ' +
+      '     CONTADOR_INTENTOS_VFCOLA = CONTADOR_INTENTOS_VFCOLA + ' +
+      '       :INCREMENTO, ' +
       '     INSTANTE_PROXIMO_INTENTO_VFCOLA = ' +
       '       DATE_ADD(NOW(), INTERVAL :ESPERA SECOND), ' +
       '     MENSAJE_ERROR_VFCOLA = :MENSAJE, ' +
       '     INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
       ' WHERE ID_VFCOLA = :ID';
     oQry.ParamByName('ESTADO').AsString := APlan.EstadoCola;
+    if APlan.IncrementarIntentos then
+      oQry.ParamByName('INCREMENTO').AsInteger := 1
+    else
+      oQry.ParamByName('INCREMENTO').AsInteger := 0;
     oQry.ParamByName('ESPERA').AsInteger := APlan.EsperaSegundos;
     oQry.ParamByName('MENSAJE').AsString := AEntrada.Mensaje;
     oQry.ParamByName('USUARIO').AsString := AEntrada.Usuario;

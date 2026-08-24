@@ -108,7 +108,8 @@ type
       AIdCola: Int64;
       const AToken, AEstado: string;
       AEsperaSegundos: Integer;
-      const AMensaje, AUsuario: string);
+      const AMensaje, AUsuario: string;
+      AConsumirIntento: Boolean = True);
   end;
 
 const
@@ -1334,7 +1335,8 @@ procedure TRepositorioPrestaShopColaUniDAC.GuardarErrorIntento(
   AIdCola: Int64;
   const AToken, AEstado: string;
   AEsperaSegundos: Integer;
-  const AMensaje, AUsuario: string);
+  const AMensaje, AUsuario: string;
+  AConsumirIntento: Boolean);
 var
   oConsulta: TUniQuery;
 begin
@@ -1356,11 +1358,15 @@ begin
       'ELSE ''ENVIADA'' END, ' +
       'CONTADOR_INTENTOS_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
+      'AND :INCREMENTO = 0 THEN CONTADOR_INTENTOS_PSCOLA ' +
+      'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
       'AND :ESTADO = ''ERROR'' AND :ESPERA = 0 ' +
       'THEN CONTADOR_INTENTOS_PSCOLA ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
       'THEN CONTADOR_INTENTOS_PSCOLA + 1 ELSE 0 END, ' +
       'INSTANTE_PROXIMO_INTENTO_PSCOLA = CASE ' +
+      'WHEN :INCREMENTO = 0 THEN ' +
+      'DATE_ADD(NOW(), INTERVAL :ESPERA SECOND) ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
       'AND :ESTADO = ''PENDIENTE'' THEN ' +
       'DATE_ADD(NOW(), INTERVAL :ESPERA SECOND) ELSE NULL END, ' +
@@ -1381,6 +1387,10 @@ begin
       'AND ESTADO_PSCOLA IN ' +
       '(''PROCESANDO'', ''PROCESANDO_VISIBILIDAD'')';
     oConsulta.ParamByName('ESTADO').AsString := AEstado;
+    if AConsumirIntento then
+      oConsulta.ParamByName('INCREMENTO').AsInteger := 1
+    else
+      oConsulta.ParamByName('INCREMENTO').AsInteger := 0;
     oConsulta.ParamByName('ESPERA').AsInteger := AEsperaSegundos;
     oConsulta.ParamByName('MENSAJE').AsMemo := AMensaje;
     oConsulta.ParamByName('MARCA_ALTA').AsString :=

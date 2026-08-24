@@ -50,12 +50,13 @@ uses
   inLibPrestaCatalogoIntf, inLibPrestaCatalogo,
   inLibPrestaCatalogoAltaIntf, inLibPrestaCatalogoAlta,
   inLibPrestaShopAltaArticuloIntf, inLibPrestaShopColaSenal,
-  inLibPrestaShopTransporteHistorial;
+  inLibPrestaShopTransporteHistorial, inLibErroresHttp;
 
 const
   CToleranciaPrecio = 0.000001;
   CFilasPorCiclo = 10;
   CMinutosReclamacionCaducada = 10;
+  CSegundosReintentoSinConexion = 300;
   CTipoRecursoProducto = 'product';
 
 type
@@ -133,6 +134,10 @@ type
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const AConfiguracion: TConfiguracionGlobalPrestaShop;
       const AMensaje: string);
+    procedure GuardarSinConexion(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      const AMensaje: string);
     procedure GuardarIncidenciaTerminal(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const AConfiguracion: TConfiguracionGlobalPrestaShop;
@@ -161,13 +166,13 @@ type
     procedure EjecutarBarridoSiProcede(
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure ProcesarCiclo(ARecuperacion: Boolean);
-    procedure ProcesarFila(
+    function ProcesarFila(
       AIdCola: Int64;
       const ACliente: IClienteCatalogoPrestaInstantanea;
       const AClienteAlta: IClienteCatalogoAltaPresta;
       const ATransporteHistorial:
         ITransportePrestaShopConHistorial;
-      const AConfiguracion: TConfiguracionGlobalPrestaShop);
+      const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
     procedure ProcesarLinea(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ALinea: TLineaArticuloPrestaShop;
@@ -820,6 +825,8 @@ begin
   except
     on E: ECierreForzadoPrestaShop do
       raise;
+    on E: EConexionHttpTemporal do
+      raise;
     on E: EAltaArticuloPrestaLocal do
       raise;
     on E: ERecursoPrestaAmbiguo do
@@ -1042,7 +1049,7 @@ begin
     begin
       bContinuar := SigueVigente(AConfiguracion);
       if bContinuar then
-        ProcesarFila(
+        bContinuar := ProcesarFila(
           aPendientes[iIndice],
           ACliente,
           AClienteAlta,
@@ -1053,18 +1060,19 @@ begin
   end;
 end;
 
-procedure THiloPrestaShopCola.ProcesarFila(
+function THiloPrestaShopCola.ProcesarFila(
   AIdCola: Int64;
   const ACliente: IClienteCatalogoPrestaInstantanea;
   const AClienteAlta: IClienteCatalogoAltaPresta;
   const ATransporteHistorial:
     ITransportePrestaShopConHistorial;
-  const AConfiguracion: TConfiguracionGlobalPrestaShop);
+  const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
 var
   oContextoHistorial: TContextoTransportePrestaShop;
   oTrabajo: TTrabajoArticuloPrestaShop;
   sToken: string;
 begin
+  Result := True;
   if FControlTrabajo.IntentarIniciarTrabajo then
   begin
     try
@@ -1157,6 +1165,11 @@ begin
                   oTrabajo,
                   AConfiguracion,
                   ERecursoPrestaAmbiguo(E))
+              else if E is EConexionHttpTemporal then
+              begin
+                GuardarSinConexion(oTrabajo, AConfiguracion, E.Message);
+                Result := False;
+              end
               else
                 GuardarError(oTrabajo, AConfiguracion, E.Message);
             end;
@@ -1492,6 +1505,30 @@ begin
     FRegistroLog.RegistrarAviso(
       Format(
         'Cola PrestaShop, artículo %s: %s',
+        [ATrabajo.CodigoArticulo, sMensaje]));
+end;
+
+procedure THiloPrestaShopCola.GuardarSinConexion(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  const AMensaje: string);
+var
+  sMensaje: string;
+begin
+  sMensaje := OcultarClave(AMensaje, AConfiguracion.ClaveApi);
+  FRepositorio.GuardarErrorIntento(
+    ATrabajo.IdCola,
+    ATrabajo.Token,
+    'PENDIENTE',
+    CSegundosReintentoSinConexion,
+    sMensaje,
+    FUsuario,
+    False);
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarAviso(
+      Format(
+        'Cola PrestaShop aplazada por falta de conexión, artículo %s; ' +
+        'el intento no se contabiliza: %s',
         [ATrabajo.CodigoArticulo, sMensaje]));
 end;
 

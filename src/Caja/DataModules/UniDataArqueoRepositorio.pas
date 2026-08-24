@@ -797,7 +797,11 @@ begin
   try
     Query.Connection := FConexion;
     oDefinicion := DefinicionesSql[8];
-    Query.SQL.Text := oDefinicion.SqlBase;
+    if Assigned(FCatalogoSql) then
+      Query.SQL.Text := FCatalogoSql.Resolver(
+        oDefinicion).Texto
+    else
+      Query.SQL.Text := oDefinicion.SqlBase;
     Query.Open;
     ValidarCamposResultadoSql(
       oDefinicion,

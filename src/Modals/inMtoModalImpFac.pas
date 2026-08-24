@@ -47,25 +47,35 @@ uses
   dxSpreadSheetStyles, dxHashUtils, inLibDevExcel, System.Actions, Vcl.ActnList,
   frLocalization, frLanguageSpanish, frCoreClasses,
   frxExportBaseImageSettingsDialog, frxSmartMemo,
-  inLibInformeFacturaPersistenciaIntf;
+  inLibInformeFacturaPersistenciaIntf, inLibComandoImprimirFacturas;
 
 type
+  TEjecutarLoteFacturas = reference to function(
+    const AReferencias: TReferenciasComandoFactura;
+    const AFormato: string): Boolean;
+  TObtenerLoteFacturas = reference to function:
+    TReferenciasComandoFactura;
+
   TfrmPrintFac = class(TfrmPrint)
     edtNroFac: TcxTextEdit;
     lblcxlbl1: TcxLabel;
     edtSerie: TcxTextEdit;
     cxrdgrp1: TcxRadioGroup;
     rbActual: TcxRadioButton;
-    rbRangoFechas: TcxRadioButton;
-    dedDesde: TcxDateEdit;
-    dedHasta: TcxDateEdit;
-    lblcxlbl2: TcxLabel;
-    lblcxlbl3: TcxLabel;
-    procedure rbRangoFechasClick(Sender: TObject);
+    rbProcesarFiltrados: TcxRadioButton;
+    procedure rbProcesarFiltradosClick(Sender: TObject);
     procedure rbActualClick(Sender: TObject);
+    procedure btnPDFClick(Sender: TObject); override;
+    procedure btnImprimirClick(Sender: TObject); override;
     procedure btnExcelClick(Sender: TObject);
   private
     FPreparadorInforme: IPreparadorInformeFactura;
+    FObtenerReferenciasFiltradas: TObtenerLoteFacturas;
+    FExportarLotePdf: TEjecutarLoteFacturas;
+    FImprimirLote: TEjecutarLoteFacturas;
+    procedure AplicarModoSeleccionado;
+    function PrepararLote(
+      const AAccion: TEjecutarLoteFacturas): Boolean;
   protected
     function TraducirContenidoInforme: Boolean; override;
     procedure PdfExportado(const ARuta: string); override;
@@ -77,7 +87,12 @@ type
       const ASerie, ANumero: string); static;
     procedure preparar_consulta; override;
     procedure AfterReportLoaded; override;
+    procedure ConfigurarDataModule(ADataModule: TdmFacturas);
     procedure ConfigurarNombrePDF;
+    procedure ConfigurarLote(
+      APuedeUsarActual: Boolean;
+      const AObtenerFiltradas: TObtenerLoteFacturas;
+      const AExportarPdf, AImprimir: TEjecutarLoteFacturas);
     function ObtenerNombreFactura(ADataSet: TDataSet): string;
     procedure AplicarSkuDescripcionReport(AReport: TfrxReport);
   public
@@ -93,9 +108,22 @@ uses
   inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob,
   inLibDir, inLibFacturasPersistenciaIntf,
   UniDataFacturasOperaciones, UniDataVentasWsCola,
-  UniDataInformeFacturaRepositorio;
+  UniDataInformeFacturaRepositorio, inLibMsgFacturas;
 
 { TfrmPrintFac }
+
+procedure TfrmPrintFac.ConfigurarDataModule(ADataModule: TdmFacturas);
+begin
+  dmFac := ADataModule;
+  if dmFac <> nil then
+  begin
+    // Se enlaza tambien la plantilla origen antes de cualquier AssignAll.
+    // Asi, tanto el formato predeterminado como los formatos guardados se
+    // cargan dentro del ambito local del data module de esta instancia.
+    RebindReportDataSetsByDataModule(frxReportOrigen, dmFac);
+    RebindReportDataSetsByDataModule(frxrprt1, dmFac);
+  end;
+end;
 
 function TfrmPrintFac.TraducirContenidoInforme: Boolean;
 begin
@@ -240,6 +268,91 @@ begin
   end;
 end;
 
+procedure TfrmPrintFac.ConfigurarLote(
+  APuedeUsarActual: Boolean;
+  const AObtenerFiltradas: TObtenerLoteFacturas;
+  const AExportarPdf, AImprimir: TEjecutarLoteFacturas);
+begin
+  FObtenerReferenciasFiltradas := AObtenerFiltradas;
+  FExportarLotePdf := AExportarPdf;
+  FImprimirLote := AImprimir;
+  rbActual.Enabled := APuedeUsarActual;
+  rbProcesarFiltrados.Enabled := Assigned(FObtenerReferenciasFiltradas);
+  if rbActual.Enabled then
+    rbActual.Checked := True
+  else if rbProcesarFiltrados.Enabled then
+    rbProcesarFiltrados.Checked := True;
+  AplicarModoSeleccionado;
+end;
+
+procedure TfrmPrintFac.AplicarModoSeleccionado;
+var
+  bActual: Boolean;
+begin
+  bActual := rbActual.Checked;
+  btnPDF.Enabled := True;
+  btnImprimir.Enabled := True;
+  btnVistaPreliminar.Enabled := bActual;
+  btnEditar.Enabled := bActual;
+  btnExcel.Enabled := bActual;
+end;
+
+function TfrmPrintFac.PrepararLote(
+  const AAccion: TEjecutarLoteFacturas): Boolean;
+var
+  oReferencias: TReferenciasComandoFactura;
+begin
+  Result := False;
+  if not Assigned(AAccion) then
+  begin
+    ShowMessage(SErrorServicioLoteImpresionFacturas);
+    Exit;
+  end;
+  Consultar_Formularios(True);
+  if FormatoElegido = '' then
+    Exit;
+  try
+    if Assigned(FObtenerReferenciasFiltradas) then
+      oReferencias := FObtenerReferenciasFiltradas()
+    else
+      oReferencias := nil;
+  except
+    on E: Exception do
+    begin
+      ShowMessage(E.Message);
+      Exit;
+    end;
+  end;
+  if Length(oReferencias) = 0 then
+  begin
+    ShowMessage(SErrorFacturasFiltradasVacias);
+    Exit;
+  end;
+  Result := AAccion(oReferencias, FormatoElegido);
+end;
+
+procedure TfrmPrintFac.btnPDFClick(Sender: TObject);
+begin
+  if rbProcesarFiltrados.Checked then
+  begin
+    if PrepararLote(FExportarLotePdf) then
+      ModalResult := mrOk;
+  end
+  else
+    inherited btnPDFClick(Sender);
+end;
+
+procedure TfrmPrintFac.btnImprimirClick(Sender: TObject);
+begin
+  if rbProcesarFiltrados.Checked then
+  begin
+    if PrepararLote(FImprimirLote) then
+      ModalResult := mrOk;
+  end
+  else
+    inherited btnImprimirClick(Sender);
+end;
+
 procedure TfrmPrintFac.PdfExportado(const ARuta: string);
 var
   sSerie:  string;
@@ -326,11 +439,10 @@ procedure TfrmPrintFac.preparar_consulta;
 var
   criterios: TCriteriosInformeFactura;
 begin
-  criterios.FacturaActual := rbActual.Checked;
+  criterios := Default(TCriteriosInformeFactura);
+  criterios.FacturaActual := True;
   criterios.Serie := edtSerie.Text;
   criterios.Numero := edtNroFac.Text;
-  criterios.FechaDesde := dedDesde.Date;
-  criterios.FechaHasta := dedHasta.Date;
   if FPreparadorInforme = nil then
     FPreparadorInforme := CrearPreparadorInformeFacturaUniDAC(
       dmFac.unqryFacPrint,
@@ -347,16 +459,12 @@ end;
 
 procedure TfrmPrintFac.rbActualClick(Sender: TObject);
 begin
-  inherited;
-   dedDesde.Enabled := false;
-   dedHasta.Enabled := false;
+  AplicarModoSeleccionado;
 end;
 
-procedure TfrmPrintFac.rbRangoFechasClick(Sender: TObject);
+procedure TfrmPrintFac.rbProcesarFiltradosClick(Sender: TObject);
 begin
-  inherited;
-  dedDesde.Enabled := true;
-  dedHasta.Enabled := true;
+  AplicarModoSeleccionado;
 end;
 
 end.

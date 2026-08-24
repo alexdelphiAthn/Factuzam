@@ -63,9 +63,9 @@ type
     ActionList1: TActionList;
     actSalir: TAction;
     frLocalizationController1: TfrLocalizationController;
-    procedure btnImprimirClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject); virtual;
     procedure btnSalirClick(Sender: TObject);
-    procedure btnPDFClick(Sender: TObject);
+    procedure btnPDFClick(Sender: TObject); virtual;
     procedure btnVistaPreliminarClick(Sender: TObject);
     procedure btnEditarClick(Sender: TObject);
     procedure btnExcelClick(Sender: TObject);
@@ -142,6 +142,11 @@ type
     function ExportarPdfPreparado(
       const ARuta: string;
       ANotificarExportacion: Boolean = True): Boolean;
+    // Imprime sin mostrar el dialogo del controlador usando los datos que
+    // el llamador ya ha preparado. Un nombre vacio conserva la impresora
+    // predeterminada del informe.
+    function ImprimirPreparadoEn(
+      const AImpresora: string): Boolean;
     // Crea en runtime un dataset auxiliar por cada guia configurada en
     // fza_informes_guias para Self.Name, enlazandolo MasterSource-style
     // al frxDBDataset master y exponiendolo al frxrprt1.
@@ -178,7 +183,8 @@ implementation
 
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
-  System.Generics.Collections, System.Rtti, inLibFotos, inLibVerifactu,
+  System.Generics.Collections, System.Rtti, System.TypInfo,
+  inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar,
   inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme,
   inLibVentasPantallaIntf,
@@ -236,9 +242,11 @@ var
   ctx: TRttiContext;
   rType: TRttiType;
   prop: TRttiProperty;
+  propDataSetName: TRttiProperty;
   curVal: TValue;
   curObj: TObject;
   newDs: TfrxDBDataset;
+  sDataSetName: string;
 begin
   if (Report <> nil) and (DM <> nil) then
   begin
@@ -255,9 +263,40 @@ begin
       end;
       if Map.Count > 0 then
       begin
+        // FastReport registra globalmente todos los TfrxDataSet. Cuando hay
+        // dos instancias del mismo modulo (por ejemplo, la pantalla de
+        // facturas y el impresor del lote), ambas publican los UserName
+        // "Facturas" y "Lineas Facturas". El modo global puede resolver el
+        // informe contra la primera instancia y mezclar FieldDefs con otro
+        // TDataSet. EnabledDataSets es el mecanismo de FastReport para
+        // acotar la resolucion al modulo de esta instancia.
+        Report.EngineOptions.UseGlobalDataSetList := False;
+        Report.EnabledDataSets.Clear;
         Report.DataSets.Clear;
-        for ds in Map.Values do
-          Report.DataSets.Add(ds);
+        // Conservamos el orden de los componentes del data module y evitamos
+        // duplicados si dos wrappers declaran accidentalmente el mismo
+        // UserName.
+        for i := 0 to DM.ComponentCount - 1 do
+        begin
+          comp := DM.Components[i];
+          if comp is TfrxDBDataset then
+          begin
+            ds := TfrxDBDataset(comp);
+            if (ds.UserName <> '') and
+               Map.TryGetValue(ds.UserName, newDs) and
+               (newDs = ds) then
+            begin
+              Report.EnabledDataSets.Add(ds);
+              Report.DataSets.Add(ds);
+            end;
+          end;
+        end;
+        // El propio TfrxReport tambien puede actuar como banda de datos.
+        // AllObjects no incluye la raiz, por lo que se trata expresamente.
+        sDataSetName := Report.DataSetName;
+        if (sDataSetName <> '') and
+           Map.TryGetValue(sDataSetName, newDs) then
+          Report.DataSet := newDs;
         for i := 0 to Report.AllObjects.Count - 1 do
         begin
           obj := TfrxComponent(Report.AllObjects[i]);
@@ -265,16 +304,28 @@ begin
           prop := rType.GetProperty('DataSet');
           if (prop <> nil) and prop.IsReadable and prop.IsWritable then
           begin
+            sDataSetName := '';
             curVal := prop.GetValue(obj);
-            if not curVal.IsEmpty then
+            if not curVal.IsEmpty and (curVal.Kind = tkClass) then
             begin
               curObj := curVal.AsObject;
-              if (curObj is TfrxDBDataset) and
-                 Map.TryGetValue(
-                   TfrxDBDataset(curObj).UserName, newDs) and
-                 (newDs <> curObj) then
-                prop.SetValue(obj, newDs);
+              if curObj is TfrxDBDataset then
+                sDataSetName := TfrxDBDataset(curObj).UserName;
             end;
+            // Un formato guardado puede conservar DataSetName aunque el
+            // puntero DataSet no se haya podido resolver al cargarlo.
+            if sDataSetName = '' then
+            begin
+              propDataSetName := rType.GetProperty('DataSetName');
+              if (propDataSetName <> nil) and
+                 propDataSetName.IsReadable and
+                 (propDataSetName.PropertyType.TypeKind in
+                    [tkString, tkLString, tkWString, tkUString]) then
+                sDataSetName := propDataSetName.GetValue(obj).AsString;
+            end;
+            if (sDataSetName <> '') and
+               Map.TryGetValue(sDataSetName, newDs) then
+              prop.SetValue(obj, newDs);
           end;
         end;
       end;
@@ -867,6 +918,37 @@ begin
   end;
 end;
 
+function TfrmPrint.ImprimirPreparadoEn(
+  const AImpresora: string): Boolean;
+var
+  bMostrarDialogo: Boolean;
+  sImpresoraPrevia: string;
+begin
+  Result := False;
+  if sElegido <> '' then
+  begin
+    AfterReportLoaded;
+    AbrirGuiasRuntime(True);
+    OnGuiasAplicadas;
+    TraducirInformeActual;
+    bMostrarDialogo := frxrprt1.PrintOptions.ShowDialog;
+    sImpresoraPrevia := frxrprt1.PrintOptions.Printer;
+    try
+      frxrprt1.PrintOptions.ShowDialog := False;
+      if Trim(AImpresora) <> '' then
+        frxrprt1.PrintOptions.Printer := Trim(AImpresora);
+      Result := frxrprt1.PrepareReport(True) and
+                (frxrprt1.PreviewPages.Count > 0);
+      if Result then
+        Result := frxrprt1.Print;
+    finally
+      frxrprt1.PrintOptions.ShowDialog := bMostrarDialogo;
+      frxrprt1.PrintOptions.Printer := sImpresoraPrevia;
+      CerrarGuiasRuntime;
+    end;
+  end;
+end;
+
 procedure TfrmPrint.btnVistaPreliminarClick(Sender: TObject);
 begin
   Preparar_consulta;
@@ -1016,14 +1098,27 @@ procedure TfrmPrint.SeleccionarFormato(
   out AAccion: string);
 var
   Selector: TfrmMtoModalGenImpEle;
+  RestaurarVisibilidad: Boolean;
 begin
   Selector := TfrmMtoModalGenImpEle.Create(Self, Self);
   try
-    PrepararSelectorFormato(Selector, AFormatoPredeterminado);
-    sElegido := Selector.sElegido;
-    AAccion := Selector.sFicha;
-    ActualizarFormatoPredeterminado(
-      Selector, AFormatoPredeterminado);
+    // TfrmPrint es fsStayOnTop. Si sigue visible, Windows mantiene este
+    // formulario por encima del selector modal, que es una ventana normal.
+    // Lo ocultamos durante todo el flujo de seleccion (incluido el posible
+    // dialogo para guardar la opcion predeterminada) y restauramos su estado.
+    RestaurarVisibilidad := Visible;
+    if RestaurarVisibilidad then
+      Hide;
+    try
+      PrepararSelectorFormato(Selector, AFormatoPredeterminado);
+      sElegido := Selector.sElegido;
+      AAccion := Selector.sFicha;
+      ActualizarFormatoPredeterminado(
+        Selector, AFormatoPredeterminado);
+    finally
+      if RestaurarVisibilidad then
+        Show;
+    end;
   finally
     FreeAndNil(Selector);
   end;

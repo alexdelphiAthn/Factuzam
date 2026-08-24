@@ -16,7 +16,9 @@ unit inLibSqlSeguro;
 interface
 
 uses
-  System.SysUtils, System.Classes;
+  System.SysUtils,
+  System.Classes,
+  inLibDialectoSqlIntf;
 
 type
   EIdentificadorSqlNoPermitido = class(Exception);
@@ -27,14 +29,21 @@ function DelimitarIdentificadorSql(
 function DelimitarIdentificadorSql(
   const AIdentificador: string;
   AListaPermitida: TStrings): string; overload;
+function DelimitarIdentificadorSql(
+  const ADialecto: IDialectoSql;
+  const AIdentificador: string;
+  const AListaPermitida: array of string): string; overload;
+function DelimitarIdentificadorSql(
+  const ADialecto: IDialectoSql;
+  const AIdentificador: string;
+  AListaPermitida: TStrings): string; overload;
 
 implementation
 
-resourcestring
-  SIdentificadorSqlNoPermitido =
-    'El identificador SQL "%s" no pertenece a la lista blanca.';
-  SIdentificadorSqlInvalido =
-    'El identificador SQL "%s" contiene caracteres no válidos.';
+uses
+  inLibConexionPerfilIntf,
+  inLibDialectosSql,
+  inLibMsgSqlSeguro;
 
 function EsCaracterInicialValido(ACaracter: Char): Boolean;
 begin
@@ -70,10 +79,24 @@ end;
 function DelimitarIdentificadorSql(
   const AIdentificador: string;
   const AListaPermitida: array of string): string;
+begin
+  Result := DelimitarIdentificadorSql(
+    CrearDialectoSql(mbMariaDB),
+    AIdentificador,
+    AListaPermitida);
+end;
+
+function DelimitarIdentificadorSql(
+  const ADialecto: IDialectoSql;
+  const AIdentificador: string;
+  const AListaPermitida: array of string): string;
 var
   i: Integer;
   bPermitido: Boolean;
 begin
+  if not Assigned(ADialecto) then
+    raise EArgumentNilException.Create(
+      SErrorDialectoSqlNoAsignado);
   ExigirSintaxisIdentificador(AIdentificador);
   bPermitido := False;
   i := Low(AListaPermitida);
@@ -86,16 +109,30 @@ begin
     raise EIdentificadorSqlNoPermitido.CreateFmt(
       SIdentificadorSqlNoPermitido,
       [AIdentificador]);
-  Result := '`' + AIdentificador + '`';
+  Result := ADialecto.DelimitarIdentificador(AIdentificador);
 end;
 
 function DelimitarIdentificadorSql(
+  const AIdentificador: string;
+  AListaPermitida: TStrings): string;
+begin
+  Result := DelimitarIdentificadorSql(
+    CrearDialectoSql(mbMariaDB),
+    AIdentificador,
+    AListaPermitida);
+end;
+
+function DelimitarIdentificadorSql(
+  const ADialecto: IDialectoSql;
   const AIdentificador: string;
   AListaPermitida: TStrings): string;
 var
   i: Integer;
   bPermitido: Boolean;
 begin
+  if not Assigned(ADialecto) then
+    raise EArgumentNilException.Create(
+      SErrorDialectoSqlNoAsignado);
   ExigirSintaxisIdentificador(AIdentificador);
   bPermitido := False;
   i := 0;
@@ -109,7 +146,7 @@ begin
     raise EIdentificadorSqlNoPermitido.CreateFmt(
       SIdentificadorSqlNoPermitido,
       [AIdentificador]);
-  Result := '`' + AIdentificador + '`';
+  Result := ADialecto.DelimitarIdentificador(AIdentificador);
 end;
 
 end.

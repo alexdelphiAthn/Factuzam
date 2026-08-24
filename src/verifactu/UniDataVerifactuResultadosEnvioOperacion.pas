@@ -44,11 +44,14 @@ type
     Usuario: string;
     Intentos: Integer;
     MaximoIntentos: Integer;
+    NoConsumirIntento: Boolean;
+    EsperaSinIntentoSegundos: Integer;
   end;
   TPlanErrorEnvioVerifactu = record
     EstadoCola: string;
     EsperaSegundos: Integer;
     ActualizarFactura: Boolean;
+    IncrementarIntentos: Boolean;
   end;
   IPersistenciaResultadoEnvioVerifactu = interface
     ['{F7CC65B6-8C40-4FB9-A1A3-4E124C6AFB09}']
@@ -126,12 +129,25 @@ function CrearPlanErrorEnvioVerifactu(
   TPlanErrorEnvioVerifactu;
 begin
   Result := Default(TPlanErrorEnvioVerifactu);
-  Result.EstadoCola := CalcularEstadoReintentoVerifactu(
-    AEntrada.Intentos,
-    AEntrada.MaximoIntentos);
-  Result.EsperaSegundos := CalcularEsperaReintentoVerifactu(
-    AEntrada.Intentos);
-  Result.ActualizarFactura := Result.EstadoCola = 'ERROR';
+  if AEntrada.NoConsumirIntento then
+  begin
+    Result.EstadoCola := 'PENDIENTE';
+    Result.EsperaSegundos := AEntrada.EsperaSinIntentoSegundos;
+    if Result.EsperaSegundos < 1 then
+      Result.EsperaSegundos := 60;
+    Result.ActualizarFactura := False;
+    Result.IncrementarIntentos := False;
+  end
+  else
+  begin
+    Result.EstadoCola := CalcularEstadoReintentoVerifactu(
+      AEntrada.Intentos,
+      AEntrada.MaximoIntentos);
+    Result.EsperaSegundos := CalcularEsperaReintentoVerifactu(
+      AEntrada.Intentos);
+    Result.ActualizarFactura := Result.EstadoCola = 'ERROR';
+    Result.IncrementarIntentos := True;
+  end;
 end;
 
 constructor TOperacionResultadosEnvioVerifactu.Create(

@@ -69,10 +69,13 @@ begin
     try
       oSql := ACatalogo.Resolver(ADefinicion);
     except
+      on E: EVarianteSqlMotorNoDisponible do
+        raise;
       on E: Exception do
       begin
-        oSql := ResolverSqlBase(
+        oSql := ResolverSqlBaseMotor(
           ADefinicion,
+          ACatalogo.Motor,
           E.Message);
       end;
     end;
@@ -93,7 +96,7 @@ begin
           oSql.ClavePerfil,
           E.Message,
           AIncidencias);
-        AEjecutar(ADefinicion.SqlBase);
+        AEjecutar(oSql.TextoBase);
       end
       else
         raise;

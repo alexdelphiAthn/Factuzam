@@ -16,7 +16,9 @@ unit inLibCatalogoSqlAdmin;
 interface
 
 uses
-  inLibCatalogoSqlIntf, inLibPerfilesUsuarioIntf;
+  inLibCatalogoSqlIntf,
+  inLibConexionPerfilIntf,
+  inLibPerfilesUsuarioIntf;
 
 type
   TEstadoPerfilSql = (
@@ -47,6 +49,7 @@ type
   private
     FPerfilesLectura: ILectorPerfilesUsuario;
     FPerfilesEscritura: IEscritorPerfilesUsuario;
+    FMotor: TMotorBBDD;
     function CargarPerfil(
       const AClavePerfil: string): TProfileDicc;
     function PerfilActivo(const AValor: string): Boolean;
@@ -56,7 +59,11 @@ type
   public
     constructor Create(
       const APerfilesLectura: ILectorPerfilesUsuario;
-      const APerfilesEscritura: IEscritorPerfilesUsuario);
+      const APerfilesEscritura: IEscritorPerfilesUsuario); overload;
+    constructor Create(
+      const APerfilesLectura: ILectorPerfilesUsuario;
+      const APerfilesEscritura: IEscritorPerfilesUsuario;
+      AMotor: TMotorBBDD); overload;
     procedure PublicarFaltantes(
       const AClavePerfil: string;
       const ADefiniciones: TDefinicionesSql);
@@ -100,9 +107,21 @@ constructor TAdministradorSqlPerfiles.Create(
   const APerfilesLectura: ILectorPerfilesUsuario;
   const APerfilesEscritura: IEscritorPerfilesUsuario);
 begin
+  Create(
+    APerfilesLectura,
+    APerfilesEscritura,
+    mbMariaDB);
+end;
+
+constructor TAdministradorSqlPerfiles.Create(
+  const APerfilesLectura: ILectorPerfilesUsuario;
+  const APerfilesEscritura: IEscritorPerfilesUsuario;
+  AMotor: TMotorBBDD);
+begin
   inherited Create;
   FPerfilesLectura := APerfilesLectura;
   FPerfilesEscritura := APerfilesEscritura;
+  FMotor := AMotor;
 end;
 
 function TAdministradorSqlPerfiles.CargarPerfil(
@@ -192,16 +211,22 @@ begin
           'S;V=%d;BASE=%s',
           [ADefiniciones[iIndice].Version,
            CalcularHuellaSql(
-             ADefiniciones[iIndice].SqlBase)]);
+             ObtenerSqlBaseMotor(
+               ADefiniciones[iIndice],
+               FMotor))]);
         FPerfilesEscritura.GrabarPerfil(
           PERFIL_TODOS,
           AClavePerfil,
           sClaveSql,
           sVersion,
-          ADefiniciones[iIndice].SqlBase);
+          ObtenerSqlBaseMotor(
+            ADefiniciones[iIndice],
+            FMotor));
         oValor.sValue := sVersion;
         oValor.sValueText :=
-          ADefiniciones[iIndice].SqlBase;
+          ObtenerSqlBaseMotor(
+            ADefiniciones[iIndice],
+            FMotor);
         oPerfil.AddOrSetValue(
           sClaveSql,
           oValor);
@@ -219,7 +244,7 @@ begin
     raise Exception.Create(
       SErrorRegistroSqlNoConfigurado);
   PublicarFaltantes(
-    CLAVE_PERFIL_CATALOGO_SQL,
+    ClavePerfilCatalogoSql(FMotor),
     ARegistro.ObtenerDefiniciones);
 end;
 
@@ -249,12 +274,16 @@ begin
       Result[iIndice].Operacion :=
         ADefiniciones[iIndice].Operacion;
       Result[iIndice].SqlBase :=
-        ADefiniciones[iIndice].SqlBase;
+        ObtenerSqlBaseMotor(
+          ADefiniciones[iIndice],
+          FMotor);
       Result[iIndice].SqlPerfil := '';
       Result[iIndice].ValorPerfil := '';
       Result[iIndice].UltimaCausaFallback := '';
       Result[iIndice].HuellaBase := CalcularHuellaSql(
-        ADefiniciones[iIndice].SqlBase);
+        ObtenerSqlBaseMotor(
+          ADefiniciones[iIndice],
+          FMotor));
       Result[iIndice].HuellaPerfil := '';
       Result[iIndice].Mensaje := '';
       Result[iIndice].Politica :=
@@ -288,7 +317,9 @@ begin
         else
         begin
           oValidacion := ValidarSql(
-            ADefiniciones[iIndice], sSqlPerfil);
+            ADefiniciones[iIndice],
+            sSqlPerfil,
+            FMotor);
           if not oValidacion.EsValido then
           begin
             Result[iIndice].Estado := epsInvalido;
@@ -318,7 +349,7 @@ begin
     raise Exception.Create(
       SErrorRegistroSqlNoConfigurado);
   Result := Revisar(
-    CLAVE_PERFIL_CATALOGO_SQL,
+    ClavePerfilCatalogoSql(FMotor),
     ARegistro.ObtenerDefiniciones,
     AIncidencias);
 end;
@@ -329,7 +360,7 @@ procedure TAdministradorSqlPerfiles.Exportar(
 begin
   Exportar(
     ARuta,
-    CLAVE_PERFIL_CATALOGO_SQL,
+    ClavePerfilCatalogoSql(FMotor),
     ADefiniciones,
     nil);
 end;
@@ -369,7 +400,9 @@ begin
           ADefiniciones[iIndice].Operacion) + '.base.sql');
       TFile.WriteAllText(
         sFichero,
-        ADefiniciones[iIndice].SqlBase,
+        ObtenerSqlBaseMotor(
+          ADefiniciones[iIndice],
+          FMotor),
         TEncoding.UTF8);
       if oRevisiones[iIndice].TienePerfil then
       begin
@@ -395,7 +428,9 @@ begin
            ADefiniciones[iIndice].Politica),
          ADefiniciones[iIndice].Version,
          CalcularHuellaSql(
-           ADefiniciones[iIndice].SqlBase),
+           ObtenerSqlBaseMotor(
+             ADefiniciones[iIndice],
+             FMotor)),
          oRevisiones[iIndice].HuellaPerfil,
          sMensaje,
          oRevisiones[iIndice].UltimaCausaFallback]));
@@ -418,7 +453,7 @@ begin
       SErrorRegistroSqlNoConfigurado);
   Exportar(
     ARuta,
-    CLAVE_PERFIL_CATALOGO_SQL,
+    ClavePerfilCatalogoSql(FMotor),
     ARegistro.ObtenerDefiniciones,
     AIncidencias);
 end;

@@ -17,6 +17,7 @@ interface
 
 uses
   inLibCatalogoSqlIntf,
+  inLibConexionPerfilIntf,
   inLibPerfilesUsuarioIntf,
   inLibLogIntf;
 
@@ -28,7 +29,8 @@ procedure CrearCatalogoSqlAplicacion(
   AActivo: Boolean;
   out ACatalogo: ICatalogoSql;
   out AIncidencias: IRegistroIncidenciasSql;
-  const ARegistroLog: IRegistroLog = nil);
+  const ARegistroLog: IRegistroLog = nil;
+  AMotor: TMotorBBDD = mbMariaDB);
 
 implementation
 
@@ -96,7 +98,8 @@ procedure CrearCatalogoSqlAplicacion(
   AActivo: Boolean;
   out ACatalogo: ICatalogoSql;
   out AIncidencias: IRegistroIncidenciasSql;
-  const ARegistroLog: IRegistroLog);
+  const ARegistroLog: IRegistroLog;
+  AMotor: TMotorBBDD);
 var
   oAdministrador: TAdministradorSqlPerfiles;
   oPerfil: TProfileDicc;
@@ -114,7 +117,8 @@ begin
         CrearRegistroDefinicionesSqlAplicacion;
       oAdministrador := TAdministradorSqlPerfiles.Create(
         APerfilesLectura,
-        APerfilesEscritura);
+        APerfilesEscritura,
+        AMotor);
       try
         oAdministrador.PublicarCatalogo(
           oRegistro);
@@ -122,7 +126,7 @@ begin
         FreeAndNil(oAdministrador);
       end;
       APerfilesLectura.CargarPerfilFormulario(
-        CLAVE_PERFIL_CATALOGO_SQL,
+        ClavePerfilCatalogoSql(AMotor),
         PERFIL_TODOS,
         PERFIL_TODOS,
         oPerfil);
@@ -140,7 +144,8 @@ begin
   end;
   try
     ACatalogo := TCatalogoSqlPerfiles.Create(
-      oPerfil);
+      oPerfil,
+      AMotor);
   finally
     FreeAndNil(oPerfil);
   end;

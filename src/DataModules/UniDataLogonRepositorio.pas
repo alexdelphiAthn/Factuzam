@@ -17,9 +17,11 @@ interface
 
 uses
   System.Classes, Uni,
+  inLibConexionesIntf,
   inLibLogonAplicacionIntf;
 
 procedure CrearRepositorioLogonUniDAC(
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   out ARepositorio: IRepositorioLogon;
   out AConexion: TUniConnection);
 function ExisteEsquemaLogonUniDAC(
@@ -33,8 +35,9 @@ procedure EjecutarScriptLogonUniDAC(
 implementation
 
 uses
-  System.SysUtils, Data.DB, DBAccess, MySQLUniProvider,
-  DAScript, UniScript, inLibWin;
+  System.SysUtils, Data.DB, DBAccess,
+  DAScript, UniScript, inLibMsgConexion, inLibMsgLogon,
+  inLibProteccionDatosFacturacion, inLibWin;
 
 const
   SQL_AUTENTICAR =
@@ -43,7 +46,7 @@ const
     'V.GRUPO_USU, V.ESGRUPOADMINISTRADOR_USUGRP ' +
     'FROM fza_usuarios U LEFT JOIN VI_USUARIOS V ' +
     'ON V.USUARIO_USU = U.USUARIO_USU ' +
-    'WHERE U.USUARIO_USU = :Usuario LIMIT 1';
+    'WHERE U.USUARIO_USU = :Usuario';
   SQL_ULTIMO_LOGIN =
     'UPDATE fza_usuarios SET ULTIMO_LOGIN_USU = :Instante ' +
     'WHERE USUARIO_USU = :Usuario';
@@ -56,10 +59,11 @@ type
     TInterfacedObject,
     IRepositorioLogon)
   private
-    FProveedor: TMySQLUniProvider;
+    FFabricaConexiones: IFabricaConexionesUniDAC;
     FConexion: TUniConnection;
   public
-    constructor Create;
+    constructor Create(
+      const AFabricaConexiones: IFabricaConexionesUniDAC);
     destructor Destroy; override;
     function Autenticar(
       const AUsuario, AContrasena: string): TResultadoAutenticacionLogon;
@@ -84,38 +88,39 @@ type
 procedure ComprobarConexion(AConexion: TUniConnection);
 begin
   if AConexion = nil then
-    raise EArgumentNilException.Create('AConexion');
+    raise EArgumentNilException.Create(
+      SErrorConexionNoAsignada);
 end;
 
 procedure CrearRepositorioLogonUniDAC(
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   out ARepositorio: IRepositorioLogon;
   out AConexion: TUniConnection);
 var
   oRepositorio: TRepositorioLogonUniDAC;
 begin
-  oRepositorio := TRepositorioLogonUniDAC.Create;
+  oRepositorio := TRepositorioLogonUniDAC.Create(
+    AFabricaConexiones);
   AConexion := oRepositorio.Conexion;
   ARepositorio := oRepositorio;
 end;
 
-constructor TRepositorioLogonUniDAC.Create;
+constructor TRepositorioLogonUniDAC.Create(
+  const AFabricaConexiones: IFabricaConexionesUniDAC);
 begin
+  if not Assigned(AFabricaConexiones) then
+    raise EArgumentNilException.Create(
+      SErrorFabricaConexionesNoAsignada);
   inherited Create;
-  FProveedor := TMySQLUniProvider.Create(nil);
-  FConexion := TUniConnection.Create(nil);
-  FConexion.ProviderName := 'MySQL';
-  FConexion.LoginPrompt := False;
-  FConexion.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-  FConexion.Pooling := True;
-  FConexion.PoolingOptions.MinPoolSize := 1;
-  FConexion.PoolingOptions.MaxPoolSize := 50;
-  FConexion.PoolingOptions.ConnectionLifeTime := 3 * 60;
+  FFabricaConexiones := AFabricaConexiones;
+  FConexion := FFabricaConexiones.CrearConexion(nil);
+  ComprobarConexion(FConexion);
 end;
 
 destructor TRepositorioLogonUniDAC.Destroy;
 begin
   FreeAndNil(FConexion);
-  FreeAndNil(FProveedor);
+  FFabricaConexiones := nil;
   inherited;
 end;
 
@@ -128,15 +133,17 @@ var
 begin
   if not FConexion.Connected then
     raise ERepositorioLogonNoDisponible.Create(
-      'La base de datos de autenticación no está disponible.');
+      SErrorBaseDatosAutenticacionNoDisponible);
   Result := TResultadoAutenticacionLogon.Crear(
     ealCredencialesInvalidas,
-    'Las credenciales no son válidas.');
+    SResultadoCredencialesInvalidas);
   oConsulta := TUniQuery.Create(nil);
   try
     try
       oConsulta.Connection := FConexion;
-      oConsulta.SQL.Text := SQL_AUTENTICAR;
+      oConsulta.SQL.Text :=
+        FFabricaConexiones.DialectoSql.AplicarLimiteOrdenado(
+          SQL_AUTENTICAR, 'U.USUARIO_USU', 1);
       oConsulta.ParamByName('Usuario').AsString := AUsuario;
       oConsulta.Open;
       if not oConsulta.IsEmpty then
@@ -149,7 +156,7 @@ begin
         begin
           Result := TResultadoAutenticacionLogon.Crear(
             ealAutenticado,
-            'Autenticación correcta.');
+            SResultadoAutenticacionCorrecta);
           Result.Usuario := AUsuario;
           Result.Grupo := oConsulta.FieldByName('GRUPO_USU').AsString;
           Result.EsGrupoAdministrador := oConsulta.FieldByName(
@@ -226,6 +233,7 @@ begin
     oScript.NoPreconnect := True;
     oScript.OnError := ResolverError;
     oScript.SQL.LoadFromFile(ARuta);
+    ValidarSqlSinModificacionesFacturacion(oScript.SQL.Text);
     oScript.Execute;
   finally
     oScript.Free;

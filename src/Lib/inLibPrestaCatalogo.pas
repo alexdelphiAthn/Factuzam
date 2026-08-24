@@ -79,7 +79,7 @@ uses
   System.SysUtils, System.Hash, System.Math, System.NetEncoding,
   System.Net.URLClient, System.Variants, System.Generics.Collections,
   Xml.XMLIntf, Xml.XMLDoc, REST.Client, REST.Types,
-  REST.Authenticator.Basic;
+  REST.Authenticator.Basic, inLibErroresHttp;
 
 const
   CNombreProductos = 'products';
@@ -680,9 +680,15 @@ begin
     FSolicitud.Execute;
   except
     on E: Exception do
+    begin
+      if EsFalloTemporalTransporteHttp(E) then
+        raise EConexionHttpTemporal.CreateFmt(SErrorTransportePresta,
+          [sMetodo, ARecurso,
+           OcultarSecreto(E.Message, FAutenticador.Username)]);
       raise ETransportePresta.CreateFmt(SErrorTransportePresta,
         [sMetodo, ARecurso,
          OcultarSecreto(E.Message, FAutenticador.Username)]);
+    end;
   end;
   Result.EstadoHttp := FRespuesta.StatusCode;
   Result.TextoEstado := OcultarSecreto(FRespuesta.StatusText,
@@ -724,9 +730,15 @@ begin
     FSolicitud.Execute;
   except
     on E: Exception do
+    begin
+      if EsFalloTemporalTransporteHttp(E) then
+        raise EConexionHttpTemporal.CreateFmt(SErrorTransportePresta,
+          [sMetodo, ARecurso,
+           OcultarSecreto(E.Message, FAutenticador.Username)]);
       raise ETransportePresta.CreateFmt(SErrorTransportePresta,
         [sMetodo, ARecurso,
          OcultarSecreto(E.Message, FAutenticador.Username)]);
+    end;
   end;
   Result.EstadoHttp := FRespuesta.StatusCode;
   Result.TextoEstado := OcultarSecreto(FRespuesta.StatusText,

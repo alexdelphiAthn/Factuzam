@@ -2,14 +2,15 @@
 {                                                                              }
 {  Módulo:       inLibConexionesUniDAC                                         }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       24/07/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       24/08/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Servicio UniDAC compatible con la conexión principal existente.           }
+{    Servicio UniDAC que crea conexiones de trabajo mediante la fábrica        }
+{    configurada en la raíz de composición.                                    }
 {******************************************************************************}
 unit inLibConexionesUniDAC;
 
@@ -20,13 +21,6 @@ uses
   Uni,
   inLibConexionesIntf;
 
-procedure ConfigurarConexionMySQL(
-  AConexion: TUniConnection;
-  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
-procedure ConfigurarYConectarMySQL(
-  AConexion: TUniConnection;
-  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
-
 type
   TServicioConexionesUniDAC = class(
     TInterfacedObject,
@@ -34,14 +28,15 @@ type
   )
   private
     FConexionPrincipal: TUniConnection;
+    FFabrica: IFabricaConexionesUniDAC;
     function GetConexionPrincipal: TUniConnection;
     function GetDisponible: Boolean;
-    procedure CopiarConfiguracion(
-      AConexion: TUniConnection;
-      AUso: TUsoConexionTrabajo
-    );
+    procedure CopiarManejadorErrorConexionPrincipal(
+      AConexion: TUniConnection);
   public
-    constructor Create(AConexionPrincipal: TUniConnection);
+    constructor Create(
+      AConexionPrincipal: TUniConnection;
+      const AFabrica: IFabricaConexionesUniDAC);
     function CrearConexion(
       AOwner: TComponent;
       AUso: TUsoConexionTrabajo
@@ -52,92 +47,22 @@ type
 implementation
 
 uses
-  System.SysUtils, inLibMsgConfiguracion;
-
-procedure ConfigurarCredencialesMySQL(
-  AConexion: TUniConnection;
-  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
-begin
-  AConexion.ConnectString :=
-    'Provider Name=MySQL;User ID=' + AUsuario +
-    ';Password=' + APassword +
-    ';Data Source=' + AServidor +
-    ';Database=' + ABaseDatos +
-    ';Login Prompt=False';
-  AConexion.Server := AServidor;
-  AConexion.Database := ABaseDatos;
-  AConexion.Username := AUsuario;
-  AConexion.Password := APassword;
-  AConexion.Port := StrToIntDef(
-    APuerto, 3306);
-  AConexion.SpecificOptions.Values[
-    'MySQL.UseUnicode'] := 'True';
-end;
-
-procedure ConfigurarConexionMySQL(
-  AConexion: TUniConnection;
-  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
-begin
-  ConfigurarCredencialesMySQL(
-    AConexion,
-    AUsuario,
-    APassword,
-    AServidor,
-    APuerto,
-    ABaseDatos);
-  AConexion.SpecificOptions.Values[
-    'MySQL.Charset'] := 'utf8mb4';
-  AConexion.SpecificOptions.Values[
-    'MySQL.Protocol'] := 'mpDefault';
-  AConexion.Pooling := True;
-  AConexion.PoolingOptions.ConnectionLifetime := 0;
-  AConexion.PoolingOptions.Validate := True;
-  AConexion.PoolingOptions.MinPoolSize := 3;
-  AConexion.PoolingOptions.MaxPoolSize := 20;
-  AConexion.SpecificOptions.Values[
-    'MySQL.Interactive'] := 'True';
-  AConexion.SpecificOptions.Values[
-    'ConnectionTimeout'] := '5';
-  AConexion.Options.LocalFailover := True;
-  AConexion.Options.DisconnectedMode := True;
-end;
-
-procedure ConfigurarYConectarMySQL(
-  AConexion: TUniConnection;
-  const AUsuario, APassword, AServidor, APuerto, ABaseDatos: string);
-begin
-  ConfigurarCredencialesMySQL(
-    AConexion,
-    AUsuario,
-    APassword,
-    AServidor,
-    APuerto,
-    ABaseDatos);
-  if not AConexion.Connected then
-  begin
-    try
-      AConexion.Connect;
-    except
-      on E: Exception do
-      begin
-        raise Exception.Create(
-          Format(
-            SErrorConexionBbddConExcepcion,
-            [
-              SConnFailBBDD,
-              E.ClassName,
-              E.Message
-            ]));
-      end;
-    end;
-  end;
-end;
+  System.SysUtils,
+  inLibMsgConexion;
 
 constructor TServicioConexionesUniDAC.Create(
-  AConexionPrincipal: TUniConnection);
+  AConexionPrincipal: TUniConnection;
+  const AFabrica: IFabricaConexionesUniDAC);
 begin
   inherited Create;
+  if not Assigned(AConexionPrincipal) then
+    raise EArgumentException.Create(
+      SErrorConexionPrincipalNoAsignada);
+  if not Assigned(AFabrica) then
+    raise EArgumentException.Create(
+      SErrorFabricaConexionesNoAsignada);
   FConexionPrincipal := AConexionPrincipal;
+  FFabrica := AFabrica;
 end;
 
 function TServicioConexionesUniDAC.GetConexionPrincipal: TUniConnection;
@@ -148,39 +73,17 @@ end;
 function TServicioConexionesUniDAC.GetDisponible: Boolean;
 begin
   Result := Assigned(FConexionPrincipal) and
+            Assigned(FFabrica) and
             FConexionPrincipal.Connected;
 end;
 
-procedure TServicioConexionesUniDAC.CopiarConfiguracion(
-  AConexion: TUniConnection;
-  AUso: TUsoConexionTrabajo);
+procedure TServicioConexionesUniDAC.CopiarManejadorErrorConexionPrincipal(
+  AConexion: TUniConnection);
 begin
-  AConexion.LoginPrompt := False;
-  AConexion.ProviderName := FConexionPrincipal.ProviderName;
-  AConexion.Server := FConexionPrincipal.Server;
-  AConexion.Port := FConexionPrincipal.Port;
-  AConexion.Database := FConexionPrincipal.Database;
-  AConexion.Username := FConexionPrincipal.Username;
-  AConexion.Password := FConexionPrincipal.Password;
-  AConexion.Pooling := True;
-  AConexion.PoolingOptions.ConnectionLifetime := 0;
-  AConexion.PoolingOptions.Validate := True;
-  AConexion.SpecificOptions.Values['MySQL.Interactive'] := 'True';
-  AConexion.SpecificOptions.Values['ConnectionTimeout'] := '30';
-  AConexion.Options.LocalFailover := True;
-  AConexion.Options.DisconnectedMode := True;
-  case AUso of
-    uctMantenimiento:
-      begin
-        AConexion.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
-        AConexion.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
-        AConexion.SpecificOptions.Values['MySQL.Protocol'] := 'mpDefault';
-        AConexion.OnError := FConexionPrincipal.OnError;
-        AConexion.AfterConnect := FConexionPrincipal.AfterConnect;
-      end;
-    uctSegundoPlano:
-      AConexion.AfterConnect := FConexionPrincipal.AfterConnect;
-  end;
+  if not Assigned(AConexion) then
+    raise EArgumentException.Create(
+      SErrorConexionNoAsignada);
+  AConexion.OnError := FConexionPrincipal.OnError;
 end;
 
 function TServicioConexionesUniDAC.CrearConexion(
@@ -188,11 +91,15 @@ function TServicioConexionesUniDAC.CrearConexion(
   AUso: TUsoConexionTrabajo): TUniConnection;
 begin
   if not Assigned(FConexionPrincipal) then
-    raise Exception.Create(SErrorConexionPrincipalTrabajoNoDisponible);
-  Result := TUniConnection.Create(AOwner);
+    raise EInvalidOpException.Create(
+      SErrorConexionPrincipalNoAsignada);
+  if not Assigned(FFabrica) then
+    raise EInvalidOpException.Create(
+      SErrorFabricaConexionesNoAsignada);
+  Result := FFabrica.CrearConexion(AOwner);
   try
-    CopiarConfiguracion(Result, AUso);
-    Result.Connect;
+    CopiarManejadorErrorConexionPrincipal(Result);
+    FFabrica.Conectar(Result);
   except
     FreeAndNil(Result);
     raise;
@@ -202,6 +109,7 @@ end;
 procedure TServicioConexionesUniDAC.Invalidar;
 begin
   FConexionPrincipal := nil;
+  FFabrica := nil;
 end;
 
 end.

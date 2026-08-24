@@ -17,7 +17,9 @@ interface
 
 uses
   System.Classes,
-  Uni;
+  Uni,
+  inLibConexionPerfilIntf,
+  inLibDialectoSqlIntf;
 
 type
   TUsoConexionTrabajo = (
@@ -25,6 +27,42 @@ type
     uctPrecarga,
     uctSegundoPlano
   );
+
+  IFabricaConexionesUniDAC = interface
+    ['{C1A49483-4701-4B86-96E6-D608928DA9B3}']
+    function GetPerfil: TPerfilConexion;
+    function GetCapacidades: TCapacidadesMotorBBDD;
+    function GetDialectoSql: IDialectoSql;
+    function CrearConexion(AOwner: TComponent): TUniConnection;
+    function CrearPerfilAdministrativo(
+      const APerfilBase: TPerfilConexion): TPerfilConexion;
+    procedure ConfigurarConexion(AConexion: TUniConnection);
+    procedure ConfigurarConexionTemporal(
+      AConexion: TUniConnection;
+      const APerfil: TPerfilConexion;
+      const ACredencial: string);
+    procedure Conectar(AConexion: TUniConnection);
+    procedure ConectarTemporal(
+      AConexion: TUniConnection;
+      const APerfil: TPerfilConexion;
+      const ACredencial: string);
+    procedure InicializarSesion(AConexion: TUniConnection);
+    procedure InicializarSesionTemporal(
+      AConexion: TUniConnection;
+      const APerfil: TPerfilConexion);
+    procedure ActualizarConfiguracion(
+      const APerfil: TPerfilConexion;
+      const ACredencial: string);
+    procedure GuardarConfiguracion;
+    function FormatearError(
+      ACodigo: Integer;
+      const AMensaje: string;
+      AIncluirDetalle: Boolean): string;
+    function EtiquetaMotor: string;
+    property Perfil: TPerfilConexion read GetPerfil;
+    property Capacidades: TCapacidadesMotorBBDD read GetCapacidades;
+    property DialectoSql: IDialectoSql read GetDialectoSql;
+  end;
 
   IServicioConexiones = interface
     ['{BB7D3E06-AD0C-4C73-B7A1-D8E19EE1D994}']

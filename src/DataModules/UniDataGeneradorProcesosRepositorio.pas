@@ -35,6 +35,7 @@ uses
   System.Classes,
   System.Diagnostics,
   System.SysUtils,
+  inLibProteccionDatosFacturacion,
   UniScript;
 
 type
@@ -218,6 +219,8 @@ begin
   AResultado.FConsulta := TUniQuery.Create(nil);
   AResultado.FConsulta.Connection := FConexion;
   AResultado.FConsulta.SQL.Text := ASentencia;
+  AResultado.FConsulta.ReadOnly :=
+    SqlReferenciaTablaFacturacionProtegida(ASentencia);
   AResultado.FConsulta.Open;
   AResultado.FTieneDatos := AResultado.FConsulta.FieldCount > 0;
   if AResultado.FTieneDatos then
@@ -327,6 +330,7 @@ procedure TRepositorioGeneradorProcesosUniDAC.CargarContenido(
   const ANombre: string);
 begin
   FContenido.Close;
+  FContenido.ReadOnly := EsTablaFacturacionProtegida(ANombre);
   FContenido.SQL.Text := 'SELECT * FROM ' + IdentificadorSeguro(ANombre);
   FContenido.Open;
 end;

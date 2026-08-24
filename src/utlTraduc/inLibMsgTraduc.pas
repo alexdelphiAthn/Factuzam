@@ -26,6 +26,8 @@ resourcestring
     'No existe el INI de Factuzam:' + sLineBreak + '%s';
   SErrorClaveIniFactuzam =
     'No se pudo descifrar PasswordEn del INI de Factuzam.';
+  SErrorMotorConexionEditorNoSoportado =
+    'El editor de traducciones todavía solo admite conexiones MariaDB.';
   SErrorConexion =
     'No se pudo conectar con Factuzam:' + sLineBreak + '%s';
   SInfoConexionCorrecta =

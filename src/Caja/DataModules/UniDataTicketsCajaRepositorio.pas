@@ -1034,7 +1034,11 @@ begin
   oQuery := TUniQuery.Create(nil);
   try
     oQuery.Connection := FConexion;
-    oQuery.SQL.Text := oDefinicion.SqlBase;
+    if Assigned(FCatalogoSql) then
+      oQuery.SQL.Text := FCatalogoSql.Resolver(
+        oDefinicion).Texto
+    else
+      oQuery.SQL.Text := oDefinicion.SqlBase;
     oQuery.Open;
     ValidarCamposResultadoSql(
       oDefinicion,

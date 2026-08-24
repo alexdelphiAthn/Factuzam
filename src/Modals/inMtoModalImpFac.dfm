@@ -69,8 +69,8 @@
     Caption = 'Opciones'
     Properties.Items = <>
     TabOrder = 4
-    Height = 137
-    Width = 269
+    Height = 81
+    Width = 242
     object rbActual: TcxRadioButton
       Left = 8
       Top = 24
@@ -83,45 +83,14 @@
       OnClick = rbActualClick
       Transparent = True
     end
-    object rbRangoFechas: TcxRadioButton
+    object rbProcesarFiltrados: TcxRadioButton
       Left = 8
       Top = 48
-      Width = 258
+      Width = 223
       Height = 17
-      Caption = 'Imprimir Rango de Borradores'
-      Enabled = False
+      Caption = 'Procesar filtrados'
       TabOrder = 1
-      OnClick = rbRangoFechasClick
-      Transparent = True
-    end
-    object dedDesde: TcxDateEdit
-      Left = 63
-      Top = 72
-      Enabled = False
-      TabOrder = 2
-      Width = 121
-    end
-    object dedHasta: TcxDateEdit
-      Left = 63
-      Top = 104
-      Enabled = False
-      TabOrder = 4
-      Width = 121
-    end
-    object lblcxlbl2: TcxLabel
-      Left = 7
-      Top = 77
-      Caption = 'Desde'
-      Enabled = False
-      TabOrder = 3
-      Transparent = True
-    end
-    object lblcxlbl3: TcxLabel
-      Left = 12
-      Top = 105
-      Caption = 'Hasta'
-      Enabled = False
-      TabOrder = 5
+      OnClick = rbProcesarFiltradosClick
       Transparent = True
     end
   end

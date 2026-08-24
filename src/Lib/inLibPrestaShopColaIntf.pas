@@ -150,7 +150,8 @@ type
       AIdCola: Int64;
       const AToken, AEstado: string;
       AEsperaSegundos: Integer;
-      const AMensaje, AUsuario: string);
+      const AMensaje, AUsuario: string;
+      AConsumirIntento: Boolean = True);
   end;
 
   ISesionPrestaShopCola = interface

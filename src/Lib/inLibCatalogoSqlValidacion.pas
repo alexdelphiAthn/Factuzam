@@ -16,11 +16,16 @@ unit inLibCatalogoSqlValidacion;
 interface
 
 uses
-  inLibCatalogoSqlIntf;
+  inLibCatalogoSqlIntf,
+  inLibConexionPerfilIntf;
 
 function ValidarSql(
   const ADefinicion: TDefinicionSql;
-  const ASql: string): TResultadoValidacionSql;
+  const ASql: string): TResultadoValidacionSql; overload;
+function ValidarSql(
+  const ADefinicion: TDefinicionSql;
+  const ASql: string;
+  AMotor: TMotorBBDD): TResultadoValidacionSql; overload;
 function ValidarDefinicionSql(
   const ADefinicion: TDefinicionSql): TResultadoValidacionSql;
 function CalcularHuellaSql(const ASql: string): string;
@@ -90,6 +95,8 @@ begin
   while iIndice <= Length(sSinLiterales) do
   begin
     if (sSinLiterales[iIndice] = ':') and
+       ((iIndice = 1) or
+        (sSinLiterales[iIndice - 1] <> ':')) and
        (iIndice < Length(sSinLiterales)) and
        EsInicioIdentificador(sSinLiterales[iIndice + 1]) then
     begin
@@ -368,10 +375,22 @@ end;
 function ValidarSql(
   const ADefinicion: TDefinicionSql;
   const ASql: string): TResultadoValidacionSql;
+begin
+  Result := ValidarSql(
+    ADefinicion,
+    ASql,
+    mbMariaDB);
+end;
+
+function ValidarSql(
+  const ADefinicion: TDefinicionSql;
+  const ASql: string;
+  AMotor: TMotorBBDD): TResultadoValidacionSql;
 var
   oEsperados: TStringList;
   oEncontrados: TStringList;
   sMensajeCampos: string;
+  sPrimerToken: string;
   sTipoEsperado: string;
 begin
   Result.EsValido := False;
@@ -389,7 +408,14 @@ begin
   begin
     sTipoEsperado := NombreTipoSentencia(
       ADefinicion.TipoSentencia);
-    if PrimerToken(ASql) <> sTipoEsperado then
+    sPrimerToken := PrimerToken(ASql);
+    if (ADefinicion.TipoSentencia = tssCall) and
+       (AMotor = mbSQLServer) then
+      sTipoEsperado := 'EXEC';
+    if (sPrimerToken <> sTipoEsperado) and
+       not ((ADefinicion.TipoSentencia = tssCall) and
+            (AMotor = mbSQLServer) and
+            (sPrimerToken = 'EXECUTE')) then
       Result.Mensaje := Format(
         'Se esperaba una sentencia %s.', [sTipoEsperado])
     else
@@ -421,6 +447,8 @@ end;
 
 function ValidarDefinicionSql(
   const ADefinicion: TDefinicionSql): TResultadoValidacionSql;
+var
+  eMotor: TMotorBBDD;
 begin
   Result.EsValido := False;
   Result.Mensaje := '';
@@ -451,9 +479,23 @@ begin
     Result.Mensaje :=
       'Una lectura no puede usar la política de escritura transaccional.'
   else
+  begin
     Result := ValidarSql(
       ADefinicion,
-      ADefinicion.SqlBase);
+      ADefinicion.SqlBase,
+      mbMariaDB);
+    if Result.EsValido then
+      for eMotor := Succ(mbMariaDB) to High(TMotorBBDD) do
+        if TieneVarianteSqlMotor(ADefinicion, eMotor) then
+        begin
+          Result := ValidarSql(
+            ADefinicion,
+            ObtenerSqlBaseMotor(ADefinicion, eMotor),
+            eMotor);
+          if not Result.EsValido then
+            Exit;
+        end;
+  end;
 end;
 
 end.

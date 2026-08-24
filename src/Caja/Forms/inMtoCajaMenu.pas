@@ -23,7 +23,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, JvExControls, JvAnimatedImage,
   JvGIFCtrl, cxLabel, Vcl.ExtCtrls, math, cxStyles,
-  UniProvider, MySQLUniProvider, Data.DB, DBAccess, Uni, Vcl.Menus,
+  Data.DB, DBAccess, Uni, Vcl.Menus,
   Vcl.StdCtrls, cxButtons, inLibCajaVentanasIntf, inMtoTraspasoOpe,
   UniDataTraspaso,
   system.IOUtils, system.IniFiles,

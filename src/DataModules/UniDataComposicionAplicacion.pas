@@ -60,6 +60,7 @@ type
   TComposicionAplicacion = class
   private
     FOwner: TComponent;
+    FFabricaConexiones: IFabricaConexionesUniDAC;
     FContextoSesion: IContextoSesionAplicacion;
     FRegistroLog: IRegistroLog;
     FPreviewTicket: IPreviewTicket;
@@ -101,6 +102,7 @@ type
   public
     constructor Create(
       AOwner: TComponent;
+      const AFabricaConexiones: IFabricaConexionesUniDAC;
       const AContextoSesion: IContextoSesionAplicacion;
       const ARegistroLog: IRegistroLog;
       const APreviewTicket: IPreviewTicket;
@@ -197,7 +199,8 @@ uses
   UniDataRegistroPantallasRepositorio,
   UniDataRepositoriosConfiguracionAplicacionPantalla,
   UniDataRepositoriosOperacionesAplicacionPantalla,
-  UniDataRepositoriosPantalla;
+  UniDataRepositoriosPantalla,
+  inLibMsgConexion;
 
 resourcestring
   SErrorServicioConexionesComposicionNoDisponible =
@@ -284,6 +287,7 @@ end;
 
 constructor TComposicionAplicacion.Create(
   AOwner: TComponent;
+  const AFabricaConexiones: IFabricaConexionesUniDAC;
   const AContextoSesion: IContextoSesionAplicacion;
   const ARegistroLog: IRegistroLog;
   const APreviewTicket: IPreviewTicket;
@@ -295,6 +299,9 @@ begin
   inherited Create;
   if not Assigned(AOwner) then
     raise EArgumentNilException.Create('AOwner');
+  if not Assigned(AFabricaConexiones) then
+    raise EArgumentNilException.Create(
+      SErrorFabricaConexionesNoAsignada);
   if not Assigned(AContextoSesion) then
     raise EArgumentNilException.Create('AContextoSesion');
   if not Assigned(ARegistroLog) then
@@ -304,12 +311,14 @@ begin
   if not Assigned(AGestorExcepciones) then
     raise EArgumentNilException.Create('AGestorExcepciones');
   FOwner := AOwner;
+  FFabricaConexiones := AFabricaConexiones;
   FContextoSesion := AContextoSesion;
   FRegistroLog := ARegistroLog;
   FPreviewTicket := APreviewTicket;
   FRegistroMonitorSQL := ARegistroMonitorSQL;
   FGestorExcepciones := AGestorExcepciones;
   FDmConn := TdmConn.Create(FOwner);
+  FDmConn.AsignarFabrica(AFabricaConexiones);
   FRepositorioCopias := CrearRepositorioCopiasAplicacionPantalla(
     FContextoSesion,
     FDmConn.conUni);
@@ -334,7 +343,9 @@ begin
   FDmConn.AsignarReceptorMonitorSQL(
     FMonitorSQL as IReceptorEventosMonitorSQL);
   FDmConn.conUni.Connect;
-  FConexiones := TServicioConexionesUniDAC.Create(FDmConn.conUni);
+  FConexiones := TServicioConexionesUniDAC.Create(
+    FDmConn.conUni,
+    FFabricaConexiones);
   FConfigCamposCarga := TConfigCamposCache.Create(
     TRepositorioConfigCamposUniDAC.Create(FDmConn.conUni),
     FRegistroLog);
@@ -352,7 +363,8 @@ begin
     ANombrePantalla,
     FServiciosPerfiles.Lectura,
     FServiciosPerfiles.Escritura,
-    FRegistroLog);
+    FRegistroLog,
+    FFabricaConexiones.Perfil.Motor);
 end;
 
 function TComposicionAplicacion.CrearServiciosSqlPantalla(
@@ -520,7 +532,8 @@ begin
     FServiciosPerfiles,
     FServiciosParametrosApp.Lectura,
     FRegistroLog,
-    bCatalogoActivo);
+    bCatalogoActivo,
+    FFabricaConexiones.Perfil.Motor);
   oComposicionFiltros := CrearFiltrosAplicacionPantalla(FOwner);
   FDmFiltros := oComposicionFiltros.DataModule;
   FServiciosFiltros := oComposicionFiltros.Servicios;
@@ -928,6 +941,7 @@ begin
     FConfigCampos := nil;
     FConfigCamposCarga := nil;
     FreeAndNil(FDmConn);
+    FFabricaConexiones := nil;
     FGestorExcepciones := nil;
     FRegistroMonitorSQL := nil;
     FPreviewTicket := nil;

@@ -17,7 +17,8 @@ interface
 
 uses
   System.Classes, Uni, inLibCatalogoSqlIntf,
-  inLibContextoSesionIntf, inLibConexionesIntf,
+  inLibConexionPerfilIntf, inLibContextoSesionIntf,
+  inLibConexionesIntf,
   inLibFiltrosGuardadosIntf, inLibFotos,
   inLibInformesGuiasCache, inLibLogIntf, inLibParametrosIntf,
   inLibPerfilesUsuarioIntf, inLibPermisosIntf,
@@ -53,7 +54,8 @@ function CrearFotosAplicacionPantalla(
   const APerfiles: TServiciosPerfilesUsuario;
   const AParametrosApp: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  ACatalogoActivo: Boolean): TFotosArticulos;
+  ACatalogoActivo: Boolean;
+  AMotor: TMotorBBDD = mbMariaDB): TFotosArticulos;
 function CrearFiltrosAplicacionPantalla(
   AOwner: TComponent): TComposicionFiltrosAplicacionPantalla;
 function CrearInformesGuiasAplicacionPantalla(
@@ -137,7 +139,8 @@ function CrearFotosAplicacionPantalla(
   const APerfiles: TServiciosPerfilesUsuario;
   const AParametrosApp: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  ACatalogoActivo: Boolean): TFotosArticulos;
+  ACatalogoActivo: Boolean;
+  AMotor: TMotorBBDD): TFotosArticulos;
 var
   oCatalogoSql: ICatalogoSql;
   oIncidenciasSql: IRegistroIncidenciasSql;
@@ -148,7 +151,8 @@ begin
     ACatalogoActivo,
     oCatalogoSql,
     oIncidenciasSql,
-    ARegistroLog);
+    ARegistroLog,
+    AMotor);
   Result := TFotosArticulos.Create;
   Result.AsignarConexion(
     AConexion,

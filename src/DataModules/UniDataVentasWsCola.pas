@@ -67,7 +67,8 @@ type
       AIdCola: Int64;
       const AEstado: string;
       AEsperaSegundos: Integer;
-      const AMensaje, AUsuario: string);
+      const AMensaje, AUsuario: string;
+      AConsumirIntento: Boolean = True);
   end;
 
 procedure CamposPdf(
@@ -382,7 +383,8 @@ procedure TRepositorioVentasWsColaUniDAC.GuardarErrorIntento(
   AIdCola: Int64;
   const AEstado: string;
   AEsperaSegundos: Integer;
-  const AMensaje, AUsuario: string);
+  const AMensaje, AUsuario: string;
+  AConsumirIntento: Boolean);
 var
   Qry: TUniQuery;
 begin
@@ -390,12 +392,17 @@ begin
   try
     Qry.SQL.Text :=
       ' UPDATE fza_ventas_ws_cola SET ESTADO_VWSC = :ESTADO, ' +
-      ' CONTADOR_INTENTOS_VWSC = CONTADOR_INTENTOS_VWSC + 1, ' +
+      ' CONTADOR_INTENTOS_VWSC = CONTADOR_INTENTOS_VWSC + ' +
+      ' :INCREMENTO, ' +
       ' INSTANTE_PROXIMO_INTENTO_VWSC = ' +
       ' DATE_ADD(NOW(), INTERVAL :ESPERA SECOND), ' +
       ' MENSAJE_ERROR_VWSC = :MENSAJE, INSTANTE_MODIF = NOW(), ' +
       ' USUARIO_MODIF = :USUARIO WHERE ID_VWSC = :ID';
     Qry.ParamByName('ESTADO').AsString := AEstado;
+    if AConsumirIntento then
+      Qry.ParamByName('INCREMENTO').AsInteger := 1
+    else
+      Qry.ParamByName('INCREMENTO').AsInteger := 0;
     Qry.ParamByName('ESPERA').AsInteger := AEsperaSegundos;
     Qry.ParamByName('MENSAJE').AsString := AMensaje;
     Qry.ParamByName('USUARIO').AsString := AUsuario;

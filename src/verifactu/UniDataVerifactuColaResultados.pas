@@ -31,7 +31,9 @@ type
       const AParametrosCaja: IParametrosCaja; const AUsuario: string;
       AIdCola: Int64; const ASerie, ANumero, AMensaje: string;
       AIntentos: Integer;
-      const ARegistroLog: IRegistroLog); static;
+      const ARegistroLog: IRegistroLog;
+      ANoConsumirIntento: Boolean = False;
+      AEsperaSinIntentoSegundos: Integer = 0); static;
   end;
 implementation
 uses
@@ -83,7 +85,9 @@ class procedure TResultadosVerifactuColaUniDAC.GuardarEnvioError(
   const AParametrosCaja: IParametrosCaja; const AUsuario: string;
   AIdCola: Int64; const ASerie, ANumero, AMensaje: string;
   AIntentos: Integer;
-  const ARegistroLog: IRegistroLog);
+  const ARegistroLog: IRegistroLog;
+  ANoConsumirIntento: Boolean;
+  AEsperaSinIntentoSegundos: Integer);
 var
   oEntrada: TEntradaErrorEnvioVerifactu;
   oOperacion: TOperacionResultadosEnvioVerifactu;
@@ -98,20 +102,31 @@ begin
   oEntrada.MaximoIntentos := AParametrosApp.GetInt(
     'appVerifactuMaxIntentos',
     10);
+  oEntrada.NoConsumirIntento := ANoConsumirIntento;
+  oEntrada.EsperaSinIntentoSegundos := AEsperaSinIntentoSegundos;
   oOperacion := CrearOperacionResultadosEnvioVerifactuUniDAC(AConexion);
   try
     oOperacion.GuardarEnvioError(oEntrada);
   finally
     FreeAndNil(oOperacion);
   end;
-  RegistrarEventoVerifactu(AParametrosApp, AConexion, AUsuario,
-    cEventoVerifactuEnvioError,
-    'Error de envío Verifactu (intento ' + IntToStr(AIntentos + 1) +
-    '): ' + AMensaje, '', ASerie, ANumero);
-  TVentasWsCola.RegistrarEventoSeguro(
-    AParametrosCaja,
-    CrearRepositorioVentasWsColaUniDAC(AConexion),
-    AUsuario,
-    'FISCAL_ACTUALIZADO', ASerie, ANumero, ARegistroLog);
+  if ANoConsumirIntento then
+    RegistrarEventoVerifactu(AParametrosApp, AConexion, AUsuario,
+      cEventoVerifactuInfo,
+      'Envío Verifactu aplazado por falta de conexión; ' +
+      'el intento no se contabiliza: ' + AMensaje,
+      '', ASerie, ANumero)
+  else
+  begin
+    RegistrarEventoVerifactu(AParametrosApp, AConexion, AUsuario,
+      cEventoVerifactuEnvioError,
+      'Error de envío Verifactu (intento ' + IntToStr(AIntentos + 1) +
+      '): ' + AMensaje, '', ASerie, ANumero);
+    TVentasWsCola.RegistrarEventoSeguro(
+      AParametrosCaja,
+      CrearRepositorioVentasWsColaUniDAC(AConexion),
+      AUsuario,
+      'FISCAL_ACTUALIZADO', ASerie, ANumero, ARegistroLog);
+  end;
 end;
 end.
