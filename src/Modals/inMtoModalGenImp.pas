@@ -1050,7 +1050,16 @@ begin
     end;
   end;
   if ASelector.lstFormatos.Count > 0 then
-    ASelector.ShowModal
+  begin
+    if ASelector.ShowModal <> mrOk then
+    begin
+      // Cerrar el selector sin usar Original ni un formato guardado es una
+      // cancelación. No debe conservar los valores iniciales del formulario.
+      ASelector.sElegido := '';
+      ASelector.sFicha := '';
+      ASelector.bPredeterminado := False;
+    end;
+  end
   else
     ASelector.sFicha := 'O';
 end;

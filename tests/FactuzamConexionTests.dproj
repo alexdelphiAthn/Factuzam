@@ -46,7 +46,7 @@
     <PropertyGroup Condition="'$(Base)'!=''">
         <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
-        <DCC_UnitSearchPath>..\src\Lib;..\src\DataModules;$(FactuzamDependenciasPruebas);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>..\src\Lib;..\src\DataModules;..\src\3rdpartyComp\DCPCrypt-master;..\src\3rdpartyComp\DCPCrypt-master\Ciphers;$(FactuzamDependenciasPruebas);$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_Namespace>System;Xml;Data;Datasnap;Web;Soap;Vcl;Vcl.Imaging;Vcl.Touch;Vcl.Samples;Vcl.Shell;$(DCC_Namespace)</DCC_Namespace>
         <SanitizedProjectName>FactuzamConexionTests</SanitizedProjectName>
     </PropertyGroup>
@@ -75,6 +75,9 @@
         <DCCReference Include="PruebasGeneradorProcesosProteccion.pas"/>
         <DCCReference Include="PruebasRestauracionCopiasReglas.pas"/>
         <DCCReference Include="PruebasCorreoValidacion.pas"/>
+        <DCCReference Include="PruebasCredencialUsuarioIni.pas"/>
+        <DCCReference Include="PruebasNuevoEquipo.pas"/>
+        <DCCReference Include="PruebasLogonAplicacion.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionesIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionPerfilIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionPerfil.pas"/>
@@ -89,6 +92,12 @@
         <DCCReference Include="..\src\Lib\inLibSqlSeguro.pas"/>
         <DCCReference Include="..\src\Lib\inLibProteccionDatosFacturacion.pas"/>
         <DCCReference Include="..\src\Lib\inLibCorreoValidacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCifrado.pas"/>
+        <DCCReference Include="..\src\Lib\inLibProteccionCredenciales.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCredencialUsuarioIni.pas"/>
+        <DCCReference Include="..\src\Lib\inLibNuevoEquipo.pas"/>
+        <DCCReference Include="..\src\Lib\inLibLogonAplicacionIntf.pas"/>
+        <DCCReference Include="..\src\Lib\inLibLogonAplicacion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataConexionFabrica.pas"/>
     </ItemGroup>
     <ProjectExtensions>

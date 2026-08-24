@@ -49,7 +49,7 @@ type
     function ValidarEstructuraLogon: Boolean;
     function ConectarAplicacionLogon: Boolean;
     function PrepararLicenciaLogon: Boolean;
-    procedure EjecutarAutenticacionAutomatica;
+    procedure PrepararNuevoEquipo;
   end;
   ICasoUsoPreparacionLogon = interface
     ['{EF902D59-64C5-4300-A6CC-A19AF264DBB7}']
@@ -138,7 +138,7 @@ begin
   if Continuar then
     Continuar := FPasos.PrepararLicenciaLogon;
   if Continuar then
-    FPasos.EjecutarAutenticacionAutomatica;
+    FPasos.PrepararNuevoEquipo;
 end;
 
 function CrearCasoUsoArranqueAplicacion(

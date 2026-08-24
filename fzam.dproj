@@ -201,6 +201,9 @@
         <DCCReference Include="src\Lib\inLibComandoImprimirFacturas.pas"/>
         <DCCReference Include="src\Core\inMtoComandoImprimirFacturas.pas"/>
         <DCCReference Include="src\Lib\inLibConfiguracionIni.pas"/>
+        <DCCReference Include="src\Lib\inLibProteccionCredenciales.pas"/>
+        <DCCReference Include="src\Lib\inLibCredencialUsuarioIni.pas"/>
+        <DCCReference Include="src\Lib\inLibNuevoEquipo.pas"/>
         <DCCReference Include="src\Lib\inLibDatasets.pas"/>
         <DCCReference Include="src\Lib\inLibValoresAutomaticos.pas"/>
         <DCCReference Include="src\Lib\inLibUser.pas"/>

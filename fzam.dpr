@@ -60,6 +60,11 @@ uses
   inMtoComandoImprimirFacturas in
     'src\Core\inMtoComandoImprimirFacturas.pas',
   inLibConfiguracionIni in 'src\Lib\inLibConfiguracionIni.pas',
+  inLibProteccionCredenciales in
+    'src\Lib\inLibProteccionCredenciales.pas',
+  inLibCredencialUsuarioIni in
+    'src\Lib\inLibCredencialUsuarioIni.pas',
+  inLibNuevoEquipo in 'src\Lib\inLibNuevoEquipo.pas',
   inLibDatasets in 'src\Lib\inLibDatasets.pas',
   inLibValoresAutomaticos in 'src\Lib\inLibValoresAutomaticos.pas',
   inLibUser in 'src\Lib\inLibUser.pas',
@@ -1657,11 +1662,11 @@ begin
       if (not AForzarCredenciales) and
          frmLogon.IsInitializeAuto then
       begin
-        frmLogon.btnAceptarClick(nil);
         AutoLoginCorrecto :=
-          frmLogon.ResultadoInicioSesion.Autenticado;
+          frmLogon.EjecutarAutenticacionAutomatica;
       end;
-      if not AutoLoginCorrecto then
+      if not AutoLoginCorrecto and
+         not frmLogon.DebeCerrarAplicacion then
         frmLogon.ShowModal;
       ResultadoInicioSesion := frmLogon.ResultadoInicioSesion;
       if ResultadoInicioSesion.Autenticado then

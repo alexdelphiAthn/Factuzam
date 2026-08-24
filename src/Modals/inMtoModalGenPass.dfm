@@ -27,6 +27,7 @@
     Top = 64
     Properties.EchoMode = eemPassword
     Properties.PasswordChar = #10026
+    Properties.MaxLength = 128
     TabOrder = 2
     Width = 238
   end
@@ -41,6 +42,7 @@
     Top = 104
     Properties.EchoMode = eemPassword
     Properties.PasswordChar = #9679
+    Properties.MaxLength = 128
     TabOrder = 4
     Width = 238
   end

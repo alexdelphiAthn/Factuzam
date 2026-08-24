@@ -61,6 +61,38 @@ resourcestring
     'No se pudo completar el inicio automático:' + sLineBreak +
     '%s' + sLineBreak + sLineBreak +
     'Introduzca sus credenciales manualmente.';
+  SErrorPrepararNuevoEquipo =
+    'No se pudo restablecer la contraseña de acceso:' +
+    sLineBreak + '%s';
+  SErrorGuardarInicioTrasNuevoEquipo =
+    'La contraseña ya se cambió, pero no se pudieron guardar todas las ' +
+    'preferencias de inicio.' + sLineBreak + sLineBreak +
+    'Puede continuar e iniciar sesión con la contraseña nueva.' +
+    sLineBreak + sLineBreak + '%s';
+  SErrorCompletarNuevoEquipoPendiente =
+    'La contraseña ya se cambió, pero no se pudo retirar la marca de ' +
+    'primera ejecución.' + sLineBreak + sLineBreak +
+    'Puede continuar e iniciar sesión con la contraseña nueva.' +
+    sLineBreak + sLineBreak + '%s';
+  SErrorOrdenParametrosNuevoEquipo =
+    'En el arranque de mantenimiento, el perfil INI debe ser el primer ' +
+    'argumento de la aplicación.';
+  SErrorGuardarContrasenaUsuario =
+    'No se pudo guardar la contraseña con la protección de Windows.' +
+    sLineBreak + sLineBreak +
+    'Se desactivarán "Recordar contraseña" y el arranque automático.' +
+    sLineBreak + sLineBreak + '%s';
+  SErrorGuardarContrasenaUsuarioNoRetirada =
+    'No se pudo guardar la contraseña exclusivamente con la protección de ' +
+    'Windows ni retirar la credencial anterior.' + sLineBreak + sLineBreak +
+    '"Recordar contraseña" seguirá marcado para no ocultar que aún puede ' +
+    'haber una credencial almacenada; el arranque automático se ' +
+    'desactivará.' + sLineBreak + sLineBreak + '%s' + sLineBreak + '%s';
+  SErrorEliminarContrasenaUsuario =
+    'No se pudo retirar la contraseña recordada.' +
+    sLineBreak + sLineBreak +
+    'La opción seguirá activada para no ocultar que la credencial aún ' +
+    'puede estar almacenada.' + sLineBreak + sLineBreak + '%s';
   SLicenciaEstablecida =
     'Licencia establecida.' + sLineBreak + sLineBreak +
     'Código: %s' + sLineBreak +
@@ -374,6 +406,12 @@ resourcestring
     '%d permisos copiados de "%s" a "%s".';
   SErrorContrasenasNoCoinciden =
     'Las contraseñas no coinciden';
+  SErrorContrasenaUsuarioVacia =
+    'La contraseña nueva no puede estar vacía.';
+  SCaptionNuevaContrasenaUsuario = 'Nueva contraseña';
+  SCaptionRepetirNuevaContrasenaUsuario =
+    'Repita la nueva contraseña';
+  SCaptionContinuarNuevaContrasena = '&Continuar';
   SInfoLogGuardado =
     'Log guardado en %s';
   SErrorPermisoAbrirCajon =

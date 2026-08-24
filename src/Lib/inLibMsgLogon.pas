@@ -22,6 +22,17 @@ resourcestring
     'Las credenciales no son válidas.';
   SResultadoAutenticacionCorrecta =
     'Autenticación correcta.';
+  SErrorUsuarioNuevoEquipoNoAutorizado =
+    'El usuario "%s" no existe, no está activo o no pertenece a un ' +
+    'grupo administrador.';
+  SErrorContrasenaNuevoEquipoNoVerificada =
+    'No se pudo verificar la contraseña nueva del usuario "%s".';
+  SErrorContrasenaNuevoEquipoDebeDiferirDemo =
+    'La contraseña nueva debe ser distinta de la contraseña inicial de la ' +
+    'demo.';
+  SAvisoNuevoEquipoDemoYaPreparado =
+    'La contraseña inicial de la demo ya había sido cambiada. Continúe con ' +
+    'el inicio de sesión.';
 
 implementation
 

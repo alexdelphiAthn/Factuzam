@@ -17,7 +17,10 @@ uses
     'PruebasGeneradorProcesosProteccion.pas',
   PruebasRestauracionCopiasReglas in
     'PruebasRestauracionCopiasReglas.pas',
-  PruebasCorreoValidacion in 'PruebasCorreoValidacion.pas';
+  PruebasCorreoValidacion in 'PruebasCorreoValidacion.pas',
+  PruebasCredencialUsuarioIni in 'PruebasCredencialUsuarioIni.pas',
+  PruebasNuevoEquipo in 'PruebasNuevoEquipo.pas',
+  PruebasLogonAplicacion in 'PruebasLogonAplicacion.pas';
 
 const
   CODIGO_CORRECTO = 0;

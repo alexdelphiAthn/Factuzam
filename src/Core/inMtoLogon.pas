@@ -120,7 +120,7 @@ type
     function ValidarEstructuraLogon: Boolean;
     function ConectarAplicacionLogon: Boolean;
     function PrepararLicenciaLogon: Boolean;
-    procedure EjecutarAutenticacionAutomatica;
+    procedure PrepararNuevoEquipo;
     procedure AplicarTraduccionesPantalla;
     function ResolverErrorScriptLogon(
       const ASentencia, AError: string): TDecisionErrorScriptLogon;
@@ -170,6 +170,7 @@ type
       AOwner: TComponent;
       const AFabricaConexiones: IFabricaConexionesUniDAC); reintroduce;
     destructor Destroy; override;
+    function EjecutarAutenticacionAutomatica: Boolean;
     function IsInitializeAuto:Boolean;
     function DebeCerrarAplicacion:Boolean;
     property ResultadoInicioSesion: TResultadoInicioSesion
@@ -181,8 +182,9 @@ type
 implementation
 
 uses  inLibWin,
-      inLibCifrado,
       inLibConfiguracionIni,
+      inLibCredencialUsuarioIni,
+      inLibNuevoEquipo,
       inLibTraducciones,
       inLibTraduccionesFastReport,
       inLibMsgComun,
@@ -198,6 +200,7 @@ uses  inLibWin,
       inLibDBStructure,
       inMtoModalScriptLog,
       inMtoModalContrasenaCopia,
+      inMtoModalGenPass,
       inLibCopiasSeguridad,
       inLibRestauracionCopiasConexion,
       UniDataRestauracionCopiasConexion,
@@ -348,6 +351,12 @@ end;
 procedure TfrmLogon.FormCreate(Sender: TObject);
 begin
   inherited;
+  if not EsOrdenParametrosNuevoEquipoValido then
+  begin
+    FCerrarAplicacion := True;
+    ShowMessage(SErrorOrdenParametrosNuevoEquipo);
+    Exit;
+  end;
   CrearCasoUsoPreparacionLogon(
     Self as IPasosPreparacionLogon).Ejecutar;
 end;
@@ -383,6 +392,8 @@ begin
   edtUser.Text := '';
 
   GetIniValues;
+  if FindCmdLineSwitch('relogin', True) then
+    edtPass.Text := '';
   CargarPerfilConexion;
 end;
 
@@ -589,27 +600,123 @@ begin
   Result := ProcesarLicenciaAplicacion;
 end;
 
-procedure TfrmLogon.EjecutarAutenticacionAutomatica;
+procedure TfrmLogon.PrepararNuevoEquipo;
+var
+  bConmutadorMantenimiento: Boolean;
+  bPendienteInstalacion: Boolean;
+  oPerfil: TPerfilConexion;
+  sContrasenaNueva: string;
+  sRutaIni: string;
 begin
-  if FindCmdLineSwitch('relogin', True) then
-    edtPass.Text := '';
-  if IsInitializeAuto then
+  sRutaIni := RutaIniAplicacion(GetUserFolder);
+  bConmutadorMantenimiento := HayConmutadorNuevoEquipo;
+  bPendienteInstalacion :=
+    HayNuevoEquipoPendienteEnIni(sRutaIni);
+  if bPendienteInstalacion then
   begin
+    oPerfil := FFabricaConexiones.Perfil;
+    bPendienteInstalacion := EsPerfilInstalacionDemoLocal(
+      oPerfil.Servidor,
+      oPerfil.BaseDatos,
+      oPerfil.Usuario,
+      oPerfil.Puerto);
+    if not bPendienteInstalacion then
+    begin
+      RegistroLog.RegistrarAviso(
+        'Se ignoró una marca de nuevo equipo fuera del perfil demo local.');
+    end;
+  end;
+  if not bConmutadorMantenimiento and
+     not bPendienteInstalacion then
+    Exit;
+  { El destino no se toma del INI: NomUser es editable y no concede
+    autoridad para restablecer una cuenta arbitraria. }
+  edtUser.Text := USUARIO_INICIAL_NUEVO_EQUIPO;
+  if not TfrmModalGenPass.SolicitarNueva(
+           Self,
+           edtUser.Text,
+           sContrasenaNueva) then
+  begin
+    RegistroLog.RegistrarInformacion(
+      'Configuración de nuevo equipo cancelada.');
+    FCerrarAplicacion := True;
+    Exit;
+  end;
+  try
     try
-      btnAceptarClick(Self);
+      FAplicacionLogon.EstablecerContrasenaNuevoEquipo(
+        edtUser.Text,
+        sContrasenaNueva,
+        bPendienteInstalacion and
+          not bConmutadorMantenimiento);
+    except
+      on E: ENuevoEquipoDemoYaPreparado do
+      begin
+        try
+          CompletarNuevoEquipoPendienteEnIni(sRutaIni);
+        except
+          on ECompletar: Exception do
+          begin
+            RegistroLog.RegistrarAviso(
+              'No se pudo retirar la marca ya consumida de primera ' +
+              'ejecución: ' + ECompletar.Message);
+          end;
+        end;
+        RegistroLog.RegistrarAviso(E.Message);
+        ShowMessage(E.Message);
+        Exit;
+      end;
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarError(
+          'No se pudo completar el arranque de mantenimiento: ' +
+          E.ClassName + ': ' + E.Message);
+        ShowMessage(Format(SErrorPrepararNuevoEquipo, [E.Message]));
+        edtPass.Text := '';
+        FCerrarAplicacion := True;
+        Exit;
+      end;
+    end;
+
+    edtPass.Text := sContrasenaNueva;
+    { Conserva exactamente las opciones existentes, pero sustituye ahora la
+      credencial recordada para no dejar la contraseña anterior si el
+      usuario cierra el login manual que pueda mostrarse a continuación. }
+    try
+      SetIniValues;
     except
       on E: Exception do
       begin
-        RegistroLog.RegistrarError('Fallo en auto-login: ' +
-                              E.ClassName + ': ' + E.Message);
-        ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
-        chkAuto.Checked := False;
-        EscribirCadenaIni(
-          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-        InvalidarResultadoInicioSesion;
-        ModalResult := mrNone;
+        RegistroLog.RegistrarError(
+          'La contraseña se cambió, pero no se pudieron guardar las ' +
+          'preferencias de inicio: ' + E.ClassName + ': ' + E.Message);
+        ShowMessage(Format(
+          SErrorGuardarInicioTrasNuevoEquipo,
+          [E.Message]));
       end;
     end;
+    if bPendienteInstalacion then
+    begin
+      try
+        CompletarNuevoEquipoPendienteEnIni(sRutaIni);
+      except
+        on E: Exception do
+        begin
+          RegistroLog.RegistrarAviso(
+            'La contraseña se cambió, pero quedó pendiente retirar la ' +
+            'marca de primera ejecución: ' + E.Message);
+          ShowMessage(Format(
+            SErrorCompletarNuevoEquipoPendiente,
+            [E.Message]));
+        end;
+      end;
+    end;
+    RegistroLog.RegistrarInformacion(
+      'Contraseña de acceso restablecida mediante el arranque de ' +
+      'mantenimiento.');
+  finally
+    { El control conserva la única copia que consumirá el login. }
+    sContrasenaNueva := '';
   end;
 end;
 
@@ -1257,6 +1364,24 @@ begin
   end;
 end;
 
+function TfrmLogon.EjecutarAutenticacionAutomatica: Boolean;
+begin
+  Result := False;
+  try
+    btnAceptarClick(nil);
+    Result := FResultadoInicioSesion.Autenticado;
+  except
+    on E: Exception do
+    begin
+      RegistroLog.RegistrarError(
+        'Fallo en auto-login: ' + E.ClassName + ': ' + E.Message);
+      ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
+      InvalidarResultadoInicioSesion;
+      ModalResult := mrNone;
+    end;
+  end;
+end;
+
 procedure TfrmLogon.InvalidarResultadoInicioSesion;
 begin
   FResultadoInicioSesion :=
@@ -1293,33 +1418,120 @@ begin
 end;
 
 procedure TfrmLogon.SetIniValues;
+var
+  bCredencialEliminada: Boolean;
+  sErrorEliminarCredencial: string;
+  sRutaIni: string;
 begin
-  if (chkRememberUser.Checked = True) then
+  sRutaIni := RutaIniAplicacion(GetUserFolder);
+  if chkRememberUser.Checked then
   begin
     EscribirCadenaIni(
       'UserInfo', 'RememberUser', 'Yes', GetUserFolder);
     EscribirCadenaIni(
       'UserInfo', 'NomUser', edtUser.Text, GetUserFolder);
-  end;
-  if (chkRememberPassword.Checked = True) then
+  end
+  else
   begin
     EscribirCadenaIni(
-      'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
-    EscribirCadenaIni('UserInfo', 'PasswordEn',
-                                       CifrarAES(edtPass.Text),
-                                       GetUserFolder);
+      'UserInfo', 'RememberUser', 'No', GetUserFolder);
   end;
-  if (chkAuto.Checked = True) then
+
+  if chkRememberPassword.Checked then
+  begin
+    try
+      GuardarContrasenaUsuarioRecordada(
+        sRutaIni,
+        edtPass.Text);
       EscribirCadenaIni(
-        'UserInfo', 'AutoLogin', 'Yes', GetUserFolder);
+        'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarError(
+          'No se pudo proteger la contraseña recordada: ' +
+          E.ClassName + ': ' + E.Message);
+        bCredencialEliminada := True;
+        sErrorEliminarCredencial := '';
+        try
+          EliminarContrasenaUsuarioRecordada(sRutaIni);
+        except
+          on EEliminar: Exception do
+          begin
+            bCredencialEliminada := False;
+            sErrorEliminarCredencial := EEliminar.Message;
+            RegistroLog.RegistrarError(
+              'Tampoco se pudo retirar la contraseña recordada: ' +
+              EEliminar.ClassName + ': ' + EEliminar.Message);
+          end;
+        end;
+        chkAuto.Checked := False;
+        if bCredencialEliminada then
+        begin
+          chkRememberPassword.Checked := False;
+          EscribirCadenaIni(
+            'UserInfo', 'RememberPassword', 'No', GetUserFolder);
+          ShowMessage(Format(
+            SErrorGuardarContrasenaUsuario,
+            [E.Message]));
+        end
+        else
+        begin
+          { No se oculta una credencial que quizá siga en el fichero. }
+          chkRememberPassword.Checked := True;
+          EscribirCadenaIni(
+            'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
+          ShowMessage(Format(
+            SErrorGuardarContrasenaUsuarioNoRetirada,
+            [E.Message, sErrorEliminarCredencial]));
+        end;
+      end;
+    end;
+  end
+  else
+  begin
+    bCredencialEliminada := True;
+    try
+      EliminarContrasenaUsuarioRecordada(sRutaIni);
+    except
+      on E: Exception do
+      begin
+        bCredencialEliminada := False;
+        RegistroLog.RegistrarError(
+          'No se pudo retirar la contraseña recordada: ' +
+          E.ClassName + ': ' + E.Message);
+        chkRememberPassword.Checked := True;
+        chkAuto.Checked := False;
+        EscribirCadenaIni(
+          'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
+        ShowMessage(Format(
+          SErrorEliminarContrasenaUsuario,
+          [E.Message]));
+      end;
+    end;
+    if bCredencialEliminada then
+    begin
+      EscribirCadenaIni(
+        'UserInfo', 'RememberPassword', 'No', GetUserFolder);
+    end;
+  end;
+
+  if chkAuto.Checked then
+    EscribirCadenaIni(
+      'UserInfo', 'AutoLogin', 'Yes', GetUserFolder)
+  else
+    EscribirCadenaIni(
+      'UserInfo', 'AutoLogin', 'No', GetUserFolder);
 end;
 
 procedure TfrmLogon.GetIniValues;
 var
   sRememberUser,
   sAutoRun,
-  sRememberPassword     : string;
+  sRememberPassword,
+  sRutaIni: string;
 begin
+  sRutaIni := RutaIniAplicacion(GetUserFolder);
   sRememberUser := LeerCadenaIni('UserInfo',
                                 'RememberUser',
                                 'No',
@@ -1347,10 +1559,22 @@ begin
   if SameText(sRememberPassword, 'Yes') then
   begin
     chkRememberPassword.Checked := True;
-    edtPass.Text := DescifrarAES(LeerCadenaIni('UserInfo',
-                                           'PasswordEn',
-                                           '',
-                                           GetUserFolder));
+    try
+      edtPass.Text := CargarContrasenaUsuarioRecordada(sRutaIni);
+      if edtPass.Text = '' then
+      begin
+        RegistroLog.RegistrarAviso(
+          'No hay una contraseña de usuario recordada utilizable.');
+      end;
+    except
+      on E: Exception do
+      begin
+        edtPass.Text := '';
+        RegistroLog.RegistrarAviso(
+          'No se pudo recuperar la contraseña recordada: ' +
+          E.ClassName + ': ' + E.Message);
+      end;
+    end;
   end;
   RegistroLog.RegistrarInformacion('Leyendo archivo ini de usuario');
 end;
@@ -1363,7 +1587,9 @@ begin
   if FindCmdLineSwitch('relogin', True) then
     Result := False
   else
-    Result := chkAuto.Checked;
+    Result := chkAuto.Checked and
+      (Trim(edtUser.Text) <> '') and
+      (edtPass.Text <> '');
   {$IFDEF DEBUG}
     //Result := False;
   {$ENDIF }

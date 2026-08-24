@@ -7187,6 +7187,48 @@ begin
       SErrorInicioAutomatico);
   ARegistrar(
     'inLibMsgConfiguracion.' +
+    'SErrorPrepararNuevoEquipo',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorPrepararNuevoEquipo);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorGuardarInicioTrasNuevoEquipo',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorGuardarInicioTrasNuevoEquipo);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorCompletarNuevoEquipoPendiente',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorCompletarNuevoEquipoPendiente);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorOrdenParametrosNuevoEquipo',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorOrdenParametrosNuevoEquipo);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorGuardarContrasenaUsuario',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorGuardarContrasenaUsuario);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorGuardarContrasenaUsuarioNoRetirada',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorGuardarContrasenaUsuarioNoRetirada);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorEliminarContrasenaUsuario',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorEliminarContrasenaUsuario);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
     'SLicenciaEstablecida',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
@@ -7965,6 +8007,30 @@ begin
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
       SErrorContrasenasNoCoinciden);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorContrasenaUsuarioVacia',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorContrasenaUsuarioVacia);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SCaptionNuevaContrasenaUsuario',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SCaptionNuevaContrasenaUsuario);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SCaptionRepetirNuevaContrasenaUsuario',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SCaptionRepetirNuevaContrasenaUsuario);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SCaptionContinuarNuevaContrasena',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SCaptionContinuarNuevaContrasena);
   ARegistrar(
     'inLibMsgConfiguracion.' +
     'SInfoLogGuardado',
@@ -9603,6 +9669,30 @@ begin
     'src/Lib/inLibMsgLogon.pas',
     @inLibMsgLogon.
       SResultadoAutenticacionCorrecta);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SErrorUsuarioNuevoEquipoNoAutorizado',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SErrorUsuarioNuevoEquipoNoAutorizado);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SErrorContrasenaNuevoEquipoNoVerificada',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SErrorContrasenaNuevoEquipoNoVerificada);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SErrorContrasenaNuevoEquipoDebeDiferirDemo',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SErrorContrasenaNuevoEquipoDebeDiferirDemo);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SAvisoNuevoEquipoDemoYaPreparado',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SAvisoNuevoEquipoDemoYaPreparado);
   ARegistrar(
     'inLibMsgSql.' +
     'SErrorTextoSqlVacio',

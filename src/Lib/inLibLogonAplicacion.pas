@@ -24,7 +24,8 @@ function CrearAplicacionLogon(
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  inLibNuevoEquipo;
 
 type
   TAplicacionLogon = class(TInterfacedObject, IAplicacionLogon)
@@ -34,6 +35,9 @@ type
     constructor Create(const ARepositorio: IRepositorioLogon);
     function Autenticar(
       const AUsuario, AContrasena: string): TResultadoAutenticacionLogon;
+    procedure EstablecerContrasenaNuevoEquipo(
+      const AUsuario, AContrasenaNueva: string;
+      AExigirContrasenaDemoInicial: Boolean = False);
   end;
 
 function CrearAplicacionLogon(
@@ -66,6 +70,21 @@ begin
         ealError,
         E.Message);
   end;
+end;
+
+procedure TAplicacionLogon.EstablecerContrasenaNuevoEquipo(
+  const AUsuario, AContrasenaNueva: string;
+  AExigirContrasenaDemoInicial: Boolean);
+begin
+  if not SameText(
+           Trim(AUsuario),
+           USUARIO_INICIAL_NUEVO_EQUIPO) then
+    raise EArgumentException.Create('AUsuario');
+  ValidarContrasenaNuevoEquipo(AContrasenaNueva);
+  FRepositorio.EstablecerContrasenaNuevoEquipo(
+    AUsuario,
+    AContrasenaNueva,
+    AExigirContrasenaDemoInicial);
 end;
 
 end.

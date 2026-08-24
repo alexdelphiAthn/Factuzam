@@ -37,7 +37,7 @@ implementation
 uses
   System.SysUtils, Data.DB, DBAccess,
   DAScript, UniScript, inLibMsgConexion, inLibMsgLogon,
-  inLibProteccionDatosFacturacion, inLibWin;
+  inLibNuevoEquipo, inLibProteccionDatosFacturacion, inLibWin;
 
 const
   SQL_AUTENTICAR =
@@ -50,9 +50,31 @@ const
   SQL_ULTIMO_LOGIN =
     'UPDATE fza_usuarios SET ULTIMO_LOGIN_USU = :Instante ' +
     'WHERE USUARIO_USU = :Usuario';
+  SQL_VALIDAR_USUARIO_NUEVO_EQUIPO =
+    'SELECT U.PASSWORD_USU AS CONTRASENA, ' +
+    'COALESCE(U.ESACTIVO_USU, ''N'') AS ACTIVO, ' +
+    'COALESCE(G.ESGRUPOADMINISTRADOR_USUGRP, ''N'') AS ADMINISTRADOR ' +
+    'FROM fza_usuarios U LEFT JOIN fza_usuarios_grupos G ' +
+    'ON G.GRUPO_USUGRP = U.GRUPO_USU ' +
+    'WHERE U.USUARIO_USU = :Usuario';
+  SQL_ESTABLECER_CONTRASENA_NUEVO_EQUIPO =
+    'UPDATE fza_usuarios SET PASSWORD_USU = :Contrasena, ' +
+    'INSTANTE_MODIF = :Instante, USUARIO_MODIF = :UsuarioModif ' +
+    'WHERE USUARIO_USU = :Usuario ' +
+    'AND COALESCE(ESACTIVO_USU, ''N'') = ''S'' ' +
+    'AND EXISTS (SELECT 1 FROM fza_usuarios_grupos G ' +
+    'WHERE G.GRUPO_USUGRP = fza_usuarios.GRUPO_USU ' +
+    'AND COALESCE(G.ESGRUPOADMINISTRADOR_USUGRP, ''N'') = ''S'')';
+  SQL_EXIGIR_CONTRASENA_INICIAL_DEMO =
+    ' AND PASSWORD_USU = :ContrasenaDemoInicial';
   SQL_EXISTE_ESQUEMA =
     'SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA ' +
     'WHERE SCHEMA_NAME = :BBDD';
+  USUARIO_AUDITORIA_NUEVO_EQUIPO = 'Mantenimiento';
+  { Debe coincidir con Administrador en factuzam_demo.sql. Sólo limita la
+    marca automática del instalador; el conmutador manual no la exige. }
+  HASH_CONTRASENA_INICIAL_DEMO =
+    '4F8239A5B05A0E22D3DD4D7853808AF3';
 
 type
   TRepositorioLogonUniDAC = class(
@@ -67,6 +89,9 @@ type
     destructor Destroy; override;
     function Autenticar(
       const AUsuario, AContrasena: string): TResultadoAutenticacionLogon;
+    procedure EstablecerContrasenaNuevoEquipo(
+      const AUsuario, AContrasenaNueva: string;
+      AExigirContrasenaDemoInicial: Boolean = False);
     property Conexion: TUniConnection read FConexion;
   end;
 
@@ -174,6 +199,113 @@ begin
         end;
       end;
     except
+      on E: Exception do
+      begin
+        if not FConexion.Connected then
+          raise ERepositorioLogonNoDisponible.Create(E.Message)
+        else
+          raise ERepositorioLogonError.Create(E.Message);
+      end;
+    end;
+  finally
+    oConsulta.Free;
+  end;
+end;
+
+procedure TRepositorioLogonUniDAC.EstablecerContrasenaNuevoEquipo(
+  const AUsuario, AContrasenaNueva: string;
+  AExigirContrasenaDemoInicial: Boolean);
+var
+  bTransaccionPropia: Boolean;
+  oConsulta: TUniQuery;
+  sContrasenaCifrada: string;
+begin
+  if not FConexion.Connected then
+    raise ERepositorioLogonNoDisponible.Create(
+      SErrorBaseDatosAutenticacionNoDisponible);
+  if not SameText(
+           Trim(AUsuario),
+           USUARIO_INICIAL_NUEVO_EQUIPO) then
+    raise EArgumentException.Create('AUsuario');
+  if AContrasenaNueva = '' then
+    raise EArgumentException.Create('AContrasenaNueva');
+  sContrasenaCifrada := sMd5(AContrasenaNueva);
+  if AExigirContrasenaDemoInicial and
+     SameText(sContrasenaCifrada, HASH_CONTRASENA_INICIAL_DEMO) then
+  begin
+    raise ERepositorioLogonError.Create(
+      SErrorContrasenaNuevoEquipoDebeDiferirDemo);
+  end;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    try
+      oConsulta.Connection := FConexion;
+      bTransaccionPropia := not FConexion.InTransaction;
+      if bTransaccionPropia then
+        FConexion.StartTransaction;
+      try
+        { Las condiciones de activo y administrador forman parte del UPDATE;
+          no se concede el restablecimiento a partir de una comprobación
+          anterior que pudiera quedar obsoleta. }
+        oConsulta.SQL.Text := SQL_ESTABLECER_CONTRASENA_NUEVO_EQUIPO;
+        if AExigirContrasenaDemoInicial then
+        begin
+          oConsulta.SQL.Add(SQL_EXIGIR_CONTRASENA_INICIAL_DEMO);
+          oConsulta.ParamByName('ContrasenaDemoInicial').AsString :=
+            HASH_CONTRASENA_INICIAL_DEMO;
+        end;
+        oConsulta.ParamByName('Contrasena').AsString :=
+          sContrasenaCifrada;
+        oConsulta.ParamByName('Instante').AsDateTime := Now;
+        oConsulta.ParamByName('UsuarioModif').AsString :=
+          USUARIO_AUDITORIA_NUEVO_EQUIPO;
+        oConsulta.ParamByName('Usuario').AsString := AUsuario;
+        oConsulta.ExecSQL;
+
+        { RowsAffected puede ser cero si se repite la misma clave dentro de
+          la precisión temporal de la BBDD. Se verifica el estado final. }
+        oConsulta.SQL.Text := SQL_VALIDAR_USUARIO_NUEVO_EQUIPO;
+        oConsulta.ParamByName('Usuario').AsString := AUsuario;
+        oConsulta.Open;
+        if oConsulta.IsEmpty or
+           not SameText(
+             oConsulta.FieldByName('ACTIVO').AsString,
+             'S') or
+           not SameText(
+             oConsulta.FieldByName('ADMINISTRADOR').AsString,
+             'S') then
+        begin
+          raise ERepositorioLogonError.CreateFmt(
+            SErrorUsuarioNuevoEquipoNoAutorizado,
+            [AUsuario]);
+        end;
+        if not SameText(
+                 oConsulta.FieldByName('CONTRASENA').AsString,
+                 sContrasenaCifrada) then
+        begin
+          if AExigirContrasenaDemoInicial and
+             not SameText(
+               oConsulta.FieldByName('CONTRASENA').AsString,
+               HASH_CONTRASENA_INICIAL_DEMO) then
+          begin
+            raise ENuevoEquipoDemoYaPreparado.Create(
+              SAvisoNuevoEquipoDemoYaPreparado);
+          end;
+          raise ERepositorioLogonError.CreateFmt(
+            SErrorContrasenaNuevoEquipoNoVerificada,
+            [AUsuario]);
+        end;
+        oConsulta.Close;
+        if bTransaccionPropia and FConexion.InTransaction then
+          FConexion.Commit;
+      except
+        if bTransaccionPropia and FConexion.InTransaction then
+          FConexion.Rollback;
+        raise;
+      end;
+    except
+      on E: ERepositorioLogonError do
+        raise;
       on E: Exception do
       begin
         if not FConexion.Connected then

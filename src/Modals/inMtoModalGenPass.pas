@@ -42,8 +42,11 @@ type
   private
     { Private declarations }
   public
-    { Public declarations }
     sFicha:string;
+    class function SolicitarNueva(
+      AOwner: TComponent;
+      const AUsuario: string;
+      out AContrasena: string): Boolean; static;
   end;
 
 implementation
@@ -56,20 +59,29 @@ uses
 procedure TfrmModalGenPass.btnCancelarClick(Sender: TObject);
 begin
   inherited;
-  PostMessage(Handle, WM_CLOSE, 0, 0);
+  sFicha := '';
+  ModalResult := mrCancel;
 end;
 
 procedure TfrmModalGenPass.btnGuardarClick(Sender: TObject);
 begin
   inherited;
-  if (edtPassword.Text <> edtPasswordCon.Text) then
+  if edtPassword.Text = '' then
+  begin
+    ShowMessage(SErrorContrasenaUsuarioVacia);
+    if edtPassword.CanFocus then
+      edtPassword.SetFocus;
+  end
+  else if (edtPassword.Text <> edtPasswordCon.Text) then
   begin
     ShowMessage(SErrorContrasenasNoCoinciden);
+    if edtPasswordCon.CanFocus then
+      edtPasswordCon.SetFocus;
   end
   else
   begin
     sFicha := 'S';
-    PostMessage(Handle, WM_CLOSE, 0, 0);
+    ModalResult := mrOk;
   end;
 end;
 
@@ -84,6 +96,34 @@ procedure TfrmModalGenPass.FormCreate(Sender: TObject);
 begin
   inherited;
   Self.Position := poScreenCenter;
+  sFicha := '';
+end;
+
+class function TfrmModalGenPass.SolicitarNueva(
+  AOwner: TComponent;
+  const AUsuario: string;
+  out AContrasena: string): Boolean;
+var
+  oFormulario: TfrmModalGenPass;
+begin
+  AContrasena := '';
+  oFormulario := TfrmModalGenPass.Create(AOwner);
+  try
+    oFormulario.Caption := SCaptionNuevaContrasenaUsuario;
+    oFormulario.edtUsuario.Text := AUsuario;
+    oFormulario.lbl2.Caption := SCaptionNuevaContrasenaUsuario;
+    oFormulario.lbl3.Caption :=
+      SCaptionRepetirNuevaContrasenaUsuario;
+    oFormulario.btnGuardar.Caption :=
+      SCaptionContinuarNuevaContrasena;
+    Result := oFormulario.ShowModal = mrOk;
+    if Result then
+      AContrasena := oFormulario.edtPassword.Text;
+  finally
+    oFormulario.edtPassword.Text := '';
+    oFormulario.edtPasswordCon.Text := '';
+    FreeAndNil(oFormulario);
+  end;
 end;
 
 end.

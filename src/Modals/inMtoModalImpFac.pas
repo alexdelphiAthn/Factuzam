@@ -61,6 +61,10 @@ type
   TObtenerLoteFacturas = reference to function:
     TReferenciasComandoFactura;
 
+const
+  WM_INICIAR_ENVIO_EMAIL_FACTURA = WM_APP + $461;
+
+type
   TfrmPrintFac = class(TfrmPrint)
     edtNroFac: TcxTextEdit;
     lblcxlbl1: TcxLabel;
@@ -84,17 +88,23 @@ type
     FEmailEnvio: string;
     FEnviarCorreo: TEnviarCorreoFactura;
     FActualizandoEmail: Boolean;
-    FEmailIndividualConfirmado: Boolean;
+    FEnvioEmailPendiente: Boolean;
+    FProcesandoEnvioEmail: Boolean;
     procedure AplicarModoSeleccionado;
     procedure ActualizarDisponibilidadCorreo;
+    procedure BloquearAccionesCorreo;
     procedure DesmarcarEnvioEmail;
     function SolicitarEmailIndividual: Boolean;
-    function ValidarCorreoAntesDeActuar: Boolean;
+    function ValidarConfiguracionCorreo: Boolean;
+    procedure IniciarEnvioEmail;
     procedure EnviarPdfPorCorreo(const ARutaPdf: string);
-    procedure EnviarCorreoTrasImpresion;
+    procedure EnviarCorreoIndividualPreparado;
     procedure EliminarPdfTemporalSeguro(const ARutaPdf: string);
+    procedure WMIniciarEnvioEmailFactura(
+      var Message: TMessage); message WM_INICIAR_ENVIO_EMAIL_FACTURA;
     function PrepararLote(
-      const AAccion: TEjecutarLoteFacturas): Boolean;
+      const AAccion: TEjecutarLoteFacturas;
+      AEnviarEmail: Boolean): Boolean;
   protected
     function TraducirContenidoInforme: Boolean; override;
     procedure PdfExportado(const ARuta: string); override;
@@ -150,8 +160,8 @@ resourcestring
   SErrorFacturaNoEnviadaCorreo =
     'No se pudo enviar la factura por correo electrónico.';
   SErrorPdfTemporalCorreoFactura =
-    'La impresión se completó, pero no se pudo generar el PDF para ' +
-    'enviarlo por correo electrónico.';
+    'No se pudo generar el PDF temporal para enviar la factura por ' +
+    'correo electrónico.';
   SAvisoPdfTemporalCorreoNoEliminado =
     'No se pudo eliminar el PDF temporal usado para el correo: %s';
 
@@ -267,7 +277,6 @@ begin
   FEmailInicial := Trim(AEmailInicial);
   FEmailEnvio := '';
   FEnviarCorreo := AEnviarCorreo;
-  FEmailIndividualConfirmado := False;
   ActualizarDisponibilidadCorreo;
 end;
 
@@ -278,7 +287,7 @@ var
 begin
   bCorreoLoteDisponible :=
     Assigned(FObtenerReferenciasFiltradas) and
-    (Assigned(FExportarLotePdf) or Assigned(FImprimirLote));
+    Assigned(FExportarLotePdf);
   chkEnviarEmail.Visible :=
     Assigned(FEnviarCorreo) or bCorreoLoteDisponible;
   if rbActual.Checked then
@@ -293,13 +302,22 @@ end;
 procedure TfrmPrintFac.DesmarcarEnvioEmail;
 begin
   FEmailEnvio := '';
-  FEmailIndividualConfirmado := False;
   FActualizandoEmail := True;
   try
     chkEnviarEmail.Checked := False;
   finally
     FActualizandoEmail := False;
   end;
+end;
+
+procedure TfrmPrintFac.BloquearAccionesCorreo;
+begin
+  chkEnviarEmail.Enabled := False;
+  btnPDF.Enabled := False;
+  btnImprimir.Enabled := False;
+  btnVistaPreliminar.Enabled := False;
+  btnEditar.Enabled := False;
+  btnExcel.Enabled := False;
 end;
 
 function TfrmPrintFac.SolicitarEmailIndividual: Boolean;
@@ -314,10 +332,7 @@ begin
     Formulario.Free;
   end;
   if Result then
-  begin
-    FEmailEnvio := sEmail;
-    FEmailIndividualConfirmado := True;
-  end
+    FEmailEnvio := sEmail
   else
     DesmarcarEnvioEmail;
 end;
@@ -329,46 +344,100 @@ begin
     Exit;
   if not chkEnviarEmail.Checked then
   begin
-    FEmailEnvio := '';
-    FEmailIndividualConfirmado := False;
+    FEnvioEmailPendiente := False;
+    FEmailEnvio := ''
   end
-  else if rbActual.Checked then
-    SolicitarEmailIndividual
   else
   begin
-    // En un lote el destinatario se obtiene de cada factura. No se pide
-    // ni se conserva un correo comun para toda la seleccion.
-    FEmailEnvio := '';
-    FEmailIndividualConfirmado := False;
+    if FEnvioEmailPendiente or FProcesandoEnvioEmail then
+      Exit;
+    FEnvioEmailPendiente := True;
+    BloquearAccionesCorreo;
+    if not Winapi.Windows.PostMessage(
+      Handle,
+      WM_INICIAR_ENVIO_EMAIL_FACTURA,
+      0,
+      0) then
+    begin
+      FEnvioEmailPendiente := False;
+      DesmarcarEnvioEmail;
+      AplicarModoSeleccionado;
+    end;
   end;
 end;
 
-function TfrmPrintFac.ValidarCorreoAntesDeActuar: Boolean;
+procedure TfrmPrintFac.WMIniciarEnvioEmailFactura(
+  var Message: TMessage);
+begin
+  FEnvioEmailPendiente := False;
+  if chkEnviarEmail.Checked then
+    IniciarEnvioEmail
+  else
+    AplicarModoSeleccionado;
+  Message.Result := 0;
+end;
+
+function TfrmPrintFac.ValidarConfiguracionCorreo: Boolean;
 var
   sMensaje: string;
 begin
-  Result := True;
-  if not chkEnviarEmail.Checked then
-    Exit;
   Result := CorreoTicketsConfigurado(ParametrosApp, sMensaje);
   if not Result then
   begin
     ShowMessage(sMensaje);
     Exit;
   end;
-  if rbActual.Checked then
+  if rbActual.Checked and not Assigned(FEnviarCorreo) then
   begin
-    if not FEmailIndividualConfirmado then
-    begin
-      Result := SolicitarEmailIndividual;
-      if not Result then
+    ShowMessage(SErrorServicioCorreoFacturaNoDisponible);
+    Result := False;
+  end;
+end;
+
+procedure TfrmPrintFac.IniciarEnvioEmail;
+begin
+  if FProcesandoEnvioEmail or not chkEnviarEmail.Checked then
+    Exit;
+  FProcesandoEnvioEmail := True;
+  BloquearAccionesCorreo;
+  try
+    try
+      if not ValidarConfiguracionCorreo then
         Exit;
+      if rbProcesarFiltrados.Checked then
+      begin
+        // En lote se reutiliza el flujo PDF completo: selección forzada de
+        // formato, carpeta, envío por factura y TXT final. El destinatario
+        // procede de cada snapshot y nunca se solicita un correo común.
+        if PrepararLote(FExportarLotePdf, True) then
+          ModalResult := mrOk;
+        Exit;
+      end;
+
+      // Mismo comienzo que el botón PDF, pero el fichero es temporal: el
+      // usuario elige la plantilla y después confirma el destinatario.
+      preparar_consulta;
+      Consultar_Formularios(True);
+      if FormatoElegido = '' then
+        Exit;
+      if not SolicitarEmailIndividual then
+        Exit;
+      EnviarCorreoIndividualPreparado;
+    except
+      on E: Exception do
+        MessageDlg(
+          SErrorFacturaNoEnviadaCorreo + sLineBreak +
+          E.ClassName + ': ' + E.Message,
+          mtError,
+          [mbOK],
+          0);
     end;
-    if not Assigned(FEnviarCorreo) then
-    begin
-      ShowMessage(SErrorServicioCorreoFacturaNoDisponible);
-      Result := False;
-    end;
+  finally
+    // La casilla actúa como iniciador, no como opción pendiente. También
+    // se limpia tras error o cancelación para que reintentar sea marcarla.
+    DesmarcarEnvioEmail;
+    FProcesandoEnvioEmail := False;
+    AplicarModoSeleccionado;
   end;
 end;
 
@@ -396,7 +465,6 @@ begin
     if Trim(sMensaje) = '' then
       sMensaje := Format(SInfoFacturaEnviadaCorreo, [FEmailEnvio]);
     MessageDlg(sMensaje, mtInformation, [mbOK], 0);
-    DesmarcarEnvioEmail;
   end
   else
   begin
@@ -408,7 +476,7 @@ begin
   end;
 end;
 
-procedure TfrmPrintFac.EnviarCorreoTrasImpresion;
+procedure TfrmPrintFac.EnviarCorreoIndividualPreparado;
 var
   sRutaPdf: string;
 begin
@@ -653,18 +721,12 @@ begin
   btnExcel.Enabled := bActual;
   ActualizarDisponibilidadCorreo;
   if not bActual then
-  begin
     FEmailEnvio := '';
-    FEmailIndividualConfirmado := False;
-  end
-  else if chkEnviarEmail.Checked and
-          not FEmailIndividualConfirmado and
-          not FActualizandoEmail then
-    SolicitarEmailIndividual;
 end;
 
 function TfrmPrintFac.PrepararLote(
-  const AAccion: TEjecutarLoteFacturas): Boolean;
+  const AAccion: TEjecutarLoteFacturas;
+  AEnviarEmail: Boolean): Boolean;
 var
   oReferencias: TReferenciasComandoFactura;
 begin
@@ -697,41 +759,29 @@ begin
   Result := AAccion(
     oReferencias,
     FormatoElegido,
-    chkEnviarEmail.Checked);
+    AEnviarEmail);
 end;
 
 procedure TfrmPrintFac.btnPDFClick(Sender: TObject);
 begin
-  if not ValidarCorreoAntesDeActuar then
-    Exit;
   if rbProcesarFiltrados.Checked then
   begin
-    if PrepararLote(FExportarLotePdf) then
+    if PrepararLote(FExportarLotePdf, False) then
       ModalResult := mrOk;
   end
   else
-  begin
     inherited btnPDFClick(Sender);
-    if chkEnviarEmail.Checked and (UltimaRutaPdf <> '') then
-      EnviarPdfPorCorreo(UltimaRutaPdf);
-  end;
 end;
 
 procedure TfrmPrintFac.btnImprimirClick(Sender: TObject);
 begin
-  if not ValidarCorreoAntesDeActuar then
-    Exit;
   if rbProcesarFiltrados.Checked then
   begin
-    if PrepararLote(FImprimirLote) then
+    if PrepararLote(FImprimirLote, False) then
       ModalResult := mrOk;
   end
   else
-  begin
     inherited btnImprimirClick(Sender);
-    if chkEnviarEmail.Checked and UltimaImpresionCorrecta then
-      EnviarCorreoTrasImpresion;
-  end;
 end;
 
 procedure TfrmPrintFac.PdfExportado(const ARuta: string);

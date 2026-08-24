@@ -104,23 +104,28 @@ end;
 
 procedure TfrmMtoUsuarios.btnSetPassClick(Sender: TObject);
 var
-  formulario: TfrmModalGenPass;
+  sContrasenaNueva: string;
+  sUsuario: string;
 begin
   inherited;
-  formulario := TfrmModalGenPass.Create(Application);
-  formulario.edtUsuario.Text :=
-                dmmUsuarios.unqryTablaG.FieldByName('USUARIO_USU').AsString;
-  formulario.ShowModal;
-  if (formulario.sFicha = 'S') then
+  sUsuario :=
+    dmmUsuarios.unqryTablaG.FieldByName('USUARIO_USU').AsString;
+  if TfrmModalGenPass.SolicitarNueva(
+       Application,
+       sUsuario,
+       sContrasenaNueva) then
   begin
-     if ((dsTablaG.DataSet.State <> dsInsert) and
-         (dsTablaG.DataSet.State <> dsEdit)) then
-       dsTablaG.DataSet.Edit;
-     dmmUsuarios.unqryTablaG.FieldByName('PASSWORD_USU').AsString :=
-                                              sMd5(formulario.edtPassword.Text);
-     dmmUSuarios.unqryTablaG.Post;
+    try
+      if ((dsTablaG.DataSet.State <> dsInsert) and
+          (dsTablaG.DataSet.State <> dsEdit)) then
+        dsTablaG.DataSet.Edit;
+      dmmUsuarios.unqryTablaG.FieldByName('PASSWORD_USU').AsString :=
+        sMd5(sContrasenaNueva);
+      dmmUsuarios.unqryTablaG.Post;
+    finally
+      sContrasenaNueva := '';
+    end;
   end;
-  FreeAndNil(formulario);
 end;
 
 procedure TfrmMtoUsuarios.btnSetCajaClick(Sender: TObject);

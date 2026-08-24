@@ -41,17 +41,24 @@ type
 
   ERepositorioLogonNoDisponible = class(Exception);
   ERepositorioLogonError = class(Exception);
+  ENuevoEquipoDemoYaPreparado = class(ERepositorioLogonError);
 
   IRepositorioLogon = interface
     ['{7E58B7E8-C2D1-4D3C-B06A-3317161F5A1B}']
     function Autenticar(
       const AUsuario, AContrasena: string): TResultadoAutenticacionLogon;
+    procedure EstablecerContrasenaNuevoEquipo(
+      const AUsuario, AContrasenaNueva: string;
+      AExigirContrasenaDemoInicial: Boolean = False);
   end;
 
   IAplicacionLogon = interface
     ['{A64D1FA9-0B93-48B2-9318-80E6A8CF2CD6}']
     function Autenticar(
       const AUsuario, AContrasena: string): TResultadoAutenticacionLogon;
+    procedure EstablecerContrasenaNuevoEquipo(
+      const AUsuario, AContrasenaNueva: string;
+      AExigirContrasenaDemoInicial: Boolean = False);
   end;
 
   TDecisionErrorScriptLogon = (
