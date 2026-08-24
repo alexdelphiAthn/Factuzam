@@ -1323,6 +1323,19 @@ begin
       ealAutenticado:
       begin
         RegistroLog.RegistrarInformacion('Login correcto');
+        try
+          SetIniValues;
+        except
+          on E: Exception do
+          begin
+            RegistroLog.RegistrarError(
+              'Login correcto, pero falló el guardado de preferencias: ' +
+              E.ClassName + ': ' + E.Message);
+            ShowMessage(Format(
+              SErrorGuardarPreferenciasInicioSesion,
+              [E.Message]));
+          end;
+        end;
         FResultadoInicioSesion :=
           TResultadoInicioSesion.CrearAutenticado(
             TIdentidadSesion.Crear(
@@ -1333,7 +1346,6 @@ begin
               Resultado.Empresa,
               Resultado.Almacen,
               Resultado.Caja));
-        SetIniValues;
         PostMessage(Handle, WM_CLOSE, 0, 0);
         ModalResult := mrOK;
       end;

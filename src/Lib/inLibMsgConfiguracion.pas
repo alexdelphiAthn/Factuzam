@@ -61,6 +61,10 @@ resourcestring
     'No se pudo completar el inicio automático:' + sLineBreak +
     '%s' + sLineBreak + sLineBreak +
     'Introduzca sus credenciales manualmente.';
+  SErrorGuardarPreferenciasInicioSesion =
+    'El inicio de sesión es correcto, pero no se pudieron guardar todas las ' +
+    'preferencias de acceso.' + sLineBreak + sLineBreak +
+    'La sesión continuará.' + sLineBreak + sLineBreak + '%s';
   SErrorPrepararNuevoEquipo =
     'No se pudo restablecer la contraseña de acceso:' +
     sLineBreak + '%s';

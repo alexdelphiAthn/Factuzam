@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripcion:                                                                }
-{    Reglas puras del arranque especial para un equipo nuevo.                  }
+{    Reglas y marca persistente del arranque para un equipo nuevo.             }
 {******************************************************************************}
 unit inLibNuevoEquipo;
 

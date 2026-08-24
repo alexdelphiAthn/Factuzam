@@ -7187,6 +7187,12 @@ begin
       SErrorInicioAutomatico);
   ARegistrar(
     'inLibMsgConfiguracion.' +
+    'SErrorGuardarPreferenciasInicioSesion',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorGuardarPreferenciasInicioSesion);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
     'SErrorPrepararNuevoEquipo',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
