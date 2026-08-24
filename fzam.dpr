@@ -907,6 +907,7 @@ uses
     'src\DataModules\UniDataCargaMasivaArticulosRepositorio.pas',
   inLibGenerarTicketBD in 'src\Lib\inLibGenerarTicketBD.pas',
   inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
+  inLibCorreoValidacion in 'src\Lib\inLibCorreoValidacion.pas',
   inLibFactuzamApi in 'src\Lib\inLibFactuzamApi.pas',
   inLibErroresHttp in 'src\Lib\inLibErroresHttp.pas',
   inLibTraduccionesDescarga in

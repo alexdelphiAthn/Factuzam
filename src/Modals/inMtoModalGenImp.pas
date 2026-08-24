@@ -85,6 +85,7 @@ type
     FServiciosPersistencia: TServiciosPersistenciaImpresion;
     FRestauracionesGuias: TInterfaceList;
     FUltimaRutaPdf: string;
+    FUltimaImpresionCorrecta: Boolean;
     // D22: True si frxrprt1 contiene un formato personalizado
     // cargado del BLOB; False si contiene la plantilla base.
     FInformeEsPersonalizado: Boolean;
@@ -119,6 +120,8 @@ type
     function TraducirContenidoInforme: Boolean; virtual;
     procedure PdfExportado(const ARuta: string); virtual;
     property FormatoElegido: string read sElegido;
+    property UltimaImpresionCorrecta: Boolean
+      read FUltimaImpresionCorrecta;
   public
     destructor Destroy; override;
     procedure CargarFormatos(form:TfrmMtoModalGenImpEle);
@@ -821,6 +824,7 @@ end;
 
 procedure TfrmPrint.btnImprimirClick(Sender: TObject);
 begin
+  FUltimaImpresionCorrecta := False;
   Preparar_consulta;
   Self.Hide;
   Consultar_Formularios;
@@ -831,8 +835,9 @@ begin
     OnGuiasAplicadas;
     TraducirInformeActual;
     try
-      frxrprt1.PrepareReport(True);
-      frxrprt1.Print;
+      FUltimaImpresionCorrecta := frxrprt1.PrepareReport(True);
+      if FUltimaImpresionCorrecta then
+        FUltimaImpresionCorrecta := frxrprt1.Print;
     finally
       CerrarGuiasRuntime;
     end;
@@ -846,7 +851,10 @@ begin
 end;
 
 procedure TfrmPrint.btnPDFClick(Sender: TObject);
+var
+  sRutaPdf: string;
 begin
+  FUltimaRutaPdf := '';
   Preparar_consulta;
   Self.Hide;
   Consultar_Formularios;
@@ -857,10 +865,16 @@ begin
     OnGuiasAplicadas;
     TraducirInformeActual;
     try
-      frxrprt1.PrepareReport(True);
-      frxpdfxprtPedWeb.DefaultPath := ParametrosApp.GetPath('appDirPDF');
-      frxrprt1.Export(frxpdfxprtPedWeb);
-      PdfExportado(RutaPdfExportado(frxpdfxprtPedWeb));
+      if frxrprt1.PrepareReport(True) then
+      begin
+        frxpdfxprtPedWeb.DefaultPath := ParametrosApp.GetPath('appDirPDF');
+        if frxrprt1.Export(frxpdfxprtPedWeb) then
+        begin
+          sRutaPdf := RutaPdfExportado(frxpdfxprtPedWeb);
+          if sRutaPdf <> '' then
+            PdfExportado(sRutaPdf);
+        end;
+      end;
     finally
       CerrarGuiasRuntime;
     end;

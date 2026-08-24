@@ -55,8 +55,9 @@ type
 implementation
 
 uses
-  System.SysUtils, System.UITypes, Vcl.Forms, Vcl.Dialogs,
+  System.SysUtils, System.UITypes, Data.DB, Vcl.Forms, Vcl.Dialogs,
   UniDataFacturas, inMtoModalImpFac,
+  inLibCorreoTickets,
   inLibGenerarTicket, inLibGenerarTicketBD, inLibGenerarTicketCaja,
   inLibDir, inLibFacturasComposicion,
   // Raiz de composicion de este servicio: los adaptadores UniData* se
@@ -95,6 +96,9 @@ procedure TImpresorVentaVcl.ImprimirFacturaA4(
 var
   DatosFactura: TdmFacturas;
   Formulario: TfrmPrintFac;
+  sEmailFactura: string;
+  sNombreEmpresa: string;
+  sReferencia: string;
   sRutaPdf: string;
 begin
   DatosFactura := TdmFacturas.Create(FPropietario);
@@ -113,7 +117,45 @@ begin
     Formulario := TfrmPrintFac.Create(Application);
     Formulario.edtSerie.Text := ASerie;
     Formulario.edtNroFac.Text := ANumero;
-    Formulario.dmFac := DatosFactura;
+    Formulario.ConfigurarDataModule(DatosFactura);
+    Formulario.preparar_consulta;
+    sEmailFactura := '';
+    sNombreEmpresa := '';
+    if DatosFactura.unqryFacPrint.Active and
+       not DatosFactura.unqryFacPrint.IsEmpty then
+    begin
+      sEmailFactura := Trim(
+        DatosFactura.unqryFacPrint.FieldByName(
+          'EMAIL_CLIENTE_FAC').AsString);
+      sNombreEmpresa := Trim(
+        DatosFactura.unqryFacPrint.FieldByName(
+          'RAZON_SOCIAL_EMPRESA_FAC').AsString);
+    end;
+    sReferencia := ASerie + '\' + ANumero;
+    Formulario.ConfigurarCorreo(
+      sEmailFactura,
+      function(
+        const ARutaPdf, AEmail: string;
+        out AMensaje: string): Boolean
+      var
+        oRutas: TStringList;
+      begin
+        oRutas := TStringList.Create;
+        try
+          oRutas.Add(ARutaPdf);
+          Result := EnviarDocumentosPorCorreo(
+            FParametrosApp,
+            tdcFactura,
+            sReferencia,
+            sNombreEmpresa,
+            AEmail,
+            oRutas,
+            nil,
+            AMensaje);
+        finally
+          oRutas.Free;
+        end;
+      end);
     Formulario.ShowModal;
     if not FileExists(Formulario.UltimaRutaPdf) then
     begin

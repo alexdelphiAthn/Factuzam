@@ -32,12 +32,22 @@ type
     CodigoSalida: Cardinal;
     EsError: Boolean;
     Mensaje: string;
+    CorreoSolicitado: Boolean;
+    CorreosEnviados: Integer;
+    CorreosSinDestinatario: Integer;
+    CorreosConError: Integer;
+    DetalleCorreo: string;
   end;
   TResultadoLoteImpresionFacturas = record
     Solicitadas: Integer;
     Impresas: Integer;
     OmitidasNoConsolidadas: Integer;
     Error: string;
+    CorreoSolicitado: Boolean;
+    CorreosEnviados: Integer;
+    CorreosSinDestinatario: Integer;
+    CorreosConError: Integer;
+    DetalleCorreo: string;
   end;
   TFinalizarLoteImpresionFacturas = reference to procedure(
     const AResultado: TResultadoLoteImpresionFacturas);
@@ -53,7 +63,8 @@ function EjecutarComandoImprimirFacturas(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const APermisos: IPermisosAplicacion;
-  const ARegistroLog: IRegistroLog
+  const ARegistroLog: IRegistroLog;
+  AEnviarEmail: Boolean = False
 ): TResultadoComandoImprimirFacturas;
 procedure IniciarLoteImpresionFacturas(
   const AReferencias: TReferenciasComandoFactura;
@@ -65,6 +76,7 @@ procedure IniciarLoteImpresionFacturas(
   const AParametrosApp: IParametrosAplicacion;
   const APermisos: IPermisosAplicacion;
   const ARegistroLog: IRegistroLog;
+  AEnviarEmail: Boolean;
   const AAlFinalizar: TFinalizarLoteImpresionFacturas);
 procedure DetenerLoteImpresionFacturasAlCerrar;
 function EjecutarProcesoComandoImprimirFacturas(
@@ -96,6 +108,7 @@ uses
   Data.DB,
   frPrinter,
   inLibFiltroUsuario,
+  inLibCorreoTickets,
   inLibLineaComandos,
   inLibMsgConfiguracion,
   inLibSalidaComandos,
@@ -109,6 +122,12 @@ type
     efilOmitidaNoConsolidada,
     efilError
   );
+  TDatosCorreoFacturaLote = record
+    Email: string;
+    NombreEmpresa: string;
+    RutaPdf: string;
+    ErrorPreparacion: string;
+  end;
   TThreadAcceso = class(TThread);
 
 const
@@ -255,6 +274,16 @@ resourcestring
   SInfoFinLoteImpresionFacturas =
     'Impresión por lotes finalizada. Solicitadas: %d. Impresas: %d. ' +
     'Omitidas no consolidadas: %d.';
+  SInfoCorreoFacturaLoteEnviado =
+    'Factura %s enviada por correo a %s.';
+  SAvisoCorreoFacturaLoteSinDestinatario =
+    'Factura %s sin envío: EMAIL_CLIENTE_FAC está vacío.';
+  SErrorCorreoFacturaLote =
+    'No se pudo enviar por correo la factura %s a %s: %s';
+  SErrorPrepararCorreoFacturaLote =
+    'No se pudo generar el PDF temporal para enviar por correo la factura %s.';
+  SErrorInesperadoLotePdfFacturas =
+    'Se produjo un error inesperado durante el lote de PDF: %s: %s.';
 
 var
   GBloqueoLoteImpresionFacturas: TCriticalSection;
@@ -302,6 +331,80 @@ begin
     try
       ARegistroLog.RegistrarError(AMensaje);
     except
+    end;
+  end;
+end;
+
+function TextoUnaLinea(const ATexto: string): string;
+begin
+  Result := StringReplace(ATexto, #13, ' ', [rfReplaceAll]);
+  Result := StringReplace(Result, #10, ' ', [rfReplaceAll]);
+  Result := StringReplace(Result, #9, ' ', [rfReplaceAll]);
+  Result := Trim(Result);
+end;
+
+procedure AgregarDetalleCorreo(
+  var ADetalle: string;
+  const AReferencia, AEstado, AEmail, AMensaje: string);
+var
+  sLinea: string;
+begin
+  sLinea := TextoUnaLinea(AReferencia) + ' | ' + AEstado;
+  if Trim(AEmail) <> '' then
+    sLinea := sLinea + ' | ' + TextoUnaLinea(AEmail);
+  if Trim(AMensaje) <> '' then
+    sLinea := sLinea + ' | ' + TextoUnaLinea(AMensaje);
+  if ADetalle <> '' then
+    ADetalle := ADetalle + sLineBreak;
+  ADetalle := ADetalle + sLinea;
+end;
+
+function EnviarPdfFacturaPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  const AReferencia, ANombreEmpresa, AEmail, ARutaPdf: string;
+  out AMensaje: string): Boolean;
+var
+  oRutas: TStringList;
+begin
+  oRutas := TStringList.Create;
+  try
+    oRutas.Add(ARutaPdf);
+    Result := EnviarDocumentosPorCorreo(
+      AParametrosApp,
+      tdcFactura,
+      AReferencia,
+      ANombreEmpresa,
+      AEmail,
+      oRutas,
+      ARegistroLog,
+      AMensaje);
+  finally
+    FreeAndNil(oRutas);
+  end;
+end;
+
+procedure EliminarPdfTemporalSeguro(
+  const ARuta: string;
+  const ARegistroLog: IRegistroLog);
+begin
+  if (Trim(ARuta) <> '') and FileExists(ARuta) then
+  begin
+    try
+      SetLastError(ERROR_SUCCESS);
+      if not System.SysUtils.DeleteFile(ARuta) then
+        RegistrarAvisoSeguro(
+          ARegistroLog,
+          Format(
+            SAvisoEliminarPdfTemporalComandoImprimirFacturas,
+            [ARuta, SysErrorMessage(GetLastError)]));
+    except
+      on E: Exception do
+        RegistrarAvisoSeguro(
+          ARegistroLog,
+          Format(
+            SAvisoEliminarPdfTemporalComandoImprimirFacturas,
+            [ARuta, E.ClassName + ': ' + E.Message]));
     end;
   end;
 end;
@@ -892,13 +995,16 @@ end;
 function ImprimirFacturaConsolidada(
   const AReferencia: TReferenciaComandoFactura;
   const AFormato, AImpresora: string;
+  APrepararCorreo: Boolean;
   AOwnerSesion: TComponent;
   AConexion: TUniConnection;
   const AContexto: TContextoAutorizacionComandoFactura;
   const AUsuario: string;
   const ARegistroLog: IRegistroLog;
+  out ACorreo: TDatosCorreoFacturaLote;
   out AError: string): TEstadoFacturaImpresionLote;
 var
+  iTamanoPdf: Int64;
   oConsulta: TUniQuery;
   oDatos: TDatosAutorizacionComandoFactura;
   oDatosFactura: TdmFacturas;
@@ -906,6 +1012,7 @@ var
   oRechazo: TRechazoComandoFactura;
 begin
   Result := efilError;
+  ACorreo := Default(TDatosCorreoFacturaLote);
   AError := '';
   oConsulta := nil;
   oDatosFactura := nil;
@@ -985,6 +1092,47 @@ begin
         Format(
           SInfoFacturaEnviadaLote,
           [AReferencia.Texto, AImpresora]));
+      if APrepararCorreo then
+      begin
+        ACorreo.Email := Trim(
+          oDatosFactura.unqryFacPrint.FieldByName(
+            'EMAIL_CLIENTE_FAC').AsString);
+        ACorreo.NombreEmpresa := Trim(
+          oDatosFactura.unqryFacPrint.FieldByName(
+            'RAZON_SOCIAL_EMPRESA_FAC').AsString);
+        if ACorreo.Email <> '' then
+        begin
+          ACorreo.RutaPdf := CrearRutaTemporalPdf(
+            TPath.Combine(TPath.GetTempPath, 'correo_factura.pdf'));
+          try
+            if not oFormulario.ExportarPdfPreparado(
+              ACorreo.RutaPdf,
+              False) or
+               not EsPdfValido(ACorreo.RutaPdf, iTamanoPdf) then
+            begin
+              ACorreo.ErrorPreparacion := Format(
+                SErrorPrepararCorreoFacturaLote,
+                [AReferencia.Texto]);
+              EliminarPdfTemporalSeguro(
+                ACorreo.RutaPdf,
+                ARegistroLog);
+              ACorreo.RutaPdf := '';
+            end;
+          except
+            on E: Exception do
+            begin
+              ACorreo.ErrorPreparacion := Format(
+                SErrorPrepararCorreoFacturaLote,
+                [AReferencia.Texto]) + ' ' +
+                E.ClassName + ': ' + E.Message;
+              EliminarPdfTemporalSeguro(
+                ACorreo.RutaPdf,
+                ARegistroLog);
+              ACorreo.RutaPdf := '';
+            end;
+          end;
+        end;
+      end;
       Result := efilImpresa;
     except
       on E: Exception do
@@ -1037,9 +1185,15 @@ function ExportarFacturas(
   AConexion: TUniConnection;
   const AContextoAutorizacion: TContextoAutorizacionComandoFactura;
   const AUsuario: string;
-  const ARegistroLog: IRegistroLog
+  const AParametrosApp: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  AEnviarEmail: Boolean
 ): TResultadoComandoImprimirFacturas;
 var
+  bPdfGenerado: Boolean;
+  iCorreosConError: Integer;
+  iCorreosEnviados: Integer;
+  iCorreosSinDestinatario: Integer;
   iFactura: Integer;
   iGeneradas: Integer;
   iTamanoPdf: Int64;
@@ -1052,11 +1206,21 @@ var
   oRutasGeneradas: TStringList;
   sErrorBloqueo: string;
   sErrorPublicacion: string;
+  sEmail: string;
+  sDetalleCorreo: string;
+  sMensajeCorreo: string;
   sNombrePdf: string;
+  sNombreEmpresa: string;
   sRutaPdf: string;
+  sRutaPdfCorreo: string;
   sRutaTemporal: string;
+  sErrorPreparacionCorreo: string;
 begin
   Result := CrearResultado(0, '');
+  iCorreosConError := 0;
+  iCorreosEnviados := 0;
+  iCorreosSinDestinatario := 0;
+  sDetalleCorreo := '';
   RegistrarInformacionSeguro(
     ARegistroLog,
     SInfoCrearImpresorComandoImprimirFacturas);
@@ -1066,6 +1230,7 @@ begin
   oConsultaAutorizacion := nil;
   oRutasGeneradas := TStringList.Create;
   try
+    try
     oRutasGeneradas.CaseSensitive := False;
     oDatosFactura := TdmFacturas.Create(AOwnerSesion);
     oDatosFactura.ReasignarConexion(AConexion);
@@ -1127,6 +1292,11 @@ begin
     while (iFactura <= High(ASolicitud.Referencias)) and
           not Result.EsError do
     begin
+      bPdfGenerado := False;
+      sEmail := '';
+      sNombreEmpresa := '';
+      sRutaPdfCorreo := '';
+      sErrorPreparacionCorreo := '';
       RegistrarInformacionSeguro(
         ARegistroLog,
         Format(
@@ -1300,6 +1470,7 @@ begin
                     begin
                       oRutasGeneradas.Add(sRutaPdf);
                       Inc(iGeneradas);
+                      bPdfGenerado := True;
                       RegistrarInformacionSeguro(
                         ARegistroLog,
                         Format(
@@ -1307,6 +1478,49 @@ begin
                           [ASolicitud.Referencias[iFactura].Texto,
                            sRutaPdf,
                            iTamanoPdf]));
+                      if AEnviarEmail then
+                      begin
+                        sEmail := Trim(
+                          oDatosFactura.unqryFacPrint.FieldByName(
+                            'EMAIL_CLIENTE_FAC').AsString);
+                        sNombreEmpresa := Trim(
+                          oDatosFactura.unqryFacPrint.FieldByName(
+                            'RAZON_SOCIAL_EMPRESA_FAC').AsString);
+                        if sEmail <> '' then
+                        begin
+                          sRutaPdfCorreo := CrearRutaTemporalPdf(
+                            TPath.Combine(
+                              TPath.GetTempPath,
+                              'correo_factura.pdf'));
+                          try
+                            TFile.Copy(sRutaPdf, sRutaPdfCorreo, False);
+                            if not EsPdfValido(
+                              sRutaPdfCorreo,
+                              iTamanoPdf) then
+                            begin
+                              sErrorPreparacionCorreo := Format(
+                                SErrorPrepararCorreoFacturaLote,
+                                [ASolicitud.Referencias[iFactura].Texto]);
+                              EliminarPdfTemporalSeguro(
+                                sRutaPdfCorreo,
+                                ARegistroLog);
+                              sRutaPdfCorreo := '';
+                            end;
+                          except
+                            on E: Exception do
+                            begin
+                              sErrorPreparacionCorreo := Format(
+                                SErrorPrepararCorreoFacturaLote,
+                                [ASolicitud.Referencias[iFactura].Texto]) +
+                                ' ' + E.ClassName + ': ' + E.Message;
+                              EliminarPdfTemporalSeguro(
+                                sRutaPdfCorreo,
+                                ARegistroLog);
+                              sRutaPdfCorreo := '';
+                            end;
+                          end;
+                        end;
+                      end;
                     end;
                   except
                     on E: Exception do
@@ -1354,6 +1568,109 @@ begin
               end;
             end;
           end;
+          if AEnviarEmail and bPdfGenerado then
+          begin
+            try
+            if sEmail = '' then
+            begin
+              Inc(iCorreosSinDestinatario);
+              sMensajeCorreo := Format(
+                SAvisoCorreoFacturaLoteSinDestinatario,
+                [ASolicitud.Referencias[iFactura].Texto]);
+              AgregarDetalleCorreo(
+                sDetalleCorreo,
+                ASolicitud.Referencias[iFactura].Texto,
+                'SIN EMAIL',
+                '',
+                'EMAIL_CLIENTE_FAC vacío');
+              RegistrarAvisoSeguro(ARegistroLog, sMensajeCorreo);
+            end
+            else if sErrorPreparacionCorreo <> '' then
+            begin
+              Inc(iCorreosConError);
+              AgregarDetalleCorreo(
+                sDetalleCorreo,
+                ASolicitud.Referencias[iFactura].Texto,
+                'ERROR',
+                sEmail,
+                sErrorPreparacionCorreo);
+              RegistrarErrorSeguro(
+                ARegistroLog,
+                Format(
+                  SErrorCorreoFacturaLote,
+                  [ASolicitud.Referencias[iFactura].Texto,
+                   sEmail,
+                   sErrorPreparacionCorreo]));
+            end
+            else
+            begin
+              try
+                if EnviarPdfFacturaPorCorreo(
+                  AParametrosApp,
+                  nil,
+                  ASolicitud.Referencias[iFactura].Texto,
+                  sNombreEmpresa,
+                  sEmail,
+                  sRutaPdfCorreo,
+                  sMensajeCorreo) then
+                begin
+                  Inc(iCorreosEnviados);
+                  AgregarDetalleCorreo(
+                    sDetalleCorreo,
+                    ASolicitud.Referencias[iFactura].Texto,
+                    'ENVIADO',
+                    sEmail,
+                    '');
+                  RegistrarInformacionSeguro(
+                    ARegistroLog,
+                    Format(
+                      SInfoCorreoFacturaLoteEnviado,
+                      [ASolicitud.Referencias[iFactura].Texto, sEmail]));
+                end
+                else
+                begin
+                  Inc(iCorreosConError);
+                  AgregarDetalleCorreo(
+                    sDetalleCorreo,
+                    ASolicitud.Referencias[iFactura].Texto,
+                    'ERROR',
+                    sEmail,
+                    sMensajeCorreo);
+                  RegistrarErrorSeguro(
+                    ARegistroLog,
+                    Format(
+                      SErrorCorreoFacturaLote,
+                      [ASolicitud.Referencias[iFactura].Texto,
+                       sEmail,
+                       sMensajeCorreo]));
+                end;
+              except
+                on E: Exception do
+                begin
+                  sMensajeCorreo := E.ClassName + ': ' + E.Message;
+                  Inc(iCorreosConError);
+                  AgregarDetalleCorreo(
+                    sDetalleCorreo,
+                    ASolicitud.Referencias[iFactura].Texto,
+                    'ERROR',
+                    sEmail,
+                    sMensajeCorreo);
+                  RegistrarErrorSeguro(
+                    ARegistroLog,
+                    Format(
+                      SErrorCorreoFacturaLote,
+                      [ASolicitud.Referencias[iFactura].Texto,
+                       sEmail,
+                       sMensajeCorreo]));
+                end;
+              end;
+            end;
+            finally
+              EliminarPdfTemporalSeguro(
+                sRutaPdfCorreo,
+                ARegistroLog);
+            end;
+          end;
         end;
       end;
       Inc(iFactura);
@@ -1365,7 +1682,27 @@ begin
           SInfoLoteParcialComandoImprimirFacturas,
           [iGeneradas, Length(ASolicitud.Referencias)]);
     end;
+    except
+      on E: Exception do
+      begin
+        Result := CrearResultado(
+          SALIDA_COMANDO_IMPRESION_ERROR,
+          Format(
+            SErrorInesperadoLotePdfFacturas,
+            [E.ClassName, E.Message]));
+        if iGeneradas > 0 then
+          Result.Mensaje := Result.Mensaje +
+            Format(
+              SInfoLoteParcialComandoImprimirFacturas,
+              [iGeneradas, Length(ASolicitud.Referencias)]);
+      end;
+    end;
   finally
+    Result.CorreoSolicitado := AEnviarEmail;
+    Result.CorreosEnviados := iCorreosEnviados;
+    Result.CorreosSinDestinatario := iCorreosSinDestinatario;
+    Result.CorreosConError := iCorreosConError;
+    Result.DetalleCorreo := sDetalleCorreo;
     FreeAndNil(oFormulario);
     FreeAndNil(oConsultaAutorizacion);
     FreeAndNil(oDatosFactura);
@@ -1383,7 +1720,8 @@ function EjecutarComandoImprimirFacturas(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
   const APermisos: IPermisosAplicacion;
-  const ARegistroLog: IRegistroLog
+  const ARegistroLog: IRegistroLog;
+  AEnviarEmail: Boolean
 ): TResultadoComandoImprimirFacturas;
 var
   oAutorizacion: TContextoAutorizacionComandoFactura;
@@ -1459,19 +1797,22 @@ begin
         AConexion,
         oAutorizacion,
         sUsuario,
-        ARegistroLog);
+        AParametrosApp,
+        ARegistroLog,
+        AEnviarEmail);
     end;
     if not Result.EsError then
     begin
-      Result := CrearResultado(
-        0,
-        Format(
-          SInfoFinComandoImprimirFacturas,
-          [Length(oSolicitud.Referencias),
-           oSolicitud.DirectorioDestino,
-           sUsuario]));
+      Result.CodigoSalida := 0;
+      Result.EsError := False;
+      Result.Mensaje := Format(
+        SInfoFinComandoImprimirFacturas,
+        [Length(oSolicitud.Referencias),
+         oSolicitud.DirectorioDestino,
+         sUsuario]);
     end;
   end;
+  Result.CorreoSolicitado := AEnviarEmail;
 end;
 
 function ReservarInicioLoteImpresionFacturas(
@@ -1588,6 +1929,7 @@ procedure IniciarLoteImpresionFacturas(
   const AParametrosApp: IParametrosAplicacion;
   const APermisos: IPermisosAplicacion;
   const ARegistroLog: IRegistroLog;
+  AEnviarEmail: Boolean;
   const AAlFinalizar: TFinalizarLoteImpresionFacturas);
 var
   oAutorizacion: TContextoAutorizacionComandoFactura;
@@ -1609,6 +1951,7 @@ var
 begin
   oResultado := Default(TResultadoLoteImpresionFacturas);
   oResultado.Solicitadas := Length(AReferencias);
+  oResultado.CorreoSolicitado := AEnviarEmail;
   oHilo := nil;
   bInicioReservado := ReservarInicioLoteImpresionFacturas(
     oResultado.Error);
@@ -1663,8 +2006,10 @@ begin
         iFactura: Integer;
         oConexionFondo: TUniConnection;
         oConsolidadas: TReferenciasComandoFactura;
+        oCorreo: TDatosCorreoFacturaLote;
         oEstadoFactura: TEstadoFacturaImpresionLote;
         sErrorFactura: string;
+        sMensajeCorreo: string;
       begin
         oConexionFondo := nil;
         try
@@ -1697,7 +2042,10 @@ begin
                    Application.Terminated then
                   Break;
                 sErrorFactura := '';
+                sMensajeCorreo := '';
+                oCorreo := Default(TDatosCorreoFacturaLote);
                 oEstadoFactura := efilError;
+                try
                 TThread.Synchronize(nil,
                   procedure
                   begin
@@ -1709,28 +2057,133 @@ begin
                         oConsolidadas[iFactura],
                         AFormato,
                         sImpresora,
+                        AEnviarEmail,
                         AOwnerSesion,
                         AConexionPrincipal,
                         oAutorizacion,
                         sUsuario,
                         ARegistroLog,
+                        oCorreo,
                         sErrorFactura);
                     end;
                   end);
-                if HiloLoteTerminado(oHilo) or
-                   AContextoSesion.CerrandoAplicacion or
-                   Application.Terminated then
-                  Break;
-                case oEstadoFactura of
-                  efilImpresa:
-                    Inc(oResultado.Impresas);
-                  efilOmitidaNoConsolidada:
-                    Inc(oResultado.OmitidasNoConsolidadas);
-                  efilError:
-                    begin
-                      oResultado.Error := sErrorFactura;
-                      Break;
-                    end;
+                  if HiloLoteTerminado(oHilo) or
+                     AContextoSesion.CerrandoAplicacion or
+                     Application.Terminated then
+                    Break;
+                  case oEstadoFactura of
+                    efilImpresa:
+                      begin
+                        Inc(oResultado.Impresas);
+                        if AEnviarEmail then
+                        begin
+                          if oCorreo.Email = '' then
+                          begin
+                            Inc(oResultado.CorreosSinDestinatario);
+                            AgregarDetalleCorreo(
+                              oResultado.DetalleCorreo,
+                              oConsolidadas[iFactura].Texto,
+                              'SIN EMAIL',
+                              '',
+                              'EMAIL_CLIENTE_FAC vacío');
+                            RegistrarAvisoSeguro(
+                              ARegistroLog,
+                              Format(
+                                SAvisoCorreoFacturaLoteSinDestinatario,
+                                [oConsolidadas[iFactura].Texto]));
+                          end
+                          else if oCorreo.ErrorPreparacion <> '' then
+                          begin
+                            Inc(oResultado.CorreosConError);
+                            AgregarDetalleCorreo(
+                              oResultado.DetalleCorreo,
+                              oConsolidadas[iFactura].Texto,
+                              'ERROR',
+                              oCorreo.Email,
+                              oCorreo.ErrorPreparacion);
+                            RegistrarErrorSeguro(
+                              ARegistroLog,
+                              oCorreo.ErrorPreparacion);
+                          end
+                          else
+                          begin
+                            try
+                              if EnviarPdfFacturaPorCorreo(
+                                AParametrosApp,
+                                nil,
+                                oConsolidadas[iFactura].Texto,
+                                oCorreo.NombreEmpresa,
+                                oCorreo.Email,
+                                oCorreo.RutaPdf,
+                                sMensajeCorreo) then
+                              begin
+                                Inc(oResultado.CorreosEnviados);
+                                AgregarDetalleCorreo(
+                                  oResultado.DetalleCorreo,
+                                  oConsolidadas[iFactura].Texto,
+                                  'ENVIADO',
+                                  oCorreo.Email,
+                                  '');
+                                RegistrarInformacionSeguro(
+                                  ARegistroLog,
+                                  Format(
+                                    SInfoCorreoFacturaLoteEnviado,
+                                    [oConsolidadas[iFactura].Texto,
+                                     oCorreo.Email]));
+                              end
+                              else
+                              begin
+                                Inc(oResultado.CorreosConError);
+                                AgregarDetalleCorreo(
+                                  oResultado.DetalleCorreo,
+                                  oConsolidadas[iFactura].Texto,
+                                  'ERROR',
+                                  oCorreo.Email,
+                                  sMensajeCorreo);
+                                RegistrarErrorSeguro(
+                                  ARegistroLog,
+                                  Format(
+                                    SErrorCorreoFacturaLote,
+                                    [oConsolidadas[iFactura].Texto,
+                                     oCorreo.Email,
+                                     sMensajeCorreo]));
+                              end;
+                            except
+                              on E: Exception do
+                              begin
+                                sMensajeCorreo :=
+                                  E.ClassName + ': ' + E.Message;
+                                Inc(oResultado.CorreosConError);
+                                AgregarDetalleCorreo(
+                                  oResultado.DetalleCorreo,
+                                  oConsolidadas[iFactura].Texto,
+                                  'ERROR',
+                                  oCorreo.Email,
+                                  sMensajeCorreo);
+                                RegistrarErrorSeguro(
+                                  ARegistroLog,
+                                  Format(
+                                    SErrorCorreoFacturaLote,
+                                    [oConsolidadas[iFactura].Texto,
+                                     oCorreo.Email,
+                                     sMensajeCorreo]));
+                              end;
+                            end;
+                          end;
+                        end;
+                      end;
+                    efilOmitidaNoConsolidada:
+                      Inc(oResultado.OmitidasNoConsolidadas);
+                    efilError:
+                      begin
+                        oResultado.Error := sErrorFactura;
+                        Break;
+                      end;
+                  end;
+                finally
+                  EliminarPdfTemporalSeguro(
+                    oCorreo.RutaPdf,
+                    ARegistroLog);
                 end;
               end;
             end;

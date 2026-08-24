@@ -74,6 +74,7 @@
         <DCCReference Include="PruebasProteccionDatosFacturacion.pas"/>
         <DCCReference Include="PruebasGeneradorProcesosProteccion.pas"/>
         <DCCReference Include="PruebasRestauracionCopiasReglas.pas"/>
+        <DCCReference Include="PruebasCorreoValidacion.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionesIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionPerfilIntf.pas"/>
         <DCCReference Include="..\src\Lib\inLibConexionPerfil.pas"/>
@@ -87,6 +88,7 @@
         <DCCReference Include="..\src\Lib\inLibCatalogoSqlEjecucion.pas"/>
         <DCCReference Include="..\src\Lib\inLibSqlSeguro.pas"/>
         <DCCReference Include="..\src\Lib\inLibProteccionDatosFacturacion.pas"/>
+        <DCCReference Include="..\src\Lib\inLibCorreoValidacion.pas"/>
         <DCCReference Include="..\src\DataModules\UniDataConexionFabrica.pas"/>
     </ItemGroup>
     <ProjectExtensions>

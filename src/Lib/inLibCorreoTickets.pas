@@ -2,7 +2,7 @@
 {                                                                              }
 {  Módulo:       inLibCorreoTickets                                            }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
+{ Versión:       1.1.0                                                         }
 {   Fecha:       13/07/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
@@ -17,11 +17,13 @@ unit inLibCorreoTickets;
 interface
 
 uses
-  System.SysUtils, Uni, inLibParametrosIntf,
+  System.SysUtils, System.Classes, Uni, inLibParametrosIntf,
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
   inLibUnidadesMedida, inLibPreviewTicket, inLibLogIntf;
 
 type
+  TTipoDocumentoCorreo = (tdcTicket, tdcFactura);
+
   TDatosCorreoOperacion = record
     Encontrada: Boolean;
     EmailCliente: string;
@@ -35,6 +37,13 @@ type
 
 function CorreoTicketsConfigurado(
   const AParametrosApp: IParametrosAplicacion;
+  out AMensaje: string): Boolean;
+function EnviarDocumentosPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  ATipoDocumento: TTipoDocumentoCorreo;
+  const AReferenciaDocumento, ANombreEmpresa, AEmail: string;
+  const ARutasPDF: TStrings;
+  const ARegistroLog: IRegistroLog;
   out AMensaje: string): Boolean;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
@@ -51,9 +60,10 @@ function EnviarDocumentacionOperacion(
 implementation
 
 uses
-  System.Classes, System.JSON, System.Net.HttpClient, System.Net.Mime,
+  System.JSON, System.Net.HttpClient, System.Net.Mime,
+  Winapi.Windows,
   inLibGenerarTicketBD, inLibGenerarTicketCaja,
-  inLibTraspasoTicket, inLibFactuzamApi;
+  inLibTraspasoTicket, inLibFactuzamApi, inLibCorreoValidacion;
 
 const
   cRutaCorreo = 'correo/enviar_ticket.php';
@@ -67,18 +77,131 @@ begin
   AMensaje := '';
   Faltan := TStringList.Create;
   try
-    if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
-      Faltan.Add('  - URL general del servicio web');
-    if TClienteFactuzamApi.Token(AParametrosApp) = '' then
-      Faltan.Add('  - API key / token de la instalación');
-    if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
-      Faltan.Add('  - Referencia global de la instalación');
+    if not Assigned(AParametrosApp) then
+      Faltan.Add('  - Parámetros de la aplicación')
+    else
+    begin
+      if TClienteFactuzamApi.UrlBase(AParametrosApp) = '' then
+        Faltan.Add('  - URL general del servicio web');
+      if TClienteFactuzamApi.Token(AParametrosApp) = '' then
+        Faltan.Add('  - API key / token de la instalación');
+      if TClienteFactuzamApi.Referencia(AParametrosApp) = '' then
+        Faltan.Add('  - Referencia global de la instalación');
+    end;
     Result := Faltan.Count = 0;
     if not Result then
       AMensaje := 'Configura primero estos parámetros (Parámetros de la ' +
         'aplicación -> Servicios web):' + sLineBreak + Faltan.Text;
   finally
     FreeAndNil(Faltan);
+  end;
+end;
+
+function TipoDocumentoTexto(
+  ATipoDocumento: TTipoDocumentoCorreo): string;
+begin
+  case ATipoDocumento of
+    tdcFactura:
+      Result := 'factura';
+  else
+    Result := 'ticket';
+  end;
+end;
+
+procedure RegistrarErrorCorreo(const ARegistroLog: IRegistroLog;
+  const AReferenciaDocumento, AMensaje: string);
+begin
+  if Assigned(ARegistroLog) then
+  begin
+    try
+      ARegistroLog.RegistrarError(
+        'Correo de documento ' + AReferenciaDocumento + ': ' + AMensaje);
+    except
+      { Un fallo del registro no debe ocultar el error original del envío. }
+    end;
+  end;
+end;
+
+procedure EliminarDocumentoTemporalSeguro(
+  const ARuta: string;
+  const ARegistroLog: IRegistroLog);
+var
+  iError: Cardinal;
+  sDetalle: string;
+  sRuta: string;
+begin
+  sRuta := Trim(ARuta);
+  if (sRuta = '') or not FileExists(sRuta) then
+    Exit;
+  sDetalle := '';
+  try
+    SetLastError(ERROR_SUCCESS);
+    if System.SysUtils.DeleteFile(sRuta) then
+      Exit;
+    iError := GetLastError;
+    if not FileExists(sRuta) then
+      Exit;
+    if iError <> ERROR_SUCCESS then
+      sDetalle := SysErrorMessage(iError);
+  except
+    on E: Exception do
+      sDetalle := E.ClassName + ': ' + E.Message;
+  end;
+  if Assigned(ARegistroLog) then
+  begin
+    try
+      if Trim(sDetalle) <> '' then
+        sDetalle := ': ' + sDetalle
+      else
+        sDetalle := '.';
+      ARegistroLog.RegistrarAviso(
+        'No se pudo eliminar el PDF temporal de correo "' + sRuta + '"' +
+        sDetalle);
+    except
+      { La limpieza no debe alterar el resultado del envío. }
+    end;
+  end;
+end;
+
+function RutasPdfValidas(const ARutasPDF: TStrings;
+  out AMensaje: string): Boolean;
+var
+  i: Integer;
+  sRuta: string;
+begin
+  Result := False;
+  AMensaje := '';
+  if not Assigned(ARutasPDF) then
+    AMensaje := 'No hay documentos PDF para enviar.'
+  else if ARutasPDF.Count = 0 then
+    AMensaje := 'No hay documentos PDF para enviar.'
+  else
+  begin
+    Result := True;
+    for i := 0 to ARutasPDF.Count - 1 do
+    begin
+      sRuta := Trim(ARutasPDF[i]);
+      if sRuta = '' then
+      begin
+        AMensaje := Format('La ruta del documento %d está vacía.',
+          [i + 1]);
+        Result := False;
+        Break;
+      end;
+      if not SameText(ExtractFileExt(sRuta), '.pdf') then
+      begin
+        AMensaje := Format('El documento no es un PDF: %s', [sRuta]);
+        Result := False;
+        Break;
+      end;
+      if not FileExists(sRuta) then
+      begin
+        AMensaje := Format('No se encuentra el documento PDF: %s',
+          [sRuta]);
+        Result := False;
+        Break;
+      end;
+    end;
   end;
 end;
 
@@ -176,7 +299,8 @@ begin
 end;
 
 function EnviarAlServicio(const AUrl, AApiKey, AReferencia, AOperacion,
-  AEmpresa, AEmail: string; ARutasPDF: TStrings;
+  AEmpresa, AEmail: string; ATipoDocumento: TTipoDocumentoCorreo;
+  const ARutasPDF: TStrings;
   out AMensaje: string): Boolean;
 var
   Http: THTTPClient;
@@ -196,8 +320,11 @@ begin
     Formulario.AddField('destinatario', AEmail);
     Formulario.AddField('operacion', AOperacion);
     Formulario.AddField('nombre_empresa', AEmpresa);
+    Formulario.AddField('tipo_documento',
+      TipoDocumentoTexto(ATipoDocumento));
     for i := 0 to ARutasPDF.Count - 1 do
-      Formulario.AddFile('documentos[]', ARutasPDF[i], 'application/pdf');
+      Formulario.AddFile('documentos[]', Trim(ARutasPDF[i]),
+        'application/pdf');
     ResultadoHttp := Http.Post(AUrl, Formulario, Respuesta);
     Result := ResultadoHttp.StatusCode = 200;
     if Result then
@@ -213,6 +340,64 @@ begin
   end;
 end;
 
+function EnviarDocumentosPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  ATipoDocumento: TTipoDocumentoCorreo;
+  const AReferenciaDocumento, ANombreEmpresa, AEmail: string;
+  const ARutasPDF: TStrings;
+  const ARegistroLog: IRegistroLog;
+  out AMensaje: string): Boolean;
+var
+  sApiKey: string;
+  sEmail: string;
+  sReferenciaInstalacion: string;
+  sUrl: string;
+begin
+  Result := False;
+  AMensaje := '';
+  try
+    if not CorreoTicketsConfigurado(AParametrosApp, AMensaje) then
+    begin
+      RegistrarErrorCorreo(ARegistroLog, AReferenciaDocumento, AMensaje);
+      Exit;
+    end;
+
+    sEmail := Trim(AEmail);
+    if sEmail = '' then
+      AMensaje := 'Indique una dirección de correo electrónico.'
+    else if not EmailDocumentoValido(sEmail) then
+      AMensaje := 'La dirección de correo electrónico no es válida.'
+    else if not RutasPdfValidas(ARutasPDF, AMensaje) then
+    begin
+      { RutasPdfValidas deja el detalle en AMensaje. }
+    end
+    else
+    begin
+      sUrl := TClienteFactuzamApi.ComponerUrl(
+        AParametrosApp, cRutaCorreo);
+      sApiKey := TClienteFactuzamApi.Token(AParametrosApp);
+      sReferenciaInstalacion :=
+        TClienteFactuzamApi.Referencia(AParametrosApp);
+      Result := EnviarAlServicio(
+        sUrl,
+        sApiKey,
+        sReferenciaInstalacion,
+        Trim(AReferenciaDocumento),
+        ANombreEmpresa,
+        sEmail,
+        ATipoDocumento,
+        ARutasPDF,
+        AMensaje);
+    end;
+  except
+    on E: Exception do
+      AMensaje := 'No se pudo enviar la documentación: ' + E.Message;
+  end;
+
+  if not Result then
+    RegistrarErrorCorreo(ARegistroLog, AReferenciaDocumento, AMensaje);
+end;
+
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
   const APreviewTicket: IPreviewTicket;
@@ -226,9 +411,6 @@ function EnviarDocumentacionOperacion(
   out AMensaje: string): Boolean;
 var
   RutasPDF: TStringList;
-  sUrl: string;
-  sApiKey: string;
-  sReferencia: string;
   i: Integer;
 begin
   Result := False;
@@ -262,32 +444,28 @@ begin
             if RutasPDF.Count = 0 then
               AMensaje := 'La operación no tiene documentación asociada.'
             else
-            begin
-              sUrl := TClienteFactuzamApi.ComponerUrl(
+              Result := EnviarDocumentosPorCorreo(
                 AParametrosApp,
-                cRutaCorreo);
-              sApiKey := TClienteFactuzamApi.Token(AParametrosApp);
-              sReferencia :=
-                TClienteFactuzamApi.Referencia(AParametrosApp);
-              Result := EnviarAlServicio(sUrl, sApiKey, sReferencia,
-                ANumeroOperacion, ADatos.NombreEmpresa, Trim(AEmail),
-                RutasPDF, AMensaje);
-            end;
+                tdcTicket,
+                ANumeroOperacion,
+                ADatos.NombreEmpresa,
+                Trim(AEmail),
+                RutasPDF,
+                ARegistroLog,
+                AMensaje);
           except
             on E: Exception do
             begin
               AMensaje := 'No se pudo enviar la documentación: ' + E.Message;
-              ARegistroLog.RegistrarError(
-                'Correo de operación ' + ANumeroOperacion + ': ' +
-                E.Message);
+              RegistrarErrorCorreo(
+                ARegistroLog, ANumeroOperacion, E.Message);
             end;
           end;
         finally
           for i := 0 to RutasPDF.Count - 1 do
-          begin
-            if FileExists(RutasPDF[i]) then
-              DeleteFile(RutasPDF[i]);
-          end;
+            EliminarDocumentoTemporalSeguro(
+              RutasPDF[i],
+              ARegistroLog);
           FreeAndNil(RutasPDF);
         end;
       end;

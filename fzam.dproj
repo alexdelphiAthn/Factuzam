@@ -1075,6 +1075,7 @@
         <DCCReference Include="src\DataModules\UniDataCargaMasivaArticulosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoTickets.pas"/>
+        <DCCReference Include="src\Lib\inLibCorreoValidacion.pas"/>
         <DCCReference Include="src\Lib\inLibFactuzamApi.pas"/>
         <DCCReference Include="src\Lib\inLibErroresHttp.pas"/>
         <DCCReference Include="src\Lib\inLibTraduccionesDescarga.pas"/>

@@ -94,6 +94,16 @@
       Transparent = True
     end
   end
+  object chkEnviarEmail: TcxCheckBox [5]
+    Left = 8
+    Top = 150
+    Caption = 'Enviar por email'
+    Properties.OnEditValueChanged = chkEnviarEmailPropertiesEditValueChanged
+    TabOrder = 5
+    Transparent = True
+    Visible = False
+    Width = 242
+  end
   inherited Localizer1: TcxLocalizer
     Left = 128
     Top = 144

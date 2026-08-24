@@ -16,7 +16,8 @@ uses
   PruebasGeneradorProcesosProteccion in
     'PruebasGeneradorProcesosProteccion.pas',
   PruebasRestauracionCopiasReglas in
-    'PruebasRestauracionCopiasReglas.pas';
+    'PruebasRestauracionCopiasReglas.pas',
+  PruebasCorreoValidacion in 'PruebasCorreoValidacion.pas';
 
 const
   CODIGO_CORRECTO = 0;
