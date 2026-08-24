@@ -97,6 +97,7 @@ var
   DatosFactura: TdmFacturas;
   Formulario: TfrmPrintFac;
   sEmailFactura: string;
+  sEmailRespuesta: string;
   sNombreEmpresa: string;
   sReferencia: string;
   sRutaPdf: string;
@@ -120,6 +121,7 @@ begin
     Formulario.ConfigurarDataModule(DatosFactura);
     Formulario.preparar_consulta;
     sEmailFactura := '';
+    sEmailRespuesta := '';
     sNombreEmpresa := '';
     if DatosFactura.unqryFacPrint.Active and
        not DatosFactura.unqryFacPrint.IsEmpty then
@@ -130,6 +132,9 @@ begin
       sNombreEmpresa := Trim(
         DatosFactura.unqryFacPrint.FieldByName(
           'RAZON_SOCIAL_EMPRESA_FAC').AsString);
+      sEmailRespuesta := Trim(
+        DatosFactura.unqryFacPrint.FieldByName(
+          'EMAIL_EMPRESA_FAC').AsString);
     end;
     sReferencia := ASerie + '\' + ANumero;
     Formulario.ConfigurarCorreo(
@@ -149,6 +154,7 @@ begin
             sReferencia,
             sNombreEmpresa,
             AEmail,
+            sEmailRespuesta,
             oRutas,
             nil,
             AMensaje);

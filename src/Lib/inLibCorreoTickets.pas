@@ -44,7 +44,15 @@ function EnviarDocumentosPorCorreo(
   const AReferenciaDocumento, ANombreEmpresa, AEmail: string;
   const ARutasPDF: TStrings;
   const ARegistroLog: IRegistroLog;
-  out AMensaje: string): Boolean;
+  out AMensaje: string): Boolean; overload;
+function EnviarDocumentosPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  ATipoDocumento: TTipoDocumentoCorreo;
+  const AReferenciaDocumento, ANombreEmpresa, AEmail,
+    AEmailRespuesta: string;
+  const ARutasPDF: TStrings;
+  const ARegistroLog: IRegistroLog;
+  out AMensaje: string): Boolean; overload;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
   const APreviewTicket: IPreviewTicket;
@@ -299,7 +307,8 @@ begin
 end;
 
 function EnviarAlServicio(const AUrl, AApiKey, AReferencia, AOperacion,
-  AEmpresa, AEmail: string; ATipoDocumento: TTipoDocumentoCorreo;
+  AEmpresa, AEmail, AEmailRespuesta: string;
+  ATipoDocumento: TTipoDocumentoCorreo;
   const ARutasPDF: TStrings;
   out AMensaje: string): Boolean;
 var
@@ -322,6 +331,8 @@ begin
     Formulario.AddField('nombre_empresa', AEmpresa);
     Formulario.AddField('tipo_documento',
       TipoDocumentoTexto(ATipoDocumento));
+    if AEmailRespuesta <> '' then
+      Formulario.AddField('email_respuesta', AEmailRespuesta);
     for i := 0 to ARutasPDF.Count - 1 do
       Formulario.AddFile('documentos[]', Trim(ARutasPDF[i]),
         'application/pdf');
@@ -347,9 +358,31 @@ function EnviarDocumentosPorCorreo(
   const ARutasPDF: TStrings;
   const ARegistroLog: IRegistroLog;
   out AMensaje: string): Boolean;
+begin
+  Result := EnviarDocumentosPorCorreo(
+    AParametrosApp,
+    ATipoDocumento,
+    AReferenciaDocumento,
+    ANombreEmpresa,
+    AEmail,
+    '',
+    ARutasPDF,
+    ARegistroLog,
+    AMensaje);
+end;
+
+function EnviarDocumentosPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  ATipoDocumento: TTipoDocumentoCorreo;
+  const AReferenciaDocumento, ANombreEmpresa, AEmail,
+    AEmailRespuesta: string;
+  const ARutasPDF: TStrings;
+  const ARegistroLog: IRegistroLog;
+  out AMensaje: string): Boolean;
 var
   sApiKey: string;
   sEmail: string;
+  sEmailRespuesta: string;
   sReferenciaInstalacion: string;
   sUrl: string;
 begin
@@ -363,6 +396,8 @@ begin
     end;
 
     sEmail := Trim(AEmail);
+    sEmailRespuesta :=
+      NormalizarEmailRespuestaDocumento(AEmailRespuesta);
     if sEmail = '' then
       AMensaje := 'Indique una dirección de correo electrónico.'
     else if not EmailDocumentoValido(sEmail) then
@@ -385,6 +420,7 @@ begin
         Trim(AReferenciaDocumento),
         ANombreEmpresa,
         sEmail,
+        sEmailRespuesta,
         ATipoDocumento,
         ARutasPDF,
         AMensaje);

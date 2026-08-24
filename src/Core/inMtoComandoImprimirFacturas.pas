@@ -124,6 +124,7 @@ type
   );
   TDatosCorreoFacturaLote = record
     Email: string;
+    EmailRespuesta: string;
     NombreEmpresa: string;
     RutaPdf: string;
     ErrorPreparacion: string;
@@ -362,7 +363,8 @@ end;
 function EnviarPdfFacturaPorCorreo(
   const AParametrosApp: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  const AReferencia, ANombreEmpresa, AEmail, ARutaPdf: string;
+  const AReferencia, ANombreEmpresa, AEmailRespuesta, AEmail,
+    ARutaPdf: string;
   out AMensaje: string): Boolean;
 var
   oRutas: TStringList;
@@ -376,6 +378,7 @@ begin
       AReferencia,
       ANombreEmpresa,
       AEmail,
+      AEmailRespuesta,
       oRutas,
       ARegistroLog,
       AMensaje);
@@ -1097,6 +1100,9 @@ begin
         ACorreo.Email := Trim(
           oDatosFactura.unqryFacPrint.FieldByName(
             'EMAIL_CLIENTE_FAC').AsString);
+        ACorreo.EmailRespuesta := Trim(
+          oDatosFactura.unqryFacPrint.FieldByName(
+            'EMAIL_EMPRESA_FAC').AsString);
         ACorreo.NombreEmpresa := Trim(
           oDatosFactura.unqryFacPrint.FieldByName(
             'RAZON_SOCIAL_EMPRESA_FAC').AsString);
@@ -1207,6 +1213,7 @@ var
   sErrorBloqueo: string;
   sErrorPublicacion: string;
   sEmail: string;
+  sEmailRespuesta: string;
   sDetalleCorreo: string;
   sMensajeCorreo: string;
   sNombrePdf: string;
@@ -1294,6 +1301,7 @@ begin
     begin
       bPdfGenerado := False;
       sEmail := '';
+      sEmailRespuesta := '';
       sNombreEmpresa := '';
       sRutaPdfCorreo := '';
       sErrorPreparacionCorreo := '';
@@ -1483,6 +1491,9 @@ begin
                         sEmail := Trim(
                           oDatosFactura.unqryFacPrint.FieldByName(
                             'EMAIL_CLIENTE_FAC').AsString);
+                        sEmailRespuesta := Trim(
+                          oDatosFactura.unqryFacPrint.FieldByName(
+                            'EMAIL_EMPRESA_FAC').AsString);
                         sNombreEmpresa := Trim(
                           oDatosFactura.unqryFacPrint.FieldByName(
                             'RAZON_SOCIAL_EMPRESA_FAC').AsString);
@@ -1610,6 +1621,7 @@ begin
                   nil,
                   ASolicitud.Referencias[iFactura].Texto,
                   sNombreEmpresa,
+                  sEmailRespuesta,
                   sEmail,
                   sRutaPdfCorreo,
                   sMensajeCorreo) then
@@ -2113,6 +2125,7 @@ begin
                                 nil,
                                 oConsolidadas[iFactura].Texto,
                                 oCorreo.NombreEmpresa,
+                                oCorreo.EmailRespuesta,
                                 oCorreo.Email,
                                 oCorreo.RutaPdf,
                                 sMensajeCorreo) then

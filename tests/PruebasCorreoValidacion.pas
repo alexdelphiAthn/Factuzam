@@ -28,6 +28,8 @@ type
     procedure RechazaLocalesInvalidos;
     [Test]
     procedure RechazaDominiosInvalidos;
+    [Test]
+    procedure NormalizaEmailRespuestaOpcional;
   end;
 
 implementation
@@ -60,6 +62,19 @@ begin
   Assert.IsFalse(EmailDocumentoValido('a@example-.com'));
   Assert.IsFalse(EmailDocumentoValido('a@example'));
   Assert.IsFalse(EmailDocumentoValido('a@example.com.'));
+end;
+
+procedure TPruebasCorreoValidacion.NormalizaEmailRespuestaOpcional;
+begin
+  Assert.AreEqual(
+    '',
+    NormalizarEmailRespuestaDocumento(''));
+  Assert.AreEqual(
+    'facturas@example.com',
+    NormalizarEmailRespuestaDocumento('  facturas@example.com  '));
+  Assert.AreEqual(
+    '',
+    NormalizarEmailRespuestaDocumento('direccion-no-valida'));
 end;
 
 initialization

@@ -99,7 +99,8 @@ end;
 function EnviarPdfFacturaVcl(
   const AParametros: IParametrosAplicacion;
   const ARegistroLog: IRegistroLog;
-  const AReferencia, ANombreEmpresa, AEmail, ARutaPdf: string;
+  const AReferencia, ANombreEmpresa, AEmailRespuesta, AEmail,
+    ARutaPdf: string;
   out AMensaje: string): Boolean;
 var
   oRutas: TStringList;
@@ -113,6 +114,7 @@ begin
       AReferencia,
       ANombreEmpresa,
       AEmail,
+      AEmailRespuesta,
       oRutas,
       ARegistroLog,
       AMensaje);
@@ -238,6 +240,7 @@ var
   oOwnerFormulario: TComponent;
   oOwnerLote: TComponent;
   sEmailFactura: string;
+  sEmailRespuesta: string;
   sNombreEmpresa: string;
   sReferencia: string;
 begin
@@ -274,6 +277,8 @@ begin
       ACabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString);
     sNombreEmpresa := Trim(
       ACabecera.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
+    sEmailRespuesta := Trim(
+      ACabecera.FieldByName('EMAIL_EMPRESA_FAC').AsString);
     sReferencia :=
       ACabecera.FieldByName(fseriefac).AsString + '\' +
       ACabecera.FieldByName(fnrofac).AsString;
@@ -288,6 +293,7 @@ begin
           ARegistroLog,
           sReferencia,
           sNombreEmpresa,
+          sEmailRespuesta,
           AEmail,
           ARutaPdf,
           AMensaje);

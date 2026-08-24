@@ -16,6 +16,8 @@ unit inLibCorreoValidacion;
 interface
 
 function EmailDocumentoValido(const AEmail: string): Boolean;
+function NormalizarEmailRespuestaDocumento(
+  const AEmail: string): string;
 
 implementation
 
@@ -123,6 +125,14 @@ begin
     Length(sDominio)) then
     Exit;
   Result := iPuntosDominio > 0;
+end;
+
+function NormalizarEmailRespuestaDocumento(
+  const AEmail: string): string;
+begin
+  Result := Trim(AEmail);
+  if (Result <> '') and not EmailDocumentoValido(Result) then
+    Result := '';
 end;
 
 end.
