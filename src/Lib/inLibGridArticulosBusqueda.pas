@@ -176,6 +176,7 @@ end;
 
 procedure TBusquedaGridArticulos.CrearControlesBusqueda;
 var
+  oBoton: TcxEditButton;
   oColumna: TcxGridDBColumn;
 begin
   FBusqDs := TDataSource.Create(nil);
@@ -237,11 +238,9 @@ begin
   FRepCombo.Properties.OnCloseUp := ComboBusqCloseUp;
   FRepCombo.Properties.OnChange := ArticuloChange;
   FRepCombo.Properties.Buttons.Clear;
-  with FRepCombo.Properties.Buttons.Add do
-  begin
-    Default := True;
-    Kind := bkEllipsis;
-  end;
+  oBoton := FRepCombo.Properties.Buttons.Add;
+  oBoton.Default := True;
+  oBoton.Kind := bkEllipsis;
   FRepCombo.Properties.OnButtonClick := ArticuloButtonClick;
   FRepCombo.Properties.OnValidate := ArticuloValidate;
 end;
