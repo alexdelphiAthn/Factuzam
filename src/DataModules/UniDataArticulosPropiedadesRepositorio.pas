@@ -24,7 +24,8 @@ function CrearServiciosPropiedadesArticuloUniDAC(
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections;
+  System.SysUtils, System.Generics.Collections,
+  inLibUser, UniDataPrestaShopEncolado;
 
 type
   TRepositorioPropiedadesArticuloUniDAC = class(
@@ -404,6 +405,11 @@ begin
       oConsulta.ParamByName('VALOR_LIBRE').Clear;
     oConsulta.ParamByName('USUARIO').AsString := AUsuario;
     oConsulta.Execute;
+    EncolarCambioPropiedadArticuloPrestaShop(
+      FConexion,
+      ACodigoArticulo,
+      ACodigoPropiedad,
+      AUsuario);
   finally
     FreeAndNil(oConsulta);
   end;
@@ -423,6 +429,12 @@ begin
     oConsulta.ParamByName('ARTICULO').AsString := ACodigoArticulo;
     oConsulta.ParamByName('PROPIEDAD').AsString := ACodigoPropiedad;
     oConsulta.Execute;
+    if oConsulta.RowsAffected > 0 then
+      EncolarCambioPropiedadArticuloPrestaShop(
+        FConexion,
+        ACodigoArticulo,
+        ACodigoPropiedad,
+        IdentidadSesion.Usuario);
   finally
     FreeAndNil(oConsulta);
   end;
@@ -444,6 +456,12 @@ begin
     oConsulta.ParamByName('PROPIEDAD').AsString := ACodigoPropiedad;
     oConsulta.ParamByName('UNIDAD').AsString := ACodigoUnidad;
     oConsulta.Execute;
+    if oConsulta.RowsAffected > 0 then
+      EncolarCambioPropiedadArticuloPrestaShop(
+        FConexion,
+        ACodigoArticulo,
+        ACodigoPropiedad,
+        IdentidadSesion.Usuario);
   finally
     FreeAndNil(oConsulta);
   end;

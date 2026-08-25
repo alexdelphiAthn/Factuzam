@@ -44,6 +44,16 @@ procedure EncolarTodosWebPrestaShop(
   AConexion: TUniConnection;
   AEsPrecio, AEsStock: Boolean;
   const AUsuario: string);
+function PropiedadAfectaDescuentoPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoPropiedad, AUsuario: string): Boolean;
+function ValorPropiedadAfectaDescuentoPrestaShop(
+  AConexion: TUniConnection;
+  AIdValor: Integer;
+  const AUsuario: string): Boolean;
+procedure EncolarCambioPropiedadArticuloPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, ACodigoPropiedad, AUsuario: string);
 function LeerCodigoTarifaPrestaShop(
   AConexion: TUniConnection;
   const AUsuario: string): string;
@@ -58,7 +68,8 @@ implementation
 
 uses
   System.SysUtils, Data.DB, inLibPrestaCatalogo,
-  inLibPrestaShopColaSenal;
+  inLibPrestaShopColaSenal,
+  UniDataPrestaShopPrecioCondicional;
 
 const
   CMarcaGuardadoArticuloPrestaShop = '[GUARDADO_ARTICULO] ';
@@ -548,6 +559,86 @@ begin
       FreeAndNil(oConsulta);
     end;
   end;
+end;
+
+function PropiedadAfectaDescuentoPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoPropiedad, AUsuario: string): Boolean;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := False;
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  if (Trim(ACodigoPropiedad) = '') or
+     (not EsquemaDescuentoCondicionalDisponible(AConexion)) then
+    Exit;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'SELECT COUNT(*) AS NUMERO ' +
+      'FROM fza_tarifas_descuento_condiciones dc ' +
+      'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
+      'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
+      'AND dc.CODIGO_PROP_TARDCO = :PROPIEDAD';
+    oConsulta.ParamByName('TARIFA').AsString :=
+      LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
+    oConsulta.ParamByName('PROPIEDAD').AsString :=
+      Trim(ACodigoPropiedad);
+    oConsulta.Open;
+    Result := oConsulta.FieldByName('NUMERO').AsInteger > 0;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function ValorPropiedadAfectaDescuentoPrestaShop(
+  AConexion: TUniConnection;
+  AIdValor: Integer;
+  const AUsuario: string): Boolean;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := False;
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  if (AIdValor <= 0) or
+     (not EsquemaDescuentoCondicionalDisponible(AConexion)) then
+    Exit;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'SELECT COUNT(*) AS NUMERO ' +
+      'FROM fza_tarifas_descuento_condiciones dc ' +
+      'JOIN fza_tarifas_descuento_valores dv ' +
+      'ON dv.CODIGO_TAR_TARDVA = dc.CODIGO_TAR_TARDCO ' +
+      'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
+      'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
+      'AND dv.ID_PV_TARDVA = :ID_VALOR';
+    oConsulta.ParamByName('TARIFA').AsString :=
+      LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
+    oConsulta.ParamByName('ID_VALOR').AsInteger := AIdValor;
+    oConsulta.Open;
+    Result := oConsulta.FieldByName('NUMERO').AsInteger > 0;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure EncolarCambioPropiedadArticuloPrestaShop(
+  AConexion: TUniConnection;
+  const ACodigoArticulo, ACodigoPropiedad, AUsuario: string);
+begin
+  if PropiedadAfectaDescuentoPrestaShop(
+       AConexion,
+       ACodigoPropiedad,
+       AUsuario) then
+    EncolarPrecioPrestaShop(
+      AConexion,
+      ACodigoArticulo,
+      AUsuario);
 end;
 
 procedure EncolarPrecioPrestaShop(

@@ -112,6 +112,9 @@ type
     function DescuentoTarifaVigente(
       const ACodigoTarifa: string;
       const AFecha: TDateTime): Boolean;
+    function DescuentoTarifaAplicable(
+      const ACodigoTarifa, ACodigoArt, ACodigoSku: string;
+      const AFecha: TDateTime): Boolean;
   end;
 
 implementation
@@ -126,6 +129,44 @@ const
     'SELECT FECHA_DESDE_DTO_TAR, FECHA_HASTA_DTO_TAR ' +
     'FROM fza_tarifas ' +
     'WHERE CODIGO_TAR_ARTTAR = :tar LIMIT 1';
+  SQL_CONDICION_DESCUENTO_TARIFA =
+    'SELECT c.MODO_TARDCO, c.CODIGO_PROP_TARDCO, ' +
+    'c.POLITICA_SIN_VALOR_TARDCO, ' +
+    'p.TIPO_VALOR_PROP, p.ESACTIVO_PROP, ' +
+    'pe.ID_PV_ARTPROP AS ID_PV_EFECTIVO, ' +
+    'CASE WHEN v.ID_PV_TARDVA IS NULL THEN ''N'' ELSE ''S'' END ' +
+    'AS VALOR_SELECCIONADO, ' +
+    '(SELECT COUNT(*) FROM fza_tarifas_descuento_valores vc ' +
+    'WHERE vc.CODIGO_TAR_TARDVA = c.CODIGO_TAR_TARDCO) ' +
+    'AS NUM_VALORES_CONDICION, ' +
+    '(SELECT COUNT(*) FROM fza_tarifas_descuento_valores vc ' +
+    'JOIN fza_propiedades_valores pvc ' +
+    'ON pvc.ID_PV_ARTPROP = vc.ID_PV_TARDVA ' +
+    'AND pvc.ID_PROP_PV = c.CODIGO_PROP_TARDCO ' +
+    'AND pvc.ESACTIVO_PV = ''S'' ' +
+    'WHERE vc.CODIGO_TAR_TARDVA = c.CODIGO_TAR_TARDCO) ' +
+    'AS NUM_VALORES_VALIDOS ' +
+    'FROM fza_tarifas_descuento_condiciones c ' +
+    'LEFT JOIN fza_propiedades p ' +
+    'ON p.CODIGO_PROP_ARTPROP = c.CODIGO_PROP_TARDCO ' +
+    'LEFT JOIN vi_articulos_propiedades_efectivas e ' +
+    'ON e.CODIGO_ART = :art ' +
+    'AND e.CODIGO_UNIDAD_SKU = :sku ' +
+    'AND e.CODIGO_PROP_ARTPROP = c.CODIGO_PROP_TARDCO ' +
+    'LEFT JOIN fza_articulos_propiedades pa ' +
+    'ON :sku = '''' ' +
+    'AND pa.CODIGO_ART_ART = :art ' +
+    'AND pa.CODIGO_UNIDAD_ARTPROP = '''' ' +
+    'AND pa.CODIGO_PROP_ARTPROP = c.CODIGO_PROP_TARDCO ' +
+    'LEFT JOIN fza_propiedades_valores pe ' +
+    'ON pe.ID_PV_ARTPROP = ' +
+    'COALESCE(e.ID_PV_ARTPROP, pa.ID_PV_ARTPROP) ' +
+    'AND pe.ID_PROP_PV = c.CODIGO_PROP_TARDCO ' +
+    'AND pe.ESACTIVO_PV = ''S'' ' +
+    'LEFT JOIN fza_tarifas_descuento_valores v ' +
+    'ON v.CODIGO_TAR_TARDVA = c.CODIGO_TAR_TARDCO ' +
+    'AND v.ID_PV_TARDVA = pe.ID_PV_ARTPROP ' +
+    'WHERE c.CODIGO_TAR_TARDCO = :tar LIMIT 1';
   SQL_CONTAR_SKUS_ACTIVOS =
     'SELECT CODIGO_UNIDAD_SKU FROM fza_articulos_skus ' +
     'WHERE CODIGO_ART_SKU = :art AND ESACTIVO_SKU = ''S''';
@@ -272,7 +313,7 @@ end;
 class function TRepositorioArticulosResolver.DefinicionesSql:
   TDefinicionesSql;
 begin
-  SetLength(Result, 10);
+  SetLength(Result, 11);
   Result[0] := DefinicionSql(
     'DescuentoTarifaVigente',
     SQL_DESCUENTO_TARIFA,
@@ -338,6 +379,14 @@ begin
     SQL_LISTAR_SKUS,
     'art,incluir',
     'CODIGO_UNIDAD_SKU,ESACTIVO_SKU,DESCRIPCION_SKU');
+  Result[10] := DefinicionSql(
+    'DescuentoTarifaAplicable',
+    SQL_CONDICION_DESCUENTO_TARIFA,
+    'art,sku,tar',
+    'MODO_TARDCO,CODIGO_PROP_TARDCO,POLITICA_SIN_VALOR_TARDCO,' +
+    'TIPO_VALOR_PROP,' +
+    'ESACTIVO_PROP,ID_PV_EFECTIVO,VALOR_SELECCIONADO,' +
+    'NUM_VALORES_CONDICION,NUM_VALORES_VALIDOS');
 end;
 
 function TRepositorioArticulosResolver.DescuentoTarifaVigente(
@@ -391,7 +440,122 @@ begin
             dHasta);
         end;
       except
-        Result := True;
+        on E: Exception do
+        begin
+          if Assigned(FIncidenciasSql) then
+            FIncidenciasSql.Registrar(
+              ClavePerfilSql(oDefinicion),
+              E.Message);
+          Result := False;
+        end;
+      end;
+    finally
+      FreeAndNil(oConsulta);
+    end;
+  end;
+end;
+
+function TRepositorioArticulosResolver.DescuentoTarifaAplicable(
+  const ACodigoTarifa, ACodigoArt, ACodigoSku: string;
+  const AFecha: TDateTime): Boolean;
+var
+  bTieneValor: Boolean;
+  bValorSeleccionado: Boolean;
+  oConsulta: TUniQuery;
+  oDefinicion: TDefinicionSql;
+  sModo: string;
+begin
+  Result := False;
+  if (not Assigned(FConexion)) or (ACodigoTarifa = '') then
+    Exit;
+  if not DescuentoTarifaVigente(ACodigoTarifa, AFecha) then
+    Exit;
+
+  Result := True;
+  if Assigned(FConexion) and (ACodigoTarifa <> '') then
+  begin
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := FConexion;
+      oDefinicion := DefinicionesSql[10];
+      try
+        EjecutarLecturaSqlConFallback(
+          oDefinicion,
+          FCatalogoSql,
+          procedure(const ASql: string)
+          begin
+            oConsulta.Close;
+            oConsulta.SQL.Text := ASql;
+            oConsulta.ParamByName('tar').AsString :=
+              ACodigoTarifa;
+            oConsulta.ParamByName('art').AsString :=
+              ACodigoArt;
+            oConsulta.ParamByName('sku').AsString :=
+              ACodigoSku;
+            oConsulta.Open;
+            ValidarCamposResultadoSql(
+              oDefinicion,
+              oConsulta);
+          end,
+          FIncidenciasSql);
+
+        // Sin cabecera de condicion se conserva el comportamiento historico.
+        // TODOS tampoco necesita propiedad ni valores asociados.
+        if not oConsulta.IsEmpty then
+        begin
+          sModo := UpperCase(Trim(oConsulta.FieldByName(
+            'MODO_TARDCO').AsString));
+          if sModo = 'TODOS' then
+            Result := True
+          else
+          begin
+            // Una condicion mal configurada o sin valor efectivo nunca abre
+            // el descuento. La propiedad debe seguir activa y ser de lista.
+            Result :=
+              ((sModo = 'SOLO_SI') or
+               (sModo = 'TODOS_EXCEPTO')) and
+              (Trim(oConsulta.FieldByName(
+                'CODIGO_PROP_TARDCO').AsString) <> '') and
+              SameText(oConsulta.FieldByName(
+                'POLITICA_SIN_VALOR_TARDCO').AsString,
+                'NO_APLICAR') and
+              (oConsulta.FieldByName('ESACTIVO_PROP').AsString = 'S') and
+              SameText(oConsulta.FieldByName(
+                'TIPO_VALOR_PROP').AsString, 'LISTA') and
+              (oConsulta.FieldByName(
+                'NUM_VALORES_CONDICION').AsInteger > 0) and
+              (oConsulta.FieldByName(
+                'NUM_VALORES_VALIDOS').AsInteger =
+               oConsulta.FieldByName(
+                'NUM_VALORES_CONDICION').AsInteger);
+            bTieneValor := not oConsulta.FieldByName(
+              'ID_PV_EFECTIVO').IsNull;
+            Result := Result and bTieneValor;
+            if Result then
+            begin
+              bValorSeleccionado :=
+                oConsulta.FieldByName(
+                  'VALOR_SELECCIONADO').AsString = 'S';
+              if sModo = 'SOLO_SI' then
+                Result := bValorSeleccionado
+              else if sModo = 'TODOS_EXCEPTO' then
+                Result := not bValorSeleccionado
+              else
+                Result := False;
+            end;
+          end;
+        end;
+      except
+        on E: Exception do
+        begin
+          // Con una lectura incompleta no se puede demostrar que el articulo
+          // cumple la regla; por seguridad comercial, no se descuenta.
+          if Assigned(FIncidenciasSql) then
+            FIncidenciasSql.Registrar(
+              ClavePerfilSql(oDefinicion),
+              E.Message);
+          Result := False;
+        end;
       end;
     finally
       FreeAndNil(oConsulta);
@@ -533,14 +697,16 @@ begin
   finally
     FreeAndNil(oConsulta);
   end;
-  // Ventana de aplicacion del descuento (cabecera de tarifa). Si la linea
-  // trae descuento pero la fecha pedida cae fuera de la ventana, se cobra el
-  // precio de salida y se anula el descuento. Sin ventana -> aplica siempre.
+  // La aplicacion del descuento combina la ventana de la tarifa con su
+  // condicion por propiedad efectiva del articulo/SKU. Sin condicion se
+  // conserva el comportamiento historico basado sólo en la fecha.
   if Result.TieneRegistro and
      ((Result.PorcentajeDto <> 0) or (Result.PrecioDto <> 0)) then
   begin
-    if not DescuentoTarifaVigente(
+    if not DescuentoTarifaAplicable(
              Result.CodigoTarifa,
+             ACodigoArt,
+             ACodigoSku,
              dFecha) then
     begin
       Result.PrecioFinal        := Result.PrecioSalida;

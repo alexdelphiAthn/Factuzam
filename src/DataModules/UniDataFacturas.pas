@@ -631,10 +631,18 @@ end;
 procedure TdmFacturas.CopiarArticuloaLinea(DataSet: TDataSet);
 var
   bDtoVig: Boolean;
+  sCodigoSku: string;
 begin
-  bDtoVig := FArticulosResolver.DescuentoTarifaVigente(
+  sCodigoSku := '';
+  if DataSet.FindField('CODIGO_UNIDAD_SKU') <> nil then
+    sCodigoSku := DataSet.FieldByName('CODIGO_UNIDAD_SKU').AsString
+  else if DataSet.FindField('CODIGO_UNIDAD_ARTTAR') <> nil then
+    sCodigoSku := DataSet.FieldByName('CODIGO_UNIDAD_ARTTAR').AsString;
+  bDtoVig := FArticulosResolver.DescuentoTarifaAplicable(
     unqryTablaG.FieldByName(
       'TARIFA_ARTICULO_CLIENTE_FAC').AsString,
+    DataSet.FieldByName('CODIGO_ART_ART').AsString,
+    sCodigoSku,
     unqryTablaG.FieldByName('FECHA_FAC').AsDateTime);
   CopiarArticuloSeleccionadoFactura(
     DataSet, dsLinFac.DataSet, unqryTablaG, bDtoVig);

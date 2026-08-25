@@ -121,6 +121,9 @@ type
     function DescuentoTarifaVigente(
       const ACodigoTarifa: string;
       const AFecha: TDateTime): Boolean;
+    function DescuentoTarifaAplicable(
+      const ACodigoTarifa, ACodigoArt, ACodigoSku: string;
+      const AFecha: TDateTime): Boolean;
   end;
 
 function DescuentoEnVentana(

@@ -29,7 +29,8 @@ uses
   System.Classes, System.Generics.Collections, System.Math,
   System.StrUtils, System.SysUtils, Data.DB, Vcl.Imaging.PngImage,
   inLibFotosAlmacenamiento, inLibFotosTipos,
-  inLibLicenciaAplicacion, inLibParametrosIntf, inLibPathTokens;
+  inLibLicenciaAplicacion, inLibParametrosIntf, inLibPathTokens,
+  UniDataPrestaShopPrecioCondicional;
 
 const
   CDirectorioFotosPredeterminado = '$(PUBLICO)\Factuzam\fotos';
@@ -56,14 +57,7 @@ const
     'WHEN ''S'' THEN iva.PORCENTAJE_SUPERREDUCIDO_IVA ' +
     'WHEN ''E'' THEN iva.PORCENTAJE_EXENTO_IVA ' +
     'ELSE NULL END AS PORCENTAJE_IVA, ' +
-    '(SELECT CASE WHEN ' +
-    '((COALESCE(t.PORCENTAJE_DTO_ARTTAR, 0) <> 0 OR ' +
-    'COALESCE(t.PRECIO_DTO_ARTTAR, 0) <> 0) AND ' +
-    '((tar.FECHA_DESDE_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_DESDE_DTO_TAR > CURDATE()) OR ' +
-    '(tar.FECHA_HASTA_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_HASTA_DTO_TAR < CURDATE()))) ' +
-    'THEN t.PRECIO_SALIDA_ARTTAR ELSE t.PRECIO_FINAL_ARTTAR END ' +
+    '(SELECT {PRECIO_CONDICIONAL} ' +
     'FROM fza_articulos_tarifas t ' +
     'WHERE t.CODIGO_ART_ARTTAR = a.CODIGO_ART_ART ' +
     'AND t.CODIGO_TAR_ARTTAR = :TARIFA ' +
@@ -99,14 +93,7 @@ const
 
   SQL_SKUS =
     'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_VAR_SKU, ' +
-    '(SELECT CASE WHEN ' +
-    '((COALESCE(t.PORCENTAJE_DTO_ARTTAR, 0) <> 0 OR ' +
-    'COALESCE(t.PRECIO_DTO_ARTTAR, 0) <> 0) AND ' +
-    '((tar.FECHA_DESDE_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_DESDE_DTO_TAR > CURDATE()) OR ' +
-    '(tar.FECHA_HASTA_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_HASTA_DTO_TAR < CURDATE()))) ' +
-    'THEN t.PRECIO_SALIDA_ARTTAR ELSE t.PRECIO_FINAL_ARTTAR END ' +
+    '(SELECT {PRECIO_CONDICIONAL} ' +
     'FROM fza_articulos_tarifas t ' +
     'WHERE t.CODIGO_ART_ARTTAR = s.CODIGO_ART_SKU ' +
     'AND t.CODIGO_TAR_ARTTAR = :TARIFA ' +
@@ -204,6 +191,7 @@ type
     IRepositorioAltaArticuloPresta)
   private
     FConexion: TUniConnection;
+    FUsarDescuentoCondicional: Boolean;
     function NuevaConsulta: TUniQuery;
     function LeerDirectorioFotos(
       const AUsuario, AGrupo: string): string;
@@ -302,6 +290,8 @@ begin
     raise EArgumentNilException.Create('AConexion');
   inherited Create;
   FConexion := AConexion;
+  FUsarDescuentoCondicional :=
+    EsquemaDescuentoCondicionalDisponible(FConexion);
 end;
 
 function TRepositorioAltaArticuloPrestaUniDAC.NuevaConsulta: TUniQuery;
@@ -451,7 +441,13 @@ var
 begin
   oConsulta := NuevaConsulta;
   try
-    oConsulta.SQL.Text := SQL_PRECIO_ARTICULO;
+    oConsulta.SQL.Text := AplicarPrecioCondicionalPrestaShop(
+      SQL_PRECIO_ARTICULO,
+      't',
+      'tar',
+      'a.CODIGO_ART_ART',
+      '',
+      FUsarDescuentoCondicional);
     oConsulta.ParamByName('EMPRESA').AsString :=
       AConfiguracion.CodigoEmpresa;
     oConsulta.ParamByName('TARIFA').AsString :=
@@ -697,7 +693,13 @@ begin
         [AArticulo.Codigo]);
     oConsulta := NuevaConsulta;
     try
-      oConsulta.SQL.Text := SQL_SKUS;
+      oConsulta.SQL.Text := AplicarPrecioCondicionalPrestaShop(
+        SQL_SKUS,
+        't',
+        'tar',
+        's.CODIGO_ART_SKU',
+        's.CODIGO_UNIDAD_SKU',
+        FUsarDescuentoCondicional);
       oConsulta.ParamByName('TARIFA').AsString :=
         AConfiguracion.CodigoTarifa;
       oConsulta.ParamByName('ARTICULO').AsString := AArticulo.Codigo;

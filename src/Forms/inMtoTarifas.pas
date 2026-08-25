@@ -36,7 +36,8 @@ uses
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan,
   cxSplitter, JvComponentBase, JvEnterTab, dxShellDialogs, System.UITypes,
-  inLibCargaMasivaArticulosPersistenciaIntf, inLibPermisosIntf;
+  Vcl.CheckLst, inLibCargaMasivaArticulosPersistenciaIntf,
+  inLibTarifasDescuentoCondicionesPersistenciaIntf, inLibPermisosIntf;
 
 type
   TfrmMtoTarifas = class(TfrmMtoGen)
@@ -151,8 +152,37 @@ type
   private
     FBtnSesionesCambios: TcxButton;
     FCargaMasiva: TServiciosCargaMasivaArticulos;
+    FRepositorioCondicionesDto:
+      IRepositorioCondicionesDescuentoTarifa;
+    FTabCondicionDto: TcxTabSheet;
+    FCmbModoCondicionDto: TcxComboBox;
+    FCmbPropiedadCondicionDto: TcxComboBox;
+    FLstValoresCondicionDto: TCheckListBox;
+    FLblPropiedadCondicionDto: TcxLabel;
+    FLblValoresCondicionDto: TcxLabel;
+    FLblAyudaCondicionDto: TcxLabel;
+    FBtnGuardarCondicionDto: TcxButton;
+    FPropiedadesCondicionDto: TPropiedadesListaDescuentoTarifa;
+    FValoresCondicionDto: TValoresListaDescuentoTarifa;
+    FCargandoCondicionDto: Boolean;
+    FUltimaTarifaCondicionDto: string;
+    FOnDataChangeTablaGAnterior: TDataChangeEvent;
     procedure CrearBotonSesionesCambios;
     procedure btnSesionesCambiosClick(Sender: TObject);
+    procedure CrearControlesCondicionDto;
+    procedure CargarPropiedadesCondicionDto;
+    procedure CargarCondicionDto;
+    procedure CargarValoresCondicionDto(
+      const AIdsSeleccionados: TArray<Integer>);
+    procedure ActualizarEstadoCondicionDto;
+    function CodigoTarifaActual: string;
+    function CodigoPropiedadCondicionDto: string;
+    function RecogerCondicionDto: TCondicionDescuentoTarifa;
+    procedure cmbModoCondicionDtoChange(Sender: TObject);
+    procedure cmbPropiedadCondicionDtoChange(Sender: TObject);
+    procedure btnGuardarCondicionDtoClick(Sender: TObject);
+    procedure dsTablaGDataChangeCondicionDto(
+      Sender: TObject; Field: TField);
   public
     dmmTarifas: TdmTarifas;
     constructor Create(
@@ -175,7 +205,8 @@ uses
   inLibUser,
   inLibDevExp,
   inLibFotos,
-  inMtoModalAddBlockTarifa, inLibMsgArticulos;
+  inMtoModalAddBlockTarifa, inLibMsgArticulos,
+  UniDataTarifasDescuentoCondicionesRepositorio;
 
 {$R *.dfm}
 
@@ -197,6 +228,7 @@ end;
 
 destructor TfrmMtoTarifas.Destroy;
 begin
+  FRepositorioCondicionesDto := nil;
   FCargaMasiva.Consultas := nil;
   FCargaMasiva.Inserciones := nil;
   inherited;
@@ -292,6 +324,282 @@ begin
   tvArticulos.DataController.DataSource := dmmTarifas.dsArticulosTarifas;
   pkFieldName := 'CODIGO_TAR_ARTTAR';
   CrearBotonSesionesCambios;
+  FRepositorioCondicionesDto :=
+    CrearRepositorioCondicionesDescuentoTarifaUniDAC(
+      dmmTarifas.unqryTablaG.Connection);
+  CrearControlesCondicionDto;
+  CargarPropiedadesCondicionDto;
+  FOnDataChangeTablaGAnterior := dsTablaG.OnDataChange;
+  dsTablaG.OnDataChange := dsTablaGDataChangeCondicionDto;
+  CargarCondicionDto;
+end;
+
+procedure TfrmMtoTarifas.CrearControlesCondicionDto;
+var
+  oEtiqueta: TcxLabel;
+begin
+  if Assigned(FTabCondicionDto) then
+    Exit;
+  FTabCondicionDto := TcxTabSheet.Create(Self);
+  FTabCondicionDto.PageControl := pcPestana;
+  FTabCondicionDto.Caption := 'Aplicación del descuento';
+
+  oEtiqueta := TcxLabel.Create(Self);
+  oEtiqueta.Parent := FTabCondicionDto;
+  oEtiqueta.SetBounds(24, 24, 145, 24);
+  oEtiqueta.Caption := 'Aplicar descuento';
+  oEtiqueta.Transparent := True;
+
+  FCmbModoCondicionDto := TcxComboBox.Create(Self);
+  FCmbModoCondicionDto.Parent := FTabCondicionDto;
+  FCmbModoCondicionDto.SetBounds(180, 20, 310, 26);
+  FCmbModoCondicionDto.Properties.DropDownListStyle := lsFixedList;
+  FCmbModoCondicionDto.Properties.Items.Add('Todos los artículos');
+  FCmbModoCondicionDto.Properties.Items.Add('Solo si cumple');
+  FCmbModoCondicionDto.Properties.Items.Add('Todos excepto');
+  FCmbModoCondicionDto.ItemIndex := Ord(mcdTodos);
+  FCmbModoCondicionDto.Properties.OnEditValueChanged :=
+    cmbModoCondicionDtoChange;
+
+  FLblPropiedadCondicionDto := TcxLabel.Create(Self);
+  FLblPropiedadCondicionDto.Parent := FTabCondicionDto;
+  FLblPropiedadCondicionDto.SetBounds(24, 68, 145, 24);
+  FLblPropiedadCondicionDto.Caption := 'Propiedad';
+  FLblPropiedadCondicionDto.Transparent := True;
+
+  FCmbPropiedadCondicionDto := TcxComboBox.Create(Self);
+  FCmbPropiedadCondicionDto.Parent := FTabCondicionDto;
+  FCmbPropiedadCondicionDto.SetBounds(180, 64, 430, 26);
+  FCmbPropiedadCondicionDto.Anchors := [akLeft, akTop, akRight];
+  FCmbPropiedadCondicionDto.Properties.DropDownListStyle := lsFixedList;
+  FCmbPropiedadCondicionDto.Properties.OnEditValueChanged :=
+    cmbPropiedadCondicionDtoChange;
+
+  FLblValoresCondicionDto := TcxLabel.Create(Self);
+  FLblValoresCondicionDto.Parent := FTabCondicionDto;
+  FLblValoresCondicionDto.SetBounds(24, 108, 145, 24);
+  FLblValoresCondicionDto.Caption := 'Valores';
+  FLblValoresCondicionDto.Transparent := True;
+
+  FLstValoresCondicionDto := TCheckListBox.Create(Self);
+  FLstValoresCondicionDto.Parent := FTabCondicionDto;
+  FLstValoresCondicionDto.SetBounds(180, 104, 430, 190);
+  FLstValoresCondicionDto.Anchors :=
+    [akLeft, akTop, akRight, akBottom];
+  FLstValoresCondicionDto.IntegralHeight := True;
+
+  FLblAyudaCondicionDto := TcxLabel.Create(Self);
+  FLblAyudaCondicionDto.Parent := FTabCondicionDto;
+  FLblAyudaCondicionDto.SetBounds(180, 306, 600, 52);
+  FLblAyudaCondicionDto.Anchors := [akLeft, akRight, akBottom];
+  FLblAyudaCondicionDto.AutoSize := False;
+  FLblAyudaCondicionDto.Properties.WordWrap := True;
+  FLblAyudaCondicionDto.Caption :=
+    'Criterio conservador: si el artículo o SKU no tiene un valor ' +
+    'efectivo para la propiedad seleccionada, no se aplica el descuento.';
+  FLblAyudaCondicionDto.Transparent := True;
+
+  FBtnGuardarCondicionDto := TcxButton.Create(Self);
+  FBtnGuardarCondicionDto.Parent := FTabCondicionDto;
+  FBtnGuardarCondicionDto.SetBounds(180, 370, 210, 34);
+  FBtnGuardarCondicionDto.Anchors := [akLeft, akBottom];
+  FBtnGuardarCondicionDto.Caption := 'Guardar aplicación';
+  FBtnGuardarCondicionDto.OnClick := btnGuardarCondicionDtoClick;
+end;
+
+procedure TfrmMtoTarifas.CargarPropiedadesCondicionDto;
+var
+  i: Integer;
+begin
+  FPropiedadesCondicionDto :=
+    FRepositorioCondicionesDto.ListarPropiedades;
+  FCargandoCondicionDto := True;
+  try
+    FCmbPropiedadCondicionDto.Properties.Items.Clear;
+    for i := 0 to High(FPropiedadesCondicionDto) do
+      FCmbPropiedadCondicionDto.Properties.Items.Add(
+        FPropiedadesCondicionDto[i].Nombre + ' (' +
+        FPropiedadesCondicionDto[i].Codigo + ')');
+    FCmbPropiedadCondicionDto.ItemIndex := -1;
+  finally
+    FCargandoCondicionDto := False;
+  end;
+end;
+
+function TfrmMtoTarifas.CodigoTarifaActual: string;
+begin
+  Result := '';
+  if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+     not dsTablaG.DataSet.IsEmpty then
+    Result := Trim(dsTablaG.DataSet.FieldByName(
+      'CODIGO_TAR_ARTTAR').AsString);
+end;
+
+function TfrmMtoTarifas.CodigoPropiedadCondicionDto: string;
+var
+  i: Integer;
+begin
+  Result := '';
+  i := FCmbPropiedadCondicionDto.ItemIndex;
+  if (i >= 0) and (i < Length(FPropiedadesCondicionDto)) then
+    Result := FPropiedadesCondicionDto[i].Codigo;
+end;
+
+procedure TfrmMtoTarifas.CargarValoresCondicionDto(
+  const AIdsSeleccionados: TArray<Integer>);
+
+  function EstaSeleccionado(AId: Integer): Boolean;
+  var
+    j: Integer;
+  begin
+    Result := False;
+    for j := 0 to High(AIdsSeleccionados) do
+      if AIdsSeleccionados[j] = AId then
+        Exit(True);
+  end;
+
+var
+  i: Integer;
+begin
+  SetLength(FValoresCondicionDto, 0);
+  FLstValoresCondicionDto.Items.Clear;
+  if CodigoPropiedadCondicionDto = '' then
+    Exit;
+  FValoresCondicionDto := FRepositorioCondicionesDto.ListarValores(
+    CodigoPropiedadCondicionDto);
+  for i := 0 to High(FValoresCondicionDto) do
+  begin
+    FLstValoresCondicionDto.Items.Add(FValoresCondicionDto[i].Nombre);
+    FLstValoresCondicionDto.Checked[i] :=
+      EstaSeleccionado(FValoresCondicionDto[i].Id);
+  end;
+end;
+
+procedure TfrmMtoTarifas.CargarCondicionDto;
+var
+  i: Integer;
+  oCondicion: TCondicionDescuentoTarifa;
+  sTarifa: string;
+begin
+  if not Assigned(FRepositorioCondicionesDto) or
+     not Assigned(FCmbModoCondicionDto) then
+    Exit;
+  sTarifa := CodigoTarifaActual;
+  if SameText(FUltimaTarifaCondicionDto, sTarifa) then
+  begin
+    ActualizarEstadoCondicionDto;
+    Exit;
+  end;
+  FUltimaTarifaCondicionDto := sTarifa;
+  oCondicion := CondicionDescuentoTodos;
+  if sTarifa <> '' then
+    oCondicion := FRepositorioCondicionesDto.Cargar(sTarifa);
+  FCargandoCondicionDto := True;
+  try
+    FCmbModoCondicionDto.ItemIndex := Ord(oCondicion.Modo);
+    FCmbPropiedadCondicionDto.ItemIndex := -1;
+    if oCondicion.Modo <> mcdTodos then
+      for i := 0 to High(FPropiedadesCondicionDto) do
+        if SameText(
+          FPropiedadesCondicionDto[i].Codigo,
+          oCondicion.CodigoPropiedad) then
+        begin
+          FCmbPropiedadCondicionDto.ItemIndex := i;
+          Break;
+        end;
+    CargarValoresCondicionDto(oCondicion.IdsValores);
+  finally
+    FCargandoCondicionDto := False;
+  end;
+  ActualizarEstadoCondicionDto;
+end;
+
+procedure TfrmMtoTarifas.ActualizarEstadoCondicionDto;
+var
+  bCondicional: Boolean;
+  bHayTarifa: Boolean;
+  bPuedeEditar: Boolean;
+begin
+  if not Assigned(FCmbModoCondicionDto) then
+    Exit;
+  bHayTarifa := CodigoTarifaActual <> '';
+  bPuedeEditar := bHayTarifa and
+    Assigned(dsTablaG.DataSet) and
+    (dsTablaG.State = dsBrowse) and
+    PuedeAccionMto(apmModificar);
+  bCondicional := FCmbModoCondicionDto.ItemIndex in
+    [Ord(mcdSoloSi), Ord(mcdTodosExcepto)];
+  FCmbModoCondicionDto.Enabled := bPuedeEditar;
+  FCmbPropiedadCondicionDto.Enabled := bPuedeEditar and bCondicional;
+  FLstValoresCondicionDto.Enabled := bPuedeEditar and bCondicional and
+    (FCmbPropiedadCondicionDto.ItemIndex >= 0);
+  FLblPropiedadCondicionDto.Enabled := bCondicional;
+  FLblValoresCondicionDto.Enabled := bCondicional;
+  FBtnGuardarCondicionDto.Enabled := bPuedeEditar;
+end;
+
+function TfrmMtoTarifas.RecogerCondicionDto:
+  TCondicionDescuentoTarifa;
+var
+  i: Integer;
+  iSeleccionados: Integer;
+begin
+  Result := CondicionDescuentoTodos;
+  if FCmbModoCondicionDto.ItemIndex < 0 then
+    Exit;
+  Result.Modo := TModoCondicionDescuentoTarifa(
+    FCmbModoCondicionDto.ItemIndex);
+  if Result.Modo = mcdTodos then
+    Exit;
+  Result.CodigoPropiedad := CodigoPropiedadCondicionDto;
+  iSeleccionados := 0;
+  for i := 0 to FLstValoresCondicionDto.Items.Count - 1 do
+    if FLstValoresCondicionDto.Checked[i] then
+    begin
+      SetLength(Result.IdsValores, iSeleccionados + 1);
+      Result.IdsValores[iSeleccionados] := FValoresCondicionDto[i].Id;
+      Inc(iSeleccionados);
+    end;
+end;
+
+procedure TfrmMtoTarifas.cmbModoCondicionDtoChange(Sender: TObject);
+begin
+  if not FCargandoCondicionDto then
+    ActualizarEstadoCondicionDto;
+end;
+
+procedure TfrmMtoTarifas.cmbPropiedadCondicionDtoChange(Sender: TObject);
+var
+  aSinSeleccion: TArray<Integer>;
+begin
+  if FCargandoCondicionDto then
+    Exit;
+  SetLength(aSinSeleccion, 0);
+  CargarValoresCondicionDto(aSinSeleccion);
+  ActualizarEstadoCondicionDto;
+end;
+
+procedure TfrmMtoTarifas.btnGuardarCondicionDtoClick(Sender: TObject);
+var
+  oCondicion: TCondicionDescuentoTarifa;
+begin
+  oCondicion := RecogerCondicionDto;
+  FRepositorioCondicionesDto.Guardar(
+    CodigoTarifaActual,
+    oCondicion,
+    IdentidadSesion.Usuario);
+  FUltimaTarifaCondicionDto := '';
+  CargarCondicionDto;
+  ShowMessage('Aplicación del descuento guardada');
+end;
+
+procedure TfrmMtoTarifas.dsTablaGDataChangeCondicionDto(
+  Sender: TObject; Field: TField);
+begin
+  if Assigned(FOnDataChangeTablaGAnterior) then
+    FOnDataChangeTablaGAnterior(Sender, Field);
+  if (Field = nil) or SameText(Field.FieldName, 'CODIGO_TAR_ARTTAR') then
+    CargarCondicionDto;
 end;
 
 procedure TfrmMtoTarifas.CrearBotonSesionesCambios;
@@ -365,6 +673,7 @@ begin
   begin
     txtCODIGO_TARIFA.Enabled := False;
   end;
+  ActualizarEstadoCondicionDto;
 end;
 
 initialization

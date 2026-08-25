@@ -26,7 +26,8 @@ implementation
 
 uses
   System.Math, System.StrUtils, System.SysUtils, Data.DB,
-  inLibPrestaShopColaSenal;
+  inLibPrestaShopColaSenal,
+  UniDataPrestaShopPrecioCondicional;
 
 type
   TRepositorioPrestaShopColaUniDAC = class(
@@ -34,6 +35,7 @@ type
     IRepositorioPrestaShopCola)
   private
     FConexion: TUniConnection;
+    FUsarDescuentoCondicional: Boolean;
     function CrearToken: string;
     function NuevaConsulta: TUniQuery;
     function PrecioSinIva(
@@ -115,14 +117,7 @@ type
 const
   CNivelesFamiliaAltaMaximo = 50;
   SQL_PRECIO_PRODUCTO =
-    'SELECT CASE WHEN ((COALESCE(tp.PORCENTAJE_DTO_ARTTAR, 0) <> 0 ' +
-    'OR COALESCE(tp.PRECIO_DTO_ARTTAR, 0) <> 0) AND ' +
-    '((tar.FECHA_DESDE_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_DESDE_DTO_TAR > CURDATE()) OR ' +
-    '(tar.FECHA_HASTA_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_HASTA_DTO_TAR < CURDATE()))) ' +
-    'THEN tp.PRECIO_SALIDA_ARTTAR ' +
-    'ELSE tp.PRECIO_FINAL_ARTTAR END AS PRECIO_BRUTO, ' +
+    'SELECT {PRECIO_CONDICIONAL} AS PRECIO_BRUTO, ' +
     'tar.ESIMP_INCL_TAR, CASE a.TIPO_IVA_ART ' +
     'WHEN ''N'' THEN iva.PORCENTAJE_NORMAL_IVA ' +
     'WHEN ''R'' THEN iva.PORCENTAJE_REDUCIDO_IVA ' +
@@ -166,14 +161,7 @@ const
     'a.ESACTIVO_ART) AS ESACTIVO_SKU, a.ESVARIACION_ART, ' +
     'a.TIPO_ART, CASE WHEN s.CODIGO_UNIDAD_SKU IS NULL ' +
     'THEN ''N'' ELSE ''S'' END AS ESSKU_REAL, ' +
-    'CASE WHEN ((COALESCE(te.PORCENTAJE_DTO_ARTTAR, 0) <> 0 ' +
-    'OR COALESCE(te.PRECIO_DTO_ARTTAR, 0) <> 0) AND ' +
-    '((tar.FECHA_DESDE_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_DESDE_DTO_TAR > CURDATE()) OR ' +
-    '(tar.FECHA_HASTA_DTO_TAR IS NOT NULL AND ' +
-    'tar.FECHA_HASTA_DTO_TAR < CURDATE()))) ' +
-    'THEN te.PRECIO_SALIDA_ARTTAR ' +
-    'ELSE te.PRECIO_FINAL_ARTTAR END AS PRECIO_SKU_BRUTO, ' +
+    '{PRECIO_CONDICIONAL} AS PRECIO_SKU_BRUTO, ' +
     'tar.ESIMP_INCL_TAR, CASE a.TIPO_IVA_ART ' +
     'WHEN ''N'' THEN iva.PORCENTAJE_NORMAL_IVA ' +
     'WHEN ''R'' THEN iva.PORCENTAJE_REDUCIDO_IVA ' +
@@ -314,6 +302,8 @@ begin
     raise EArgumentNilException.Create('AConexion');
   inherited Create;
   FConexion := AConexion;
+  FUsarDescuentoCondicional :=
+    EsquemaDescuentoCondicionalDisponible(FConexion);
 end;
 
 function TRepositorioPrestaShopColaUniDAC.NuevaConsulta: TUniQuery;
@@ -906,7 +896,13 @@ begin
       ATrabajo.ProximoCambioPrecio :=
         oConsulta.FieldByName('FRONTERA').AsDateTime;
     oConsulta.Close;
-    oConsulta.SQL.Text := SQL_PRECIO_PRODUCTO;
+    oConsulta.SQL.Text := AplicarPrecioCondicionalPrestaShop(
+      SQL_PRECIO_PRODUCTO,
+      'tp',
+      'tar',
+      'a.CODIGO_ART_ART',
+      '',
+      FUsarDescuentoCondicional);
     oConsulta.ParamByName('EMPRESA').AsString :=
       AConfiguracion.CodigoEmpresa;
     oConsulta.ParamByName('TARIFA').AsString :=
@@ -972,7 +968,13 @@ begin
           [AConfiguracion.CodigoEmpresa]);
       oConsulta.Close;
     end;
-    oConsulta.SQL.Text := SQL_LINEAS;
+    oConsulta.SQL.Text := AplicarPrecioCondicionalPrestaShop(
+      SQL_LINEAS,
+      'te',
+      'tar',
+      'a.CODIGO_ART_ART',
+      's.CODIGO_UNIDAD_SKU',
+      FUsarDescuentoCondicional);
     oConsulta.ParamByName('EMPRESA').AsString :=
       AConfiguracion.CodigoEmpresa;
     oConsulta.ParamByName('TARIFA').AsString :=
