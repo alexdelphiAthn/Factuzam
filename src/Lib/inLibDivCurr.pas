@@ -196,6 +196,22 @@ begin
   Result := AAmount * Rate;
 end;
 
+procedure LiberarResultadoFrankfurter(var AResultado: TFrankfurterResult);
+begin
+  FreeAndNil(AResultado.Rates);
+end;
+
+procedure LiberarSerieFrankfurter(var ASerie: TFrankfurterSeries);
+var
+  oRates: TDictionary<string, Double>;
+begin
+  if not Assigned(ASerie) then
+    Exit;
+  for oRates in ASerie.Values do
+    oRates.Free;
+  FreeAndNil(ASerie);
+end;
+
 { TFrankfurterAPI }
 
 constructor TFrankfurterAPI.Create(const ABaseURL: string);
@@ -339,16 +355,21 @@ var
   JSON : TJSONObject;
   Raw  : string;
 begin
-  Result.Rates := nil;
-  URL  := BuildRatesURL('latest', ABase, ATargets);
-  Raw  := DoGet(URL);
-  JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
-  if not Assigned(JSON) then
-    raise EFrankfurterError.Create(SErrorJsonDivisas);
+  Result := Default(TFrankfurterResult);
   try
-    ParseRatesInto(JSON, Result);
-  finally
-    FreeAndNil(JSON);
+    URL  := BuildRatesURL('latest', ABase, ATargets);
+    Raw  := DoGet(URL);
+    JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
+    if not Assigned(JSON) then
+      raise EFrankfurterError.Create(SErrorJsonDivisas);
+    try
+      ParseRatesInto(JSON, Result);
+    finally
+      FreeAndNil(JSON);
+    end;
+  except
+    LiberarResultadoFrankfurter(Result);
+    raise;
   end;
 end;
 
@@ -361,17 +382,22 @@ var
   JSON    : TJSONObject;
   Raw     : string;
 begin
-  Result.Rates := nil;
-  DateStr := FormatDateTime('yyyy-mm-dd', ADate);
-  URL     := BuildRatesURL(DateStr, ABase, ATargets);
-  Raw     := DoGet(URL);
-  JSON    := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
-  if not Assigned(JSON) then
-    raise EFrankfurterError.Create(SErrorJsonDivisas);
+  Result := Default(TFrankfurterResult);
   try
-    ParseRatesInto(JSON, Result);
-  finally
-    FreeAndNil(JSON);
+    DateStr := FormatDateTime('yyyy-mm-dd', ADate);
+    URL     := BuildRatesURL(DateStr, ABase, ATargets);
+    Raw     := DoGet(URL);
+    JSON    := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
+    if not Assigned(JSON) then
+      raise EFrankfurterError.Create(SErrorJsonDivisas);
+    try
+      ParseRatesInto(JSON, Result);
+    finally
+      FreeAndNil(JSON);
+    end;
+  except
+    LiberarResultadoFrankfurter(Result);
+    raise;
   end;
 end;
 
@@ -390,34 +416,55 @@ var
   CurPair  : TJSONPair;
   DayDate  : TDate;
   DayRates : TDictionary<string, Double>;
+  OldRates : TDictionary<string, Double>;
 begin
   Result   := TFrankfurterSeries.Create;
-  StartStr := FormatDateTime('yyyy-mm-dd', AStartDate);
-  EndStr   := FormatDateTime('yyyy-mm-dd', AEndDate);
-
-  // Endpoint de serie: /YYYY-MM-DD..YYYY-MM-DD
-  URL := BuildRatesURL(StartStr + '..' + EndStr, ABase, ATargets);
-
-  Raw  := DoGet(URL);
-  JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
-  if not Assigned(JSON) then
-    raise EFrankfurterError.Create(SErrorJsonDivisas);
   try
-    // La API devuelve "rates": { "2025-01-02": { "USD": 1.04, ... }, ... }
-    RatesObj := JSON.GetValue<TJSONObject>('rates');
-    if Assigned(RatesObj) then
-      for DayPair in RatesObj do
-      begin
-        DayDate  := JSONToDate(DayPair.JsonString.Value);
-        DayObj   := DayPair.JsonValue as TJSONObject;
-        DayRates := TDictionary<string, Double>.Create;
-        for CurPair in DayObj do
-          DayRates.AddOrSetValue(CurPair.JsonString.Value,
-                                 CurPair.JsonValue.AsType<Double>);
-        Result.AddOrSetValue(DayDate, DayRates);
-      end;
-  finally
-    FreeAndNil(JSON);
+    StartStr := FormatDateTime('yyyy-mm-dd', AStartDate);
+    EndStr   := FormatDateTime('yyyy-mm-dd', AEndDate);
+
+    // Endpoint de serie: /YYYY-MM-DD..YYYY-MM-DD
+    URL := BuildRatesURL(StartStr + '..' + EndStr, ABase, ATargets);
+
+    Raw  := DoGet(URL);
+    JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
+    if not Assigned(JSON) then
+      raise EFrankfurterError.Create(SErrorJsonDivisas);
+    try
+      // La API devuelve "rates":
+      // { "2025-01-02": { "USD": 1.04, ... }, ... }
+      RatesObj := JSON.GetValue<TJSONObject>('rates');
+      if Assigned(RatesObj) then
+        for DayPair in RatesObj do
+        begin
+          DayDate  := JSONToDate(DayPair.JsonString.Value);
+          DayObj   := DayPair.JsonValue as TJSONObject;
+          DayRates := TDictionary<string, Double>.Create;
+          try
+            for CurPair in DayObj do
+              DayRates.AddOrSetValue(CurPair.JsonString.Value,
+                                     CurPair.JsonValue.AsType<Double>);
+            if Result.TryGetValue(DayDate, OldRates) then
+            begin
+              Result.AddOrSetValue(DayDate, DayRates);
+              DayRates := nil;
+              FreeAndNil(OldRates);
+            end
+            else
+            begin
+              Result.Add(DayDate, DayRates);
+              DayRates := nil;
+            end;
+          finally
+            FreeAndNil(DayRates);
+          end;
+        end;
+    finally
+      FreeAndNil(JSON);
+    end;
+  except
+    LiberarSerieFrankfurter(Result);
+    raise;
   end;
 end;
 

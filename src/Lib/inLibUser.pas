@@ -41,7 +41,7 @@ function GetPerfilValue(var APerfilDic: TProfileDicc; ASubKey: string): string;
 function GetPerfilValueText(var APerfilDic: TProfileDicc; ASubKey: string):
                                                                      WideString;
 procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
-                                 var APerfilDic: TProfileDicc);
+                                 out APerfilDic: TProfileDicc);
 procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
                              AFormName: string;
                              const APerfilesUsuario:
@@ -86,8 +86,9 @@ begin
 end;
 
 procedure FilterProfileUserGroup(var APerfilUserDic: TProfileUserDicc;
-  var APerfilDic: TProfileDicc);
+  out APerfilDic: TProfileDicc);
 var
+  oPerfilDicNuevo: TProfileDicc;
   oPerfilUserDicCopy: TProfileUserDicc;
   oDictUKey,
     oDictUKeyCopy   : TDictUserKey;
@@ -97,58 +98,68 @@ var
 begin
   //Stopwatch := TStopwatch.StartNew;
   APerfilUserDic.TrimExcess;
-  APerfilDic := TProfileDicc.Create;
-  oPerfilUserDicCopy := TProfileUserDicc.Create
-    (
-      APerfilUserDic,
-      TEqualityComparer<TDictUserKey>.Construct
-    (
-    function(const Left, Right: TDictUserKey): Boolean
-    begin
-      Result := (Left.sUser = Right.sUser) and
-        (Left.sGroup = Right.sGroup) and
-        (Left.sKey = Right.sKey) and
-        (Left.sSubkey = Right.sSubkey) and
-        (Left.oProperty = Right.oProperty);
-    end,
-    function(const Value: TDictUserKey): Integer
-    begin
-      Result := Length(Value.sKey); //este hash da un mayor rendimiento ~35 ms
-    end
-    )
-      );
-  for oDictUKey in APerfilUserDic.Keys do
-  begin
-    oDictUKeyCopy := oDictUKey;
-    APerfilUserDic.TryGetValue(oDictUKey, oDictValue);
-    if (oDictUKey.oProperty = User) then
-      //si hay user, no me lo pienso y lo inserto
-    begin
-      APerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
-    end
-    else if (oDictUKey.oProperty = Group) then
-      //si hay grupo, busco el mismo key-subkey para user
-    begin
-      oDictUKeyCopy.oProperty := User;
-      if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
-        //si no hay user con el mismo key, lo añado
-        APerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
-      //añado al perfil por defecto para el grupo
-    end
-    else if (oDictUKey.oProperty = All) then
-      //si hay todos, y no hay user o grupo, añado
-    begin
-      oDictUKeyCopy.oProperty := User;
-      if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
+  APerfilDic := nil;
+  oPerfilDicNuevo := TProfileDicc.Create;
+  try
+    oPerfilUserDicCopy := TProfileUserDicc.Create
+      (
+        APerfilUserDic,
+        TEqualityComparer<TDictUserKey>.Construct
+      (
+      function(const Left, Right: TDictUserKey): Boolean
       begin
-        oDictUKeyCopy.oProperty := Group;
-        if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
-          APerfilDic.AddOrSetValue(oDictUKey.sSubkey, oDictValue)
-            //añado al perfil por defecto
+        Result := (Left.sUser = Right.sUser) and
+          (Left.sGroup = Right.sGroup) and
+          (Left.sKey = Right.sKey) and
+          (Left.sSubkey = Right.sSubkey) and
+          (Left.oProperty = Right.oProperty);
+      end,
+      function(const Value: TDictUserKey): Integer
+      begin
+        Result := Length(Value.sKey); //este hash da un mayor rendimiento ~35 ms
+      end
+      )
+        );
+    try
+      for oDictUKey in APerfilUserDic.Keys do
+      begin
+        oDictUKeyCopy := oDictUKey;
+        APerfilUserDic.TryGetValue(oDictUKey, oDictValue);
+        if (oDictUKey.oProperty = User) then
+          //si hay user, no me lo pienso y lo inserto
+        begin
+          oPerfilDicNuevo.AddOrSetValue(oDictUKey.sSubkey, oDictValue);
+        end
+        else if (oDictUKey.oProperty = Group) then
+          //si hay grupo, busco el mismo key-subkey para user
+        begin
+          oDictUKeyCopy.oProperty := User;
+          if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
+            //si no hay user con el mismo key, lo añado
+            oPerfilDicNuevo.AddOrSetValue(oDictUKey.sSubkey, oDictValue)
+          //añado al perfil por defecto para el grupo
+        end
+        else if (oDictUKey.oProperty = All) then
+          //si hay todos, y no hay user o grupo, añado
+        begin
+          oDictUKeyCopy.oProperty := User;
+          if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
+          begin
+            oDictUKeyCopy.oProperty := Group;
+            if (not (oPerfilUserDicCopy.ContainsKey(oDictUKeyCopy))) then
+              oPerfilDicNuevo.AddOrSetValue(oDictUKey.sSubkey, oDictValue)
+                //añado al perfil por defecto
+          end;
+        end;
       end;
+    finally
+      FreeAndNil(oPerfilUserDicCopy);
     end;
+    APerfilDic := oPerfilDicNuevo;
+    oPerfilDicNuevo := nil;
+  finally
+    FreeAndNil(oPerfilDicNuevo);
   end;
-  FreeAndNil(oPerfilUserDicCopy);
   //Elapsed := Stopwatch.Elapsed;
   //ShowMessage(Elapsed.TotalMilliseconds.ToString);
 end;

@@ -183,28 +183,26 @@ begin
   if bSinErrores then
   begin
     unqrySol := TUniQuery.Create(nil);
-    unqrySol.Connection := ConexionPrincipal;
-    unqrySol.SQL.Text := 'SELECT * ' +
-      '  FROM vi_empresas_retenciones ' +
-      ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
-    unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
-      FindField('CODIGO_EMP_EMPRET').AsString;
-    unqrySol.Open;
-  end;
-  if bSinErrores and
-     not ExistePeriodoUnico(
-       unqrySol,
-       FindField('FECHA_DESDE_EMPRET'),
-       FindField('FECHA_HASTA_EMPRET')) then
-  begin
-    raise ERangeError.CreateFmt(SErrorRetencionesEmpresaConcurrentes,
-      [FindField('CODIGO_EMP_EMPRET').AsString]);
-    bSinErrores := False;
-  end;
-  if (assigned(unqrySol)) then
-  begin
-    unqrySol.Close;
-    FreeAndNil(unqrySol);
+    try
+      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.SQL.Text := 'SELECT * ' +
+        '  FROM vi_empresas_retenciones ' +
+        ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
+      unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
+        FindField('CODIGO_EMP_EMPRET').AsString;
+      unqrySol.Open;
+      if not ExistePeriodoUnico(
+           unqrySol,
+           FindField('FECHA_DESDE_EMPRET'),
+           FindField('FECHA_HASTA_EMPRET')) then
+      begin
+        raise ERangeError.CreateFmt(SErrorRetencionesEmpresaConcurrentes,
+          [FindField('CODIGO_EMP_EMPRET').AsString]);
+        bSinErrores := False;
+      end;
+    finally
+      FreeAndNil(unqrySol);
+    end;
   end;
   if (bSinErrores) then
   begin
@@ -255,21 +253,20 @@ begin
   if bSinErrores then
   begin
     unqrySol := TUniQuery.Create(nil);
-    unqrySol.Connection := ConexionPrincipal;
-    unqrySol.SQL.Text := 'SELECT * ' +
-      '  FROM vi_empresas_series ' +
-      ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
+    try
+      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.SQL.Text := 'SELECT * ' +
+        '  FROM vi_empresas_series ' +
+        ' WHERE CODIGO_EMP_EMPSER = :CODIGO_EMP_EMP';
 //      if (sCodigoSerie <> '') then
 // unqrySol.SQL.Text := unqrySol.SQL.Text + ' AND CODIGO_SERIE_EMPSER <> ' +
 //                                                                 sCodigoSerie;
-    unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
-      FindField('CODIGO_EMP_EMPSER').AsString;
-    unqrySol.Open;
-  end;
-  if (assigned(unqrySol)) then
-  begin
-    unqrySol.Close;
-    FreeAndNil(unqrySol);
+      unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
+        FindField('CODIGO_EMP_EMPSER').AsString;
+      unqrySol.Open;
+    finally
+      FreeAndNil(unqrySol);
+    end;
   end;
   if (bSinErrores) then
   begin

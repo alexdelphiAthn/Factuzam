@@ -37,13 +37,15 @@ function GetSpecialFolderPath(
 var
   aRuta: array [0..MAX_PATH] of Char;
 begin
-  SHGetFolderPath(
-    0,
-    ACarpetaCSIDL,
-    0,
-    0,
-    aRuta);
-  Result := aRuta;
+  if SHGetFolderPath(
+       0,
+       ACarpetaCSIDL,
+       0,
+       0,
+       aRuta) = S_OK then
+    Result := aRuta
+  else
+    Result := '';
 end;
 
 function GetUserFolderTickets: String;

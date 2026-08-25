@@ -254,6 +254,7 @@ const
         begin
           // Realocar con el tamaño correcto
           FreeMem(InfoArray);
+          InfoArray := nil;
           GetMem(InfoArray, BytesNeeded);
           if EnumPrinters(Flags, nil, 2, InfoArray, BytesNeeded,
                           BytesNeeded, NumPrinters) then
@@ -289,27 +290,32 @@ var
   ImpresoresCompartidas: Integer;
 begin
   Result := TStringList.Create;
-  Result.Duplicates := dupIgnore;
-  Result.Sorted := True;
-  ImpresoresCompartidas := 0;
-//  EscribirLog('=== Enumerando todas las impresoras ===');
-  // 1. Impresoras locales
-  EnumerarYAgregar(PRINTER_ENUM_LOCAL,
-                   'Impresoras locales',
-                   ImpresoresCompartidas);
-  // 2. Conexiones de red (REDIRECCIONADAS - Terminal Server, RDP, etc.)
-  EnumerarYAgregar(PRINTER_ENUM_CONNECTIONS,
-                   'Impresoras redireccionadas/conexiones',
-                   ImpresoresCompartidas);
-  // 3. Impresoras de red compartidas
-  EnumerarYAgregar(PRINTER_ENUM_NETWORK,
-                   'Impresoras de red disponibles',
-                   ImpresoresCompartidas);
-  Result.Add('DEBUG');
-//  EscribirLog('========================================');
-//  EscribirLog(Format('Total impresoras únicas: %d', [Result.Count - 1]));
-//  EscribirLog(Format('Total impresoras compartidas: %d',
-//                     [ImpresoresCompartidas]));
+  try
+    Result.Duplicates := dupIgnore;
+    Result.Sorted := True;
+    ImpresoresCompartidas := 0;
+//    EscribirLog('=== Enumerando todas las impresoras ===');
+    // 1. Impresoras locales
+    EnumerarYAgregar(PRINTER_ENUM_LOCAL,
+                     'Impresoras locales',
+                     ImpresoresCompartidas);
+    // 2. Conexiones de red (REDIRECCIONADAS - Terminal Server, RDP, etc.)
+    EnumerarYAgregar(PRINTER_ENUM_CONNECTIONS,
+                     'Impresoras redireccionadas/conexiones',
+                     ImpresoresCompartidas);
+    // 3. Impresoras de red compartidas
+    EnumerarYAgregar(PRINTER_ENUM_NETWORK,
+                     'Impresoras de red disponibles',
+                     ImpresoresCompartidas);
+    Result.Add('DEBUG');
+//    EscribirLog('========================================');
+//    EscribirLog(Format('Total impresoras únicas: %d', [Result.Count - 1]));
+//    EscribirLog(Format('Total impresoras compartidas: %d',
+//                       [ImpresoresCompartidas]));
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 function ObtenerSesionImpresora(const NombreImpresora: string): string;

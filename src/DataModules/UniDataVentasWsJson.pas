@@ -137,9 +137,14 @@ var
   iCampo: Integer;
 begin
   Result := TJSONObject.Create;
-  for iCampo := 0 to ADataSet.FieldCount - 1 do
-    Result.AddPair(ADataSet.Fields[iCampo].FieldName,
-                   CampoAJson(ADataSet.Fields[iCampo]));
+  try
+    for iCampo := 0 to ADataSet.FieldCount - 1 do
+      Result.AddPair(ADataSet.Fields[iCampo].FieldName,
+                     CampoAJson(ADataSet.Fields[iCampo]));
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
 end;
 
 class function TVentasWsJson.ConstruirArray(AConn: TUniConnection;
@@ -220,14 +225,19 @@ var
     begin
       aPdf := LeerCampoBinario(Qry.FieldByName(ACampoContenido));
       oPdf := TJSONObject.Create;
-      oPdf.AddPair('nombre', Qry.FieldByName(ACampoNombre).AsString);
-      oPdf.AddPair('mime', 'application/pdf');
-      oPdf.AddPair('tamano', TJSONNumber.Create(
-        Qry.FieldByName(ACampoTamano).AsLargeInt));
-      oPdf.AddPair('sha256', Qry.FieldByName(ACampoHuella).AsString);
-      oPdf.AddPair('contenido_base64',
-        TNetEncoding.Base64.EncodeBytesToString(aPdf));
-      Result.AddPair(AClave, oPdf);
+      try
+        oPdf.AddPair('nombre', Qry.FieldByName(ACampoNombre).AsString);
+        oPdf.AddPair('mime', 'application/pdf');
+        oPdf.AddPair('tamano', TJSONNumber.Create(
+          Qry.FieldByName(ACampoTamano).AsLargeInt));
+        oPdf.AddPair('sha256', Qry.FieldByName(ACampoHuella).AsString);
+        oPdf.AddPair('contenido_base64',
+          TNetEncoding.Base64.EncodeBytesToString(aPdf));
+        Result.AddPair(AClave, oPdf);
+        oPdf := nil;
+      finally
+        FreeAndNil(oPdf);
+      end;
     end;
   end;
 

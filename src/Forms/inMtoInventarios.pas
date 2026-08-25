@@ -1759,6 +1759,7 @@ begin
     ShowMessage(SErrorInventarioNoActivo)
   else
   begin
+    fPreview := nil;
     Screen.Cursor := crHourGlass;
     try
       // Solo recargar si no estan ya abiertas (evitar re-query de 4 s)
@@ -1775,12 +1776,13 @@ begin
           dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
         ExportarInventarioExcel(fPreview.dxSpreadSheet1,
           dmmInventarios.unqryTablaG, dmmInventarios.cdsLineas);
-      finally
         Screen.Cursor := crDefault;
+        fPreview.ShowModal;
+      finally
+        FreeAndNil(fPreview);
       end;
-      fPreview.ShowModal;
     finally
-      FreeAndNil(fPreview);
+      Screen.Cursor := crDefault;
     end;
   end;
 end;

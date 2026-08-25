@@ -682,6 +682,7 @@ begin
     if Abs(Importe) < 0.01 then
     begin
       DataSet.FieldByName('REFERENCIA').AsString := '';
+      DataSet.FieldByName('RED_BLOCKCHAIN').AsString := '';
 //    DataSet.FieldByName('CODIGO_DIVISA').AsString := 'EUR';
       DataSet.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
       DataSet.FieldByName('IMPORTE_DIVISA').AsFloat := 0;
@@ -726,6 +727,7 @@ begin
   FMemTablePagos.FieldDefs.Add('FACTOR_CAMBIO', ftCurrency);
   FMemTablePagos.FieldDefs.Add('ESIMPORTE_DIVISA', ftString, 1);
   FMemTablePagos.FieldDefs.Add('REFERENCIA', ftString, 255);
+  FMemTablePagos.FieldDefs.Add('RED_BLOCKCHAIN', ftString, 50);
   FMemTablePagos.FieldDefs.Add('IMPORTE_ENTREGADO', ftFloat);
   FMemTablePagos.FieldDefs.Add('IMPORTE_DIVISA', ftFloat);
   FMemTablePagos.FieldDefs.Add('IMPORTE_CAMBIO', ftCurrency);
@@ -750,6 +752,7 @@ begin
       FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
       FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'S';
       FMemTablePagos.FieldByName('REFERENCIA').AsString := '';
+      FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString := '';
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
       FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat := 0;
       FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency := 0;
@@ -899,6 +902,8 @@ begin
     begin
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('REFERENCIA').AsString       := dr.Referencia;
+      FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString   :=
+                                                            dr.RedBlockchain;
       if EsDivisa then
       begin
         FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat    :=
@@ -915,6 +920,7 @@ begin
     begin
       FMemTablePagos.Edit;
       FMemTablePagos.FieldByName('REFERENCIA').AsString       := '';
+      FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString   := '';
       FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := 0;
       FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency := 1;
       FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat    := 0;
@@ -927,6 +933,7 @@ begin
     FMemTablePagos.Edit;
     FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat := AImporte;
     FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
+    FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString := '';
     FMemTablePagos.Post;
   end;
   FDatosCobro.Recalcular;

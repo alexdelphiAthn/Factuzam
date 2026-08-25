@@ -1753,6 +1753,7 @@ procedure TGrabacionFacturaCaja.RegistrarFormasPago;
 var
   sCodigoFormaPago: string;
   sDivisa: string;
+  sRedBlockchain: string;
   sReferencia: string;
   dImporte: Double;
   dFactor: Double;
@@ -1773,6 +1774,8 @@ begin
       Inc(FNumeroLineaPago);
       sDivisa := FDatosCobro.MemTablePagos.FieldByName(
         'CODIGO_DIVISA').AsString;
+      sRedBlockchain := FDatosCobro.MemTablePagos.FieldByName(
+        'RED_BLOCKCHAIN').AsString;
       dFactor := FDatosCobro.MemTablePagos.FieldByName(
         'FACTOR_CAMBIO').AsFloat;
       dImporteDivisa := FDatosCobro.MemTablePagos.FieldByName(
@@ -1785,7 +1788,7 @@ begin
         sCodigoFormaPago, dImporte,
         FDatosCobro.MemTablePagos.FieldByName(
           'IMPORTE_CAMBIO').AsCurrency,
-        sDivisa, '', dFactor, dImporteDivisa, sReferencia);
+        sDivisa, sRedBlockchain, dFactor, dImporteDivisa, sReferencia);
     end;
     FDatosCobro.MemTablePagos.Next;
   end;

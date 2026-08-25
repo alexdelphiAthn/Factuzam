@@ -244,12 +244,12 @@ begin
     oRaiz.AddPair('descripcion', ADescripcion);
     oRaiz.AddPair('modo', AModo);
     oLineasJson := TJSONArray.Create;
+    oRaiz.AddPair('lineas', oLineasJson);
     aLineas := APersistencia.ListarLineas(AClave);
     for iLinea := Low(aLineas) to High(aLineas) do
     begin
       oLineasJson.AddElement(CrearJsonLinea(aLineas[iLinea]));
     end;
-    oRaiz.AddPair('lineas', oLineasJson);
     Result := oRaiz.ToString;
   finally
     FreeAndNil(oRaiz);

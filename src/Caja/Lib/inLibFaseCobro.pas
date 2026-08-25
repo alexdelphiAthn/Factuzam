@@ -360,6 +360,8 @@ begin
         'IMPORTE_DIVISA').AsCurrency := DatosRef.ImporteDivisa;
       FMemTablePagos.FieldByName(
         'REFERENCIA').AsString := DatosRef.Referencia;
+      FMemTablePagos.FieldByName(
+        'RED_BLOCKCHAIN').AsString := DatosRef.RedBlockchain;
       FMemTablePagos.Post;
       Recalcular;
       Result := True;
@@ -771,12 +773,16 @@ begin
           // Solo procesar líneas con importe > 0
           if FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsCurrency > 0 then
           begin
+            Item := Default(TFormaPagoItem);
+            Item.NumeroLinea := Lista.Count + 1;
             Item.CodigoFormaPago :=
               FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
             Item.DescripcionFormaPago :=
               FMemTablePagos.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
             Item.CodigoDivisa :=
               FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
+            Item.RedBlockchain :=
+              FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString;
             Item.FactorCambio :=
               FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsCurrency;
             Item.ImporteDivisa :=
@@ -805,6 +811,7 @@ begin
     end;
     if FImporteDejarCuenta > 0 then
     begin
+      Item := Default(TFormaPagoItem);
       Item.NumeroLinea := Lista.Count + 1;
       Item.CodigoFormaPago := 'DEUDA';
       Item.DescripcionFormaPago := 'Dejar en cuenta';
@@ -827,6 +834,7 @@ end;
 function TDatosFaseCobro.ObtenerFormaPagoInfo(
                                          const ACodigo: string): TFormaPagoInfo;
 begin
+  Result := Default(TFormaPagoInfo);
   if Assigned(FMemTablePagos) and (FMemTablePagos.Active) and
      (FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString = ACodigo) then
   begin

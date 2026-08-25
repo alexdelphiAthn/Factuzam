@@ -198,6 +198,7 @@ function SeleccionarDocumentoTrabajo(AOwner: TComponent;
                                      out AIdDtr: Int64): Boolean;
 var
   Accion: TAccionDocumentoTrabajo;
+  sTituloPropuesto: string;
   sTitulo: string;
   sId: string;
   sConsulta: string;
@@ -217,10 +218,10 @@ begin
   end;
   if Accion = adtCrear then
   begin
-    sTitulo := 'Documento de trabajo ' +
+    sTituloPropuesto := 'Documento de trabajo ' +
       FormatDateTime('dd/mm/yyyy hh:nn', Now);
     if Assigned(AInteraccion) and
-       AInteraccion.SolicitarTitulo(sTitulo, sTitulo) then
+       AInteraccion.SolicitarTitulo(sTituloPropuesto, sTitulo) then
     begin
       if Trim(sTitulo) <> '' then
       begin

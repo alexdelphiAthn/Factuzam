@@ -650,42 +650,45 @@ begin
   inherited;
   EsIBANErr := False;
   stErr := TStringList.Create;
-  sIBAN := StringReplace(dsTablaG.DataSet.FieldByName('IBAN_CLI').Text,
-                         ' ', '', [rfReplaceAll]);
-  iLen := Length(sIBAN);
-  sPref := (Copy(sIBAN, 1, 2));
-  if ((sPref = 'ES') or (iLen = 20)) then
-  begin
-    TIBAN.ValidarCCC(sIBAN, stErr);
-    sErr := stErr.Text;
-    if (sErr <> '') then
+  try
+    sIBAN := StringReplace(dsTablaG.DataSet.FieldByName('IBAN_CLI').Text,
+                           ' ', '', [rfReplaceAll]);
+    iLen := Length(sIBAN);
+    sPref := (Copy(sIBAN, 1, 2));
+    if ((sPref = 'ES') or (iLen = 20)) then
     begin
-      ShowMessage(sErr);
-      EsIBANErr := True;
+      TIBAN.ValidarCCC(sIBAN, stErr);
+      sErr := stErr.Text;
+      if (sErr <> '') then
+      begin
+        ShowMessage(sErr);
+        EsIBANErr := True;
+      end;
     end;
-  end;
-  if ((iLen = 20) and
-      (StrToIntDef(sPref, 0) <> 0) and
-      not(EsIBANErr)) then
-  begin
-    sPref4 := TIBAN.GenerarIBAN('ES', sIBAN);
-    if (dsTablaG.State = dsBrowse) then
-      dsTablaG.DataSet.Edit;
-    dsTablaG.DataSet.FieldByName('IBAN_CLI').Text := sPref4 + sIBAN;
-  end;
-  if (not(EsIBANErr) and (StrToIntDef(sPref, 0) = 0)) then
-  begin
-    TIBAN.ValidarIBAN(sIBAN, stErr);
-    sErr := stErr.Text;
-    if (sErr <> '') then
+    if ((iLen = 20) and
+        (StrToIntDef(sPref, 0) <> 0) and
+        not(EsIBANErr)) then
     begin
-      ShowMessage(sErr);
-      EsIBANErr := True;
+      sPref4 := TIBAN.GenerarIBAN('ES', sIBAN);
+      if (dsTablaG.State = dsBrowse) then
+        dsTablaG.DataSet.Edit;
+      dsTablaG.DataSet.FieldByName('IBAN_CLI').Text := sPref4 + sIBAN;
     end;
+    if (not(EsIBANErr) and (StrToIntDef(sPref, 0) = 0)) then
+    begin
+      TIBAN.ValidarIBAN(sIBAN, stErr);
+      sErr := stErr.Text;
+      if (sErr <> '') then
+      begin
+        ShowMessage(sErr);
+        EsIBANErr := True;
+      end;
+    end;
+    if not(EsIBANErr) then
+      ShowMessage(SInfoIbanValidado);
+  finally
+    FreeAndNil(stErr);
   end;
-  if not(EsIBANErr) then
-    ShowMessage(SInfoIbanValidado);
-  FreeAndNil(stErr);
 end;
 
 procedure TfrmMtoClientes.CrearTablaPrincipal;

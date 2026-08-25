@@ -292,14 +292,18 @@ var
   oWriter: IScriptWriter;
   sRutaScript: string;
 begin
-  oIncluirTablas := TStringList.Create;
-  oExcluirTablas := TStringList.Create;
-  oFiltrosDatos := TStringList.Create;
   oEngine := nil;
-  sRutaScript := CrearRutaScriptBackup(
-    ARutaFichero,
-    AModo);
+  oIncluirTablas := nil;
+  oExcluirTablas := nil;
+  oFiltrosDatos := nil;
+  sRutaScript := '';
   try
+    oIncluirTablas := TStringList.Create;
+    oExcluirTablas := TStringList.Create;
+    oFiltrosDatos := TStringList.Create;
+    sRutaScript := CrearRutaScriptBackup(
+      ARutaFichero,
+      AModo);
     oFiltrosDatos.Values['fza_traducciones'] :=
       APersistencia.ObtenerFiltroTraducciones;
     oWriter := TScriptWriter.Create(sRutaScript);

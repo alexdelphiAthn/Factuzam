@@ -65,6 +65,57 @@ a la versión de Delphi del runner. Las rutas explícitas de UniDAC se añaden a
 proyecto; los paquetes instalados por sus proveedores siguen siendo
 responsabilidad de la imagen del runner.
 
+## Configuración local de DelphiLSP
+
+Los archivos `*.delphilsp.json` no se versionan porque contienen rutas y
+opciones de la instalación local. RAD Studio los genera al activar `Generate
+LSP Config` en las opciones de Code Insight y volver a abrir el proyecto. Cada
+desarrollador debe generar su propia copia cuando utilice DelphiLSP desde un
+editor externo.
+
+## Análisis estático con Pascal Analyzer
+
+`analizar_pascal.ps1` ejecuta PALCMD con Delphi 13 sobre el proyecto y añade
+las fuentes instaladas de DevExpress y FastReport sin guardar rutas locales en
+el repositorio. Reutiliza las cuatro variables requeridas para compilar y la
+selección de informes se fija en `PascalAnalyzer.ini`, por lo que no depende de
+las preferencias de Pascal Analyzer de cada desarrollador. Para que el
+resultado sea comparable, el runner exige Pascal Analyzer 9.21.5.
+
+Validar la instalación sin ejecutar el análisis:
+
+```powershell
+.\eng\analizar_pascal.ps1 -SoloValidar
+```
+
+Analizar Win64 Debug y escribir los informes en un directorio temporal:
+
+```powershell
+.\eng\analizar_pascal.ps1 -Configuracion Debug -Plataforma Win64
+```
+
+De forma opcional pueden definirse estas variables:
+
+| Variable | Uso |
+| --- | --- |
+| `FACTUZAM_PASCAL_ANALYZER` | Ruta completa a `palcmd.exe`. |
+| `FACTUZAM_DEVEXPRESS_SOURCE_ROOT` | Raíz VCL que contiene las fuentes de DevExpress. |
+| `FACTUZAM_FASTREPORT_SOURCE_ROOT` | Raíz `Sources` de FastReport. |
+
+Si no se indican las dos raíces de fuentes, el script intenta obtenerlas a
+partir de `FACTUZAM_DEVEXPRESS_ROOT` y `FACTUZAM_FASTREPORT_ROOT`. La
+instalación actual de UniDAC solo distribuye las unidades principales como
+DCU; Pascal Analyzer informará de esa limitación aunque el proyecto compile.
+Las fuentes externas se siguen analizando para resolver símbolos, pero sus
+identificadores se excluyen de los informes que admiten ese filtro para
+mantenerlos centrados en el código propio. `Totals.txt` conserva deliberadamente
+el total global de unidades analizadas, incluidas las dependencias.
+
+Los informes no se escriben en el repositorio salvo que se pase expresamente
+`-DirectorioSalida`; si se especifica, el directorio debe estar vacío. El
+script confirma que PALCMD terminó y generó los informes, pero no aplica un
+umbral automático de avisos ni actúa como puerta de calidad.
+
 ## Proyecto de pruebas
 
 `tests\FactuzamTests.dproj`, citado por el plan original de IA-S32, fue

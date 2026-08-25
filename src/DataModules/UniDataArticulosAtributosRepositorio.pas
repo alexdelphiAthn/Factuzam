@@ -364,48 +364,51 @@ begin
   Result := nil;
   if ACodigoArticulo <> '' then
   begin
-  Lst := TList<TArticuloAtributo>.Create;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    oDefinicion := DefinicionesSql[3];
-    EjecutarLecturaSqlConFallback(
-      oDefinicion,
-      FCatalogoSql,
-      procedure(const ASql: string)
-      begin
-        q.Close;
-        q.SQL.Text := ASql;
-        q.ParamByName('art').AsString := ACodigoArticulo;
-        q.Open;
-        ValidarCamposResultadoSql(
+    Lst := TList<TArticuloAtributo>.Create;
+    try
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := FConexion;
+        oDefinicion := DefinicionesSql[3];
+        EjecutarLecturaSqlConFallback(
           oDefinicion,
-          q);
-      end,
-      FIncidenciasSql);
-    while not q.Eof do
-    begin
-      A := Default(TArticuloAtributo);
-      A.IdAtributo     := q.FieldByName('ID_ATB_VA').AsString;
-      A.NombreAtributo := q.FieldByName('NOMBRE_ATR').AsString;
-      A.OrdenAtributo  := q.FieldByName('ORDEN_VA').AsInteger;
-      A.IdConjunto     := q.FieldByName('ID_AC_ACA').AsInteger;
-      A.NombreConjunto := q.FieldByName('NOMBRE_AC').AsString;
-      Lst.Add(A);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+          FCatalogoSql,
+          procedure(const ASql: string)
+          begin
+            q.Close;
+            q.SQL.Text := ASql;
+            q.ParamByName('art').AsString := ACodigoArticulo;
+            q.Open;
+            ValidarCamposResultadoSql(
+              oDefinicion,
+              q);
+          end,
+          FIncidenciasSql);
+        while not q.Eof do
+        begin
+          A := Default(TArticuloAtributo);
+          A.IdAtributo     := q.FieldByName('ID_ATB_VA').AsString;
+          A.NombreAtributo := q.FieldByName('NOMBRE_ATR').AsString;
+          A.OrdenAtributo  := q.FieldByName('ORDEN_VA').AsInteger;
+          A.IdConjunto     := q.FieldByName('ID_AC_ACA').AsInteger;
+          A.NombreConjunto := q.FieldByName('NOMBRE_AC').AsString;
+          Lst.Add(A);
+          q.Next;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
 
-  for i := 0 to Lst.Count - 1 do
-  begin
-    A := Lst[i];
-    CargarValoresAtributo(A.IdAtributo, A.IdConjunto, A.Valores);
-    Lst[i] := A;
-  end;
-  Result := Lst.ToArray;
-  FreeAndNil(Lst);
+      for i := 0 to Lst.Count - 1 do
+      begin
+        A := Lst[i];
+        CargarValoresAtributo(A.IdAtributo, A.IdConjunto, A.Valores);
+        Lst[i] := A;
+      end;
+      Result := Lst.ToArray;
+    finally
+      FreeAndNil(Lst);
+    end;
   end;
 end;
 
@@ -421,52 +424,58 @@ begin
   Result := nil;
   if ACodigoArticulo <> '' then
   begin
-  Lst := TList<TArticuloPropiedad>.Create;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := FConexion;
-    oDefinicion := DefinicionesSql[4];
-    EjecutarLecturaSqlConFallback(
-      oDefinicion,
-      FCatalogoSql,
-      procedure(const ASql: string)
-      begin
-        q.Close;
-        q.SQL.Text := ASql;
-        q.ParamByName('art').AsString := ACodigoArticulo;
-        q.Open;
-        ValidarCamposResultadoSql(
+    Lst := TList<TArticuloPropiedad>.Create;
+    try
+      q := TUniQuery.Create(nil);
+      try
+        q.Connection := FConexion;
+        oDefinicion := DefinicionesSql[4];
+        EjecutarLecturaSqlConFallback(
           oDefinicion,
-          q);
-      end,
-      FIncidenciasSql);
-    while not q.Eof do
-    begin
-      P := Default(TArticuloPropiedad);
-      P.Codigo             := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
-      P.Nombre             := q.FieldByName('NOMBRE_PROP_PROP').AsString;
-      P.TipoValor          :=
-                     TipoDesdeCadena(q.FieldByName('TIPO_VALOR_PROP').AsString);
-      P.EsRequerido        := q.FieldByName('ESREQUERIDO_FA').AsString = 'S';
-      P.Orden              := q.FieldByName('ORDEN_MOSTRAR_FA').AsInteger;
-      P.IdValorAsignado    := q.FieldByName('ID_PV_ARTPROP').AsInteger;
-      P.ValorLibreAsignado := q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
-      Lst.Add(P);
-      q.Next;
-    end;
-  finally
-    FreeAndNil(q);
-  end;
+          FCatalogoSql,
+          procedure(const ASql: string)
+          begin
+            q.Close;
+            q.SQL.Text := ASql;
+            q.ParamByName('art').AsString := ACodigoArticulo;
+            q.Open;
+            ValidarCamposResultadoSql(
+              oDefinicion,
+              q);
+          end,
+          FIncidenciasSql);
+        while not q.Eof do
+        begin
+          P := Default(TArticuloPropiedad);
+          P.Codigo := q.FieldByName('CODIGO_PROP_ARTPROP').AsString;
+          P.Nombre := q.FieldByName('NOMBRE_PROP_PROP').AsString;
+          P.TipoValor := TipoDesdeCadena(
+            q.FieldByName('TIPO_VALOR_PROP').AsString);
+          P.EsRequerido :=
+            q.FieldByName('ESREQUERIDO_FA').AsString = 'S';
+          P.Orden := q.FieldByName('ORDEN_MOSTRAR_FA').AsInteger;
+          P.IdValorAsignado :=
+            q.FieldByName('ID_PV_ARTPROP').AsInteger;
+          P.ValorLibreAsignado :=
+            q.FieldByName('VALOR_LIBRE_ARTPROP').AsString;
+          Lst.Add(P);
+          q.Next;
+        end;
+      finally
+        FreeAndNil(q);
+      end;
 
-  for i := 0 to Lst.Count - 1 do
-  begin
-    P := Lst[i];
-    if P.TipoValor = tvpLista then
-      CargarValoresPropiedad(P.Codigo, P.Valores);
-    Lst[i] := P;
-  end;
-  Result := Lst.ToArray;
-  FreeAndNil(Lst);
+      for i := 0 to Lst.Count - 1 do
+      begin
+        P := Lst[i];
+        if P.TipoValor = tvpLista then
+          CargarValoresPropiedad(P.Codigo, P.Valores);
+        Lst[i] := P;
+      end;
+      Result := Lst.ToArray;
+    finally
+      FreeAndNil(Lst);
+    end;
   end;
 end;
 

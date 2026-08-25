@@ -275,44 +275,49 @@ var
 
 begin
   oResultado := TDictionary<string, TFotoInfo>.Create;
-  Result := oResultado;
-  if Length(ACodigos) > 0 then
-  begin
-    aMetadatos := FRepositorio.BuscarFotosArticulos(ACodigos);
-    sArticuloActual := '';
-    iFotosArticulo := 0;
-    bFotoArticulo := False;
-    sUnidadPrimera := '';
-    sNombrePrimero := '';
-    sExtPrimera := '';
-    sNombreArticulo := '';
-    sExtArticulo := '';
-    for iFoto := 0 to High(aMetadatos) do
+  try
+    if Length(ACodigos) > 0 then
     begin
-      sArticulo := aMetadatos[iFoto].CodigoArticulo;
-      sUnidad := aMetadatos[iFoto].CodigoUnidad;
-      if sArticulo <> sArticuloActual then
+      aMetadatos := FRepositorio.BuscarFotosArticulos(ACodigos);
+      sArticuloActual := '';
+      iFotosArticulo := 0;
+      bFotoArticulo := False;
+      sUnidadPrimera := '';
+      sNombrePrimero := '';
+      sExtPrimera := '';
+      sNombreArticulo := '';
+      sExtArticulo := '';
+      for iFoto := 0 to High(aMetadatos) do
       begin
-        FinalizarArticulo(sArticuloActual);
-        sArticuloActual := sArticulo;
-        iFotosArticulo := 0;
-        bFotoArticulo := False;
+        sArticulo := aMetadatos[iFoto].CodigoArticulo;
+        sUnidad := aMetadatos[iFoto].CodigoUnidad;
+        if sArticulo <> sArticuloActual then
+        begin
+          FinalizarArticulo(sArticuloActual);
+          sArticuloActual := sArticulo;
+          iFotosArticulo := 0;
+          bFotoArticulo := False;
+        end;
+        Inc(iFotosArticulo);
+        if iFotosArticulo = 1 then
+        begin
+          sUnidadPrimera := sUnidad;
+          sNombrePrimero := aMetadatos[iFoto].Nombre;
+          sExtPrimera := aMetadatos[iFoto].Extension;
+        end;
+        if sUnidad = '' then
+        begin
+          bFotoArticulo := True;
+          sNombreArticulo := aMetadatos[iFoto].Nombre;
+          sExtArticulo := aMetadatos[iFoto].Extension;
+        end;
       end;
-      Inc(iFotosArticulo);
-      if iFotosArticulo = 1 then
-      begin
-        sUnidadPrimera := sUnidad;
-        sNombrePrimero := aMetadatos[iFoto].Nombre;
-        sExtPrimera := aMetadatos[iFoto].Extension;
-      end;
-      if sUnidad = '' then
-      begin
-        bFotoArticulo := True;
-        sNombreArticulo := aMetadatos[iFoto].Nombre;
-        sExtArticulo := aMetadatos[iFoto].Extension;
-      end;
+      FinalizarArticulo(sArticuloActual);
     end;
-    FinalizarArticulo(sArticuloActual);
+    Result := oResultado;
+    oResultado := nil;
+  finally
+    FreeAndNil(oResultado);
   end;
 end;
 

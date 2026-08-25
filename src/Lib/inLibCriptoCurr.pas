@@ -346,6 +346,44 @@ begin
     Change24h.TryGetValue(LowerCase(ACurrency) + '_24h_change', Result);
 end;
 
+procedure LiberarDiccionariosPrecio(var APrecio: TCoinPrice);
+begin
+  FreeAndNil(APrecio.Prices);
+  FreeAndNil(APrecio.MarketCaps);
+  FreeAndNil(APrecio.Vol24h);
+  FreeAndNil(APrecio.Change24h);
+end;
+
+procedure LiberarPrecios(var APrecios: TArray<TCoinPrice>);
+var
+  i: Integer;
+begin
+  for i := 0 to High(APrecios) do
+    LiberarDiccionariosPrecio(APrecios[i]);
+  APrecios := nil;
+end;
+
+procedure LiberarPreciosLista(ALista: TList<TCoinPrice>);
+var
+  i: Integer;
+  oPrecio: TCoinPrice;
+begin
+  if not Assigned(ALista) then
+    Exit;
+  for i := 0 to ALista.Count - 1 do
+  begin
+    oPrecio := ALista[i];
+    LiberarDiccionariosPrecio(oPrecio);
+  end;
+end;
+
+procedure LiberarDiccionariosDetalle(var ADetalle: TCoinDetail);
+begin
+  FreeAndNil(ADetalle.CurrentPrices);
+  FreeAndNil(ADetalle.MarketCaps);
+  FreeAndNil(ADetalle.TotalVolumes);
+end;
+
 { TCoinGeckoAPI }
 
 constructor TCoinGeckoAPI.Create(const AApiKey, ABaseURL: string);
@@ -443,7 +481,7 @@ end;
 
 function TCoinGeckoAPI.UnixToDateTime(AUnix: Int64): TDateTime;
 begin
-  Result := UnixToDateTime(AUnix);
+  Result := System.DateUtils.UnixToDateTime(AUnix);
 end;
 
 // ── Métodos públicos ───────────────────────────────────────
@@ -473,9 +511,14 @@ var
   Prices: TArray<TCoinPrice>;
 begin
   Result := 0;
-  Prices := GetPrices([LowerCase(ACoinID)], [LowerCase(AVsCurrency)]);
-  if Length(Prices) > 0 then
-    Result := Prices[0].GetPrice(AVsCurrency);
+  Prices := nil;
+  try
+    Prices := GetPrices([LowerCase(ACoinID)], [LowerCase(AVsCurrency)]);
+    if Length(Prices) > 0 then
+      Result := Prices[0].GetPrice(AVsCurrency);
+  finally
+    LiberarPrecios(Prices);
+  end;
 end;
 
 function IfThen(AValue: Boolean;
@@ -506,62 +549,90 @@ var
   Curs      : string;
   CoinPair  : TJSONPair;
 begin
-  IDs  := string.Join(',', ACoinIDs);
-  Curs := string.Join(',', ACurrencies);
-
-  URL := BuildURL('/simple/price', [
-    'ids',                    IDs,
-    'vs_currencies',          Curs,
-    'include_market_cap',     IfThen(AIncludeMarketCap, 'true', 'false'),
-    'include_24hr_vol',       IfThen(AInclude24hVol,    'true', 'false'),
-    'include_24hr_change',    IfThen(AInclude24hChange, 'true', 'false'),
-    'include_last_updated_at','true'
-  ]);
-
-  Raw  := DoGet(URL);
-  JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
-  if not Assigned(JSON) then
-    raise ECoinGeckoError.Create(SErrorJsonCripto);
-
-  CoinList := TList<TCoinPrice>.Create;
+  Result := nil;
   try
-    for CoinPair in JSON do
-    begin
-      Coin.CoinID      := CoinPair.JsonString.Value;
-      Coin.Prices      := TDictionary<string, Double>.Create;
-      Coin.MarketCaps  := TDictionary<string, Double>.Create;
-      Coin.Vol24h      := TDictionary<string, Double>.Create;
-      Coin.Change24h   := TDictionary<string, Double>.Create;
-      Coin.LastUpdated := 0;
+    IDs  := string.Join(',', ACoinIDs);
+    Curs := string.Join(',', ACurrencies);
 
-      CoinObj := CoinPair.JsonValue as TJSONObject;
-      if Assigned(CoinObj) then
-        for CurPair in CoinObj do
-        begin
-          // last_updated_at es Unix timestamp
-          if CurPair.JsonString.Value = 'last_updated_at' then
-            Coin.LastUpdated := UnixToDateTime(
-              StrToInt64Def(CurPair.JsonValue.Value, 0))
-          else if CurPair.JsonString.Value.EndsWith('_market_cap') then
-            Coin.MarketCaps.AddOrSetValue(CurPair.JsonString.Value,
-                                          CurPair.JsonValue.AsType<Double>)
-          else if CurPair.JsonString.Value.EndsWith('_24h_vol') then
-            Coin.Vol24h.AddOrSetValue(CurPair.JsonString.Value,
-                                       CurPair.JsonValue.AsType<Double>)
-          else if CurPair.JsonString.Value.EndsWith('_24h_change') then
-            Coin.Change24h.AddOrSetValue(CurPair.JsonString.Value,
-                                          CurPair.JsonValue.AsType<Double>)
-          else
-            Coin.Prices.AddOrSetValue(CurPair.JsonString.Value,
-                                       CurPair.JsonValue.AsType<Double>);
+    URL := BuildURL('/simple/price', [
+      'ids',                    IDs,
+      'vs_currencies',          Curs,
+      'include_market_cap',     IfThen(AIncludeMarketCap, 'true', 'false'),
+      'include_24hr_vol',       IfThen(AInclude24hVol,    'true', 'false'),
+      'include_24hr_change',    IfThen(AInclude24hChange, 'true', 'false'),
+      'include_last_updated_at','true'
+    ]);
+
+    Raw  := DoGet(URL);
+    JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
+    if not Assigned(JSON) then
+      raise ECoinGeckoError.Create(SErrorJsonCripto);
+    try
+      CoinList := TList<TCoinPrice>.Create;
+      try
+        try
+          for CoinPair in JSON do
+          begin
+            Coin := Default(TCoinPrice);
+            try
+              Coin.CoinID      := CoinPair.JsonString.Value;
+              Coin.Prices      := TDictionary<string, Double>.Create;
+              Coin.MarketCaps  := TDictionary<string, Double>.Create;
+              Coin.Vol24h      := TDictionary<string, Double>.Create;
+              Coin.Change24h   := TDictionary<string, Double>.Create;
+              Coin.LastUpdated := 0;
+
+              CoinObj := CoinPair.JsonValue as TJSONObject;
+              if Assigned(CoinObj) then
+                for CurPair in CoinObj do
+                begin
+                  // last_updated_at es Unix timestamp
+                  if CurPair.JsonString.Value = 'last_updated_at' then
+                    Coin.LastUpdated := UnixToDateTime(
+                      StrToInt64Def(CurPair.JsonValue.Value, 0))
+                  else if CurPair.JsonString.Value.EndsWith(
+                            '_market_cap') then
+                    Coin.MarketCaps.AddOrSetValue(
+                      CurPair.JsonString.Value,
+                      CurPair.JsonValue.AsType<Double>)
+                  else if CurPair.JsonString.Value.EndsWith('_24h_vol') then
+                    Coin.Vol24h.AddOrSetValue(CurPair.JsonString.Value,
+                                              CurPair.JsonValue.AsType<Double>)
+                  else if CurPair.JsonString.Value.EndsWith(
+                            '_24h_change') then
+                    Coin.Change24h.AddOrSetValue(
+                      CurPair.JsonString.Value,
+                      CurPair.JsonValue.AsType<Double>)
+                  else
+                    Coin.Prices.AddOrSetValue(CurPair.JsonString.Value,
+                                              CurPair.JsonValue.AsType<Double>);
+                end;
+
+              CoinList.Add(Coin);
+            except
+              LiberarDiccionariosPrecio(Coin);
+              raise;
+            end;
+            // La lista pasa a ser propietaria de los diccionarios.
+            Coin.Prices := nil;
+            Coin.MarketCaps := nil;
+            Coin.Vol24h := nil;
+            Coin.Change24h := nil;
+          end;
+          Result := CoinList.ToArray;
+        except
+          LiberarPreciosLista(CoinList);
+          raise;
         end;
-
-      CoinList.Add(Coin);
+      finally
+        FreeAndNil(CoinList);
+      end;
+    finally
+      FreeAndNil(JSON);
     end;
-    Result := CoinList.ToArray;
-  finally
-    FreeAndNil(CoinList);
-    FreeAndNil(JSON);
+  except
+    LiberarPrecios(Result);
+    raise;
   end;
 end;
 
@@ -657,84 +728,89 @@ var
   Pair        : TJSONPair;
   rValor      : Double;
 begin
-  FillChar(Result, SizeOf(Result), 0);
-  Result.CurrentPrices := TDictionary<string, Double>.Create;
-  Result.MarketCaps    := TDictionary<string, Double>.Create;
-  Result.TotalVolumes  := TDictionary<string, Double>.Create;
-
-  URL := BuildURL('/coins/' + LowerCase(ACoinID), [
-    'localization',      'false',
-    'tickers',           'false',
-    'market_data',       'true',
-    'community_data',    'true',
-    'developer_data',    'false',
-    'sparkline',         'false'
-  ]);
-
-  Raw  := DoGet(URL);
-  JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
-  if not Assigned(JSON) then
-    raise ECoinGeckoError.Create(SErrorJsonCripto);
+  Result := Default(TCoinDetail);
   try
-    Result.ID     := SafeStr(JSON, 'id');
-    Result.Symbol := SafeStr(JSON, 'symbol');
-    Result.Name   := SafeStr(JSON, 'name');
+    Result.CurrentPrices := TDictionary<string, Double>.Create;
+    Result.MarketCaps    := TDictionary<string, Double>.Create;
+    Result.TotalVolumes  := TDictionary<string, Double>.Create;
 
-    // Descripción en inglés
-    DescObj := JSON.GetValue<TJSONObject>('description');
-    if Assigned(DescObj) then
-      Result.Description := SafeStr(DescObj, 'en');
+    URL := BuildURL('/coins/' + LowerCase(ACoinID), [
+      'localization',      'false',
+      'tickers',           'false',
+      'market_data',       'true',
+      'community_data',    'true',
+      'developer_data',    'false',
+      'sparkline',         'false'
+    ]);
 
-    // Homepage
-    Links := JSON.GetValue<TJSONObject>('links');
-    if Assigned(Links) then
-    begin
-      HomepageArr := Links.GetValue<TJSONArray>('homepage');
-      if Assigned(HomepageArr) and (HomepageArr.Count > 0) then
-        Result.HomepageURL := HomepageArr.Items[0].Value;
-    end;
+    Raw  := DoGet(URL);
+    JSON := TJSONObject.ParseJSONValue(Raw) as TJSONObject;
+    if not Assigned(JSON) then
+      raise ECoinGeckoError.Create(SErrorJsonCripto);
+    try
+      Result.ID     := SafeStr(JSON, 'id');
+      Result.Symbol := SafeStr(JSON, 'symbol');
+      Result.Name   := SafeStr(JSON, 'name');
 
-    Result.GenesisDate  := SafeStr(JSON, 'genesis_date');
-    Result.MarketCapRank := SafeInt(JSON, 'market_cap_rank');
-    Result.CoingeckoRank := SafeInt(JSON, 'coingecko_rank');
+      // Descripción en inglés
+      DescObj := JSON.GetValue<TJSONObject>('description');
+      if Assigned(DescObj) then
+        Result.Description := SafeStr(DescObj, 'en');
 
-    // Scores
-    ScoresObj := JSON;
-    Result.CoingeckoScore := SafeDouble(ScoresObj, 'coingecko_score');
-    Result.DeveloperScore := SafeDouble(ScoresObj, 'developer_score');
-    Result.CommunityScore := SafeDouble(ScoresObj, 'community_score');
-    Result.LiquidityScore := SafeDouble(ScoresObj, 'liquidity_score');
-    Result.PublicInterest := SafeDouble(ScoresObj, 'public_interest_score');
+      // Homepage
+      Links := JSON.GetValue<TJSONObject>('links');
+      if Assigned(Links) then
+      begin
+        HomepageArr := Links.GetValue<TJSONArray>('homepage');
+        if Assigned(HomepageArr) and (HomepageArr.Count > 0) then
+          Result.HomepageURL := HomepageArr.Items[0].Value;
+      end;
 
-    // Market data
-    MarketData := JSON.GetValue<TJSONObject>('market_data');
-    if Assigned(MarketData) then
-    begin
-      CurrentPr := MarketData.GetValue<TJSONObject>('current_price');
-      MktCap    := MarketData.GetValue<TJSONObject>('market_cap');
-      TotVol    := MarketData.GetValue<TJSONObject>('total_volume');
+      Result.GenesisDate  := SafeStr(JSON, 'genesis_date');
+      Result.MarketCapRank := SafeInt(JSON, 'market_cap_rank');
+      Result.CoingeckoRank := SafeInt(JSON, 'coingecko_rank');
 
-      // Divisas con valor no numerico se omiten; el resto sigue.
-      if Assigned(CurrentPr) then
-        for Pair in CurrentPr do
-          if Pair.JsonValue.TryGetValue<Double>(rValor) then
-            Result.CurrentPrices.AddOrSetValue(Pair.JsonString.Value,
-                                               rValor);
+      // Scores
+      ScoresObj := JSON;
+      Result.CoingeckoScore := SafeDouble(ScoresObj, 'coingecko_score');
+      Result.DeveloperScore := SafeDouble(ScoresObj, 'developer_score');
+      Result.CommunityScore := SafeDouble(ScoresObj, 'community_score');
+      Result.LiquidityScore := SafeDouble(ScoresObj, 'liquidity_score');
+      Result.PublicInterest := SafeDouble(ScoresObj, 'public_interest_score');
 
-      if Assigned(MktCap) then
-        for Pair in MktCap do
-          if Pair.JsonValue.TryGetValue<Double>(rValor) then
-            Result.MarketCaps.AddOrSetValue(Pair.JsonString.Value,
-                                            rValor);
+      // Market data
+      MarketData := JSON.GetValue<TJSONObject>('market_data');
+      if Assigned(MarketData) then
+      begin
+        CurrentPr := MarketData.GetValue<TJSONObject>('current_price');
+        MktCap    := MarketData.GetValue<TJSONObject>('market_cap');
+        TotVol    := MarketData.GetValue<TJSONObject>('total_volume');
 
-      if Assigned(TotVol) then
-        for Pair in TotVol do
-          if Pair.JsonValue.TryGetValue<Double>(rValor) then
-            Result.TotalVolumes.AddOrSetValue(Pair.JsonString.Value,
+        // Divisas con valor no numerico se omiten; el resto sigue.
+        if Assigned(CurrentPr) then
+          for Pair in CurrentPr do
+            if Pair.JsonValue.TryGetValue<Double>(rValor) then
+              Result.CurrentPrices.AddOrSetValue(Pair.JsonString.Value,
+                                                 rValor);
+
+        if Assigned(MktCap) then
+          for Pair in MktCap do
+            if Pair.JsonValue.TryGetValue<Double>(rValor) then
+              Result.MarketCaps.AddOrSetValue(Pair.JsonString.Value,
                                               rValor);
+
+        if Assigned(TotVol) then
+          for Pair in TotVol do
+            if Pair.JsonValue.TryGetValue<Double>(rValor) then
+              Result.TotalVolumes.AddOrSetValue(Pair.JsonString.Value,
+                                                rValor);
+      end;
+    finally
+      FreeAndNil(JSON);
     end;
-  finally
-    FreeAndNil(JSON);
+  except
+    LiberarDiccionariosDetalle(Result);
+    raise;
   end;
 end;
 

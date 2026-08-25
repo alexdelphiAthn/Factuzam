@@ -20,6 +20,7 @@ fzam.res
 *.tvsconfig
 *.stat
 *.dproj.local
+*.delphilsp.json
 *.vlb
 *.7z
 .identcache
