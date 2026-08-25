@@ -357,6 +357,7 @@ begin
     PropiedadesArticulo := TcxButtonEditProperties(FColArticulo.Properties);
     PropiedadesArticulo.Buttons.Clear;
     BotonArticulo := PropiedadesArticulo.Buttons.Add;
+    BotonArticulo.Default := True;
     BotonArticulo.Kind := bkEllipsis;
     PropiedadesArticulo.OnButtonClick := ArticuloButtonClick;
     PropiedadesArticulo.OnValidate := ArticuloValidate;

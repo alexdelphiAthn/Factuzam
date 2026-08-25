@@ -339,6 +339,7 @@ begin
     oPropiedades := TcxButtonEditProperties(AColumna.Properties);
     oPropiedades.Buttons.Clear;
     oBoton := oPropiedades.Buttons.Add;
+    oBoton.Default := True;
     oBoton.Kind := bkEllipsis;
     oPropiedades.OnButtonClick := AOnButtonClick;
     oPropiedades.OnValidate := AOnValidate;

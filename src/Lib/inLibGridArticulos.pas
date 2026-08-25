@@ -411,6 +411,7 @@ begin
   Propiedades := TcxButtonEditProperties(FColArticulo.Properties);
   Propiedades.Buttons.Clear;
   Boton := Propiedades.Buttons.Add;
+  Boton.Default := True;
   Boton.Kind := bkEllipsis;
   // Las lineas ya resueltas no se editan encima: se borra la linea o se usa
   // el boton. Las lineas nuevas usan el combo editable por OnGetProperties.

@@ -1509,8 +1509,12 @@ begin
       FAnfitrionMto.CancelarEdicionesPantallas;
     Key := 0;
   end
-  // RETURN sin control activo -> simular Tab
-  else if (Key = VK_RETURN) and (ActiveControl = nil) then
+  // RETURN sin control activo -> simular Tab. Los modificadores se respetan:
+  // Ctrl+Enter es el ClickKey estandar de los EditButton y Alt+Enter tampoco
+  // debe convertirse en una combinacion de navegacion.
+  else if (Key = VK_RETURN) and
+          not (ssCtrl in Shift) and not (ssAlt in Shift) and
+          (ActiveControl = nil) then
   begin
     Key := 0;
     SimulateTabKey;

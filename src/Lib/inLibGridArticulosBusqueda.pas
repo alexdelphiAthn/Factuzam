@@ -237,7 +237,11 @@ begin
   FRepCombo.Properties.OnCloseUp := ComboBusqCloseUp;
   FRepCombo.Properties.OnChange := ArticuloChange;
   FRepCombo.Properties.Buttons.Clear;
-  FRepCombo.Properties.Buttons.Add.Kind := bkEllipsis;
+  with FRepCombo.Properties.Buttons.Add do
+  begin
+    Default := True;
+    Kind := bkEllipsis;
+  end;
   FRepCombo.Properties.OnButtonClick := ArticuloButtonClick;
   FRepCombo.Properties.OnValidate := ArticuloValidate;
 end;
