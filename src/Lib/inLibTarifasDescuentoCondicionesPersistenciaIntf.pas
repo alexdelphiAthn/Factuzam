@@ -99,7 +99,7 @@ begin
   else
     raise EArgumentOutOfRangeException.CreateFmt(
       SErrorModoCondicionDescuento,
-      [Ord(AModo)]);
+      [IntToStr(Ord(AModo))]);
   end;
 end;
 

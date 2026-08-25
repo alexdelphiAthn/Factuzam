@@ -612,11 +612,16 @@ begin
     oConsulta.SQL.Text :=
       'SELECT COUNT(*) AS NUMERO ' +
       'FROM fza_tarifas_descuento_condiciones dc ' +
-      'JOIN fza_tarifas_descuento_valores dv ' +
-      'ON dv.CODIGO_TAR_TARDVA = dc.CODIGO_TAR_TARDCO ' +
       'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
       'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
-      'AND dv.ID_PV_TARDVA = :ID_VALOR';
+      'AND (EXISTS (SELECT 1 ' +
+      'FROM fza_tarifas_descuento_valores dv ' +
+      'WHERE dv.CODIGO_TAR_TARDVA = dc.CODIGO_TAR_TARDCO ' +
+      'AND dv.ID_PV_TARDVA = :ID_VALOR) OR (' +
+      'dc.MODO_TARDCO = ''TODOS_EXCEPTO'' AND EXISTS (' +
+      'SELECT 1 FROM fza_propiedades_valores pv ' +
+      'WHERE pv.ID_PV_ARTPROP = :ID_VALOR ' +
+      'AND pv.ID_PROP_PV = dc.CODIGO_PROP_TARDCO)))';
     oConsulta.ParamByName('TARIFA').AsString :=
       LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
     oConsulta.ParamByName('ID_VALOR').AsInteger := AIdValor;

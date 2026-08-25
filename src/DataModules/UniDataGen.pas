@@ -222,6 +222,7 @@ uses
   Vcl.Forms, UniDataAlmacenesEmpresaRepositorio,
   inLibMsgComun, inLibRegistroLogNulo,
   inLibDatasets, inLibFiltroUsuario, inLibMtoGenAplicacion,
+  inLibPrestaShopColaSenal,
   UniDataValoresAutomaticosRepositorio;
 
 {$R *.dfm}
@@ -261,6 +262,7 @@ end;
 procedure TUnidadTrabajoMtoGenUniDAC.Confirmar;
 begin
   FConexion.Commit;
+  SolicitarProcesadoPrestaShop;
 end;
 
 procedure TUnidadTrabajoMtoGenUniDAC.Revertir;

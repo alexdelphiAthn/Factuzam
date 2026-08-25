@@ -37,6 +37,7 @@ uses
   inLibArticulosAtributosIntf, inLibArticulosValidadorIntf,
   inLibComprasPantallaIntf, inLibDocumentosTrabajo,
   inLibCargaMasivaArticulosPersistenciaIntf,
+  inLibFotos,
   inLibPermisosIntf,
   UniDataComprasPantallaComposicion,
   inLibCajasDefectoPersistenciaIntf,
@@ -109,6 +110,10 @@ type
     miEnviarInventarioDTR: TMenuItem;
     miEnviarTarifasDTR: TMenuItem;
     btnArchivarDTR: TcxButton;
+    pnlLateralDTR: TPanel;
+    pnlFotoArticuloActivoDTR: TPanel;
+    lblFotoArticuloActivoDTR: TcxLabel;
+    imgFotoArticuloActivoDTR: TImage;
     procedure btnEnviarADTRClick(Sender: TObject);
     procedure miEnviarAlbaranDTRClick(Sender: TObject);
     procedure miEnviarFacturaVentaDTRClick(Sender: TObject);
@@ -130,6 +135,7 @@ type
     procedure actEliminarDocumentoTrabajoUpdate(Sender: TObject);
   private
     FIdEtiquetasDTR: Int64;
+    FFotoArticuloActivoDTR: TFotoEmbebida;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal. El
     // Construir hace ClearItems: las columnas del dfm mueren y las
@@ -198,14 +204,14 @@ implementation
 
 uses
   Vcl.ActnList,
-  UniDataArticulos, inLibFotos, inLibGenBusq, inMtoModalEtiqArt,
+  UniDataArticulos, inLibGenBusq, inMtoModalEtiqArt,
   inMtoModalAddBlockDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
   inLibColumnasSku,
   UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino, inMtoModalCajDef,
-  // Listado del documento con una foto de 300 x 300 por línea.
+  // Listado del documento con una foto de 150 x 150 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
   inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
 
@@ -287,6 +293,11 @@ begin
     tvLineasDTR.DataController.DataSource := dmmDocumentosTrabajo.dsLineas;
     tvCompartidosDTR.DataController.DataSource :=
       dmmDocumentosTrabajo.dsCompartidos;
+    FreeAndNil(FFotoArticuloActivoDTR);
+    FFotoArticuloActivoDTR := TFotoEmbebida.Create(
+      FotosArticulos,
+      imgFotoArticuloActivoDTR,
+      dmmDocumentosTrabajo.dsLineas);
     AplicarEstadoAmbito;
   end;
   pkFieldName := 'ID_DTR';
@@ -300,6 +311,7 @@ end;
 
 destructor TfrmMtoDocumentosTrabajo.Destroy;
 begin
+  FreeAndNil(FFotoArticuloActivoDTR);
   FCargaMasiva.Consultas := nil;
   FCargaMasiva.Inserciones := nil;
   FLookupAtributos := nil;
@@ -535,6 +547,8 @@ begin
      (FModoEntradaSel <> mcsTallasInline) then
     dmmDocumentosTrabajo.unqryLineas.FieldByName(
       'CANTIDAD_DTL').AsFloat := 1;
+  if Assigned(FFotoArticuloActivoDTR) then
+    FFotoArticuloActivoDTR.Refrescar;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.AplicarEstadoAmbito;

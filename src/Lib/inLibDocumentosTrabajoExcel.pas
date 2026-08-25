@@ -9,8 +9,9 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Exporta un Documento de Trabajo a Excel con una foto de 300 x 300 por     }
-{    cada línea, resuelta por artículo y SKU.                                  }
+{    Exporta un Documento de Trabajo a Excel con una foto de 150 x 150 por     }
+{    cada línea, resuelta por artículo y SKU. Las líneas sin foto mantienen    }
+{    una altura compacta.                                                       }
 {******************************************************************************}
 unit inLibDocumentosTrabajoExcel;
 
@@ -59,7 +60,7 @@ const
   fcantidadDtl = 'CANTIDAD_DTL';
   forigenDtl = 'ORIGEN_DTL';
   finstanteStockDtl = 'INSTANTE_STOCK_DTL';
-  cTamanoFoto = 300;
+  cTamanoFoto = 150;
   cFormatoCantidad = '#,##0.##;-#,##0.##;0';
   cFormatoPrecio = '#,##0.00" €"';
   cColorCabecera = $00666666;
@@ -171,6 +172,7 @@ begin
     oImagen := TdxSmartImage.Create;
     try
       oImagen.LoadFromFile(sRuta);
+      FHoja.Rows[AFila].Size := cTamanoFoto;
       iAncho := oImagen.Width;
       iAlto := oImagen.Height;
       if (iAncho > cTamanoFoto) or (iAlto > cTamanoFoto) then
@@ -240,7 +242,9 @@ procedure TExportadorDocumentoTrabajo.EscribirCabeceraLineas;
 var
   iColumna: Integer;
 begin
-  W(FHoja, FFila, COL_FOTO, 'Foto 300 x 300', True, ssahCenter);
+  W(FHoja, FFila, COL_FOTO,
+    Format('Foto %d x %d', [cTamanoFoto, cTamanoFoto]),
+    True, ssahCenter);
   W(FHoja, FFila, COL_LINEA, 'Línea', True, ssahCenter);
   W(FHoja, FFila, COL_ARTICULO, 'Artículo', True, ssahCenter);
   W(FHoja, FFila, COL_SKU, 'SKU', True, ssahCenter);
@@ -273,7 +277,6 @@ end;
 procedure TExportadorDocumentoTrabajo.EscribirLinea;
 begin
   FHoja.CreateCell(FFila, COL_FOTO);
-  FHoja.Rows[FFila].Size := cTamanoFoto;
   IncrustarFoto(FFila,
                 FLineas.FieldByName(fcodArtDtl).AsString,
                 FLineas.FieldByName(fcodUnidadDtl).AsString);

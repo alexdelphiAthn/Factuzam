@@ -114,8 +114,9 @@ begin
     Result := SqlValorArticulo
   else
     Result :=
-      '((' + AExpresionSku + ' IS NOT NULL AND ' + SqlValorSku +
-      ') OR (' + AExpresionSku + ' IS NULL AND ' +
+      '((COALESCE(' + AExpresionSku + ', '''') <> '''' AND ' +
+      SqlValorSku + ') OR (COALESCE(' + AExpresionSku +
+      ', '''') = '''' AND ' +
       SqlValorArticulo + '))';
 end;
 
@@ -151,7 +152,7 @@ begin
     'WHERE dvi.CODIGO_TAR_TARDVA = ' + sCondicion +
     '.CODIGO_TAR_TARDCO AND (pvi.ID_PV_ARTPROP IS NULL OR ' +
     'pvi.ID_PROP_PV <> ' + sCondicion + '.CODIGO_PROP_TARDCO OR ' +
-    'pvi.ESACTIVO_PV <> ''S'')) AND ' +
+    'COALESCE(pvi.ESACTIVO_PV, ''N'') <> ''S'')) AND ' +
     SqlValorEfectivoAplicable(
       sCondicion, AExpresionArticulo, AExpresionSku) + '))))';
 end;

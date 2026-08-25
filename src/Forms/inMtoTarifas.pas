@@ -354,8 +354,8 @@ begin
   FCmbModoCondicionDto.Parent := FTabCondicionDto;
   FCmbModoCondicionDto.SetBounds(180, 20, 310, 26);
   FCmbModoCondicionDto.Properties.DropDownListStyle := lsFixedList;
-  FCmbModoCondicionDto.Properties.Items.Add('Todos los artículos');
-  FCmbModoCondicionDto.Properties.Items.Add('Solo si cumple');
+  FCmbModoCondicionDto.Properties.Items.Add('Todos');
+  FCmbModoCondicionDto.Properties.Items.Add('Solo si');
   FCmbModoCondicionDto.Properties.Items.Add('Todos excepto');
   FCmbModoCondicionDto.ItemIndex := Ord(mcdTodos);
   FCmbModoCondicionDto.Properties.OnEditValueChanged :=

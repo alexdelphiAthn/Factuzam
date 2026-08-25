@@ -67,9 +67,11 @@ type
       AIdValor: Integer;
       const AValorLibre, AUsuario: string);
     procedure EliminarPropiedad(
-      const ACodigoArticulo, ACodigoPropiedad: string);
+      const ACodigoArticulo, ACodigoPropiedad,
+      AUsuario: string);
     procedure EliminarValorUnidad(
-      const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string);
+      const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad,
+      AUsuario: string);
   end;
   TServiciosPropiedadesArticulo = record
     Lectura: ILectorPropiedadesArticulo;

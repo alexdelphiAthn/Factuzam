@@ -69,7 +69,8 @@ uses
   System.SysUtils,
   System.Generics.Collections,
   inLibMsgCompras,
-  UniDataPedidosCompraAlbaranComun;
+  UniDataPedidosCompraAlbaranComun,
+  inLibPrestaShopColaSenal;
 
 function TEscrituraIncorporacionAlbaranCompra.MaxLineaAlbaranCompra(
   AConn: TUniConnection;
@@ -419,7 +420,11 @@ begin
         Result := True;
       end;
       if EsTransaccionPropia then
+      begin
         FConexion.Commit;
+        if Result then
+          SolicitarProcesadoPrestaShop;
+      end;
     except
       if EsTransaccionPropia and FConexion.InTransaction then
         FConexion.Rollback;
@@ -529,7 +534,11 @@ begin
         end;
       end;
       if EsTransaccionPropia then
+      begin
         FConexion.Commit;
+        if Result then
+          SolicitarProcesadoPrestaShop;
+      end;
     except
       if EsTransaccionPropia and FConexion.InTransaction then
         FConexion.Rollback;

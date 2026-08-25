@@ -415,6 +415,7 @@
         <DCCReference Include="src\Forms\inMtoTarifas.pas">
             <Form>frmMtoTarifas</Form>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibTarifasDescuentoCondicionesPersistenciaIntf.pas"/>
         <DCCReference Include="src\Forms\inMtoUsuarios.pas">
             <Form>frmMtoUsuarios</Form>
         </DCCReference>
@@ -709,6 +710,7 @@
             <Form>dmTarifas</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataTarifasDescuentoCondicionesRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataUsuarios.pas">
             <Form>dmUsuarios</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -1108,6 +1110,7 @@
         <DCCReference Include="src\Lib\inLibPrestaShopTransporteHistorial.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopAltaArticuloIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataPrestaShopAltaArticulo.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPrestaShopPrecioCondicional.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopColaIntf.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopColaSenal.pas"/>
         <DCCReference Include="src\Lib\inLibPrestaShopCierre.pas"/>

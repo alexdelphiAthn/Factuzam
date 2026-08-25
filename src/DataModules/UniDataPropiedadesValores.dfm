@@ -41,6 +41,10 @@
       'ORDER BY ID_PROP_PV, ID_PV_ARTPROP'
       '')
     Active = True
+    BeforePost = unqryTablaGBeforePost
+    AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
+    AfterDelete = unqryTablaGAfterDelete
     Left = 24
   end
   object unqryPropiedades: TUniQuery

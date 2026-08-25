@@ -954,7 +954,8 @@ begin
   if FCodigoArticulo <> '' then
     FServicios.Escritura.EliminarPropiedad(
       FCodigoArticulo,
-      CodigoPropiedad);
+      CodigoPropiedad,
+      FUsuario);
 end;
 
 { ═══════════════════════════════════════════════════════════════════════════ }
@@ -1200,7 +1201,8 @@ begin
   FServicios.Escritura.EliminarValorUnidad(
     FArticulo,
     FCodigoProp,
-    AUnidad);
+    AUnidad,
+    FUsuario);
 end;
 
 procedure TfrmPropPorUnidad.BtnAceptarClick(Sender: TObject);

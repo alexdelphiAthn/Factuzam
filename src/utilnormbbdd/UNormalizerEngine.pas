@@ -299,6 +299,8 @@ begin
   AddSuf('fza_tarifas',                         'TAR');
   AddSuf('fza_tarifas_cambios',                 'TARC');
   AddSuf('fza_tarifas_cambios_lineas',          'TARCLIN');
+  AddSuf('fza_tarifas_descuento_condiciones',   'TARDCO');
+  AddSuf('fza_tarifas_descuento_valores',       'TARDVA');
   AddSuf('fza_tipos_documentos',                'TD');
   AddSuf('fza_tipos_efecto',                    'TEFE');
   AddSuf('fza_traducciones',                    'TRAD');
@@ -373,6 +375,10 @@ begin
   AddOwn('fza_tarifas_cambios',                ['TARIFA','CAMBIO']);
   AddOwn('fza_tarifas_cambios_lineas',
          ['TARIFA','CAMBIO','LINEA']);
+  AddOwn('fza_tarifas_descuento_condiciones',
+         ['TARIFA','DESCUENTO','CONDICION']);
+  AddOwn('fza_tarifas_descuento_valores',
+         ['TARIFA','DESCUENTO','VALOR']);
   AddOwn('fza_traducciones',                    ['TRADUCCION']);
   AddOwn('fza_articulos_proveedores',          ['PROVEEDOR']);
   AddOwn('fza_articulos_skus_costes',          ['COSTE']);

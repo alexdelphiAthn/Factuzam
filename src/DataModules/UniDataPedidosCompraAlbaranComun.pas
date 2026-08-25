@@ -42,7 +42,8 @@ uses
   System.SysUtils, Data.DB, DBAccess,
   inLibAlbaranesCompraMovimientos,
   UniDataAlbaranesCompraMovimientos,
-  UniDataPedidosCompraPendientes;
+  UniDataPedidosCompraPendientes,
+  UniDataPrestaShopEncolado;
 function BloquearPedidoCompra(
   AConexion: TUniConnection;
   const ASeriePedido, ANumeroPedido: string): Boolean;
@@ -269,6 +270,16 @@ begin
       Query.ParamByName('s').AsString := ASerieAlbaran;
       Query.ParamByName('n').AsString := ANumeroAlbaran;
       Query.ExecSQL;
+      if (Query.RowsAffected > 0) and
+         PropiedadAfectaDescuentoPrestaShop(
+           AConexion,
+           'TEMPORADA',
+           AUsuario) then
+        EncolarTodosWebPrestaShop(
+          AConexion,
+          True,
+          False,
+          AUsuario);
     finally
       FreeAndNil(Query);
     end;

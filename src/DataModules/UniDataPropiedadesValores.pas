@@ -26,19 +26,82 @@ type
     unqryPropiedades: TUniQuery;
     dsPropiedades: TDataSource;
     procedure DataModuleCreate(Sender: TObject);
+    procedure unqryTablaGAfterDelete(DataSet: TDataSet);
+    procedure unqryTablaGAfterPost(DataSet: TDataSet);
+    procedure unqryTablaGBeforeDelete(DataSet: TDataSet);
+    procedure unqryTablaGBeforePost(DataSet: TDataSet);
   private
-    { Private declarations }
+    FEncolarPreciosPrestaShop: Boolean;
   public
     { Public declarations }
   end;
 
 implementation
 
+uses
+  UniDataPrestaShopEncolado;
+
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+procedure TdmPropiedadesValores.unqryTablaGAfterDelete(
+  DataSet: TDataSet);
+begin
+  try
+    if FEncolarPreciosPrestaShop then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPreciosPrestaShop := False;
+  end;
+end;
+
+procedure TdmPropiedadesValores.unqryTablaGAfterPost(
+  DataSet: TDataSet);
+begin
+  try
+    if FEncolarPreciosPrestaShop or
+       ValorPropiedadAfectaDescuentoPrestaShop(
+         TUniQuery(DataSet).Connection,
+         DataSet.FieldByName('ID_PV_ARTPROP').AsInteger,
+         IdentidadSesion.Usuario) then
+      EncolarTodosWebPrestaShop(
+        TUniQuery(DataSet).Connection,
+        True,
+        False,
+        IdentidadSesion.Usuario);
+  finally
+    FEncolarPreciosPrestaShop := False;
+  end;
+end;
+
+procedure TdmPropiedadesValores.unqryTablaGBeforePost(
+  DataSet: TDataSet);
+begin
+  inherited;
+  FEncolarPreciosPrestaShop :=
+    (DataSet.State = dsEdit) and
+    ValorPropiedadAfectaDescuentoPrestaShop(
+      TUniQuery(DataSet).Connection,
+      DataSet.FieldByName('ID_PV_ARTPROP').AsInteger,
+      IdentidadSesion.Usuario);
+end;
+
+procedure TdmPropiedadesValores.unqryTablaGBeforeDelete(
+  DataSet: TDataSet);
+begin
+  FEncolarPreciosPrestaShop :=
+    ValorPropiedadAfectaDescuentoPrestaShop(
+      TUniQuery(DataSet).Connection,
+      DataSet.FieldByName('ID_PV_ARTPROP').AsInteger,
+      IdentidadSesion.Usuario);
+end;
 
 procedure TdmPropiedadesValores.DataModuleCreate(Sender: TObject);
 begin

@@ -25,7 +25,7 @@ implementation
 
 uses
   System.SysUtils, System.Generics.Collections,
-  inLibUser, UniDataPrestaShopEncolado;
+  UniDataPrestaShopEncolado;
 
 type
   TRepositorioPropiedadesArticuloUniDAC = class(
@@ -63,9 +63,11 @@ type
       AIdValor: Integer;
       const AValorLibre, AUsuario: string);
     procedure EliminarPropiedad(
-      const ACodigoArticulo, ACodigoPropiedad: string);
+      const ACodigoArticulo, ACodigoPropiedad,
+      AUsuario: string);
     procedure EliminarValorUnidad(
-      const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string);
+      const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad,
+      AUsuario: string);
   end;
 
 constructor TRepositorioPropiedadesArticuloUniDAC.Create(
@@ -416,7 +418,7 @@ begin
 end;
 
 procedure TRepositorioPropiedadesArticuloUniDAC.EliminarPropiedad(
-  const ACodigoArticulo, ACodigoPropiedad: string);
+  const ACodigoArticulo, ACodigoPropiedad, AUsuario: string);
 var
   oConsulta: TUniQuery;
 begin
@@ -434,14 +436,15 @@ begin
         FConexion,
         ACodigoArticulo,
         ACodigoPropiedad,
-        IdentidadSesion.Usuario);
+        AUsuario);
   finally
     FreeAndNil(oConsulta);
   end;
 end;
 
 procedure TRepositorioPropiedadesArticuloUniDAC.EliminarValorUnidad(
-  const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad: string);
+  const ACodigoArticulo, ACodigoPropiedad, ACodigoUnidad,
+  AUsuario: string);
 var
   oConsulta: TUniQuery;
 begin
@@ -461,7 +464,7 @@ begin
         FConexion,
         ACodigoArticulo,
         ACodigoPropiedad,
-        IdentidadSesion.Usuario);
+        AUsuario);
   finally
     FreeAndNil(oConsulta);
   end;

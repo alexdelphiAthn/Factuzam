@@ -5850,6 +5850,73 @@ INSERT INTO `fza_tarifas` VALUES ('3','S',NULL,'REBAJAS','S',NULL,NULL,NULL,NULL
 UNLOCK TABLES;
 
 --
+-- Table structure for table `fza_tarifas_descuento_condiciones`
+--
+
+DROP TABLE IF EXISTS `fza_tarifas_descuento_condiciones`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fza_tarifas_descuento_condiciones` (
+  `CODIGO_TAR_TARDCO` varchar(10) COLLATE utf8mb4_spanish_ci NOT NULL,
+  `MODO_TARDCO` varchar(20) COLLATE utf8mb4_spanish_ci NOT NULL,
+  `CODIGO_PROP_TARDCO` varchar(20) COLLATE utf8mb4_spanish_ci DEFAULT NULL,
+  `POLITICA_SIN_VALOR_TARDCO` varchar(20) COLLATE utf8mb4_spanish_ci NOT NULL DEFAULT 'NO_APLICAR',
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT current_timestamp(),
+  `USUARIO_ALTA` varchar(100) COLLATE utf8mb4_spanish_ci NOT NULL,
+  `USUARIO_MODIF` varchar(100) COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_TAR_TARDCO`),
+  KEY `IDX_TARDCO_PROPIEDAD` (`CODIGO_PROP_TARDCO`),
+  CONSTRAINT `FK_TARDCO_TARIFA` FOREIGN KEY (`CODIGO_TAR_TARDCO`) REFERENCES `fza_tarifas` (`CODIGO_TAR_ARTTAR`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_TARDCO_PROPIEDAD` FOREIGN KEY (`CODIGO_PROP_TARDCO`) REFERENCES `fza_propiedades` (`CODIGO_PROP_ARTPROP`) ON UPDATE CASCADE,
+  CONSTRAINT `CHK_TARDCO_MODO` CHECK (`MODO_TARDCO` in ('TODOS','SOLO_SI','TODOS_EXCEPTO')),
+  CONSTRAINT `CHK_TARDCO_POLITICA` CHECK (`POLITICA_SIN_VALOR_TARDCO` = 'NO_APLICAR'),
+  CONSTRAINT `CHK_TARDCO_CONFIGURACION` CHECK (`MODO_TARDCO` = 'TODOS' and `CODIGO_PROP_TARDCO` is null or `MODO_TARDCO` in ('SOLO_SI','TODOS_EXCEPTO') and `CODIGO_PROP_TARDCO` is not null)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fza_tarifas_descuento_condiciones`
+--
+-- ORDER BY:  `CODIGO_TAR_TARDCO`
+
+LOCK TABLES `fza_tarifas_descuento_condiciones` WRITE;
+/*!40000 ALTER TABLE `fza_tarifas_descuento_condiciones` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fza_tarifas_descuento_condiciones` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fza_tarifas_descuento_valores`
+--
+
+DROP TABLE IF EXISTS `fza_tarifas_descuento_valores`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fza_tarifas_descuento_valores` (
+  `CODIGO_TAR_TARDVA` varchar(10) COLLATE utf8mb4_spanish_ci NOT NULL,
+  `ID_PV_TARDVA` int(11) NOT NULL,
+  `INSTANTE_MODIF` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  `INSTANTE_ALTA` timestamp NOT NULL DEFAULT current_timestamp(),
+  `USUARIO_ALTA` varchar(100) COLLATE utf8mb4_spanish_ci NOT NULL,
+  `USUARIO_MODIF` varchar(100) COLLATE utf8mb4_spanish_ci NOT NULL,
+  PRIMARY KEY (`CODIGO_TAR_TARDVA`,`ID_PV_TARDVA`),
+  KEY `IDX_TARDVA_VALOR` (`ID_PV_TARDVA`),
+  CONSTRAINT `FK_TARDVA_CONDICION` FOREIGN KEY (`CODIGO_TAR_TARDVA`) REFERENCES `fza_tarifas_descuento_condiciones` (`CODIGO_TAR_TARDCO`) ON DELETE CASCADE ON UPDATE CASCADE,
+  CONSTRAINT `FK_TARDVA_VALOR` FOREIGN KEY (`ID_PV_TARDVA`) REFERENCES `fza_propiedades_valores` (`ID_PV_ARTPROP`) ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_spanish_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fza_tarifas_descuento_valores`
+--
+-- ORDER BY:  `CODIGO_TAR_TARDVA`,`ID_PV_TARDVA`
+
+LOCK TABLES `fza_tarifas_descuento_valores` WRITE;
+/*!40000 ALTER TABLE `fza_tarifas_descuento_valores` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fza_tarifas_descuento_valores` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
 -- Table structure for table `fza_tarifas_cambios`
 --
 

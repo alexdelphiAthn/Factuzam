@@ -339,14 +339,58 @@
     end
   end
   inherited pButtonRightBar: TPanel
-    object btnArchivarDTR: TcxButton
-      Left = 1
-      Top = 120
-      Width = 138
-      Height = 34
-      Caption = '&Archivar'
+    object pnlLateralDTR: TPanel
+      Left = 0
+      Top = 110
+      Width = 140
+      Height = 250
+      Align = alClient
+      BevelOuter = bvNone
       TabOrder = 2
-      OnClick = btnArchivarDTRClick
+      object btnArchivarDTR: TcxButton
+        Left = 0
+        Top = 216
+        Width = 140
+        Height = 34
+        Align = alBottom
+        Caption = '&Archivar'
+        TabOrder = 1
+        OnClick = btnArchivarDTRClick
+      end
+      object pnlFotoArticuloActivoDTR: TPanel
+        Left = 0
+        Top = 0
+        Width = 140
+        Height = 216
+        Align = alClient
+        BevelOuter = bvLowered
+        TabOrder = 0
+        object lblFotoArticuloActivoDTR: TcxLabel
+          Left = 1
+          Top = 1
+          Align = alTop
+          Caption = 'Art'#237'culo activo'
+          Properties.Alignment.Horz = taCenter
+          Properties.Alignment.Vert = taVCenter
+          Transparent = True
+          Height = 24
+          Width = 138
+          AnchorX = 70
+          AnchorY = 13
+        end
+        object imgFotoArticuloActivoDTR: TImage
+          Left = 1
+          Top = 25
+          Width = 138
+          Height = 190
+          Hint = 'Foto del art'#237'culo / SKU seleccionado'
+          Align = alClient
+          Center = True
+          Proportional = True
+          ShowHint = True
+          Stretch = True
+        end
+      end
     end
   end
   object pmEnviarDTR: TPopupMenu

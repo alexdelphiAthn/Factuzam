@@ -283,6 +283,8 @@ uses
   inMtoIvasGrupos in 'src\Forms\inMtoIvasGrupos.pas' {frmMtoIvasGrupos},
   inMtoProveedores in 'src\Forms\inMtoProveedores.pas' {frmMtoProveedores},
   inMtoTarifas in 'src\Forms\inMtoTarifas.pas' {frmMtoTarifas},
+  inLibTarifasDescuentoCondicionesPersistenciaIntf in
+    'src\Lib\inLibTarifasDescuentoCondicionesPersistenciaIntf.pas',
   inMtoUsuarios in 'src\Forms\inMtoUsuarios.pas' {frmMtoUsuarios},
   inMtoUsuariosPerfiles in 'src\Forms\inMtoUsuariosPerfiles.pas' {frmMtoUsuariosPerfiles},
   inMtoPermisos in 'src\Forms\inMtoPermisos.pas' {frmMtoPermisos},
@@ -521,6 +523,8 @@ uses
   UniDataFiltros in 'src\DataModules\UniDataFiltros.pas' {dmFiltros: TDataModule},
   UniDataProveedores in 'src\DataModules\UniDataProveedores.pas' {dmProveedores: TDataModule},
   UniDataTarifas in 'src\DataModules\UniDataTarifas.pas' {dmTarifas: TDataModule},
+  UniDataTarifasDescuentoCondicionesRepositorio in
+    'src\DataModules\UniDataTarifasDescuentoCondicionesRepositorio.pas',
   UniDataUsuarios in 'src\DataModules\UniDataUsuarios.pas' {dmUsuarios: TDataModule},
   UniDataUsuariosPerfiles in 'src\DataModules\UniDataUsuariosPerfiles.pas' {dmUsuariosPerfiles: TDataModule},
   UniDataPermisosGrupo in 'src\DataModules\UniDataPermisosGrupo.pas' {dmPermisosGrupo: TDataModule},
@@ -950,6 +954,8 @@ uses
     'src\Lib\inLibPrestaShopAltaArticuloIntf.pas',
   UniDataPrestaShopAltaArticulo in
     'src\DataModules\UniDataPrestaShopAltaArticulo.pas',
+  UniDataPrestaShopPrecioCondicional in
+    'src\DataModules\UniDataPrestaShopPrecioCondicional.pas',
   inLibPrestaShopColaIntf in 'src\Lib\inLibPrestaShopColaIntf.pas',
   inLibPrestaShopColaSenal in 'src\Lib\inLibPrestaShopColaSenal.pas',
   inLibPrestaShopCierre in 'src\Lib\inLibPrestaShopCierre.pas',

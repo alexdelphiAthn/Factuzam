@@ -39,7 +39,8 @@ implementation
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   Data.DB, DBAccess, UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
-  UniDataPedidosCompraAlbaranComun, UniDataPedidosCompraPendientes;
+  UniDataPedidosCompraAlbaranComun, UniDataPedidosCompraPendientes,
+  inLibPrestaShopColaSenal;
 
 type
   TCreacionAlbaranPedidoCompraUniDAC = class(
@@ -644,7 +645,10 @@ begin
     if EsTransaccionPropia then
     begin
       if Result then
-        FConexion.Commit
+      begin
+        FConexion.Commit;
+        SolicitarProcesadoPrestaShop;
+      end
       else
         FConexion.Rollback;
     end;
@@ -677,7 +681,10 @@ begin
     if EsTransaccionPropia then
     begin
       if Result then
-        FConexion.Commit
+      begin
+        FConexion.Commit;
+        SolicitarProcesadoPrestaShop;
+      end
       else
         FConexion.Rollback;
     end;

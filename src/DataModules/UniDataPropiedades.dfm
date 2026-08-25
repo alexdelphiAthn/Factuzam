@@ -1,6 +1,10 @@
 ﻿inherited dmPropiedades: TdmPropiedades
   PixelsPerInch = 120
   inherited unqryTablaG: TUniQuery
+    BeforePost = unqryTablaGBeforePost
+    AfterPost = unqryTablaGAfterPost
+    BeforeDelete = unqryTablaGBeforeDelete
+    AfterDelete = unqryTablaGAfterDelete
     SQLInsert.Strings = (
       'INSERT INTO `fza_propiedades`'
       
@@ -117,6 +121,10 @@
       'WHERE ID_PROP_PV = :CODIGO_PROP_ARTPROP'
       'ORDER BY PV')
     MasterSource = frmMtoPropiedades.dsTablaG
+    BeforePost = unqryValoresBeforePost
+    AfterPost = unqryValoresAfterPost
+    BeforeDelete = unqryValoresBeforeDelete
+    AfterDelete = unqryValoresAfterDelete
     Left = 248
     Top = 24
   end

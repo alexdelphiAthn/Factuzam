@@ -43,8 +43,9 @@ type
       AConsultaBusca, AConsultaMarca, AConsultaUnico: TUniQuery);
     function AplicarLineaTarifa(
       AConsultaBusca, AConsultaExec, AConsultaMarca,
-      AConsultaUnico: TUniQuery): Boolean;
-    procedure AplicarVentanaDescuento(AConsulta: TUniQuery);
+      AConsultaUnico: TUniQuery;
+      out AEncoloPrestaShop: Boolean): Boolean;
+    function AplicarVentanaDescuento(AConsulta: TUniQuery): Boolean;
     procedure MarcarSesionAplicada(AConsulta: TUniQuery);
     procedure ConfigurarQueries;
   public
@@ -380,7 +381,8 @@ end;
 
 function TdmTarifasCambios.AplicarLineaTarifa(
   AConsultaBusca, AConsultaExec, AConsultaMarca,
-  AConsultaUnico: TUniQuery): Boolean;
+  AConsultaUnico: TUniQuery;
+  out AEncoloPrestaShop: Boolean): Boolean;
 var
   EsInsertar: Boolean;
   iUnico: Integer;
@@ -389,6 +391,7 @@ var
   sTarifa: string;
 begin
   Result := False;
+  AEncoloPrestaShop := False;
   if SameText(unqryLineas.FieldByName(
     'ESAPLICAR_TARCLIN').AsString, 'S') then
   begin
@@ -468,21 +471,30 @@ begin
     AConsultaMarca.ParamByName('ID').AsInteger :=
       unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
     AConsultaMarca.Execute;
-    EncolarPrecioPrestaShop(
-      AConsultaExec.Connection,
-      sArticulo,
-      IdentidadSesion.Usuario);
+    if SameText(
+      Trim(sTarifa),
+      LeerCodigoTarifaPrestaShop(
+        AConsultaExec.Connection,
+        IdentidadSesion.Usuario)) then
+    begin
+      EncolarPrecioPrestaShop(
+        AConsultaExec.Connection,
+        sArticulo,
+        IdentidadSesion.Usuario);
+      AEncoloPrestaShop := True;
+    end;
     Result := True;
   end;
 end;
 
-procedure TdmTarifasCambios.AplicarVentanaDescuento(
-  AConsulta: TUniQuery);
+function TdmTarifasCambios.AplicarVentanaDescuento(
+  AConsulta: TUniQuery): Boolean;
 var
   fDesde: TField;
   fHasta: TField;
   sTarifa: string;
 begin
+  Result := False;
   fDesde := unqryTablaG.FindField('FECHA_DESDE_DTO_TARC');
   fHasta := unqryTablaG.FindField('FECHA_HASTA_DTO_TARC');
   if Assigned(fDesde) and Assigned(fHasta) and
@@ -510,11 +522,14 @@ begin
       LeerCodigoTarifaPrestaShop(
         AConsulta.Connection,
         IdentidadSesion.Usuario)) then
+    begin
       EncolarTodosWebPrestaShop(
         AConsulta.Connection,
         True,
         False,
         IdentidadSesion.Usuario);
+      Result := True;
+    end;
   end;
 end;
 
@@ -535,7 +550,9 @@ end;
 function TdmTarifasCambios.AplicarSesionActual(
   out AMensaje: string): Integer;
 var
+  EncoloLineaPrestaShop: Boolean;
   EsTransaccionPropia: Boolean;
+  HayEncoladoPrestaShop: Boolean;
   TransaccionConfirmada: Boolean;
   oConexion: TUniConnection;
   qryBusca: TUniQuery;
@@ -570,6 +587,7 @@ begin
       qryUnico.Connection := oConexion;
       ConfigurarConsultasAplicacion(qryBusca, qryMarca, qryUnico);
       EsTransaccionPropia := not oConexion.InTransaction;
+      HayEncoladoPrestaShop := False;
       TransaccionConfirmada := False;
       if EsTransaccionPropia then
         oConexion.StartTransaction;
@@ -580,14 +598,18 @@ begin
           while not unqryLineas.Eof do
           begin
             if AplicarLineaTarifa(
-              qryBusca, qryExec, qryMarca, qryUnico) then
+              qryBusca, qryExec, qryMarca, qryUnico,
+              EncoloLineaPrestaShop) then
               Inc(Result);
+            HayEncoladoPrestaShop :=
+              HayEncoladoPrestaShop or EncoloLineaPrestaShop;
             unqryLineas.Next;
           end;
         finally
           unqryLineas.EnableControls;
         end;
-        AplicarVentanaDescuento(qryExec);
+        HayEncoladoPrestaShop :=
+          AplicarVentanaDescuento(qryExec) or HayEncoladoPrestaShop;
         MarcarSesionAplicada(qryExec);
         if EsTransaccionPropia then
         begin
@@ -608,7 +630,7 @@ begin
             raise;
         end;
       end;
-      if TransaccionConfirmada then
+      if TransaccionConfirmada and HayEncoladoPrestaShop then
         SolicitarProcesadoPrestaShop;
       unqryTablaG.Refresh;
       unqryLineas.Refresh;
