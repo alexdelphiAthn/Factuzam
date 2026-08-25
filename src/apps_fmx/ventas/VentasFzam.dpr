@@ -18,6 +18,7 @@ program VentasFzam;
 uses
   System.StartUpCopy,
   FMX.Forms,
+  ConfiguracionClienteMovil in '..\ConfiguracionClienteMovil.pas',
   VentasModelo in 'VentasModelo.pas',
   VentasConfig in 'VentasConfig.pas',
   VentasApi in 'VentasApi.pas',

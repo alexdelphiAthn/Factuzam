@@ -135,6 +135,115 @@ uses
   System.UITypes, System.StrUtils,
   UConfigEditor, UFR3SQLDumpPatcher;
 
+const
+  cMascaraSql = '*.sql';
+  cMascaraCsv = '*.csv';
+  cMascaraTexto = '*.txt';
+  cMascaraZip = '*.zip';
+  cMascaraTodosArchivos = '*.*';
+  cExtensionPas = '.pas';
+  cExtensionDfm = '.dfm';
+  cExtensionBackup = '.bak';
+  cPatronParametrosOld = 'Old_*';
+  cCampoKeyUsuper = 'KEY_USUPER';
+  cFormularioPrintFac = 'frmPrintFac';
+  cFormularioPrintRecFac = 'frmPrintRecFac';
+  cArchivoSqlReemplazo = '03_reemplazar_en_resto_sql.sql';
+  cArchivoScriptCambios = 'aplicar_cambios.ps1';
+  cArchivoPlanCambios = 'aplicar_cambios.csv';
+  cArchivoLeemeCambios = 'LEEME.txt';
+  cOpcionDryRun = '-DryRun';
+
+resourcestring
+  SFiltroArchivosSql =
+    'Archivos SQL (%s)|%s|Todos los archivos (%s)|%s';
+  SFiltroArchivosCsv =
+    'Archivos CSV (%s)|%s|Todos los archivos (%s)|%s';
+  SFiltroArchivosTexto =
+    'Texto (%s)|%s|Todos los archivos (%s)|%s';
+  SFiltroArchivosZip =
+    'Archivos ZIP (%s)|%s|Todos los archivos (%s)|%s';
+  STituloSeleccionarVolcadoSql = 'Selecciona el volcado SQL original';
+  STituloSeleccionarPlanCsv = 'Selecciona el CSV de plan ya editado';
+  STituloSeleccionarCarpetaEntregables =
+    'Selecciona la carpeta donde guardar los entregables';
+  STituloSeleccionarCarpetaProyecto =
+    'Selecciona una carpeta del proyecto Delphi';
+  STituloSeleccionarDumpOriginal =
+    'Selecciona el dump SQL ORIGINAL (no se modificará)';
+  STituloArchivoSalidaDump =
+    'Archivo de salida (NO debe coincidir con la entrada)';
+  STituloExportarInformeAuditoria = 'Exportar informe de auditoría';
+  STituloGuardarScriptCambios =
+    'Guardar script de aplicación de cambios';
+  SNombreArchivoCasosRevisar = 'casos_a_revisar.txt';
+  SNombreArchivoAplicarCambios = 'aplicar_cambios.zip';
+  SErrorCargarArchivo = 'No se pudo cargar el archivo: %s';
+  SErrorCargarCsv = 'No se pudo cargar el CSV: %s';
+  SAvisoCargarSqlPrimero = 'Carga un fichero SQL primero.';
+  SInfoExportacionCompletada =
+    'Exportación completada (%d ficheros) en:'#13#10'%s';
+  SErrorExportar = 'Error al exportar: %s';
+  SPreguntaAplicarReemplazosCodigo =
+    'Se modificarán los archivos %s/%s de las carpetas indicadas.'#13#10 +
+    'Se creará una copia de seguridad %s de cada uno ' +
+    '(si no existe ya).'#13#10#13#10 +
+    '¿Continuar?';
+  SInfoReemplazosCodigoAplicados =
+    'Reemplazos aplicados a %d ficheros.'#13#10 +
+    'Se han creado backups %s junto a cada original.';
+  SAvisoSinCarpetasEscaneo =
+    'No hay carpetas que escanear. Añade al menos una.';
+  SInfoSinParametrosDesincronizados =
+    'No se han encontrado parámetros %s desincronizados.';
+  SPreguntaCorregirParametrosDesincronizados =
+    'Se han detectado parámetros %s desincronizados en los %s.'#13#10 +
+    'Se reescribirán para que coincidan con el nombre actual de la columna.' +
+    #13#10 +
+    'Se creará un backup %s de cada archivo modificado ' +
+    '(si no existe).'#13#10#13#10 +
+    '¿Aplicar los cambios?';
+  SInfoSaneadoParametrosCompletado =
+    'Saneado completado.'#13#10 +
+    '  Ficheros modificados: %d'#13#10 +
+    '  Parámetros corregidos: %d'#13#10#13#10 +
+    'Se han creado backups %s junto a cada original.';
+  SErrorArchivoSalidaCoincide =
+    'El archivo de salida no puede coincidir con el de entrada.';
+  SAvisoSinPlanRenombrado =
+    'No hay plan de renombrado cargado.'#13#10 +
+    'Genera el plan primero desde la pestaña SQL.';
+  SPreguntaParchearDump =
+    'Entrada (intacta):'#13#10'  %s'#13#10#13#10 +
+    'Salida (se creará/sobreescribirá):'#13#10'  %s'#13#10#13#10 +
+    'Solo se procesarán filas con %s en (%s, %s).'#13#10#13#10 +
+    '¿Continuar?';
+  SInfoDumpSinCambios =
+    'Procesado correctamente, sin cambios necesarios.'#13#10 +
+    'El archivo de salida es una copia 1:1 de la entrada:'#13#10 +
+    '  %s';
+  SInfoDumpParcheado =
+    'Dump parcheado correctamente.'#13#10 +
+    '  Filas con cambios:  %d'#13#10 +
+    '  Salida:             %s';
+  SInfoSqlReemplazoGenerado =
+    'SQL de reemplazo generado.'#13#10 +
+    'Se incluirá en la exportación como %s.';
+  SAvisoSinDatosAuditoria =
+    'No hay datos de auditoría que exportar. ' +
+    'Pulsa "Auditar código" primero.';
+  SInfoInformeAuditoriaExportado = 'Informe exportado a:'#13#10'%s';
+  SAvisoSinCambiosPlan =
+    'No hay cambios en el plan. Carga el SQL o un CSV de plan primero.';
+  SInfoZipCambiosGenerado =
+    'ZIP generado en:'#13#10'%s'#13#10#13#10 +
+    'Contiene:'#13#10 +
+    '  - %s (script PowerShell)'#13#10 +
+    '  - %s (%d pares de renombrado)'#13#10 +
+    '  - %s (instrucciones)'#13#10#13#10 +
+    'Antes de aplicar de verdad, ejecuta primero con %s.';
+  SErrorGenerarScriptCambios = 'Error al generar el script: %s';
+
 procedure TFormNormalizer.FormCreate(Sender: TObject);
 begin
   Caption  := 'Factuzam Normalizer';
@@ -313,9 +422,11 @@ var
   Plan:         TPlanPairList;
   ChangedCount, i, Changed: Integer;
 begin
-  OpenDialog.Filter     := 'Archivos SQL (*.sql)|*.sql|Todos los archivos (*.*)|*.*';
+  OpenDialog.Filter     := Format(SFiltroArchivosSql,
+    [cMascaraSql, cMascaraSql,
+     cMascaraTodosArchivos, cMascaraTodosArchivos]);
   OpenDialog.DefaultExt := 'sql';
-  OpenDialog.Title      := 'Selecciona el volcado SQL original';
+  OpenDialog.Title      := STituloSeleccionarVolcadoSql;
   if not OpenDialog.Execute then Exit;
 
   Screen.Cursor := crHourGlass;
@@ -330,7 +441,7 @@ begin
       on E: Exception do
       begin
         Log('[ERROR] Cargando SQL: ' + E.Message);
-        MessageDlg('No se pudo cargar el archivo: ' + E.Message,
+        MessageDlg(Format(SErrorCargarArchivo, [E.Message]),
                    mtError, [mbOK], 0);
         Exit;
       end;
@@ -403,9 +514,11 @@ procedure TFormNormalizer.btnLoadCSVClick(Sender: TObject);
 var
   i, ChangedCount: Integer;
 begin
-  OpenDialog.Filter     := 'Archivos CSV (*.csv)|*.csv|Todos los archivos (*.*)|*.*';
+  OpenDialog.Filter     := Format(SFiltroArchivosCsv,
+    [cMascaraCsv, cMascaraCsv,
+     cMascaraTodosArchivos, cMascaraTodosArchivos]);
   OpenDialog.DefaultExt := 'csv';
-  OpenDialog.Title      := 'Selecciona el CSV de plan ya editado';
+  OpenDialog.Title      := STituloSeleccionarPlanCsv;
   if not OpenDialog.Execute then Exit;
 
   try
@@ -423,7 +536,7 @@ begin
     on E: Exception do
     begin
       Log('[ERROR] Cargando CSV: ' + E.Message);
-      MessageDlg('No se pudo cargar el CSV: ' + E.Message, mtError, [mbOK], 0);
+      MessageDlg(Format(SErrorCargarCsv, [E.Message]), mtError, [mbOK], 0);
     end;
   end;
 end;
@@ -521,7 +634,7 @@ var
 begin
   if FSourceSQL = '' then
   begin
-    MessageDlg('Carga un fichero SQL primero.', mtWarning, [mbOK], 0);
+    MessageDlg(SAvisoCargarSqlPrimero, mtWarning, [mbOK], 0);
     Exit;
   end;
   Screen.Cursor := crHourGlass;
@@ -596,7 +709,7 @@ begin
   with TFileOpenDialog.Create(nil) do
   try
     Options := [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist];
-    Title   := 'Selecciona la carpeta donde guardar los entregables';
+    Title   := STituloSeleccionarCarpetaEntregables;
     if not Execute then Exit;
     Folder := FileName;
   finally
@@ -742,14 +855,14 @@ begin
     end;
 
     Log(Format('Exportados %d ficheros a %s', [ExportedFiles, Folder]));
-    MessageDlg(Format('Exportación completada (%d ficheros) en:'#13#10'%s',
+    MessageDlg(Format(SInfoExportacionCompletada,
       [ExportedFiles, Folder]),
       mtInformation, [mbOK], 0);
   except
     on E: Exception do
     begin
       Log('[ERROR] Exportando: ' + E.Message);
-      MessageDlg('Error al exportar: ' + E.Message, mtError, [mbOK], 0);
+      MessageDlg(Format(SErrorExportar, [E.Message]), mtError, [mbOK], 0);
     end;
   end;
 end;
@@ -777,7 +890,7 @@ begin
   with TFileOpenDialog.Create(nil) do
   try
     Options := [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist];
-    Title   := 'Selecciona una carpeta del proyecto Delphi';
+    Title   := STituloSeleccionarCarpetaProyecto;
     if not Execute then Exit;
     Folder := FileName;
   finally
@@ -829,9 +942,8 @@ var
   Stats: TFileChangeList;
 begin
   if MessageDlg(
-       'Se modificarán los archivos .pas/.dfm de las carpetas indicadas.'#13#10 +
-       'Se creará una copia de seguridad .bak de cada uno (si no existe ya).'#13#10#13#10 +
-       '¿Continuar?',
+       Format(SPreguntaAplicarReemplazosCodigo,
+         [cExtensionPas, cExtensionDfm, cExtensionBackup]),
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Stats := TFileChangeList.Create;
@@ -841,8 +953,8 @@ begin
     FProjectScanner.SetRenamePlan(Plan);
     FProjectScanner.ApplyReplacements(Stats);
     Log(Format('Reemplazos aplicados a %d ficheros.', [Stats.Count]));
-    MessageDlg(Format('Reemplazos aplicados a %d ficheros.'#13#10 +
-      'Se han creado backups .bak junto a cada original.', [Stats.Count]),
+    MessageDlg(Format(SInfoReemplazosCodigoAplicados,
+      [Stats.Count, cExtensionBackup]),
       mtInformation, [mbOK], 0);
     FProjectScanner.Scan(FCodeMatches);
     RefreshGridCodeMatches;
@@ -863,7 +975,7 @@ var
 begin
   if ListBoxFolders.Items.Count = 0 then
   begin
-    MessageDlg('No hay carpetas que escanear. Añade al menos una.',
+    MessageDlg(SAvisoSinCarpetasEscaneo,
       mtWarning, [mbOK], 0);
     Exit;
   end;
@@ -883,7 +995,8 @@ begin
     if Fixes.Count = 0 then
     begin
       Log('No hay parámetros Old_* desincronizados. Nada que sanear.');
-      MessageDlg('No se han encontrado parámetros Old_* desincronizados.',
+      MessageDlg(Format(SInfoSinParametrosDesincronizados,
+        [cPatronParametrosOld]),
         mtInformation, [mbOK], 0);
       Exit;
     end;
@@ -907,10 +1020,8 @@ begin
 
   // Confirmación antes de tocar disco
   if MessageDlg(
-       'Se han detectado parámetros Old_* desincronizados en los .dfm.'#13#10 +
-       'Se reescribirán para que coincidan con el nombre actual de la columna.'#13#10 +
-       'Se creará un backup .bak de cada archivo modificado (si no existe).'#13#10#13#10 +
-       '¿Aplicar los cambios?',
+       Format(SPreguntaCorregirParametrosDesincronizados,
+         [cPatronParametrosOld, cExtensionDfm, cExtensionBackup]),
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
   begin
     Log('Cancelado por el usuario. No se ha modificado nada.');
@@ -925,12 +1036,8 @@ begin
     FProjectScanner.FixOldParameters(Stats, Fixes);
     Log(Format('Saneado completado: %d fichero(s) modificado(s), %d parámetro(s) corregido(s).',
       [Stats.Count, Fixes.Count]));
-    MessageDlg(Format(
-      'Saneado completado.'#13#10 +
-      '  Ficheros modificados: %d'#13#10 +
-      '  Parámetros corregidos: %d'#13#10#13#10 +
-      'Se han creado backups .bak junto a cada original.',
-      [Stats.Count, Fixes.Count]),
+    MessageDlg(Format(SInfoSaneadoParametrosCompletado,
+      [Stats.Count, Fixes.Count, cExtensionBackup]),
       mtInformation, [mbOK], 0);
   finally
     Stats.Free;
@@ -957,8 +1064,10 @@ begin
   // 1) Pedir archivo de ENTRADA (dump original)
   OpenDlg := TOpenDialog.Create(Self);
   try
-    OpenDlg.Title  := 'Selecciona el dump SQL ORIGINAL (no se modificará)';
-    OpenDlg.Filter := 'Archivos SQL (*.sql)|*.sql|Todos|*.*';
+    OpenDlg.Title  := STituloSeleccionarDumpOriginal;
+    OpenDlg.Filter := Format(SFiltroArchivosSql,
+      [cMascaraSql, cMascaraSql,
+       cMascaraTodosArchivos, cMascaraTodosArchivos]);
     if not OpenDlg.Execute then Exit;
     InputFile := OpenDlg.FileName;
   finally
@@ -977,8 +1086,10 @@ begin
   // 3) Pedir archivo de SALIDA
   SaveDlg := TSaveDialog.Create(Self);
   try
-    SaveDlg.Title       := 'Archivo de salida (NO debe coincidir con la entrada)';
-    SaveDlg.Filter      := 'Archivos SQL (*.sql)|*.sql|Todos|*.*';
+    SaveDlg.Title       := STituloArchivoSalidaDump;
+    SaveDlg.Filter      := Format(SFiltroArchivosSql,
+      [cMascaraSql, cMascaraSql,
+       cMascaraTodosArchivos, cMascaraTodosArchivos]);
     SaveDlg.DefaultExt  := 'sql';
     SaveDlg.FileName    := DefaultOut;
     SaveDlg.Options     := SaveDlg.Options + [ofOverwritePrompt];
@@ -990,26 +1101,22 @@ begin
 
   if SameFileName(InputFile, OutputFile) then
   begin
-    MessageDlg('El archivo de salida no puede coincidir con el de entrada.',
+    MessageDlg(SErrorArchivoSalidaCoincide,
       mtError, [mbOK], 0);
     Exit;
   end;
 
   if FColumnPlan.Count = 0 then
   begin
-    MessageDlg(
-      'No hay plan de renombrado cargado.'#13#10 +
-      'Genera el plan primero desde la pestaña SQL.',
+    MessageDlg(SAvisoSinPlanRenombrado,
       mtWarning, [mbOK], 0);
     Exit;
   end;
 
   if MessageDlg(
-       Format('Entrada (intacta):'#13#10'  %s'#13#10#13#10 +
-              'Salida (se creará/sobreescribirá):'#13#10'  %s'#13#10#13#10 +
-              'Solo se procesarán filas con KEY_USUPER en (frmPrintFac, frmPrintRecFac).'#13#10#13#10 +
-              '¿Continuar?',
-              [InputFile, OutputFile]),
+       Format(SPreguntaParchearDump,
+         [InputFile, OutputFile, cCampoKeyUsuper,
+          cFormularioPrintFac, cFormularioPrintRecFac]),
        mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
 
   Plan    := BuildPlanPairList;
@@ -1029,10 +1136,7 @@ begin
 
     if not Changed then
     begin
-      MessageDlg(Format(
-        'Procesado correctamente, sin cambios necesarios.'#13#10 +
-        'El archivo de salida es una copia 1:1 de la entrada:'#13#10 +
-        '  %s', [OutputFile]),
+      MessageDlg(Format(SInfoDumpSinCambios, [OutputFile]),
         mtInformation, [mbOK], 0);
       Exit;
     end;
@@ -1054,10 +1158,7 @@ begin
     if Fixes.Count > 50 then
       Log(Format('  ...y %d más', [Fixes.Count - 50]));
 
-    MessageDlg(Format(
-      'Dump parcheado correctamente.'#13#10 +
-      '  Filas con cambios:  %d'#13#10 +
-      '  Salida:             %s',
+    MessageDlg(Format(SInfoDumpParcheado,
       [Fixes.Count, OutputFile]),
       mtInformation, [mbOK], 0);
   finally
@@ -1129,8 +1230,8 @@ begin
     Log(Format('SQL de reemplazo generado (%d reemplazos aplicados).',
       [Changed]));
     PageControl.ActivePage := tabFullSQL;
-    MessageDlg('SQL de reemplazo generado.'#13#10 +
-      'Se incluirá en la exportación como 03_reemplazar_en_resto_sql.sql.',
+    MessageDlg(Format(SInfoSqlReemplazoGenerado,
+      [cArchivoSqlReemplazo]),
       mtInformation, [mbOK], 0);
   finally
     Plan.Free;
@@ -1342,15 +1443,17 @@ var
 begin
   if FAuditMatches.Count = 0 then
   begin
-    MessageDlg('No hay datos de auditoría que exportar. Pulsa "Auditar código" primero.',
+    MessageDlg(SAvisoSinDatosAuditoria,
       mtInformation, [mbOK], 0);
     Exit;
   end;
 
-  SaveDialogAudit.Filter     := 'Texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*';
+  SaveDialogAudit.Filter     := Format(SFiltroArchivosTexto,
+    [cMascaraTexto, cMascaraTexto,
+     cMascaraTodosArchivos, cMascaraTodosArchivos]);
   SaveDialogAudit.DefaultExt := 'txt';
-  SaveDialogAudit.FileName   := 'casos_a_revisar.txt';
-  SaveDialogAudit.Title      := 'Exportar informe de auditoría';
+  SaveDialogAudit.FileName   := SNombreArchivoCasosRevisar;
+  SaveDialogAudit.Title      := STituloExportarInformeAuditoria;
   if not SaveDialogAudit.Execute then Exit;
   Path := SaveDialogAudit.FileName;
 
@@ -1368,7 +1471,7 @@ begin
     SL.SaveToFile(Path, TEncoding.UTF8);
     Log(Format('Informe de auditoría exportado: %s (%d filas)',
       [Path, FAuditMatches.Count]));
-    MessageDlg(Format('Informe exportado a:'#13#10'%s', [Path]),
+    MessageDlg(Format(SInfoInformeAuditoriaExportado, [Path]),
       mtInformation, [mbOK], 0);
   finally
     SL.Free;
@@ -1670,17 +1773,19 @@ begin
     if FColumnPlan[i].Changed then Inc(ChangedCount);
   if ChangedCount = 0 then
   begin
-    MessageDlg('No hay cambios en el plan. Carga el SQL o un CSV de plan primero.',
+    MessageDlg(SAvisoSinCambiosPlan,
       mtWarning, [mbOK], 0);
     Exit;
   end;
 
   with TSaveDialog.Create(nil) do
   try
-    Filter     := 'Archivos ZIP (*.zip)|*.zip|Todos los archivos (*.*)|*.*';
+    Filter     := Format(SFiltroArchivosZip,
+      [cMascaraZip, cMascaraZip,
+       cMascaraTodosArchivos, cMascaraTodosArchivos]);
     DefaultExt := 'zip';
-    FileName   := 'aplicar_cambios.zip';
-    Title      := 'Guardar script de aplicación de cambios';
+    FileName   := SNombreArchivoAplicarCambios;
+    Title      := STituloGuardarScriptCambios;
     if not Execute then Exit;
     ZipPath := FileName;
   finally
@@ -1692,19 +1797,15 @@ begin
     WriteApplyScriptZip(ZipPath);
     Log(Format('Script de aplicación generado: %s (%d pares)',
       [ZipPath, ChangedCount]));
-    MessageDlg(Format('ZIP generado en:'#13#10'%s'#13#10#13#10 +
-      'Contiene:'#13#10 +
-      '  - aplicar_cambios.ps1 (script PowerShell)'#13#10 +
-      '  - aplicar_cambios.csv (%d pares de renombrado)'#13#10 +
-      '  - LEEME.txt (instrucciones)'#13#10#13#10 +
-      'Antes de aplicar de verdad, ejecuta primero con -DryRun.',
-      [ZipPath, ChangedCount]),
+    MessageDlg(Format(SInfoZipCambiosGenerado,
+      [ZipPath, cArchivoScriptCambios, cArchivoPlanCambios, ChangedCount,
+       cArchivoLeemeCambios, cOpcionDryRun]),
       mtInformation, [mbOK], 0);
   except
     on E: Exception do
     begin
       Log('[ERROR] Generando script: ' + E.Message);
-      MessageDlg('Error al generar el script: ' + E.Message,
+      MessageDlg(Format(SErrorGenerarScriptCambios, [E.Message]),
         mtError, [mbOK], 0);
     end;
   end;

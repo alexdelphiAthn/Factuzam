@@ -344,6 +344,12 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosAlbaranCompra = 'Búsqueda de artículos';
+  STituloBuscarSkusAlbaranCompra = 'SKUs del artículo %s';
+  STituloBuscarEmpresasAlbaranCompra = 'Búsqueda de empresas';
+  STituloBuscarProveedoresAlbaranCompra = 'Búsqueda de proveedores';
+
 type
   TfrmMtoAlbaranesCompraInyectada = class(TfrmMtoAlbaranesCompra)
   private
@@ -418,7 +424,7 @@ begin
     else
       Result := BuscarArticuloProveedorCompra(
         FBusquedasArticulos, BusquedaVisual, sPrv,
-        'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
+        STituloBuscarArticulosAlbaranCompra, 'frmMtoDevcArtSearch', Self);
   end;
 end;
 
@@ -447,7 +453,7 @@ begin
   else
     Result := BuscarSkuArticuloCompra(
       FBusquedasArticulos, BusquedaVisual, sArt,
-      'SKUs del artículo ' + sArt,
+      Format(STituloBuscarSkusAlbaranCompra, [sArt]),
       'frmMtoAlbcSkuSearch', Self);
 end;
 
@@ -1288,7 +1294,7 @@ begin
   oConsulta := FBusquedaEmpresas.ConsultarEmpresas;
   oDatos := oConsulta.DataSet;
   Result := BusquedaVisual.EjecutarBusquedaDataSet(
-    'Búsqueda de empresas', oDatos, 'frmMtoEmpFacSearch', Self);
+    STituloBuscarEmpresasAlbaranCompra, oDatos, 'frmMtoEmpFacSearch', Self);
   if Result then
     ACodigo := oDatos.FieldByName('CODIGO_EMP_EMP').AsString;
 end;
@@ -1303,7 +1309,8 @@ begin
   oConsulta := FBusquedaProveedores.ConsultarProveedores;
   oDatos := oConsulta.DataSet;
   Result := BusquedaVisual.EjecutarBusquedaDataSet(
-    'Búsqueda de proveedores', oDatos, 'frmMtoAlbcProvSearch', Self);
+    STituloBuscarProveedoresAlbaranCompra, oDatos,
+    'frmMtoAlbcProvSearch', Self);
   if Result then
     ACodigo := oDatos.FieldByName('CODIGO_PRV_PRV').AsString;
 end;

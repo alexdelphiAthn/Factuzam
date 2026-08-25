@@ -101,6 +101,9 @@ resourcestring
   SErrorFormatoDocumentoConComa =
     'El formato de documentos no puede contener una coma. La coma está ' +
     'reservada para separar facturas en los procesos por lotes.';
+  SAccionBorrarEmpresa = 'borrar';
+  SAccionEditarEmpresa = 'editar';
+  SAccionCrearEmpresa = 'crear';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -711,7 +714,7 @@ procedure TdmEmpresas.unqryTablaGBeforeDelete(DataSet: TDataSet);
 begin
   inherited;
   FEncolarPrecioPrestaShop := False;
-  if not ConfirmarCambioCriticoEmpresa('borrar') then
+  if not ConfirmarCambioCriticoEmpresa(SAccionBorrarEmpresa) then
   begin
     Abort;
   end;
@@ -732,7 +735,7 @@ end;
 procedure TdmEmpresas.unqryTablaGBeforeEdit(DataSet: TDataSet);
 begin
   inherited;
-  if not ConfirmarCambioCriticoEmpresa('editar') then
+  if not ConfirmarCambioCriticoEmpresa(SAccionEditarEmpresa) then
   begin
     Abort;
   end;
@@ -741,7 +744,7 @@ end;
 procedure TdmEmpresas.unqryTablaGBeforeInsert(DataSet: TDataSet);
 begin
   inherited;
-  if not ConfirmarCambioCriticoEmpresa('crear') then
+  if not ConfirmarCambioCriticoEmpresa(SAccionCrearEmpresa) then
   begin
     Abort;
   end;

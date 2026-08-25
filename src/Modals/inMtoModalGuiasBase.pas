@@ -113,6 +113,11 @@ uses
   inLibUser, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
+resourcestring
+  SInfoSeleccionarTablaGuia = 'Selecciona una tabla.';
+  SInfoSeleccionarCamposRelacionGuia =
+    '  (selecciona campo master y detail)';
+
 constructor TfrmModalGuiasBase.Create(
   AOwner: TComponent;
   const ARepositorio: IRepositorioGuias);
@@ -187,7 +192,7 @@ begin
   sTabla := cbbTabla.Text;
   if sTabla = '' then
   begin
-    mmoResumen.Lines.Add('Selecciona una tabla.');
+    mmoResumen.Lines.Add(SInfoSeleccionarTablaGuia);
   end
   else
   begin
@@ -201,7 +206,7 @@ begin
     if (sMaster <> '') and (sDetail <> '') then
       mmoResumen.Lines.Add('  ON ' + sDetail + ' = ' + sMaster)
     else
-      mmoResumen.Lines.Add('  (selecciona campo master y detail)');
+      mmoResumen.Lines.Add(SInfoSeleccionarCamposRelacionGuia);
     AutoGenerarCodigo;
   end;
 end;

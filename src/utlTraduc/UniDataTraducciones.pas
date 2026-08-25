@@ -56,6 +56,7 @@ uses
   cxLocalization,
   inLibRegistroResourcestringTraducciones,
   inLibRegistroParametrosTraducciones,
+  inLibConfigCamposIntf,
   inLibdxSpreadSheetStrs_ESP, inLibMsgTraduc;
 
 {$R *.dfm}
@@ -163,6 +164,41 @@ begin
       end);
   finally
     Localizador.Free;
+  end;
+end;
+
+procedure RecopilarTitulosConfigCampos(
+  AConexion: TUniConnection;
+  ACatalogo: TCatalogoImportacionTraduccion);
+var
+  Consulta: TUniQuery;
+  Campo: string;
+  Tabla: string;
+  Titulo: string;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT TABLA_OBJETIVO_CC, OBJETIVO_CC, TITULO_VISUAL_CC ' +
+      '  FROM fza_config_campos ' +
+      ' ORDER BY TABLA_OBJETIVO_CC, OBJETIVO_CC';
+    Consulta.Open;
+    while not Consulta.Eof do
+    begin
+      Tabla := Consulta.FieldByName(
+        'TABLA_OBJETIVO_CC').AsString;
+      Campo := Consulta.FieldByName('OBJETIVO_CC').AsString;
+      Titulo := Consulta.FieldByName('TITULO_VISUAL_CC').AsString;
+      AgregarEntradaImportacion(
+        ACatalogo,
+        ClaveTituloVisualConfigCampo(Tabla, Campo),
+        Titulo,
+        'fza_config_campos.' + Tabla + '.' + Campo);
+      Consulta.Next;
+    end;
+  finally
+    FreeAndNil(Consulta);
   end;
 end;
 
@@ -396,6 +432,7 @@ begin
   try
     RecopilarResourcestrings(Catalogo);
     RecopilarParametrosDinamicos(Catalogo);
+    RecopilarTitulosConfigCampos(FConexion, Catalogo);
     RecopilarDevExpress(Catalogo);
     PrepararComandoGuardar;
     FConexion.StartTransaction;

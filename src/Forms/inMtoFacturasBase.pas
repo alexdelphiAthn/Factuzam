@@ -623,6 +623,12 @@ uses
   UniDataGen,
   inLibPresentacionDocumento;
 
+resourcestring
+  STituloBuscarClientesBorradoresFactura =
+    'Búsqueda de Clientes en Borradores';
+  STituloBuscarEmpresasBorradoresFactura =
+    'Búsqueda de Empresas en Borradores';
+
 function CrearContextoConsolidacionFacturaVcl(
   AFormulario: TfrmMtoFacturasBase
 ): TContextoConsolidacionFacturaVcl;
@@ -1583,7 +1589,7 @@ begin
   begin
     if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
-      'Búsqueda de Clientes en Borradores',
+      STituloBuscarClientesBorradoresFactura,
                                        dmmFacturas.unqryCliDataFac,
                                        'frmMtoCliFacSearch') then
      begin
@@ -1628,7 +1634,7 @@ begin
   begin
     if BusquedaVisual.EjecutarBusqueda(
       ConexionPrincipal,
-      'Búsqueda de Empresas en Borradores',
+      STituloBuscarEmpresasBorradoresFactura,
                                        dmmFacturas.unqryEmpDataFac,
                                        'frmMtoEmpFacSearch') then
       dmmFacturas.CopiarEmpresaaFactura(dmmFacturas.unqryEmpDataFac);
@@ -1677,78 +1683,31 @@ begin
   end;
 end;
 
-function TfrmMtoFacturasBase.ObtenerReferenciasFiltradas:
-  TReferenciasComandoFactura;
+function CrearReferenciasFacturasFiltradas(
+  AView: TcxGridDBTableView;
+  AIndiceSerie, AIndiceNumero: Integer): TReferenciasComandoFactura;
 var
   iFila: Integer;
   iRegistro: Integer;
   oClaves: TStringList;
-  oDataSet: TDataSet;
   oLista: TList<TReferenciaComandoFactura>;
-  oMarcador: TBookmark;
   oReferencia: TReferenciaComandoFactura;
   sClave: string;
   sNumero: string;
   sSerie: string;
 begin
-  Result := nil;
-  oDataSet := cxGrdDBTabPrin.DataController.DataSet;
-  if (oDataSet = nil) or not oDataSet.Active then
-    Exit;
-  if (oDataSet.State in dsEditModes) or
-     (Assigned(dmmFacturas) and
-      Assigned(dmmFacturas.unqryLinFac) and
-      (dmmFacturas.unqryLinFac.State in dsEditModes)) or
-     (Assigned(dmmFacturas) and
-      Assigned(dmmFacturas.unqryRecibos) and
-      (dmmFacturas.unqryRecibos.State in dsEditModes)) then
-    raise EInvalidOpException.Create(
-      SErrorCambiosPendientesProcesarFiltradas);
-  if tmrBusqGlobal.Enabled then
-    tmrBusqGlobalTimer(tmrBusqGlobal);
-  oDataSet := cxGrdDBTabPrin.DataController.DataSet;
-  if (oDataSet = nil) or not oDataSet.Active then
-    Exit;
-  if oDataSet.State in dsEditModes then
-    raise EInvalidOpException.Create(
-      SErrorCambiosPendientesProcesarFiltradas);
-
-  oMarcador := nil;
-  if not oDataSet.IsEmpty then
-  begin
-    oMarcador := oDataSet.GetBookmark;
-    oDataSet.DisableControls;
-    try
-      // UniDAC obtiene la consulta por bloques. Last fuerza que el filtro
-      // local del grid pueda evaluar también los registros aún no leídos.
-      oDataSet.Last;
-      if oDataSet.BookmarkValid(oMarcador) then
-        oDataSet.GotoBookmark(oMarcador);
-    finally
-      oDataSet.EnableControls;
-      oDataSet.FreeBookmark(oMarcador);
-    end;
-    cxGrdDBTabPrin.DataController.Refresh;
-  end;
-
   oLista := TList<TReferenciaComandoFactura>.Create;
   oClaves := TStringList.Create;
   try
     oClaves.CaseSensitive := False;
     oClaves.Sorted := True;
-    for iFila := 0 to
-      cxGrdDBTabPrin.DataController.FilteredRecordCount - 1 do
+    for iFila := 0 to AView.DataController.FilteredRecordCount - 1 do
     begin
-      iRegistro :=
-        cxGrdDBTabPrin.DataController.FilteredRecordIndex[iFila];
-      sSerie := Trim(VarToStr(
-        cxGrdDBTabPrin.DataController.Values[
-          iRegistro,
-          cxgrdbclmnGrdDBTabPrinSERIE_FACTURA.Index]));
-      sNumero := Trim(VarToStr(
-        cxGrdDBTabPrin.DataController.Values[
-          iRegistro,
-          cxgrdbclmnGrdDBTabPrinNRO_FACTURA.Index]));
+      iRegistro := AView.DataController.FilteredRecordIndex[iFila];
+      sSerie := Trim(VarToStr(AView.DataController.Values[
+        iRegistro, AIndiceSerie]));
+      sNumero := Trim(VarToStr(AView.DataController.Values[
+        iRegistro, AIndiceNumero]));
       if (sSerie <> '') and (sNumero <> '') then
       begin
         oReferencia := TReferenciaComandoFactura.Crear(
@@ -1765,6 +1724,58 @@ begin
   finally
     FreeAndNil(oClaves);
     FreeAndNil(oLista);
+  end;
+end;
+
+function TfrmMtoFacturasBase.ObtenerReferenciasFiltradas:
+  TReferenciasComandoFactura;
+var
+  oDataSet: TDataSet;
+  oMarcador: TBookmark;
+begin
+  Result := nil;
+  oDataSet := cxGrdDBTabPrin.DataController.DataSet;
+  if (oDataSet <> nil) and oDataSet.Active then
+  begin
+    if (oDataSet.State in dsEditModes) or
+       (Assigned(dmmFacturas) and
+        Assigned(dmmFacturas.unqryLinFac) and
+        (dmmFacturas.unqryLinFac.State in dsEditModes)) or
+       (Assigned(dmmFacturas) and
+        Assigned(dmmFacturas.unqryRecibos) and
+        (dmmFacturas.unqryRecibos.State in dsEditModes)) then
+      raise EInvalidOpException.Create(
+        SErrorCambiosPendientesProcesarFiltradas);
+    if tmrBusqGlobal.Enabled then
+      tmrBusqGlobalTimer(tmrBusqGlobal);
+    oDataSet := cxGrdDBTabPrin.DataController.DataSet;
+    if (oDataSet <> nil) and oDataSet.Active then
+    begin
+      if oDataSet.State in dsEditModes then
+        raise EInvalidOpException.Create(
+          SErrorCambiosPendientesProcesarFiltradas);
+      oMarcador := nil;
+      if not oDataSet.IsEmpty then
+      begin
+        oMarcador := oDataSet.GetBookmark;
+        oDataSet.DisableControls;
+        try
+          // UniDAC obtiene la consulta por bloques. Last fuerza que el filtro
+          // local del grid pueda evaluar también los registros aún no leídos.
+          oDataSet.Last;
+          if oDataSet.BookmarkValid(oMarcador) then
+            oDataSet.GotoBookmark(oMarcador);
+        finally
+          oDataSet.EnableControls;
+          oDataSet.FreeBookmark(oMarcador);
+        end;
+        cxGrdDBTabPrin.DataController.Refresh;
+      end;
+      Result := CrearReferenciasFacturasFiltradas(
+        cxGrdDBTabPrin,
+        cxgrdbclmnGrdDBTabPrinSERIE_FACTURA.Index,
+        cxgrdbclmnGrdDBTabPrinNRO_FACTURA.Index);
+    end;
   end;
 end;
 

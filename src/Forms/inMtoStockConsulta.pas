@@ -194,6 +194,16 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosStock = 'Búsqueda de Artículos';
+  SCaptionCodigoBusquedaStock = 'Código';
+  SCaptionDescripcionBusquedaStock = 'Descripción';
+  SCaptionFamiliaBusquedaStock = 'Familia';
+  SCaptionTemporadaBusquedaStock = 'Temporada';
+  SCaptionProveedorBusquedaStock = 'Proveedor';
+  SCaptionReferenciaProveedorBusquedaStock = 'Ref. proveedor';
+  SCaptionPvpBusquedaStock = 'PVP';
+
 const
   PERFIL_STOCK_CONSULTA = NOMBRE_PANTALLA_STOCK_CONSULTA;
   PERFIL_MODO_DESGLOSADO = 'ModoDesglosado';
@@ -1079,15 +1089,22 @@ begin
     ParametrosCaja.TarifaDefecto);
   Datos := Resultado.DataSet;
   try
-    ConfigCampo(Datos.FindField('CODIGO_ART_ART'),  'Código',      '');
-    ConfigCampo(Datos.FindField('DESCRIPCION_ART'), 'Descripción', '');
-    ConfigCampo(Datos.FindField('DESCRIPCION_FAM'), 'Familia',     '');
-    ConfigCampo(Datos.FindField('TEMPORADA'),       'Temporada',   '');
-    ConfigCampo(Datos.FindField('PROVEEDOR'),       'Proveedor',   '');
-    ConfigCampo(Datos.FindField('REF_PROVEEDOR'),   'Ref. proveedor', '');
-    ConfigCampo(Datos.FindField('PRECIO_PVP'),      'PVP', '#,##0.00 €');
+    ConfigCampo(Datos.FindField('CODIGO_ART_ART'),
+      SCaptionCodigoBusquedaStock, '');
+    ConfigCampo(Datos.FindField('DESCRIPCION_ART'),
+      SCaptionDescripcionBusquedaStock, '');
+    ConfigCampo(Datos.FindField('DESCRIPCION_FAM'),
+      SCaptionFamiliaBusquedaStock, '');
+    ConfigCampo(Datos.FindField('TEMPORADA'),
+      SCaptionTemporadaBusquedaStock, '');
+    ConfigCampo(Datos.FindField('PROVEEDOR'),
+      SCaptionProveedorBusquedaStock, '');
+    ConfigCampo(Datos.FindField('REF_PROVEEDOR'),
+      SCaptionReferenciaProveedorBusquedaStock, '');
+    ConfigCampo(Datos.FindField('PRECIO_PVP'),
+      SCaptionPvpBusquedaStock, '#,##0.00 €');
     if BusquedaVisual.EjecutarBusquedaDataSet(
-      'Búsqueda de Artículos',
+      STituloBuscarArticulosStock,
       Datos,
       LAYOUT_BUSQUEDA_ARTICULOS) then
       Result := Datos.FieldByName('CODIGO_ART_ART').AsString;

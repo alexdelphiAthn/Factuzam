@@ -124,6 +124,10 @@ implementation
        inLibDatasets,
        inLibDir, uGenericIfThen;
 
+resourcestring
+  SCaptionFiltroArchivoExportacion =
+    'Archivo %s';
+
 procedure GridRecalc(AConexion: TUniConnection;
                      const ARepositorioLecturas:
                        IRepositorioLecturasFactura;
@@ -210,7 +214,8 @@ begin
     saveDialog.DefaultFolder := AParametrosApp.GetPath('appDirExcel');
     saveDialog.DefaultExtension := sExt;
     oTipoFichero := saveDialog.FileTypes.Add;
-    oTipoFichero.DisplayName := 'Archivo ' + sExt;
+    oTipoFichero.DisplayName :=
+      Format(SCaptionFiltroArchivoExportacion, [sExt]);
     oTipoFichero.FileMask := '*.' + sExt;
     saveDialog.FileName := AsNomFile;
     if saveDialog.Execute then

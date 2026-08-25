@@ -15,6 +15,9 @@ unit inLibConfigCamposIntf;
 
 interface
 
+function ClaveTituloVisualConfigCampo(
+  const ATabla, ACampo: string): string;
+
 type
   IConfiguracionCampos = interface
     ['{6621783C-C7F9-4D80-8B14-3F922E5D5BA2}']
@@ -39,5 +42,16 @@ type
   end;
 
 implementation
+
+uses
+  System.SysUtils;
+
+function ClaveTituloVisualConfigCampo(
+  const ATabla, ACampo: string): string;
+begin
+  Result := 'fza_config_campos.' +
+    LowerCase(Trim(ATabla)) + '.' +
+    LowerCase(Trim(ACampo)) + '.TITULO_VISUAL_CC';
+end;
 
 end.

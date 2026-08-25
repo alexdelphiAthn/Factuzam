@@ -45,6 +45,27 @@ uses
   System.Types, System.UITypes, FMX.Types, FMX.Layouts,
   VentasConfig;
 
+const
+  cRutaApiVentas = '/api/v1/';
+  cNombreCertApiWeb = 'CertApiWeb';
+
+resourcestring
+  STituloConfiguracionVentas = 'Configuración';
+  SBotonCancelarConfiguracion = 'Cancelar';
+  SBotonGuardarConfiguracion = 'Guardar';
+  STituloConexionWebservice = 'Conexión con el webservice';
+  SEtiquetaUrlApi = 'URL de la API';
+  SPistaUrlApi = 'Dirección del webservice, terminada en %s';
+  SEtiquetaTokenCredencial = 'Token de la credencial';
+  SPistaTokenCredencial =
+    'El que dio %s al crear la API. Solo se enseña una vez, ' +
+    'así que si se ha perdido hay que crear otra credencial.';
+  SEtiquetaReferenciaCliente = 'Referencia de cliente';
+  SPistaReferenciaCliente =
+    'Nombre de la instalación, el mismo que tiene configurado ' +
+    'Factuzam. Distingue mayúsculas de minúsculas.';
+  SOpcionMostrarCosteMargen = 'Mostrar coste y margen';
+
 { Cada campo son tres controles apilados: rótulo en negrita, una línea de
   ayuda en gris que dice qué va ahí, y la caja. Los tres van alineados
   arriba, así que el orden en que se crean es el orden en que se ven. }
@@ -91,7 +112,7 @@ var
   lblTitulo: TLabel;
   scbCampos: TVertScrollBox;
 begin
-  Self.Caption := 'Configuración';
+  Self.Caption := STituloConfiguracionVentas;
   layBotones := TLayout.Create(Self);
   layBotones.Parent := Self;
   layBotones.Align := TAlignLayout.Bottom;
@@ -101,21 +122,21 @@ begin
   btnCancelar.Align := TAlignLayout.Left;
   btnCancelar.Width := 150;
   btnCancelar.Margins.Rect := RectF(14, 8, 0, 12);
-  btnCancelar.Text := 'Cancelar';
+  btnCancelar.Text := SBotonCancelarConfiguracion;
   btnCancelar.OnClick := OnCancelarClick;
   btnGuardar := TButton.Create(Self);
   btnGuardar.Parent := layBotones;
   btnGuardar.Align := TAlignLayout.Right;
   btnGuardar.Width := 150;
   btnGuardar.Margins.Rect := RectF(0, 8, 14, 12);
-  btnGuardar.Text := 'Guardar';
+  btnGuardar.Text := SBotonGuardarConfiguracion;
   btnGuardar.OnClick := OnGuardarClick;
   lblTitulo := TLabel.Create(Self);
   lblTitulo.Parent := Self;
   lblTitulo.Align := TAlignLayout.Top;
   lblTitulo.Height := 38;
   lblTitulo.Margins.Rect := RectF(14, 12, 14, 0);
-  lblTitulo.Text := 'Conexión con el webservice';
+  lblTitulo.Text := STituloConexionWebservice;
   lblTitulo.TextSettings.Font.Size := 19;
   lblTitulo.TextSettings.Font.Style := [TFontStyle.fsBold];
   lblTitulo.StyledSettings := [];
@@ -126,22 +147,20 @@ begin
   scbCampos.Align := TAlignLayout.Client;
   FContenido := scbCampos;
   FEdtUrl := NuevoCampo(
-    'URL de la API',
-    'Dirección del webservice, terminada en /api/v1/',
+    SEtiquetaUrlApi,
+    Format(SPistaUrlApi, [cRutaApiVentas]),
     oConfig.UrlBase,
     'https://webservice.veryverifactu.com/api/v1/',
     False);
   FEdtToken := NuevoCampo(
-    'Token de la credencial',
-    'El que dio CertApiWeb al crear la API. Solo se enseña una vez, ' +
-    'así que si se ha perdido hay que crear otra credencial.',
+    SEtiquetaTokenCredencial,
+    Format(SPistaTokenCredencial, [cNombreCertApiWeb]),
     oConfig.Token,
     'fza_...',
     True);
   FEdtReferencia := NuevoCampo(
-    'Referencia de cliente',
-    'Nombre de la instalación, el mismo que tiene configurado ' +
-    'Factuzam. Distingue mayúsculas de minúsculas.',
+    SEtiquetaReferenciaCliente,
+    SPistaReferenciaCliente,
     oConfig.Referencia,
     'MI-TIENDA',
     False);
@@ -150,7 +169,7 @@ begin
   FChkMargen.Align := TAlignLayout.Top;
   FChkMargen.Height := 44;
   FChkMargen.Margins.Rect := RectF(14, 14, 14, 0);
-  FChkMargen.Text := 'Mostrar coste y margen';
+  FChkMargen.Text := SOpcionMostrarCosteMargen;
   FChkMargen.IsChecked := oConfig.MostrarMargen;
 end;
 

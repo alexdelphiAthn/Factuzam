@@ -46,12 +46,15 @@ var
 
 implementation
 
+uses
+  ConfiguracionClienteMovil;
+
 constructor TRecuentoConfig.Create;
 begin
   inherited Create;
-  FUrlBase     := '';
-  FCarpeta     := '';
-  FToken       := '';
+  FUrlBase     := cUrlApiMovil;
+  FCarpeta     := cReferenciaInstalacionMovil;
+  FToken       := cTokenApiMovil;
   FOperario    := '';
   FDispositivo := '';
   Cargar;
@@ -68,11 +71,11 @@ var
 begin
   oIni := TIniFile.Create(RutaIni);
   try
-    FUrlBase     := oIni.ReadString('servidor', 'url', '');
-    FCarpeta     := oIni.ReadString('servidor', 'carpeta', '');
-    FToken       := oIni.ReadString('servidor', 'token', '');
-    FOperario    := oIni.ReadString('dispositivo', 'operario', '');
-    FDispositivo := oIni.ReadString('dispositivo', 'nombre', '');
+    FUrlBase     := oIni.ReadString('servidor', 'url', FUrlBase);
+    FCarpeta     := oIni.ReadString('servidor', 'carpeta', FCarpeta);
+    FToken       := oIni.ReadString('servidor', 'token', FToken);
+    FOperario    := oIni.ReadString('dispositivo', 'operario', FOperario);
+    FDispositivo := oIni.ReadString('dispositivo', 'nombre', FDispositivo);
   finally
     FreeAndNil(oIni);
   end;

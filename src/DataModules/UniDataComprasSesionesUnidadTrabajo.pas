@@ -56,6 +56,12 @@ uses
   System.SysUtils,
   inLibPrestaShopColaSenal;
 
+resourcestring
+  SErrorUnidadTrabajoMaterializacionYaIniciada =
+    'La unidad de trabajo ya está iniciada';
+  SErrorUnidadTrabajoMaterializacionNoIniciada =
+    'La unidad de trabajo no está iniciada';
+
 constructor TControlTransaccionMaterializacionUniDAC.Create(
   AConexion: TUniConnection);
 begin
@@ -110,7 +116,7 @@ procedure TUnidadTrabajoMaterializacionUniDAC.Iniciar;
 begin
   if FIniciada then
     raise EInvalidOpException.Create(
-      'La unidad de trabajo ya está iniciada');
+      SErrorUnidadTrabajoMaterializacionYaIniciada);
   FIniciada := True;
   FPropietaria := not FControl.EnTransaccion;
   if FPropietaria then
@@ -121,7 +127,7 @@ procedure TUnidadTrabajoMaterializacionUniDAC.Confirmar;
 begin
   if not FIniciada then
     raise EInvalidOpException.Create(
-      'La unidad de trabajo no está iniciada');
+      SErrorUnidadTrabajoMaterializacionNoIniciada);
   if FPropietaria and FControl.EnTransaccion then
   begin
     FControl.ConfirmarTransaccion;

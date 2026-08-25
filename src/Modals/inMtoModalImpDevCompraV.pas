@@ -58,6 +58,11 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoDevolucionCompraVertical = 'DevCompraV_%s_%s';
+  STituloPreviewDevolucionCompraVertical = 'DEVOLUCION A PROVEEDOR';
+  SEtiquetaAlmacenSalidaDevolucionCompraVertical = 'ALMACEN SALIDA';
+
 procedure TfrmPrintDevCompraV.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
@@ -67,8 +72,8 @@ begin
   begin
     dmDevc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
   cfg := Default(TDocCompraCabCfg);
-  cfg.Titulo         := 'DEVOLUCION A PROVEEDOR';
-  cfg.EtiquetaIzq    := 'ALMACEN SALIDA';
+  cfg.Titulo         := STituloPreviewDevolucionCompraVertical;
+  cfg.EtiquetaIzq    := SEtiquetaAlmacenSalidaDevolucionCompraVertical;
   cfg.FieldRazonIzq  := 'NOMBRE_ALM_DEVC';
   cfg.FieldDirIzq    := 'DIRECCION_ALM_DEVC';
   cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_DEVC';
@@ -96,7 +101,8 @@ begin
     fPreview.DialogoGuardar.InitialDir :=
       ParametrosApp.GetPath('appDirExcel');
     fPreview.DialogoGuardar.FileName :=
-      'DevCompraV_' + edtSerie.Text + '_' + edtNumero.Text;
+      Format(SNombreArchivoDevolucionCompraVertical,
+        [edtSerie.Text, edtNumero.Text]);
     try
       ExportarDocCompraVertical(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmDevc.unqryCabDevcPrint,

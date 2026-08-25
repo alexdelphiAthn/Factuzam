@@ -20,23 +20,27 @@ interface
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   inLibConfigCamposIntf, inLibLogIntf,
-  inLibConfigCamposPersistenciaIntf;
+  inLibConfigCamposPersistenciaIntf, inLibTraduccionesIntf;
 
 type
   TConfigCampoItem = TConfigCampoPersistido;
 
   TConfigCamposCache = class(TInterfacedObject, IConfiguracionCampos)
   private
-    // Diccionario indexado por CAMPO (sin tabla) para busqueda rapida.
-    // Si hay duplicados entre tablas, el ultimo gana; para resolucion
-    // exacta usar ObtenerPorTablaCampo.
+    // Diccionario indexado por CAMPO (sin tabla) para el fallback.
+    // Solo contiene campos presentes en un unico ambito; los duplicados
+    // se excluyen para no escoger una tabla arbitraria.
     FPorCampo: TDictionary<string, TConfigCampoItem>;
+    FCamposAmbiguos: TDictionary<string, Boolean>;
     // Diccionario indexado por TABLA.CAMPO para resolucion exacta.
     FPorTablaCampo: TDictionary<string, TConfigCampoItem>;
     FRepositorio: IRepositorioConfigCampos;
     FCargada: Boolean;
     FRegistroLog: IRegistroLog;
+    FTraducciones: IServicioTraducciones;
     function GetCargada: Boolean;
+    function TraducirTitulo(
+      const AItem: TConfigCampoItem): string;
   public
     constructor Create(
       const ARepositorio: IRepositorioConfigCampos;
@@ -45,7 +49,9 @@ type
     procedure Precargar(
       const ARepositorio: IRepositorioConfigCampos = nil);
     procedure Invalidar;
-    // Busca primero por tabla+campo exacto; si no encuentra, por campo solo.
+    procedure AsignarTraducciones(
+      const ATraducciones: IServicioTraducciones);
+    // Busca tabla+campo, despues '*', y solo usa campo si es univoco.
     function ObtenerTitulo(const aCampo: string;
                            const aTabla: string = ''): string;
     function ObtenerAncho(const aCampo: string;
@@ -66,7 +72,9 @@ begin
     raise EArgumentNilException.Create('ARegistroLog');
   FRepositorio := ARepositorio;
   FRegistroLog := ARegistroLog;
+  FTraducciones := nil;
   FPorCampo := TDictionary<string, TConfigCampoItem>.Create;
+  FCamposAmbiguos := TDictionary<string, Boolean>.Create;
   FPorTablaCampo := TDictionary<string, TConfigCampoItem>.Create;
   FCargada := False;
 end;
@@ -75,14 +83,23 @@ destructor TConfigCamposCache.Destroy;
 begin
   FRepositorio := nil;
   FRegistroLog := nil;
+  FTraducciones := nil;
+  FreeAndNil(FCamposAmbiguos);
   FreeAndNil(FPorCampo);
   FreeAndNil(FPorTablaCampo);
   inherited;
 end;
 
+procedure TConfigCamposCache.AsignarTraducciones(
+  const ATraducciones: IServicioTraducciones);
+begin
+  FTraducciones := ATraducciones;
+end;
+
 procedure TConfigCamposCache.Invalidar;
 begin
   FPorCampo.Clear;
+  FCamposAmbiguos.Clear;
   FPorTablaCampo.Clear;
   FCargada := False;
 end;
@@ -94,9 +111,11 @@ var
   item: TConfigCampoItem;
   oRepositorio: IRepositorioConfigCampos;
   oResultado: TResultadoConfigCampos;
+  sCampoKey: string;
   sKey: string;
 begin
   FPorCampo.Clear;
+  FCamposAmbiguos.Clear;
   FPorTablaCampo.Clear;
   FCargada := False;
   oRepositorio := ARepositorio;
@@ -113,7 +132,17 @@ begin
           item := oResultado.Elementos[i];
           sKey := LowerCase(item.Tabla + '.' + item.Campo);
           FPorTablaCampo.AddOrSetValue(sKey, item);
-          FPorCampo.AddOrSetValue(LowerCase(item.Campo), item);
+          sCampoKey := LowerCase(item.Campo);
+          if not FCamposAmbiguos.ContainsKey(sCampoKey) then
+          begin
+            if FPorCampo.ContainsKey(sCampoKey) then
+            begin
+              FPorCampo.Remove(sCampoKey);
+              FCamposAmbiguos.Add(sCampoKey, True);
+            end
+            else
+              FPorCampo.Add(sCampoKey, item);
+          end;
         end;
         FCargada := True;
         FRegistroLog.RegistrarInformacion(
@@ -131,6 +160,7 @@ begin
       on E: Exception do
       begin
         FPorCampo.Clear;
+        FCamposAmbiguos.Clear;
         FPorTablaCampo.Clear;
         FRegistroLog.RegistrarError(
           'ConfigCamposCache.Precargar: ' + E.Message);
@@ -149,6 +179,9 @@ begin
       Result := FPorTablaCampo.ContainsKey(
         LowerCase(aTabla + '.' + aCampo));
     if not Result then
+      Result := FPorTablaCampo.ContainsKey(
+        LowerCase('*.' + aCampo));
+    if not Result then
       Result := FPorCampo.ContainsKey(LowerCase(aCampo));
   end;
 end;
@@ -165,11 +198,25 @@ begin
     if (aTabla <> '') and
        FPorTablaCampo.TryGetValue(
          LowerCase(aTabla + '.' + aCampo), item) then
-      Result := item.TituloVisual
+      Result := TraducirTitulo(item)
+    else if FPorTablaCampo.TryGetValue(
+              LowerCase('*.' + aCampo), item) then
+      Result := TraducirTitulo(item)
     // Fallback: solo por campo
     else if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
-      Result := item.TituloVisual;
+      Result := TraducirTitulo(item);
   end;
+end;
+
+function TConfigCamposCache.TraducirTitulo(
+  const AItem: TConfigCampoItem): string;
+begin
+  Result := AItem.TituloVisual;
+  if Assigned(FTraducciones) and
+     not SameText(FTraducciones.Idioma, IDIOMA_ESPANOL) then
+    Result := FTraducciones.Traducir(
+      ClaveTituloVisualConfigCampo(AItem.Tabla, AItem.Campo),
+      Result);
 end;
 
 function TConfigCamposCache.ObtenerAncho(const aCampo: string;
@@ -183,6 +230,9 @@ begin
     if (aTabla <> '') and
        FPorTablaCampo.TryGetValue(
          LowerCase(aTabla + '.' + aCampo), item) then
+      Result := item.AnchoColumna
+    else if FPorTablaCampo.TryGetValue(
+              LowerCase('*.' + aCampo), item) then
       Result := item.AnchoColumna
     else if FPorCampo.TryGetValue(LowerCase(aCampo), item) then
       Result := item.AnchoColumna;

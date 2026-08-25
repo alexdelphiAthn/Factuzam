@@ -84,6 +84,9 @@ end;
 
 {$R *.dfm}
 
+resourcestring
+  STituloRegistrarCobroEfectoVenta = 'Efecto %d - pendiente %.2f';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoEfectosVenta.CrearTablaPrincipal;
@@ -128,7 +131,9 @@ begin
     fPend := q.FieldByName('IMPORTE_PENDIENTE_EFV').AsFloat;
     frm := TfrmModalRegistrarPago.Create(nil);
     try
-      frm.SetDatos(Format('Efecto %d - pendiente %.2f', [iEfe, fPend]), fPend);
+      frm.SetDatos(
+        Format(STituloRegistrarCobroEfectoVenta, [iEfe, fPend]),
+        fPend);
       if frm.ShowModal = mrOk then
       begin
         iRes := dmmEfectosVenta.RegistrarCobro(

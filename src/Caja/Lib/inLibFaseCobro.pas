@@ -196,6 +196,32 @@ implementation
 uses
   Vcl.Dialogs, System.UITypes;
 
+resourcestring
+  SErrorDejarCuentaSinClienteAsignado =
+    'No se puede dejar en cuenta sin cliente asignado.';
+  SErrorClienteNoPermiteDejarCuenta =
+    'El cliente no tiene permitido dejar cantidades en cuenta.';
+  SErrorLimiteCreditoExcedido =
+    'Límite de crédito excedido.' + sLineBreak +
+    'Deuda actual: %m' + sLineBreak +
+    'Nueva deuda: %m' + sLineBreak +
+    'Límite: %m';
+  SErrorImporteValeNoPositivo =
+    'El importe del vale no puede ser cero o menor que cero.';
+  SErrorDejarImporteCuentaSinCliente =
+    'No se puede dejar importe en cuenta sin cliente.';
+  SErrorClienteNoPermiteImporteCuenta =
+    'El cliente no permite dejar cantidades en cuenta.';
+  SErrorValeNoDisponible =
+    'El vale introducido (%s) no existe en la base de datos o ha sido ' +
+    'recogido o anulado.';
+  SErrorDevolucionIncompleta =
+    'Devolución incompleta. Falta por devolver al cliente: %m';
+  SErrorPagoNoIndicado = 'No se ha indicado ningún pago.';
+  SAdvertenciaCobroIncompleto =
+    'Cobro incompleto. Pendiente: %m' + sLineBreak +
+    '¿Desea dejarlo en cuenta?';
+
 { TDatosCliente }
 
 
@@ -395,21 +421,16 @@ var
 begin
   Result := TResultadoValidacion.OK;
   if not FHayCliente then
-    Result := TResultadoValidacion.Error(
-      'No se puede dejar en cuenta sin cliente asignado.')
+    Result := TResultadoValidacion.Error(SErrorDejarCuentaSinClienteAsignado)
   else if not FPermiteDeuda then
-    Result := TResultadoValidacion.Error(
-      'El cliente no tiene permitido dejar cantidades en cuenta.')
+    Result := TResultadoValidacion.Error(SErrorClienteNoPermiteDejarCuenta)
   else if FDatosCliente.LimiteCredito > 0 then
   begin
     NuevaDeuda := FDatosCliente.DeudaActual + AImporte;
     if NuevaDeuda > FDatosCliente.LimiteCredito then
     begin
       Result := TResultadoValidacion.Error(
-        Format('Límite de crédito excedido.' + sLineBreak +
-               'Deuda actual: %m' + sLineBreak +
-               'Nueva deuda: %m' + sLineBreak +
-               'Límite: %m',
+        Format(SErrorLimiteCreditoExcedido,
                [FDatosCliente.DeudaActual, NuevaDeuda,
                 FDatosCliente.LimiteCredito]));
     end;
@@ -435,8 +456,7 @@ end;
 function TDatosFaseCobro.EmitirVale(AImporte: Currency): TResultadoValidacion;
 begin
   if AImporte <= 0 then
-    Result := TResultadoValidacion.Error('El importe del vale no puede ser' +
-                                         ' cero o menor que cero.')
+    Result := TResultadoValidacion.Error(SErrorImporteValeNoPositivo)
   else
   begin
     FImporteValeEmitido := Abs(AImporte);
@@ -667,10 +687,10 @@ begin
   begin
     if not FHayCliente then
       Result := TResultadoValidacion.Error(
-        'No se puede dejar importe en cuenta sin cliente.')
+        SErrorDejarImporteCuentaSinCliente)
     else if not FPermiteDeuda then
       Result := TResultadoValidacion.Error(
-        'El cliente no permite dejar cantidades en cuenta.');
+        SErrorClienteNoPermiteImporteCuenta);
   end;
 end;
 
@@ -699,8 +719,7 @@ begin
           if not FRepositorio.ExisteValePendiente(CodigoVale) then
           begin
             Result := TResultadoValidacion.Error(
-              'El vale introducido (' + CodigoVale + ') no existe en la ' +
-              'base de datos o ha sido recogido o anulado.');
+              Format(SErrorValeNoDisponible, [CodigoVale]));
             Break;
           end;
         end;
@@ -724,7 +743,7 @@ begin
   begin
     if FImportePendiente > 0.01 then
       Result := TResultadoValidacion.Error(
-        Format('Devolución incompleta. Falta por devolver al cliente: %m',
+        Format(SErrorDevolucionIncompleta,
                [FImportePendiente]))
     else
       Result := TResultadoValidacion.OK;
@@ -738,13 +757,11 @@ begin
     begin
       TotalCobrado := FImporteEntregado + FImporteDejarCuenta;
       if (TotalCobrado = 0) and (FImporteTotalPagar > 0) then
-        Result := TResultadoValidacion.Error(
-          'No se ha indicado ningún pago.')
+        Result := TResultadoValidacion.Error(SErrorPagoNoIndicado)
       else if (FImportePendiente > 0.01) and
               (FImporteDejarCuenta = 0) then
         Result := TResultadoValidacion.Advertencia(
-          Format('Cobro incompleto. Pendiente: %m' + sLineBreak +
-                 '¿Desea dejarlo en cuenta?', [FImportePendiente]))
+          Format(SAdvertenciaCobroIncompleto, [FImportePendiente]))
       else
         Result := TResultadoValidacion.OK;
     end;

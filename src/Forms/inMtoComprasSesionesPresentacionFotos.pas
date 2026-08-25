@@ -132,6 +132,9 @@ resourcestring
     'No se proporcionaron todos los datasets de fotos de la sesion.';
   SErrorServicioFotosSesionNoDisponible =
     'No se proporciono el servicio de fotos de la sesion.';
+  SFiltroImagenFotosSesion =
+    'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|' +
+    '*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp';
 
 function EvaluarSeleccionFotoSesion(
   const ASeleccion: TSeleccionFotoSesion;
@@ -256,9 +259,7 @@ end;
 
 procedure TCoordinadorFotosProvisionalesSesion.ConfigurarDialogo;
 begin
-  FEntorno.DialogoFoto.Filter :=
-    'Imagenes (*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp)|' +
-    '*.png;*.jpg;*.jpeg;*.webp;*.avif;*.bmp';
+  FEntorno.DialogoFoto.Filter := SFiltroImagenFotosSesion;
   FEntorno.DialogoFoto.Options :=
     FEntorno.DialogoFoto.Options + [ofFileMustExist];
 end;

@@ -570,7 +570,7 @@ end;
 procedure TRestoreWorker.ActualizarProgresoSQL(
   APosicion, ATotal, ASentencias: Integer);
 begin
-  FProgresoEtapa := 'Restaurando SQL (KB)';
+  FProgresoEtapa := 'Restaurando SQL';
   FPosicion := APosicion;
   FTotal := ATotal;
   FSentenciasEjecutadas := ASentencias;

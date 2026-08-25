@@ -244,6 +244,12 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorImportacionOcrConUnidadTrabajoActiva =
+    'La importación OCR ya tiene una unidad de trabajo activa';
+  SErrorImportacionOcrSinUnidadTrabajoActiva =
+    'La importación OCR no tiene una unidad de trabajo activa';
+
 function TdmComprasSesiones.ConexionDatos: TUniConnection;
 begin
   Result := unqryTablaG.Connection;
@@ -255,7 +261,7 @@ procedure TdmComprasSesiones.IniciarUnidadTrabajoImportacionOcr;
 begin
   if Assigned(FUnidadTrabajoImportacionOcr) then
     raise EInvalidOpException.Create(
-      'La importación OCR ya tiene una unidad de trabajo activa');
+      SErrorImportacionOcrConUnidadTrabajoActiva);
   FUnidadTrabajoImportacionOcr :=
     TUnidadTrabajoMaterializacionUniDAC.Create(
       ConexionDatos);
@@ -271,7 +277,7 @@ procedure TdmComprasSesiones.ConfirmarUnidadTrabajoImportacionOcr;
 begin
   if not Assigned(FUnidadTrabajoImportacionOcr) then
     raise EInvalidOpException.Create(
-      'La importación OCR no tiene una unidad de trabajo activa');
+      SErrorImportacionOcrSinUnidadTrabajoActiva);
   FUnidadTrabajoImportacionOcr.Confirmar;
   FUnidadTrabajoImportacionOcr := nil;
 end;

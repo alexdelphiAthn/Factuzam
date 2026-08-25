@@ -113,6 +113,13 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SCaptionProveedorEfectosRemesa = 'Proveedor';
+  SCaptionClienteEfectosRemesa = 'Cliente';
+  STextoEfectosPagadosRemesa = 'pagados';
+  STextoEfectosCobradosRemesa = 'cobrados';
+  STituloBuscarEmpresaEfectosRemesa = 'Buscar empresa';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 constructor TfrmModalCargarEfectosRemesa.Create(
@@ -193,9 +200,9 @@ begin
   FConsultaEfectos := nil;
   FTipoRemesa := ATipo;
   if FTipoRemesa = tcerCompra then
-    colTercero.Caption := 'Proveedor'
+    colTercero.Caption := SCaptionProveedorEfectosRemesa
   else
-    colTercero.Caption := 'Cliente';
+    colTercero.Caption := SCaptionClienteEfectosRemesa;
 end;
 
 procedure TfrmModalCargarEfectosRemesa.FormDestroy(Sender: TObject);
@@ -230,7 +237,8 @@ begin
   Consulta := FRepositorio.ConsultarEmpresas;
   Datos := Consulta.DataSet;
   if BusquedaVisual.EjecutarBusquedaDataSet(
-       'Buscar empresa', Datos, 'srchEmpRem', Self) then
+       STituloBuscarEmpresaEfectosRemesa,
+       Datos, 'srchEmpRem', Self) then
   begin
     sVal := Datos.FieldByName('CODIGO_EMP_EMP').AsString;
     btnEmpresa.Text := sVal;
@@ -402,9 +410,9 @@ begin
     FRemNumero  := sNumRem;
     FConfirmado := Resultado.Procesados > 0;
     if FTipoRemesa = tcerCompra then
-      sTextoOmitidos := 'pagados'
+      sTextoOmitidos := STextoEfectosPagadosRemesa
     else
-      sTextoOmitidos := 'cobrados';
+      sTextoOmitidos := STextoEfectosCobradosRemesa;
     ShowMessage(Format(SInfoEfectosCargadosRemesa,
       [Resultado.Procesados, sSerieRem, sNumRem, sTextoOmitidos,
        Resultado.Omitidos]));

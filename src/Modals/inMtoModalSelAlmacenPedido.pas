@@ -130,6 +130,9 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SCaptionTemporadaSeleccionAlmacenPedido = 'Temporada';
+
 procedure TfrmModalSelAlmacenPedido.FormCreate(Sender: TObject);
 var
   oContexto: TContextoSeleccionAlmacenVentasPantalla;
@@ -278,7 +281,7 @@ begin
   cbbTemporada.Properties.ListColumns.Clear;
   Columna := cbbTemporada.Properties.ListColumns.Add;
   Columna.FieldName := 'PV';
-  Columna.Caption := 'Temporada';
+  Columna.Caption := SCaptionTemporadaSeleccionAlmacenPedido;
   Columna.Width := 240;
 end;
 

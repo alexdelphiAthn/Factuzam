@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibDialectosSql                                            }
 {    Tipo:       Librería                                                      }
@@ -9,9 +9,9 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Implementaciones de las primitivas SQL de MariaDB, PostgreSQL y            }
-{    SQL Server. Las operaciones de negocio completas se seleccionan desde      }
-{    el catálogo SQL; esta unidad solo compone diferencias sintácticas.          }
+{    Implementaciones de las primitivas SQL de MariaDB, PostgreSQL y           }
+{    SQL Server. Las operaciones de negocio completas se seleccionan desde     }
+{    el catálogo SQL; esta unidad solo compone diferencias sintácticas.        }
 {******************************************************************************}
 unit inLibDialectosSql;
 

@@ -195,6 +195,10 @@ uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
   inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
 
+resourcestring
+  STituloPersonalizacionConsultaOperaciones =
+    'Personalizacion Consulta Operaciones';
+
 // -----------------------------------------------------------------------------
 constructor TfrmConsultaOpe.Create(AOwner: TComponent);
 begin
@@ -911,7 +915,8 @@ begin
     Layout.GuardarGrid('Depositos',   cxViewDep);
     Layout.GuardarGrid('FacturaCab',  cxViewFacCab);
     Layout.GuardarGrid('FacturaLin',  cxViewFacLin);
-    if Layout.PreguntarYGrabar('Personalizacion Consulta Operaciones') then
+    if Layout.PreguntarYGrabar(
+      STituloPersonalizacionConsultaOperaciones) then
       ShowMessage(SInfoLayoutGuardado);
   finally
     FreeAndNil(Layout);

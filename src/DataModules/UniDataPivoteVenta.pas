@@ -35,6 +35,9 @@ uses
   inLibGridArticulosPersistenciaIntf,
   UniDataGridArticulosRepositorio;
 
+resourcestring
+  STituloBusquedaArticulosPivoteVenta = 'Búsqueda de artículos';
+
 type
   TContextoRepositorioPivoteVenta = record
     Usuario: string;
@@ -488,7 +491,7 @@ begin
     oConsulta.Aplicar(AAlmacenStock);
     oDataSet := oConsulta.DataSet;
     if FContexto.BusquedaVisual.EjecutarBusquedaDataSet(
-         'Búsqueda de artículos', oDataSet,
+         STituloBusquedaArticulosPivoteVenta, oDataSet,
          'frmMtoArtTraspasoSearch') then
     begin
       ACodigoArticulo := oDataSet.FieldByName('ARTICULO').AsString;

@@ -37,6 +37,24 @@ implementation
 uses
   Data.DB;
 
+resourcestring
+  STituloBuscarArticulosInventario = 'Búsqueda de Artículos';
+  STituloBuscarSkusInventario = 'Búsqueda de SKUs';
+  SCaptionCodigoBusquedaInventario = 'Código';
+  SCaptionDescripcionBusquedaInventario = 'Descripción';
+  SCaptionFamiliaBusquedaInventario = 'Familia';
+  SCaptionTemporadaBusquedaInventario = 'Temporada';
+  SCaptionProveedorBusquedaInventario = 'Proveedor';
+  SCaptionReferenciaProveedorBusquedaInventario = 'Ref. proveedor';
+  SCaptionPrecioCompraBusquedaInventario = 'P. compra';
+  SCaptionPrecioVentaBusquedaInventario = 'P. venta';
+  SCaptionTipoCantidadBusquedaInventario = 'Tipo cant.';
+  SCaptionSkuBusquedaInventario = 'SKU';
+  SCaptionArticuloBusquedaInventario = 'Artículo';
+  SCaptionAtributosBusquedaInventario = 'Atributos';
+  SCaptionStockBusquedaInventario = 'Stock';
+  SCaptionPrecioMedioBusquedaInventario = 'PMP';
+
 // Fija DisplayLabel y formato de un campo para que la grilla generica
 // muestre cabeceras legibles sin layout guardado.
 procedure ConfigurarCampoBusqueda(
@@ -69,25 +87,25 @@ begin
   oResultado := ABusquedas.ConsultarArticulos;
   oDatos := oResultado.DataSet;
   ConfigurarCampoBusqueda(oDatos.FindField('CODIGO_ART_ART'),
-    'Código', '');
+    SCaptionCodigoBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('DESCRIPCION_ART'),
-    'Descripción', '');
+    SCaptionDescripcionBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('DESCRIPCION_FAM'),
-    'Familia', '');
+    SCaptionFamiliaBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('TEMPORADA'),
-    'Temporada', '');
+    SCaptionTemporadaBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('RAZON_SOCIAL_PROVEEDOR'),
-    'Proveedor', '');
+    SCaptionProveedorBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('REF_PROVEEDOR'),
-    'Ref. proveedor', '');
+    SCaptionReferenciaProveedorBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('PRECIO_ULT_COMPRA'),
-    'P. compra', '#,##0.00 €');
+    SCaptionPrecioCompraBusquedaInventario, '#,##0.00 €');
   ConfigurarCampoBusqueda(oDatos.FindField('PRECIO_FINAL_ARTTAR'),
-    'P. venta', '#,##0.00 €');
+    SCaptionPrecioVentaBusquedaInventario, '#,##0.00 €');
   ConfigurarCampoBusqueda(oDatos.FindField('TIPO_CANTIDAD_ART'),
-    'Tipo cant.', '');
+    SCaptionTipoCantidadBusquedaInventario, '');
   if ABusquedaVisual.EjecutarBusquedaDataSet(
-       'Búsqueda de Artículos', oDatos, 'frmMtoArtInvSearch',
+       STituloBuscarArticulosInventario, oDatos, 'frmMtoArtInvSearch',
        AFormularioPadre) then
     Result := oDatos.FieldByName('CODIGO_ART_ART').AsString;
 end;
@@ -105,19 +123,19 @@ begin
   oResultado := ABusquedas.ConsultarSkus(ACodigoAlmacen);
   oDatos := oResultado.DataSet;
   ConfigurarCampoBusqueda(oDatos.FindField('CODIGO_UNIDAD_SKU'),
-    'SKU', '');
+    SCaptionSkuBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('CODIGO_ART_SKU'),
-    'Artículo', '');
+    SCaptionArticuloBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('DESCRIPCION_ART'),
-    'Descripción', '');
+    SCaptionDescripcionBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('ATRIBUTOS'),
-    'Atributos', '');
+    SCaptionAtributosBusquedaInventario, '');
   ConfigurarCampoBusqueda(oDatos.FindField('CANTIDAD_STK'),
-    'Stock', '#,##0.00');
+    SCaptionStockBusquedaInventario, '#,##0.00');
   ConfigurarCampoBusqueda(oDatos.FindField('PRECIO_MEDIO_STK'),
-    'PMP', '#,##0.0000');
+    SCaptionPrecioMedioBusquedaInventario, '#,##0.0000');
   if ABusquedaVisual.EjecutarBusquedaDataSet(
-       'Búsqueda de SKUs', oDatos, 'frmMtoInvSkuSearch',
+       STituloBuscarSkusInventario, oDatos, 'frmMtoInvSkuSearch',
        AFormularioPadre) then
     Result := oDatos.FieldByName('CODIGO_UNIDAD_SKU').AsString;
 end;

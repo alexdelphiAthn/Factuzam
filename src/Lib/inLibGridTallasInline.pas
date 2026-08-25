@@ -240,6 +240,11 @@ uses
   Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls,
   inLibMsgArticulos;
 
+resourcestring
+  SCabeceraSistemaSelectorTallas = 'Sistema';
+  SCabeceraDesdeSelectorTallas = 'Desde';
+  SCabeceraHastaSelectorTallas = 'Hasta';
+
 { TGestorGridTallas }
 
 function CrearConfigPersistenciaTallasInline(
@@ -791,14 +796,14 @@ begin
   cv.Font.Style := [fsBold];
   cv.Brush.Style := bsClear;
   r := Rect(MARGEN_COL, 0, xD - MARGEN_COL, FHeader.ClientHeight);
-  DrawText(cv.Handle, 'Sistema', -1, r,
+  DrawText(cv.Handle, PChar(SCabeceraSistemaSelectorTallas), -1, r,
            DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
   r := Rect(xD + MARGEN_COL, 0, xH - MARGEN_COL, FHeader.ClientHeight);
-  DrawText(cv.Handle, 'Desde', -1, r,
+  DrawText(cv.Handle, PChar(SCabeceraDesdeSelectorTallas), -1, r,
            DT_SINGLELINE or DT_VCENTER or DT_CENTER);
   r := Rect(xH + MARGEN_COL, 0, FHeader.ClientWidth - MARGEN_COL,
             FHeader.ClientHeight);
-  DrawText(cv.Handle, 'Hasta', -1, r,
+  DrawText(cv.Handle, PChar(SCabeceraHastaSelectorTallas), -1, r,
            DT_SINGLELINE or DT_VCENTER or DT_CENTER);
   // Separadores verticales + linea inferior.
   cv.Pen.Color := clBtnShadow;

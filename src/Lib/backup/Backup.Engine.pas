@@ -142,12 +142,15 @@ var
   iTotalKb: Int64;
 begin
   if ATotalBytes <= 0 then
-    Exit(1);
-  iTotalKb := 1 + ((ATotalBytes - 1) div 1024);
-  if iTotalKb > MaxInt then
-    Result := MaxInt
+    Result := 1
   else
-    Result := Integer(iTotalKb);
+  begin
+    iTotalKb := 1 + ((ATotalBytes - 1) div 1024);
+    if iTotalKb > MaxInt then
+      Result := MaxInt
+    else
+      Result := Integer(iTotalKb);
+  end;
 end;
 
 function PosicionProgresoRestauracion(
@@ -157,15 +160,18 @@ var
   iTotalKb: Int64;
 begin
   if (APosicionBytes <= 0) or (ATotalBytes <= 0) then
-    Exit(0);
-  if APosicionBytes >= ATotalBytes then
-    Exit(ATotalProgreso);
-  iTotalKb := 1 + ((ATotalBytes - 1) div 1024);
-  if iTotalKb <= MaxInt then
-    Result := Integer(APosicionBytes div 1024)
+    Result := 0
+  else if APosicionBytes >= ATotalBytes then
+    Result := ATotalProgreso
   else
-    Result := Trunc(
-      (APosicionBytes / ATotalBytes) * ATotalProgreso);
+  begin
+    iTotalKb := 1 + ((ATotalBytes - 1) div 1024);
+    if iTotalKb <= MaxInt then
+      Result := Integer(APosicionBytes div 1024)
+    else
+      Result := Trunc(
+        (APosicionBytes / ATotalBytes) * ATotalProgreso);
+  end;
 end;
 
 constructor TEjecutorRestauracionSQL.Create(
@@ -514,7 +520,7 @@ begin
       if Assigned(FLog) and ((FSentenciasEjecutadas mod 250) = 0) then
       begin
         FLog.Add(Format(
-          ' -- [OK] Sentencias ejecutadas: %d | %d / %d KB',
+          ' -- [OK] Sentencias ejecutadas: %d | progreso %d / %d',
           [FSentenciasEjecutadas, FPosicion, FTotal]));
       end;
     except

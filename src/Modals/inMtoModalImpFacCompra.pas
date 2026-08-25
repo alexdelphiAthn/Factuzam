@@ -59,6 +59,11 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoFacturaCompra = 'FacCompra_%s_%s';
+  STituloPreviewFacturaCompra = 'FACTURA DE COMPRA';
+  SEtiquetaAlmacenDestinoFacturaCompra = 'ALMACEN DESTINO';
+
 procedure TfrmPrintFacCompra.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
@@ -70,8 +75,8 @@ begin
   begin
     dmFacc.PrepararPrint(edtSerie.Text, edtNumero.Text);
     cfg := Default(TDocCompraCabCfg);
-    cfg.Titulo         := 'FACTURA DE COMPRA';
-    cfg.EtiquetaIzq    := 'ALMACEN DESTINO';
+    cfg.Titulo         := STituloPreviewFacturaCompra;
+    cfg.EtiquetaIzq    := SEtiquetaAlmacenDestinoFacturaCompra;
     cfg.FieldRazonIzq  := 'NOMBRE_ALM_FACC';
     cfg.FieldDirIzq    := 'DIRECCION_ALM_FACC';
     cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_FACC';
@@ -100,7 +105,8 @@ begin
         fPreview.DialogoGuardar.InitialDir :=
           ParametrosApp.GetPath('appDirExcel');
         fPreview.DialogoGuardar.FileName :=
-          'FacCompra_' + edtSerie.Text + '_' + edtNumero.Text;
+          Format(SNombreArchivoFacturaCompra,
+            [edtSerie.Text, edtNumero.Text]);
         ExportarDocCompraHorizontal(ConexionPrincipal,fPreview.dxSpreadSheet1,
           dmFacc.unqryCabFaccPrint,
           dmFacc.unqryLinFaccPrint,

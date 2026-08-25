@@ -13,7 +13,7 @@
 {    fotos con la cámara (o elegirlas de la galería) asociándolas a un código  }
 {    de artículo y un color, las reduce a la resolución máxima configurada     }
 {    (por defecto 1000 px), las acumula en una cola por lotes y las sube al    }
-{    webservice de Factuzam (upload_foto.php / fotosnube). Si hay varias       }
+{    endpoint de fotos de la API v1 de Factuzam. Si hay varias fotos del       }
 {    fotos del mismo artículo+color se les asigna un índice correlativo.       }
 {******************************************************************************}
 unit UPrincipal;

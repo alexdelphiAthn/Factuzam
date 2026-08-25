@@ -32,6 +32,29 @@ uses
   System.StrUtils,
   System.SysUtils;
 
+resourcestring
+  SErrorActualizacionSinHttps =
+    'La actualización no utiliza una conexión HTTPS.';
+  SErrorHuellaActualizacionInvalida =
+    'La actualización no incluye una huella SHA-256 válida.';
+  SErrorServidorActualizacionHttp =
+    'El servidor respondió HTTP %d.';
+  SErrorTamanoActualizacionNoCoincide =
+    'El tamaño de la actualización no coincide.';
+  SErrorArchivoActualizacionNoEjecutable =
+    'El archivo descargado no es un ejecutable válido.';
+  SErrorHuellaActualizacionNoCoincide =
+    'La huella SHA-256 de la actualización no coincide.';
+  SErrorArquitecturaActualizacionNoCoincide =
+    'La actualización no corresponde a la arquitectura instalada.';
+  SErrorRestaurarEjecutableAnterior =
+    '%sNo se pudo restaurar automáticamente el ejecutable anterior: %s' +
+    '%sSe conserva en: %s';
+  SErrorRenombrarEjecutableActual =
+    'No se pudo renombrar el ejecutable actual: %s';
+  SErrorCopiarEjecutableNuevo =
+    'No se pudo copiar el nuevo ejecutable: %s';
+
 function CrearRutaDescarga: string;
 var
   Identificador: TGUID;
@@ -94,46 +117,48 @@ begin
   ARuta := '';
   AError := '';
   if not StartsText('https://', Trim(AUrl)) then
-    AError := 'La actualización no utiliza una conexión HTTPS.'
+    AError := SErrorActualizacionSinHttps
   else if Length(Trim(ASha256)) <> 64 then
-    AError := 'La actualización no incluye una huella SHA-256 válida.'
+    AError := SErrorHuellaActualizacionInvalida
   else
   begin
     ARuta := CrearRutaDescarga;
     oHttp := THTTPClient.Create;
-    oFlujo := TFileStream.Create(ARuta, fmCreate);
     try
+      oFlujo := TFileStream.Create(ARuta, fmCreate);
       try
-        oHttp.ConnectionTimeout := 15000;
-        oHttp.ResponseTimeout := 600000;
-        oRespuesta := oHttp.Get(AUrl, oFlujo);
-        if (oRespuesta.StatusCode < 200) or
-           (oRespuesta.StatusCode >= 300) then
-          AError := Format(
-            'El servidor respondió HTTP %d.',
-            [oRespuesta.StatusCode])
-        else if (ACantidadBytes > 0) and
-                (oFlujo.Size <> ACantidadBytes) then
-          AError := 'El tamaño de la actualización no coincide.'
-        else if not CabeceraEjecutableValida(ARuta) then
-          AError := 'El archivo descargado no es un ejecutable válido.'
-        else
-        begin
-          sHash := UpperCase(THashSHA2.GetHashStringFromFile(ARuta));
-          if not SameText(sHash, Trim(ASha256)) then
-            AError := 'La huella SHA-256 de la actualización no coincide.'
-          else if not MismaArquitectura(ParamStr(0), ARuta) then
-            AError :=
-              'La actualización no corresponde a la arquitectura instalada.'
+        try
+          oHttp.ConnectionTimeout := 15000;
+          oHttp.ResponseTimeout := 600000;
+          oRespuesta := oHttp.Get(AUrl, oFlujo);
+          if (oRespuesta.StatusCode < 200) or
+             (oRespuesta.StatusCode >= 300) then
+            AError := Format(
+              SErrorServidorActualizacionHttp,
+              [oRespuesta.StatusCode])
+          else if (ACantidadBytes > 0) and
+                  (oFlujo.Size <> ACantidadBytes) then
+            AError := SErrorTamanoActualizacionNoCoincide
+          else if not CabeceraEjecutableValida(ARuta) then
+            AError := SErrorArchivoActualizacionNoEjecutable
           else
-            Result := True;
+          begin
+            sHash := UpperCase(THashSHA2.GetHashStringFromFile(ARuta));
+            if not SameText(sHash, Trim(ASha256)) then
+              AError := SErrorHuellaActualizacionNoCoincide
+            else if not MismaArquitectura(ParamStr(0), ARuta) then
+              AError := SErrorArquitecturaActualizacionNoCoincide
+            else
+              Result := True;
+          end;
+        except
+          on E: Exception do
+            AError := E.Message;
         end;
-      except
-        on E: Exception do
-          AError := E.Message;
+      finally
+        oFlujo.Free;
       end;
     finally
-      oFlujo.Free;
       oHttp.Free;
     end;
   end;
@@ -205,10 +230,9 @@ begin
            PChar(ARutaAnterior),
            PChar(ARutaActual),
            MOVEFILE_WRITE_THROUGH) then
-    AError := AError + sLineBreak +
-      'No se pudo restaurar automáticamente el ejecutable anterior: ' +
-      SysErrorMessage(GetLastError) + sLineBreak +
-      'Se conserva en: ' + ARutaAnterior;
+    AError := AError + Format(SErrorRestaurarEjecutableAnterior,
+      [sLineBreak, SysErrorMessage(GetLastError), sLineBreak,
+       ARutaAnterior]);
 end;
 
 function InstalarActualizacionSoporte(
@@ -236,15 +260,15 @@ begin
              PChar(sRutaActual),
              PChar(ARutaAnterior),
              MOVEFILE_WRITE_THROUGH) then
-      AError := 'No se pudo renombrar el ejecutable actual: ' +
-        SysErrorMessage(GetLastError)
+      AError := Format(SErrorRenombrarEjecutableActual,
+        [SysErrorMessage(GetLastError)])
     else if not CopyFile(
                   PChar(sRutaDescarga),
                   PChar(sRutaActual),
                   True) then
     begin
-      AError := 'No se pudo copiar el nuevo ejecutable: ' +
-        SysErrorMessage(GetLastError);
+      AError := Format(SErrorCopiarEjecutableNuevo,
+        [SysErrorMessage(GetLastError)]);
       RestaurarEjecutableAnterior(
         ARutaAnterior,
         sRutaActual,

@@ -1,4 +1,4 @@
-inherited frmModalMovimientosSku: TfrmModalMovimientosSku
+﻿inherited frmModalMovimientosSku: TfrmModalMovimientosSku
   BorderStyle = bsSizeable
   Caption = 'Movimientos de almac'#233'n'
   ClientHeight = 520

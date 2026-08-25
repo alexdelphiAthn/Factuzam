@@ -195,6 +195,9 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SDescripcionFormatoPredeterminado = 'Predet: %s';
+
 destructor TfrmPrint.Destroy;
 begin
   try
@@ -1082,7 +1085,8 @@ begin
   Formulario := TfrmModalGenImpSave.Create(Self);
   try
     Formulario.edtNombreOrigen.Text := Self.Name;
-    Formulario.edtDescripcion.Text := 'Predet: ' + AFormato;
+    Formulario.edtDescripcion.Text :=
+      Format(SDescripcionFormatoPredeterminado, [AFormato]);
     Formulario.edtDescripcion.Enabled := False;
     Formulario.ShowModal;
     if Formulario.sFicha = 'S' then

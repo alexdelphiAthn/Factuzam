@@ -30,6 +30,12 @@ uses
   System.SysUtils, Data.DB,
   inLibPlanEjecucionMariaDB, inLibProteccionDatosFacturacion;
 
+resourcestring
+  SErrorMariaDbSinPlanEjecucion =
+    'MariaDB no ha devuelto un plan de ejecución';
+  SErrorMariaDbPlanEjecucionVacio =
+    'MariaDB ha devuelto un plan de ejecución vacío';
+
 type
   TCatalogoMetadatosBBDDUniDAC = class(
     TInterfacedObject,
@@ -432,12 +438,10 @@ begin
     oConsulta.SQL.Text := sConsulta;
     oConsulta.Open;
     if oConsulta.IsEmpty or (oConsulta.FieldCount = 0) then
-      raise EDatabaseError.Create(
-        'MariaDB no ha devuelto un plan de ejecución');
+      raise EDatabaseError.Create(SErrorMariaDbSinPlanEjecucion);
     Result := oConsulta.Fields[0].AsString;
     if Trim(Result) = '' then
-      raise EDatabaseError.Create(
-        'MariaDB ha devuelto un plan de ejecución vacío');
+      raise EDatabaseError.Create(SErrorMariaDbPlanEjecucionVacio);
   finally
     oConsulta.Free;
   end;

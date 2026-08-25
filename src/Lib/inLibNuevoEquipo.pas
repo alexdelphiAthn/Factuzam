@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibNuevoEquipo                                              }
 {    Tipo:       Libreria                                                      }
@@ -49,6 +49,16 @@ implementation
 uses
   System.Hash,
   System.IniFiles;
+
+resourcestring
+  SErrorRutaIniNuevoEquipoVacia =
+    'La ruta del INI no puede estar vacía.';
+  SErrorMarcaNuevoEquipoIniNoCompletada =
+    'No se pudo completar la marca de nuevo equipo del INI.';
+  SErrorContrasenaNuevoEquipoVacia =
+    'La contrasena nueva no puede estar vacia.';
+  SErrorContrasenaNuevoEquipoDemasiadoLarga =
+    'La contrasena nueva no puede superar %d caracteres.';
 
 const
   HASH_CONMUTADOR_NUEVO_EQUIPO =
@@ -124,13 +134,14 @@ var
   i: Integer;
 begin
   Result := True;
-  if not HayConmutadorNuevoEquipo(AParametros) then
-    Exit;
-  i := Low(AParametros) + 1;
-  while (i <= High(AParametros)) and Result do
+  if HayConmutadorNuevoEquipo(AParametros) then
   begin
-    Result := not EsParametroPosicional(AParametros[i]);
-    Inc(i);
+    i := Low(AParametros) + 1;
+    while (i <= High(AParametros)) and Result do
+    begin
+      Result := not EsParametroPosicional(AParametros[i]);
+      Inc(i);
+    end;
   end;
 end;
 
@@ -139,13 +150,14 @@ var
   i: Integer;
 begin
   Result := True;
-  if not HayConmutadorNuevoEquipo then
-    Exit;
-  i := 2;
-  while (i <= ParamCount) and Result do
+  if HayConmutadorNuevoEquipo then
   begin
-    Result := not EsParametroPosicional(ParamStr(i));
-    Inc(i);
+    i := 2;
+    while (i <= ParamCount) and Result do
+    begin
+      Result := not EsParametroPosicional(ParamStr(i));
+      Inc(i);
+    end;
   end;
 end;
 
@@ -153,8 +165,7 @@ procedure ComprobarRutaIni(const ARutaIni: string);
 begin
   if Trim(ARutaIni) = '' then
   begin
-    raise EArgumentException.Create(
-      'La ruta del INI no puede estar vacía.');
+    raise EArgumentException.Create(SErrorRutaIniNuevoEquipoVacia);
   end;
 end;
 
@@ -165,23 +176,25 @@ var
   sMarca: string;
 begin
   ComprobarRutaIni(ARutaIni);
-  if not FileExists(ARutaIni) then
-    Exit(False);
-  oIni := TIniFile.Create(ARutaIni);
-  try
-    sMarca := Trim(oIni.ReadString(
-      SECCION_INSTALACION,
-      CLAVE_NUEVO_EQUIPO_PENDIENTE,
-      ''));
-    Result := sMarca <> '';
-    if Result then
-    begin
-      Result := SameText(
-        THashSHA2.GetHashString(sMarca),
-        HASH_MARCA_NUEVO_EQUIPO_PENDIENTE);
+  Result := False;
+  if FileExists(ARutaIni) then
+  begin
+    oIni := TIniFile.Create(ARutaIni);
+    try
+      sMarca := Trim(oIni.ReadString(
+        SECCION_INSTALACION,
+        CLAVE_NUEVO_EQUIPO_PENDIENTE,
+        ''));
+      Result := sMarca <> '';
+      if Result then
+      begin
+        Result := SameText(
+          THashSHA2.GetHashString(sMarca),
+          HASH_MARCA_NUEVO_EQUIPO_PENDIENTE);
+      end;
+    finally
+      oIni.Free;
     end;
-  finally
-    oIni.Free;
   end;
 end;
 
@@ -211,8 +224,7 @@ begin
          SECCION_INSTALACION,
          CLAVE_NUEVO_EQUIPO_PENDIENTE) then
     begin
-      raise EInOutError.Create(
-        'No se pudo completar la marca de nuevo equipo del INI.');
+      raise EInOutError.Create(SErrorMarcaNuevoEquipoIniNoCompletada);
     end;
   finally
     oIni.Free;
@@ -232,12 +244,12 @@ begin
   if AContrasena = '' then
   begin
     raise EContrasenaNuevoEquipoNoValida.Create(
-      'La contrasena nueva no puede estar vacia.');
+      SErrorContrasenaNuevoEquipoVacia);
   end;
   if Length(AContrasena) > LONGITUD_MAXIMA_CONTRASENA_NUEVO_EQUIPO then
   begin
     raise EContrasenaNuevoEquipoNoValida.CreateFmt(
-      'La contrasena nueva no puede superar %d caracteres.',
+      SErrorContrasenaNuevoEquipoDemasiadoLarga,
       [LONGITUD_MAXIMA_CONTRASENA_NUEVO_EQUIPO]);
   end;
 end;

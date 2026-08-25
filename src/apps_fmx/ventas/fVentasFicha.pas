@@ -42,6 +42,31 @@ uses
   System.SysUtils, System.Types, System.UITypes, System.IOUtils,
   FMX.Types, FMX.StdCtrls, FMX.Layouts, FMX.Graphics;
 
+const
+  cEtiquetaSku = 'SKU';
+  cEtiquetaPvp = 'PVP';
+
+resourcestring
+  STituloDetalleVenta = 'Detalle de la venta';
+  SBotonCerrarDetalleVenta = 'Cerrar';
+  SEtiquetaFechaHora = 'Fecha y hora';
+  SEtiquetaArticulo = 'Artículo';
+  SEtiquetaColor = 'Color';
+  SEtiquetaFamilia = 'Familia';
+  SEtiquetaTemporada = 'Temporada';
+  SEtiquetaProveedor = 'Proveedor';
+  SEtiquetaCantidad = 'Cantidad';
+  SEtiquetaPrecioCoste = 'Precio coste';
+  SEtiquetaDescuento = 'Descuento';
+  SEtiquetaPrecioVenta = 'Precio venta';
+  SEtiquetaCosteTotal = 'Coste total';
+  SEtiquetaTotalLinea = 'Total línea';
+  SEtiquetaDocumento = 'Documento';
+  SDetalleDocumentoLinea = '%s  línea %s';
+  SEtiquetaEmpresa = 'Empresa';
+  SEtiquetaEstado = 'Estado';
+  SEstadoVentaAnulada = 'VENTA ANULADA';
+
 function Moneda(AValor: Double): string;
 begin
   Result := FormatFloat('#,##0.00', AValor) + ' €';
@@ -102,13 +127,13 @@ var
   lblTitulo: TLabel;
   scbDatos: TVertScrollBox;
 begin
-  Self.Caption := 'Detalle de la venta';
+  Self.Caption := STituloDetalleVenta;
   btnCerrar := TButton.Create(Self);
   btnCerrar.Parent := Self;
   btnCerrar.Align := TAlignLayout.Bottom;
   btnCerrar.Height := 52;
   btnCerrar.Margins.Rect := RectF(12, 8, 12, 12);
-  btnCerrar.Text := 'Cerrar';
+  btnCerrar.Text := SBotonCerrarDetalleVenta;
   btnCerrar.OnClick := OnCerrarClick;
   lblTitulo := TLabel.Create(Self);
   lblTitulo.Parent := Self;
@@ -144,28 +169,29 @@ begin
   scbDatos.Align := TAlignLayout.Client;
   scbDatos.Margins.Rect := RectF(12, 0, 12, 0);
   FContenido := scbDatos;
-  AgregarDato('Fecha y hora', ALinea.Fecha + '  ' + ALinea.Hora);
-  AgregarDato('Artículo', ALinea.Articulo);
-  AgregarDato('SKU', ALinea.Sku);
-  AgregarDato('Color', ALinea.Color);
-  AgregarDato('Familia', ALinea.Familia);
-  AgregarDato('Temporada', ALinea.Temporada);
-  AgregarDato('Proveedor', ALinea.Proveedor);
+  AgregarDato(SEtiquetaFechaHora, ALinea.Fecha + '  ' + ALinea.Hora);
+  AgregarDato(SEtiquetaArticulo, ALinea.Articulo);
+  AgregarDato(cEtiquetaSku, ALinea.Sku);
+  AgregarDato(SEtiquetaColor, ALinea.Color);
+  AgregarDato(SEtiquetaFamilia, ALinea.Familia);
+  AgregarDato(SEtiquetaTemporada, ALinea.Temporada);
+  AgregarDato(SEtiquetaProveedor, ALinea.Proveedor);
   AgregarSeparador;
-  AgregarDato('Cantidad', Cantidad(ALinea.Cantidad));
-  AgregarDato('Precio coste', Moneda(ALinea.PrecioCoste));
-  AgregarDato('PVP', Moneda(ALinea.Pvp));
-  AgregarDato('Descuento',
+  AgregarDato(SEtiquetaCantidad, Cantidad(ALinea.Cantidad));
+  AgregarDato(SEtiquetaPrecioCoste, Moneda(ALinea.PrecioCoste));
+  AgregarDato(cEtiquetaPvp, Moneda(ALinea.Pvp));
+  AgregarDato(SEtiquetaDescuento,
     FormatFloat('#,##0.##', ALinea.PorcentajeDescuento) + ' %   (' +
     Moneda(ALinea.ImporteDescuento) + ')');
-  AgregarDato('Precio venta', Moneda(ALinea.PrecioVenta));
-  AgregarDato('Coste total', Moneda(ALinea.TotalCoste));
-  AgregarDato('Total línea', Moneda(ALinea.TotalLinea));
+  AgregarDato(SEtiquetaPrecioVenta, Moneda(ALinea.PrecioVenta));
+  AgregarDato(SEtiquetaCosteTotal, Moneda(ALinea.TotalCoste));
+  AgregarDato(SEtiquetaTotalLinea, Moneda(ALinea.TotalLinea));
   AgregarSeparador;
-  AgregarDato('Documento', ALinea.Documento + '  línea ' + ALinea.Linea);
-  AgregarDato('Empresa', ALinea.Empresa);
+  AgregarDato(SEtiquetaDocumento,
+    Format(SDetalleDocumentoLinea, [ALinea.Documento, ALinea.Linea]));
+  AgregarDato(SEtiquetaEmpresa, ALinea.Empresa);
   if ALinea.Anulada then
-    AgregarDato('Estado', 'VENTA ANULADA');
+    AgregarDato(SEtiquetaEstado, SEstadoVentaAnulada);
 end;
 
 procedure TfrmFicha.OnCerrarClick(Sender: TObject);

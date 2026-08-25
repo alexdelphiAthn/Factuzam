@@ -408,6 +408,12 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosPedidoCompra = 'Búsqueda de artículos';
+  STituloBuscarSkusPedidoCompra = 'SKUs del artículo %s';
+  STituloBuscarEmpresasPedidoCompra = 'Búsqueda de empresas';
+  STituloBuscarProveedoresPedidoCompra = 'Búsqueda de proveedores';
+
 type
   TfrmMtoPedidosCompraInyectada = class(TfrmMtoPedidosCompra)
   private
@@ -484,7 +490,7 @@ begin
     else
       Result := BuscarArticuloProveedorCompra(
         FBusquedasArticulos, BusquedaVisual, sPrv,
-        'Búsqueda de artículos', 'frmMtoDevcArtSearch', Self);
+        STituloBuscarArticulosPedidoCompra, 'frmMtoDevcArtSearch', Self);
   end;
 end;
 
@@ -513,7 +519,7 @@ begin
   else
     Result := BuscarSkuArticuloCompra(
       FBusquedasArticulos, BusquedaVisual, sArt,
-      'SKUs del artículo ' + sArt,
+      Format(STituloBuscarSkusPedidoCompra, [sArt]),
       'frmMtoPedcSkuSearch', Self);
 end;
 
@@ -1296,7 +1302,7 @@ begin
     begin
       oConsulta := FBusquedaEmpresas.ConsultarEmpresas;
       if BusquedaVisual.EjecutarBusquedaDataSet(
-        'Búsqueda de empresas',
+        STituloBuscarEmpresasPedidoCompra,
         oConsulta.DataSet,
         'frmMtoEmpFacSearch',
         Self) then
@@ -1337,7 +1343,7 @@ begin
     begin
       oConsulta := FBusquedaProveedores.ConsultarProveedores;
       if BusquedaVisual.EjecutarBusquedaDataSet(
-        'Búsqueda de proveedores',
+        STituloBuscarProveedoresPedidoCompra,
         oConsulta.DataSet,
         'frmMtoPedcProvSearch',
         Self) then

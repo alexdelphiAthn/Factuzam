@@ -51,6 +51,15 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorSeleccionarEnvioError = 'Seleccione un envío de error.';
+  SErrorScriptRemotoNoPendiente = 'No hay un script pendiente.';
+  SErrorScriptRemotoVacio = 'El script propuesto está vacío.';
+  SErrorHuellaScriptRemotoNoCoincide =
+    'La huella SHA-256 del script no coincide.';
+  SErrorComunicarResultadoScriptRemoto =
+    'El script se ejecutó, pero no se pudo comunicar el resultado: %s';
+
 procedure TdmErroresEnvios.ConfigurarVisibilidad(
   const AUsuario: string;
   AEsAdministrador: Boolean);
@@ -196,7 +205,7 @@ begin
     end;
   end
   else
-    AError := 'Seleccione un envío de error.';
+    AError := SErrorSeleccionarEnvioError;
 end;
 
 function TdmErroresEnvios.EnviarComentarioActual(
@@ -217,7 +226,7 @@ begin
       Result := ActualizarActual(AError);
   end
   else
-    AError := 'Seleccione un envío de error.';
+    AError := SErrorSeleccionarEnvioError;
 end;
 
 function TdmErroresEnvios.EjecutarScriptActual(
@@ -244,14 +253,14 @@ begin
     sSql := unqryTablaG.FieldByName('SCRIPT_SQL_ERENV').AsString;
     sHash := UpperCase(THashSHA2.GetHashString(sSql));
     if iId <= 0 then
-      AError := 'No hay un script pendiente.'
+      AError := SErrorScriptRemotoNoPendiente
     else if Trim(sSql) = '' then
-      AError := 'El script propuesto está vacío.'
+      AError := SErrorScriptRemotoVacio
     else if not SameText(
                   sHash,
                   unqryTablaG.FieldByName(
                     'SHA256_SCRIPT_ERENV').AsString) then
-      AError := 'La huella SHA-256 del script no coincide.'
+      AError := SErrorHuellaScriptRemotoNoCoincide
     else
     begin
       oScript := TUniScript.Create(nil);
@@ -283,8 +292,8 @@ begin
                sResultado,
                sNotificacion) and
          (AError = '') then
-        AError := 'El script se ejecutó, pero no se pudo comunicar el ' +
-          'resultado: ' + sNotificacion;
+        AError := Format(SErrorComunicarResultadoScriptRemoto,
+          [sNotificacion]);
       oConsulta := TUniQuery.Create(nil);
       try
         oConsulta.Connection := unqryTablaG.Connection;
@@ -301,7 +310,7 @@ begin
     end;
   end
   else
-    AError := 'Seleccione un envío de error.';
+    AError := SErrorSeleccionarEnvioError;
 end;
 
 initialization

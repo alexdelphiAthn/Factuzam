@@ -31,7 +31,7 @@ implementation
 uses
   dxCore, cxClasses, dxSpreadSheetStrs;
 
-procedure EnumerarTraduccionesEspanolasDxSpreadSheet(
+procedure RegistrarMenuEdicionDxSpreadSheet(
   const AProcesar: TProcesarTraduccionDxSpreadSheet);
 
   procedure Registrar(
@@ -141,6 +141,26 @@ begin
       'sdxBuiltInPopupMenuPasteSpecialValuesAndStyles',
       @sdxBuiltInPopupMenuPasteSpecialValuesAndStyles,
       'Valor&es y formato de origen');
+  end;
+end;
+
+procedure RegistrarMenuHojaDxSpreadSheet(
+  const AProcesar: TProcesarTraduccionDxSpreadSheet);
+
+  procedure Registrar(
+    const ANombre: string;
+    ARecurso: PResStringRec;
+    const ATexto: string);
+  begin
+    AProcesar(
+      ANombre,
+      ARecurso,
+      ATexto);
+  end;
+
+begin
+  if Assigned(AProcesar) then
+  begin
     Registrar(
       'sdxBuiltInPopupMenuRename',
       @sdxBuiltInPopupMenuRename,
@@ -205,6 +225,26 @@ begin
       'sdxBuiltInPopupMenuUnprotectSheet',
       @sdxBuiltInPopupMenuUnprotectSheet,
       'Des&proteger hoja...');
+  end;
+end;
+
+procedure RegistrarDialogosYAccionesDxSpreadSheet(
+  const AProcesar: TProcesarTraduccionDxSpreadSheet);
+
+  procedure Registrar(
+    const ANombre: string;
+    ARecurso: PResStringRec;
+    const ATexto: string);
+  begin
+    AProcesar(
+      ANombre,
+      ARecurso,
+      ATexto);
+  end;
+
+begin
+  if Assigned(AProcesar) then
+  begin
     // Diálogo para cambiar el nombre de la hoja
     Registrar(
       'sdxRenameDialogCaption',
@@ -332,6 +372,26 @@ begin
       'sdxActionSortCells',
       @sdxActionSortCells,
       'Ordenar celdas');
+  end;
+end;
+
+procedure RegistrarTextosAuxiliaresDxSpreadSheet(
+  const AProcesar: TProcesarTraduccionDxSpreadSheet);
+
+  procedure Registrar(
+    const ANombre: string;
+    ARecurso: PResStringRec;
+    const ATexto: string);
+  begin
+    AProcesar(
+      ANombre,
+      ARecurso,
+      ATexto);
+  end;
+
+begin
+  if Assigned(AProcesar) then
+  begin
     // Hipervínculos
     Registrar(
       'sdxDefaultHyperlinkScreenTip',
@@ -406,6 +466,18 @@ begin
       'sdxFormulaBarSelectionInfo',
       @sdxFormulaBarSelectionInfo,
       '%dF x %dC');
+  end;
+end;
+
+procedure EnumerarTraduccionesEspanolasDxSpreadSheet(
+  const AProcesar: TProcesarTraduccionDxSpreadSheet);
+begin
+  if Assigned(AProcesar) then
+  begin
+    RegistrarMenuEdicionDxSpreadSheet(AProcesar);
+    RegistrarMenuHojaDxSpreadSheet(AProcesar);
+    RegistrarDialogosYAccionesDxSpreadSheet(AProcesar);
+    RegistrarTextosAuxiliaresDxSpreadSheet(AProcesar);
   end;
 end;
 

@@ -221,7 +221,7 @@ type
       const ARegistroLog: IRegistroLog);
     procedure AsignarConfiguracionCampos(
       const AConfiguracionCampos: IConfiguracionCampos);
-    procedure AplicarTraduccionActual;
+    procedure AplicarTraduccionActual; virtual;
     procedure AsignarFotosArticulos(AFotos: TFotosArticulos);
     procedure AsignarUnidadesMedida(AUnidades: TUnidadesMedida);
     procedure AsignarServiciosVisuales(

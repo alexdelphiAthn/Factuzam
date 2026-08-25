@@ -57,6 +57,10 @@ implementation
 uses
   inLibUser, inLibMsgArticulos;
 
+resourcestring
+  SCaptionExcluirArticulosYaEnSesionTarifa =
+    'Excluir articulos ya cargados en la sesion';
+
 class function TfrmModalCargarSesionTarifa.Ejecutar(
   AOwner: TComponent;
   ACodigoTarc: Integer;
@@ -103,7 +107,7 @@ end;
 
 function TfrmModalCargarSesionTarifa.TextoExcluirYaCargados: string;
 begin
-  Result := 'Excluir articulos ya cargados en la sesion';
+  Result := SCaptionExcluirArticulosYaEnSesionTarifa;
 end;
 
 function TfrmModalCargarSesionTarifa.EjecutarInsercion(

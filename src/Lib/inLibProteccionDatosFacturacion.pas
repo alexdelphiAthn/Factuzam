@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibProteccionDatosFacturacion                               }
 {    Tipo:       Libreria de dominio                                           }
@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripcion:                                                                }
 {    Proteccion comun frente a modificaciones SQL directas de las tablas de    }
-{    facturacion. No depende de VCL, UniDAC ni del modo VERI*FACTU activo.      }
+{    facturacion. No depende de VCL, UniDAC ni del modo VERI*FACTU activo.     }
 {******************************************************************************}
 unit inLibProteccionDatosFacturacion;
 
@@ -113,11 +113,13 @@ end;
 
 procedure SaltarCadenaSimple(const ASql: string; var APosicion: Integer);
 var
+  bTerminada: Boolean;
   cDelimitador: Char;
 begin
   cDelimitador := ASql[APosicion];
   Inc(APosicion);
-  while APosicion <= Length(ASql) do
+  bTerminada := False;
+  while (APosicion <= Length(ASql)) and not bTerminada do
   begin
     if ASql[APosicion] = '\' then
       Inc(APosicion, 2)
@@ -129,7 +131,7 @@ begin
       else
       begin
         Inc(APosicion);
-        Exit;
+        bTerminada := True;
       end;
     end
     else
@@ -142,12 +144,14 @@ function LeerIdentificadorDelimitado(
   var APosicion: Integer;
   ACierre: Char): string;
 var
+  bTerminado: Boolean;
   cApertura: Char;
 begin
   Result := '';
   cApertura := ASql[APosicion];
   Inc(APosicion);
-  while APosicion <= Length(ASql) do
+  bTerminado := False;
+  while (APosicion <= Length(ASql)) and not bTerminado do
   begin
     if ASql[APosicion] = ACierre then
     begin
@@ -161,7 +165,7 @@ begin
       else
       begin
         Inc(APosicion);
-        Exit;
+        bTerminado := True;
       end;
     end
     else
@@ -222,24 +226,22 @@ function EsComentarioEjecutableMySql(
   APosicion: Integer;
   out AInicioContenido: Integer): Boolean;
 begin
-  Result := False;
   AInicioContenido := 0;
-  if (APosicion + 2 <= Length(ASql)) and
-     (ASql[APosicion] = '/') and
-     (ASql[APosicion + 1] = '*') and
-     (ASql[APosicion + 2] = '!') then
-  begin
+  Result := (APosicion + 2 <= Length(ASql)) and
+    (ASql[APosicion] = '/') and
+    (ASql[APosicion + 1] = '*') and
+    (ASql[APosicion + 2] = '!');
+  if Result then
     AInicioContenido := APosicion + 3;
-    Exit(True);
-  end;
-  if (APosicion + 3 <= Length(ASql)) and
-     (ASql[APosicion] = '/') and
-     (ASql[APosicion + 1] = '*') and
-     (UpCase(ASql[APosicion + 2]) = 'M') and
-     (ASql[APosicion + 3] = '!') then
+  if not Result then
   begin
-    AInicioContenido := APosicion + 4;
-    Exit(True);
+    Result := (APosicion + 3 <= Length(ASql)) and
+      (ASql[APosicion] = '/') and
+      (ASql[APosicion + 1] = '*') and
+      (UpCase(ASql[APosicion + 2]) = 'M') and
+      (ASql[APosicion + 3] = '!');
+    if Result then
+      AInicioContenido := APosicion + 4;
   end;
 end;
 
@@ -535,6 +537,7 @@ function DetectarObjetivoUpdate(
   out ATabla: string): Boolean;
 var
   bEsperandoTabla: Boolean;
+  bFinalizado: Boolean;
   iIndice: Integer;
   iNivel: Integer;
   sNombre: string;
@@ -544,8 +547,10 @@ begin
   iIndice := AIndiceOperacion + 1;
   SaltarPalabras(ATokens, iIndice, ['LOW_PRIORITY', 'IGNORE', 'ONLY']);
   bEsperandoTabla := True;
+  bFinalizado := False;
   iNivel := 0;
-  while iIndice < Length(ATokens) do
+  while (iIndice < Length(ATokens)) and
+        not bFinalizado and not Result do
   begin
     if SimboloEs(ATokens, iIndice, '(') then
     begin
@@ -555,12 +560,15 @@ begin
     else if SimboloEs(ATokens, iIndice, ')') then
     begin
       if iNivel = 0 then
-        Exit;
-      Dec(iNivel);
-      Inc(iIndice);
+        bFinalizado := True
+      else
+      begin
+        Dec(iNivel);
+        Inc(iIndice);
+      end;
     end
     else if (iNivel = 0) and TokenEs(ATokens, iIndice, 'SET') then
-      Exit
+      bFinalizado := True
     else if (iNivel = 0) and bEsperandoTabla then
     begin
       if TokenEs(ATokens, iIndice, 'ONLY') then
@@ -570,7 +578,7 @@ begin
         if EsTablaFacturacionProtegida(sNombre) then
         begin
           ATabla := sNombre;
-          Exit(True);
+          Result := True;
         end;
         bEsperandoTabla := False;
       end
@@ -602,10 +610,12 @@ var
   I: Integer;
 begin
   Result := AToken.Tipo <> ttsIdentificador;
-  if not Result then
-    for I := Low(PALABRAS) to High(PALABRAS) do
-      if SameText(AToken.Texto, PALABRAS[I]) then
-        Exit(True);
+  I := Low(PALABRAS);
+  while not Result and (I <= High(PALABRAS)) do
+  begin
+    Result := SameText(AToken.Texto, PALABRAS[I]);
+    Inc(I);
+  end;
 end;
 
 function ListaContiene(
@@ -631,12 +641,16 @@ function BuscarPalabraNivelCero(
   AInicio: Integer;
   const APalabra: string): Integer;
 var
+  bFinalizado: Boolean;
   I: Integer;
   iNivel: Integer;
 begin
   Result := -1;
+  bFinalizado := False;
   iNivel := 0;
-  for I := AInicio to Length(ATokens) - 1 do
+  I := AInicio;
+  while (I < Length(ATokens)) and
+        not bFinalizado and (Result < 0) do
   begin
     if SimboloEs(ATokens, I, '(') then
       Inc(iNivel)
@@ -646,9 +660,10 @@ begin
         Dec(iNivel);
     end
     else if (iNivel = 0) and TokenEs(ATokens, I, APalabra) then
-      Exit(I)
+      Result := I
     else if (iNivel = 0) and SimboloEs(ATokens, I, ';') then
-      Exit;
+      bFinalizado := True;
+    Inc(I);
   end;
 end;
 
@@ -659,6 +674,7 @@ function ReferenciaDeleteProtegidaEsObjetivo(
   out ATabla: string): Boolean;
 var
   bEsperandoTabla: Boolean;
+  bFinalizado: Boolean;
   iIndice: Integer;
   iNivel: Integer;
   sAlias: string;
@@ -667,12 +683,14 @@ begin
   Result := False;
   ATabla := '';
   bEsperandoTabla := True;
+  bFinalizado := False;
   iIndice := AInicioReferencias;
   iNivel := 0;
-  while iIndice < Length(ATokens) do
+  while (iIndice < Length(ATokens)) and
+        not bFinalizado and not Result do
   begin
     if SimboloEs(ATokens, iIndice, ';') and (iNivel = 0) then
-      Exit
+      bFinalizado := True
     else if SimboloEs(ATokens, iIndice, '(') then
     begin
       Inc(iNivel);
@@ -681,16 +699,19 @@ begin
     else if SimboloEs(ATokens, iIndice, ')') then
     begin
       if iNivel = 0 then
-        Exit;
-      Dec(iNivel);
-      Inc(iIndice);
+        bFinalizado := True
+      else
+      begin
+        Dec(iNivel);
+        Inc(iIndice);
+      end;
     end
     else if (iNivel = 0) and
             (TokenEs(ATokens, iIndice, 'WHERE') or
              TokenEs(ATokens, iIndice, 'ORDER') or
              TokenEs(ATokens, iIndice, 'LIMIT') or
              TokenEs(ATokens, iIndice, 'RETURNING')) then
-      Exit
+      bFinalizado := True
     else if (iNivel = 0) and bEsperandoTabla then
     begin
       if TokenEs(ATokens, iIndice, 'ONLY') then
@@ -719,7 +740,7 @@ begin
             ((sAlias <> '') and ListaContiene(AObjetivos, sAlias))) then
         begin
           ATabla := sNombre;
-          Exit(True);
+          Result := True;
         end;
         bEsperandoTabla := False;
       end
@@ -764,7 +785,7 @@ begin
       Inc(iIndice);
     SaltarPalabras(ATokens, iIndice, ['ONLY']);
 
-    while iIndice < Length(ATokens) do
+    while (iIndice < Length(ATokens)) and not Result do
     begin
       if (not bFormaFromDirecta) and
          (TokenEs(ATokens, iIndice, 'FROM') or
@@ -776,38 +797,44 @@ begin
       if EsTablaFacturacionProtegida(sObjetivo) then
       begin
         ATabla := sObjetivo;
-        Exit(True);
+        Result := True;
       end;
-      if SimboloEs(ATokens, iIndice, '.') and
-         SimboloEs(ATokens, iIndice + 1, '*') then
-        Inc(iIndice, 2);
-      if not SimboloEs(ATokens, iIndice, ',') then
-        Break;
-      Inc(iIndice);
+      if not Result then
+      begin
+        if SimboloEs(ATokens, iIndice, '.') and
+           SimboloEs(ATokens, iIndice + 1, '*') then
+          Inc(iIndice, 2);
+        if not SimboloEs(ATokens, iIndice, ',') then
+          Break;
+        Inc(iIndice);
+      end;
     end;
 
-    if bFormaFromDirecta then
+    if not Result then
     begin
-      iUsing := BuscarPalabraNivelCero(ATokens, iIndice, 'USING');
-      if iUsing >= 0 then
-        iDesde := iUsing + 1
+      if bFormaFromDirecta then
+      begin
+        iUsing := BuscarPalabraNivelCero(ATokens, iIndice, 'USING');
+        if iUsing >= 0 then
+          iDesde := iUsing + 1
+        else
+          iDesde := AIndiceOperacion + 2;
+      end
       else
-        iDesde := AIndiceOperacion + 2;
-    end
-    else
-    begin
-      iDesde := BuscarPalabraNivelCero(ATokens, iIndice, 'FROM');
-      if iDesde < 0 then
-        iDesde := BuscarPalabraNivelCero(ATokens, iIndice, 'USING');
+      begin
+        iDesde := BuscarPalabraNivelCero(ATokens, iIndice, 'FROM');
+        if iDesde < 0 then
+          iDesde := BuscarPalabraNivelCero(ATokens, iIndice, 'USING');
+        if iDesde >= 0 then
+          Inc(iDesde);
+      end;
       if iDesde >= 0 then
-        Inc(iDesde);
+        Result := ReferenciaDeleteProtegidaEsObjetivo(
+          ATokens,
+          iDesde,
+          oObjetivos,
+          ATabla);
     end;
-    if iDesde >= 0 then
-      Result := ReferenciaDeleteProtegidaEsObjetivo(
-        ATokens,
-        iDesde,
-        oObjetivos,
-        ATabla);
   finally
     oObjetivos.Free;
   end;
@@ -818,28 +845,37 @@ function DetectarObjetivoTruncate(
   AIndiceOperacion: Integer;
   out ATabla: string): Boolean;
 var
+  bFinalizado: Boolean;
   iIndice: Integer;
   sNombre: string;
 begin
   Result := False;
   ATabla := '';
+  bFinalizado := False;
   iIndice := AIndiceOperacion + 1;
   SaltarPalabras(ATokens, iIndice, ['TABLE', 'ONLY']);
-  while iIndice < Length(ATokens) do
+  while (iIndice < Length(ATokens)) and
+        not bFinalizado and not Result do
   begin
     if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
-      Exit;
-    if EsTablaFacturacionProtegida(sNombre) then
+      bFinalizado := True
+    else if EsTablaFacturacionProtegida(sNombre) then
     begin
       ATabla := sNombre;
-      Exit(True);
+      Result := True;
     end;
-    if SimboloEs(ATokens, iIndice, '*') then
-      Inc(iIndice);
-    if not SimboloEs(ATokens, iIndice, ',') then
-      Exit;
-    Inc(iIndice);
-    SaltarPalabras(ATokens, iIndice, ['ONLY']);
+    if not Result and not bFinalizado then
+    begin
+      if SimboloEs(ATokens, iIndice, '*') then
+        Inc(iIndice);
+      if not SimboloEs(ATokens, iIndice, ',') then
+        bFinalizado := True
+      else
+      begin
+        Inc(iIndice);
+        SaltarPalabras(ATokens, iIndice, ['ONLY']);
+      end;
+    end;
   end;
 end;
 
@@ -848,30 +884,40 @@ function DetectarObjetivoDropTable(
   AIndiceOperacion: Integer;
   out ATabla: string): Boolean;
 var
+  bFinalizado: Boolean;
   iIndice: Integer;
   sNombre: string;
 begin
   Result := False;
   ATabla := '';
+  bFinalizado := False;
   iIndice := AIndiceOperacion + 1;
   SaltarPalabras(ATokens, iIndice, ['TEMPORARY']);
-  if not TokenEs(ATokens, iIndice, 'TABLE') then
-    Exit;
-  Inc(iIndice);
-  SaltarPalabras(ATokens, iIndice, ['IF', 'EXISTS', 'ONLY']);
-  while iIndice < Length(ATokens) do
+  if TokenEs(ATokens, iIndice, 'TABLE') then
   begin
-    if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
-      Exit;
-    if EsTablaFacturacionProtegida(sNombre) then
-    begin
-      ATabla := sNombre;
-      Exit(True);
-    end;
-    if not SimboloEs(ATokens, iIndice, ',') then
-      Exit;
     Inc(iIndice);
-    SaltarPalabras(ATokens, iIndice, ['ONLY']);
+    SaltarPalabras(ATokens, iIndice, ['IF', 'EXISTS', 'ONLY']);
+    while (iIndice < Length(ATokens)) and
+          not bFinalizado and not Result do
+    begin
+      if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
+        bFinalizado := True
+      else if EsTablaFacturacionProtegida(sNombre) then
+      begin
+        ATabla := sNombre;
+        Result := True;
+      end;
+      if not Result and not bFinalizado then
+      begin
+        if not SimboloEs(ATokens, iIndice, ',') then
+          bFinalizado := True
+        else
+        begin
+          Inc(iIndice);
+          SaltarPalabras(ATokens, iIndice, ['ONLY']);
+        end;
+      end;
+    end;
   end;
 end;
 
@@ -882,15 +928,17 @@ function DetectarObjetivoAlterTable(
 var
   iIndice: Integer;
 begin
+  Result := False;
   ATabla := '';
   iIndice := AIndiceOperacion + 1;
   SaltarPalabras(ATokens, iIndice, ['ONLINE', 'OFFLINE', 'IGNORE']);
-  if not TokenEs(ATokens, iIndice, 'TABLE') then
-    Exit(False);
-  Inc(iIndice);
-  SaltarPalabras(ATokens, iIndice, ['IF', 'EXISTS', 'ONLY']);
-  Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
-    EsTablaFacturacionProtegida(ATabla);
+  if TokenEs(ATokens, iIndice, 'TABLE') then
+  begin
+    Inc(iIndice);
+    SaltarPalabras(ATokens, iIndice, ['IF', 'EXISTS', 'ONLY']);
+    Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
+      EsTablaFacturacionProtegida(ATabla);
+  end;
   if not Result then
     ATabla := '';
 end;
@@ -900,37 +948,45 @@ function DetectarObjetivoRenameTable(
   AIndiceOperacion: Integer;
   out ATabla: string): Boolean;
 var
+  bFinalizado: Boolean;
   iIndice: Integer;
   sNombre: string;
 begin
   Result := False;
   ATabla := '';
+  bFinalizado := False;
   iIndice := AIndiceOperacion + 1;
-  if not TokenEs(ATokens, iIndice, 'TABLE') then
-    Exit;
-  Inc(iIndice);
-  while iIndice < Length(ATokens) do
+  if TokenEs(ATokens, iIndice, 'TABLE') then
   begin
-    if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
-      Exit;
-    if EsTablaFacturacionProtegida(sNombre) then
-    begin
-      ATabla := sNombre;
-      Exit(True);
-    end;
-    if not TokenEs(ATokens, iIndice, 'TO') then
-      Exit;
     Inc(iIndice);
-    if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
-      Exit;
-    if EsTablaFacturacionProtegida(sNombre) then
+    while (iIndice < Length(ATokens)) and
+          not bFinalizado and not Result do
     begin
-      ATabla := sNombre;
-      Exit(True);
+      if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
+        bFinalizado := True
+      else if EsTablaFacturacionProtegida(sNombre) then
+      begin
+        ATabla := sNombre;
+        Result := True;
+      end
+      else if not TokenEs(ATokens, iIndice, 'TO') then
+        bFinalizado := True
+      else
+      begin
+        Inc(iIndice);
+        if not LeerNombreCalificado(ATokens, iIndice, sNombre) then
+          bFinalizado := True
+        else if EsTablaFacturacionProtegida(sNombre) then
+        begin
+          ATabla := sNombre;
+          Result := True;
+        end
+        else if not SimboloEs(ATokens, iIndice, ',') then
+          bFinalizado := True
+        else
+          Inc(iIndice);
+      end;
     end;
-    if not SimboloEs(ATokens, iIndice, ',') then
-      Exit;
-    Inc(iIndice);
   end;
 end;
 
@@ -939,22 +995,30 @@ function DetectarObjetivoCreateOrReplaceTable(
   AIndiceOperacion: Integer;
   out ATabla: string): Boolean;
 var
+  bCabeceraValida: Boolean;
   iIndice: Integer;
 begin
+  Result := False;
   ATabla := '';
   iIndice := AIndiceOperacion + 1;
-  if not TokenEs(ATokens, iIndice, 'OR') then
-    Exit(False);
-  Inc(iIndice);
-  if not TokenEs(ATokens, iIndice, 'REPLACE') then
-    Exit(False);
-  Inc(iIndice);
-  SaltarPalabras(ATokens, iIndice, ['TEMPORARY']);
-  if not TokenEs(ATokens, iIndice, 'TABLE') then
-    Exit(False);
-  Inc(iIndice);
-  Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
-    EsTablaFacturacionProtegida(ATabla);
+  bCabeceraValida := TokenEs(ATokens, iIndice, 'OR');
+  if bCabeceraValida then
+  begin
+    Inc(iIndice);
+    bCabeceraValida := TokenEs(ATokens, iIndice, 'REPLACE');
+  end;
+  if bCabeceraValida then
+  begin
+    Inc(iIndice);
+    SaltarPalabras(ATokens, iIndice, ['TEMPORARY']);
+    bCabeceraValida := TokenEs(ATokens, iIndice, 'TABLE');
+  end;
+  if bCabeceraValida then
+  begin
+    Inc(iIndice);
+    Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
+      EsTablaFacturacionProtegida(ATabla);
+  end;
   if not Result then
     ATabla := '';
 end;
@@ -971,12 +1035,14 @@ begin
     ATokens,
     AIndiceOperacion + 1,
     'INTO');
-  if iIndice < 0 then
-    Exit(False);
-  Inc(iIndice);
-  SaltarPalabras(ATokens, iIndice, ['TABLE', 'ONLY']);
-  Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
-    EsTablaFacturacionProtegida(ATabla);
+  Result := iIndice >= 0;
+  if Result then
+  begin
+    Inc(iIndice);
+    SaltarPalabras(ATokens, iIndice, ['TABLE', 'ONLY']);
+    Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
+      EsTablaFacturacionProtegida(ATabla);
+  end;
   if not Result then
     ATabla := '';
 end;
@@ -990,18 +1056,16 @@ var
   iHasta: Integer;
   iIndice: Integer;
 begin
-  Result := False;
   ATabla := '';
   iIndice := AIndiceOperacion + 1;
-  if not LeerNombreCalificado(ATokens, iIndice, ATabla) or
-     not EsTablaFacturacionProtegida(ATabla) then
+  Result := LeerNombreCalificado(ATokens, iIndice, ATabla) and
+    EsTablaFacturacionProtegida(ATabla);
+  if Result then
   begin
-    ATabla := '';
-    Exit;
+    iDesde := BuscarPalabraNivelCero(ATokens, iIndice, 'FROM');
+    iHasta := BuscarPalabraNivelCero(ATokens, iIndice, 'TO');
+    Result := (iDesde >= 0) and ((iHasta < 0) or (iDesde < iHasta));
   end;
-  iDesde := BuscarPalabraNivelCero(ATokens, iIndice, 'FROM');
-  iHasta := BuscarPalabraNivelCero(ATokens, iIndice, 'TO');
-  Result := (iDesde >= 0) and ((iHasta < 0) or (iDesde < iHasta));
   if not Result then
     ATabla := '';
 end;
@@ -1016,14 +1080,15 @@ begin
   Result := False;
   ATabla := '';
   oTokens := TokenizarSql(ASql);
-  for I := 0 to Length(oTokens) - 1 do
+  I := 0;
+  while (I < Length(oTokens)) and not Result do
   begin
-    if (oTokens[I].Tipo = ttsIdentificador) and
-       EsTablaFacturacionProtegida(oTokens[I].Texto) then
-    begin
-      ATabla := NormalizarNombreTabla(oTokens[I].Texto);
-      Exit(True);
-    end;
+    Result := (oTokens[I].Tipo = ttsIdentificador) and
+      EsTablaFacturacionProtegida(oTokens[I].Texto);
+    if Result then
+      ATabla := NormalizarNombreTabla(oTokens[I].Texto)
+    else
+      Inc(I);
   end;
 end;
 
@@ -1042,11 +1107,11 @@ var
   I: Integer;
   oTokens: TTokensSql;
 begin
-  Result := False;
   AOperacion := '';
   ATabla := '';
   oTokens := TokenizarSql(ASql);
-  for I := 0 to Length(oTokens) - 1 do
+  I := 0;
+  while (I < Length(oTokens)) and (AOperacion = '') do
   begin
     if TokenEs(oTokens, I, 'INSERT') and
        DetectarObjetivoInsertReplace(oTokens, I, ATabla) then
@@ -1084,9 +1149,9 @@ begin
     else if TokenEs(oTokens, I, 'COPY') and
             DetectarObjetivoCopyFrom(oTokens, I, ATabla) then
       AOperacion := 'COPY';
-    if AOperacion <> '' then
-      Exit(True);
+    Inc(I);
   end;
+  Result := AOperacion <> '';
 end;
 
 procedure ValidarSqlSinModificacionesFacturacion(const ASql: string);

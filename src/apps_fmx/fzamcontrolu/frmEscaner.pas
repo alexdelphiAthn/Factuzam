@@ -62,6 +62,12 @@ implementation
 
 {$R *.fmx}
 
+resourcestring
+  SAvisoAccesoCamaraNecesario =
+    'Factuzam necesita acceso a la camara para escanear codigos.';
+  SAvisoPermisoCamaraNecesario =
+    'Factuzam necesita permiso de camara para escanear codigos.';
+
 procedure TFormEscaner.FormShow(Sender: TObject);
 begin
   FBuscando := False;
@@ -88,7 +94,7 @@ begin
       // Mostrar al usuario por que necesitamos la camara, y luego
       // llamar a APostRationaleProc para que aparezca el dialogo del SO
       TDialogService.ShowMessage(
-        'Factuzam necesita acceso a la camara para escanear codigos.',
+        SAvisoAccesoCamaraNecesario,
         procedure(const AResult: TModalResult)
         begin
           APostRationaleProc;
@@ -105,7 +111,7 @@ procedure TFormEscaner.SinPermiso;
 begin
   lblEstado.Text := 'Sin permiso de camara';
   TDialogService.ShowMessage(
-    'Factuzam necesita permiso de camara para escanear codigos.');
+    SAvisoPermisoCamaraNecesario);
 end;
 {$ENDIF}
 

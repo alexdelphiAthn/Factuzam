@@ -80,6 +80,15 @@ implementation
 uses
   inLibMsgFacturas, UniDataInformeEfectosPagoRepositorio;
 
+resourcestring
+  STituloTotalesInformeEfectosPago = 'Totales';
+  STituloTiposInformeEfectosPago = 'Tipos de efecto';
+  STituloSituacionesInformeEfectosPago = 'Situación efectos';
+  STituloBancosInformeEfectosPago = 'Bancos remesa';
+  SCaptionAlmacenesInformeEfectosPago = 'Almacenes';
+  SCaptionFechasInformeEfectosPago = 'Fechas';
+  SCaptionProveedoresInformeEfectosPago = 'Proveedores';
+
 { TfrmPrintEfectosPago }
 
 function TfrmPrintEfectosPago.FiltrosUsados: TFiltrosReport;
@@ -167,13 +176,14 @@ begin
     FchkSoloTotales.Width := 170;
     FchkSoloTotales.Caption := SCaptionMostrarSoloTotales;
   end;
-  FclbTotales := CrearTabChecklist('Totales');
+  FclbTotales := CrearTabChecklist(STituloTotalesInformeEfectosPago);
   CargarTotales;
-  FclbTipos := CrearTabChecklist('Tipos de efecto');
+  FclbTipos := CrearTabChecklist(STituloTiposInformeEfectosPago);
   CargarTiposEfecto;
-  FclbSituaciones := CrearTabChecklist('Situación efectos');
+  FclbSituaciones := CrearTabChecklist(
+    STituloSituacionesInformeEfectosPago);
   CargarSituaciones;
-  FclbBancos := CrearTabChecklist('Bancos remesa');
+  FclbBancos := CrearTabChecklist(STituloBancosInformeEfectosPago);
   CargarBancosRemesa;
 end;
 
@@ -220,12 +230,12 @@ begin
   if FclbTotales <> nil then
   begin
     FclbTotales.Items.Clear;
-    Agregar('ALM', 'Almacenes', False);
-    Agregar('FECHA', 'Fechas', False);
-    Agregar('PRV', 'Proveedores', False);
-    Agregar('BANCO', 'Bancos remesa', True);
-    Agregar('ESTADO', 'Situación efectos', False);
-    Agregar('TEFE', 'Tipos de efecto', False);
+    Agregar('ALM', SCaptionAlmacenesInformeEfectosPago, False);
+    Agregar('FECHA', SCaptionFechasInformeEfectosPago, False);
+    Agregar('PRV', SCaptionProveedoresInformeEfectosPago, False);
+    Agregar('BANCO', STituloBancosInformeEfectosPago, True);
+    Agregar('ESTADO', STituloSituacionesInformeEfectosPago, False);
+    Agregar('TEFE', STituloTiposInformeEfectosPago, False);
   end;
 end;
 

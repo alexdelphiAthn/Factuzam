@@ -42,6 +42,8 @@ const
 procedure InvalidarCachePaleta;
 procedure ConfigurarLecturasAtributosPaleta(
   const ALecturas: ILecturasAtributosPaleta);
+procedure ConfigurarSelectorAtributoPaleta(
+  const ASelector: ISelectorAtributoPaleta);
 
 // Busca por (ID_VA_ATB, CODIGO_ATB). Devuelve True si existe en la paleta
 // Y su EXTRA_ATB es un color valido.
@@ -201,9 +203,6 @@ function SeleccionarAvConPaleta(AConexion: TUniConnection;
 
 implementation
 
-uses
-  Vcl.Forms, inMtoSelectorAtributoPaleta;
-
 var
   GCache        : TDictionary<string, TInfoBasico>;
   GCacheArticulo: TDictionary<string, TInfoBasico>;
@@ -214,6 +213,7 @@ var
   GMapaGlobal        : TDictionary<string, string>;
   GMapaGlobalCargado : Boolean;
   GLecturasPersistencia: ILecturasAtributosPaleta;
+  GSelectorPresentacion: ISelectorAtributoPaleta;
 
 procedure ConfigurarLecturasAtributosPaleta(
   const ALecturas: ILecturasAtributosPaleta);
@@ -221,6 +221,12 @@ begin
   GLecturasPersistencia := ALecturas;
   InvalidarCachePaleta;
   InvalidarMapaAtributosGlobal;
+end;
+
+procedure ConfigurarSelectorAtributoPaleta(
+  const ASelector: ISelectorAtributoPaleta);
+begin
+  GSelectorPresentacion := ASelector;
 end;
 
 function ClaveCache(const AIdVA, ACodigoATB: string): string;
@@ -760,53 +766,22 @@ function SeleccionarAvConPaleta(AConexion: TUniConnection;
                                 AScreenLeft, AScreenTop,
                                 AWidthHint: Integer;
                                 const ACodArt: string): Boolean;
-var
-  F: TfrmSelectorAtributoPaleta;
-  Propietario: TComponent;
-  ResolverInfo: TResolverInfoAtributoPaleta;
 begin
   AValor := '';
   Result := False;
-  if Length(AAvs) > 0 then
-  begin
-    Propietario := Screen.ActiveForm;
-    ResolverInfo :=
-      function(
-        const AValor: string;
-        out AInfo: TInfoBasico): Boolean
-      begin
-        Result := False;
-        if Trim(AIdVa) <> '' then
-          Result := ObtenerInfoBasico(
-            AConexion,
-            AIdVa,
-            AValor,
-            AInfo);
-        if not Result then
-          Result := BuscarInfoBasicoEnArticulo(
-            AConexion,
-            AValor,
-            ObtenerMapaAtributosGlobal(AConexion),
-            AInfo);
-      end;
-    F := TfrmSelectorAtributoPaleta.CreateConOpciones(
-      Propietario,
+  if (Length(AAvs) > 0) and
+     (GSelectorPresentacion <> nil) then
+    Result := GSelectorPresentacion.Seleccionar(
       AConexion,
       GLecturasPersistencia,
-      ResolverInfo,
       AIdVa,
       AAvs,
       AValorActual,
+      AValor,
       AScreenLeft,
       AScreenTop,
       AWidthHint,
       ACodArt);
-    try
-      Result := F.Ejecutar(AValor);
-    finally
-      F.Free;
-    end;
-  end;
 end;
 
 initialization
@@ -817,6 +792,7 @@ initialization
   GMapaGlobalCargado := False;
 
 finalization
+  GSelectorPresentacion := nil;
   GLecturasPersistencia := nil;
   FreeAndNil(GCache);
   FreeAndNil(GCacheArticulo);

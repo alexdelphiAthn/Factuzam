@@ -357,6 +357,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosDevolucionCompra = 'Búsqueda de artículos';
+  STituloBuscarSkusDevolucionCompra = 'SKUs del artículo %s';
+
 type
   TfrmMtoDevolucionesCompraInyectada = class(TfrmMtoDevolucionesCompra)
   private
@@ -1772,7 +1776,8 @@ begin
                mtInformation, [mbOk], 0)
   else
     Result := BuscarArticuloProveedorCompra(
-      FBusquedasArticulos, BusquedaVisual, sPrv, 'Búsqueda de artículos',
+      FBusquedasArticulos, BusquedaVisual, sPrv,
+      STituloBuscarArticulosDevolucionCompra,
       'frmMtoDevcArtSearch', Self);
 end;
 
@@ -1801,7 +1806,7 @@ begin
   else
     Result := BuscarSkuArticuloCompra(
       FBusquedasArticulos, BusquedaVisual, sArt,
-      'SKUs del artículo ' + sArt,
+      Format(STituloBuscarSkusDevolucionCompra, [sArt]),
       'frmMtoDevcSkuSearch', Self);
 end;
 

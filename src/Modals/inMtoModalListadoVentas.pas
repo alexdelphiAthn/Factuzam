@@ -105,6 +105,9 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SItemTodosFiltrosListadoVentas = '(Todos)';
+
 procedure ForceReferenceToClass(C: TClass);
 begin
 end;
@@ -391,7 +394,7 @@ begin
     ACombo.Properties.Items.BeginUpdate;
     try
       ACombo.Properties.Items.Clear;
-      ACombo.Properties.Items.Add('(Todos)');
+      ACombo.Properties.Items.Add(SItemTodosFiltrosListadoVentas);
       for Opcion in AOpciones do
       begin
         if (Opcion.Nombre <> '') and

@@ -401,6 +401,12 @@ foreach ($rutaTercerosProyecto in @(
 }
 $rutasExcluidasInformes.Sort()
 
+$normalizadorSbom = Join-Path $PSScriptRoot (
+  'normalizar_sbom_pascal_analyzer.ps1')
+if (-not (Test-Path -LiteralPath $normalizadorSbom -PathType Leaf)) {
+  throw "No existe el normalizador de SBOM: $normalizadorSbom"
+}
+
 Write-Output (
   'Pascal Analyzer: dependencias validas. ' +
   "DevExpress=$($devExpressSources.Count) carpetas de fuentes; " +
@@ -506,19 +512,25 @@ $informesEsperados = @(
   'Exception.txt',
   'Security.txt',
   'SBOM.json',
-  'Complexity.txt'
+  'Complexity.txt',
+  'Status.txt'
 )
 $informesFaltantes = [System.Collections.Generic.List[string]]::new()
-$informeTotales = $null
+$informesEncontrados = @{}
 foreach ($nombreInforme in $informesEsperados) {
-  $informe = Get-ChildItem -LiteralPath $DirectorioSalida `
-      -Filter $nombreInforme -File -Recurse |
-    Select-Object -First 1
-  if ($null -eq $informe) {
+  $informes = @(
+    Get-ChildItem -LiteralPath $DirectorioSalida `
+      -Filter $nombreInforme -File -Recurse)
+  if ($informes.Count -eq 0) {
     $informesFaltantes.Add($nombreInforme)
   }
-  elseif ($nombreInforme -eq 'Totals.txt') {
-    $informeTotales = $informe
+  elseif ($informes.Count -gt 1) {
+    throw (
+      "PALCMD genero mas de un informe $($nombreInforme): " +
+      (($informes.FullName | Sort-Object) -join ', '))
+  }
+  else {
+    $informesEncontrados[$nombreInforme] = $informes[0]
   }
 }
 if ($informesFaltantes.Count -gt 0) {
@@ -527,7 +539,36 @@ if ($informesFaltantes.Count -gt 0) {
     ($informesFaltantes -join ', '))
 }
 
-Write-Output "Informes generados: $($informeTotales.Directory.FullName)"
+$directoriosInformes = @(
+  $informesEncontrados.Values |
+    ForEach-Object { $_.Directory.FullName } |
+    Sort-Object -Unique)
+if ($directoriosInformes.Count -ne 1) {
+  throw (
+    'Los informes de PALCMD no estan en un unico directorio: ' +
+    ($directoriosInformes -join ', '))
+}
+$directorioInformes = $directoriosInformes[0]
+
+& $normalizadorSbom `
+  -RutaSbom $informesEncontrados['SBOM.json'].FullName `
+  -RutaSecurity $informesEncontrados['Security.txt'].FullName `
+  -RutaStatus $informesEncontrados['Status.txt'].FullName `
+  -RaizProyecto $raiz `
+  -UniDacRoot $uniDacRoot `
+  -Plataforma $Plataforma
+
+foreach ($nombreInforme in @(
+    'SBOM.pal.raw.json',
+    'Security.pal.raw.txt',
+    'Security Coverage.txt')) {
+  $rutaInforme = Join-Path $directorioInformes $nombreInforme
+  if (-not (Test-Path -LiteralPath $rutaInforme -PathType Leaf)) {
+    throw "El normalizador no genero el informe $nombreInforme."
+  }
+}
+
+Write-Output "Informes generados: $directorioInformes"
 Write-Output "Configuracion efectiva: $configuracionEfectiva"
 
 exit 0

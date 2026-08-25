@@ -205,11 +205,12 @@ procedure LiberarSerieFrankfurter(var ASerie: TFrankfurterSeries);
 var
   oRates: TDictionary<string, Double>;
 begin
-  if not Assigned(ASerie) then
-    Exit;
-  for oRates in ASerie.Values do
-    oRates.Free;
-  FreeAndNil(ASerie);
+  if Assigned(ASerie) then
+  begin
+    for oRates in ASerie.Values do
+      oRates.Free;
+    FreeAndNil(ASerie);
+  end;
 end;
 
 { TFrankfurterAPI }

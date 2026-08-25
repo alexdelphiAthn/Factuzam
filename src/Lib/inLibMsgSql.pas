@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibMsgSql                                                  }
 {    Tipo:       Librería de mensajes                                          }
@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Literales traducibles de dialectos y selección de SQL por motor.           }
+{    Literales traducibles de dialectos y selección de SQL por motor.          }
 {******************************************************************************}
 unit inLibMsgSql;
 
@@ -33,7 +33,8 @@ resourcestring
   SErrorVarianteSqlMotorNoDisponible =
     'La operación SQL %s no tiene una variante para %s.';
   SErrorMotorConexionPendiente =
-    'El motor %s está previsto por el contrato, pero su adaptador de conexión todavía no está implementado.';
+    'El motor %s está previsto por el contrato, pero su adaptador de ' +
+    'conexión todavía no está implementado.';
 
 implementation
 

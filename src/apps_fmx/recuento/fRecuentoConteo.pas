@@ -51,6 +51,22 @@ type
 
 implementation
 
+resourcestring
+  SPromptCantidadPorEscaneo = 'Cantidad por escaneo';
+  SPromptEscanearCodigo = 'Escanea o teclea el código y pulsa Intro';
+  SBotonVolverConteo = 'Volver';
+  SBotonSincronizarConteo = 'Sincronizar';
+  SBotonFinalizarConteo = 'Finalizar';
+  SDescripcionArticuloNoIdentificado = '(no identificado)';
+  SLineaEventoRecuento = '%s   +%g   (total %g)   %s';
+  SEstadoEventosPendientes = 'Pendientes de subir: %d';
+  SInfoEventosSubidos = 'Subidos %d eventos';
+  SErrorSincronizarEventos = 'Error al sincronizar: %s';
+  SErrorSubirEventosAntesFinalizar =
+    'No se pudo subir todo antes de finalizar: %s';
+  SInfoRecuentoFinalizado = 'Recuento finalizado y enviado';
+  SErrorFinalizarRecuento = 'No se pudo finalizar: %s';
+
 function TfrmConteo.NuevoUuid: string;
 var
   g: TGUID;
@@ -95,14 +111,14 @@ begin
     FCantidad.Parent := Self;
     FCantidad.Align := TAlignLayout.Top;
     FCantidad.Height := 40;
-    FCantidad.TextPrompt := 'Cantidad por escaneo';
+    FCantidad.TextPrompt := SPromptCantidadPorEscaneo;
     FCantidad.Text := '1';
   end;
   FScan := TEdit.Create(Self);
   FScan.Parent := Self;
   FScan.Align := TAlignLayout.Top;
   FScan.Height := 44;
-  FScan.TextPrompt := 'Escanea o teclea el código y pulsa Intro';
+  FScan.TextPrompt := SPromptEscanearCodigo;
   FScan.OnKeyDown := OnScanKeyDown;
   FlblEstado := TLabel.Create(Self);
   FlblEstado.Parent := Self;
@@ -116,19 +132,19 @@ begin
   btnVolver.Parent := layBotones;
   btnVolver.Align := TAlignLayout.Left;
   btnVolver.Width := 100;
-  btnVolver.Text := 'Volver';
+  btnVolver.Text := SBotonVolverConteo;
   btnVolver.OnClick := OnVolverClick;
   btnSync := TButton.Create(Self);
   btnSync.Parent := layBotones;
   btnSync.Align := TAlignLayout.Left;
   btnSync.Width := 130;
-  btnSync.Text := 'Sincronizar';
+  btnSync.Text := SBotonSincronizarConteo;
   btnSync.OnClick := OnSincronizarClick;
   btnFin := TButton.Create(Self);
   btnFin.Parent := layBotones;
   btnFin.Align := TAlignLayout.Right;
   btnFin.Width := 130;
-  btnFin.Text := 'Finalizar';
+  btnFin.Text := SBotonFinalizarConteo;
   btnFin.OnClick := OnFinalizarClick;
   FLista := TListBox.Create(Self);
   FLista.Parent := Self;
@@ -149,7 +165,7 @@ begin
     iIdx := BuscarEnCatalogo(sCodigo);
     sSku := sCodigo;
     sArt := '';
-    sDesc := '(no identificado)';
+    sDesc := SDescripcionArticuloNoIdentificado;
     if iIdx >= 0 then
     begin
       sSku := FCatalogo[iIdx].CodigoUnidad;
@@ -169,7 +185,7 @@ begin
     // TODO: si iIdx>=0 y FCatalogo[iIdx].EsTrazable, pedir lote/caducidad.
     oLocal.Encolar(FIdRecuento, Ev);
     dTotal := oLocal.ContarPorSku(FIdRecuento, sSku);
-    AnadirLinea(Format('%s   +%g   (total %g)   %s',
+    AnadirLinea(Format(SLineaEventoRecuento,
                        [sSku, dCant, dTotal, sDesc]));
     FScan.Text := '';
     FScan.SetFocus;
@@ -189,7 +205,7 @@ end;
 
 procedure TfrmConteo.ActualizarEstado;
 begin
-  FlblEstado.Text := Format('Pendientes de subir: %d',
+  FlblEstado.Text := Format(SEstadoEventosPendientes,
                             [oLocal.ContarPendientes(FIdRecuento)]);
 end;
 
@@ -213,9 +229,9 @@ begin
   oSync := TRecuentoSync.Create;
   try
     if oSync.Sincronizar(FIdRecuento, iSubidos, sMsg) then
-      TDialogService.ShowMessage(Format('Subidos %d eventos', [iSubidos]))
+      TDialogService.ShowMessage(Format(SInfoEventosSubidos, [iSubidos]))
     else
-      TDialogService.ShowMessage('Error al sincronizar: ' + sMsg);
+      TDialogService.ShowMessage(Format(SErrorSincronizarEventos, [sMsg]));
   finally
     FreeAndNil(oSync);
   end;
@@ -234,15 +250,16 @@ begin
   oApi := TRecuentoApi.Create;
   try
     if not oSync.Sincronizar(FIdRecuento, iSubidos, sMsg) then
-      TDialogService.ShowMessage('No se pudo subir todo antes de finalizar: ' +
-                                 sMsg)
+      TDialogService.ShowMessage(
+        Format(SErrorSubirEventosAntesFinalizar, [sMsg]))
     else if oApi.Finalizar(FIdRecuento) then
     begin
-      TDialogService.ShowMessage('Recuento finalizado y enviado');
+      TDialogService.ShowMessage(SInfoRecuentoFinalizado);
       ModalResult := mrOk;
     end
     else
-      TDialogService.ShowMessage('No se pudo finalizar: ' + oApi.UltimoError);
+      TDialogService.ShowMessage(
+        Format(SErrorFinalizarRecuento, [oApi.UltimoError]));
   finally
     FreeAndNil(oApi);
     FreeAndNil(oSync);

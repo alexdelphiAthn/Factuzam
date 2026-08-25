@@ -84,60 +84,60 @@ begin
   // La lectura de pendientes debe hacerse despues del mismo bloqueo que usa
   // la reversion; asi no fija una instantanea anterior a otra recepcion.
   if not BloquearPedidoCompra(AConn, ASeriePedc, ANumPedc) then
-  begin
     AMensaje := SErrorPedidoCompraNoActivoCrearAlbaran;
-    Exit;
-  end;
   // Construye una celda por linea pendiente del almacen y delega en
   // CrearAlbaranDesdePedidoConCantidades: un unico camino de codigo
   // para el flujo "todo lo pendiente" y el flujo celda a celda del
   // pivote. Antes eran dos funciones gemelas de ~350 lineas cada una.
-  oCeldas := TList<TCeldaARecibir>.Create;
-  q := TUniQuery.Create(nil);
-  try
-    q.Connection := AConn;
-    q.SQL.Text :=
-      'SELECT L.LINEA_PEDCLIN, L.CODIGO_UNIDAD_PEDCLIN, ' +
-      '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) ' +
-      '         AS PENDIENTE ' +
-      '  FROM fza_pedidos_compra_lineas L ' +
-      '  JOIN fza_pedidos_compra P ' +
-      '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
-      '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
-      ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
-      '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
-      '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
-      '              P.CODIGO_ALM_PEDC) = :alm ' +
-      '   AND L.CANTIDAD_PEDCLIN - ' +
-      '       IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) > 0 ' +
-      ' ORDER BY L.LINEA_PEDCLIN';
-    q.ParamByName('s').AsString   := ASeriePedc;
-    q.ParamByName('n').AsString   := ANumPedc;
-    q.ParamByName('alm').AsString := ACodigoAlm;
-    q.Open;
-    while not q.Eof do
-    begin
-      rCelda.LineaPedido   := q.FieldByName('LINEA_PEDCLIN').AsString;
-      rCelda.CodigoSku     :=
-        q.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
-      rCelda.CodigoAlmacen := ACodigoAlm;
-      rCelda.Cantidad      := q.FieldByName('PENDIENTE').AsFloat;
-      oCeldas.Add(rCelda);
-      q.Next;
+  if AMensaje = '' then
+  begin
+    oCeldas := TList<TCeldaARecibir>.Create;
+    q := TUniQuery.Create(nil);
+    try
+      q.Connection := AConn;
+      q.SQL.Text :=
+        'SELECT L.LINEA_PEDCLIN, L.CODIGO_UNIDAD_PEDCLIN, ' +
+        '       L.CANTIDAD_PEDCLIN - IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) ' +
+        '         AS PENDIENTE ' +
+        '  FROM fza_pedidos_compra_lineas L ' +
+        '  JOIN fza_pedidos_compra P ' +
+        '    ON P.SERIE_PEDC  = L.SERIE_PEDC_PEDCLIN ' +
+        '   AND P.NUMERO_PEDC = L.NUMERO_PEDC_PEDCLIN ' +
+        ' WHERE L.SERIE_PEDC_PEDCLIN  = :s ' +
+        '   AND L.NUMERO_PEDC_PEDCLIN = :n ' +
+        '   AND IFNULL(NULLIF(L.CODIGO_ALMACEN_PEDCLIN, ''''), ' +
+        '              P.CODIGO_ALM_PEDC) = :alm ' +
+        '   AND L.CANTIDAD_PEDCLIN - ' +
+        '       IFNULL(L.CANTIDAD_RECIBIDA_PEDCLIN,0) > 0 ' +
+        ' ORDER BY L.LINEA_PEDCLIN';
+      q.ParamByName('s').AsString   := ASeriePedc;
+      q.ParamByName('n').AsString   := ANumPedc;
+      q.ParamByName('alm').AsString := ACodigoAlm;
+      q.Open;
+      while not q.Eof do
+      begin
+        rCelda.LineaPedido   := q.FieldByName('LINEA_PEDCLIN').AsString;
+        rCelda.CodigoSku     :=
+          q.FieldByName('CODIGO_UNIDAD_PEDCLIN').AsString;
+        rCelda.CodigoAlmacen := ACodigoAlm;
+        rCelda.Cantidad      := q.FieldByName('PENDIENTE').AsFloat;
+        oCeldas.Add(rCelda);
+        q.Next;
+      end;
+      q.Close;
+      if oCeldas.Count = 0 then
+        AMensaje := Format(SErrorPedidoCompraSinPendientesAlmacen,
+          [ACodigoAlm, ASeriePedc, ANumPedc])
+      else
+        Result := CrearAlbaranDesdePedidoConCantidadesInterno(
+          AConn, ASeriePedc,
+          ANumPedc, ACodigoAlm, ASerieAlbc, AUsuario, ARefPrv,
+          AFechaRecepcion, AIdPvTemporada, oCeldas.ToArray, ANumAlbc,
+          AMensaje);
+    finally
+      FreeAndNil(q);
+      FreeAndNil(oCeldas);
     end;
-    q.Close;
-    if oCeldas.Count = 0 then
-      AMensaje := Format(SErrorPedidoCompraSinPendientesAlmacen,
-        [ACodigoAlm, ASeriePedc, ANumPedc])
-    else
-      Result := CrearAlbaranDesdePedidoConCantidadesInterno(
-        AConn, ASeriePedc,
-        ANumPedc, ACodigoAlm, ASerieAlbc, AUsuario, ARefPrv,
-        AFechaRecepcion, AIdPvTemporada, oCeldas.ToArray, ANumAlbc,
-        AMensaje);
-  finally
-    FreeAndNil(q);
-    FreeAndNil(oCeldas);
   end;
 end;
 

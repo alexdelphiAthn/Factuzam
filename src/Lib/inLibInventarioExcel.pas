@@ -13,7 +13,8 @@
 {    - ExportarInventarioExcel: vuelca cabecera + lineas a una hoja con        }
 {      preview editable (mismo patron que inLibDocCompraExcel).                }
 {    - ImportarInventarioExcel: lee un .xlsx y devuelve una lista de pares     }
-{      SKU=CANTIDAD para que el DM los cargue via CargarDesdeListaSkus. }
+{      SKU=CANTIDAD para que el DM los cargue via                        }
+{      CargarDesdeListaSkus.                                             }
 {******************************************************************************}
 unit inLibInventarioExcel;
 
@@ -397,22 +398,28 @@ end;
 function ColumnasImportacionInventario(
   const ALector: ILectorHojaCalculo): TColumnasImportacionInventario;
 var
+  bEncontrada: Boolean;
+  oCandidatas: TColumnasImportacionInventario;
   Fila: Integer;
   UltimaFilaCabecera: Integer;
 begin
-  UltimaFilaCabecera := ALector.UltimaFila;
-  if UltimaFilaCabecera > MAX_FILA_CABECERA_IMPORTACION then
-    UltimaFilaCabecera := MAX_FILA_CABECERA_IMPORTACION;
-  for Fila := 0 to UltimaFilaCabecera do
-  begin
-    Result := ColumnasImportacionInventarioEnFila(ALector, Fila);
-    if Result.Sku >= 0 then
-      Exit;
-  end;
   Result.Sku := 0;
   Result.Cantidad := 1;
   Result.PmpNuevo := -1;
   Result.FilaInicio := 0;
+  UltimaFilaCabecera := ALector.UltimaFila;
+  if UltimaFilaCabecera > MAX_FILA_CABECERA_IMPORTACION then
+    UltimaFilaCabecera := MAX_FILA_CABECERA_IMPORTACION;
+  bEncontrada := False;
+  Fila := 0;
+  while (Fila <= UltimaFilaCabecera) and not bEncontrada do
+  begin
+    oCandidatas := ColumnasImportacionInventarioEnFila(ALector, Fila);
+    bEncontrada := oCandidatas.Sku >= 0;
+    if bEncontrada then
+      Result := oCandidatas;
+    Inc(Fila);
+  end;
 end;
 
 procedure AgregarIncidenciaImportacionInventario(
@@ -485,34 +492,39 @@ begin
   ATextoLista := '';
   ALinea.Sku := TextoCeldaImportacionInventario(
     ALector, AFila, AColumnas.Sku);
-  if ALinea.Sku = '' then
-    Exit(eliVacia);
-  TextoCantidad := TextoCeldaImportacionInventario(
-    ALector, AFila, AColumnas.Cantidad);
-  CantidadValida := LeerCantidadImportacionInventario(
-    TextoCantidad, ALinea.Cantidad);
-  if not CantidadValida then
-    AgregarIncidenciaImportacionInventario(
-      AIncidencias,
-      AFila + 1,
-      ALinea.Sku,
-      ciiCantidad,
-      TextoCantidad);
-  TextoPmp := TextoCeldaImportacionInventario(
-    ALector, AFila, AColumnas.PmpNuevo);
-  PmpValido := LeerPmpImportacionInventario(
-    TextoPmp, ALinea.PmpNuevo, ALinea.TienePmp);
-  if not PmpValido then
-    AgregarIncidenciaImportacionInventario(
-      AIncidencias,
-      AFila + 1,
-      ALinea.Sku,
-      ciiPmpNuevo,
-      TextoPmp);
-  if not (CantidadValida and PmpValido) then
-    Exit(eliInvalida);
-  ATextoLista := ALinea.Sku + '=' + TextoCantidad;
-  Result := eliValida;
+  Result := eliVacia;
+  if ALinea.Sku <> '' then
+  begin
+    TextoCantidad := TextoCeldaImportacionInventario(
+      ALector, AFila, AColumnas.Cantidad);
+    CantidadValida := LeerCantidadImportacionInventario(
+      TextoCantidad, ALinea.Cantidad);
+    if not CantidadValida then
+      AgregarIncidenciaImportacionInventario(
+        AIncidencias,
+        AFila + 1,
+        ALinea.Sku,
+        ciiCantidad,
+        TextoCantidad);
+    TextoPmp := TextoCeldaImportacionInventario(
+      ALector, AFila, AColumnas.PmpNuevo);
+    PmpValido := LeerPmpImportacionInventario(
+      TextoPmp, ALinea.PmpNuevo, ALinea.TienePmp);
+    if not PmpValido then
+      AgregarIncidenciaImportacionInventario(
+        AIncidencias,
+        AFila + 1,
+        ALinea.Sku,
+        ciiPmpNuevo,
+        TextoPmp);
+    if CantidadValida and PmpValido then
+    begin
+      ATextoLista := ALinea.Sku + '=' + TextoCantidad;
+      Result := eliValida;
+    end
+    else
+      Result := eliInvalida;
+  end;
 end;
 
 procedure AgregarLineaImportacionInventario(

@@ -331,6 +331,13 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosLineasAlbaran =
+    'Búsqueda de Artículos en Líneas de Albarán';
+  STituloBuscarSkusAlbaran = 'SKUs del artículo %s';
+  STituloBuscarEmpresasAlbaran = 'Búsqueda de Empresas en Albaranes';
+  STituloBuscarClientesAlbaran = 'Búsqueda de Clientes en Albaranes';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmMtoAlbaranes.cbbSERIE_ALBPropertiesInitPopup(Sender: TObject);
@@ -386,7 +393,7 @@ begin
       dFecha);
     Datos := Consulta.DataSet;
     if BusquedaVisual.EjecutarBusquedaDataSet(
-        'Búsqueda de Artículos en Líneas de Albarán',
+        STituloBuscarArticulosLineasAlbaran,
         Datos,
         'frmMtoArtFacSearch',
         Self) then
@@ -434,7 +441,7 @@ begin
     Consulta := FContextoVentas.EntradaArticulos.ConsultarSkus(sArt);
     Datos := Consulta.DataSet;
     if BusquedaVisual.EjecutarBusquedaDataSet(
-        'SKUs del artículo ' + sArt,
+        Format(STituloBuscarSkusAlbaran, [sArt]),
         Datos,
         'frmMtoAlbSkuSearch',
         Self) and (Datos.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -1113,7 +1120,7 @@ begin
     try
       if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
-        'Búsqueda de Empresas en Albaranes',
+        STituloBuscarEmpresasAlbaran,
            dmmAlbaranes.unqryEmpDataAlb,
            'frmMtoEmpFacSearch',
            Self) then
@@ -1138,7 +1145,7 @@ begin
     try
       if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
-        'Búsqueda de Clientes en Albaranes',
+        STituloBuscarClientesAlbaran,
            dmmAlbaranes.unqryCliDataAlb,
            'frmMtoCliFacSearch',
            Self) then

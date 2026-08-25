@@ -1,4 +1,4 @@
-unit uUrlSegura;
+﻿unit uUrlSegura;
 
 {
   Politica comun de URLs para FzamControlU.

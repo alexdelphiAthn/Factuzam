@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibCorreoValidacion                                         }
 {    Tipo:       Librería                                                      }
@@ -47,84 +47,100 @@ var
   i: Integer;
   iLongitud: Integer;
 begin
-  Result := False;
   iLongitud := AFin - AInicio + 1;
-  if (iLongitud < 1) or (iLongitud > 63) then
-    Exit;
-  if not EsAlfanumericoAscii(ADominio[AInicio]) then
-    Exit;
-  if not EsAlfanumericoAscii(ADominio[AFin]) then
-    Exit;
-  for i := AInicio to AFin do
+  Result := (iLongitud >= 1) and (iLongitud <= 63);
+  if Result then
+    Result := EsAlfanumericoAscii(ADominio[AInicio]) and
+      EsAlfanumericoAscii(ADominio[AFin]);
+  i := AInicio;
+  while Result and (i <= AFin) do
   begin
-    if not EsAlfanumericoAscii(ADominio[i]) and
-       (ADominio[i] <> '-') then
-      Exit;
+    Result := EsAlfanumericoAscii(ADominio[i]) or
+      (ADominio[i] = '-');
+    Inc(i);
   end;
-  Result := True;
+end;
+
+function ParteLocalEmailValida(const AParteLocal: string): Boolean;
+var
+  i: Integer;
+begin
+  Result := (AParteLocal <> '') and
+    (Length(AParteLocal) <= 64);
+  if Result then
+    Result := (AParteLocal[1] <> '.') and
+      (AParteLocal[Length(AParteLocal)] <> '.') and
+      (Pos('..', AParteLocal) = 0);
+  i := 1;
+  while Result and (i <= Length(AParteLocal)) do
+  begin
+    Result := EsCaracterLocalEmail(AParteLocal[i]);
+    Inc(i);
+  end;
+end;
+
+function DominioEmailValido(const ADominio: string): Boolean;
+var
+  i: Integer;
+  iInicioEtiqueta: Integer;
+  iPuntosDominio: Integer;
+begin
+  Result := (ADominio <> '') and
+    (Length(ADominio) <= 253);
+  if Result then
+    Result := (ADominio[1] <> '.') and
+      (ADominio[Length(ADominio)] <> '.') and
+      (Pos('..', ADominio) = 0);
+  iInicioEtiqueta := 1;
+  iPuntosDominio := 0;
+  i := 1;
+  while Result and (i <= Length(ADominio)) do
+  begin
+    if ADominio[i] = '.' then
+    begin
+      Result := EtiquetaDominioValida(
+        ADominio,
+        iInicioEtiqueta,
+        i - 1);
+      if Result then
+      begin
+        Inc(iPuntosDominio);
+        iInicioEtiqueta := i + 1;
+      end;
+    end;
+    Inc(i);
+  end;
+  if Result then
+    Result := EtiquetaDominioValida(
+      ADominio,
+      iInicioEtiqueta,
+      Length(ADominio)) and
+      (iPuntosDominio > 0);
 end;
 
 function EmailDocumentoValido(const AEmail: string): Boolean;
 var
-  i: Integer;
   iArroba: Integer;
-  iInicioEtiqueta: Integer;
-  iPuntosDominio: Integer;
   sDominio: string;
   sEmail: string;
   sLocal: string;
 begin
-  Result := False;
   sEmail := Trim(AEmail);
-  if (sEmail = '') or (Length(sEmail) > 254) then
-    Exit;
-
-  iArroba := Pos('@', sEmail);
-  if iArroba <= 1 then
-    Exit;
-  if Pos('@', Copy(sEmail, iArroba + 1, MaxInt)) > 0 then
-    Exit;
-
-  sLocal := Copy(sEmail, 1, iArroba - 1);
-  sDominio := Copy(sEmail, iArroba + 1, MaxInt);
-  if Length(sLocal) > 64 then
-    Exit;
-  if (sDominio = '') or (Length(sDominio) > 253) then
-    Exit;
-  if (sLocal[1] = '.') or (sLocal[Length(sLocal)] = '.') or
-     (Pos('..', sLocal) > 0) then
-    Exit;
-  for i := 1 to Length(sLocal) do
+  Result := (sEmail <> '') and (Length(sEmail) <= 254);
+  iArroba := 0;
+  if Result then
   begin
-    if not EsCaracterLocalEmail(sLocal[i]) then
-      Exit;
+    iArroba := Pos('@', sEmail);
+    Result := (iArroba > 1) and
+      (Pos('@', Copy(sEmail, iArroba + 1, MaxInt)) = 0);
   end;
-
-  if (sDominio[1] = '.') or
-     (sDominio[Length(sDominio)] = '.') or
-     (Pos('..', sDominio) > 0) then
-    Exit;
-  iInicioEtiqueta := 1;
-  iPuntosDominio := 0;
-  for i := 1 to Length(sDominio) do
+  if Result then
   begin
-    if sDominio[i] = '.' then
-    begin
-      if not EtiquetaDominioValida(
-        sDominio,
-        iInicioEtiqueta,
-        i - 1) then
-        Exit;
-      Inc(iPuntosDominio);
-      iInicioEtiqueta := i + 1;
-    end;
+    sLocal := Copy(sEmail, 1, iArroba - 1);
+    sDominio := Copy(sEmail, iArroba + 1, MaxInt);
+    Result := ParteLocalEmailValida(sLocal) and
+      DominioEmailValido(sDominio);
   end;
-  if not EtiquetaDominioValida(
-    sDominio,
-    iInicioEtiqueta,
-    Length(sDominio)) then
-    Exit;
-  Result := iPuntosDominio > 0;
 end;
 
 function NormalizarEmailRespuestaDocumento(

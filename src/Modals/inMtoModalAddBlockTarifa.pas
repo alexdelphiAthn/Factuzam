@@ -122,6 +122,10 @@ implementation
 uses
   inLibMsgArticulos;
 
+resourcestring
+  SCaptionExcluirArticulosYaEnTarifa =
+    'Excluir articulos ya en la tarifa';
+
 // ============================================================================
 //   API publica
 // ============================================================================
@@ -315,7 +319,7 @@ end;
 
 function TfrmModalAddBlockTarifa.TextoExcluirYaCargados: string;
 begin
-  Result := 'Excluir articulos ya en la tarifa';
+  Result := SCaptionExcluirArticulosYaEnTarifa;
 end;
 
 procedure TfrmModalAddBlockTarifa.ConfigurarPreviewExtra;

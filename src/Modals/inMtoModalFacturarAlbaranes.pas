@@ -102,6 +102,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarEmpresaFacturarAlbaranes = 'Buscar empresa';
+  STituloBuscarProveedorFacturarAlbaranes = 'Buscar proveedor';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TfrmModalFacturarAlbaranes.FormCreate(Sender: TObject);
@@ -241,7 +245,8 @@ begin
   Consulta := FRepositorio.ConsultarEmpresas;
   Datos := Consulta.DataSet;
   if BusquedaVisual.EjecutarBusquedaDataSet(
-       'Buscar empresa', Datos, 'srchEmpFacAlb', Self) then
+       STituloBuscarEmpresaFacturarAlbaranes,
+       Datos, 'srchEmpFacAlb', Self) then
   begin
     sVal := Datos.FieldByName('CODIGO_EMP_EMP').AsString;
     btnEmpresa.Text := sVal;
@@ -259,7 +264,8 @@ begin
   Consulta := FRepositorio.ConsultarProveedores;
   Datos := Consulta.DataSet;
   if BusquedaVisual.EjecutarBusquedaDataSet(
-       'Buscar proveedor', Datos, 'srchPrvFacAlb', Self) then
+       STituloBuscarProveedorFacturarAlbaranes,
+       Datos, 'srchPrvFacAlb', Self) then
   begin
     sVal := Datos.FieldByName('CODIGO_PRV_PRV').AsString;
     btnProveedor.Text := sVal;

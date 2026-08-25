@@ -53,6 +53,10 @@ uses
   inLibMsgCompras,
   UniDataImpuestosRepositorio;
 
+resourcestring
+  STituloBuscarEmpresasDevolucionCompra = 'Búsqueda de empresas';
+  STituloBuscarProveedoresDevolucionCompra = 'Búsqueda de proveedores';
+
 function FormularioPadreSeleccion(
   AControl: TControl): TCustomForm;
 begin
@@ -78,7 +82,7 @@ begin
       oConsulta := AContexto.BusquedaEmpresas.ConsultarEmpresas;
       if Assigned(oConsulta) and
          AContexto.BusquedaVisual.EjecutarBusquedaDataSet(
-           'B' + #250 + 'squeda de empresas',
+           STituloBuscarEmpresasDevolucionCompra,
            oConsulta.DataSet,
            'frmMtoEmpFacSearch',
            FormularioPadreSeleccion(AContexto.ControlOrigen)) then
@@ -109,7 +113,7 @@ begin
       oConsulta := AContexto.BusquedaProveedores.ConsultarProveedores;
       if Assigned(oConsulta) and
          AContexto.BusquedaVisual.EjecutarBusquedaDataSet(
-           'B' + #250 + 'squeda de proveedores',
+           STituloBuscarProveedoresDevolucionCompra,
            oConsulta.DataSet,
            'frmMtoDevcProvSearch',
            FormularioPadreSeleccion(AContexto.ControlOrigen)) then

@@ -486,11 +486,6 @@ type
      // pasa a tsTarifas (ver dmmArticulos.AsegurarTarifasAbiertas).
      procedure PcDetailChange(Sender: TObject);
      procedure CerrarSiNoVisible(qry: TUniQuery; ActivaTarget: TcxTabSheet);
-  private
-    function  ObtenerFacturaLineaActiva(out ANumero,
-                                        ASerie: string): Boolean;
-    procedure AbrirFacturaLineaActiva(const ANumero,
-                                      ASerie: string);
   public
     procedure RecogerPerfilesParticulares(var oList: TPerfilList;
                                           const sPermisos: string); override;
@@ -579,10 +574,15 @@ uses
   UniDataArticulosCodigosBarrasRepositorio,
   UniDataDestinoFacturaRepositorio,
   UniDataFiltroArticulosRepositorio,
+  inMtoArticulosNavegacionFacturasVcl,
   System.Diagnostics,   // TStopwatch
   inLibMsgArticulos, inLibMsgComun;
 
 {$R *.dfm}
+
+resourcestring
+  STituloBuscarProveedoresArticulos =
+    'Búsqueda de Proveedores en Articulos';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -796,56 +796,17 @@ begin
               'Empresas');
 end;
 
-function TfrmMtoArticulos.ObtenerFacturaLineaActiva(out ANumero,
-  ASerie: string): Boolean;
-var
-  oDataSet: TDataSet;
-  oCampoNumero: TField;
-  oCampoSerie: TField;
-begin
-  Result := False;
-  ANumero := '';
-  ASerie := '';
-  oDataSet := nil;
-  if Assigned(tvLinFac) and
-     Assigned(tvLinFac.DataController) and
-     Assigned(tvLinFac.DataController.DataSource) then
-    oDataSet := tvLinFac.DataController.DataSource.DataSet;
-  if Assigned(oDataSet) and oDataSet.Active and (not oDataSet.IsEmpty) then
-  begin
-    oCampoNumero := oDataSet.FindField('NUMERO_FAC_FACLIN');
-    oCampoSerie := oDataSet.FindField('SERIE_FAC_FACLIN');
-    if Assigned(oCampoNumero) and Assigned(oCampoSerie) and
-       (not oCampoNumero.IsNull) and (not oCampoSerie.IsNull) then
-    begin
-      ANumero := Trim(oCampoNumero.AsString);
-      ASerie := Trim(oCampoSerie.AsString);
-      Result := (ANumero <> '') and (ASerie <> '');
-    end;
-  end;
-end;
-
-procedure TfrmMtoArticulos.AbrirFacturaLineaActiva(const ANumero,
-  ASerie: string);
-begin
-  ShowMto(Self.Owner,
-          ResolverCallFactura(
-            FResolutorDestinoFactura,
-            ANumero,
-            ASerie),
-          ANumero + ',' + ASerie);
-end;
-
 procedure TfrmMtoArticulos.actFacturasExecute(Sender: TObject);
-var
-  sNum: string;
-  sSer: string;
 begin
   inherited;
   //Control + F   -> Facturas
-  if (pcDetail.ActivePage = tsLineasFactura) and
-     ObtenerFacturaLineaActiva(sNum, sSer) then
-    AbrirFacturaLineaActiva(sNum, sSer)
+  if pcDetail.ActivePage = tsLineasFactura then
+  begin
+    if not IntentarAbrirFacturaLineaActiva(
+         Self.Owner, tvLinFac, FResolutorDestinoFactura) then
+      ShowMto(Self.Owner,
+              'Facturas');
+  end
   else
     ShowMto(Self.Owner,
             'Facturas');
@@ -985,13 +946,10 @@ begin
 end;
 
 procedure TfrmMtoArticulos.btnIraFacturaClick(Sender: TObject);
-var
-  sNum, sSer: string;
 begin
   inherited;
-  if ObtenerFacturaLineaActiva(sNum, sSer) then
-    AbrirFacturaLineaActiva(sNum, sSer)
-  else
+  if not IntentarAbrirFacturaLineaActiva(
+           Self.Owner, tvLinFac, FResolutorDestinoFactura) then
     ShowMto(Self.Owner,
             'Facturas');
 end;
@@ -1263,7 +1221,7 @@ procedure TfrmMtoArticulos.BuscarProveedores;
 begin
   if BusquedaVisual.EjecutarBusqueda(
     ConexionPrincipal,
-    'Búsqueda de Proveedores en Articulos',
+    STituloBuscarProveedoresArticulos,
                                      dmmArticulos.unqryProveedores,
                                      'frmMtoArtProvSearch') then
     dmmArticulos.CopiarProveedoraArticulo(dmmArticulos.unqryProveedores);

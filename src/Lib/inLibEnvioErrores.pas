@@ -51,6 +51,12 @@ uses
   inLibMsgComun,
   inLibWin;
 
+resourcestring
+  SErrorTamanoCopiaSeguridadSoporte =
+    'La copia supera el límite de %d MiB.';
+  SErrorCopiaSeguridadSoporteNoCreada =
+    'No se pudo crear la copia de seguridad protegida.';
+
 const
   cUrlEnvioErroresDefecto =
     'https://webservice.veryverifactu.com/error.php';
@@ -350,7 +356,7 @@ begin
       if TFile.GetSize(RutaZip) > cMaximoCopiaAdjunta then
       begin
         AError := Format(
-          'La copia supera el límite de %d MiB.',
+          SErrorTamanoCopiaSeguridadSoporte,
           [cMaximoCopiaAdjunta div 1024 div 1024]);
       end
       else
@@ -362,7 +368,7 @@ begin
       end;
     end
     else if AError = '' then
-      AError := 'No se pudo crear la copia de seguridad protegida.';
+      AError := SErrorCopiaSeguridadSoporteNoCreada;
   except
     on E: Exception do
       AError := E.ClassName + ': ' + E.Message;

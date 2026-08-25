@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibCredencialesConexionWindows                             }
 {    Tipo:       Infraestructura                                               }
@@ -61,23 +61,25 @@ begin
   if not Result then
   begin
     iError := GetLastError;
-    if iError = ERROR_CREDENCIAL_NO_ENCONTRADA then
-      Exit(False);
-    raise EOSError.CreateFmt(
-      SErrorLeerCredencialConexion,
-      [iError]);
+    if iError <> ERROR_CREDENCIAL_NO_ENCONTRADA then
+      raise EOSError.CreateFmt(
+        SErrorLeerCredencialConexion,
+        [iError]);
   end;
-  try
-    if (oCredencial.CredentialBlobSize mod SizeOf(Char)) <> 0 then
-      raise EConvertError.Create(
-        SErrorFormatoCredencialConexion);
-    if oCredencial.CredentialBlobSize > 0 then
-      SetString(
-        ACredencial,
-        PChar(oCredencial.CredentialBlob),
-        oCredencial.CredentialBlobSize div SizeOf(Char));
-  finally
-    CredFree(oCredencial);
+  if Result then
+  begin
+    try
+      if (oCredencial.CredentialBlobSize mod SizeOf(Char)) <> 0 then
+        raise EConvertError.Create(
+          SErrorFormatoCredencialConexion);
+      if oCredencial.CredentialBlobSize > 0 then
+        SetString(
+          ACredencial,
+          PChar(oCredencial.CredentialBlob),
+          oCredencial.CredentialBlobSize div SizeOf(Char));
+    finally
+      CredFree(oCredencial);
+    end;
   end;
 end;
 
@@ -118,16 +120,17 @@ var
   iError: Cardinal;
 begin
   ComprobarReferencia(AReferencia);
-  if CredDeleteW(
-       PWideChar(AReferencia),
-       CRED_TYPE_GENERIC,
-       0) then
-    Exit;
-  iError := GetLastError;
-  if iError <> ERROR_CREDENCIAL_NO_ENCONTRADA then
-    raise EOSError.CreateFmt(
-      SErrorEliminarCredencialConexion,
-      [iError]);
+  if not CredDeleteW(
+           PWideChar(AReferencia),
+           CRED_TYPE_GENERIC,
+           0) then
+  begin
+    iError := GetLastError;
+    if iError <> ERROR_CREDENCIAL_NO_ENCONTRADA then
+      raise EOSError.CreateFmt(
+        SErrorEliminarCredencialConexion,
+        [iError]);
+  end;
 end;
 
 end.

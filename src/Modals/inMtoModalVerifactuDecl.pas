@@ -60,6 +60,37 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SEstadoInstalacionPendiente = 'Pendiente';
+  SEstadoInstalacionSifDistinto = 'SIF distinto';
+  SEstadoInstalacionRequiereRegenerar = 'Requiere regenerar';
+  SEstadoInstalacionValida = 'Válido';
+  SCaptionSiEmpresaInstalacion = 'Sí';
+  SCaptionNoEmpresaInstalacion = 'No';
+  SInfoEmpresasInstalacionNoConfiguradas =
+    'No hay empresas configuradas en esta base de datos.';
+  SCaptionCodigoEmpresaInstalacion = 'Código';
+  SCaptionRazonSocialEmpresaInstalacion = 'Razón social';
+  SCaptionNifEmpresaInstalacion = 'NIF';
+  SCaptionActivaEmpresaInstalacion = 'Activa';
+  SCaptionNumeroEmpresaInstalacion = 'Nº instalación';
+  SCaptionVersionEmpresaInstalacion = 'Versión';
+  SCaptionSifEmpresaInstalacion = 'SIF';
+  SCaptionFechaEmpresaInstalacion = 'Fecha generación';
+  SCaptionEstadoEmpresaInstalacion = 'Estado';
+  STituloAnexoEmpresasInstalacion =
+    'Anexo: empresas e instalaciones SIF';
+  SDescripcionAnexoEmpresasInstalacion =
+    'Relación de empresas configuradas en Factuzam para el SIF FZ ' +
+    'en la versión %s.';
+  SErrorDescargarDeclaracionResponsable =
+    'No se ha podido descargar la declaración responsable.' +
+    sLineBreak + sLineBreak + 'Versión solicitada: %s' +
+    sLineBreak + sLineBreak + 'Detalle: %s';
+  SInfoDescargandoDeclaracionResponsable =
+    'Descargando declaración responsable...' + sLineBreak + sLineBreak +
+    'Versión: %s';
+
 function AjustarHtmlParaVisor(const AHtml: string): string;
 var
   iPosHead: Integer;
@@ -140,19 +171,19 @@ function EstadoEmpresaInstalacion(const ANumero, AVersion,
 begin
   if Trim(ANumero) = '' then
   begin
-    Result := 'Pendiente';
+    Result := SEstadoInstalacionPendiente;
   end
   else if not SameText(Trim(ACodigoSif), cCodigoSifFactuzam) then
   begin
-    Result := 'SIF distinto';
+    Result := SEstadoInstalacionSifDistinto;
   end
   else if not SameText(Trim(AVersion), oVersion) then
   begin
-    Result := 'Requiere regenerar';
+    Result := SEstadoInstalacionRequiereRegenerar;
   end
   else
   begin
-    Result := 'Válido';
+    Result := SEstadoInstalacionValida;
   end;
 end;
 
@@ -177,11 +208,11 @@ begin
       sEstado := EstadoEmpresaInstalacion(sNumero, sVersion, sCodigoSif);
       if AEmpresas[i].Activa then
       begin
-        sActivo := 'Sí';
+        sActivo := SCaptionSiEmpresaInstalacion;
       end
       else
       begin
-        sActivo := 'No';
+        sActivo := SCaptionNoEmpresaInstalacion;
       end;
       if not AEmpresas[i].TieneInstanteInstalacion then
       begin
@@ -221,25 +252,30 @@ begin
   end;
   if Length(AEmpresas) = 0 then
   begin
-    sFilas :=
-      '<p>No hay empresas configuradas en esta base de datos.</p>';
+    sFilas := '<p>' + SInfoEmpresasInstalacionNoConfiguradas + '</p>';
   end
   else
   begin
     sFilas :=
       '<table>' + sLineBreak +
       '<thead><tr>' +
-      '<th>Código</th><th>Razón social</th><th>NIF</th><th>Activa</th>' +
-      '<th>Nº instalación</th><th>Versión</th><th>SIF</th>' +
-      '<th>Fecha generación</th><th>Estado</th>' +
+      '<th>' + SCaptionCodigoEmpresaInstalacion + '</th><th>' +
+      SCaptionRazonSocialEmpresaInstalacion + '</th><th>' +
+      SCaptionNifEmpresaInstalacion + '</th><th>' +
+      SCaptionActivaEmpresaInstalacion + '</th><th>' +
+      SCaptionNumeroEmpresaInstalacion + '</th><th>' +
+      SCaptionVersionEmpresaInstalacion + '</th><th>' +
+      SCaptionSifEmpresaInstalacion + '</th><th>' +
+      SCaptionFechaEmpresaInstalacion + '</th><th>' +
+      SCaptionEstadoEmpresaInstalacion + '</th>' +
       '</tr></thead>' + sLineBreak +
       '<tbody>' + sLineBreak + sFilas + '</tbody></table>';
   end;
   Result :=
     '<section class="anexo-instalaciones-sif">' + sLineBreak +
-    '<h2>Anexo: empresas e instalaciones SIF</h2>' + sLineBreak +
-    '<p>Relación de empresas configuradas en Factuzam para el SIF FZ ' +
-    'en la versión ' + HtmlTexto(oVersion) + '.</p>' + sLineBreak +
+    '<h2>' + STituloAnexoEmpresasInstalacion + '</h2>' + sLineBreak +
+    '<p>' + Format(SDescripcionAnexoEmpresasInstalacion,
+      [HtmlTexto(oVersion)]) + '</p>' + sLineBreak +
     sFilas + sLineBreak +
     '</section>' + sLineBreak;
 end;
@@ -418,12 +454,8 @@ begin
     FWebDeclaracion.Visible := False;
   mDeclaracion.Visible := True;
   mDeclaracion.BringToFront;
-  mDeclaracion.Lines.Text :=
-    'No se ha podido descargar la declaración responsable.' +
-    sLineBreak + sLineBreak +
-    'Versión solicitada: ' + oVersion +
-    sLineBreak + sLineBreak +
-    'Detalle: ' + AMensaje;
+  mDeclaracion.Lines.Text := Format(SErrorDescargarDeclaracionResponsable,
+    [oVersion, AMensaje]);
   mDeclaracion.SelStart := 0;
 end;
 
@@ -446,10 +478,8 @@ var
   sArchivo: string;
 begin
   mDeclaracion.Visible := True;
-  mDeclaracion.Lines.Text :=
-    'Descargando declaración responsable...' +
-    sLineBreak + sLineBreak +
-    'Versión: ' + oVersion;
+  mDeclaracion.Lines.Text := Format(SInfoDescargandoDeclaracionResponsable,
+    [oVersion]);
   mDeclaracion.SelStart := 0;
   Application.ProcessMessages;
   try

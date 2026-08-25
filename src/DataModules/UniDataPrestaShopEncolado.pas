@@ -249,6 +249,110 @@ begin
     AClaveInstalacion := '';
 end;
 
+function PrepararMensajePublicacionAplazada(
+  const AMensaje: string): string;
+begin
+  Result := Trim(AMensaje);
+  if Result = '' then
+    Result := 'No se completo el guardado del articulo';
+  Result := Copy(
+    CMarcaGuardadoArticuloPrestaShop + Result,
+    1,
+    4000);
+end;
+
+function PrepararUsuarioAuditoriaPublicacionAplazada(
+  const AUsuario: string): string;
+begin
+  Result := Copy(Trim(AUsuario), 1, 50);
+  if Result = '' then
+    Result := 'PRESTASHOP';
+end;
+
+procedure AjustarAccionPublicacionAplazada(
+  AConexion: TUniConnection;
+  const AClaveInstalacion: string;
+  AIdTienda: Integer;
+  const ACodigoArticulo: string;
+  var AAccion: TAccionVisibilidadPrestaShop);
+var
+  oConsulta: TUniQuery;
+  sAccionAnterior: string;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'SELECT ACCION_VISIBILIDAD_PSCOLA ' +
+      'FROM fza_prestashop_cola ' +
+      'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
+      'AND ID_TIENDA_PSCOLA = :TIENDA ' +
+      'AND CODIGO_ART_PSCOLA = :ARTICULO ' +
+      'AND ESTADO_PSCOLA = ''ERROR'' ' +
+      'AND LEFT(COALESCE(MENSAJE_ERROR_PSCOLA, ''''), 20) = ' +
+      ':MARCA FOR UPDATE';
+    oConsulta.ParamByName('INSTALACION').AsString := AClaveInstalacion;
+    oConsulta.ParamByName('TIENDA').AsInteger := AIdTienda;
+    oConsulta.ParamByName('ARTICULO').AsString := Trim(ACodigoArticulo);
+    oConsulta.ParamByName('MARCA').AsString :=
+      CMarcaGuardadoArticuloPrestaShop;
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+    begin
+      sAccionAnterior := UpperCase(Trim(
+        oConsulta.FieldByName('ACCION_VISIBILIDAD_PSCOLA').AsString));
+      if sAccionAnterior = 'A' then
+        AAccion := avpActivar
+      else if sAccionAnterior <> 'N' then
+        raise EDatabaseError.Create(
+          'La publicacion aplazada de PrestaShop no es valida');
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure MarcarPublicacionAplazadaComoError(
+  AConexion: TUniConnection;
+  const AClaveInstalacion: string;
+  AIdTienda: Integer;
+  const ACodigoArticulo, AMensaje, AUsuarioAuditoria: string);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'UPDATE fza_prestashop_cola SET ' +
+      'ESTADO_PSCOLA = ''ERROR'', ' +
+      'CONTADOR_INTENTOS_PSCOLA = 0, ' +
+      'INSTANTE_PROXIMO_INTENTO_PSCOLA = NULL, ' +
+      'MENSAJE_ERROR_PSCOLA = :MENSAJE, ' +
+      'VERSION_RECLAMADA_PSCOLA = NULL, ' +
+      'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
+      'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
+      'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ''N'', ' +
+      'ID_RECLAMACION_PSCOLA = NULL, ' +
+      'INSTANTE_RECLAMACION_PSCOLA = NULL, ' +
+      'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
+      'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
+      'AND ID_TIENDA_PSCOLA = :TIENDA ' +
+      'AND CODIGO_ART_PSCOLA = :ARTICULO';
+    oConsulta.ParamByName('MENSAJE').AsMemo := AMensaje;
+    oConsulta.ParamByName('USUARIO').AsString := AUsuarioAuditoria;
+    oConsulta.ParamByName('INSTALACION').AsString := AClaveInstalacion;
+    oConsulta.ParamByName('TIENDA').AsInteger := AIdTienda;
+    oConsulta.ParamByName('ARTICULO').AsString := Trim(ACodigoArticulo);
+    oConsulta.Execute;
+    if oConsulta.RowsAffected <> 1 then
+      raise EDatabaseError.Create(
+        'No se pudo registrar la publicacion aplazada de PrestaShop');
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
 procedure RegistrarPublicacionAplazadaPrestaShop(
   AConexion: TUniConnection;
   const ACodigoArticulo: string;
@@ -258,8 +362,6 @@ procedure RegistrarPublicacionAplazadaPrestaShop(
 var
   bTransaccionPropia: Boolean;
   iIdTienda: Integer;
-  oConsulta: TUniQuery;
-  sAccionAnterior: string;
   sClaveInstalacion: string;
   sMensaje: string;
   sUsuarioAuditoria: string;
@@ -271,16 +373,9 @@ begin
   if AAccion = avpDesactivar then
     raise EArgumentException.Create(
       'Una publicacion aplazada no puede desactivar el articulo');
-  sMensaje := Trim(AMensaje);
-  if sMensaje = '' then
-    sMensaje := 'No se completo el guardado del articulo';
-  sMensaje := Copy(
-    CMarcaGuardadoArticuloPrestaShop + sMensaje,
-    1,
-    4000);
-  sUsuarioAuditoria := Copy(Trim(AUsuario), 1, 50);
-  if sUsuarioAuditoria = '' then
-    sUsuarioAuditoria := 'PRESTASHOP';
+  sMensaje := PrepararMensajePublicacionAplazada(AMensaje);
+  sUsuarioAuditoria :=
+    PrepararUsuarioAuditoriaPublicacionAplazada(AUsuario);
   bTransaccionPropia := not AConexion.InTransaction;
   if bTransaccionPropia then
     AConexion.StartTransaction;
@@ -293,81 +388,24 @@ begin
       raise EDatabaseError.Create(
         'Faltan URL o tienda para aplazar la publicacion PrestaShop');
     if not AAccionExplicita then
-    begin
-      oConsulta := TUniQuery.Create(nil);
-      try
-        oConsulta.Connection := AConexion;
-        oConsulta.SQL.Text :=
-          'SELECT ACCION_VISIBILIDAD_PSCOLA ' +
-          'FROM fza_prestashop_cola ' +
-          'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
-          'AND ID_TIENDA_PSCOLA = :TIENDA ' +
-          'AND CODIGO_ART_PSCOLA = :ARTICULO ' +
-          'AND ESTADO_PSCOLA = ''ERROR'' ' +
-          'AND LEFT(COALESCE(MENSAJE_ERROR_PSCOLA, ''''), 20) = ' +
-          ':MARCA FOR UPDATE';
-        oConsulta.ParamByName('INSTALACION').AsString :=
-          sClaveInstalacion;
-        oConsulta.ParamByName('TIENDA').AsInteger := iIdTienda;
-        oConsulta.ParamByName('ARTICULO').AsString :=
-          Trim(ACodigoArticulo);
-        oConsulta.ParamByName('MARCA').AsString :=
-          CMarcaGuardadoArticuloPrestaShop;
-        oConsulta.Open;
-        if not oConsulta.IsEmpty then
-        begin
-          sAccionAnterior := UpperCase(Trim(
-            oConsulta.FieldByName(
-              'ACCION_VISIBILIDAD_PSCOLA').AsString));
-          if sAccionAnterior = 'A' then
-            AAccion := avpActivar
-          else if sAccionAnterior <> 'N' then
-            raise EDatabaseError.Create(
-              'La publicacion aplazada de PrestaShop no es valida');
-        end;
-      finally
-        FreeAndNil(oConsulta);
-      end;
-    end;
+      AjustarAccionPublicacionAplazada(
+        AConexion,
+        sClaveInstalacion,
+        iIdTienda,
+        ACodigoArticulo,
+        AAccion);
     EjecutarEncoladoVisibilidadPrestaShop(
       AConexion,
       ACodigoArticulo,
       AccionVisibilidad(AAccion),
       AUsuario);
-    oConsulta := TUniQuery.Create(nil);
-    try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'UPDATE fza_prestashop_cola SET ' +
-        'ESTADO_PSCOLA = ''ERROR'', ' +
-        'CONTADOR_INTENTOS_PSCOLA = 0, ' +
-        'INSTANTE_PROXIMO_INTENTO_PSCOLA = NULL, ' +
-        'MENSAJE_ERROR_PSCOLA = :MENSAJE, ' +
-        'VERSION_RECLAMADA_PSCOLA = NULL, ' +
-        'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA = ''N'', ' +
-        'ESCAMBIO_STOCK_RECLAMADO_PSCOLA = ''N'', ' +
-        'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA = ''N'', ' +
-        'ID_RECLAMACION_PSCOLA = NULL, ' +
-        'INSTANTE_RECLAMACION_PSCOLA = NULL, ' +
-        'INSTANTE_MODIF = NOW(), USUARIO_MODIF = :USUARIO ' +
-        'WHERE CLAVE_INSTALACION_PSCOLA = :INSTALACION ' +
-        'AND ID_TIENDA_PSCOLA = :TIENDA ' +
-        'AND CODIGO_ART_PSCOLA = :ARTICULO';
-      oConsulta.ParamByName('MENSAJE').AsMemo := sMensaje;
-      oConsulta.ParamByName('USUARIO').AsString :=
-        sUsuarioAuditoria;
-      oConsulta.ParamByName('INSTALACION').AsString :=
-        sClaveInstalacion;
-      oConsulta.ParamByName('TIENDA').AsInteger := iIdTienda;
-      oConsulta.ParamByName('ARTICULO').AsString :=
-        Trim(ACodigoArticulo);
-      oConsulta.Execute;
-      if oConsulta.RowsAffected <> 1 then
-        raise EDatabaseError.Create(
-          'No se pudo registrar la publicacion aplazada de PrestaShop');
-    finally
-      FreeAndNil(oConsulta);
-    end;
+    MarcarPublicacionAplazadaComoError(
+      AConexion,
+      sClaveInstalacion,
+      iIdTienda,
+      ACodigoArticulo,
+      sMensaje,
+      sUsuarioAuditoria);
     if bTransaccionPropia and AConexion.InTransaction then
       AConexion.Commit;
   except
@@ -570,26 +608,27 @@ begin
   Result := False;
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
-  if (Trim(ACodigoPropiedad) = '') or
-     (not EsquemaDescuentoCondicionalDisponible(AConexion)) then
-    Exit;
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := AConexion;
-    oConsulta.SQL.Text :=
-      'SELECT COUNT(*) AS NUMERO ' +
-      'FROM fza_tarifas_descuento_condiciones dc ' +
-      'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
-      'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
-      'AND dc.CODIGO_PROP_TARDCO = :PROPIEDAD';
-    oConsulta.ParamByName('TARIFA').AsString :=
-      LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
-    oConsulta.ParamByName('PROPIEDAD').AsString :=
-      Trim(ACodigoPropiedad);
-    oConsulta.Open;
-    Result := oConsulta.FieldByName('NUMERO').AsInteger > 0;
-  finally
-    FreeAndNil(oConsulta);
+  if (Trim(ACodigoPropiedad) <> '') and
+     EsquemaDescuentoCondicionalDisponible(AConexion) then
+  begin
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := AConexion;
+      oConsulta.SQL.Text :=
+        'SELECT COUNT(*) AS NUMERO ' +
+        'FROM fza_tarifas_descuento_condiciones dc ' +
+        'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
+        'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
+        'AND dc.CODIGO_PROP_TARDCO = :PROPIEDAD';
+      oConsulta.ParamByName('TARIFA').AsString :=
+        LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
+      oConsulta.ParamByName('PROPIEDAD').AsString :=
+        Trim(ACodigoPropiedad);
+      oConsulta.Open;
+      Result := oConsulta.FieldByName('NUMERO').AsInteger > 0;
+    finally
+      FreeAndNil(oConsulta);
+    end;
   end;
 end;
 
@@ -603,32 +642,33 @@ begin
   Result := False;
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
-  if (AIdValor <= 0) or
-     (not EsquemaDescuentoCondicionalDisponible(AConexion)) then
-    Exit;
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := AConexion;
-    oConsulta.SQL.Text :=
-      'SELECT COUNT(*) AS NUMERO ' +
-      'FROM fza_tarifas_descuento_condiciones dc ' +
-      'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
-      'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
-      'AND (EXISTS (SELECT 1 ' +
-      'FROM fza_tarifas_descuento_valores dv ' +
-      'WHERE dv.CODIGO_TAR_TARDVA = dc.CODIGO_TAR_TARDCO ' +
-      'AND dv.ID_PV_TARDVA = :ID_VALOR) OR (' +
-      'dc.MODO_TARDCO = ''TODOS_EXCEPTO'' AND EXISTS (' +
-      'SELECT 1 FROM fza_propiedades_valores pv ' +
-      'WHERE pv.ID_PV_ARTPROP = :ID_VALOR ' +
-      'AND pv.ID_PROP_PV = dc.CODIGO_PROP_TARDCO)))';
-    oConsulta.ParamByName('TARIFA').AsString :=
-      LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
-    oConsulta.ParamByName('ID_VALOR').AsInteger := AIdValor;
-    oConsulta.Open;
-    Result := oConsulta.FieldByName('NUMERO').AsInteger > 0;
-  finally
-    FreeAndNil(oConsulta);
+  if (AIdValor > 0) and
+     EsquemaDescuentoCondicionalDisponible(AConexion) then
+  begin
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := AConexion;
+      oConsulta.SQL.Text :=
+        'SELECT COUNT(*) AS NUMERO ' +
+        'FROM fza_tarifas_descuento_condiciones dc ' +
+        'WHERE dc.CODIGO_TAR_TARDCO = :TARIFA ' +
+        'AND dc.MODO_TARDCO IN (''SOLO_SI'', ''TODOS_EXCEPTO'') ' +
+        'AND (EXISTS (SELECT 1 ' +
+        'FROM fza_tarifas_descuento_valores dv ' +
+        'WHERE dv.CODIGO_TAR_TARDVA = dc.CODIGO_TAR_TARDCO ' +
+        'AND dv.ID_PV_TARDVA = :ID_VALOR) OR (' +
+        'dc.MODO_TARDCO = ''TODOS_EXCEPTO'' AND EXISTS (' +
+        'SELECT 1 FROM fza_propiedades_valores pv ' +
+        'WHERE pv.ID_PV_ARTPROP = :ID_VALOR ' +
+        'AND pv.ID_PROP_PV = dc.CODIGO_PROP_TARDCO)))';
+      oConsulta.ParamByName('TARIFA').AsString :=
+        LeerCodigoTarifaPrestaShop(AConexion, AUsuario);
+      oConsulta.ParamByName('ID_VALOR').AsInteger := AIdValor;
+      oConsulta.Open;
+      Result := oConsulta.FieldByName('NUMERO').AsInteger > 0;
+    finally
+      FreeAndNil(oConsulta);
+    end;
   end;
 end;
 

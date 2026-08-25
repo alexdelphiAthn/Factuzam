@@ -69,6 +69,17 @@ uses
   System.Diagnostics, System.Variants,
   UniDataAperturaConsultas, inLibMsgArticulos;
 
+resourcestring
+  SErrorGrabarColeccionAntesValores =
+    'Graba primero los datos de la colección antes de modificar sus valores.';
+  SErrorValorNoPerteneceAtributoColeccion =
+    'El valor seleccionado no pertenece al atributo de la colección.';
+  SErrorValorRepetidoColeccion =
+    'Ese valor ya está incluido en la colección.';
+  SErrorColeccionValoresOtroAtributo =
+    'La colección contiene valores de otro atributo. ' +
+    'Elimina primero sus valores antes de cambiar el atributo.';
+
 const
   SQL_BUSCAR_VALOR =
     'SELECT ID_AV, AV, ESACTIVO_AV ' +
@@ -413,9 +424,7 @@ var
 begin
   inherited;
   if unqryTablaG.State in [dsEdit, dsInsert] then
-    raise Exception.Create(
-      'Graba primero los datos de la colección antes de modificar ' +
-      'sus valores.');
+    raise Exception.Create(SErrorGrabarColeccionAntesValores);
   if DataSet.FieldByName('ID_AV_ACD').IsNull then
     raise Exception.Create(SErrorValorColeccionAtributosObligatorio);
   iIdConjunto := unqryTablaG.FieldByName('ID_AC').AsInteger;
@@ -428,8 +437,7 @@ begin
   sIdAtributo := unqryTablaG.FieldByName('ID_VA_AC').AsString;
   if not ValorPerteneceAtributo(
            iIdValor, sIdAtributo) then
-    raise Exception.Create(
-      'El valor seleccionado no pertenece al atributo de la colección.');
+    raise Exception.Create(SErrorValorNoPerteneceAtributoColeccion);
   bValorModificado := DataSet.State = dsInsert;
   if DataSet.State = dsEdit then
     bValorModificado :=
@@ -438,8 +446,7 @@ begin
   if bValorModificado and
      ValorRepetidoEnConjunto(
        iIdConjunto, iIdValor, iIdAnterior) then
-    raise Exception.Create(
-      'Ese valor ya está incluido en la colección.');
+    raise Exception.Create(SErrorValorRepetidoColeccion);
   ActualizarAuditoria(DataSet);
 end;
 
@@ -462,9 +469,7 @@ begin
   if bAtributoModificado and
      (not DetallesPertenecenAtributo(
             iIdConjunto, sIdAtributo)) then
-    raise Exception.Create(
-      'La colección contiene valores de otro atributo. ' +
-      'Elimina primero sus valores antes de cambiar el atributo.');
+    raise Exception.Create(SErrorColeccionValoresOtroAtributo);
   inherited unqryTablaGBeforePost(DataSet);
 end;
 

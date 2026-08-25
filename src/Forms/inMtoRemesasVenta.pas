@@ -145,6 +145,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoOrdenSepaRemesaVenta = 'remesa_cobro_%s_%s';
+  SFiltroArchivoOrdenSepa = 'Orden SEPA XML (*.xml)|*.xml';
+
 constructor TfrmMtoRemesasVenta.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
@@ -558,14 +562,15 @@ begin
           if TfrmModalSepaRemesaVenta.Ejecutar(rDatosSepa) then
           begin
             dmmRemesasVenta.GuardarDatosSepa(rDatosSepa);
-            sNombre := 'remesa_cobro_' +
-              dmmRemesasVenta.unqryTablaG.FieldByName('SERIE_REMV').AsString +
-              '_' + dmmRemesasVenta.unqryTablaG.FieldByName('NUMERO_REMV')
-                .AsString;
+            sNombre := Format(SNombreArchivoOrdenSepaRemesaVenta,
+              [dmmRemesasVenta.unqryTablaG.FieldByName(
+                 'SERIE_REMV').AsString,
+               dmmRemesasVenta.unqryTablaG.FieldByName(
+                 'NUMERO_REMV').AsString]);
             dlg := TSaveDialog.Create(nil);
             try
               dlg.DefaultExt := 'xml';
-              dlg.Filter := 'Orden SEPA XML (*.xml)|*.xml';
+              dlg.Filter := SFiltroArchivoOrdenSepa;
               dlg.FileName := LimpiarNombreArchivo(sNombre) + '.xml';
               if dlg.Execute then
               begin

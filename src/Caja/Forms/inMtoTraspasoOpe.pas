@@ -228,6 +228,12 @@ uses
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
   inLibMsgArticulos;
 
+resourcestring
+  STituloMisPeticionesTraspaso =
+    'Mis peticiones';
+  STituloBusquedaEmpleadoTraspaso =
+    'Buscar empleado';
+
 function TextoBotonConAtajo(
   const ACaption, AAtajo: string): string;
 var
@@ -1647,7 +1653,7 @@ end;
 
 procedure TfrmMtoOpeTraspaso.AbrirMisPeticiones;
 begin
-  AbrirHistoricoSolicitudes(FAlmacen, 'Mis peticiones');
+  AbrirHistoricoSolicitudes(FAlmacen, STituloMisPeticionesTraspaso);
 end;
 
 procedure TfrmMtoOpeTraspaso.AbrirHistoricoSolicitudes(
@@ -1748,7 +1754,7 @@ begin
   Consulta := FRepositorioConsultas.ConsultarEmpleados;
   Datos := Consulta.DataSet;
   if BusquedaVisual.EjecutarBusquedaDataSet(
-       'Buscar empleado',
+       STituloBusquedaEmpleadoTraspaso,
        Datos,
        'frmMtoEmpCajSearch') then
   begin

@@ -78,6 +78,10 @@ uses
   inLibCajaVentanasIntf, inLibFotos, inMtoStockConsulta,
   inMtoModalCambioIva;
 
+resourcestring
+  SDescripcionPersonalizacionCaja =
+    'Personalización Caja';
+
 function SolicitarCambioIvaCaja(
   AOwner: TComponent;
   const ATipoActual: string;
@@ -169,7 +173,7 @@ begin
       'FotoStockWidth',
       FContexto.PanelFoto);
     Layout.GuardarGrid('Lineas', FContexto.VistaLineas);
-    if Layout.PreguntarYGrabar('Personalización Caja') then
+    if Layout.PreguntarYGrabar(SDescripcionPersonalizacionCaja) then
       ShowMessage(SInfoLayoutCajaGuardado);
   finally
     FreeAndNil(Layout);

@@ -60,6 +60,18 @@ type
     Mensaje: string;
   end;
 
+procedure InformarFalloSecundarioEnDepurador(
+  const AContexto: PChar;
+  E: Exception);
+begin
+  try
+    OutputDebugString(PChar(
+      string(AContexto) + ': ' + E.ClassName + ': ' + E.Message));
+  except
+    OutputDebugString(AContexto);
+  end;
+end;
+
 function CrearResultadoComandoCopiaSeguridad(
   ACodigoSalida: Cardinal;
   const AMensaje: string
@@ -548,6 +560,9 @@ begin
       AResultado.Mensaje,
       AResultado.EsError);
   except
+    on E: Exception do
+      InformarFalloSecundarioEnDepurador(
+        'inMtoComandoCopiaSeguridad.RegistrarResultadoComando.Salida', E);
   end;
   try
     if AResultado.EsError then
@@ -555,6 +570,9 @@ begin
     else
       ARegistroLog.RegistrarInformacion(AResultado.Mensaje);
   except
+    on E: Exception do
+      InformarFalloSecundarioEnDepurador(
+        'inMtoComandoCopiaSeguridad.RegistrarResultadoComando.Log', E);
   end;
 end;
 

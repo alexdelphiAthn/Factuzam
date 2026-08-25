@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inLibTarifasDescuentoCondicionesPersistenciaIntf             }
 {    Tipo:       Contrato de persistencia                                      }
@@ -127,28 +127,29 @@ var
   i: Integer;
   oIds: TDictionary<Integer, Boolean>;
 begin
-  if ACondicion.Modo = mcdTodos then
-    Exit;
-  if Trim(ACondicion.CodigoPropiedad) = '' then
-    raise EArgumentException.Create(
-      SErrorPropiedadCondicionObligatoria);
-  if Length(ACondicion.IdsValores) = 0 then
-    raise EArgumentException.Create(
-      SErrorValoresCondicionObligatorios);
-  oIds := TDictionary<Integer, Boolean>.Create;
-  try
-    for i := 0 to High(ACondicion.IdsValores) do
-    begin
-      if ACondicion.IdsValores[i] <= 0 then
-        raise EArgumentException.Create(
-          SErrorValorCondicionNoValido);
-      if oIds.ContainsKey(ACondicion.IdsValores[i]) then
-        raise EArgumentException.Create(
-          SErrorValorCondicionDuplicado);
-      oIds.Add(ACondicion.IdsValores[i], True);
+  if ACondicion.Modo <> mcdTodos then
+  begin
+    if Trim(ACondicion.CodigoPropiedad) = '' then
+      raise EArgumentException.Create(
+        SErrorPropiedadCondicionObligatoria);
+    if Length(ACondicion.IdsValores) = 0 then
+      raise EArgumentException.Create(
+        SErrorValoresCondicionObligatorios);
+    oIds := TDictionary<Integer, Boolean>.Create;
+    try
+      for i := 0 to High(ACondicion.IdsValores) do
+      begin
+        if ACondicion.IdsValores[i] <= 0 then
+          raise EArgumentException.Create(
+            SErrorValorCondicionNoValido);
+        if oIds.ContainsKey(ACondicion.IdsValores[i]) then
+          raise EArgumentException.Create(
+            SErrorValorCondicionDuplicado);
+        oIds.Add(ACondicion.IdsValores[i], True);
+      end;
+    finally
+      oIds.Free;
     end;
-  finally
-    oIds.Free;
   end;
 end;
 

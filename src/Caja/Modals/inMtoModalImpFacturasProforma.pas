@@ -56,6 +56,8 @@ implementation
 resourcestring
   SIdProformaNoValido =
     'No se ha indicado una proforma interna válida para imprimir.';
+  SFormatoNombreArchivoProforma =
+    'Proforma_%s_%s_%s';
 
 function SanearNombreArchivo(const AOriginal: string): string;
 var
@@ -91,7 +93,8 @@ begin
       'NUMERO_PROCAJ').AsString;
     frxpdfxprtPedWeb.FileName :=
       SanearNombreArchivo(
-        Format('Proforma_%s_%s_%s', [sEmpresa, sSerie, sNumero]));
+        Format(SFormatoNombreArchivoProforma,
+          [sEmpresa, sSerie, sNumero]));
   end;
 end;
 

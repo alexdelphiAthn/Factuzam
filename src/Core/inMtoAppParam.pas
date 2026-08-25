@@ -216,9 +216,16 @@ uses
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
    inLibTraduccionesDescargaPersistenciaIntf,
    inMtoModalDescargaTraduccion, inLibLogIntf,
+   UniDataAppParamGrupoUsuarioConsulta,
    UniDataConfiguracionPantalla,
    UniDataTraduccionesDescargaRepositorio,
    UniDataPrestaShopEncolado;
+
+resourcestring
+  SSolicitudSeleccionarCarpetaParametros =
+    'Seleccione una carpeta';
+  SDescripcionPersonalizacionParametrosAplicacion =
+    'Personalización Parámetros Aplicación';
 
 function EsParametroPrestaShop(const ANombre: string): Boolean;
 begin
@@ -275,23 +282,10 @@ end;
 
 function TfrmMtoAppParam.ObtenerGrupoUsuario(
   const AUsuario: string): string;
-var
-  oConsulta: TUniQuery;
 begin
-  Result := '';
-  oConsulta := TUniQuery.Create(nil);
-  try
-    oConsulta.Connection := ConexionPrincipal;
-    oConsulta.SQL.Text :=
-      'SELECT GRUPO_USU FROM fza_usuarios ' +
-      'WHERE USUARIO_USU = :USUARIO';
-    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
-    oConsulta.Open;
-    if not oConsulta.Eof then
-      Result := Trim(oConsulta.FieldByName('GRUPO_USU').AsString);
-  finally
-    FreeAndNil(oConsulta);
-  end;
+  Result := ConsultarGrupoUsuarioUniDAC(
+    ConexionPrincipal,
+    AUsuario);
 end;
 
 procedure RegistrarCambioConfiguracionVerifactuSeguro(
@@ -872,7 +866,7 @@ begin
   begin
     // El valor guardado puede contener un token: se expande para el diálogo
     Dir := ExpandPathTokens(DisplayStr);
-    if SelectDirectory('Seleccione una carpeta', '', Dir,
+    if SelectDirectory(SSolicitudSeleccionarCarpetaParametros, '', Dir,
                        [sdNewUI, sdNewFolder]) then
       DisplayStr := PathToToken(Dir);
   end;
@@ -1320,7 +1314,8 @@ begin
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarDividerInspector('Divider', JvInspector1);
-    if Layout.PreguntarYGrabar('Personalización Parámetros Aplicación') then
+    if Layout.PreguntarYGrabar(
+         SDescripcionPersonalizacionParametrosAplicacion) then
       ShowMessage(SInfoLayoutGuardado);
   finally
     FreeAndNil(Layout);

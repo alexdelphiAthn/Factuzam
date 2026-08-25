@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibProteccionCredenciales                                   }
 {    Tipo:       Librería                                                      }
@@ -24,6 +24,12 @@ uses
   System.NetEncoding,
   System.SysUtils,
   Winapi.Windows;
+
+resourcestring
+  SErrorCredencialBase64Invalido =
+    'La credencial protegida no tiene un Base64 válido.';
+  SErrorCredencialOtroUsuarioWindows =
+    'La credencial no pertenece a este usuario de Windows.';
 
 const
   CRYPTPROTECT_UI_FORBIDDEN = $00000001;
@@ -151,8 +157,7 @@ begin
     except
       on E: Exception do
       begin
-        raise EConvertError.Create(
-          'La credencial protegida no tiene un Base64 válido.');
+        raise EConvertError.Create(SErrorCredencialBase64Invalido);
       end;
     end;
     oEntrada := CrearBlob(aEntrada);
@@ -169,8 +174,7 @@ begin
         CRYPTPROTECT_UI_FORBIDDEN,
         @oSalida) then
       begin
-        raise EConvertError.Create(
-          'La credencial no pertenece a este usuario de Windows.');
+        raise EConvertError.Create(SErrorCredencialOtroUsuarioWindows);
       end;
       aSalida := CopiarBlob(oSalida);
       try

@@ -85,6 +85,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorModuloFacturasNoAsignado =
+    'Data module de facturas no asignado.';
+
 procedure TfrmGenFacRec.btn3Click(Sender: TObject);
 begin
   Close;
@@ -101,7 +105,7 @@ begin
   IsError := False;
   if not Assigned(dmFac) then
     raise EArgumentNilException.Create(
-      'Data module de facturas no asignado.');
+      SErrorModuloFacturasNoAsignado);
     if chkAbonar.Checked and not IsError then
     begin
       SavedCursor := Screen.Cursor;
@@ -204,7 +208,7 @@ procedure TfrmGenFacRec.Preparar(ADM: TdmFacturas);
 begin
   if not Assigned(ADM) then
     raise EArgumentNilException.Create(
-      'Data module de facturas no asignado.');
+      SErrorModuloFacturasNoAsignado);
   dmFac := ADM;
   if not dmFac.unqrySeries.Active then
     dmFac.unqrySeries.Open;

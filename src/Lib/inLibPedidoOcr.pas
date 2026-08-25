@@ -88,6 +88,28 @@ uses
   System.Generics.Collections,
   inLibJsonSeguro;
 
+resourcestring
+  SOrigenTotalLineaCeldaPedidoOcr =
+    'total de línea y celda OCR fusionada';
+  SOrigenTotalPedidoCeldaPedidoOcr =
+    'total del pedido y celda OCR fusionada';
+  SOrigenInferenciaPedidoOcr = 'inferencia OCR';
+  SFormatoInferenciaPedidoOcr =
+    'Línea %s, modelo %s, color %s, talla %s: cantidad %s (%s).';
+  SErrorJsonPedidoOcrObjetoInvalido =
+    'El fichero no contiene un objeto JSON válido.';
+  SErrorBloqueValidacionPedidoOcrInvalido =
+    'El bloque de validación del OCR no contiene un objeto válido.';
+  SErrorVerificacionCantidadesPedidoOcr =
+    'El extractor no pudo verificar las cantidades e importes.';
+  SErrorValidacionPedidoOcr =
+    'El OCR no ha superado la validación del pedido.' + sLineBreak + '%s';
+  SErrorJsonPedidoOcrNoExiste = 'No existe el JSON del pedido: %s';
+  SErrorJsonPedidoOcrSinDetalle =
+    'El JSON no contiene el array detalle.';
+  SErrorPedidoOcrSinLineasImportables =
+    'El pedido no contiene líneas importables.';
+
 function NormalizarTallaPedido(const ATalla: string): string;
 var
   cCaracter: Char;
@@ -214,10 +236,10 @@ begin
             sCantidad := LeerTextoSeguro(oInferencia, 'cantidad');
             sOrigen := LeerTextoSeguro(oInferencia, 'origen');
             if SameText(sOrigen, 'total_linea_y_celda_ocr_fusionada') then
-              sOrigen := 'total de línea y celda OCR fusionada'
+              sOrigen := SOrigenTotalLineaCeldaPedidoOcr
             else if SameText(
               sOrigen, 'total_pedido_y_celda_ocr_fusionada') then
-              sOrigen := 'total del pedido y celda OCR fusionada';
+              sOrigen := SOrigenTotalPedidoCeldaPedidoOcr;
             if sLinea = '' then
               sLinea := '?';
             if sModelo = '' then
@@ -229,10 +251,8 @@ begin
             if sCantidad = '' then
               sCantidad := '?';
             if sOrigen = '' then
-              sOrigen := 'inferencia OCR';
-            oTextos.Add(Format(
-              'Línea %s, modelo %s, color %s, talla %s: ' +
-              'cantidad %s (%s).',
+              sOrigen := SOrigenInferenciaPedidoOcr;
+            oTextos.Add(Format(SFormatoInferenciaPedidoOcr,
               [sLinea, sModelo, sColor, sTalla, sCantidad, sOrigen]));
           end;
         end;
@@ -253,16 +273,14 @@ var
   sMotivo: string;
 begin
   if not (AObjeto is TJSONObject) then
-    raise Exception.Create(
-      'El fichero no contiene un objeto JSON válido.');
+    raise Exception.Create(SErrorJsonPedidoOcrObjetoInvalido);
   oRaiz := TJSONObject(AObjeto);
   oValor := oRaiz.GetValue('validacion');
   if Assigned(oValor) then
   begin
     APedido.TieneValidacion := True;
     if not (oValor is TJSONObject) then
-      raise Exception.Create(
-        'El bloque de validación del OCR no contiene un objeto válido.');
+      raise Exception.Create(SErrorBloqueValidacionPedidoOcrInvalido);
     oValidacion := TJSONObject(oValor);
     APedido.Cuadra := LeerBooleanoSeguro(oValidacion, 'cuadra', False);
     APedido.RequiereRevision := LeerBooleanoSeguro(
@@ -274,11 +292,8 @@ begin
     begin
       sMotivo := Trim(APedido.AdvertenciasValidacion);
       if sMotivo = '' then
-        sMotivo :=
-          'El extractor no pudo verificar las cantidades e importes.';
-      raise Exception.Create(
-        'El OCR no ha superado la validación del pedido.' +
-        sLineBreak + sMotivo);
+        sMotivo := SErrorVerificacionCantidadesPedidoOcr;
+      raise Exception.Create(Format(SErrorValidacionPedidoOcr, [sMotivo]));
     end;
   end;
 end;
@@ -467,12 +482,12 @@ begin
   Result := Default(TPedidoOcr);
   if not TFile.Exists(AFicheroJson) then
     raise Exception.CreateFmt(
-      'No existe el JSON del pedido: %s', [AFicheroJson]);
+      SErrorJsonPedidoOcrNoExiste, [AFicheroJson]);
   sContenido := TFile.ReadAllText(AFicheroJson, TEncoding.UTF8);
   oValor := TJSONObject.ParseJSONValue(sContenido);
   try
     if not (oValor is TJSONObject) then
-      raise Exception.Create('El fichero no contiene un objeto JSON válido.');
+      raise Exception.Create(SErrorJsonPedidoOcrObjetoInvalido);
     oRaiz := TJSONObject(oValor);
     Result.FicheroJson := TPath.GetFullPath(AFicheroJson);
     Result.ReferenciaDocumento := LeerTextoSeguro(
@@ -487,7 +502,7 @@ begin
     end;
     LeerValidacion(oRaiz, Result);
     if not (oRaiz.GetValue('detalle') is TJSONArray) then
-      raise Exception.Create('El JSON no contiene el array detalle.');
+      raise Exception.Create(SErrorJsonPedidoOcrSinDetalle);
     oDetalle := TJSONArray(oRaiz.GetValue('detalle'));
     for iLinea := 0 to oDetalle.Count - 1 do
     begin
@@ -500,7 +515,7 @@ begin
     end;
     CompletarFotosPorModelo(Result.Lineas);
     if Length(Result.Lineas) = 0 then
-      raise Exception.Create('El pedido no contiene líneas importables.');
+      raise Exception.Create(SErrorPedidoOcrSinLineasImportables);
     if oRaiz.GetValue('paginas_originales') is TJSONArray then
     begin
       oPaginas := TJSONArray(oRaiz.GetValue('paginas_originales'));

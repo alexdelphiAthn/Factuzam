@@ -27,6 +27,10 @@ implementation
 uses
   System.SysUtils;
 
+resourcestring
+  SErrorOperacionHistoricaInvalida =
+    'Debe indicar una operación histórica válida.';
+
 const
   LONGITUD_MAXIMA_ARTICULO = 20;
   LONGITUD_MAXIMA_COLOR = 100;
@@ -226,7 +230,7 @@ begin
   begin
     Result := TResultadoReversionHistorico.Error(
       crhNoEncontrada,
-      'Debe indicar una operación histórica válida.');
+      SErrorOperacionHistoricaInvalida);
   end;
 end;
 

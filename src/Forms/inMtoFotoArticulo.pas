@@ -177,6 +177,9 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloLayoutFotoArticulo = 'Foto del artículo / SKU';
+
 function FotoFlotanteActual: TfrmFotoArticulo;
 var
   Componente: TComponent;
@@ -338,7 +341,7 @@ begin
   try
     saver.GuardarGeometria(Self);
     saver.GuardarValor('Resolucion', IntToStr(rgResolucion.ItemIndex));
-    saver.PreguntarYGrabar('Foto del artículo / SKU');
+    saver.PreguntarYGrabar(STituloLayoutFotoArticulo);
   finally
     FreeAndNil(saver);
   end;

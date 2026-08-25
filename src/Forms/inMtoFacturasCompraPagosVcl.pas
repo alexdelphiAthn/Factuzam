@@ -40,6 +40,10 @@ uses
   inLibMsgCompras,
   inMtoModalRegistrarPago, inMtoModalSeleccionarBanco;
 
+resourcestring
+  STituloRegistrarPagoEfectoFacturaCompra =
+    'Efecto %d - vto %s - pendiente %.2f';
+
 procedure GenerarEfectosFacturaCompraVcl(
   AOwner: TComponent;
   ACabecera: TDataSet;
@@ -98,7 +102,7 @@ begin
     try
       Formulario.SetDatos(
         Format(
-          'Efecto %d - vto %s - pendiente %.2f',
+          STituloRegistrarPagoEfectoFacturaCompra,
           [NumeroEfecto,
            FormatDateTime(
              'dd/mm/yyyy',

@@ -82,7 +82,10 @@ selección de informes se fija en `PascalAnalyzer.ini`, por lo que no depende de
 las preferencias de Pascal Analyzer de cada desarrollador. Para que el
 resultado sea comparable, el runner exige Pascal Analyzer 9.21.5.
 Genera los informes Totals, Modules, Strong Warnings, Warnings, Memory,
-Complexity, Exception y Security, junto con el SBOM CycloneDX asociado.
+Complexity, Exception, Status y Security, junto con el SBOM CycloneDX
+asociado. Conserva las salidas originales de PAL como `SBOM.pal.raw.json` y
+`Security.pal.raw.txt`; `SBOM.json` y `Security.txt` contienen la version
+normalizada, y `Security Coverage.txt` documenta el alcance real del analisis.
 
 Validar la instalación sin ejecutar el análisis:
 
@@ -112,6 +115,33 @@ Las fuentes externas se siguen analizando para resolver símbolos, pero sus
 identificadores se excluyen de los informes que admiten ese filtro para
 mantenerlos centrados en el código propio. `Totals.txt` conserva deliberadamente
 el total global de unidades analizadas, incluidas las dependencias.
+
+El postprocesado del SBOM añade el componente raíz de Factuzam, cierra y valida
+las referencias del grafo, calcula SHA-256 para los ficheros inventariados,
+sustituye las rutas absolutas por identificadores lógicos y clasifica por
+separado código propio y dependencias, incluidas las fuentes vendorizadas de
+`src/Lib/sqlformatter` y `src/vcl37`. Las fuentes SQL Formatter se identifican
+además con su licencia Apache-2.0. `isExternal` mantiene el significado de
+CycloneDX —componente de ejecución proporcionado por el entorno— y no se usa
+como sinónimo de tercero. Las unidades que PAL no puede cargar desde fuentes se
+representan mediante componentes separados para UniDAC y DAC, identificados
+con sus versiones y con las huellas de sus DCU/BPL de evidencia. El grafo crea
+un nodo para cada componente y declara la composición como incompleta porque
+describe la resolución de fuentes, no una entrega reconciliada con el EXE o el
+instalador.
+
+El conjunto saneado que puede exportarse está formado exclusivamente por
+`SBOM.json`, `Security.txt` y `Security Coverage.txt`. Las copias raw y los demás
+informes de Pascal Analyzer (`Status.txt`, `Modules.txt`, `Complexity.txt`, etc.)
+son evidencia interna y pueden contener rutas locales; no debe publicarse ni
+copiarse como entrega el directorio completo de resultados.
+
+Pascal Analyzer no consulta una base de vulnerabilidades. Por eso
+`Security Coverage.txt` declara `Vulnerability scan: NOT PERFORMED` y estado
+`UNKNOWN`: el informe no debe interpretarse como ausencia de CVE. Para obtener
+cobertura de vulnerabilidades hace falta un escáner posterior y, en las
+dependencias comerciales sin identificadores públicos fiables, revisar también
+los avisos de seguridad de sus proveedores.
 
 Los informes no se escriben en el repositorio salvo que se pase expresamente
 `-DirectorioSalida`; si se especifica, el directorio debe estar vacío. El

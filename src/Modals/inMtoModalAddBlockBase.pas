@@ -290,6 +290,12 @@ uses
   inLibUser, inLibMsgArticulos, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
+resourcestring
+  SCaptionExcluirArticulosYaCargados =
+    'Excluir articulos ya cargados';
+  SItemTodasPropiedadesAddBlock =
+    '(todas - ver todos los valores)';
+
 // ============================================================================
 //   API publica del hijo
 // ============================================================================
@@ -344,7 +350,7 @@ end;
 
 function TfrmModalAddBlockBase.TextoExcluirYaCargados: string;
 begin
-  Result := 'Excluir articulos ya cargados';
+  Result := SCaptionExcluirArticulosYaCargados;
 end;
 
 procedure TfrmModalAddBlockBase.ConfigurarPreviewExtra;
@@ -502,7 +508,7 @@ begin
   aPropiedades := FServicios.Consultas.ListarPropiedades;
   cbxPropiedad.Properties.Items.Clear;
   FCodigosPropiedades.Clear;
-  cbxPropiedad.Properties.Items.Add('(todas - ver todos los valores)');
+  cbxPropiedad.Properties.Items.Add(SItemTodasPropiedadesAddBlock);
   FCodigosPropiedades.Add('');
   for oPropiedad in aPropiedades do
   begin

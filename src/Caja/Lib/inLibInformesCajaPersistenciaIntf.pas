@@ -64,7 +64,15 @@ type
     function DataSet: TDataSet;
   end;
 
-  IRepositorioInformesCaja = interface
+  IRepositorioValesCaja = interface
+    ['{9C40657A-CC5F-45F8-A066-A2C81A04736E}']
+    function ConsultarValesPendientes(
+      const AFiltro, APin: string;
+      AUsarCaducidad: Boolean
+    ): IResultadoInformeCaja;
+  end;
+
+  IRepositorioInformesCaja = interface(IRepositorioValesCaja)
     ['{6302BC37-4503-4E4D-8D80-FF18D36A10C2}']
     function ConsultarArqueos(
       const ASolicitud: TSolicitudInformeCaja
@@ -93,10 +101,6 @@ type
     ): IResultadoInformeCaja;
     function ConsultarArqueosHistorico(
       const AEmpresa, AAlmacen, ACaja: string
-    ): IResultadoInformeCaja;
-    function ConsultarValesPendientes(
-      const AFiltro, APin: string;
-      AUsarCaducidad: Boolean
     ): IResultadoInformeCaja;
   end;
 

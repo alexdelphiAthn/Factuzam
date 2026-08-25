@@ -94,6 +94,9 @@ uses
   inLibMsgArticulos,
   inLibMsgComun;
 
+resourcestring
+  SDescripcionModalGuardarPrecargaArticulos = 'Guardar precarga';
+
 const
   ALTO_CABECERA = 22;
   ALTO_CONTENIDO = 44;
@@ -341,7 +344,7 @@ begin
   try
     oModal.edtDescripcion.Enabled := False;
     oModal.edtNombreOrigen.Text := ANombrePantalla;
-    oModal.edtDescripcion.Text := 'Guardar precarga';
+    oModal.edtDescripcion.Text := SDescripcionModalGuardarPrecargaArticulos;
     oModal.ShowModal;
     if oModal.sFicha = 'S' then
       sPermisos := oModal.cbbPermisos.Text;

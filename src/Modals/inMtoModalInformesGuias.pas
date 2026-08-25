@@ -42,6 +42,15 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  SInfoReportGuiasNoDisponible = '(Report no disponible)';
+  STituloGuiasInforme = 'Guías del informe';
+  SInfoInformeFormatoGlobal =
+    'Informe: %s   ·   Formato: (global)';
+  SInfoInformeFormato = 'Informe: %s   ·   Formato: %s';
+  SInfoDatasetInformeSinNombre = '(sin nombre)';
+  SInfoDatasetInformeSinCampos = '%s  (sin campos)';
+
 procedure TfrmModalInformesGuias.CargarCamposMaster;
 var
   i, j: Integer;
@@ -52,7 +61,7 @@ begin
   lbCamposMaster.Items.Clear;
   if FReport = nil then
   begin
-    lbCamposMaster.Items.Add('(Report no disponible)');
+    lbCamposMaster.Items.Add(SInfoReportGuiasNoDisponible);
   end
   else
   begin
@@ -63,10 +72,11 @@ begin
         oFrx := TfrxDBDataset(FReport.Datasets[i].DataSet);
         sUserName := oFrx.UserName;
         if sUserName = '' then
-          sUserName := '(sin nombre)';
+          sUserName := SInfoDatasetInformeSinNombre;
         oDS := oFrx.DataSet;
         if (oDS = nil) or (not oDS.Active) or (oDS.FieldCount = 0) then
-          lbCamposMaster.Items.Add(sUserName + '  (sin campos)')
+          lbCamposMaster.Items.Add(
+            Format(SInfoDatasetInformeSinCampos, [sUserName]))
         else
           for j := 0 to oDS.FieldCount - 1 do
             lbCamposMaster.Items.Add(
@@ -83,15 +93,15 @@ end;
 
 function TfrmModalInformesGuias.ObtenerTitulo: string;
 begin
-  Result := 'Guías del informe';
+  Result := STituloGuiasInforme;
 end;
 
 function TfrmModalInformesGuias.ObtenerInfoCaption: string;
 begin
   if sFormatoSugerido = '' then
-    Result := Format('Informe: %s   ·   Formato: (global)', [sInforme])
+    Result := Format(SInfoInformeFormatoGlobal, [sInforme])
   else
-    Result := Format('Informe: %s   ·   Formato: %s',
+    Result := Format(SInfoInformeFormato,
       [sInforme, sFormatoSugerido]);
 end;
 

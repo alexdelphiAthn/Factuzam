@@ -172,6 +172,11 @@ implementation
 
 uses uGenericIfThen, inLibMsgArticulos;
 
+resourcestring
+  STituloAnadirPropiedadesArticulo = 'Añadir propiedades al artículo';
+  STituloPropiedadPorSku = '%s por SKU';
+  STituloPropiedadPorColor = '%s por color';
+
 const
   ALTO_FILA      = 26;
   MARGEN_V       = 6;
@@ -190,7 +195,7 @@ begin
   FLectura        := ALectura;
   FExcluirCodigos := AExcluir;
   CodigosSeleccionados := TStringList.Create;
-  Caption    := 'Añadir propiedades al artículo';
+  Caption    := STituloAnadirPropiedadesArticulo;
   Width      := 542;
   Height     := 400;
   Position   := poOwnerFormCenter;
@@ -981,9 +986,9 @@ begin
   FOpciones   := TList<TPair<Integer, string>>.Create;
   FActuales   := TDictionary<string, TValUnidadProp>.Create;
   if FNivel = 'SKU' then
-    Caption := FNombreProp + ' por SKU'
+    Caption := Format(STituloPropiedadPorSku, [FNombreProp])
   else
-    Caption := FNombreProp + ' por color';
+    Caption := Format(STituloPropiedadPorColor, [FNombreProp]);
   Width       := 560;
   Height      := 460;
   Position    := poOwnerFormCenter;

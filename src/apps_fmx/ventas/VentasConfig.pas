@@ -44,14 +44,15 @@ var
 implementation
 
 uses
-  System.SysUtils, System.IOUtils, System.IniFiles;
+  System.SysUtils, System.IOUtils, System.IniFiles,
+  ConfiguracionClienteMovil;
 
 constructor TVentasConfig.Create;
 begin
   inherited Create;
-  FUrlBase := 'https://webservice.veryverifactu.com/api/v1/';
-  FToken := '';
-  FReferencia := '';
+  FUrlBase := cUrlApiMovil;
+  FToken := cTokenApiMovil;
+  FReferencia := cReferenciaInstalacionMovil;
   FMostrarMargen := True;
   Cargar;
 end;
@@ -75,8 +76,8 @@ begin
   oIni := TIniFile.Create(RutaIni);
   try
     FUrlBase := oIni.ReadString('servidor', 'url', FUrlBase);
-    FToken := oIni.ReadString('servidor', 'token', '');
-    FReferencia := oIni.ReadString('servidor', 'referencia', '');
+    FToken := oIni.ReadString('servidor', 'token', FToken);
+    FReferencia := oIni.ReadString('servidor', 'referencia', FReferencia);
     FMostrarMargen := oIni.ReadBool('vista', 'margen', True);
   finally
     FreeAndNil(oIni);

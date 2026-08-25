@@ -43,6 +43,23 @@ uses
   System.Classes,
   System.IOUtils;
 
+resourcestring
+  SErrorPdfPedidoOcrNoExiste = 'No existe el PDF: %s';
+  SErrorEjecutablePedidoOcrNoEncontrado =
+    'No se encuentra %s junto a Factuzam.exe.';
+  SErrorLogPedidoOcrNoCreado =
+    'No se pudo crear el log del OCR (%d).';
+  SErrorProcesoPedidoOcrNoIniciado =
+    'No se pudo iniciar el OCR (%d).';
+  SErrorEsperaProcesoPedidoOcr =
+    'Error esperando al proceso OCR (%d).';
+  SErrorResultadoProcesoPedidoOcrNoLeido =
+    'No se pudo leer el resultado del OCR (%d).';
+  SErrorExtractorPedidoOcr =
+    'El extractor OCR terminó con código %d.%s%s';
+  SErrorExtractorPedidoOcrSinJson =
+    'El extractor terminó sin generar el JSON del pedido.';
+
 const
   cNombreEjecutableOcr = 'ExtraerPedidoAlbionTesseract.exe';
   cCarpetaTemporalOcr = 'FactuzamPedidoOcr';
@@ -83,13 +100,13 @@ var
 begin
   Result := Default(TResultadoProcesoPedidoOcr);
   if not TFile.Exists(AFicheroPdf) then
-    raise Exception.CreateFmt('No existe el PDF: %s', [AFicheroPdf]);
+    raise Exception.CreateFmt(SErrorPdfPedidoOcrNoExiste, [AFicheroPdf]);
   sEjecutable := TPath.Combine(
     TPath.GetDirectoryName(ParamStr(0)),
     cNombreEjecutableOcr);
   if not TFile.Exists(sEjecutable) then
     raise Exception.CreateFmt(
-      'No se encuentra %s junto a Factuzam.exe.',
+      SErrorEjecutablePedidoOcrNoEncontrado,
       [cNombreEjecutableOcr]);
   Result.DirectorioTrabajo := CrearDirectorioTrabajo;
   try
@@ -114,7 +131,7 @@ begin
       0);
     if hLog = INVALID_HANDLE_VALUE then
       raise EOSError.CreateFmt(
-        'No se pudo crear el log del OCR (%d).', [GetLastError]);
+        SErrorLogPedidoOcrNoCreado, [GetLastError]);
     ZeroMemory(@oInicio, SizeOf(oInicio));
     ZeroMemory(@oProceso, SizeOf(oProceso));
     oInicio.cb := SizeOf(oInicio);
@@ -141,7 +158,7 @@ begin
     CloseHandle(hLog);
     if not bCreado then
       raise EOSError.CreateFmt(
-        'No se pudo iniciar el OCR (%d).', [GetLastError]);
+        SErrorProcesoPedidoOcrNoIniciado, [GetLastError]);
     try
       repeat
         iEspera := WaitForSingleObject(oProceso.hProcess, 100);
@@ -150,10 +167,10 @@ begin
       until iEspera <> WAIT_TIMEOUT;
       if iEspera <> WAIT_OBJECT_0 then
         raise EOSError.CreateFmt(
-          'Error esperando al proceso OCR (%d).', [GetLastError]);
+          SErrorEsperaProcesoPedidoOcr, [GetLastError]);
       if not GetExitCodeProcess(oProceso.hProcess, iCodigo) then
         raise EOSError.CreateFmt(
-          'No se pudo leer el resultado del OCR (%d).', [GetLastError]);
+          SErrorResultadoProcesoPedidoOcrNoLeido, [GetLastError]);
     finally
       CloseHandle(oProceso.hThread);
       CloseHandle(oProceso.hProcess);
@@ -164,11 +181,10 @@ begin
         TEncoding.UTF8);
     if iCodigo <> 0 then
       raise Exception.CreateFmt(
-        'El extractor OCR terminó con código %d.%s%s',
+        SErrorExtractorPedidoOcr,
         [iCodigo, sLineBreak, Result.SalidaProceso]);
     if not TFile.Exists(Result.FicheroJson) then
-      raise Exception.Create(
-        'El extractor terminó sin generar el JSON del pedido.');
+      raise Exception.Create(SErrorExtractorPedidoOcrSinJson);
   except
     EliminarTrabajo(Result.DirectorioTrabajo);
     raise;

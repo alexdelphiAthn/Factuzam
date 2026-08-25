@@ -38,6 +38,10 @@ type
 
 implementation
 
+resourcestring
+  SBotonCancelarSeleccion = 'Cancelar';
+  SBotonAceptarSeleccion = 'Aceptar';
+
 procedure TfrmSelector.Construir(const ATitulo: string;
   const ACaptions: TArray<string>);
 var
@@ -61,13 +65,13 @@ begin
   btnCancelar.Parent := layBotones;
   btnCancelar.Align := TAlignLayout.Left;
   btnCancelar.Width := 150;
-  btnCancelar.Text := 'Cancelar';
+  btnCancelar.Text := SBotonCancelarSeleccion;
   btnCancelar.OnClick := OnCancelarClick;
   btnAceptar := TButton.Create(Self);
   btnAceptar.Parent := layBotones;
   btnAceptar.Align := TAlignLayout.Right;
   btnAceptar.Width := 150;
-  btnAceptar.Text := 'Aceptar';
+  btnAceptar.Text := SBotonAceptarSeleccion;
   btnAceptar.OnClick := OnAceptarClick;
   FLista := TListBox.Create(Self);
   FLista.Parent := Self;

@@ -77,6 +77,12 @@ implementation
 uses
   inLibMsgCaja;
 
+resourcestring
+  SCaptionAgrupamientoPorTipoDocumento =
+    'Por tipo de documento';
+  SCaptionAgrupamientoPorOrdenCronologico =
+    'Por orden cronológico';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmModalTiraCaja }
@@ -124,8 +130,10 @@ begin
     // Los ítems recién añadidos salen desmarcados (ninguna serie = todas).
     // Agrupamiento: por tipo de documento (índice 0) o cronológico (índice 1).
     Frm.cbAgrupamiento.Properties.Items.Clear;
-    Frm.cbAgrupamiento.Properties.Items.Add('Por tipo de documento');
-    Frm.cbAgrupamiento.Properties.Items.Add('Por orden cronológico');
+    Frm.cbAgrupamiento.Properties.Items.Add(
+      SCaptionAgrupamientoPorTipoDocumento);
+    Frm.cbAgrupamiento.Properties.Items.Add(
+      SCaptionAgrupamientoPorOrdenCronologico);
     Frm.cbAgrupamiento.ItemIndex := 0;
     // El QR solo se ofrece (y marca por defecto) si Verifactu está activo.
     Frm.chkQR.Enabled := AVerifactu;

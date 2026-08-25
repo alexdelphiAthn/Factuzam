@@ -43,6 +43,18 @@ type
       const ACodigoArticulo, AIdVariacion, AValor: string;
       out AInfo: TInfoBasico): Boolean;
   end;
+  ISelectorAtributoPaleta = interface
+    ['{52F4CC49-16B9-4D3E-B858-25E565786B5E}']
+    function Seleccionar(
+      AConexion: TUniConnection;
+      const ALecturas: ILecturasAtributosPaleta;
+      const AIdVariacion: string;
+      const AValores: array of string;
+      const AValorActual: string;
+      out AValor: string;
+      AScreenLeft, AScreenTop, AWidthHint: Integer;
+      const ACodigoArticulo: string): Boolean;
+  end;
 
 implementation
 

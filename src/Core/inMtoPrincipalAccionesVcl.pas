@@ -14,7 +14,8 @@ interface
 
 uses
   System.Classes, Vcl.Forms, cxPC, Uni,
-  inLibLogIntf, inLibCargaEfectosRemesaPersistenciaIntf;
+  inLibAnfitrionMtoIntf, inLibLogIntf,
+  inLibCargaEfectosRemesaPersistenciaIntf;
 
 type
   TAccionPrincipalVcl = reference to procedure;
@@ -23,7 +24,9 @@ procedure MostrarListadoVentas(AOwner: TComponent);
 procedure MostrarListadoDocumentosProveedor(AOwner: TComponent);
 procedure MostrarListadoEfectosPago(AOwner: TComponent);
 function FacturarAlbaranesCompra: Boolean;
-procedure MostrarProcesosAuxiliares(AOwner: TComponent);
+procedure MostrarProcesosAuxiliares(
+  AOwner: TComponent;
+  const AAnfitrionMantenimiento: IAnfitrionMantenimiento);
 procedure MostrarCambioArticuloColor(
   AOwner: TComponent;
   AConexion: TUniConnection;
@@ -39,6 +42,9 @@ procedure MostrarConsultaStockPrincipal(
   AFormularioPrincipal: TForm;
   APaginas: TcxPageControl);
 procedure DesvincularConsultaStockPrincipal;
+function EsPantallaBusquedaDatos(AFormulario: TForm): Boolean;
+procedure ActualizarFotoMantenimientoPrincipal(AMantenimiento: TObject);
+procedure ActualizarFotoPaginaActivaPrincipal(APaginas: TcxPageControl);
 procedure CargarEfectosRemesaPrincipal(
   AOwner: TComponent;
   const ARepositorio: IRepositorioCargaEfectosRemesa;
@@ -64,6 +70,9 @@ uses
   inMtoModalImpMovVentasArt,
   inMtoSplash,
   inMtoFrmBase, inMtoStockConsulta,
+  inMtoBusquedaDatos,
+  inMtoFotoArticulo,
+  inMtoGen,
   inMtoModalCargarEfectosRemesa;
 
 procedure MostrarListadoVentas(AOwner: TComponent);
@@ -114,9 +123,13 @@ begin
   end;
 end;
 
-procedure MostrarProcesosAuxiliares(AOwner: TComponent);
+procedure MostrarProcesosAuxiliares(
+  AOwner: TComponent;
+  const AAnfitrionMantenimiento: IAnfitrionMantenimiento);
 begin
-  TfrmModalProcesosAuxiliaresBBDD.Ejecutar(AOwner);
+  TfrmModalProcesosAuxiliaresBBDD.Ejecutar(
+    AOwner,
+    AAnfitrionMantenimiento);
 end;
 
 procedure MostrarCambioArticuloColor(
@@ -216,6 +229,59 @@ end;
 procedure DesvincularConsultaStockPrincipal;
 begin
   DesvincularPerfilesStockConsulta;
+end;
+
+function EsPantallaBusquedaDatos(AFormulario: TForm): Boolean;
+begin
+  Result := AFormulario is TfrmMtoBusquedaDatos;
+end;
+
+procedure ActualizarFotoMantenimientoPrincipal(AMantenimiento: TObject);
+var
+  Articulo: string;
+  FormularioFoto: TfrmFotoArticulo;
+  Mantenimiento: TfrmMtoGen;
+  Sku: string;
+begin
+  FormularioFoto := FotoFlotanteActual;
+  if (FormularioFoto <> nil) and FormularioFoto.Visible and
+     (AMantenimiento is TfrmMtoGen) then
+  begin
+    Mantenimiento := TfrmMtoGen(AMantenimiento);
+    Mantenimiento.ResolverArtSkuActivo(Articulo, Sku);
+    FormularioFoto.VincularDataSources(
+      Mantenimiento.DataSourcesParaFoto,
+      Mantenimiento.ResolverArtSkuActivo);
+    FormularioFoto.SetArticuloSku(Articulo, Sku);
+  end;
+end;
+
+procedure ActualizarFotoPaginaActivaPrincipal(APaginas: TcxPageControl);
+var
+  FormularioFoto: TfrmFotoArticulo;
+  Pestana: TcxTabSheet;
+begin
+  FormularioFoto := FotoFlotanteActual;
+  if APaginas.ActivePageIndex < 0 then
+  begin
+    if (FormularioFoto <> nil) and FormularioFoto.Visible then
+    begin
+      FormularioFoto.VincularDataSources([], nil);
+      FormularioFoto.SetArticuloSku('', '');
+    end;
+  end
+  else
+  begin
+    Pestana := APaginas.Pages[APaginas.ActivePageIndex] as TcxTabSheet;
+    if (Pestana.ControlCount = 0) or
+       not (Pestana.Controls[0] is TfrmMtoGen) then
+    begin
+      if (FormularioFoto <> nil) and FormularioFoto.Visible then
+        FormularioFoto.VincularDataSources([], nil);
+    end
+    else
+      ActualizarFotoMantenimientoPrincipal(Pestana.Controls[0]);
+  end;
 end;
 
 procedure CargarEfectosRemesaPrincipal(

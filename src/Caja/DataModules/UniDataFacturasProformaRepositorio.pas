@@ -108,6 +108,28 @@ uses
   Data.DB,
   inLibVerifactu;
 
+resourcestring
+  SErrorGeneracionProformaDuplicada =
+    'Ya existe una generación con el mismo periodo y modalidad.';
+  SErrorPeriodoGeneracionProformaSolapado =
+    'El periodo se solapa con una generación anterior.';
+  SErrorSerieFacturaCajaNoDisponible =
+    'No existe una serie FC NORMAL activa para la empresa %s.';
+  SErrorCabeceraProformaCajaNoCreada =
+    'No se pudo crear la cabecera de la proforma de caja.';
+  SDescripcionProformaCajaGenerada =
+    'Proforma %s/%s generada con %d operaciones y %d ajustes.';
+  SErrorFacturaTaDemasiadasLineas =
+    'La factura TA de %s/%s tendría %d líneas; el máximo es 9999.';
+  SErrorOperacionesTaSinLineas =
+    'Las operaciones TA reservadas no tienen líneas activas.';
+  SErrorCantidadLineasTaNoCoincide =
+    'Se esperaban %d líneas TA y se han generado %d.';
+  SErrorFacturaTaNoCreada =
+    'No se pudo crear la factura TA de la empresa %s.';
+  SDescripcionBorradoresFacturasTaGenerados =
+    '%d borradores de facturas TA con %d operaciones.';
+
 const
   SQL_REVISAR_PERIODO =
     'SELECT COALESCE(SUM(CASE WHEN FECHA_DESDE_FACPER = :DESDE ' +
@@ -751,13 +773,11 @@ begin
   Result.EsSolapado := iSolapados > iDuplicados;
   if Result.EsDuplicado then
   begin
-    Result.Descripcion :=
-      'Ya existe una generación con el mismo periodo y modalidad.';
+    Result.Descripcion := SErrorGeneracionProformaDuplicada;
   end
   else if Result.EsSolapado then
   begin
-    Result.Descripcion :=
-      'El periodo se solapa con una generación anterior.';
+    Result.Descripcion := SErrorPeriodoGeneracionProformaSolapado;
   end;
 end;
 
@@ -875,7 +895,7 @@ begin
     if Result = '' then
     begin
       raise Exception.CreateFmt(
-        'No existe una serie FC NORMAL activa para la empresa %s.',
+        SErrorSerieFacturaCajaNoDisponible,
         [AEmpresa]);
     end;
   finally
@@ -917,8 +937,7 @@ begin
           oConsulta.Execute;
           if oConsulta.RowsAffected = 0 then
           begin
-            raise Exception.Create(
-              'No se pudo crear la cabecera de la proforma de caja.');
+            raise Exception.Create(SErrorCabeceraProformaCajaNoCreada);
           end;
           iIdProforma := ObtenerIdentidad;
           oConsulta.SQL.Text := SQL_INICIAR_LINEA_PROFORMA;
@@ -949,8 +968,7 @@ begin
           if Result.CantidadOperaciones > 0 then
           begin
             Result.CantidadDocumentos := 1;
-            Result.Descripcion := Format(
-              'Proforma %s/%s generada con %d operaciones y %d ajustes.',
+            Result.Descripcion := Format(SDescripcionProformaCajaGenerada,
               [sSerie, sNumero, Result.CantidadOperaciones,
                Result.CantidadAjustes]);
             ActualizarPeriodo(
@@ -1034,13 +1052,12 @@ begin
   if iLineas > 9999 then
   begin
     raise Exception.CreateFmt(
-      'La factura TA de %s/%s tendría %d líneas; el máximo es 9999.',
+      SErrorFacturaTaDemasiadasLineas,
       [AEmpresaOrigen, AAlmacenOrigen, iLineas]);
   end;
   if iLineas = 0 then
   begin
-    raise Exception.Create(
-      'Las operaciones TA reservadas no tienen líneas activas.');
+    raise Exception.Create(SErrorOperacionesTaSinLineas);
   end;
   AConsulta.SQL.Text := SQL_INICIAR_LINEA_FACTURA;
   AConsulta.Execute;
@@ -1054,7 +1071,7 @@ begin
   if AConsulta.RowsAffected <> iLineas then
   begin
     raise Exception.CreateFmt(
-      'Se esperaban %d líneas TA y se han generado %d.',
+      SErrorCantidadLineasTaNoCoincide,
       [iLineas, AConsulta.RowsAffected]);
   end;
   AConsulta.SQL.Text := SQL_ACTUALIZAR_CONTADOR_LINEAS_FACTURA;
@@ -1097,7 +1114,7 @@ begin
       if oConsulta.RowsAffected = 0 then
       begin
         raise Exception.CreateFmt(
-          'No se pudo crear la factura TA de la empresa %s.',
+          SErrorFacturaTaNoCreada,
           [AEmpresaOrigen]);
       end;
       Result := ReservarOperacionesTraspaso(
@@ -1151,7 +1168,7 @@ begin
   if iLineas > 9999 then
   begin
     raise Exception.CreateFmt(
-      'La factura TA de %s/%s tendría %d líneas; el máximo es 9999.',
+      SErrorFacturaTaDemasiadasLineas,
       [AEmpresaOrigen, AAlmacenOrigen, iLineas]);
   end;
   if iLineas > 0 then
@@ -1220,8 +1237,7 @@ begin
     end;
     if Result.CantidadDocumentos > 0 then
     begin
-      Result.Descripcion := Format(
-        '%d borradores de facturas TA con %d operaciones.',
+      Result.Descripcion := Format(SDescripcionBorradoresFacturasTaGenerados,
         [Result.CantidadDocumentos, Result.CantidadOperaciones]);
       ActualizarPeriodo(
         iIdPeriodo,

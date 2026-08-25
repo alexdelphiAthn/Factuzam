@@ -81,6 +81,11 @@ uses
   inLibInventariosAplicacion,
   inMtoModalScriptLog;
 
+resourcestring
+  SFiltroArchivoImportacionRecuentoInventario =
+    'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|' +
+    'Todos (*.*)|*.*';
+
 constructor TImportadorRecuentoInventarioVcl.Create(
   APropietario: TComponent;
   ADialogo: TOpenDialog;
@@ -235,8 +240,7 @@ var
   Mensaje: string;
 begin
   Incidencias := nil;
-  FDialogo.Filter :=
-    'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|Todos (*.*)|*.*';
+  FDialogo.Filter := SFiltroArchivoImportacionRecuentoInventario;
   FDialogo.DefaultExt := 'xlsx';
   try
     if not APuedeEditar then

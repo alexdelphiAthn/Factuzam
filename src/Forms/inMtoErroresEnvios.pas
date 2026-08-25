@@ -165,6 +165,37 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorEnvioErrorNoSeleccionado = 'Seleccione un envío de error.';
+  SInfoSeguimientoEnvioErrorActualizado =
+    'Estado, mensajes y propuestas actualizados.';
+  STituloComentarioEnvioError =
+    'Comentario para el desarrollador o técnico';
+  SErrorComentarioEnvioErrorVacio = 'Escriba un comentario.';
+  SInfoComentarioEnvioErrorEnviado =
+    'Comentario enviado correctamente.';
+  SInfoEnlaceSeguimientoEnvioErrorNoDisponible =
+    'Este envío no dispone de un enlace de seguimiento.';
+  SInfoScriptSoporteNoPendiente =
+    'No hay un script pendiente o aún no se ha sincronizado.';
+  SDetalleScriptSoporte =
+    'Descripción:' + sLineBreak + '%s' + sLineBreak + sLineBreak +
+    'SHA-256:' + sLineBreak + '%s' + sLineBreak + sLineBreak +
+    'Script SQL:' + sLineBreak + '%s';
+  SPreguntaEjecutarScriptSoporte =
+    '¿Desea crear una copia de seguridad y ejecutar este script?';
+  SErrorServicioCopiaSeguridadNoDisponible =
+    'No está disponible el servicio de copia de seguridad.';
+  SInfoScriptSoporteEjecutado = 'Script ejecutado correctamente.';
+  SInfoActualizacionSoporteNoPendiente =
+    'No hay una actualización pendiente o aún no se ha sincronizado.';
+  SDetalleActualizacionSoporte =
+    'Versión: %s' + sLineBreak + 'Descripción:' + sLineBreak + '%s' +
+    sLineBreak + sLineBreak + 'Tamaño: %s bytes' + sLineBreak +
+    'SHA-256:' + sLineBreak + '%s';
+  SPreguntaInstalarActualizacionSoporte =
+    '¿Desea instalar esta actualización y reiniciar Factuzam?';
+
 procedure TfrmMtoErroresEnvios.CrearTablaPrincipal;
 begin
   inherited;
@@ -198,7 +229,7 @@ begin
     not dsTablaG.DataSet.IsEmpty;
   if not Result and AMostrarAviso then
     MessageDlg(
-      'Seleccione un envío de error.',
+      SErrorEnvioErrorNoSeleccionado,
       mtInformation,
       [mbOk],
       0);
@@ -253,7 +284,7 @@ begin
         lblEstadoSincronizacion.Style.TextColor := clGreen;
         if AMostrarResultado then
           MessageDlg(
-            'Estado, mensajes y propuestas actualizados.',
+            SInfoSeguimientoEnvioErrorActualizado,
             mtInformation,
             [mbOk],
             0);
@@ -298,11 +329,12 @@ begin
     sMensaje := '';
     if TfrmModalMensajeTexto.Solicitar(
          Self,
-         'Comentario para el desarrollador o técnico',
+         STituloComentarioEnvioError,
          sMensaje) then
     begin
       if Trim(sMensaje) = '' then
-        MessageDlg('Escriba un comentario.', mtWarning, [mbOk], 0)
+        MessageDlg(SErrorComentarioEnvioErrorVacio,
+          mtWarning, [mbOk], 0)
       else if dmmErroresEnvios.EnviarComentarioActual(
                 sMensaje,
                 sError) then
@@ -311,7 +343,7 @@ begin
           'Comentario enviado y conversación actualizada.';
         lblEstadoSincronizacion.Style.TextColor := clGreen;
         MessageDlg(
-          'Comentario enviado correctamente.',
+          SInfoComentarioEnvioErrorEnviado,
           mtInformation,
           [mbOk],
           0);
@@ -334,7 +366,7 @@ begin
       ShellExecute(Handle, 'open', PChar(sUrl), nil, nil, SW_SHOWNORMAL)
     else
       MessageDlg(
-        'Este envío no dispone de un enlace de seguimiento.',
+        SInfoEnlaceSeguimientoEnvioErrorNoDisponible,
         mtInformation,
         [mbOk],
         0);
@@ -364,18 +396,17 @@ begin
     if (iId <= 0) or (Trim(sSql) = '') or
        not SameText(sEstado, 'PROPUESTO') then
       MessageDlg(
-        'No hay un script pendiente o aún no se ha sincronizado.',
+        SInfoScriptSoporteNoPendiente,
         mtInformation,
         [mbOk],
         0)
     else
     begin
-      sTexto := 'Descripción:' + sLineBreak + sDescripcion +
-        sLineBreak + sLineBreak + 'SHA-256:' + sLineBreak + sHash +
-        sLineBreak + sLineBreak + 'Script SQL:' + sLineBreak + sSql;
+      sTexto := Format(SDetalleScriptSoporte,
+        [sDescripcion, sHash, sSql]);
       TfrmModalMensajeTexto.Mostrar(Self, sTexto);
       if MessageDlg(
-           '¿Desea crear una copia de seguridad y ejecutar este script?',
+           SPreguntaEjecutarScriptSoporte,
            mtWarning,
            [mbYes, mbNo],
            0) = mrYes then
@@ -383,7 +414,7 @@ begin
         Anfitrion := FAnfitrionMto;
         if not Assigned(Anfitrion) then
           MessageDlg(
-            'No está disponible el servicio de copia de seguridad.',
+            SErrorServicioCopiaSeguridadNoDisponible,
             mtError,
             [mbOk],
             0)
@@ -394,7 +425,7 @@ begin
             ActualizarAccionesFicha;
             if sError = '' then
               MessageDlg(
-                'Script ejecutado correctamente.',
+                SInfoScriptSoporteEjecutado,
                 mtInformation,
                 [mbOk],
                 0)
@@ -438,20 +469,17 @@ begin
     if (iId <= 0) or (Trim(sUrl) = '') or
        not SameText(sEstado, 'PROPUESTO') then
       MessageDlg(
-        'No hay una actualización pendiente o aún no se ha sincronizado.',
+        SInfoActualizacionSoporteNoPendiente,
         mtInformation,
         [mbOk],
         0)
     else
     begin
-      sTexto := 'Versión: ' + sVersion + sLineBreak +
-        'Descripción:' + sLineBreak + sDescripcion +
-        sLineBreak + sLineBreak + 'Tamaño: ' +
-        FormatFloat('#,##0', iBytes) + ' bytes' +
-        sLineBreak + 'SHA-256:' + sLineBreak + sHash;
+      sTexto := Format(SDetalleActualizacionSoporte,
+        [sVersion, sDescripcion, FormatFloat('#,##0', iBytes), sHash]);
       TfrmModalMensajeTexto.Mostrar(Self, sTexto);
       if MessageDlg(
-           '¿Desea instalar esta actualización y reiniciar Factuzam?',
+           SPreguntaInstalarActualizacionSoporte,
            mtWarning,
            [mbYes, mbNo],
            0) = mrYes then

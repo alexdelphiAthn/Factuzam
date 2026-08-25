@@ -19,6 +19,7 @@ program RecuentoFzam;
 uses
   System.StartUpCopy,
   FMX.Forms,
+  ConfiguracionClienteMovil in '..\ConfiguracionClienteMovil.pas',
   RecuentoModelo in 'RecuentoModelo.pas',
   RecuentoConfig in 'RecuentoConfig.pas',
   RecuentoApi in 'RecuentoApi.pas',
@@ -28,8 +29,6 @@ uses
   fRecuentoSelector in 'fRecuentoSelector.pas',
   fRecuentoConteo in 'fRecuentoConteo.pas',
   fRecuentoConfig in 'fRecuentoConfig.pas';
-
-{$R *.res}
 
 begin
   Application.Initialize;

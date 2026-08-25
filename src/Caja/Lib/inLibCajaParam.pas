@@ -72,6 +72,18 @@ const
   cParametroEsperaDeteccionImpresora =
     'vgerImpresoraEsperaSegundos';
 
+procedure InformarFalloSecundarioEnDepurador(
+  const AContexto: PChar;
+  E: Exception);
+begin
+  try
+    OutputDebugString(PChar(
+      string(AContexto) + ': ' + E.ClassName + ': ' + E.Message));
+  except
+    OutputDebugString(AContexto);
+  end;
+end;
+
 type
   IEstadoDeteccionImpresora = interface
     ['{0B5F543D-E73A-48FC-A7FD-91BD12E74B4A}']
@@ -335,7 +347,7 @@ constructor THiloDeteccionImpresora.Create(
   const APatronImpresora, AArchivoCache: string;
   ASegundosEspera: Integer);
 begin
-  inherited Create(False);
+  inherited Create(True);
   FArchivoCache := AArchivoCache;
   FEstado := AEstado;
   FGeneracion := AGeneracion;
@@ -359,13 +371,21 @@ procedure LanzarDeteccionImpresora(
   AGeneracion: Integer;
   const APatronImpresora, AArchivoCache: string;
   ASegundosEspera: Integer);
+var
+  oHilo: THiloDeteccionImpresora;
 begin
-  THiloDeteccionImpresora.Create(
+  oHilo := THiloDeteccionImpresora.Create(
     AEstado,
     AGeneracion,
     APatronImpresora,
     AArchivoCache,
     ASegundosEspera);
+  try
+    oHilo.Start;
+  except
+    oHilo.Free;
+    raise;
+  end;
 end;
 
 { TParametrosCaja }
@@ -478,6 +498,9 @@ begin
   try
     IniciarDeteccionImpresora;
   except
+    on E: Exception do
+      InformarFalloSecundarioEnDepurador(
+        'inLibCajaParam.ImpresoraCaja.IniciarDeteccionImpresora', E);
   end;
 end;
 

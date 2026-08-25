@@ -90,6 +90,12 @@ uses
   inLibMsgArticulos, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
+resourcestring
+  STituloFiltroDemasiadosArticulos =
+    'Demasiados artículos - acotar la carga';
+  SCaptionTemporadaFiltroArticulos = 'Temporada';
+  SCaptionProveedorFiltroArticulos = 'Proveedor';
+
 constructor TfrmModalFiltroArt.Create(AOwner: TComponent);
 begin
   // CreateNew: sin .dfm, montamos la UI a mano en ConstruirUI.
@@ -136,7 +142,7 @@ var
   anchoCol, topListas, altoLista, topBotones: Integer;
   pnlBot: TPanel;
 begin
-  Caption      := 'Demasiados artículos - acotar la carga';
+  Caption      := STituloFiltroDemasiadosArticulos;
   BorderStyle  := bsDialog;
   Position     := poScreenCenter;
   ClientWidth  := 680;
@@ -155,9 +161,10 @@ begin
   altoLista := 300;
   anchoCol  := (ClientWidth - 2 * MARGEN - GAP) div 2;
   FclbTemporada := CrearCheckList(MARGEN, topListas, anchoCol, altoLista,
-                                  'Temporada');
+                                  SCaptionTemporadaFiltroArticulos);
   FclbProveedor := CrearCheckList(MARGEN + anchoCol + GAP, topListas,
-                                  anchoCol, altoLista, 'Proveedor');
+                                  anchoCol, altoLista,
+                                  SCaptionProveedorFiltroArticulos);
   // Línea de resultado + botón Calcular
   topBotones := topListas + 18 + altoLista + 10;
   FlblResultado := TcxLabel.Create(Self);

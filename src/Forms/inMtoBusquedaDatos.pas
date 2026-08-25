@@ -149,6 +149,16 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorSeleccionarFilaSkuDocumentoTrabajo =
+    'Seleccione una fila de SKU de la rejilla.';
+  SErrorSeleccionarSkuDocumentoTrabajo =
+    'Seleccione un SKU de la rejilla.';
+  SErrorIdentificarArticuloSkuDocumentoTrabajo =
+    'No se ha podido identificar el artículo y el SKU.';
+  SErrorSeleccionarFilaSkuValidoDocumentoTrabajo =
+    'Seleccione una fila que contenga un SKU válido.';
+
 procedure TDependenciasBusquedaDatos.Validar;
 begin
   ValidarDependenciaConfiguracion(
@@ -785,16 +795,16 @@ begin
   rec := cxGrdDBTabPrin.Controller.FocusedRecord;
   if (rec = nil) or (rec.RecordIndex < 0) then
   begin
-    AMensaje := 'Seleccione una fila de SKU de la rejilla.';
+    AMensaje := SErrorSeleccionarFilaSkuDocumentoTrabajo;
   end
   else if (not Assigned(ds)) or (not ds.Active) or ds.IsEmpty then
   begin
-    AMensaje := 'Seleccione un SKU de la rejilla.';
+    AMensaje := SErrorSeleccionarSkuDocumentoTrabajo;
   end
   else if (ds.FindField('CODIGO_ART_ART') = nil) or
           (ds.FindField('CODIGO_UNIDAD_SKU') = nil) then
   begin
-    AMensaje := 'No se ha podido identificar el artículo y el SKU.';
+    AMensaje := SErrorIdentificarArticuloSkuDocumentoTrabajo;
   end
   else
   begin
@@ -805,7 +815,7 @@ begin
     if (Trim(ALinea.CodigoArticulo) = '') or
        (Trim(ALinea.CodigoSku) = '') then
     begin
-      AMensaje := 'Seleccione una fila que contenga un SKU válido.';
+      AMensaje := SErrorSeleccionarFilaSkuValidoDocumentoTrabajo;
     end
     else
     begin

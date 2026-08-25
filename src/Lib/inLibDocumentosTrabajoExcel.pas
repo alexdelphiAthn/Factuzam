@@ -11,7 +11,7 @@
 {  Descripción:                                                                }
 {    Exporta un Documento de Trabajo a Excel con una foto de 150 x 150 por     }
 {    cada línea, resuelta por artículo y SKU. Las líneas sin foto mantienen    }
-{    una altura compacta.                                                       }
+{    una altura compacta.                                                      }
 {******************************************************************************}
 unit inLibDocumentosTrabajoExcel;
 

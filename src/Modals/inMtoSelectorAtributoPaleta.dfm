@@ -1,4 +1,4 @@
-inherited frmSelectorAtributoPaleta: TfrmSelectorAtributoPaleta
+﻿inherited frmSelectorAtributoPaleta: TfrmSelectorAtributoPaleta
   BorderStyle = bsNone
   Caption = ''
   ClientHeight = 100

@@ -664,8 +664,6 @@ var
   ZipDiario: TZipFile;
   Datos: TBytes;
   I: Integer;
-  bAnteriorAbierto: Boolean;
-  bDiarioAbierto: Boolean;
   bCompletado: Boolean;
 begin
   ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
@@ -686,16 +684,12 @@ begin
   begin
     ZipAnterior := nil;
     ZipDiario := nil;
-    bAnteriorAbierto := False;
-    bDiarioAbierto := False;
     bCompletado := True;
     try
       ZipAnterior := TZipFile.Create;
       ZipDiario := TZipFile.Create;
       ZipAnterior.Open(AZipAnterior, zmRead);
-      bAnteriorAbierto := True;
       ZipDiario.Open(ZipFileName, zmReadWrite);
-      bDiarioAbierto := True;
       for I := 0 to ZipAnterior.FileCount - 1 do
       begin
         EntradaZip := ZipAnterior.FileName[I];
@@ -716,18 +710,15 @@ begin
         end;
       end;
       ZipDiario.Close;
-      bDiarioAbierto := False;
       ZipAnterior.Close;
-      bAnteriorAbierto := False;
       if bCompletado then
         TFile.Delete(AZipAnterior);
     finally
-      if bDiarioAbierto then
-        ZipDiario.Close;
-      if bAnteriorAbierto then
-        ZipAnterior.Close;
-      FreeAndNil(ZipDiario);
-      FreeAndNil(ZipAnterior);
+      try
+        FreeAndNil(ZipDiario);
+      finally
+        FreeAndNil(ZipAnterior);
+      end;
     end;
   end;
 end;
@@ -767,7 +758,6 @@ var
   Zip: TZipFile;
   ArchivosParaBorrar: TList<string>;
   I: Integer;
-  bZipAbierto: Boolean;
 begin
   if AArchivos.Count > 0 then
   begin
@@ -780,15 +770,15 @@ begin
       TDirectory.CreateDirectory(ArchiveFolder);
     ZipFileName := TPath.Combine(ArchiveFolder,
                                  'Logs_' + ClaveFechaLog(AFechaLog) + '.zip');
-    Zip := TZipFile.Create;
-    ArchivosParaBorrar := TList<string>.Create;
-    bZipAbierto := False;
+    Zip := nil;
+    ArchivosParaBorrar := nil;
     try
+      Zip := TZipFile.Create;
+      ArchivosParaBorrar := TList<string>.Create;
       if TFile.Exists(ZipFileName) then
         Zip.Open(ZipFileName, zmReadWrite)
       else
         Zip.Open(ZipFileName, zmWrite);
-      bZipAbierto := True;
       for I := 0 to AArchivos.Count - 1 do
       begin
         EntradaZip := ExtractFileName(AArchivos[I]);
@@ -803,7 +793,6 @@ begin
         end;
       end;
       Zip.Close;
-      bZipAbierto := False;
       for I := 0 to ArchivosParaBorrar.Count - 1 do
       begin
         try
@@ -816,10 +805,11 @@ begin
         end;
       end;
     finally
-      if bZipAbierto then
-        Zip.Close;
-      FreeAndNil(ArchivosParaBorrar);
-      FreeAndNil(Zip);
+      try
+        FreeAndNil(Zip);
+      finally
+        FreeAndNil(ArchivosParaBorrar);
+      end;
     end;
   end;
 end;

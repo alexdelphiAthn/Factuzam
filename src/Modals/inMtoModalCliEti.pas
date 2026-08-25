@@ -46,18 +46,24 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  SErrorModuloClientesNoIndicado =
+    'No se ha indicado el módulo de clientes';
+  SErrorModuloClientesObligatorio =
+    'El módulo de clientes es obligatorio';
+
 procedure TfrmPrintCliEti.preparar_consulta;
 begin
   if not Assigned(FDataModule) then
     raise EArgumentNilException.Create(
-      'No se ha indicado el módulo de clientes');
+      SErrorModuloClientesNoIndicado);
   FDataModule.CrearDataSetEtiquetas(speDejarBlancos.Value, edtCodCli.text);
 end;
 
 procedure TfrmPrintCliEti.Preparar(ADataModule: TdmClientes);
 begin
   if not Assigned(ADataModule) then
-    raise EArgumentNilException.Create('El módulo de clientes es obligatorio');
+    raise EArgumentNilException.Create(SErrorModuloClientesObligatorio);
   FDataModule := ADataModule;
 end;
 

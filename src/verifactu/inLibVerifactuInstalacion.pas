@@ -74,6 +74,16 @@ uses
   inLibGlobalVar, inLibFactuzamApi,
   inLibMsgIntegraciones, inLibMsgVerifactu;
 
+resourcestring
+  SEstadoInstalacionSifPendienteGenerar =
+    'Pendiente de generar desde el servicio.';
+  SEstadoInstalacionSifNoCoincide =
+    'El SIF guardado no coincide con FZ.';
+  SEstadoInstalacionSifVersionPendiente =
+    'Pendiente de registrar la versión %s en la instalación SIF.';
+  SEstadoInstalacionSifValido =
+    'Válido para la versión actual.';
+
 const
   cUrlServicios = 'https://webservice.veryverifactu.com/api/v1/';
   cRutaInstalacionSif = 'sif/instalacion.php';
@@ -580,16 +590,16 @@ procedure ActualizarValidez(var AEstado: TEstadoInstalacionSif);
 begin
   AEstado.EsValido := False;
   if Trim(AEstado.Numero) = '' then
-    AEstado.Mensaje := 'Pendiente de generar desde el servicio.'
+    AEstado.Mensaje := SEstadoInstalacionSifPendienteGenerar
   else if not SameText(Trim(AEstado.CodigoSif), cCodigoSifFactuzam) then
-    AEstado.Mensaje := 'El SIF guardado no coincide con FZ.'
+    AEstado.Mensaje := SEstadoInstalacionSifNoCoincide
   else if not SameText(Trim(AEstado.Version), oVersion) then
-    AEstado.Mensaje := 'Pendiente de registrar la versión ' + oVersion +
-                       ' en la instalación SIF.'
+    AEstado.Mensaje := Format(SEstadoInstalacionSifVersionPendiente,
+      [oVersion])
   else
   begin
     AEstado.EsValido := True;
-    AEstado.Mensaje := 'Válido para la versión actual.';
+    AEstado.Mensaje := SEstadoInstalacionSifValido;
   end;
 end;
 

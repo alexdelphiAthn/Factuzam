@@ -372,6 +372,13 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosLineasPedido =
+    'Búsqueda de Artículos en Líneas de Pedido';
+  STituloBuscarSkusPedido = 'SKUs del artículo %s';
+  STituloBuscarEmpresasPedido = 'Búsqueda de Empresas en Pedidos';
+  STituloBuscarClientesPedido = 'Búsqueda de Clientes en Pedidos';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 destructor TfrmMtoPedidos.Destroy;
@@ -455,7 +462,7 @@ begin
       dFecha);
     oDatos := oConsulta.DataSet;
     if BusquedaVisual.EjecutarBusquedaDataSet(
-        'Búsqueda de Artículos en Líneas de Pedido',
+        STituloBuscarArticulosLineasPedido,
         oDatos,
         'frmMtoArtFacSearch',
         Self) then
@@ -502,7 +509,7 @@ begin
     oConsulta := FContextoVentas.EntradaArticulos.ConsultarSkus(sArt);
     oDatos := oConsulta.DataSet;
     if BusquedaVisual.EjecutarBusquedaDataSet(
-        'SKUs del artículo ' + sArt,
+        Format(STituloBuscarSkusPedido, [sArt]),
         oDatos,
         'frmMtoPedSkuSearch',
         Self) and (oDatos.FindField('CODIGO_UNIDAD_SKU') <> nil) then
@@ -791,7 +798,7 @@ begin
     try
       if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
-        'Búsqueda de Empresas en Pedidos',
+        STituloBuscarEmpresasPedido,
            dmmPedidos.unqryEmpDataPedido,
            'frmMtoEmpFacSearch',
            Self) then
@@ -813,7 +820,7 @@ begin
     try
       if BusquedaVisual.EjecutarBusqueda(
         ConexionPrincipal,
-        'Búsqueda de Clientes en Pedidos',
+        STituloBuscarClientesPedido,
            dmmPedidos.unqryCliDataPedido,
            'frmMtoCliFacSearch',
            Self) then
@@ -1894,18 +1901,18 @@ var
 begin
   inherited;
   if not PuedeAccionMto(apmInsertar) then
+    ShowMessage(SErrorPermisoInsertarRegistro)
+  else
   begin
-    ShowMessage(SErrorPermisoInsertarRegistro);
-    Exit;
-  end;
-  form := TfrmModalImportarPedidosPS.Create(Self);
-  try
-    form.Configurar(dmmPedidos);
-    form.ShowModal;
-    dmmPedidos.unqryTablaG.Close;
-    dmmPedidos.unqryTablaG.Open;
-  finally
-    FreeAndNil(form);
+    form := TfrmModalImportarPedidosPS.Create(Self);
+    try
+      form.Configurar(dmmPedidos);
+      form.ShowModal;
+      dmmPedidos.unqryTablaG.Close;
+      dmmPedidos.unqryTablaG.Open;
+    finally
+      FreeAndNil(form);
+    end;
   end;
 end;
 

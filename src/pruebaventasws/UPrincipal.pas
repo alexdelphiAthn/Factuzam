@@ -126,6 +126,13 @@ const
   cRutaDocumento = 'ventas/documento.php';
   cRutaPrueba = 'prueba.php';
 
+resourcestring
+  SAvisoConectarBaseDatos =
+    'Conecte antes con la base de datos de Factuzam.';
+  SAvisoIndicarFactura = 'Indique serie y número de la factura.';
+  SAvisoGenerarJsonEvento = 'Genere primero el JSON del evento.';
+  SAvisoSeleccionarVenta = 'Seleccione una venta del listado.';
+
 function NuevoUuid: string;
 var
   oGuid: TGUID;
@@ -213,7 +220,7 @@ function TfrmPrincipal.ComprobarBbdd: Boolean;
 begin
   Result := Assigned(FConexion) and FConexion.Connected;
   if not Result then
-    MessageDlg('Conecte antes con la base de datos de Factuzam.',
+    MessageDlg(SAvisoConectarBaseDatos,
       mtWarning, [mbOK], 0);
 end;
 
@@ -305,7 +312,7 @@ begin
   if not ComprobarBbdd then
     mEnvResultado.Lines.Text := 'Sin conexión a la base de datos.'
   else if (sSerie = '') or (sNumero = '') then
-    MessageDlg('Indique serie y número de la factura.',
+    MessageDlg(SAvisoIndicarFactura,
       mtWarning, [mbOK], 0)
   else
   begin
@@ -350,7 +357,7 @@ var
   oResultado: TResultadoFactuzamApi;
 begin
   if Trim(mJson.Lines.Text) = '' then
-    MessageDlg('Genere primero el JSON del evento.', mtWarning, [mbOK], 0)
+    MessageDlg(SAvisoGenerarJsonEvento, mtWarning, [mbOK], 0)
   else
   begin
     ActualizarParametros;
@@ -484,7 +491,7 @@ begin
   Result := Assigned(lvVentas.Selected) and
             (lvVentas.Selected.SubItems.Count >= 2);
   if not Result then
-    MessageDlg('Seleccione una venta del listado.', mtWarning, [mbOK], 0);
+    MessageDlg(SAvisoSeleccionarVenta, mtWarning, [mbOK], 0);
 end;
 
 function TfrmPrincipal.ConsultaVentaSeleccionada: string;

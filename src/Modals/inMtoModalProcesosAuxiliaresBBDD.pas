@@ -25,7 +25,8 @@ uses
   cxRadioGroup, cxStyles, cxCustomListBox, cxListBox,
   cxInplaceContainer, cxTL, cxTLData, SynEdit,
   SynEditHighlighter, SynHighlighterSQL,
-  inMtoFrmBase, inLibMetadatosBBDDIntf, UniDataMetadatosBBDD;
+  inMtoFrmBase, inLibAnfitrionMtoIntf, inLibMetadatosBBDDIntf,
+  UniDataMetadatosBBDD;
 
 type
   TTipoOperacionAuxiliarTabla = (
@@ -104,6 +105,7 @@ type
     lblAyuda: TcxLabel;
     FDataModule: TdmMetadatosBBDD;
     FCatalogo: ICatalogoMetadatosBBDD;
+    FAnfitrionMantenimiento: IAnfitrionMantenimiento;
     FNombreContenidoActual: string;
     FOtrasAcciones: TArray<TTipoOtraAccionAuxiliar>;
     procedure CrearInterfaz;
@@ -134,6 +136,9 @@ type
     procedure EjecutarOtraAccion;
     procedure MostrarResultadoOperacion(const ATitulo: string);
     procedure PrepararPlanEjecucion;
+    procedure CargarArbolPlan(
+      const AJson: string;
+      AConTiemposReales: Boolean);
     procedure EjecutarPlanEjecucion(AConTiemposReales: Boolean);
     procedure LimpiarResultadoPlan;
     procedure MostrarAvisoPlanProcedimiento(const AMensaje: string);
@@ -178,7 +183,9 @@ type
     procedure btnPlanMedidoClick(Sender: TObject);
   public
     destructor Destroy; override;
-    class procedure Ejecutar(AOwner: TComponent);
+    class procedure Ejecutar(
+      AOwner: TComponent;
+      const AAnfitrionMantenimiento: IAnfitrionMantenimiento);
   end;
 
 implementation
@@ -186,12 +193,190 @@ implementation
 uses
   System.Generics.Collections, System.StrUtils, System.UITypes,
   Vcl.Clipbrd, Vcl.Dialogs,
-  inLibAnfitrionMtoIntf, inLibDevExp, inLibMsgComun,
+  inLibDevExp, inLibMsgComun,
   inLibPlanEjecucionMariaDB, inLibProteccionDatosFacturacion,
   ts.Editor.CodeFormatters,
   UniDataMetadatosBBDDRepositorio;
 
 {$R *.dfm}
+
+resourcestring
+  SCaptionProcesosAuxiliaresBBDD =
+    'Operaciones auxiliares tablas, vistas y procedimientos almacenados';
+  SCaptionTipoObjetoProcesosAuxiliaresBBDD =
+    'Tipo de objeto de base de datos';
+  SCaptionTablasProcesosAuxiliaresBBDD = '&Tablas';
+  SCaptionVistasProcesosAuxiliaresBBDD = '&Vistas';
+  SCaptionProcedimientosProcesosAuxiliaresBBDD =
+    '&Procedimientos almacenados';
+  SCaptionObjetosDisponiblesProcesosAuxiliaresBBDD =
+    'Objetos disponibles';
+  SAyudaSeleccionProcesosAuxiliaresBBDD =
+    'Use Ctrl o Mayús para seleccionar varios objetos.';
+  SCaptionMetadatosSqlProcesosAuxiliaresBBDD = '&Metadatos SQL';
+  SCaptionMetadatosSqlObjetoProcesosAuxiliaresBBDD =
+    '&Metadatos SQL - %s';
+  SCaptionResultadoProcesosAuxiliaresBBDD = '&Resultado';
+  SCaptionResultadoObjetoProcesosAuxiliaresBBDD = '&Resultado - %s';
+  SCaptionExportarExcelProcesosAuxiliaresBBDD = 'Exportar a E&xcel';
+  SCaptionPlanEjecucionProcesosAuxiliaresBBDD = '&Plan de ejecución';
+  SCaptionPlanEjecucionObjetoProcesosAuxiliaresBBDD =
+    '&Plan de ejecución - %s';
+  SCaptionPlanConsultasObjetoProcesosAuxiliaresBBDD =
+    '&Plan de consultas de %s';
+  SAyudaPlanProcesosAuxiliaresBBDD =
+    'Revise la SELECT que se analizará. El plan estimado no ejecuta la ' +
+    'consulta; Medir ejecución sí la ejecuta y muestra tiempos reales.';
+  SCaptionPlanEstimadoProcesosAuxiliaresBBDD = 'Plan &estimado';
+  SCaptionMedirEjecucionProcesosAuxiliaresBBDD =
+    '&Medir ejecución (ms)';
+  SCaptionPlanExplicadoProcesosAuxiliaresBBDD = 'Plan &explicado';
+  SCaptionJsonOriginalProcesosAuxiliaresBBDD = '&JSON original';
+  SCaptionNodoPlanProcesosAuxiliaresBBDD = 'Nodo / operación';
+  SCaptionEnlacePlanProcesosAuxiliaresBBDD = 'Enlace desde el padre';
+  SCaptionFilasEstimadasPlanProcesosAuxiliaresBBDD = 'Filas estimadas';
+  SCaptionFilasRealesPlanProcesosAuxiliaresBBDD = 'Filas reales/bucle';
+  SCaptionAccesoPlanProcesosAuxiliaresBBDD = 'Acceso / índice';
+  SCaptionExplicacionPlanProcesosAuxiliaresBBDD = 'Qué hace el nodo';
+  SCaptionOperacionesCompatiblesProcesosAuxiliaresBBDD =
+    'Operaciones compatibles';
+  SCaptionEjecutarOperacionProcesosAuxiliaresBBDD =
+    'Ejecutar operación';
+  SCaptionCopiarSqlProcesosAuxiliaresBBDD = '&Copiar SQL';
+  SCaptionCerrarProcesosAuxiliaresBBDD = '&Cerrar';
+  SOperacionEdicionProcesosAuxiliaresBBDD = 'EDICION';
+  SResumenObjetosAdicionalesProcesosAuxiliaresBBDD = ' y %d más';
+  SAccionVerMetadatosProcesosAuxiliaresBBDD = 'Ver metadatos';
+  SAccionBloquearEdicionProcesosAuxiliaresBBDD =
+    'Bloquear edición de tabla';
+  SAccionEditarDatosProcesosAuxiliaresBBDD = 'Editar datos de tabla';
+  SAccionVerEstadoProcesosAuxiliaresBBDD = 'Ver estado y tamaño';
+  SAccionVerDependenciasProcesosAuxiliaresBBDD = 'Ver dependencias';
+  SAccionAnalizarEstadisticasProcesosAuxiliaresBBDD =
+    'Analizar estadísticas';
+  SAccionComprobarIntegridadProcesosAuxiliaresBBDD =
+    'Comprobar integridad';
+  SAccionRegenerarTablaProcesosAuxiliaresBBDD = 'Regenerar tabla';
+  SAccionRegenerarIndicesProcesosAuxiliaresBBDD = 'Regenerar índices';
+  SAccionExportarDdlProcesosAuxiliaresBBDD =
+    'Exportar DDL seleccionado';
+  SAccionCalcularChecksumProcesosAuxiliaresBBDD = 'Calcular checksum';
+  SAccionVaciarTablaProcesosAuxiliaresBBDD = 'Vaciar tabla';
+  SAccionBorrarTablaProcesosAuxiliaresBBDD = 'Borrar tabla';
+  SAccionVerDatosVistaProcesosAuxiliaresBBDD =
+    'Ver datos / ejecutar vista';
+  SAccionVerPlanProcesosAuxiliaresBBDD = 'Ver plan de ejecución';
+  SAccionRegenerarVistaProcesosAuxiliaresBBDD = 'Regenerar vista';
+  SAccionEjecutarProcedimientoProcesosAuxiliaresBBDD =
+    'Ejecutar procedimiento';
+  SAccionRegenerarProcedimientoProcesosAuxiliaresBBDD =
+    'Regenerar procedimiento';
+  SAccionRefrescarMetadatosProcesosAuxiliaresBBDD =
+    'Refrescar metadatos';
+  SCaptionProcedimientoPlanProcesosAuxiliaresBBDD =
+    'Procedimiento almacenado';
+  SCaptionSinEjecutarCallProcesosAuxiliaresBBDD = 'Sin ejecutar CALL';
+  SAyudaPlanVistaProcesosAuxiliaresBBDD =
+    'Revise la SELECT que usa la vista. El plan estimado no ejecuta la ' +
+    'consulta. Medir ejecución sí la ejecuta, descarta las filas y ' +
+    'muestra milisegundos inclusivos por nodo.';
+  SAyudaPlanProcedimientoProcesosAuxiliaresBBDD =
+    'MariaDB no admite EXPLAIN CALL. Se muestra una SELECT interna que ' +
+    'puede editar: sustituya parámetros y variables locales por valores ' +
+    'reales. Nunca se ejecutará el procedimiento completo desde aquí.';
+  SAvisoSinSelectProcedimientoProcesosAuxiliaresBBDD =
+    'No se ha encontrado una SELECT interna aislable. Pegue en el ' +
+    'editor una SELECT concreta del procedimiento para analizarla.';
+  SAvisoRevisarSelectProcedimientoProcesosAuxiliaresBBDD =
+    'Revise la SELECT extraída y sustituya sus parámetros o variables ' +
+    'locales antes de obtener el plan.';
+  SErrorIndicarSelectPlanProcesosAuxiliaresBBDD =
+    'Indique una sentencia SELECT para obtener su plan.';
+  SEnlaceInicioPlanProcesosAuxiliaresBBDD = 'Inicio del plan';
+  SEnlacePadreNodoPlanProcesosAuxiliaresBBDD = 'Padre → nodo';
+  SEnlaceTiempoPlanProcesosAuxiliaresBBDD = ' · %s ms inclusivos';
+  SEnlacePorcentajePlanProcesosAuxiliaresBBDD = ' · %s%% del total';
+  SEnlaceEstimadoPlanProcesosAuxiliaresBBDD =
+    ' · estimado, sin ms reales';
+  SEnlaceSinTiempoPlanProcesosAuxiliaresBBDD =
+    ' · sin tiempo informado';
+  SEnlaceBuclesPlanProcesosAuxiliaresBBDD = ' · %s bucles';
+  SAccesoIndicePlanProcesosAuxiliaresBBDD = 'índice %s';
+  SAyudaPlanMedidoProcesosAuxiliaresBBDD =
+    'Plan medido: los milisegundos de cada enlace son inclusivos; ' +
+    'contienen el trabajo de sus nodos descendientes. MariaDB ha ' +
+    'ejecutado la SELECT y ha descartado sus filas.';
+  SAyudaPlanEstimadoProcesosAuxiliaresBBDD =
+    'Plan estimado: muestra el recorrido previsto, sin ejecutar la ' +
+    'SELECT. Pulse Medir ejecución para obtener milisegundos reales.';
+  SErrorObtenerPlanProcesosAuxiliaresBBDD =
+    'No se ha podido obtener el plan de ejecución:%s%s';
+  SCaptionDdlSeleccionadoProcesosAuxiliaresBBDD = '&DDL seleccionado';
+  SFiltroScriptSqlProcesosAuxiliaresBBDD = 'Script SQL (*.sql)|*.sql';
+  SNombreArchivoObjetosProcesosAuxiliaresBBDD = 'objetos_bbdd.sql';
+  SConfirmarRegenerarProcedimientosProcesosAuxiliaresBBDD =
+    'Se regenerarán estos procedimientos: %s.';
+  SAdvertenciaRegenerarProcedimientosProcesosAuxiliaresBBDD =
+    'Se volverá a aplicar la definición actual de cada procedimiento.';
+  SInfoProcedimientosRegeneradosProcesosAuxiliaresBBDD =
+    'Procedimientos regenerados correctamente.';
+  SConfirmarAnalizarTablasProcesosAuxiliaresBBDD =
+    'Se analizarán estas tablas: %s.';
+  SAdvertenciaAnalizarTablasProcesosAuxiliaresBBDD =
+    'La operación puede tardar en tablas grandes.';
+  STituloAnalisisEstadisticasProcesosAuxiliaresBBDD =
+    'análisis de estadísticas';
+  SConfirmarComprobarObjetosProcesosAuxiliaresBBDD =
+    'Se comprobarán estos objetos: %s.';
+  SAdvertenciaComprobarObjetosProcesosAuxiliaresBBDD =
+    'La comprobación puede bloquear objetos mientras se ejecuta.';
+  STituloComprobacionIntegridadProcesosAuxiliaresBBDD =
+    'comprobación de integridad';
+  STituloEstadoObjetoProcesosAuxiliaresBBDD = 'estado de %s';
+  STituloDependenciasObjetoProcesosAuxiliaresBBDD = 'dependencias de %s';
+  SConfirmarCalcularChecksumProcesosAuxiliaresBBDD =
+    'Se calculará el checksum de: %s.';
+  SAdvertenciaCalcularChecksumProcesosAuxiliaresBBDD =
+    'Puede requerir leer por completo las tablas seleccionadas.';
+  STituloChecksumProcesosAuxiliaresBBDD = 'checksum';
+  SConfirmarRegenerarVistasProcesosAuxiliaresBBDD =
+    'Se regenerarán estas vistas: %s.';
+  SAdvertenciaRegenerarVistasProcesosAuxiliaresBBDD =
+    'Se volverá a aplicar la definición actual de cada vista.';
+  SInfoVistasRegeneradasProcesosAuxiliaresBBDD =
+    'Vistas regeneradas correctamente.';
+  SErrorServicioCopiaProcesosAuxiliaresBBDD =
+    'No está disponible el servicio de copia de seguridad.';
+  SAvisoCopiaPreviaProcesosAuxiliaresBBDD =
+    'Antes de continuar se solicitará una copia de seguridad completa.';
+  SConfirmarContinuarProcesosAuxiliaresBBDD = '¿Desea continuar?';
+  SConfirmarRegenerarTablasProcesosAuxiliaresBBDD =
+    'Se regenerarán estas tablas: %s.';
+  SConfirmarRegenerarIndicesProcesosAuxiliaresBBDD =
+    'Se regenerarán los índices de estas tablas: %s.';
+  SAdvertenciaBloqueoTablasProcesosAuxiliaresBBDD =
+    'La operación puede bloquear las tablas y tardar varios minutos.';
+  SConfirmarVaciarTablasProcesosAuxiliaresBBDD =
+    'Se vaciarán estas tablas: %s.';
+  SAdvertenciaVaciarTablasProcesosAuxiliaresBBDD =
+    'Se eliminarán todos sus registros y no se puede deshacer.';
+  SConfirmarBorrarTablasProcesosAuxiliaresBBDD =
+    'Se borrarán estas tablas: %s.';
+  SAdvertenciaBorrarTablasProcesosAuxiliaresBBDD =
+    'Se eliminarán las tablas, sus datos y su estructura.';
+  SInfoOperacionFinalizadaProcesosAuxiliaresBBDD =
+    'Operación finalizada correctamente.';
+  STituloEjecutarProcedimientoProcesosAuxiliaresBBDD =
+    'Ejecutar procedimiento almacenado';
+  SPromptEjecutarProcedimientoProcesosAuxiliaresBBDD =
+    'Revise la llamada e indique los valores de los parámetros:';
+  SNombreArchivoExcelProcesosAuxiliaresBBDD =
+    'Procesos_auxiliares_BBDD';
+  SConfirmarPlanMedidoProcesosAuxiliaresBBDD =
+    'Para medir tiempos reales, MariaDB ejecutará la SELECT y ' +
+    'descartará sus filas.%s%sRevísela con cuidado: una SELECT puede ' +
+    'invocar funciones almacenadas con efectos laterales.%s%sLa ' +
+    'ejecución se limitará a %d segundos. ¿Desea continuar?';
 
 const
   cPlanNodo = 0;
@@ -205,8 +390,7 @@ const
 procedure TfrmModalProcesosAuxiliaresBBDD.FormCreate(Sender: TObject);
 begin
   inherited;
-  Caption :=
-    'Operaciones auxiliares tablas, vistas y procedimientos almacenados';
+  Caption := SCaptionProcesosAuxiliaresBBDD;
   FNombreContenidoActual := '';
   CrearInterfaz;
   FDataModule := TdmMetadatosBBDD.Create(Self);
@@ -223,16 +407,19 @@ end;
 destructor TfrmModalProcesosAuxiliaresBBDD.Destroy;
 begin
   FCatalogo := nil;
+  FAnfitrionMantenimiento := nil;
   inherited;
 end;
 
 class procedure TfrmModalProcesosAuxiliaresBBDD.Ejecutar(
-  AOwner: TComponent);
+  AOwner: TComponent;
+  const AAnfitrionMantenimiento: IAnfitrionMantenimiento);
 var
   oFormulario: TfrmModalProcesosAuxiliaresBBDD;
 begin
   oFormulario := TfrmModalProcesosAuxiliaresBBDD.Create(AOwner);
   try
+    oFormulario.FAnfitrionMantenimiento := AAnfitrionMantenimiento;
     oFormulario.ShowModal;
   finally
     oFormulario.Free;
@@ -269,7 +456,7 @@ begin
   lblSelector := TcxLabel.Create(Self);
   lblSelector.Parent := pnlSelector;
   lblSelector.SetBounds(12, 5, 400, 24);
-  lblSelector.Caption := 'Tipo de objeto de base de datos';
+  lblSelector.Caption := SCaptionTipoObjetoProcesosAuxiliaresBBDD;
   lblSelector.Transparent := True;
   rgTipoObjeto := TcxRadioGroup.Create(Self);
   rgTipoObjeto.Parent := pnlSelector;
@@ -277,11 +464,11 @@ begin
   rgTipoObjeto.Anchors := [akLeft, akTop, akRight];
   rgTipoObjeto.Properties.Columns := 3;
   oItem := rgTipoObjeto.Properties.Items.Add;
-  oItem.Caption := '&Tablas';
+  oItem.Caption := SCaptionTablasProcesosAuxiliaresBBDD;
   oItem := rgTipoObjeto.Properties.Items.Add;
-  oItem.Caption := '&Vistas';
+  oItem.Caption := SCaptionVistasProcesosAuxiliaresBBDD;
   oItem := rgTipoObjeto.Properties.Items.Add;
-  oItem.Caption := '&Procedimientos almacenados';
+  oItem.Caption := SCaptionProcedimientosProcesosAuxiliaresBBDD;
   rgTipoObjeto.ItemIndex := 0;
   rgTipoObjeto.Properties.OnEditValueChanged := rgTipoObjetoChange;
 end;
@@ -297,7 +484,7 @@ begin
   lblSeleccion.Parent := pnlLista;
   lblSeleccion.Align := alTop;
   lblSeleccion.Height := 28;
-  lblSeleccion.Caption := 'Objetos disponibles';
+  lblSeleccion.Caption := SCaptionObjetosDisponiblesProcesosAuxiliaresBBDD;
   lblSeleccion.Transparent := True;
   pnlListaPie := TPanel.Create(Self);
   pnlListaPie.Parent := pnlLista;
@@ -308,8 +495,7 @@ begin
   lblAyuda.Parent := pnlListaPie;
   lblAyuda.Align := alClient;
   lblAyuda.AutoSize := False;
-  lblAyuda.Caption :=
-    'Use Ctrl o Mayús para seleccionar varios objetos.';
+  lblAyuda.Caption := SAyudaSeleccionProcesosAuxiliaresBBDD;
   lblAyuda.Properties.WordWrap := True;
   lblAyuda.Transparent := True;
   lstObjetos := TcxListBox.Create(Self);
@@ -332,10 +518,10 @@ begin
   pcDetalle.Align := alClient;
   tsEstructura := TcxTabSheet.Create(Self);
   tsEstructura.PageControl := pcDetalle;
-  tsEstructura.Caption := '&Metadatos SQL';
+  tsEstructura.Caption := SCaptionMetadatosSqlProcesosAuxiliaresBBDD;
   tsContenido := TcxTabSheet.Create(Self);
   tsContenido.PageControl := pcDetalle;
-  tsContenido.Caption := '&Resultado';
+  tsContenido.Caption := SCaptionResultadoProcesosAuxiliaresBBDD;
   synSQL := TSynSQLSyn.Create(Self);
   synSQL.SQLDialect := sqlMySQL;
   synEstructura := TSynEdit.Create(Self);
@@ -355,7 +541,7 @@ begin
   btnExportar := TcxButton.Create(Self);
   btnExportar.Parent := pnlContenidoBotones;
   btnExportar.SetBounds(8, 8, 148, 30);
-  btnExportar.Caption := 'Exportar a E&xcel';
+  btnExportar.Caption := SCaptionExportarExcelProcesosAuxiliaresBBDD;
   btnExportar.OnClick := btnExportarClick;
   grdContenido := TcxGrid.Create(Self);
   grdContenido.Parent := tsContenido;
@@ -380,7 +566,7 @@ procedure TfrmModalProcesosAuxiliaresBBDD.CrearPlanEjecucion;
 begin
   tsPlanEjecucion := TcxTabSheet.Create(Self);
   tsPlanEjecucion.PageControl := pcDetalle;
-  tsPlanEjecucion.Caption := '&Plan de ejecución';
+  tsPlanEjecucion.Caption := SCaptionPlanEjecucionProcesosAuxiliaresBBDD;
   pnlConsultaPlan := TPanel.Create(Self);
   pnlConsultaPlan.Parent := tsPlanEjecucion;
   pnlConsultaPlan.Align := alTop;
@@ -393,9 +579,7 @@ begin
   lblAyudaPlan.Height := 54;
   lblAyudaPlan.Properties.WordWrap := True;
   lblAyudaPlan.Transparent := True;
-  lblAyudaPlan.Caption :=
-    'Revise la SELECT que se analizará. El plan estimado no ejecuta la ' +
-    'consulta; Medir ejecución sí la ejecuta y muestra tiempos reales.';
+  lblAyudaPlan.Caption := SAyudaPlanProcesosAuxiliaresBBDD;
   pnlBotonesPlan := TPanel.Create(Self);
   pnlBotonesPlan.Parent := pnlConsultaPlan;
   pnlBotonesPlan.Align := alBottom;
@@ -404,12 +588,12 @@ begin
   btnPlanEstimado := TcxButton.Create(Self);
   btnPlanEstimado.Parent := pnlBotonesPlan;
   btnPlanEstimado.SetBounds(8, 6, 160, 32);
-  btnPlanEstimado.Caption := 'Plan &estimado';
+  btnPlanEstimado.Caption := SCaptionPlanEstimadoProcesosAuxiliaresBBDD;
   btnPlanEstimado.OnClick := btnPlanEstimadoClick;
   btnPlanMedido := TcxButton.Create(Self);
   btnPlanMedido.Parent := pnlBotonesPlan;
   btnPlanMedido.SetBounds(176, 6, 210, 32);
-  btnPlanMedido.Caption := '&Medir ejecución (ms)';
+  btnPlanMedido.Caption := SCaptionMedirEjecucionProcesosAuxiliaresBBDD;
   btnPlanMedido.OnClick := btnPlanMedidoClick;
   synConsultaPlan := TSynEdit.Create(Self);
   synConsultaPlan.Parent := pnlConsultaPlan;
@@ -424,10 +608,10 @@ begin
   pcResultadoPlan.Align := alClient;
   tsArbolPlan := TcxTabSheet.Create(Self);
   tsArbolPlan.PageControl := pcResultadoPlan;
-  tsArbolPlan.Caption := 'Plan &explicado';
+  tsArbolPlan.Caption := SCaptionPlanExplicadoProcesosAuxiliaresBBDD;
   tsJsonPlan := TcxTabSheet.Create(Self);
   tsJsonPlan.PageControl := pcResultadoPlan;
-  tsJsonPlan.Caption := '&JSON original';
+  tsJsonPlan.Caption := SCaptionJsonOriginalProcesosAuxiliaresBBDD;
   tlPlan := TcxTreeList.Create(Self);
   tlPlan.Parent := tsArbolPlan;
   tlPlan.Align := alClient;
@@ -443,32 +627,35 @@ begin
     tlPlan.Bands.Add;
   colPlanNodo := tlPlan.CreateColumn;
   colPlanNodo.Position.BandIndex := 0;
-  colPlanNodo.Caption.Text := 'Nodo / operación';
+  colPlanNodo.Caption.Text := SCaptionNodoPlanProcesosAuxiliaresBBDD;
   colPlanNodo.Width := 260;
   colPlanNodo.Options.Editing := False;
   colPlanEnlace := tlPlan.CreateColumn;
   colPlanEnlace.Position.BandIndex := 0;
-  colPlanEnlace.Caption.Text := 'Enlace desde el padre';
+  colPlanEnlace.Caption.Text := SCaptionEnlacePlanProcesosAuxiliaresBBDD;
   colPlanEnlace.Width := 230;
   colPlanEnlace.Options.Editing := False;
   colPlanFilasEstimadas := tlPlan.CreateColumn;
   colPlanFilasEstimadas.Position.BandIndex := 0;
-  colPlanFilasEstimadas.Caption.Text := 'Filas estimadas';
+  colPlanFilasEstimadas.Caption.Text :=
+    SCaptionFilasEstimadasPlanProcesosAuxiliaresBBDD;
   colPlanFilasEstimadas.Width := 110;
   colPlanFilasEstimadas.Options.Editing := False;
   colPlanFilasReales := tlPlan.CreateColumn;
   colPlanFilasReales.Position.BandIndex := 0;
-  colPlanFilasReales.Caption.Text := 'Filas reales/bucle';
+  colPlanFilasReales.Caption.Text :=
+    SCaptionFilasRealesPlanProcesosAuxiliaresBBDD;
   colPlanFilasReales.Width := 100;
   colPlanFilasReales.Options.Editing := False;
   colPlanAcceso := tlPlan.CreateColumn;
   colPlanAcceso.Position.BandIndex := 0;
-  colPlanAcceso.Caption.Text := 'Acceso / índice';
+  colPlanAcceso.Caption.Text := SCaptionAccesoPlanProcesosAuxiliaresBBDD;
   colPlanAcceso.Width := 180;
   colPlanAcceso.Options.Editing := False;
   colPlanExplicacion := tlPlan.CreateColumn;
   colPlanExplicacion.Position.BandIndex := 0;
-  colPlanExplicacion.Caption.Text := 'Qué hace el nodo';
+  colPlanExplicacion.Caption.Text :=
+    SCaptionExplicacionPlanProcesosAuxiliaresBBDD;
   colPlanExplicacion.Width := 440;
   colPlanExplicacion.Options.Editing := False;
   synJsonPlan := TSynEdit.Create(Self);
@@ -492,7 +679,8 @@ begin
   lblAcciones := TcxLabel.Create(Self);
   lblAcciones.Parent := pnlAcciones;
   lblAcciones.SetBounds(12, 4, 256, 24);
-  lblAcciones.Caption := 'Operaciones compatibles';
+  lblAcciones.Caption :=
+    SCaptionOperacionesCompatiblesProcesosAuxiliaresBBDD;
   lblAcciones.Transparent := True;
   CrearListaOtrasAcciones;
 end;
@@ -516,7 +704,8 @@ begin
     256,
     34);
   btnEjecutarOtraAccion.Anchors := [akLeft, akRight, akBottom];
-  btnEjecutarOtraAccion.Caption := 'Ejecutar operación';
+  btnEjecutarOtraAccion.Caption :=
+    SCaptionEjecutarOperacionProcesosAuxiliaresBBDD;
   btnEjecutarOtraAccion.OnClick := btnEjecutarOtraAccionClick;
 end;
 
@@ -525,13 +714,13 @@ begin
   btnCopiarSQL := TcxButton.Create(Self);
   btnCopiarSQL.Parent := pnlBotonera;
   btnCopiarSQL.SetBounds(12, 12, 150, 34);
-  btnCopiarSQL.Caption := '&Copiar SQL';
+  btnCopiarSQL.Caption := SCaptionCopiarSqlProcesosAuxiliaresBBDD;
   btnCopiarSQL.OnClick := btnCopiarSQLClick;
   btnCerrar := TcxButton.Create(Self);
   btnCerrar.Parent := pnlBotonera;
   btnCerrar.SetBounds(ClientWidth - 162, 12, 150, 34);
   btnCerrar.Anchors := [akTop, akRight];
-  btnCerrar.Caption := '&Cerrar';
+  btnCerrar.Caption := SCaptionCerrarProcesosAuxiliaresBBDD;
   btnCerrar.Cancel := True;
   btnCerrar.Default := True;
   btnCerrar.ModalResult := mrCancel;
@@ -543,7 +732,7 @@ begin
   if AEditar and
      EsTablaFacturacionProtegida(FNombreContenidoActual) then
     raise EModificacionTablaFacturacionProtegida.Create(
-      'EDICION',
+      SOperacionEdicionProcesosAuxiliaresBBDD,
       FNombreContenidoActual);
   tvContenido.OptionsData.Appending := AEditar;
   tvContenido.OptionsData.Deleting := AEditar;
@@ -622,8 +811,8 @@ begin
     lstObjetos.Items.EndUpdate;
   end;
   synEstructura.Lines.Clear;
-  tsEstructura.Caption := '&Metadatos SQL';
-  tsContenido.Caption := '&Resultado';
+  tsEstructura.Caption := SCaptionMetadatosSqlProcesosAuxiliaresBBDD;
+  tsContenido.Caption := SCaptionResultadoProcesosAuxiliaresBBDD;
   pcDetalle.ActivePage := tsEstructura;
   lstObjetos.ItemIndex := -1;
   iPrimeroSeleccionado := -1;
@@ -743,12 +932,15 @@ var
 begin
   Result := False;
   ATabla := '';
-  for i := 0 to Integer(Length(AObjetos)) - 1 do
+  i := 0;
+  while (i < Integer(Length(AObjetos))) and not Result do
   begin
-    if EsTablaFacturacionProtegida(AObjetos[i]) then
+    Result := EsTablaFacturacionProtegida(AObjetos[i]);
+    if Result then
+      ATabla := AObjetos[i]
+    else
     begin
-      ATabla := AObjetos[i];
-      Exit(True);
+      Inc(i);
     end;
   end;
 end;
@@ -771,7 +963,7 @@ begin
   end;
   if Length(AObjetos) > iLimite then
     Result := Result + Format(
-      ' y %d más',
+      SResumenObjetosAdicionalesProcesosAuxiliaresBBDD,
       [Length(AObjetos) - iLimite]);
 end;
 
@@ -824,10 +1016,12 @@ begin
       sEstructura := oFormateador.Format(sEstructura);
     end;
     synEstructura.Lines.Text := sEstructura;
-    tsEstructura.Caption := '&Metadatos SQL - ' + sNombre;
+    tsEstructura.Caption := Format(
+      SCaptionMetadatosSqlObjetoProcesosAuxiliaresBBDD,
+      [sNombre]);
   end
   else
-    tsEstructura.Caption := '&Metadatos SQL';
+    tsEstructura.Caption := SCaptionMetadatosSqlProcesosAuxiliaresBBDD;
   pcDetalle.ActivePage := tsEstructura;
   ActualizarAcciones;
 end;
@@ -858,13 +1052,15 @@ begin
   begin
     if AEditar and EsTablaFacturacionProtegida(sNombre) then
       raise EModificacionTablaFacturacionProtegida.Create(
-        'EDICION',
+        SOperacionEdicionProcesosAuxiliaresBBDD,
         sNombre);
     CerrarContenidoActual;
     FCatalogo.CargarContenido(sNombre);
     FNombreContenidoActual := sNombre;
     AEditar := AEditar and (eTipo = tombTabla);
-    MostrarDatosActuales('&Resultado - ' + sNombre, AEditar);
+    MostrarDatosActuales(
+      Format(SCaptionResultadoObjetoProcesosAuxiliaresBBDD, [sNombre]),
+      AEditar);
   end;
 end;
 
@@ -921,52 +1117,52 @@ begin
       if iSeleccionados = 1 then
       begin
         AgregarOtraAccion(
-          'Ver metadatos',
+          SAccionVerMetadatosProcesosAuxiliaresBBDD,
           toaaVerMetadatos);
         if not EsTablaFacturacionProtegida(sNombre) then
         begin
           if tvContenido.OptionsData.Editing and
              SameText(FNombreContenidoActual, sNombre) then
             AgregarOtraAccion(
-              'Bloquear edición de tabla',
+              SAccionBloquearEdicionProcesosAuxiliaresBBDD,
               toaaEditarTabla)
           else
             AgregarOtraAccion(
-              'Editar datos de tabla',
+              SAccionEditarDatosProcesosAuxiliaresBBDD,
               toaaEditarTabla);
         end;
         AgregarOtraAccion(
-          'Ver estado y tamaño',
+          SAccionVerEstadoProcesosAuxiliaresBBDD,
           toaaVerEstadoTabla);
         AgregarOtraAccion(
-          'Ver dependencias',
+          SAccionVerDependenciasProcesosAuxiliaresBBDD,
           toaaVerDependencias);
       end;
       AgregarOtraAccion(
-        'Analizar estadísticas',
+        SAccionAnalizarEstadisticasProcesosAuxiliaresBBDD,
         toaaAnalizarEstadisticas);
       AgregarOtraAccion(
-        'Comprobar integridad',
+        SAccionComprobarIntegridadProcesosAuxiliaresBBDD,
         toaaComprobarIntegridad);
       AgregarOtraAccion(
-        'Regenerar tabla',
+        SAccionRegenerarTablaProcesosAuxiliaresBBDD,
         toaaRegenerarTabla);
       AgregarOtraAccion(
-        'Regenerar índices',
+        SAccionRegenerarIndicesProcesosAuxiliaresBBDD,
         toaaRegenerarIndices);
       AgregarOtraAccion(
-        'Exportar DDL seleccionado',
+        SAccionExportarDdlProcesosAuxiliaresBBDD,
         toaaExportarDDL);
       AgregarOtraAccion(
-        'Calcular checksum',
+        SAccionCalcularChecksumProcesosAuxiliaresBBDD,
         toaaCalcularChecksum);
       if not bSeleccionProtegida then
       begin
         AgregarOtraAccion(
-          'Vaciar tabla',
+          SAccionVaciarTablaProcesosAuxiliaresBBDD,
           toaaVaciarTabla);
         AgregarOtraAccion(
-          'Borrar tabla',
+          SAccionBorrarTablaProcesosAuxiliaresBBDD,
           toaaBorrarTabla);
       end;
     end
@@ -976,26 +1172,26 @@ begin
       if iSeleccionados = 1 then
       begin
         AgregarOtraAccion(
-          'Ver metadatos',
+          SAccionVerMetadatosProcesosAuxiliaresBBDD,
           toaaVerMetadatos);
         AgregarOtraAccion(
-          'Ver datos / ejecutar vista',
+          SAccionVerDatosVistaProcesosAuxiliaresBBDD,
           toaaEjecutarVista);
         AgregarOtraAccion(
-          'Ver plan de ejecución',
+          SAccionVerPlanProcesosAuxiliaresBBDD,
           toaaVerPlanEjecucion);
         AgregarOtraAccion(
-          'Ver dependencias',
+          SAccionVerDependenciasProcesosAuxiliaresBBDD,
           toaaVerDependencias);
       end;
       AgregarOtraAccion(
-        'Comprobar integridad',
+        SAccionComprobarIntegridadProcesosAuxiliaresBBDD,
         toaaComprobarIntegridad);
       AgregarOtraAccion(
-        'Regenerar vista',
+        SAccionRegenerarVistaProcesosAuxiliaresBBDD,
         toaaRegenerarVista);
       AgregarOtraAccion(
-        'Exportar DDL seleccionado',
+        SAccionExportarDdlProcesosAuxiliaresBBDD,
         toaaExportarDDL);
     end
     else if iSeleccionados > 0 then
@@ -1003,24 +1199,24 @@ begin
       if iSeleccionados = 1 then
       begin
         AgregarOtraAccion(
-          'Ver metadatos',
+          SAccionVerMetadatosProcesosAuxiliaresBBDD,
           toaaVerMetadatos);
         AgregarOtraAccion(
-          'Ejecutar procedimiento',
+          SAccionEjecutarProcedimientoProcesosAuxiliaresBBDD,
           toaaEjecutarProcedimiento);
         AgregarOtraAccion(
-          'Ver plan de ejecución',
+          SAccionVerPlanProcesosAuxiliaresBBDD,
           toaaVerPlanEjecucion);
       end;
       AgregarOtraAccion(
-        'Regenerar procedimiento',
+        SAccionRegenerarProcedimientoProcesosAuxiliaresBBDD,
         toaaRegenerarProcedimiento);
       AgregarOtraAccion(
-        'Exportar DDL seleccionado',
+        SAccionExportarDdlProcesosAuxiliaresBBDD,
         toaaExportarDDL);
     end;
     AgregarOtraAccion(
-      'Refrescar metadatos',
+      SAccionRefrescarMetadatosProcesosAuxiliaresBBDD,
       toaaRefrescarMetadatos);
   finally
     lstOtrasAcciones.Items.EndUpdate;
@@ -1042,7 +1238,9 @@ procedure TfrmModalProcesosAuxiliaresBBDD.MostrarResultadoOperacion(
   const ATitulo: string);
 begin
   FNombreContenidoActual := '';
-  MostrarDatosActuales('&Resultado - ' + ATitulo, False);
+  MostrarDatosActuales(
+    Format(SCaptionResultadoObjetoProcesosAuxiliaresBBDD, [ATitulo]),
+    False);
 end;
 
 procedure TfrmModalProcesosAuxiliaresBBDD.LimpiarResultadoPlan;
@@ -1066,8 +1264,10 @@ begin
   try
     tlPlan.Clear;
     oNodo := tlPlan.Root.AddChild;
-    oNodo.Texts[cPlanNodo] := 'Procedimiento almacenado';
-    oNodo.Texts[cPlanEnlace] := 'Sin ejecutar CALL';
+    oNodo.Texts[cPlanNodo] :=
+      SCaptionProcedimientoPlanProcesosAuxiliaresBBDD;
+    oNodo.Texts[cPlanEnlace] :=
+      SCaptionSinEjecutarCallProcesosAuxiliaresBBDD;
     oNodo.Texts[cPlanExplicacion] := AMensaje;
     oNodo.Expanded := True;
   finally
@@ -1080,46 +1280,59 @@ var
   sDefinicion: string;
   sNombre: string;
 begin
-  if not ObjetoActivo(sNombre) then
-    Exit;
-  LimpiarResultadoPlan;
-  if TipoObjetoActivo = tombVista then
+  if ObjetoActivo(sNombre) then
   begin
-    synConsultaPlan.Lines.Text :=
-      'SELECT * FROM `' + sNombre + '`';
-    lblAyudaPlan.Caption :=
-      'Revise la SELECT que usa la vista. El plan estimado no ejecuta la ' +
-      'consulta. Medir ejecución sí la ejecuta, descarta las filas y ' +
-      'muestra milisegundos inclusivos por nodo.';
-    tsPlanEjecucion.Caption := '&Plan de ejecución - ' + sNombre;
-    pcDetalle.ActivePage := tsPlanEjecucion;
-    EjecutarPlanEjecucion(False);
-  end
-  else if TipoObjetoActivo = tombProcedimiento then
-  begin
-    sDefinicion := FCatalogo.CargarEstructura(
-      tombProcedimiento,
-      sNombre);
-    synConsultaPlan.Lines.Text :=
-      ExtraerPrimeraSelectProcedimiento(sDefinicion);
-    lblAyudaPlan.Caption :=
-      'MariaDB no admite EXPLAIN CALL. Se muestra una SELECT interna que ' +
-      'puede editar: sustituya parámetros y variables locales por valores ' +
-      'reales. Nunca se ejecutará el procedimiento completo desde aquí.';
-    tsPlanEjecucion.Caption := '&Plan de consultas de ' + sNombre;
-    pcDetalle.ActivePage := tsPlanEjecucion;
-    if Trim(synConsultaPlan.Lines.Text) = '' then
-      MostrarAvisoPlanProcedimiento(
-        'No se ha encontrado una SELECT interna aislable. Pegue en el ' +
-        'editor una SELECT concreta del procedimiento para analizarla.')
-    else
-      MostrarAvisoPlanProcedimiento(
-        'Revise la SELECT extraída y sustituya sus parámetros o variables ' +
-        'locales antes de obtener el plan.');
+    LimpiarResultadoPlan;
+    if TipoObjetoActivo = tombVista then
+    begin
+      synConsultaPlan.Lines.Text :=
+        'SELECT * FROM `' + sNombre + '`';
+      lblAyudaPlan.Caption := SAyudaPlanVistaProcesosAuxiliaresBBDD;
+      tsPlanEjecucion.Caption := Format(
+        SCaptionPlanEjecucionObjetoProcesosAuxiliaresBBDD,
+        [sNombre]);
+      pcDetalle.ActivePage := tsPlanEjecucion;
+      EjecutarPlanEjecucion(False);
+    end
+    else if TipoObjetoActivo = tombProcedimiento then
+    begin
+      sDefinicion := FCatalogo.CargarEstructura(
+        tombProcedimiento,
+        sNombre);
+      synConsultaPlan.Lines.Text :=
+        ExtraerPrimeraSelectProcedimiento(sDefinicion);
+      lblAyudaPlan.Caption := SAyudaPlanProcedimientoProcesosAuxiliaresBBDD;
+      tsPlanEjecucion.Caption := Format(
+        SCaptionPlanConsultasObjetoProcesosAuxiliaresBBDD,
+        [sNombre]);
+      pcDetalle.ActivePage := tsPlanEjecucion;
+      if Trim(synConsultaPlan.Lines.Text) = '' then
+        MostrarAvisoPlanProcedimiento(
+          SAvisoSinSelectProcedimientoProcesosAuxiliaresBBDD)
+      else
+        MostrarAvisoPlanProcedimiento(
+          SAvisoRevisarSelectProcedimientoProcesosAuxiliaresBBDD);
+    end;
   end;
 end;
 
-procedure TfrmModalProcesosAuxiliaresBBDD.EjecutarPlanEjecucion(
+function TiempoTotalRaizPlan(
+  const APlan: TPlanEjecucionMariaDB): Double;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 0 to Integer(Length(APlan.Nodos)) - 1 do
+    if (APlan.Nodos[i].PadreId < 0) and
+       APlan.Nodos[i].TieneRTotalTimeMs then
+    begin
+      Result := APlan.Nodos[i].RTotalTimeMs;
+      Break;
+    end;
+end;
+
+procedure TfrmModalProcesosAuxiliaresBBDD.CargarArbolPlan(
+  const AJson: string;
   AConTiemposReales: Boolean);
 var
   dPorcentaje: Double;
@@ -1131,122 +1344,120 @@ var
   oPlan: TPlanEjecucionMariaDB;
   sAcceso: string;
   sEnlace: string;
+begin
+  oPlan := InterpretarPlanMariaDB(AJson, AConTiemposReales);
+  synJsonPlan.Lines.Text := oPlan.JsonOriginal;
+  dTiempoTotal := TiempoTotalRaizPlan(oPlan);
+  oMapa := TDictionary<Integer, TcxTreeListNode>.Create;
+  try
+    tlPlan.BeginUpdate;
+    try
+      tlPlan.Clear;
+      for i := 0 to Integer(Length(oPlan.Nodos)) - 1 do
+      begin
+        oPadre := nil;
+        if oPlan.Nodos[i].PadreId >= 0 then
+          oMapa.TryGetValue(oPlan.Nodos[i].PadreId, oPadre);
+        if Assigned(oPadre) then
+          oNodo := oPadre.AddChild
+        else
+          oNodo := tlPlan.Root.AddChild;
+        oMapa.Add(oPlan.Nodos[i].Id, oNodo);
+        oNodo.Texts[cPlanNodo] := oPlan.Nodos[i].Titulo;
+        if oPlan.Nodos[i].PadreId < 0 then
+          sEnlace := SEnlaceInicioPlanProcesosAuxiliaresBBDD
+        else
+          sEnlace := SEnlacePadreNodoPlanProcesosAuxiliaresBBDD;
+        if oPlan.Nodos[i].TieneRTotalTimeMs then
+        begin
+          sEnlace := sEnlace + Format(
+            SEnlaceTiempoPlanProcesosAuxiliaresBBDD,
+            [FormatFloat('0.000', oPlan.Nodos[i].RTotalTimeMs)]);
+          if (oPlan.Nodos[i].PadreId >= 0) and
+             (dTiempoTotal > 0) then
+          begin
+            dPorcentaje :=
+              100 * oPlan.Nodos[i].RTotalTimeMs / dTiempoTotal;
+            sEnlace := sEnlace + Format(
+              SEnlacePorcentajePlanProcesosAuxiliaresBBDD,
+              [FormatFloat('0.0', dPorcentaje)]);
+          end;
+        end
+        else if not AConTiemposReales then
+          sEnlace := sEnlace + SEnlaceEstimadoPlanProcesosAuxiliaresBBDD
+        else
+          sEnlace := sEnlace + SEnlaceSinTiempoPlanProcesosAuxiliaresBBDD;
+        if oPlan.Nodos[i].TieneRLoops then
+          sEnlace := sEnlace + Format(
+            SEnlaceBuclesPlanProcesosAuxiliaresBBDD,
+            [FormatFloat('0.###', oPlan.Nodos[i].RLoops)]);
+        oNodo.Texts[cPlanEnlace] := sEnlace;
+        if oPlan.Nodos[i].TieneRows then
+          oNodo.Texts[cPlanFilasEstimadas] :=
+            FormatFloat('#,##0.###', oPlan.Nodos[i].Rows);
+        if oPlan.Nodos[i].TieneRRows then
+          oNodo.Texts[cPlanFilasReales] :=
+            FormatFloat('#,##0.###', oPlan.Nodos[i].RRows);
+        sAcceso := oPlan.Nodos[i].Acceso;
+        if oPlan.Nodos[i].Indice <> '' then
+        begin
+          if sAcceso <> '' then
+            sAcceso := sAcceso + ' · ';
+          sAcceso := sAcceso + Format(
+            SAccesoIndicePlanProcesosAuxiliaresBBDD,
+            [oPlan.Nodos[i].Indice]);
+        end;
+        oNodo.Texts[cPlanAcceso] := sAcceso;
+        oNodo.Texts[cPlanExplicacion] := oPlan.Nodos[i].Explicacion;
+      end;
+      tlPlan.FullExpand;
+    finally
+      tlPlan.EndUpdate;
+    end;
+  finally
+    oMapa.Free;
+  end;
+end;
+
+procedure TfrmModalProcesosAuxiliaresBBDD.EjecutarPlanEjecucion(
+  AConTiemposReales: Boolean);
+var
   sJson: string;
 begin
   if Trim(synConsultaPlan.Lines.Text) = '' then
   begin
     MessageDlg(
-      'Indique una sentencia SELECT para obtener su plan.',
+      SErrorIndicarSelectPlanProcesosAuxiliaresBBDD,
       mtInformation,
       [mbOk],
       0);
-    Exit;
   end;
-  Screen.Cursor := crHourGlass;
-  try
-    sJson := FCatalogo.ObtenerPlanEjecucion(
-      synConsultaPlan.Lines.Text,
-      AConTiemposReales,
-      cTiempoMaximoPlanSegundos);
-    oPlan := InterpretarPlanMariaDB(sJson, AConTiemposReales);
-    synJsonPlan.Lines.Text := oPlan.JsonOriginal;
-    dTiempoTotal := 0;
-    for i := 0 to Integer(Length(oPlan.Nodos)) - 1 do
-    begin
-      if (oPlan.Nodos[i].PadreId < 0) and
-         oPlan.Nodos[i].TieneRTotalTimeMs then
-      begin
-        dTiempoTotal := oPlan.Nodos[i].RTotalTimeMs;
-        Break;
-      end;
-    end;
-    oMapa := TDictionary<Integer, TcxTreeListNode>.Create;
+  if Trim(synConsultaPlan.Lines.Text) <> '' then
+  begin
+    Screen.Cursor := crHourGlass;
     try
-      tlPlan.BeginUpdate;
-      try
-        tlPlan.Clear;
-        for i := 0 to Integer(Length(oPlan.Nodos)) - 1 do
-        begin
-          oPadre := nil;
-          if oPlan.Nodos[i].PadreId >= 0 then
-            oMapa.TryGetValue(oPlan.Nodos[i].PadreId, oPadre);
-          if Assigned(oPadre) then
-            oNodo := oPadre.AddChild
-          else
-            oNodo := tlPlan.Root.AddChild;
-          oMapa.Add(oPlan.Nodos[i].Id, oNodo);
-          oNodo.Texts[cPlanNodo] := oPlan.Nodos[i].Titulo;
-          if oPlan.Nodos[i].PadreId < 0 then
-            sEnlace := 'Inicio del plan'
-          else
-            sEnlace := 'Padre → nodo';
-          if oPlan.Nodos[i].TieneRTotalTimeMs then
-          begin
-            sEnlace := sEnlace + ' · ' +
-              FormatFloat('0.000', oPlan.Nodos[i].RTotalTimeMs) +
-              ' ms inclusivos';
-            if (oPlan.Nodos[i].PadreId >= 0) and
-               (dTiempoTotal > 0) then
-            begin
-              dPorcentaje :=
-                100 * oPlan.Nodos[i].RTotalTimeMs / dTiempoTotal;
-              sEnlace := sEnlace + ' · ' +
-                FormatFloat('0.0', dPorcentaje) + '% del total';
-            end;
-          end
-          else if not AConTiemposReales then
-            sEnlace := sEnlace + ' · estimado, sin ms reales'
-          else
-            sEnlace := sEnlace + ' · sin tiempo informado';
-          if oPlan.Nodos[i].TieneRLoops then
-            sEnlace := sEnlace + ' · ' +
-              FormatFloat('0.###', oPlan.Nodos[i].RLoops) +
-              ' bucles';
-          oNodo.Texts[cPlanEnlace] := sEnlace;
-          if oPlan.Nodos[i].TieneRows then
-            oNodo.Texts[cPlanFilasEstimadas] :=
-              FormatFloat('#,##0.###', oPlan.Nodos[i].Rows);
-          if oPlan.Nodos[i].TieneRRows then
-            oNodo.Texts[cPlanFilasReales] :=
-              FormatFloat('#,##0.###', oPlan.Nodos[i].RRows);
-          sAcceso := oPlan.Nodos[i].Acceso;
-          if oPlan.Nodos[i].Indice <> '' then
-          begin
-            if sAcceso <> '' then
-              sAcceso := sAcceso + ' · ';
-            sAcceso := sAcceso + 'índice ' + oPlan.Nodos[i].Indice;
-          end;
-          oNodo.Texts[cPlanAcceso] := sAcceso;
-          oNodo.Texts[cPlanExplicacion] :=
-            oPlan.Nodos[i].Explicacion;
-        end;
-        tlPlan.FullExpand;
-      finally
-        tlPlan.EndUpdate;
-      end;
-    finally
-      oMapa.Free;
+      sJson := FCatalogo.ObtenerPlanEjecucion(
+        synConsultaPlan.Lines.Text,
+        AConTiemposReales,
+        cTiempoMaximoPlanSegundos);
+      CargarArbolPlan(sJson, AConTiemposReales);
+      if AConTiemposReales then
+        lblAyudaPlan.Caption := SAyudaPlanMedidoProcesosAuxiliaresBBDD
+      else
+        lblAyudaPlan.Caption := SAyudaPlanEstimadoProcesosAuxiliaresBBDD;
+      pcResultadoPlan.ActivePage := tsArbolPlan;
+    except
+      on E: Exception do
+        MessageDlg(
+          Format(
+            SErrorObtenerPlanProcesosAuxiliaresBBDD,
+            [sLineBreak, E.Message]),
+          mtError,
+          [mbOk],
+          0);
     end;
-    if AConTiemposReales then
-      lblAyudaPlan.Caption :=
-        'Plan medido: los milisegundos de cada enlace son inclusivos; ' +
-        'contienen el trabajo de sus nodos descendientes. MariaDB ha ' +
-        'ejecutado la SELECT y ha descartado sus filas.'
-    else
-      lblAyudaPlan.Caption :=
-        'Plan estimado: muestra el recorrido previsto, sin ejecutar la ' +
-        'SELECT. Pulse Medir ejecución para obtener milisegundos reales.';
-    pcResultadoPlan.ActivePage := tsArbolPlan;
-  except
-    on E: Exception do
-      MessageDlg(
-        'No se ha podido obtener el plan de ejecución:' + sLineBreak +
-        E.Message,
-        mtError,
-        [mbOk],
-        0);
+    Screen.Cursor := crDefault;
   end;
-  Screen.Cursor := crDefault;
 end;
 
 procedure TfrmModalProcesosAuxiliaresBBDD.ExportarDDLSeleccionado;
@@ -1283,13 +1494,13 @@ begin
         oLineas.Add('');
       end;
       synEstructura.Lines.Assign(oLineas);
-      tsEstructura.Caption := '&DDL seleccionado';
+      tsEstructura.Caption := SCaptionDdlSeleccionadoProcesosAuxiliaresBBDD;
       pcDetalle.ActivePage := tsEstructura;
       oDialogo := TSaveDialog.Create(Self);
       try
         oDialogo.DefaultExt := 'sql';
-        oDialogo.Filter := 'Script SQL (*.sql)|*.sql';
-        oDialogo.FileName := 'objetos_bbdd.sql';
+        oDialogo.Filter := SFiltroScriptSqlProcesosAuxiliaresBBDD;
+        oDialogo.FileName := SNombreArchivoObjetosProcesosAuxiliaresBBDD;
         if oDialogo.Execute then
           oLineas.SaveToFile(oDialogo.FileName, TEncoding.UTF8);
       finally
@@ -1309,12 +1520,13 @@ var
   sAccion: string;
 begin
   aObjetos := ObjetosSeleccionados;
-  sAccion := 'Se regenerarán estos procedimientos: ' +
-    TextoObjetosSeleccionados(aObjetos) + '.';
+  sAccion := Format(
+    SConfirmarRegenerarProcedimientosProcesosAuxiliaresBBDD,
+    [TextoObjetosSeleccionados(aObjetos)]);
   if (Length(aObjetos) > 0) and
      ConfirmarOperacion(
        sAccion,
-       'Se volverá a aplicar la definición actual de cada procedimiento.',
+       SAdvertenciaRegenerarProcedimientosProcesosAuxiliaresBBDD,
        False) then
   begin
     Screen.Cursor := crHourGlass;
@@ -1324,7 +1536,7 @@ begin
       Screen.Cursor := crDefault;
     end;
     MessageDlg(
-      'Procedimientos regenerados correctamente.',
+      SInfoProcedimientosRegeneradosProcesosAuxiliaresBBDD,
       mtInformation,
       [mbOk],
       0);
@@ -1365,23 +1577,29 @@ begin
       toaaAnalizarEstadisticas:
       begin
         if ConfirmarOperacion(
-             'Se analizarán estas tablas: ' + sTextoObjetos + '.',
-             'La operación puede tardar en tablas grandes.',
+             Format(
+               SConfirmarAnalizarTablasProcesosAuxiliaresBBDD,
+               [sTextoObjetos]),
+             SAdvertenciaAnalizarTablasProcesosAuxiliaresBBDD,
              False) then
         begin
           FCatalogo.AnalizarTablas(aObjetos);
-          MostrarResultadoOperacion('análisis de estadísticas');
+          MostrarResultadoOperacion(
+            STituloAnalisisEstadisticasProcesosAuxiliaresBBDD);
         end;
       end;
       toaaComprobarIntegridad:
       begin
         if ConfirmarOperacion(
-             'Se comprobarán estos objetos: ' + sTextoObjetos + '.',
-             'La comprobación puede bloquear objetos mientras se ejecuta.',
+             Format(
+               SConfirmarComprobarObjetosProcesosAuxiliaresBBDD,
+               [sTextoObjetos]),
+             SAdvertenciaComprobarObjetosProcesosAuxiliaresBBDD,
              False) then
         begin
           FCatalogo.ComprobarObjetos(aObjetos);
-          MostrarResultadoOperacion('comprobación de integridad');
+          MostrarResultadoOperacion(
+            STituloComprobacionIntegridadProcesosAuxiliaresBBDD);
         end;
       end;
       toaaVerEstadoTabla:
@@ -1389,7 +1607,9 @@ begin
         if ObjetoActivo(sNombre) then
         begin
           FCatalogo.CargarEstadoTabla(sNombre);
-          MostrarResultadoOperacion('estado de ' + sNombre);
+          MostrarResultadoOperacion(Format(
+            STituloEstadoObjetoProcesosAuxiliaresBBDD,
+            [sNombre]));
         end;
       end;
       toaaVerPlanEjecucion:
@@ -1401,7 +1621,9 @@ begin
           FCatalogo.CargarDependencias(
             TipoObjetoActivo,
             sNombre);
-          MostrarResultadoOperacion('dependencias de ' + sNombre);
+          MostrarResultadoOperacion(Format(
+            STituloDependenciasObjetoProcesosAuxiliaresBBDD,
+            [sNombre]));
         end;
       end;
       toaaExportarDDL:
@@ -1411,12 +1633,15 @@ begin
       toaaCalcularChecksum:
       begin
         if ConfirmarOperacion(
-             'Se calculará el checksum de: ' + sTextoObjetos + '.',
-             'Puede requerir leer por completo las tablas seleccionadas.',
+             Format(
+               SConfirmarCalcularChecksumProcesosAuxiliaresBBDD,
+               [sTextoObjetos]),
+             SAdvertenciaCalcularChecksumProcesosAuxiliaresBBDD,
              False) then
         begin
           FCatalogo.CalcularChecksum(aObjetos);
-          MostrarResultadoOperacion('checksum');
+          MostrarResultadoOperacion(
+            STituloChecksumProcesosAuxiliaresBBDD);
         end;
       end;
       toaaRefrescarMetadatos:
@@ -1431,12 +1656,13 @@ var
   sAccion: string;
 begin
   aObjetos := ObjetosSeleccionados;
-  sAccion := 'Se regenerarán estas vistas: ' +
-    TextoObjetosSeleccionados(aObjetos) + '.';
+  sAccion := Format(
+    SConfirmarRegenerarVistasProcesosAuxiliaresBBDD,
+    [TextoObjetosSeleccionados(aObjetos)]);
   if (Length(aObjetos) > 0) and
      ConfirmarOperacion(
        sAccion,
-       'Se volverá a aplicar la definición actual de cada vista.',
+       SAdvertenciaRegenerarVistasProcesosAuxiliaresBBDD,
        False) then
   begin
     Screen.Cursor := crHourGlass;
@@ -1446,7 +1672,7 @@ begin
       Screen.Cursor := crDefault;
     end;
     MessageDlg(
-      'Vistas regeneradas correctamente.',
+      SInfoVistasRegeneradasProcesosAuxiliaresBBDD,
       mtInformation,
       [mbOk],
       0);
@@ -1455,20 +1681,13 @@ begin
 end;
 
 function TfrmModalProcesosAuxiliaresBBDD.CrearCopiaSeguridad: Boolean;
-var
-  oAnfitrion: IAnfitrionMantenimiento;
 begin
-  Result := Supports(Owner, IAnfitrionMantenimiento, oAnfitrion);
-  if not Result then
-    Result := Supports(
-      Application.MainForm,
-      IAnfitrionMantenimiento,
-      oAnfitrion);
+  Result := Assigned(FAnfitrionMantenimiento);
   if Result then
-    Result := oAnfitrion.CrearCopiaPreviaScriptSoporte
+    Result := FAnfitrionMantenimiento.CrearCopiaPreviaScriptSoporte
   else
     MessageDlg(
-      'No está disponible el servicio de copia de seguridad.',
+      SErrorServicioCopiaProcesosAuxiliaresBBDD,
       mtError,
       [mbOk],
       0);
@@ -1483,9 +1702,9 @@ begin
   sMensaje := AAccion + sLineBreak + sLineBreak + AAdvertencia;
   if ARequiereCopia then
     sMensaje := sMensaje + sLineBreak + sLineBreak +
-      'Antes de continuar se solicitará una copia de seguridad completa.';
+      SAvisoCopiaPreviaProcesosAuxiliaresBBDD;
   sMensaje := sMensaje + sLineBreak + sLineBreak +
-    '¿Desea continuar?';
+    SConfirmarContinuarProcesosAuxiliaresBBDD;
   Result := MessageDlg(
     sMensaje,
     mtWarning,
@@ -1525,32 +1744,32 @@ begin
     case AOperacion of
     toatRegenerarTabla:
     begin
-      sAccion := 'Se regenerarán estas tablas: ' +
-        TextoObjetosSeleccionados(aObjetos) + '.';
-      sAdvertencia :=
-        'La operación puede bloquear las tablas y tardar varios minutos.';
+      sAccion := Format(
+        SConfirmarRegenerarTablasProcesosAuxiliaresBBDD,
+        [TextoObjetosSeleccionados(aObjetos)]);
+      sAdvertencia := SAdvertenciaBloqueoTablasProcesosAuxiliaresBBDD;
     end;
     toatRegenerarIndices:
     begin
-      sAccion := 'Se regenerarán los índices de estas tablas: ' +
-        TextoObjetosSeleccionados(aObjetos) + '.';
-      sAdvertencia :=
-        'La operación puede bloquear las tablas y tardar varios minutos.';
+      sAccion := Format(
+        SConfirmarRegenerarIndicesProcesosAuxiliaresBBDD,
+        [TextoObjetosSeleccionados(aObjetos)]);
+      sAdvertencia := SAdvertenciaBloqueoTablasProcesosAuxiliaresBBDD;
     end;
     toatVaciarTabla:
     begin
-      sAccion := 'Se vaciarán estas tablas: ' +
-        TextoObjetosSeleccionados(aObjetos) + '.';
-      sAdvertencia :=
-        'Se eliminarán todos sus registros y no se puede deshacer.';
+      sAccion := Format(
+        SConfirmarVaciarTablasProcesosAuxiliaresBBDD,
+        [TextoObjetosSeleccionados(aObjetos)]);
+      sAdvertencia := SAdvertenciaVaciarTablasProcesosAuxiliaresBBDD;
       bRequiereCopia := True;
     end;
     toatBorrarTabla:
     begin
-      sAccion := 'Se borrarán estas tablas: ' +
-        TextoObjetosSeleccionados(aObjetos) + '.';
-      sAdvertencia :=
-        'Se eliminarán las tablas, sus datos y su estructura.';
+      sAccion := Format(
+        SConfirmarBorrarTablasProcesosAuxiliaresBBDD,
+        [TextoObjetosSeleccionados(aObjetos)]);
+      sAdvertencia := SAdvertenciaBorrarTablasProcesosAuxiliaresBBDD;
       bRequiereCopia := True;
     end;
     end;
@@ -1573,7 +1792,7 @@ begin
         Screen.Cursor := crDefault;
       end;
       MessageDlg(
-        'Operación finalizada correctamente.',
+        SInfoOperacionFinalizadaProcesosAuxiliaresBBDD,
         mtInformation,
         [mbOk],
         0);
@@ -1637,7 +1856,7 @@ begin
       if ObjetoActivo(sNombre) and
          EsTablaFacturacionProtegida(sNombre) then
         raise EModificacionTablaFacturacionProtegida.Create(
-          'EDICION',
+          SOperacionEdicionProcesosAuxiliaresBBDD,
           sNombre);
       MostrarContenidoSeleccionado(True);
     end
@@ -1645,7 +1864,7 @@ begin
     begin
       if EsTablaFacturacionProtegida(FNombreContenidoActual) then
         raise EModificacionTablaFacturacionProtegida.Create(
-          'EDICION',
+          SOperacionEdicionProcesosAuxiliaresBBDD,
           FNombreContenidoActual);
       if FDataModule.unqryContenido.State in [dsEdit, dsInsert] then
         FDataModule.unqryContenido.Post;
@@ -1710,14 +1929,16 @@ begin
   begin
     sSQL := FCatalogo.GenerarLlamadaProcedimiento(sNombre);
     if InputQuery(
-         'Ejecutar procedimiento almacenado',
-         'Revise la llamada e indique los valores de los parámetros:',
+         STituloEjecutarProcedimientoProcesosAuxiliaresBBDD,
+         SPromptEjecutarProcedimientoProcesosAuxiliaresBBDD,
          sSQL) and
        (Trim(sSQL) <> '') then
     begin
       CerrarContenidoActual;
       FCatalogo.EjecutarConsulta(sSQL);
-      MostrarDatosActuales('&Resultado - ' + sNombre, False);
+      MostrarDatosActuales(
+        Format(SCaptionResultadoObjetoProcesosAuxiliaresBBDD, [sNombre]),
+        False);
     end;
   end;
 end;
@@ -1747,7 +1968,7 @@ begin
     ExportarExcel(
       ParametrosApp,
       grdContenido,
-      'Procesos_auxiliares_BBDD');
+      SNombreArchivoExcelProcesosAuxiliaresBBDD);
 end;
 
 procedure TfrmModalProcesosAuxiliaresBBDD.btnCopiarSQLClick(
@@ -1767,13 +1988,10 @@ procedure TfrmModalProcesosAuxiliaresBBDD.btnPlanMedidoClick(
   Sender: TObject);
 begin
   if MessageDlg(
-       'Para medir tiempos reales, MariaDB ejecutará la SELECT y ' +
-       'descartará sus filas.' + sLineBreak + sLineBreak +
-       'Revísela con cuidado: una SELECT puede invocar funciones ' +
-       'almacenadas con efectos laterales.' + sLineBreak + sLineBreak +
-       'La ejecución se limitará a ' +
-       IntToStr(cTiempoMaximoPlanSegundos) +
-       ' segundos. ¿Desea continuar?',
+       Format(
+         SConfirmarPlanMedidoProcesosAuxiliaresBBDD,
+         [sLineBreak, sLineBreak, sLineBreak, sLineBreak,
+          cTiempoMaximoPlanSegundos]),
        mtWarning,
        [mbYes, mbNo],
        0) = mrYes then

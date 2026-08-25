@@ -59,6 +59,11 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoAlbaranCompra = 'AlbCompra_%s_%s';
+  STituloPreviewAlbaranCompra = 'ALBARAN DE COMPRA';
+  SEtiquetaAlmacenDestinoAlbaranCompra = 'ALMACEN DESTINO';
+
 procedure TfrmPrintAlbCompra.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
@@ -68,8 +73,8 @@ begin
   begin
     dmAlbc.PrepararPrint(edtSerie.Text, edtNumero.Text);
   cfg := Default(TDocCompraCabCfg);
-  cfg.Titulo         := 'ALBARAN DE COMPRA';
-  cfg.EtiquetaIzq    := 'ALMACEN DESTINO';
+  cfg.Titulo         := STituloPreviewAlbaranCompra;
+  cfg.EtiquetaIzq    := SEtiquetaAlmacenDestinoAlbaranCompra;
   cfg.FieldRazonIzq  := 'NOMBRE_ALM_ALBC';
   cfg.FieldDirIzq    := 'DIRECCION_ALM_ALBC';
   cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_ALBC';
@@ -97,7 +102,8 @@ begin
     fPreview.DialogoGuardar.InitialDir :=
       ParametrosApp.GetPath('appDirExcel');
     fPreview.DialogoGuardar.FileName :=
-      'AlbCompra_' + edtSerie.Text + '_' + edtNumero.Text;
+      Format(SNombreArchivoAlbaranCompra,
+        [edtSerie.Text, edtNumero.Text]);
     try
       ExportarDocCompraHorizontal(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmAlbc.unqryCabAlbcPrint,

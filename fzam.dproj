@@ -334,6 +334,7 @@
         <DCCReference Include="src\Lib\inLibLicenciaAplicacion.pas"/>
         <DCCReference Include="src\Lib\inLibCambioArticuloColorIntf.pas"/>
         <DCCReference Include="src\Lib\inLibCambioArticuloColor.pas"/>
+        <DCCReference Include="src\Lib\inLibCambioArticuloColorHistoricoAmbito.pas"/>
         <DCCReference Include="src\DataModules\UniDataCambioArticuloColorHistorico.pas"/>
         <DCCReference Include="src\DataModules\UniDataCambioArticuloColorRepositorio.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
@@ -375,6 +376,7 @@
             <Form>frmMtoArticulos</Form>
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoArticulosGuardadoVcl.pas"/>
+        <DCCReference Include="src\Forms\inMtoArticulosNavegacionFacturasVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoArticulosStockVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoClientes.pas">
             <Form>frmMtoClientes</Form>
@@ -568,6 +570,7 @@
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
         <DCCReference Include="src\DataModules\UniDataComposicionAplicacion.pas"/>
+        <DCCReference Include="src\DataModules\UniDataComposicionAplicacionProcesosSegundoPlano.pas"/>
         <DCCReference Include="src\Core\inMtoMantenimientosInyeccionRaiz.pas"/>
         <DCCReference Include="src\Core\inMtoCajaInyeccionRaiz.pas"/>
         <DCCReference Include="src\Core\inMtoConfiguracionInyeccionRaiz.pas"/>
@@ -727,6 +730,7 @@
             <Form>dmFacturas</Form>
             <DesignClass>TdmFacturas</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\DataModules\UniDataComandoImprimirFacturasConsulta.pas"/>
         <DCCReference Include="src\DataModules\UniDataFacturasConfiguracion.pas"/>
         <DCCReference Include="src\DataModules\UniDataFacturasIncidenciaFiscal.pas"/>
         <DCCReference Include="src\DataModules\UniDataGenFilter.pas">
@@ -1004,6 +1008,7 @@
         <DCCReference Include="src\DataModules\UniDataInformesGuiasRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibAppParamPersistenciaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataAppParamRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataAppParamGrupoUsuarioConsulta.pas"/>
         <DCCReference Include="src\Lib\inLibArticulosVariacionesIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataArticulosVariaciones.pas"/>
         <DCCReference Include="src\DataModules\UniDataArticulosVariacionesGestor.pas"/>
@@ -1644,6 +1649,7 @@
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionColumnas.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionEntrada.pas"/>
         <DCCReference Include="src\Forms\inMtoGenPresentacionFiltrosVcl.pas"/>
+        <DCCReference Include="src\Forms\inMtoGenPresentacionPerfilesVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoStockConsultaPresentacionArticuloVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoStockConsultaPresentacionComposicion.pas"/>
         <DCCReference Include="src\Forms\inMtoStockConsultaPresentacionFiltrosVcl.pas"/>

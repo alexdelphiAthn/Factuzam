@@ -60,9 +60,21 @@ implementation
 uses
   System.UITypes;
 
+resourcestring
+  STituloEditorConfiguracion = 'Editar configuración del normalizador';
+  SColumnaTabla = 'Tabla';
+  SColumnaSufijo = 'Sufijo';
+  SColumnaActual = 'Columna actual';
+  SColumnaNueva = 'Columna nueva';
+  SColumnaPatronReemplazo = 'Patrón (palabra a reemplazar)';
+  SColumnaReemplazo = 'Reemplazo';
+  SPreguntaRestablecerConfiguracion =
+    '¿Restablecer toda la configuración a los valores por defecto?'#13#10 +
+    'Se perderán los cambios que hayas hecho en esta ventana.';
+
 procedure TFormConfigEditor.FormCreate(Sender: TObject);
 begin
-  Caption  := 'Editar configuración del normalizador';
+  Caption  := STituloEditorConfiguracion;
   Position := poOwnerFormCenter;
   Width    := 800;
   Height   := 560;
@@ -90,10 +102,12 @@ procedure TFormConfigEditor.SetupGrids;
   end;
 
 begin
-  CfgGrid(GridSuffixes, ['Tabla', 'Sufijo'], [400, 120]);
-  CfgGrid(GridAudit,    ['Columna actual', 'Columna nueva'], [220, 220]);
-  CfgGrid(GridAbbrev,   ['Patrón (palabra a reemplazar)', 'Reemplazo'], [260, 260]);
-  CfgGrid(GridExceptions, ['Tabla', 'Columna actual', 'Columna nueva'], [240, 240, 240]);
+  CfgGrid(GridSuffixes, [SColumnaTabla, SColumnaSufijo], [400, 120]);
+  CfgGrid(GridAudit, [SColumnaActual, SColumnaNueva], [220, 220]);
+  CfgGrid(GridAbbrev, [SColumnaPatronReemplazo, SColumnaReemplazo],
+    [260, 260]);
+  CfgGrid(GridExceptions,
+    [SColumnaTabla, SColumnaActual, SColumnaNueva], [240, 240, 240]);
 end;
 
 procedure TFormConfigEditor.ActiveGrid(out Grid: TStringGrid);
@@ -231,8 +245,7 @@ end;
 
 procedure TFormConfigEditor.btnResetClick(Sender: TObject);
 begin
-  if MessageDlg('¿Restablecer toda la configuración a los valores por defecto?'#13#10 +
-                'Se perderán los cambios que hayas hecho en esta ventana.',
+  if MessageDlg(SPreguntaRestablecerConfiguracion,
                 mtConfirmation, [mbYes, mbNo], 0) <> mrYes then Exit;
   FNormalizer.ResetToDefaults;
   LoadFromNormalizer;

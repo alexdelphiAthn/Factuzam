@@ -64,32 +64,37 @@ var
   oRegistro: TRegistroDefinicionesSql;
 begin
   oRegistro := TRegistroDefinicionesSql.Create;
-  oRegistro.AgregarRango(
-    TRepositorioComprasSesiones.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioLecturasMaterializacionComprasSesiones.
-      DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioFacturas.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioConsultasCaja.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioArticulosResolver.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioArticulosValidador.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioArticulosAtributos.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioTraspasoTicket.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioArqueoCaja.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioArqueoTicket.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioTiraCajaTicket.DefinicionesSql);
-  oRegistro.AgregarRango(
-    TRepositorioTicketsCaja.DefinicionesSql);
-  Result := oRegistro;
+  try
+    oRegistro.AgregarRango(
+      TRepositorioComprasSesiones.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioLecturasMaterializacionComprasSesiones.
+        DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioFacturas.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioConsultasCaja.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioArticulosResolver.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioArticulosValidador.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioArticulosAtributos.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioTraspasoTicket.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioArqueoCaja.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioArqueoTicket.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioTiraCajaTicket.DefinicionesSql);
+    oRegistro.AgregarRango(
+      TRepositorioTicketsCaja.DefinicionesSql);
+    Result := oRegistro;
+  except
+    oRegistro.Free;
+    raise;
+  end;
 end;
 
 procedure CrearCatalogoSqlAplicacion(

@@ -1,6 +1,6 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inLibConexionPerfil                                          }
+{  Módulo:       inLibConexionPerfil                                           }
 {    Tipo:       Librería                                                      }
 { Versión:       1.0.0                                                         }
 {   Fecha:       24/08/2026                                                    }
@@ -82,12 +82,11 @@ begin
   end;
 end;
 
-function FallarValidacion(
+procedure FallarValidacion(
   const AMensaje: string;
-  out AMotivo: string): Boolean;
+  out AMotivo: string);
 begin
   AMotivo := AMensaje;
-  Result := False;
 end;
 
 function CrearConfiguracionPoolPredeterminada:
@@ -241,89 +240,94 @@ begin
   end;
 end;
 
-function ValidarPerfilConexion(
+function ValidarDatosBasePerfilConexion(
   const APerfil: TPerfilConexion;
   out AMotivo: string): Boolean;
 begin
   AMotivo := '';
   if (Ord(APerfil.Motor) < Ord(Low(TMotorBBDD))) or
      (Ord(APerfil.Motor) > Ord(High(TMotorBBDD))) then
-    Exit(FallarValidacion(
-      SValidacionMotorBBDD, AMotivo));
-  if Trim(APerfil.Id) = '' then
-    Exit(FallarValidacion(
-      SValidacionIdPerfilConexion, AMotivo));
-  if Trim(APerfil.Servidor) = '' then
-    Exit(FallarValidacion(
-      SValidacionServidorConexion, AMotivo));
-  if (APerfil.Puerto < 1) or
-     (APerfil.Puerto > 65535) then
-    Exit(FallarValidacion(
-      SValidacionPuertoConexion, AMotivo));
-  if Trim(APerfil.BaseDatos) = '' then
-    Exit(FallarValidacion(
-      SValidacionBaseDatosConexion, AMotivo));
-  if (APerfil.Motor in [mbPostgreSQL, mbSQLServer]) and
-     (Trim(APerfil.Esquema) = '') then
-    Exit(FallarValidacion(
-      SValidacionEsquemaMotor, AMotivo));
-  if Trim(APerfil.Usuario) = '' then
-    Exit(FallarValidacion(
-      SValidacionUsuarioConexion, AMotivo));
-  if (Ord(APerfil.SSL) < Ord(Low(TModoSSLConexion))) or
-     (Ord(APerfil.SSL) > Ord(High(TModoSSLConexion))) then
-    Exit(FallarValidacion(
-      SValidacionModoSSLConexion, AMotivo));
-  if APerfil.TimeoutConexionSeg <= 0 then
-    Exit(FallarValidacion(
-      SValidacionTimeoutConexion, AMotivo));
-  if APerfil.TimeoutComandoSeg <= 0 then
-    Exit(FallarValidacion(
-      SValidacionTimeoutComando, AMotivo));
+    FallarValidacion(SValidacionMotorBBDD, AMotivo)
+  else if Trim(APerfil.Id) = '' then
+    FallarValidacion(SValidacionIdPerfilConexion, AMotivo)
+  else if Trim(APerfil.Servidor) = '' then
+    FallarValidacion(SValidacionServidorConexion, AMotivo)
+  else if (APerfil.Puerto < 1) or
+          (APerfil.Puerto > 65535) then
+    FallarValidacion(SValidacionPuertoConexion, AMotivo)
+  else if Trim(APerfil.BaseDatos) = '' then
+    FallarValidacion(SValidacionBaseDatosConexion, AMotivo)
+  else if (APerfil.Motor in [mbPostgreSQL, mbSQLServer]) and
+          (Trim(APerfil.Esquema) = '') then
+    FallarValidacion(SValidacionEsquemaMotor, AMotivo)
+  else if Trim(APerfil.Usuario) = '' then
+    FallarValidacion(SValidacionUsuarioConexion, AMotivo)
+  else if (Ord(APerfil.SSL) < Ord(Low(TModoSSLConexion))) or
+          (Ord(APerfil.SSL) > Ord(High(TModoSSLConexion))) then
+    FallarValidacion(SValidacionModoSSLConexion, AMotivo)
+  else if APerfil.TimeoutConexionSeg <= 0 then
+    FallarValidacion(SValidacionTimeoutConexion, AMotivo)
+  else if APerfil.TimeoutComandoSeg <= 0 then
+    FallarValidacion(SValidacionTimeoutComando, AMotivo);
+  Result := AMotivo = '';
+end;
+
+function ValidarPoolPerfilConexion(
+  const APerfil: TPerfilConexion;
+  out AMotivo: string): Boolean;
+begin
+  AMotivo := '';
   if APerfil.Pool.MinimoConexiones < 0 then
-    Exit(FallarValidacion(
-      SValidacionPoolMinimoNegativo, AMotivo));
-  if APerfil.Pool.MaximoConexiones < 0 then
-    Exit(FallarValidacion(
-      SValidacionPoolMaximoNegativo, AMotivo));
-  if APerfil.Pool.TiempoEsperaSeg < 0 then
-    Exit(FallarValidacion(
-      SValidacionPoolEsperaNegativa, AMotivo));
-  if APerfil.Pool.TiempoVidaSeg < 0 then
-    Exit(FallarValidacion(
-      SValidacionPoolVidaNegativa, AMotivo));
-  if APerfil.Pool.TiempoVidaSeg > (MaxInt div 1000) then
-    Exit(FallarValidacion(
-      SValidacionPoolVidaFueraDeRango, AMotivo));
-  if APerfil.Pool.Habilitado then
-  begin
-    if APerfil.Pool.MaximoConexiones = 0 then
-      Exit(FallarValidacion(
-        SValidacionPoolMaximoCero, AMotivo));
-    if APerfil.Pool.MinimoConexiones >
-       APerfil.Pool.MaximoConexiones then
-      Exit(FallarValidacion(
-        SValidacionPoolMinimoMayorMaximo, AMotivo));
-    if APerfil.Pool.TiempoEsperaSeg = 0 then
-      Exit(FallarValidacion(
-        SValidacionPoolEsperaCero, AMotivo));
-  end;
+    FallarValidacion(SValidacionPoolMinimoNegativo, AMotivo)
+  else if APerfil.Pool.MaximoConexiones < 0 then
+    FallarValidacion(SValidacionPoolMaximoNegativo, AMotivo)
+  else if APerfil.Pool.TiempoEsperaSeg < 0 then
+    FallarValidacion(SValidacionPoolEsperaNegativa, AMotivo)
+  else if APerfil.Pool.TiempoVidaSeg < 0 then
+    FallarValidacion(SValidacionPoolVidaNegativa, AMotivo)
+  else if APerfil.Pool.TiempoVidaSeg > (MaxInt div 1000) then
+    FallarValidacion(SValidacionPoolVidaFueraDeRango, AMotivo)
+  else if APerfil.Pool.Habilitado and
+          (APerfil.Pool.MaximoConexiones = 0) then
+    FallarValidacion(SValidacionPoolMaximoCero, AMotivo)
+  else if APerfil.Pool.Habilitado and
+          (APerfil.Pool.MinimoConexiones >
+           APerfil.Pool.MaximoConexiones) then
+    FallarValidacion(SValidacionPoolMinimoMayorMaximo, AMotivo)
+  else if APerfil.Pool.Habilitado and
+          (APerfil.Pool.TiempoEsperaSeg = 0) then
+    FallarValidacion(SValidacionPoolEsperaCero, AMotivo);
+  Result := AMotivo = '';
+end;
+
+function ValidarSslPerfilConexion(
+  const APerfil: TPerfilConexion;
+  out AMotivo: string): Boolean;
+begin
+  AMotivo := '';
   if (APerfil.SSL = sslDesactivado) and
      ((Trim(APerfil.RutaCertificadoCA) <> '') or
       (Trim(APerfil.RutaCertificadoCliente) <> '') or
       (Trim(APerfil.RutaClavePrivada) <> '')) then
-    Exit(FallarValidacion(
-      SValidacionCertificadosSinSSL, AMotivo));
-  if (APerfil.SSL in [sslVerificarCA, sslVerificarCompleto]) and
-     (Trim(APerfil.RutaCertificadoCA) = '') then
-    Exit(FallarValidacion(
-      SValidacionCertificadoCA, AMotivo));
-  if (Trim(APerfil.RutaCertificadoCliente) = '') <>
-     (Trim(APerfil.RutaClavePrivada) = '') then
-    Exit(FallarValidacion(
-      SValidacionCertificadoCliente,
-      AMotivo));
-  Result := True;
+    FallarValidacion(SValidacionCertificadosSinSSL, AMotivo)
+  else if (APerfil.SSL in [sslVerificarCA, sslVerificarCompleto]) and
+          (Trim(APerfil.RutaCertificadoCA) = '') then
+    FallarValidacion(SValidacionCertificadoCA, AMotivo)
+  else if (Trim(APerfil.RutaCertificadoCliente) = '') <>
+          (Trim(APerfil.RutaClavePrivada) = '') then
+    FallarValidacion(SValidacionCertificadoCliente, AMotivo);
+  Result := AMotivo = '';
+end;
+
+function ValidarPerfilConexion(
+  const APerfil: TPerfilConexion;
+  out AMotivo: string): Boolean;
+begin
+  Result := ValidarDatosBasePerfilConexion(APerfil, AMotivo);
+  if Result then
+    Result := ValidarPoolPerfilConexion(APerfil, AMotivo);
+  if Result then
+    Result := ValidarSslPerfilConexion(APerfil, AMotivo);
 end;
 
 function DescribirPerfilConexion(

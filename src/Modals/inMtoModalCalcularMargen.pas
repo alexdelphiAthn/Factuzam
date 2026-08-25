@@ -116,6 +116,9 @@ implementation
 uses
   inLibMsgArticulos, UniDataConfiguracionPantalla;
 
+resourcestring
+  SInfoSkuMargenNoDisponible = '(sin SKU)';
+
 // ============================================================================
 //   API pública
 // ============================================================================
@@ -168,7 +171,7 @@ begin
     frm.edtArticulo.Text   := ACodigoArt + ' - ' + ADescArt;
     frm.edtTarifa.Text     := ACodigoTar + ' - ' + ANombreTar;
     if Trim(ADescSku) = '' then
-      frm.edtSku.Text := '(sin SKU)'
+      frm.edtSku.Text := SInfoSkuMargenNoDisponible
     else
       frm.edtSku.Text := ADescSku;
 

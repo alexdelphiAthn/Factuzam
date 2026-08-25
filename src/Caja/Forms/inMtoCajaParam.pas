@@ -112,6 +112,10 @@ implementation
 uses
   StrUtils, inLibLayoutForm, inLibMsgCaja;
 
+resourcestring
+  SDescripcionPersonalizacionParametrosCaja =
+    'Personalización Parámetros Caja';
+
 constructor TfrmMtoCajaParam.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
@@ -368,7 +372,8 @@ begin
   try
     Layout.GuardarGeometria(Self);
     Layout.GuardarDividerInspector('Divider', JvInspector1);
-    if Layout.PreguntarYGrabar('Personalización Parámetros Caja') then
+    if Layout.PreguntarYGrabar(
+         SDescripcionPersonalizacionParametrosCaja) then
       ShowMessage(SInfoLayoutCajaGuardado);
   finally
     FreeAndNil(Layout);

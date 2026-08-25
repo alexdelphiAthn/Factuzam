@@ -31,6 +31,51 @@ uses
   System.Classes,
   Data.DB;
 
+resourcestring
+  SErrorIdentidadArticuloOrigenDestinoCoincidente =
+    'Origen y destino son la misma identidad para la base de datos.';
+  SErrorArticuloDestinoFusionNoExiste =
+    'El artículo destino de la fusión no existe.';
+  SErrorCodigoArticuloDestinoReservadoHistorico =
+    'El código de artículo destino está reservado por un histórico.';
+  SErrorSkuArticuloNoComienzaCodigoAntiguo =
+    'Hay SKU que no comienzan por el código de artículo antiguo.';
+  SErrorUnidadesArticuloFueraMapaCambio =
+    'Hay unidades del artículo antiguo fuera del mapa de cambio.';
+  SErrorDatosMaestrosArticulosIncompatibles =
+    'Los artículos tienen datos maestros incompatibles.';
+  SErrorIdentidadColorOrigenDestinoCoincidente =
+    'Origen y destino son el mismo color para la base de datos.';
+  SErrorColorOrigenIdentidadesActivas =
+    'El color origen tiene más de una identidad activa.';
+  SErrorColorDestinoFusionNoExiste =
+    'El color destino de la fusión no existe.';
+  SErrorColorDestinoIdentidadesActivas =
+    'El color destino tiene más de una identidad activa.';
+  SErrorColorDestinoReservadoHistorico =
+    'El color destino está reservado por un histórico.';
+  SErrorReferenciaParcialMultiplesDestinosColor =
+    'Una referencia parcial admite más de un destino de color.';
+  SErrorSkuSegmentoColorFueraCatalogo =
+    'Hay SKU cuyo segmento de color no coincide con el catálogo.';
+  SErrorUnidadesDocumentosColorFueraMapaCambio =
+    'Hay unidades o documentos de color fuera del mapa de cambio.';
+  SErrorInstantaneasColorAmbiguas =
+    'Hay instantáneas cuyo atributo de color es ambiguo.';
+  SErrorDatosSkuColoresIncompatibles =
+    'Los SKU de los colores tienen datos incompatibles.';
+  SErrorProcedimientoRecalcularPmpNoDisponible =
+    'No está instalado PRC_FZA_FUSION_RECALCULAR_PMP con la firma requerida.';
+  SErrorTransaccionCambioArticuloColorActiva =
+    'Ya existe una transacción activa en la conexión.';
+  SErrorReferenciasCodigoArticuloAntiguoPersisten =
+    'Persisten referencias al código de artículo antiguo.';
+  SDetalleCambioArticuloColorCompletado =
+    'SKU origen inactivos; costes conservados; tarifa más reciente y PMP ' +
+    'histórico recalculado.';
+  SErrorReferenciasColorAntiguoPersisten =
+    'Persisten referencias al color antiguo.';
+
 const
   TABLA_TEMPORAL = 'tmp_fza_cambio_unidades';
   REFERENCIA_SKU_MAESTRO =
@@ -134,10 +179,8 @@ type
 
   TDestinosPmp = array of TDestinoPmp;
 
-  TRepositorioCambioArticuloColorUniDAC = class(
-    TInterfacedObject,
-    IRepositorioCambioArticuloColor)
-  private
+  TAccesoCambioArticuloColorUniDAC = class(TInterfacedObject)
+  protected
     FConexion: TUniConnection;
     procedure Ejecutar(
       const ASql: string;
@@ -163,17 +206,13 @@ type
     function CondicionInstantaneaColorSegura(
       const AAlias, ACampoValor, ACampoNombre, AParametro: string;
       APosicion: Integer): string;
-    function LiteralTextoHistorico(const AValor: string): string;
-    function ListaUnidadesHistorico: string;
-    procedure CapturarHistorico(
-      AHistorico: THistoricoCambioArticuloColor;
-      const AOrigen, ADestino: string;
-      AEsArticulo: Boolean);
-    procedure PrepararTablaTemporal;
-    procedure EliminarTablaTemporal;
-    procedure IniciarTransaccion;
-    procedure FinalizarTransaccion(
-      const AResultado: TResultadoCambioArticuloColor);
+  public
+    constructor Create(AConexion: TUniConnection);
+  end;
+
+  TValidadorCambioArticuloColorUniDAC = class(
+    TAccesoCambioArticuloColorUniDAC)
+  private
     procedure BloquearArticulos(
       const AArticuloAntiguo, AArticuloNuevo: string);
     procedure BloquearColores(
@@ -233,6 +272,47 @@ type
       const AArticuloAntiguo: string): Boolean;
     function HayUnidadesColorSinMapa(
       const AColorAntiguo: string): Boolean;
+    function FusionColorEsSegura(
+      const AAnterior, ANuevo: string): Boolean;
+    function FusionArticuloEsSegura(
+      const AAnterior, ANuevo: string): Boolean;
+    function HayInstantaneasColorAntiguo(
+      const AColorAntiguo: string): Boolean;
+    function HayInstantaneasColorSinMapa(
+      const AColorAntiguo: string): Boolean;
+    function HayInstantaneasColorAmbiguas(
+      const AColorAntiguo: string): Boolean;
+    function HayDescripcionesColorAmbiguas(
+      const AColorAntiguo, AColorNuevo: string): Boolean;
+  public
+    function ValidarCambioArticulo(
+      const AAnterior, ANuevo: string;
+      AFusionar: Boolean): TResultadoCambioArticuloColor;
+    function ValidarCambioColor(
+      const AAnterior, ANuevo: string;
+      AFusionar: Boolean): TResultadoCambioArticuloColor;
+    function VerificarCambioArticulo(
+      const AArticuloAntiguo: string): Boolean;
+    function VerificarCambioColor(
+      const AColorAntiguo: string): Boolean;
+  end;
+
+  TRepositorioCambioArticuloColorUniDAC = class(
+    TAccesoCambioArticuloColorUniDAC,
+    IRepositorioCambioArticuloColor)
+  private
+    FValidador: TValidadorCambioArticuloColorUniDAC;
+    function LiteralTextoHistorico(const AValor: string): string;
+    function ListaUnidadesHistorico: string;
+    procedure CapturarHistorico(
+      AHistorico: THistoricoCambioArticuloColor;
+      const AOrigen, ADestino: string;
+      AEsArticulo: Boolean);
+    procedure PrepararTablaTemporal;
+    procedure EliminarTablaTemporal;
+    procedure IniciarTransaccion;
+    procedure FinalizarTransaccion(
+      const AResultado: TResultadoCambioArticuloColor);
     procedure ActualizarCampoPorValor(
       const ATabla, ACampo, AAnterior, ANuevo, AUsuario: string);
     procedure ActualizarCampoPorMapa(
@@ -271,10 +351,6 @@ type
       const AColorAntiguo, AColorDestino, AUsuario: string);
     procedure ConsolidarCatalogoColor(
       const AColorAntiguo, AColorDestino, AUsuario: string);
-    function FusionColorEsSegura(
-      const AAnterior, ANuevo: string): Boolean;
-    function FusionArticuloEsSegura(
-      const AAnterior, ANuevo: string): Boolean;
     procedure PrepararFusionArticulo(
       const AAnterior, ANuevo: string);
     function SqlActualizacionAtributos(
@@ -283,24 +359,6 @@ type
       const ATabla, ACampoUnidad, ASufijo: string): string;
     procedure ActualizarInstantaneasColor(
       const AAnterior, ANuevo, AUsuario: string);
-    function HayInstantaneasColorAntiguo(
-      const AColorAntiguo: string): Boolean;
-    function HayInstantaneasColorSinMapa(
-      const AColorAntiguo: string): Boolean;
-    function HayInstantaneasColorAmbiguas(
-      const AColorAntiguo: string): Boolean;
-    function HayDescripcionesColorAmbiguas(
-      const AColorAntiguo, AColorNuevo: string): Boolean;
-    function ValidarCambioArticulo(
-      const AAnterior, ANuevo: string;
-      AFusionar: Boolean): TResultadoCambioArticuloColor;
-    function ValidarCambioColor(
-      const AAnterior, ANuevo: string;
-      AFusionar: Boolean): TResultadoCambioArticuloColor;
-    function VerificarCambioArticulo(
-      const AArticuloAntiguo: string): Boolean;
-    function VerificarCambioColor(
-      const AColorAntiguo: string): Boolean;
     function EjecutarCambioArticulo(
       const AArticuloAntiguo, AArticuloNuevo, AUsuario: string;
       AFusionar: Boolean): TResultadoCambioArticuloColor;
@@ -309,6 +367,7 @@ type
       AFusionar: Boolean): TResultadoCambioArticuloColor;
   public
     constructor Create(AConexion: TUniConnection);
+    destructor Destroy; override;
     function CambiarArticulo(
       const AArticuloAntiguo, AArticuloNuevo, AUsuario: string):
       TResultadoCambioArticuloColor;
@@ -326,7 +385,7 @@ type
       TResultadoReversionHistorico;
   end;
 
-constructor TRepositorioCambioArticuloColorUniDAC.Create(
+constructor TAccesoCambioArticuloColorUniDAC.Create(
   AConexion: TUniConnection);
 begin
   inherited Create;
@@ -335,7 +394,20 @@ begin
   FConexion := AConexion;
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.Ejecutar(
+constructor TRepositorioCambioArticuloColorUniDAC.Create(
+  AConexion: TUniConnection);
+begin
+  inherited Create(AConexion);
+  FValidador := TValidadorCambioArticuloColorUniDAC.Create(AConexion);
+end;
+
+destructor TRepositorioCambioArticuloColorUniDAC.Destroy;
+begin
+  FValidador.Free;
+  inherited Destroy;
+end;
+
+procedure TAccesoCambioArticuloColorUniDAC.Ejecutar(
   const ASql: string;
   const ANombres, AValores: array of string);
 var
@@ -357,7 +429,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.Existe(
+function TAccesoCambioArticuloColorUniDAC.Existe(
   const ASql: string;
   const ANombres, AValores: array of string): Boolean;
 var
@@ -380,7 +452,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.EscalarEntero(
+function TAccesoCambioArticuloColorUniDAC.EscalarEntero(
   const ASql: string;
   const ANombres, AValores: array of string): Integer;
 var
@@ -403,7 +475,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.CampoExiste(
+function TAccesoCambioArticuloColorUniDAC.CampoExiste(
   const ATabla, ACampo: string): Boolean;
 const
   SQL_CAMPO_EXISTE =
@@ -417,7 +489,7 @@ begin
     [ATabla, ACampo]);
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.SepararReferencia(
+procedure TAccesoCambioArticuloColorUniDAC.SepararReferencia(
   const AReferencia: string;
   out ATabla, ACampo: string);
 var
@@ -428,7 +500,7 @@ begin
   ACampo := Copy(AReferencia, iSeparador + 1, MaxInt);
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.
+procedure TAccesoCambioArticuloColorUniDAC.
   SepararReferenciaAtributos(
     const AReferencia: string;
     out ATabla, ACampoUnidad, ASufijo: string);
@@ -449,7 +521,7 @@ begin
   ASufijo := Copy(AReferencia, iSegundoSeparador + 1, MaxInt);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TAccesoCambioArticuloColorUniDAC.
   CondicionInstantaneaColor(
     const AAlias, ACampoValor, ACampoNombre, AParametro: string): string;
 begin
@@ -461,7 +533,7 @@ begin
     'UPPER(TRIM(' + AAlias + '.`' + ACampoNombre + '`)))))';
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TAccesoCambioArticuloColorUniDAC.
   ExpresionConteoValoresAtributos(
     const ATabla, AAlias, ASufijo, AParametro: string): string;
 var
@@ -488,7 +560,7 @@ begin
   Result := '(' + sExpresion + ')';
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TAccesoCambioArticuloColorUniDAC.
   CondicionInstantaneaColorSegura(
     const AAlias, ACampoValor, ACampoNombre, AParametro: string;
     APosicion: Integer): string;
@@ -719,7 +791,7 @@ begin
     FConexion.Rollback;
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.BloquearArticulos(
+procedure TValidadorCambioArticuloColorUniDAC.BloquearArticulos(
   const AArticuloAntiguo, AArticuloNuevo: string);
 begin
   Existe(
@@ -729,7 +801,7 @@ begin
     [AArticuloAntiguo, AArticuloNuevo]);
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.BloquearColores(
+procedure TValidadorCambioArticuloColorUniDAC.BloquearColores(
   const AColorAntiguo, AColorNuevo: string);
 begin
   Existe(
@@ -740,7 +812,7 @@ begin
     [AColorAntiguo, AColorNuevo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ExisteArticulo(
+function TValidadorCambioArticuloColorUniDAC.ExisteArticulo(
   const AArticulo: string): Boolean;
 begin
   Result := Existe(
@@ -751,7 +823,7 @@ begin
     [AArticulo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ExisteColor(
+function TValidadorCambioArticuloColorUniDAC.ExisteColor(
   const AColor: string): Boolean;
 begin
   Result := Existe(
@@ -762,7 +834,7 @@ begin
     [AColor]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.NumeroColoresActivos(
+function TValidadorCambioArticuloColorUniDAC.NumeroColoresActivos(
   const AColor: string): Integer;
 begin
   Result := EscalarEntero(
@@ -773,7 +845,7 @@ begin
     [AColor]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ArticuloRegistrado(
+function TValidadorCambioArticuloColorUniDAC.ArticuloRegistrado(
   const AArticulo: string): Boolean;
 begin
   Result := Existe(
@@ -783,7 +855,7 @@ begin
     [AArticulo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ColorRegistrado(
+function TValidadorCambioArticuloColorUniDAC.ColorRegistrado(
   const AColor: string): Boolean;
 begin
   Result := Existe(
@@ -793,7 +865,7 @@ begin
     [AColor]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   ArticulosCoincidenEnBaseDatos(
     const AAnterior, ANuevo: string): Boolean;
 begin
@@ -805,7 +877,7 @@ begin
     [AAnterior, ANuevo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   ColoresCoincidenEnBaseDatos(
     const AAnterior, ANuevo: string): Boolean;
 begin
@@ -817,7 +889,7 @@ begin
     [AAnterior, ANuevo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.SqlSkusConPosicionColor:
+function TValidadorCambioArticuloColorUniDAC.SqlSkusConPosicionColor:
   string;
 var
   sOrdenColor: string;
@@ -870,7 +942,7 @@ begin
     'va_color.`ID_ATB_VA` = ''CO''';
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.ConstruirMapaArticulo(
+procedure TValidadorCambioArticuloColorUniDAC.ConstruirMapaArticulo(
   const AArticuloAntiguo, AArticuloNuevo: string);
 begin
   Ejecutar(
@@ -894,7 +966,7 @@ begin
     [AArticuloAntiguo, AArticuloNuevo]);
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.
+procedure TValidadorCambioArticuloColorUniDAC.
   AgregarMapaArticuloReferencias(
     const AArticuloAntiguo, AArticuloNuevo: string);
 var
@@ -924,7 +996,7 @@ begin
   end;
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.ConstruirMapaColor(
+procedure TValidadorCambioArticuloColorUniDAC.ConstruirMapaColor(
   const AColorAntiguo, AColorNuevo: string);
 begin
   Ejecutar(
@@ -953,7 +1025,7 @@ begin
     [AColorAntiguo, AColorNuevo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   SqlCandidatosColorReferencia(
     const ATabla, ACampo: string): string;
 begin
@@ -987,7 +1059,7 @@ begin
     'TRIM(:ANTERIOR)';
 end;
 
-procedure TRepositorioCambioArticuloColorUniDAC.
+procedure TValidadorCambioArticuloColorUniDAC.
   AgregarMapaColorReferencias(
     const AColorAntiguo, AColorNuevo: string);
 var
@@ -1020,7 +1092,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayMapaColorReferenciasAmbiguo(
     const AColorAntiguo, AColorNuevo: string): Boolean;
 var
@@ -1053,7 +1125,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.NumeroSkuMapa: Integer;
+function TValidadorCambioArticuloColorUniDAC.NumeroSkuMapa: Integer;
 begin
   Result := EscalarEntero(
     'SELECT COUNT(*) FROM `' + TABLA_TEMPORAL + '` ' +
@@ -1062,7 +1134,7 @@ begin
     []);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.MapaArticuloEsCompleto(
+function TValidadorCambioArticuloColorUniDAC.MapaArticuloEsCompleto(
   const AArticuloAntiguo: string): Boolean;
 var
   iNumeroSkuOrigen: Integer;
@@ -1075,7 +1147,7 @@ begin
   Result := iNumeroSkuOrigen = NumeroSkuMapa;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.MapaColorEsCompleto(
+function TValidadorCambioArticuloColorUniDAC.MapaColorEsCompleto(
   const AColorAntiguo: string): Boolean;
 var
   iNumeroSkuOrigen: Integer;
@@ -1111,7 +1183,7 @@ begin
             (not bHaySegmentoSinAtributo);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.MapaTieneCodigosLargos:
+function TValidadorCambioArticuloColorUniDAC.MapaTieneCodigosLargos:
   Boolean;
 begin
   Result := Existe(
@@ -1121,7 +1193,7 @@ begin
     []);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   MapaTieneDestinosDuplicados: Boolean;
 begin
   Result := Existe(
@@ -1131,7 +1203,7 @@ begin
     []);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   FusionUnidadesEsSegura(
     const AColorDestino, AArticuloDestino: string;
     AEsFusionArticulo: Boolean): Boolean;
@@ -1219,7 +1291,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayColisionUnidadesNoConsolidable(
     const AArticuloDestino: string;
     AEsFusionArticulo: Boolean): Boolean;
@@ -1295,7 +1367,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayVentasArticulo(
+function TValidadorCambioArticuloColorUniDAC.HayVentasArticulo(
   const AArticuloAntiguo: string): Boolean;
 begin
   Result := Existe(
@@ -1312,7 +1384,7 @@ begin
     [AArticuloAntiguo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayVentasColor(
+function TValidadorCambioArticuloColorUniDAC.HayVentasColor(
   const AColorAntiguo: string): Boolean;
 var
   i: Integer;
@@ -1365,7 +1437,7 @@ begin
     [AColorAntiguo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayDestinoEnVentasArticulo(const AArticuloNuevo: string): Boolean;
 begin
   Result := Existe(
@@ -1381,7 +1453,7 @@ begin
     [AArticuloNuevo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayDestinoEnVentasColor(const AColorNuevo: string): Boolean;
 var
   i: Integer;
@@ -1437,7 +1509,7 @@ begin
   Result := Existe(sSql, ['COLOR'], [AColorNuevo]);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayDestinoMapaEnVentas:
+function TValidadorCambioArticuloColorUniDAC.HayDestinoMapaEnVentas:
   Boolean;
 begin
   Result := Existe(
@@ -1449,7 +1521,7 @@ begin
     []);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayPrestaShopArticulo(
+function TValidadorCambioArticuloColorUniDAC.HayPrestaShopArticulo(
   const AArticuloAntiguo: string): Boolean;
 begin
   Result := False;
@@ -1474,7 +1546,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayPrestaShopColor(
+function TValidadorCambioArticuloColorUniDAC.HayPrestaShopColor(
   const AColorAntiguo: string): Boolean;
 begin
   Result := False;
@@ -1568,7 +1640,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayDestinoEnReferencias(
+function TValidadorCambioArticuloColorUniDAC.HayDestinoEnReferencias(
   const AReferencias: array of string): Boolean;
 var
   i: Integer;
@@ -1592,7 +1664,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.HayOrigenEnReferencias(
+function TValidadorCambioArticuloColorUniDAC.HayOrigenEnReferencias(
   const AReferencias: array of string): Boolean;
 var
   i: Integer;
@@ -1622,7 +1694,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayUnidadesArticuloSinMapa(
     const AArticuloAntiguo: string): Boolean;
 var
@@ -1651,7 +1723,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayUnidadesColorSinMapa(const AColorAntiguo: string): Boolean;
 var
   i: Integer;
@@ -2262,9 +2334,7 @@ begin
     begin
       if not ProcedimientoPmpFusionDisponible then
       begin
-        raise Exception.Create(
-          'No está instalado PRC_FZA_FUSION_RECALCULAR_PMP con la ' +
-          'firma requerida.');
+        raise Exception.Create(SErrorProcedimientoRecalcularPmpNoDisponible);
       end;
       oProcedimiento.Connection := FConexion;
       oProcedimiento.StoredProcName :=
@@ -2490,7 +2560,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.FusionColorEsSegura(
+function TValidadorCambioArticuloColorUniDAC.FusionColorEsSegura(
   const AAnterior, ANuevo: string): Boolean;
 begin
   Result := not Existe(
@@ -2532,7 +2602,7 @@ begin
     Result := not HayColisionUnidadesNoConsolidable('', False);
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.FusionArticuloEsSegura(
+function TValidadorCambioArticuloColorUniDAC.FusionArticuloEsSegura(
   const AAnterior, ANuevo: string): Boolean;
 begin
   Result := not Existe(
@@ -2868,7 +2938,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayInstantaneasColorAntiguo(const AColorAntiguo: string): Boolean;
 var
   i: Integer;
@@ -2923,7 +2993,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayInstantaneasColorSinMapa(
     const AColorAntiguo: string): Boolean;
 var
@@ -3003,7 +3073,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayInstantaneasColorAmbiguas(
     const AColorAntiguo: string): Boolean;
 var
@@ -3067,7 +3137,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.
+function TValidadorCambioArticuloColorUniDAC.
   HayDescripcionesColorAmbiguas(
     const AColorAntiguo, AColorNuevo: string): Boolean;
 var
@@ -3186,7 +3256,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ValidarCambioArticulo(
+function TValidadorCambioArticuloColorUniDAC.ValidarCambioArticulo(
   const AAnterior, ANuevo: string;
   AFusionar: Boolean): TResultadoCambioArticuloColor;
 begin
@@ -3196,7 +3266,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInvalidos,
-      'Origen y destino son la misma identidad para la base de datos.');
+      SErrorIdentidadArticuloOrigenDestinoCoincidente);
   end
   else if not ExisteArticulo(AAnterior) then
     Result := TResultadoCambioArticuloColor.Error(mcacOrigenNoExiste)
@@ -3204,7 +3274,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'El artículo destino de la fusión no existe.');
+      SErrorArticuloDestinoFusionNoExiste);
   end
   else if (not AFusionar) and ExisteArticulo(ANuevo) then
     Result := TResultadoCambioArticuloColor.Error(mcacDestinoYaExiste)
@@ -3212,7 +3282,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'El código de artículo destino está reservado por un histórico.');
+      SErrorCodigoArticuloDestinoReservadoHistorico);
   end
   else
   begin
@@ -3222,13 +3292,13 @@ begin
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Hay SKU que no comienzan por el código de artículo antiguo.');
+        SErrorSkuArticuloNoComienzaCodigoAntiguo);
     end
     else if HayUnidadesArticuloSinMapa(AAnterior) then
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Hay unidades del artículo antiguo fuera del mapa de cambio.');
+        SErrorUnidadesArticuloFueraMapaCambio);
     end
     else if MapaTieneCodigosLargos or MapaTieneDestinosDuplicados then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
@@ -3245,7 +3315,7 @@ begin
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Los artículos tienen datos maestros incompatibles.');
+        SErrorDatosMaestrosArticulosIncompatibles);
     end
     else if (not AFusionar) and
             (HayDestinoEnReferencias(REFERENCIAS_ARTICULO) or
@@ -3256,7 +3326,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.ValidarCambioColor(
+function TValidadorCambioArticuloColorUniDAC.ValidarCambioColor(
   const AAnterior, ANuevo: string;
   AFusionar: Boolean): TResultadoCambioArticuloColor;
 begin
@@ -3266,7 +3336,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInvalidos,
-      'Origen y destino son el mismo color para la base de datos.');
+      SErrorIdentidadColorOrigenDestinoCoincidente);
   end
   else if not ExisteColor(AAnterior) then
     Result := TResultadoCambioArticuloColor.Error(mcacOrigenNoExiste)
@@ -3274,19 +3344,19 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'El color origen tiene más de una identidad activa.');
+      SErrorColorOrigenIdentidadesActivas);
   end
   else if AFusionar and (not ExisteColor(ANuevo)) then
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'El color destino de la fusión no existe.');
+      SErrorColorDestinoFusionNoExiste);
   end
   else if AFusionar and (NumeroColoresActivos(ANuevo) <> 1) then
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'El color destino tiene más de una identidad activa.');
+      SErrorColorDestinoIdentidadesActivas);
   end
   else if (not AFusionar) and ExisteColor(ANuevo) then
     Result := TResultadoCambioArticuloColor.Error(mcacDestinoYaExiste)
@@ -3294,7 +3364,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'El color destino está reservado por un histórico.');
+      SErrorColorDestinoReservadoHistorico);
   end
   else
   begin
@@ -3304,33 +3374,33 @@ begin
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Una referencia parcial admite más de un destino de color.');
+        SErrorReferenciaParcialMultiplesDestinosColor);
     end
     else if not MapaColorEsCompleto(AAnterior) then
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Hay SKU cuyo segmento de color no coincide con el catálogo.');
+        SErrorSkuSegmentoColorFueraCatalogo);
     end
     else if HayUnidadesColorSinMapa(AAnterior) or
             HayInstantaneasColorSinMapa(AAnterior) then
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Hay unidades o documentos de color fuera del mapa de cambio.');
+        SErrorUnidadesDocumentosColorFueraMapaCambio);
     end
     else if HayInstantaneasColorAmbiguas(AAnterior) or
             HayDescripcionesColorAmbiguas(AAnterior, ANuevo) then
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Hay instantáneas cuyo atributo de color es ambiguo.');
+        SErrorInstantaneasColorAmbiguas);
     end
     else if AFusionar and (not FusionColorEsSegura(AAnterior, ANuevo)) then
     begin
       Result := TResultadoCambioArticuloColor.Error(
         mcacDatosInconsistentes,
-        'Los SKU de los colores tienen datos incompatibles.');
+        SErrorDatosSkuColoresIncompatibles);
     end
     else if MapaTieneCodigosLargos or MapaTieneDestinosDuplicados then
       Result := TResultadoCambioArticuloColor.Error(mcacColisionUnidades)
@@ -3350,7 +3420,7 @@ begin
   end;
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.VerificarCambioArticulo(
+function TValidadorCambioArticuloColorUniDAC.VerificarCambioArticulo(
   const AArticuloAntiguo: string): Boolean;
 begin
   Result := (not ExisteArticulo(AArticuloAntiguo)) and
@@ -3359,7 +3429,7 @@ begin
             (not HayUnidadesArticuloSinMapa(AArticuloAntiguo));
 end;
 
-function TRepositorioCambioArticuloColorUniDAC.VerificarCambioColor(
+function TValidadorCambioArticuloColorUniDAC.VerificarCambioColor(
   const AColorAntiguo: string): Boolean;
 begin
   Result := (not ExisteColor(AColorAntiguo)) and
@@ -3403,7 +3473,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'Ya existe una transacción activa en la conexión.');
+      SErrorTransaccionCambioArticuloColorActiva);
   end
   else
   begin
@@ -3411,7 +3481,7 @@ begin
     try
       IniciarTransaccion;
       try
-        Result := ValidarCambioArticulo(
+        Result := FValidador.ValidarCambioArticulo(
           AArticuloAntiguo,
           AArticuloNuevo,
           AFusionar);
@@ -3463,18 +3533,17 @@ begin
             AArticuloNuevo,
             AUsuario);
           DesactivarArticuloMaestro(AArticuloAntiguo, AUsuario);
-          if not VerificarCambioArticulo(AArticuloAntiguo) then
+          if not FValidador.VerificarCambioArticulo(AArticuloAntiguo) then
           begin
             Result := TResultadoCambioArticuloColor.Error(
               mcacDatosInconsistentes,
-              'Persisten referencias al código de artículo antiguo.');
+              SErrorReferenciasCodigoArticuloAntiguoPersisten);
           end;
           if Result.EsCorrecto then
           begin
             oHistorico.CompletarOperacion(
               Result.UnidadesAfectadas,
-              'SKU origen inactivos; costes conservados; tarifa más ' +
-              'reciente y PMP histórico recalculado.');
+              SDetalleCambioArticuloColorCompletado);
             Result.IdOperacion := oHistorico.IdOperacion;
           end;
         end;
@@ -3525,7 +3594,7 @@ begin
   begin
     Result := TResultadoCambioArticuloColor.Error(
       mcacDatosInconsistentes,
-      'Ya existe una transacción activa en la conexión.');
+      SErrorTransaccionCambioArticuloColorActiva);
   end
   else
   begin
@@ -3533,7 +3602,7 @@ begin
     try
       IniciarTransaccion;
       try
-        Result := ValidarCambioColor(
+        Result := FValidador.ValidarCambioColor(
           AColorAntiguo,
           AColorNuevo,
           AFusionar);
@@ -3573,18 +3642,17 @@ begin
             AColorNuevo,
             AUsuario,
             AFusionar);
-          if not VerificarCambioColor(AColorAntiguo) then
+          if not FValidador.VerificarCambioColor(AColorAntiguo) then
           begin
             Result := TResultadoCambioArticuloColor.Error(
               mcacDatosInconsistentes,
-              'Persisten referencias al color antiguo.');
+              SErrorReferenciasColorAntiguoPersisten);
           end;
           if Result.EsCorrecto then
           begin
             oHistorico.CompletarOperacion(
               Result.UnidadesAfectadas,
-              'SKU origen inactivos; costes conservados; tarifa más ' +
-              'reciente y PMP histórico recalculado.');
+              SDetalleCambioArticuloColorCompletado);
             Result.IdOperacion := oHistorico.IdOperacion;
           end;
         end;

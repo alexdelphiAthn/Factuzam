@@ -228,6 +228,11 @@ uses
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
+resourcestring
+  SErrorBorrarSkuArticuloWeb =
+    'No se puede borrar un SKU de un artículo En web. ' +
+    'Desmarque Activo para enviar stock cero a PrestaShop';
+
 const
   // Construimos manualmente la lista IN (...) con los codigos elegidos.
   // Los codigos vienen de fza_almacenes (validados al cargar el checklist),
@@ -584,9 +589,7 @@ begin
   if SameText(
     unqryTablaG.FieldByName('ESWEB_ART').AsString,
     'S') then
-    raise EDatabaseError.Create(
-      'No se puede borrar un SKU de un artículo En web. ' +
-      'Desmarque Activo para enviar stock cero a PrestaShop');
+    raise EDatabaseError.Create(SErrorBorrarSkuArticuloWeb);
   FCodigoArticuloSkuBorrado := Trim(
     DataSet.FieldByName('CODIGO_ART_SKU').AsString);
   // Sin FK declarada, la fila de coste quedaría huérfana al borrar el SKU:

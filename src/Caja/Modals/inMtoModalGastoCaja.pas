@@ -105,6 +105,13 @@ uses
   inLibGenerarTicketCaja, inMtoGenSearch, Data.DB,
   inLibMsgCaja, inLibMsgComun;
 
+resourcestring
+  SConceptoPagoProveedorGastoCaja = 'Pago proveedor';
+  SConceptoGastosLimpiezaGastoCaja = 'Gastos limpieza';
+  SConceptoRetiradaBancoGastoCaja = 'Retirada banco';
+  SConceptoRetiradaEncargadoGastoCaja = 'Retirada encargado';
+  SConceptoCajaFuerteGastoCaja = 'Caja fuerte';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 class function TfrmModalGastoCaja.Ejecutar(
@@ -263,11 +270,11 @@ end;
 function TfrmModalGastoCaja.ObtenerTipoTexto: string;
 begin
   case rgTipo.ItemIndex of
-    0: Result := 'Pago proveedor';
-    1: Result := 'Gastos limpieza';
-    2: Result := 'Retirada banco';
-    3: Result := 'Retirada encargado';
-    4: Result := 'Caja fuerte';
+    0: Result := SConceptoPagoProveedorGastoCaja;
+    1: Result := SConceptoGastosLimpiezaGastoCaja;
+    2: Result := SConceptoRetiradaBancoGastoCaja;
+    3: Result := SConceptoRetiradaEncargadoGastoCaja;
+    4: Result := SConceptoCajaFuerteGastoCaja;
   else
     Result := '';
   end;

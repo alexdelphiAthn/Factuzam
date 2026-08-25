@@ -36,6 +36,10 @@ uses
   System.IOUtils,
   System.Generics.Collections;
 
+resourcestring
+  SErrorDirectorioFotosPedidoSesionNoConfigurado =
+    'El parámetro appDirFotos no está configurado.';
+
 const
   cCarpetaPedidosSesiones = 'pedidos_sesiones';
   cNombreJsonGuardado = 'pedido.json';
@@ -169,8 +173,7 @@ begin
     ASerie,
     ANumero);
   if sDirectorio = '' then
-    raise Exception.Create(
-      'El parámetro appDirFotos no está configurado.');
+    raise Exception.Create(SErrorDirectorioFotosPedidoSesionNoConfigurado);
   TDirectory.CreateDirectory(sDirectorio);
   TFile.Copy(
     APedido.FicheroJson,

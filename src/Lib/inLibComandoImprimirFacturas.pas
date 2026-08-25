@@ -11,7 +11,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Interpreta el comando de impresión de facturas y aplica sus reglas de     }
-{    autorización sin depender de VCL ni de la persistencia.                    }
+{    autorización sin depender de VCL ni de la persistencia.                   }
 {******************************************************************************}
 unit inLibComandoImprimirFacturas;
 

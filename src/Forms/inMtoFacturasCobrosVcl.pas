@@ -70,6 +70,10 @@ uses
   inLibFacturasCobrosPresentacion, inLibMsgFacturas, inLibMsgComun,
   inLibMsgVentas;
 
+resourcestring
+  STituloRegistrarCobroEfectoFactura =
+    'Efecto %d - vto %s - pendiente %.2f';
+
 class function TCoordinadorCobrosFacturaVcl.HayCabecera(
   const AContexto: TContextoCobrosFacturaVcl): Boolean;
 begin
@@ -206,7 +210,7 @@ begin
         try
           Formulario.SetDatos(
             Format(
-              'Efecto %d - vto %s - pendiente %.2f',
+              STituloRegistrarCobroEfectoFactura,
               [iEfecto,
                FormatDateTime(
                  'dd/mm/yyyy',

@@ -51,6 +51,14 @@ desde las llamadas `RegistrarParametro` mediante:
 & '.\DESARROLLOS EN CURSO\generar_registro_parametros_traduccion.ps1'
 ```
 
+Los títulos dinámicos de columnas se leen directamente de
+`fza_config_campos`. Al sincronizar el español, el editor crea una entrada por
+clave primaria `(TABLA_OBJETIVO_CC, OBJETIVO_CC)` con el formato
+`fza_config_campos.<tabla>.<campo>.TITULO_VISUAL_CC`. El valor
+`TITULO_VISUAL_CC` sigue siendo el texto español autoritativo y el respaldo
+cuando no existe traducción; no hace falta recompilar para añadir o modificar
+filas de configuración.
+
 El selector de destino carga los idiomas activos de la BBDD al conectar. El
 combo admite también escribir una etiqueta nueva, por ejemplo `fr-FR`, para
 crear otro idioma sin modificar `utlTraduc`. `zh-CN` se ofrece siempre para

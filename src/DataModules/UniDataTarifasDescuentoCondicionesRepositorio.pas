@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataTarifasDescuentoCondicionesRepositorio                }
 {    Tipo:       Adaptador UniDAC                                              }
@@ -141,41 +141,45 @@ var
   sPolitica: string;
 begin
   Result := CondicionDescuentoTodos;
-  if Trim(ACodigoTarifa) = '' then
-    Exit;
-  oConsulta := CrearConsulta(SQL_CARGAR_CONDICION);
-  try
-    oConsulta.ParamByName('TARIFA').AsString := Trim(ACodigoTarifa);
-    oConsulta.Open;
-    if oConsulta.IsEmpty then
-      Exit;
-    Result.Modo := TextoAModoCondicionDescuento(
-      oConsulta.FieldByName('MODO_TARDCO').AsString);
-    sPolitica := UpperCase(Trim(
-      oConsulta.FieldByName('POLITICA_SIN_VALOR_TARDCO').AsString));
-    if sPolitica <> 'NO_APLICAR' then
-      raise EDataBaseError.CreateFmt(
-        SErrorPoliticaSinValorNoValida,
-        [sPolitica]);
-    if Result.Modo = mcdTodos then
-      Exit;
-    Result.CodigoPropiedad := Trim(
-      oConsulta.FieldByName('CODIGO_PROP_TARDCO').AsString);
-    oConsulta.Close;
-    oConsulta.SQL.Text := SQL_CARGAR_VALORES;
-    oConsulta.ParamByName('TARIFA').AsString := Trim(ACodigoTarifa);
-    oConsulta.Open;
-    i := 0;
-    while not oConsulta.Eof do
-    begin
-      SetLength(Result.IdsValores, i + 1);
-      Result.IdsValores[i] :=
-        oConsulta.FieldByName('ID_PV_TARDVA').AsInteger;
-      Inc(i);
-      oConsulta.Next;
+  if Trim(ACodigoTarifa) <> '' then
+  begin
+    oConsulta := CrearConsulta(SQL_CARGAR_CONDICION);
+    try
+      oConsulta.ParamByName('TARIFA').AsString := Trim(ACodigoTarifa);
+      oConsulta.Open;
+      if not oConsulta.IsEmpty then
+      begin
+        Result.Modo := TextoAModoCondicionDescuento(
+          oConsulta.FieldByName('MODO_TARDCO').AsString);
+        sPolitica := UpperCase(Trim(
+          oConsulta.FieldByName('POLITICA_SIN_VALOR_TARDCO').AsString));
+        if sPolitica <> 'NO_APLICAR' then
+          raise EDataBaseError.CreateFmt(
+            SErrorPoliticaSinValorNoValida,
+            [sPolitica]);
+        if Result.Modo <> mcdTodos then
+        begin
+          Result.CodigoPropiedad := Trim(
+            oConsulta.FieldByName('CODIGO_PROP_TARDCO').AsString);
+          oConsulta.Close;
+          oConsulta.SQL.Text := SQL_CARGAR_VALORES;
+          oConsulta.ParamByName('TARIFA').AsString :=
+            Trim(ACodigoTarifa);
+          oConsulta.Open;
+          i := 0;
+          while not oConsulta.Eof do
+          begin
+            SetLength(Result.IdsValores, i + 1);
+            Result.IdsValores[i] :=
+              oConsulta.FieldByName('ID_PV_TARDVA').AsInteger;
+            Inc(i);
+            oConsulta.Next;
+          end;
+        end;
+      end;
+    finally
+      oConsulta.Free;
     end;
-  finally
-    oConsulta.Free;
   end;
 end;
 
@@ -212,25 +216,26 @@ var
   oConsulta: TUniQuery;
 begin
   SetLength(Result, 0);
-  if Trim(ACodigoPropiedad) = '' then
-    Exit;
-  oConsulta := CrearConsulta(SQL_LISTAR_VALORES);
-  try
-    oConsulta.ParamByName('PROPIEDAD').AsString :=
-      Trim(ACodigoPropiedad);
-    oConsulta.Open;
-    i := 0;
-    while not oConsulta.Eof do
-    begin
-      SetLength(Result, i + 1);
-      Result[i].Id :=
-        oConsulta.FieldByName('ID_PV_ARTPROP').AsInteger;
-      Result[i].Nombre := oConsulta.FieldByName('PV').AsString;
-      Inc(i);
-      oConsulta.Next;
+  if Trim(ACodigoPropiedad) <> '' then
+  begin
+    oConsulta := CrearConsulta(SQL_LISTAR_VALORES);
+    try
+      oConsulta.ParamByName('PROPIEDAD').AsString :=
+        Trim(ACodigoPropiedad);
+      oConsulta.Open;
+      i := 0;
+      while not oConsulta.Eof do
+      begin
+        SetLength(Result, i + 1);
+        Result[i].Id :=
+          oConsulta.FieldByName('ID_PV_ARTPROP').AsInteger;
+        Result[i].Nombre := oConsulta.FieldByName('PV').AsString;
+        Inc(i);
+        oConsulta.Next;
+      end;
+    finally
+      oConsulta.Free;
     end;
-  finally
-    oConsulta.Free;
   end;
 end;
 
@@ -261,33 +266,34 @@ var
   i: Integer;
   oConsulta: TUniQuery;
 begin
-  if ACondicion.Modo = mcdTodos then
-    Exit;
-  oConsulta := CrearConsulta(SQL_VALIDAR_PROPIEDAD);
-  try
-    oConsulta.ParamByName('PROPIEDAD').AsString :=
-      Trim(ACondicion.CodigoPropiedad);
-    oConsulta.Open;
-    if oConsulta.FieldByName('CANTIDAD').AsInteger <> 1 then
-      raise EArgumentException.Create(
-        SErrorPropiedadCondicionNoValida);
-    oConsulta.Close;
-    oConsulta.SQL.Text := SQL_VALIDAR_VALOR;
-    for i := 0 to High(ACondicion.IdsValores) do
-    begin
-      oConsulta.ParamByName('ID_VALOR').AsInteger :=
-        ACondicion.IdsValores[i];
+  if ACondicion.Modo <> mcdTodos then
+  begin
+    oConsulta := CrearConsulta(SQL_VALIDAR_PROPIEDAD);
+    try
       oConsulta.ParamByName('PROPIEDAD').AsString :=
         Trim(ACondicion.CodigoPropiedad);
       oConsulta.Open;
       if oConsulta.FieldByName('CANTIDAD').AsInteger <> 1 then
-        raise EArgumentException.CreateFmt(
-          SErrorValorCondicionNoPertenece,
-          [ACondicion.IdsValores[i], ACondicion.CodigoPropiedad]);
+        raise EArgumentException.Create(
+          SErrorPropiedadCondicionNoValida);
       oConsulta.Close;
+      oConsulta.SQL.Text := SQL_VALIDAR_VALOR;
+      for i := 0 to High(ACondicion.IdsValores) do
+      begin
+        oConsulta.ParamByName('ID_VALOR').AsInteger :=
+          ACondicion.IdsValores[i];
+        oConsulta.ParamByName('PROPIEDAD').AsString :=
+          Trim(ACondicion.CodigoPropiedad);
+        oConsulta.Open;
+        if oConsulta.FieldByName('CANTIDAD').AsInteger <> 1 then
+          raise EArgumentException.CreateFmt(
+            SErrorValorCondicionNoPertenece,
+            [ACondicion.IdsValores[i], ACondicion.CodigoPropiedad]);
+        oConsulta.Close;
+      end;
+    finally
+      oConsulta.Free;
     end;
-  finally
-    oConsulta.Free;
   end;
 end;
 

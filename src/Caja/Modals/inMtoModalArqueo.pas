@@ -357,6 +357,17 @@ uses inLibPermisosIntf,
      inLibTiraCajaTicket,
      inMtoModalTiraCaja, inMtoGenSearch, inLibVerifactu, inLibMsgCaja;
 
+resourcestring
+  SCaptionGrabarArqueoSinJustificante =
+    'Grabar Arqueo (F2)';
+  SDescripcionEfectivoArqueo = 'Efectivo';
+  SConceptoRetiradaBancoArqueo = 'Retirada banco';
+  SConceptoRetiradaEncargadoArqueo = 'Retirada encargado';
+  SConceptoCajaFuerteArqueo = 'Caja fuerte';
+  SConceptoPagoProveedorArqueo = 'Pago proveedor';
+  SConceptoGastosLimpiezaArqueo = 'Gastos limpieza';
+  SConceptoRetiradaCierreArqueo = 'Retirada cierre';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 // =============================================================================
@@ -422,7 +433,8 @@ begin
       not frm.FEditarCambioPermitido;
     frm.txtDejoImporte.TabStop := frm.FEditarCambioPermitido;
     if not frm.FEmitirJustificanteCierre then
-      frm.btnGrabarArqueo.Caption := 'Grabar Arqueo (F2)';
+      frm.btnGrabarArqueo.Caption :=
+        SCaptionGrabarArqueoSinJustificante;
     // Defaults: desde = 00:00:00, hasta = 23:59:59 del mismo día/rango.
     frm.dteFechaDesde.EditValue := DateOf(AFechaDesde);
     frm.dteFechaHasta.EditValue :=
@@ -931,7 +943,7 @@ begin
     tvRecuento.DataController.Values[
       0, tvRecuentoFP.Index] := 'EFE';
     tvRecuento.DataController.Values[
-      0, tvRecuentoDesc.Index] := 'Efectivo';
+      0, tvRecuentoDesc.Index] := SDescripcionEfectivoArqueo;
     tvRecuento.DataController.Values[
       0, tvRecuentoSistema.Index] := Double(AArqueo.EfectivoCaja);
     tvRecuento.DataController.Values[
@@ -1175,13 +1187,13 @@ end;
 function TfrmModalArqueo.ObtenerConceptoRetirada: string;
 begin
   case rgRetiradaTipo.ItemIndex of
-    0: Result := 'Retirada banco';
-    1: Result := 'Retirada encargado';
-    2: Result := 'Caja fuerte';
-    3: Result := 'Pago proveedor';
-    4: Result := 'Gastos limpieza';
+    0: Result := SConceptoRetiradaBancoArqueo;
+    1: Result := SConceptoRetiradaEncargadoArqueo;
+    2: Result := SConceptoCajaFuerteArqueo;
+    3: Result := SConceptoPagoProveedorArqueo;
+    4: Result := SConceptoGastosLimpiezaArqueo;
   else
-    Result := 'Retirada cierre';
+    Result := SConceptoRetiradaCierreArqueo;
   end;
 end;
 

@@ -69,11 +69,10 @@ begin
       AParametrosCaja);
   Result.RepartidorDescuento :=
     TRepartidorDescuento.Create;
-  Result.Impresor := AImpresor;
   Result.CasoUsoCierre :=
     TCasoUsoCierreVentaCaja.Create(
       AUnidadTrabajo,
-      Result.Impresor,
+      AImpresor,
       AParametrosCaja,
       AContextoSesion,
       ARepositorioPdf,

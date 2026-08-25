@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibDialectoSqlIntf                                         }
 {    Tipo:       Contrato                                                      }
@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Contrato puro para componer las diferencias sintácticas entre motores.    }
-{    No conoce UniDAC, conexiones, formularios ni lógica de negocio.            }
+{    No conoce UniDAC, conexiones, formularios ni lógica de negocio.           }
 {******************************************************************************}
 unit inLibDialectoSqlIntf;
 
@@ -36,17 +36,8 @@ type
   TComandosInicializacionSesionSql =
     array of TComandoInicializacionSesionSql;
 
-  IDialectoSql = interface
-    ['{7C548065-A0A7-49D4-B717-EC30DB1816D1}']
-    function GetMotor: TMotorBBDD;
-    function DelimitarIdentificador(
-      const AIdentificador: string): string;
-    function DelimitarNombreCompuesto(
-      const ANombre: string): string;
-    function AplicarLimiteOrdenado(
-      const ASql, AOrdenPor: string;
-      ACantidad: Integer;
-      ADesplazamiento: Integer = 0): string;
+  IDialectoExpresionesSql = interface
+    ['{A71C1307-0FB3-47F7-A160-104C2EB45E3E}']
     function ExpresionFechaHoraActual: string;
     function ExpresionFechaActual: string;
     function ExpresionSumarFecha(
@@ -65,6 +56,19 @@ type
       const AIzquierda, ADerecha: string): string;
     function ExpresionEntero64(
       const AExpresion: string): string;
+  end;
+
+  IDialectoSql = interface(IDialectoExpresionesSql)
+    ['{7C548065-A0A7-49D4-B717-EC30DB1816D1}']
+    function GetMotor: TMotorBBDD;
+    function DelimitarIdentificador(
+      const AIdentificador: string): string;
+    function DelimitarNombreCompuesto(
+      const ANombre: string): string;
+    function AplicarLimiteOrdenado(
+      const ASql, AOrdenPor: string;
+      ACantidad: Integer;
+      ADesplazamiento: Integer = 0): string;
     function SentenciaLlamarProcedimiento(
       const ANombre, AParametros: string): string;
     function TablaConBloqueoActualizacion(

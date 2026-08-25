@@ -540,6 +540,22 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorImportarPedidoSesionCompra =
+    'No se pudo importar el pedido: %s';
+  SFiltroDocumentoPdfPedidoSesionCompra =
+    'Documento PDF (*.pdf)|*.pdf';
+  SErrorImportacionOcrSesionConLineas =
+    'La importación OCR requiere una sesión sin líneas.';
+  SErrorUsuarioSinEmpresaImportacionOcr =
+    'El usuario actual no tiene empresa asignada.';
+  SErrorUsuarioSinAlmacenImportacionOcr =
+    'El usuario actual no tiene almacén asignado.';
+  SErrorEmpresaSinSerieSesionesImportacionOcr =
+    'La empresa %s no tiene una serie de sesiones configurada.';
+  SErrorGuardarSesionAntesImportacionOcr =
+    'No se pudo guardar la sesión antes de importar el pedido.';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 constructor TfrmMtoComprasSesiones.Create(
@@ -1026,8 +1042,7 @@ var
   sSerie: string;
 begin
   inherited;
-  dlgImportarPedido.Filter :=
-    'Documento PDF (*.pdf)|*.pdf';
+  dlgImportarPedido.Filter := SFiltroDocumentoPdfPedidoSesionCompra;
   dlgImportarPedido.Options := dlgImportarPedido.Options +
     [ofPathMustExist, ofFileMustExist];
   if dlgImportarPedido.Execute then
@@ -1036,24 +1051,24 @@ begin
       raise Exception.Create(SErrorSesionCompraNoActiva);
     if not Dmm.unqrySesionLin.IsEmpty then
       raise Exception.Create(
-        'La importación OCR requiere una sesión sin líneas.');
+        SErrorImportacionOcrSesionConLineas);
     if Dmm.unqryTablaG.State = dsInsert then
     begin
       sEmpresa := Trim(UbicacionSesion.Empresa);
       sAlmacen := Trim(UbicacionSesion.Almacen);
       if sEmpresa = '' then
         raise Exception.Create(
-          'El usuario actual no tiene empresa asignada.');
+          SErrorUsuarioSinEmpresaImportacionOcr);
       if sAlmacen = '' then
         raise Exception.Create(
-          'El usuario actual no tiene almacén asignado.');
+          SErrorUsuarioSinAlmacenImportacionOcr);
       sSerie := ObtenerSerieDefecto(
         ConexionTrabajo,
         sEmpresa,
         'SE');
       if sSerie = '' then
         raise Exception.CreateFmt(
-          'La empresa %s no tiene una serie de sesiones configurada.',
+          SErrorEmpresaSinSerieSesionesImportacionOcr,
           [sEmpresa]);
       Dmm.unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString :=
         sEmpresa;
@@ -1073,7 +1088,7 @@ begin
         end);
       if ResultadoGuardado = rgmAbortado then
         raise Exception.Create(
-          'No se pudo guardar la sesión antes de importar el pedido.');
+          SErrorGuardarSesionAntesImportacionOcr);
     end;
     Screen.Cursor := crHourGlass;
     btnImportarPedido.Enabled := False;
@@ -1093,7 +1108,7 @@ begin
         end;
       except
         on E: Exception do
-          ShowMessage('No se pudo importar el pedido: ' + E.Message);
+          ShowMessage(Format(SErrorImportarPedidoSesionCompra, [E.Message]));
       end;
     finally
       btnImportarPedido.Enabled := True;

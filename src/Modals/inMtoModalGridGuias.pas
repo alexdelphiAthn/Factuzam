@@ -36,6 +36,10 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  STituloGuiasGrid = 'Guías del grid';
+  SInfoFormularioGridGuias = 'Formulario: %s';
+
 procedure TfrmModalGridGuias.CargarCamposMaster;
 var
   i: Integer;
@@ -53,12 +57,12 @@ end;
 
 function TfrmModalGridGuias.ObtenerTitulo: string;
 begin
-  Result := 'Guías del grid';
+  Result := STituloGuiasGrid;
 end;
 
 function TfrmModalGridGuias.ObtenerInfoCaption: string;
 begin
-  Result := Format('Formulario: %s', [sFormulario]);
+  Result := Format(SInfoFormularioGridGuias, [sFormulario]);
 end;
 
 function TfrmModalGridGuias.ObtenerDatasetMaster: string;

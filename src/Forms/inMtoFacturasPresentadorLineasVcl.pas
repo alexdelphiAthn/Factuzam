@@ -156,6 +156,10 @@ uses
   inLibPresentacionDocumento,
   inLibVerifactu;
 
+resourcestring
+  STituloBuscarArticulosLineasBorradoresFactura =
+    'Búsqueda de Artículos en Lineas de Borradores';
+
 type
   // Adaptadores de puerto: el presentador núcleo solo ve estas dos
   // interfaces estrechas, nunca la rejilla ni el formulario.
@@ -466,7 +470,7 @@ begin
         FindField('FECHA_FAC').AsDateTime;
     if FContexto.BusquedaVisual.EjecutarBusqueda(
          FContexto.Conexion,
-         'Búsqueda de Artículos en Lineas de Borradores',
+         STituloBuscarArticulosLineasBorradoresFactura,
          FContexto.DataModule.unqryArtDataLinFac,
          'frmMtoArtFacSearch') then
     begin

@@ -177,6 +177,15 @@ implementation
 uses
   System.DateUtils, inLibMsgComun, UniDataInformeMultiFiltroRepositorio;
 
+resourcestring
+  SCaptionFamiliaFiltroInforme = 'Familia';
+  SCaptionIncluirFiltroInforme = 'Incluir';
+  SCaptionCodigoFiltroInforme = 'Código';
+  SCaptionAlmacenesFiltroInforme = 'Almacenes';
+  SCaptionProveedoresFiltroInforme = 'Proveedores';
+  SCaptionTemporadasFiltroInforme = 'Temporadas';
+  SCaptionArticulosFiltroInforme = 'Artículos';
+
 const
   MAX_NIVELES_AGRUPACION = 3;
 
@@ -243,15 +252,15 @@ begin
   if frFechas in fs then
     CrearTabFechas;
   if frAlmacenes in fs then
-    FfcAlmacenes := CrearTabFiltro('Almacenes');
+    FfcAlmacenes := CrearTabFiltro(SCaptionAlmacenesFiltroInforme);
   if frFamilias in fs then
     CrearTabFamiliasArbol;
   if frProveedores in fs then
-    FfcProveedores := CrearTabFiltro('Proveedores');
+    FfcProveedores := CrearTabFiltro(SCaptionProveedoresFiltroInforme);
   if frTemporadas in fs then
-    FfcTemporadas := CrearTabFiltro('Temporadas');
+    FfcTemporadas := CrearTabFiltro(SCaptionTemporadasFiltroInforme);
   if frArticulos in fs then
-    FfcArticulos := CrearTabFiltro('Artículos');
+    FfcArticulos := CrearTabFiltro(SCaptionArticulosFiltroInforme);
   if FpcFiltros.PageCount > 0 then
     FpcFiltros.ActivePageIndex := 0;
 end;
@@ -651,10 +660,12 @@ begin
         FAgrupItems[AIndex].Marcado := False;
         if (FclbAgrup <> nil) and (AIndex < FclbAgrup.Items.Count) then
           FclbAgrup.Items[AIndex].State := cbsUnchecked;
-        Exit;
-      end;
+      end
+      else
+        FAgrupItems[AIndex].Marcado := True;
     end;
-    FAgrupItems[AIndex].Marcado := (ANewState = cbsChecked);
+    if ANewState <> cbsChecked then
+      FAgrupItems[AIndex].Marcado := False;
   end;
 end;
 
@@ -772,19 +783,19 @@ begin
     FtlFamilias.Bands.Add;
   FcolFamNombre := FtlFamilias.CreateColumn;
   FcolFamNombre.Position.BandIndex := 0;
-  FcolFamNombre.Caption.Text       := 'Familia';
+  FcolFamNombre.Caption.Text       := SCaptionFamiliaFiltroInforme;
   FcolFamNombre.Width              := 320;
   FcolFamNombre.Options.Editing    := False;
   FcolFamMarcado := FtlFamilias.CreateColumn;
   FcolFamMarcado.Position.BandIndex    := 0;
-  FcolFamMarcado.Caption.Text          := 'Incluir';
+  FcolFamMarcado.Caption.Text          := SCaptionIncluirFiltroInforme;
   FcolFamMarcado.Width                 := 70;
   FcolFamMarcado.DataBinding.ValueType := 'Boolean';
   FcolFamMarcado.PropertiesClass       := TcxCheckBoxProperties;
   FcolFamMarcado.Options.Editing       := False;
   FcolFamCodigo := FtlFamilias.CreateColumn;
   FcolFamCodigo.Position.BandIndex := 0;
-  FcolFamCodigo.Caption.Text       := 'Código';
+  FcolFamCodigo.Caption.Text       := SCaptionCodigoFiltroInforme;
   FcolFamCodigo.Width              := 120;
   FcolFamCodigo.Options.Editing    := False;
   FtlFamilias.OnDblClick := FamiliasDblClick;

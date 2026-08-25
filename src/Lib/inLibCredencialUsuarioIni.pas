@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibCredencialUsuarioIni                                    }
 {    Tipo:       Librería                                                      }
@@ -32,6 +32,18 @@ uses
   inLibCifrado,
   inLibProteccionCredenciales;
 
+resourcestring
+  SErrorEscribirContrasenaProtegidaIni =
+    'No se pudo escribir la contraseña protegida en el INI (%d/%d bytes).';
+  SErrorVerificarContrasenaProtegidaIni =
+    'No se pudo verificar la contraseña protegida del INI.';
+  SErrorRetirarContrasenaLegadaIni =
+    'No se pudo retirar PasswordEn del INI de usuario.';
+  SErrorContrasenaRecordadaVacia =
+    'La contraseña recordada no puede estar vacía.';
+  SErrorBorrarContrasenaRecordadaIni =
+    'No se pudo borrar la contraseña recordada del INI.';
+
 const
   SECCION_USUARIO = 'UserInfo';
   CLAVE_CONTRASENA_LEGADA = 'PasswordEn';
@@ -60,14 +72,12 @@ begin
   if sGuardado <> ADatoProtegido then
   begin
     raise EInOutError.CreateFmt(
-      'No se pudo escribir la contraseña protegida en el INI ' +
-      '(%d/%d bytes).',
+      SErrorEscribirContrasenaProtegidaIni,
       [Length(sGuardado), Length(ADatoProtegido)]);
   end;
   if DesprotegerSecretoUsuario(sGuardado) <> AContrasena then
   begin
-    raise EInOutError.Create(
-      'No se pudo verificar la contraseña protegida del INI.');
+    raise EInOutError.Create(SErrorVerificarContrasenaProtegidaIni);
   end;
 end;
 
@@ -77,8 +87,7 @@ begin
   AIni.UpdateFile;
   if AIni.ValueExists(SECCION_USUARIO, CLAVE_CONTRASENA_LEGADA) then
   begin
-    raise EInOutError.Create(
-      'No se pudo retirar PasswordEn del INI de usuario.');
+    raise EInOutError.Create(SErrorRetirarContrasenaLegadaIni);
   end;
 end;
 
@@ -90,8 +99,7 @@ var
 begin
   if AContrasena = '' then
   begin
-    raise EArgumentException.Create(
-      'La contraseña recordada no puede estar vacía.');
+    raise EArgumentException.Create(SErrorContrasenaRecordadaVacia);
   end;
   sProtegido := ProtegerSecretoUsuario(AContrasena);
   AIni.WriteString(
@@ -199,8 +207,7 @@ begin
         SECCION_USUARIO,
         CLAVE_CONTRASENA_LEGADA) then
     begin
-      raise EInOutError.Create(
-        'No se pudo borrar la contraseña recordada del INI.');
+      raise EInOutError.Create(SErrorBorrarContrasenaRecordadaIni);
     end;
   finally
     FreeAndNil(oIni);

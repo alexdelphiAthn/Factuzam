@@ -227,7 +227,6 @@ type
     ServicioRectificacion: IServicioRectificacionCaja;
     PoliticaStock: IPoliticaStockVenta;
     RepartidorDescuento: IRepartidorDescuento;
-    Impresor: IImpresorVenta;
     CasoUsoCierre: ICasoUsoCierreVentaCaja;
   end;
 

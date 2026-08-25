@@ -178,6 +178,10 @@ uses
   inLibPrestaShopColaSenal,
   UniDataMovimientosAlmacenRecalculo;
 
+resourcestring
+  SDetalleStockTraspasoInsuficiente =
+    '  %s: pides %s, hay %s'#13#10;
+
 constructor TdmTraspaso.Create(
   AOwner: TComponent;
   AConexion: TUniConnection);
@@ -531,7 +535,7 @@ begin
       dCant := cdsLineas.FieldByName('CANTIDAD').AsFloat;
       dStock := ObtenerStock(sSku, AAlmacenOrigen);
       if dCant > dStock then
-        sFalta := sFalta + Format('  %s: pides %s, hay %s'#13#10,
+        sFalta := sFalta + Format(SDetalleStockTraspasoInsuficiente,
           [sSku, FormatFloat('0.###', dCant), FormatFloat('0.###', dStock)]);
     end;
     cdsLineas.Next;

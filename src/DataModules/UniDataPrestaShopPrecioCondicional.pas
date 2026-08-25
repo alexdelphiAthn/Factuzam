@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       UniDataPrestaShopPrecioCondicional                           }
 {    Tipo:       SQL compartido                                                }
@@ -37,27 +37,28 @@ var
   oConsulta: TUniQuery;
 begin
   Result := False;
-  if not Assigned(AConexion) then
-    Exit;
-  oConsulta := TUniQuery.Create(nil);
-  try
+  if Assigned(AConexion) then
+  begin
+    oConsulta := TUniQuery.Create(nil);
     try
-      oConsulta.Connection := AConexion;
-      oConsulta.SQL.Text :=
-        'SELECT COUNT(*) AS NUMERO_OBJETOS ' +
-        'FROM information_schema.tables ' +
-        'WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ' +
-        '(''fza_tarifas_descuento_condiciones'', ' +
-        '''fza_tarifas_descuento_valores'')';
-      oConsulta.Open;
-      Result :=
-        oConsulta.FieldByName('NUMERO_OBJETOS').AsInteger = 2;
-    except
-      // Una base anterior a la migracion conserva el descuento legado.
-      Result := False;
+      try
+        oConsulta.Connection := AConexion;
+        oConsulta.SQL.Text :=
+          'SELECT COUNT(*) AS NUMERO_OBJETOS ' +
+          'FROM information_schema.tables ' +
+          'WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME IN ' +
+          '(''fza_tarifas_descuento_condiciones'', ' +
+          '''fza_tarifas_descuento_valores'')';
+        oConsulta.Open;
+        Result :=
+          oConsulta.FieldByName('NUMERO_OBJETOS').AsInteger = 2;
+      except
+        // Una base anterior a la migracion conserva el descuento legado.
+        Result := False;
+      end;
+    finally
+      FreeAndNil(oConsulta);
     end;
-  finally
-    FreeAndNil(oConsulta);
   end;
 end;
 

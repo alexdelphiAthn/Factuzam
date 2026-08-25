@@ -236,6 +236,30 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SFormatoNombreArchivoOperacionCaja = 'Operacion_Caja_%s_%s_%s_%s';
+  SNombreHojaExcelGenerica = 'Hoja';
+  SNombreHojaResumenOperacionCaja = 'Resumen';
+  STituloResumenOperacionCaja = 'OPERACIÓN DE CAJA';
+  SMensajeSinOperacionCajaSeleccionada = 'Sin operación seleccionada';
+  SNombreHojaDetalleOperacionCaja = 'Operación';
+  STituloDetalleOperacionCaja = 'Detalle de operación';
+  SNombreHojaPagosOperacionCaja = 'Pagos';
+  STituloPagosOperacionCaja = 'Pagos de la operación';
+  SNombreHojaValesOperacionCaja = 'Vales';
+  STituloValesOperacionCaja = 'Vales de la operación';
+  SNombreHojaMovimientosOperacionCaja = 'Movimientos';
+  STituloMovimientosOperacionCaja = 'Movimientos de almacén';
+  SNombreHojaClienteOperacionCaja = 'Cliente';
+  STituloClienteOperacionCaja = 'Cliente de la operación';
+  SNombreHojaDepositosOperacionCaja = 'Depósitos';
+  STituloDepositosOperacionCaja = 'Depósitos de la operación';
+  SNombreHojaBorradorOperacionCaja = 'Borrador';
+  STituloBorradorOperacionCaja = 'Cabecera del borrador';
+  SNombreHojaLineasBorradorOperacionCaja = 'Líneas borrador';
+  STituloLineasBorradorOperacionCaja = 'Líneas del borrador';
+  SDescripcionGuardarPrecargaOperacionesCaja = 'Guardar precarga';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaOperacionesHist }
@@ -1022,11 +1046,11 @@ begin
         fPreview.PopupParent := Self;
         fPreview.DialogoGuardar.InitialDir :=
           ParametrosApp.GetPath('appDirExcel');
-        sNombre := 'Operacion_Caja_' +
-                   ValorCampoPrincipal('CODIGO_EMP_OPCAJA') + '_' +
-                   ValorCampoPrincipal('CODIGO_ALM_OPCAJA') + '_' +
-                   ValorCampoPrincipal('CODIGO_CAJA_OPCAJA') + '_' +
-                   ValorCampoPrincipal('NUMERO_OPERACION_OPCAJA');
+        sNombre := Format(SFormatoNombreArchivoOperacionCaja,
+          [ValorCampoPrincipal('CODIGO_EMP_OPCAJA'),
+           ValorCampoPrincipal('CODIGO_ALM_OPCAJA'),
+           ValorCampoPrincipal('CODIGO_CAJA_OPCAJA'),
+           ValorCampoPrincipal('NUMERO_OPERACION_OPCAJA')]);
         fPreview.DialogoGuardar.FileName := sNombre;
         ExportarOperacionExcel(fPreview.dxSpreadSheet1);
       finally
@@ -1049,7 +1073,7 @@ begin
     if CharInSet(Result[i], ['\', '/', ':', '*', '?', '[', ']']) then
       Result[i] := '_';
   if Result = '' then
-    Result := 'Hoja';
+    Result := SNombreHojaExcelGenerica;
   Result := Copy(Result, 1, 31);
 end;
 
@@ -1137,11 +1161,11 @@ var
   Col: TcxGridDBColumn;
   i, iRow, iFilaInicio: Integer;
 begin
-  Sheet := CrearHojaExcel(ASheetControl, 'Resumen');
+  Sheet := CrearHojaExcel(ASheetControl, SNombreHojaResumenOperacionCaja);
   Sheet.BeginUpdate;
   try
     iRow := 1;
-    W(Sheet, iRow, 0, 'OPERACIÓN DE CAJA', True);
+    W(Sheet, iRow, 0, STituloResumenOperacionCaja, True);
     Sheet.Cells[iRow, 0].Style.Font.Size := 16;
     Inc(iRow, 2);
     ds := nil;
@@ -1150,7 +1174,7 @@ begin
     if (ds = nil) or
        (not ds.Active) or
        ds.IsEmpty then
-      W(Sheet, iRow, 0, 'Sin operación seleccionada')
+      W(Sheet, iRow, 0, SMensajeSinOperacionCajaSeleccionada)
     else
     begin
       iFilaInicio := iRow;
@@ -1251,36 +1275,36 @@ begin
   ASheetControl.ClearAll;
   ExportarResumenExcel(ASheetControl);
   ExportarVistaExcel(ASheetControl,
-                     'Operación',
-                     'Detalle de operación',
+                     SNombreHojaDetalleOperacionCaja,
+                     STituloDetalleOperacionCaja,
                      FtvDetalleOperacion);
   ExportarVistaExcel(ASheetControl,
-                     'Pagos',
-                     'Pagos de la operación',
+                     SNombreHojaPagosOperacionCaja,
+                     STituloPagosOperacionCaja,
                      FtvDetallePagos);
   ExportarVistaExcel(ASheetControl,
-                     'Vales',
-                     'Vales de la operación',
+                     SNombreHojaValesOperacionCaja,
+                     STituloValesOperacionCaja,
                      FtvDetalleVales);
   ExportarVistaExcel(ASheetControl,
-                     'Movimientos',
-                     'Movimientos de almacén',
+                     SNombreHojaMovimientosOperacionCaja,
+                     STituloMovimientosOperacionCaja,
                      FtvDetalleMovimientos);
   ExportarVistaExcel(ASheetControl,
-                     'Cliente',
-                     'Cliente de la operación',
+                     SNombreHojaClienteOperacionCaja,
+                     STituloClienteOperacionCaja,
                      FtvDetalleCliente);
   ExportarVistaExcel(ASheetControl,
-                     'Depósitos',
-                     'Depósitos de la operación',
+                     SNombreHojaDepositosOperacionCaja,
+                     STituloDepositosOperacionCaja,
                      FtvDetalleDepositos);
   ExportarVistaExcel(ASheetControl,
-                     'Borrador',
-                     'Cabecera del borrador',
+                     SNombreHojaBorradorOperacionCaja,
+                     STituloBorradorOperacionCaja,
                      FtvDetalleFacturaCab);
   ExportarVistaExcel(ASheetControl,
-                     'Líneas borrador',
-                     'Líneas del borrador',
+                     SNombreHojaLineasBorradorOperacionCaja,
+                     STituloLineasBorradorOperacionCaja,
                      FtvDetalleFacturaLin);
 end;
 
@@ -1683,7 +1707,8 @@ begin
   try
     formulario.edtDescripcion.Enabled := False;
     formulario.edtNombreOrigen.Text := Self.Name;
-    formulario.edtDescripcion.Text := 'Guardar precarga';
+    formulario.edtDescripcion.Text :=
+      SDescripcionGuardarPrecargaOperacionesCaja;
     formulario.ShowModal;
     if formulario.sFicha = 'S' then
       sPermisos := formulario.cbbPermisos.Text;

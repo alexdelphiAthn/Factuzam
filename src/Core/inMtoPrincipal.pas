@@ -379,14 +379,10 @@ uses inLibWin,
   inLibCopiasSeguridadReglas,
   inLibDir,
   inMtoCajaMenu,
-  inMtoBusquedaDatos,
   inLibGenerarTicketCaja,
   inMtoPrincipalAccionesVcl,
   inMtoModalScriptLog,
-  inMtoModalContrasenaCopia,
   inMtoRestauracionCopiasVcl,
-  inMtoGen,
-  inMtoFotoArticulo,
   System.RegularExpressions,
   inMtoModalErrorAplicacion,
   inMtoPrincipalCertificadosVcl,
@@ -443,6 +439,10 @@ resourcestring
   SBotonCancelarCierrePrestaShop = 'Cancelar cierre';
   SPistaCancelarCierrePrestaShop =
     'Mantiene Factuzam abierto y reanuda el consumo de la cola.';
+  SNombreArchivoCopiaSeguridad =
+    'copiaseguridad%s';
+  SEncabezadoRestauracionCopiaSeguridad =
+    '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --';
 
 type
   TClaseFrmBase = class of TfrmBase;
@@ -795,9 +795,9 @@ begin
   saveDialog.Options := saveDialog.Options +
     [fdoStrictFileTypes, fdoOverwritePrompt];
   ConfigurarTiposDestinoCopia(bEsAdministrador);
-  saveDialog.FileName := 'copiaseguridad' +
-    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) +
-    sExtension;
+  saveDialog.FileName := Format(
+    SNombreArchivoCopiaSeguridad,
+    [FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now)]) + sExtension;
   Result := saveDialog.Execute;
   if Result then
   begin
@@ -807,7 +807,7 @@ begin
       saveDialog.FileName,
       sExtension);
     if Modo = mpcCifrada then
-      Result := TfrmModalContrasenaCopia.SolicitarNueva(
+      Result := SolicitarNuevaContrasenaCopia(
         Self,
         AContrasena);
   end;
@@ -961,7 +961,7 @@ begin
     begin
       LogForm := TfrmMtoModalScriptLog.Create(Self);
       LogForm.LogMemo.Lines.Add(
-        '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+        SEncabezadoRestauracionCopiaSeguridad);
       LogForm.LogMemo.Lines.Add(
         '-------------------------------------------------');
       if Assigned(ALogBuffer) then
@@ -1598,7 +1598,7 @@ begin
   if mnuArticulosSimilares.Enabled then
   begin
     LForm := Screen.ActiveForm;
-    if not (LForm is TfrmMtoBusquedaDatos) then
+    if not EsPantallaBusquedaDatos(LForm) then
     begin
       FInyeccionConfiguracion.EjecutarBusquedaDatos(Self, LForm);
     end;
@@ -1616,7 +1616,7 @@ procedure TfrmMtoPrincipal.mnuProcesosAuxiliaresBBDDClick(
 begin
   inherited;
   if mnuProcesosAuxiliaresBBDD.Visible then
-    MostrarProcesosAuxiliares(Self);
+    MostrarProcesosAuxiliares(Self, Self);
 end;
 
 procedure TfrmMtoPrincipal.mnuCambioArticuloColorClick(Sender: TObject);
@@ -1798,32 +1798,10 @@ end;
 // re-vincula al nuevo Mto. Si no esta abierta no hacemos nada: el
 // usuario la abre manualmente con Ctrl+F cuando quiera.
 procedure TfrmMtoPrincipal.pcPrincipalChange(Sender: TObject);
-var
-  FormularioFoto: TfrmFotoArticulo;
-  ts: TcxTabSheet;
 begin
   if Assigned(FPresentacionInicio) then
     FPresentacionInicio.ActualizarFondo;
-  FormularioFoto := FotoFlotanteActual;
-  if pcPrincipal.ActivePageIndex < 0 then
-  begin
-    if (FormularioFoto <> nil) and FormularioFoto.Visible then
-    begin
-      FormularioFoto.VincularDataSources([], nil);
-      FormularioFoto.SetArticuloSku('', '');
-    end;
-  end;
-  if pcPrincipal.ActivePageIndex >= 0 then
-  begin
-    ts := pcPrincipal.Pages[pcPrincipal.ActivePageIndex] as TcxTabSheet;
-    if (ts.ControlCount = 0) or not (ts.Controls[0] is TfrmMtoGen) then
-    begin
-      if (FormularioFoto <> nil) and FormularioFoto.Visible then
-        FormularioFoto.VincularDataSources([], nil);
-    end
-    else
-      EngancharFotoAlMto(ts.Controls[0]);
-  end;
+  ActualizarFotoPaginaActivaPrincipal(pcPrincipal);
 end;
 
 // --- IAnfitrionPantallas -------------------------------------------
@@ -1931,25 +1909,8 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.EngancharFotoAlMto(AMto: TObject);
-var
-  FormularioFoto: TfrmFotoArticulo;
-  frmActivo     : TfrmMtoGen;
-  sArt, sSku    : string;
 begin
-  // Solo re-vincula si la flotante YA esta abierta (el usuario la
-  // abrio con Ctrl+F en algun Mto y al cambiar a otro queremos
-  // que siga el contexto). NO la abrimos automaticamente: el usuario
-  // decide cuando aparece.
-  FormularioFoto := FotoFlotanteActual;
-  if (FormularioFoto <> nil) and FormularioFoto.Visible and
-     (AMto is TfrmMtoGen) then
-  begin
-    frmActivo := TfrmMtoGen(AMto);
-    frmActivo.ResolverArtSkuActivo(sArt, sSku);
-    FormularioFoto.VincularDataSources(frmActivo.DataSourcesParaFoto,
-                                       frmActivo.ResolverArtSkuActivo);
-    FormularioFoto.SetArticuloSku(sArt, sSku);
-  end;
+  ActualizarFotoMantenimientoPrincipal(AMto);
 end;
 
 // Reenvío compatible con TApplicationEvents.OnException.

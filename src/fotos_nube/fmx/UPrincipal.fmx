@@ -204,14 +204,14 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
-          Text = 'URL del webservice (upload_foto.php)'
+          Text = 'Endpoint de subida de fotos'
           TabOrder = 0
         end
         object edUrl: TEdit
           Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
           TabOrder = 1
-          Text = 'https://webservice.veryverifactu.com/upload_foto.php'
+          Text = 'https://webservice.veryverifactu.com/api/v1/fotos/subir.php'
           Position.X = 6.000000000000000000
           Position.Y = 26.000000000000000000
           Margins.Left = 6.000000000000000000
@@ -219,7 +219,7 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TextPrompt = 'https://servidor/fotos/upload_foto.php'
+          TextPrompt = 'https://servidor/api/v1/fotos/subir.php'
         end
         object lblApiKey: TLabel
           Align = Top
@@ -231,14 +231,14 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
-          Text = 'API key'
+          Text = 'API / token'
           TabOrder = 2
         end
         object edApiKey: TEdit
           Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
           TabOrder = 3
-          Text = 'k7Hq9mZ2pXvR4nL8'
+          Text = 'fza_aaaaaaaaaaaaaaaaaaa'
           Position.X = 6.000000000000000000
           Position.Y = 92.000000000000000000
           Margins.Left = 6.000000000000000000
@@ -246,7 +246,7 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TextPrompt = 'Clave de acceso (X-API-Key)'
+          TextPrompt = 'Credencial Bearer de la API'
         end
         object lblCarpetaCliente: TLabel
           Align = Top
@@ -258,14 +258,14 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 20.000000000000000000
           Size.PlatformDefault = False
-          Text = 'Carpeta de cliente (carpeta_cliente)'
+          Text = 'Nombre de la instalación (referencia)'
           TabOrder = 4
         end
         object edCarpetaCliente: TEdit
           Touch.InteractiveGestures = [LongTap, DoubleTap]
           Align = Top
           TabOrder = 5
-          Text = 'herreras'
+          Text = 'Pruebas'
           Position.X = 6.000000000000000000
           Position.Y = 158.000000000000000000
           Margins.Left = 6.000000000000000000
@@ -273,7 +273,7 @@ object frmPrincipal: TfrmPrincipal
           Size.Width = 348.000000000000000000
           Size.Height = 40.000000000000000000
           Size.PlatformDefault = False
-          TextPrompt = 'Carpeta del cliente en el servidor'
+          TextPrompt = 'Referencia de la instalación'
         end
         object lblResolucion: TLabel
           Align = Top

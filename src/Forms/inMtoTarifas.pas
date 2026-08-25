@@ -170,6 +170,7 @@ type
     procedure CrearBotonSesionesCambios;
     procedure btnSesionesCambiosClick(Sender: TObject);
     procedure CrearControlesCondicionDto;
+    procedure InicializarControlesCondicionDto;
     procedure CargarPropiedadesCondicionDto;
     procedure CargarCondicionDto;
     procedure CargarValoresCondicionDto(
@@ -209,6 +210,10 @@ uses
   UniDataTarifasDescuentoCondicionesRepositorio;
 
 {$R *.dfm}
+
+resourcestring
+  SInfoAplicacionDescuentoGuardada =
+    'Aplicación del descuento guardada';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -335,11 +340,15 @@ begin
 end;
 
 procedure TfrmMtoTarifas.CrearControlesCondicionDto;
+begin
+  if not Assigned(FTabCondicionDto) then
+    InicializarControlesCondicionDto;
+end;
+
+procedure TfrmMtoTarifas.InicializarControlesCondicionDto;
 var
   oEtiqueta: TcxLabel;
 begin
-  if Assigned(FTabCondicionDto) then
-    Exit;
   FTabCondicionDto := TcxTabSheet.Create(Self);
   FTabCondicionDto.PageControl := pcPestana;
   FTabCondicionDto.Caption := 'Aplicación del descuento';
@@ -453,25 +462,31 @@ procedure TfrmMtoTarifas.CargarValoresCondicionDto(
     j: Integer;
   begin
     Result := False;
-    for j := 0 to High(AIdsSeleccionados) do
-      if AIdsSeleccionados[j] = AId then
-        Exit(True);
+    j := 0;
+    while (j <= High(AIdsSeleccionados)) and not Result do
+    begin
+      Result := AIdsSeleccionados[j] = AId;
+      Inc(j);
+    end;
   end;
 
 var
   i: Integer;
+  sCodigoPropiedad: string;
 begin
   SetLength(FValoresCondicionDto, 0);
   FLstValoresCondicionDto.Items.Clear;
-  if CodigoPropiedadCondicionDto = '' then
-    Exit;
-  FValoresCondicionDto := FRepositorioCondicionesDto.ListarValores(
-    CodigoPropiedadCondicionDto);
-  for i := 0 to High(FValoresCondicionDto) do
+  sCodigoPropiedad := CodigoPropiedadCondicionDto;
+  if sCodigoPropiedad <> '' then
   begin
-    FLstValoresCondicionDto.Items.Add(FValoresCondicionDto[i].Nombre);
-    FLstValoresCondicionDto.Checked[i] :=
-      EstaSeleccionado(FValoresCondicionDto[i].Id);
+    FValoresCondicionDto := FRepositorioCondicionesDto.ListarValores(
+      sCodigoPropiedad);
+    for i := 0 to High(FValoresCondicionDto) do
+    begin
+      FLstValoresCondicionDto.Items.Add(FValoresCondicionDto[i].Nombre);
+      FLstValoresCondicionDto.Checked[i] :=
+        EstaSeleccionado(FValoresCondicionDto[i].Id);
+    end;
   end;
 end;
 
@@ -481,37 +496,36 @@ var
   oCondicion: TCondicionDescuentoTarifa;
   sTarifa: string;
 begin
-  if not Assigned(FRepositorioCondicionesDto) or
-     not Assigned(FCmbModoCondicionDto) then
-    Exit;
-  sTarifa := CodigoTarifaActual;
-  if SameText(FUltimaTarifaCondicionDto, sTarifa) then
+  if Assigned(FRepositorioCondicionesDto) and
+     Assigned(FCmbModoCondicionDto) then
   begin
+    sTarifa := CodigoTarifaActual;
+    if not SameText(FUltimaTarifaCondicionDto, sTarifa) then
+    begin
+      FUltimaTarifaCondicionDto := sTarifa;
+      oCondicion := CondicionDescuentoTodos;
+      if sTarifa <> '' then
+        oCondicion := FRepositorioCondicionesDto.Cargar(sTarifa);
+      FCargandoCondicionDto := True;
+      try
+        FCmbModoCondicionDto.ItemIndex := Ord(oCondicion.Modo);
+        FCmbPropiedadCondicionDto.ItemIndex := -1;
+        if oCondicion.Modo <> mcdTodos then
+          for i := 0 to High(FPropiedadesCondicionDto) do
+            if SameText(
+              FPropiedadesCondicionDto[i].Codigo,
+              oCondicion.CodigoPropiedad) then
+            begin
+              FCmbPropiedadCondicionDto.ItemIndex := i;
+              Break;
+            end;
+        CargarValoresCondicionDto(oCondicion.IdsValores);
+      finally
+        FCargandoCondicionDto := False;
+      end;
+    end;
     ActualizarEstadoCondicionDto;
-    Exit;
   end;
-  FUltimaTarifaCondicionDto := sTarifa;
-  oCondicion := CondicionDescuentoTodos;
-  if sTarifa <> '' then
-    oCondicion := FRepositorioCondicionesDto.Cargar(sTarifa);
-  FCargandoCondicionDto := True;
-  try
-    FCmbModoCondicionDto.ItemIndex := Ord(oCondicion.Modo);
-    FCmbPropiedadCondicionDto.ItemIndex := -1;
-    if oCondicion.Modo <> mcdTodos then
-      for i := 0 to High(FPropiedadesCondicionDto) do
-        if SameText(
-          FPropiedadesCondicionDto[i].Codigo,
-          oCondicion.CodigoPropiedad) then
-        begin
-          FCmbPropiedadCondicionDto.ItemIndex := i;
-          Break;
-        end;
-    CargarValoresCondicionDto(oCondicion.IdsValores);
-  finally
-    FCargandoCondicionDto := False;
-  end;
-  ActualizarEstadoCondicionDto;
 end;
 
 procedure TfrmMtoTarifas.ActualizarEstadoCondicionDto;
@@ -520,22 +534,23 @@ var
   bHayTarifa: Boolean;
   bPuedeEditar: Boolean;
 begin
-  if not Assigned(FCmbModoCondicionDto) then
-    Exit;
-  bHayTarifa := CodigoTarifaActual <> '';
-  bPuedeEditar := bHayTarifa and
-    Assigned(dsTablaG.DataSet) and
-    (dsTablaG.State = dsBrowse) and
-    PuedeAccionMto(apmModificar);
-  bCondicional := FCmbModoCondicionDto.ItemIndex in
-    [Ord(mcdSoloSi), Ord(mcdTodosExcepto)];
-  FCmbModoCondicionDto.Enabled := bPuedeEditar;
-  FCmbPropiedadCondicionDto.Enabled := bPuedeEditar and bCondicional;
-  FLstValoresCondicionDto.Enabled := bPuedeEditar and bCondicional and
-    (FCmbPropiedadCondicionDto.ItemIndex >= 0);
-  FLblPropiedadCondicionDto.Enabled := bCondicional;
-  FLblValoresCondicionDto.Enabled := bCondicional;
-  FBtnGuardarCondicionDto.Enabled := bPuedeEditar;
+  if Assigned(FCmbModoCondicionDto) then
+  begin
+    bHayTarifa := CodigoTarifaActual <> '';
+    bPuedeEditar := bHayTarifa and
+      Assigned(dsTablaG.DataSet) and
+      (dsTablaG.State = dsBrowse) and
+      PuedeAccionMto(apmModificar);
+    bCondicional := FCmbModoCondicionDto.ItemIndex in
+      [Ord(mcdSoloSi), Ord(mcdTodosExcepto)];
+    FCmbModoCondicionDto.Enabled := bPuedeEditar;
+    FCmbPropiedadCondicionDto.Enabled := bPuedeEditar and bCondicional;
+    FLstValoresCondicionDto.Enabled := bPuedeEditar and bCondicional and
+      (FCmbPropiedadCondicionDto.ItemIndex >= 0);
+    FLblPropiedadCondicionDto.Enabled := bCondicional;
+    FLblValoresCondicionDto.Enabled := bCondicional;
+    FBtnGuardarCondicionDto.Enabled := bPuedeEditar;
+  end;
 end;
 
 function TfrmMtoTarifas.RecogerCondicionDto:
@@ -545,21 +560,23 @@ var
   iSeleccionados: Integer;
 begin
   Result := CondicionDescuentoTodos;
-  if FCmbModoCondicionDto.ItemIndex < 0 then
-    Exit;
-  Result.Modo := TModoCondicionDescuentoTarifa(
-    FCmbModoCondicionDto.ItemIndex);
-  if Result.Modo = mcdTodos then
-    Exit;
-  Result.CodigoPropiedad := CodigoPropiedadCondicionDto;
-  iSeleccionados := 0;
-  for i := 0 to FLstValoresCondicionDto.Items.Count - 1 do
-    if FLstValoresCondicionDto.Checked[i] then
+  if FCmbModoCondicionDto.ItemIndex >= 0 then
+  begin
+    Result.Modo := TModoCondicionDescuentoTarifa(
+      FCmbModoCondicionDto.ItemIndex);
+    if Result.Modo <> mcdTodos then
     begin
-      SetLength(Result.IdsValores, iSeleccionados + 1);
-      Result.IdsValores[iSeleccionados] := FValoresCondicionDto[i].Id;
-      Inc(iSeleccionados);
+      Result.CodigoPropiedad := CodigoPropiedadCondicionDto;
+      iSeleccionados := 0;
+      for i := 0 to FLstValoresCondicionDto.Items.Count - 1 do
+        if FLstValoresCondicionDto.Checked[i] then
+        begin
+          SetLength(Result.IdsValores, iSeleccionados + 1);
+          Result.IdsValores[iSeleccionados] := FValoresCondicionDto[i].Id;
+          Inc(iSeleccionados);
+        end;
     end;
+  end;
 end;
 
 procedure TfrmMtoTarifas.cmbModoCondicionDtoChange(Sender: TObject);
@@ -572,11 +589,12 @@ procedure TfrmMtoTarifas.cmbPropiedadCondicionDtoChange(Sender: TObject);
 var
   aSinSeleccion: TArray<Integer>;
 begin
-  if FCargandoCondicionDto then
-    Exit;
-  SetLength(aSinSeleccion, 0);
-  CargarValoresCondicionDto(aSinSeleccion);
-  ActualizarEstadoCondicionDto;
+  if not FCargandoCondicionDto then
+  begin
+    SetLength(aSinSeleccion, 0);
+    CargarValoresCondicionDto(aSinSeleccion);
+    ActualizarEstadoCondicionDto;
+  end;
 end;
 
 procedure TfrmMtoTarifas.btnGuardarCondicionDtoClick(Sender: TObject);
@@ -590,7 +608,7 @@ begin
     IdentidadSesion.Usuario);
   FUltimaTarifaCondicionDto := '';
   CargarCondicionDto;
-  ShowMessage('Aplicación del descuento guardada');
+  ShowMessage(SInfoAplicacionDescuentoGuardada);
 end;
 
 procedure TfrmMtoTarifas.dsTablaGDataChangeCondicionDto(

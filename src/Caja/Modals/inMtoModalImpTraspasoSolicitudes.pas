@@ -110,6 +110,8 @@ uses
 resourcestring
   SSeleccioneEstadoSolicitud =
     'Seleccione al menos un estado para generar el listado.';
+  SFormatoNombreArchivoSolicitudesTraspaso =
+    'Solicitudes_traspaso_%s';
 
 constructor TfrmPrintTraspasoSolicitudes.Create(
   AOwner: TComponent;
@@ -214,9 +216,9 @@ begin
         oPreview.PopupParent := Self;
         oPreview.DialogoGuardar.InitialDir :=
           ParametrosApp.GetPath('appDirExcel');
-        oPreview.DialogoGuardar.FileName :=
-          'Solicitudes_traspaso_' +
-          FormatDateTime('yyyymmdd_hhnnss', Now);
+        oPreview.DialogoGuardar.FileName := Format(
+          SFormatoNombreArchivoSolicitudesTraspaso,
+          [FormatDateTime('yyyymmdd_hhnnss', Now)]);
         Screen.Cursor := crHourGlass;
         try
           ExportarSolicitudesTraspasoExcel(
@@ -429,31 +431,32 @@ procedure TfrmPrintTraspasoSolicitudes.PrecargarFotosArticulos;
 var
   slArticulos: TStringList;
 begin
-  if not Assigned(FotosArticulos) then
-    Exit;
-  FotosArticulos.LimpiarPrecargaFotos;
-  if Assigned(FDatos) and FDatos.Active and not FDatos.IsEmpty then
+  if Assigned(FotosArticulos) then
   begin
-    slArticulos := TStringList.Create;
-    try
-      slArticulos.Sorted := True;
-      slArticulos.Duplicates := dupIgnore;
-      FDatos.DisableControls;
+    FotosArticulos.LimpiarPrecargaFotos;
+    if Assigned(FDatos) and FDatos.Active and not FDatos.IsEmpty then
+    begin
+      slArticulos := TStringList.Create;
       try
-        FDatos.First;
-        while not FDatos.Eof do
-        begin
-          slArticulos.Add(
-            FDatos.FieldByName('CODIGO_ART').AsString);
-          FDatos.Next;
+        slArticulos.Sorted := True;
+        slArticulos.Duplicates := dupIgnore;
+        FDatos.DisableControls;
+        try
+          FDatos.First;
+          while not FDatos.Eof do
+          begin
+            slArticulos.Add(
+              FDatos.FieldByName('CODIGO_ART').AsString);
+            FDatos.Next;
+          end;
+          FDatos.First;
+        finally
+          FDatos.EnableControls;
         end;
-        FDatos.First;
+        FotosArticulos.PrecargarFotosLote(slArticulos.ToStringArray);
       finally
-        FDatos.EnableControls;
+        FreeAndNil(slArticulos);
       end;
-      FotosArticulos.PrecargarFotosLote(slArticulos.ToStringArray);
-    finally
-      FreeAndNil(slArticulos);
     end;
   end;
 end;

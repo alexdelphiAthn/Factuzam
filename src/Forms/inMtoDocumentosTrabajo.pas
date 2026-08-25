@@ -217,6 +217,13 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoDocumentoTrabajo = 'Documento_trabajo_%s_%s';
+  STituloEnviarAlbaranVentaDocumentoTrabajo =
+    'Enviar a albarán de venta';
+  STituloEnviarInventarioDocumentoTrabajo = 'Enviar a inventario';
+  STituloCompartirDocumentoTrabajo = 'Compartir Documento de Trabajo';
+
 type
   TfrmMtoDocumentosTrabajoInyectada = class(TfrmMtoDocumentosTrabajo)
   private
@@ -773,7 +780,7 @@ begin
           fPreview.DialogoGuardar.InitialDir :=
             ParametrosApp.GetPath('appDirExcel');
           fPreview.DialogoGuardar.FileName := SanitizeFileName(
-            'Documento_trabajo_' + sId + '_' + sTitulo);
+            Format(SNombreArchivoDocumentoTrabajo, [sId, sTitulo]));
           Screen.Cursor := crHourGlass;
           try
             ExportarDocumentoTrabajoExcel(
@@ -872,7 +879,7 @@ begin
       Datos := Consulta.DataSet;
       try
         if BusquedaVisual.EjecutarBusquedaDataSet(
-          'Compartir Documento de Trabajo',
+          STituloCompartirDocumentoTrabajo,
           Datos,
           'frmBuscarCompartirDTR',
           Self) then
@@ -1012,7 +1019,7 @@ begin
     sNumero := '0';
     bContinuar := TfrmModalEnviarDestino.Ejecutar(
       Self, dmmDocumentosTrabajo.unqryTablaG.Connection,
-      'Enviar a albarán de venta', sEmp, 'AV',
+      STituloEnviarAlbaranVentaDocumentoTrabajo, sEmp, 'AV',
       sAlm, sSerie, sNumero);
     if bContinuar and (sNumero = '0') then
     begin
@@ -1402,7 +1409,8 @@ begin
     sNumero := '0';
     bContinuar := TfrmModalEnviarDestino.Ejecutar(
       Self, dmmDocumentosTrabajo.unqryTablaG.Connection,
-      'Enviar a inventario', sEmp, 'IN', sAlm, sSerie, sNumero);
+      STituloEnviarInventarioDocumentoTrabajo,
+      sEmp, 'IN', sAlm, sSerie, sNumero);
     if bContinuar and (sNumero = '0') then
     begin
       sNumero := FMaterializacionDocumentosTrabajo.SiguienteContador(

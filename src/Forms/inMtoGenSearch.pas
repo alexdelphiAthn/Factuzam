@@ -65,12 +65,15 @@ type
     function MostrarDialogoDinamico(var sCod, sDesc: string): Boolean;
     procedure AddValorDefecto(const aCampo: string; const aValor: Variant);
     function EjecutarAltaGenerica(sCod, sDesc: string):Boolean;
+    function NombreTablaConfiguracionCampos: string;
+    procedure AplicarTitulosConfiguracionCampos;
   protected
     function DebeAjustarColumnasAutomaticamente: Boolean; virtual;
   public
     FConfigAlta: TConfigAltaRapida;
     sFicha:string;
     procedure AplicarEtiquetas; override;
+    procedure AplicarTraduccionActual; override;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
     procedure CargarDefaultsDesdeBD(const aNombreTabla: string);
@@ -82,7 +85,7 @@ function CrearBusquedaVisualMto: IBusquedaVisual;
 implementation
 
 uses
-  inLibMsgComun, UniDataGen;
+  inLibMsgComun, UniDataGen, inLibDatasets;
 
 type
   TBusquedaVisualMto = class(TInterfacedObject, IBusquedaVisual)
@@ -214,7 +217,37 @@ end;
 procedure TfrmMtoSearch.AplicarEtiquetas;
 begin
   inherited;
+  AplicarTitulosConfiguracionCampos;
   //AbrirPerfiles(tsPerfil.TabVisible);
+end;
+
+procedure TfrmMtoSearch.AplicarTitulosConfiguracionCampos;
+var
+  Columna: TcxGridDBColumn;
+  i: Integer;
+  Tabla: string;
+  Titulo: string;
+begin
+  if Assigned(ConfiguracionCampos) and
+     ConfiguracionCampos.Cargada then
+  begin
+    Tabla := NombreTablaConfiguracionCampos;
+    for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
+    begin
+      Columna := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
+      Titulo := ConfiguracionCampos.ObtenerTitulo(
+        Columna.DataBinding.FieldName,
+        Tabla);
+      if Titulo <> '' then
+        Columna.Caption := Titulo;
+    end;
+  end;
+end;
+
+procedure TfrmMtoSearch.AplicarTraduccionActual;
+begin
+  inherited;
+  AplicarTitulosConfiguracionCampos;
 end;
 
 procedure TfrmMtoSearch.btnAceptarClick(Sender: TObject);
@@ -237,6 +270,7 @@ var
   col: TcxGridDBColumn;
   ds: TDataSet;
   sTit: string;
+  sTabla: string;
   iAncho: Integer;
 begin
   inherited;
@@ -279,22 +313,42 @@ begin
   // configurado prevalezca.
   if Assigned(ConfiguracionCampos) and
      ConfiguracionCampos.Cargada then
+  begin
+    sTabla := NombreTablaConfiguracionCampos;
     for i := 0 to cxGrdDBTabPrin.ColumnCount - 1 do
     begin
       col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
       sField := col.DataBinding.FieldName;
-      sTit := ConfiguracionCampos.ObtenerTitulo(sField);
+      sTit := ConfiguracionCampos.ObtenerTitulo(sField, sTabla);
       if sTit <> '' then
         col.Caption := sTit;
-      iAncho := ConfiguracionCampos.ObtenerAncho(sField);
+      iAncho := ConfiguracionCampos.ObtenerAncho(sField, sTabla);
       if iAncho > 0 then
         col.Width := iAncho;
     end;
+  end;
 end;
 
 function TfrmMtoSearch.DebeAjustarColumnasAutomaticamente: Boolean;
 begin
   Result := True;
+end;
+
+function TfrmMtoSearch.NombreTablaConfiguracionCampos: string;
+var
+  DataSet: TDataSet;
+  Separador: Integer;
+begin
+  Result := '';
+  DataSet := dsTablaG.DataSet;
+  if DataSet is TUniQuery then
+    Result := ExtraerTablaDeSQL(TUniQuery(DataSet).SQL.Text)
+  else if DataSet is TUniStoredProc then
+    Result := TUniStoredProc(DataSet).StoredProcName;
+  Result := StringReplace(Result, '`', '', [rfReplaceAll]);
+  Separador := LastDelimiter('.', Result);
+  if Separador > 0 then
+    Result := Copy(Result, Separador + 1, MaxInt);
 end;
 
 procedure TfrmMtoSearch.ResetForm;

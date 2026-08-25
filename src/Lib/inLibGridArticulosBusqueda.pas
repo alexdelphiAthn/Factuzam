@@ -108,6 +108,13 @@ implementation
 uses
   inLibMsgArticulos;
 
+resourcestring
+  STituloBusquedaArticulosGrid = 'Búsqueda de artículos';
+  SColumnaDescripcionBusquedaArticulos = 'Descripción';
+  SColumnaCodigoBarrasBusquedaArticulos = 'Cód. barras';
+  SColumnaReferenciaProveedorBusquedaArticulos = 'Ref. prov.';
+  SColumnaStockBusquedaArticulos = 'Stock';
+
 constructor TBusquedaGridArticulos.Create(
   AView: TcxGridDBTableView; ADatos: TDataSet;
   const ACampoArticulo: string;
@@ -206,19 +213,19 @@ begin
   FBusqColInput.Options.IncSearch := False;
   FBusqColInput.Options.Grouping := False;
   oColumna := FBusqView.CreateColumn;
-  oColumna.Caption := 'Descripción';
+  oColumna.Caption := SColumnaDescripcionBusquedaArticulos;
   oColumna.DataBinding.FieldName := 'DESCRIPCION';
   oColumna.Width := 220;
   oColumna := FBusqView.CreateColumn;
-  oColumna.Caption := 'Cód. barras';
+  oColumna.Caption := SColumnaCodigoBarrasBusquedaArticulos;
   oColumna.DataBinding.FieldName := 'CODBARRAS';
   oColumna.Width := 130;
   oColumna := FBusqView.CreateColumn;
-  oColumna.Caption := 'Ref. prov.';
+  oColumna.Caption := SColumnaReferenciaProveedorBusquedaArticulos;
   oColumna.DataBinding.FieldName := 'REFPRV';
   oColumna.Width := 110;
   oColumna := FBusqView.CreateColumn;
-  oColumna.Caption := 'Stock';
+  oColumna.Caption := SColumnaStockBusquedaArticulos;
   oColumna.DataBinding.FieldName := 'STOCK';
   oColumna.Width := 60;
   FEditRepo := TcxEditRepository.Create(nil);
@@ -565,7 +572,7 @@ begin
   FConsultaArticulos.Aplicar(FAlmacenStock);
   oDatos := FConsultaArticulos.DataSet;
   if FBusquedaVisual.EjecutarBusquedaDataSet(
-    'Búsqueda de artículos', oDatos,
+    STituloBusquedaArticulosGrid, oDatos,
     'frmMtoArtTraspasoSearch') then
   begin
     sArticulo := oDatos.FieldByName('ARTICULO').AsString;

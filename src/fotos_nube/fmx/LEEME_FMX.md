@@ -3,7 +3,7 @@
 App **FireMonkey (FMX)** independiente para **Android** que hace fotos con
 la cámara del dispositivo, las reduce a una resolución máxima configurable
 (por defecto **1000 px** en el lado mayor) y las sube **por lotes** al
-webservice de fotos de Factuzam (`upload_foto.php`, alias *fotosnube*).
+endpoint de fotos de la API v1 de Factuzam (`/api/v1/fotos/subir.php`).
 
 Cada foto se identifica por **código de artículo** y **color** (ambos
 obligatorios); a cada foto se le asigna un **índice correlativo**
@@ -30,13 +30,11 @@ fmx/
 
 ## Flujo
 
-1. **Configuración** (pestaña *Configuración*): URL del webservice, API
-   key, carpeta de cliente (`carpeta_cliente`, obligatoria) y resolución
+1. **Configuración** (pestaña *Configuración*): URL del endpoint, token
+   de API, referencia de instalación (`referencia`, obligatoria) y resolución
    máxima (por defecto 1000). Se guarda en `fotosnube.ini` dentro de la
    carpeta de documentos de la app (sandbox). La ruta exacta se muestra en
-   pantalla. **La carpeta del cliente debe existir ya en el servidor**: se
-   dan de alta a mano para evitar duplicados por errores de tecleo. Si no
-   existe, el webservice responde 404 y la app muestra el mensaje.
+   pantalla. La referencia debe coincidir con la asociada al token.
 2. **Capturar** (pestaña *Capturar*): se teclea el **código de artículo**
    y el **color** (ambos obligatorios); *Hacer foto* abre la cámara y
    *Elegir de galería* la toma del carrete. Cada foto se reduce al máximo
@@ -44,7 +42,7 @@ fmx/
    *Pendiente*.
 3. **Subir todas**: envía en segundo plano todas las fotos no subidas.
    Cada elemento pasa a *Subiendo…* → *Subida OK* / *Error*, y el log
-   muestra el `sha1` devuelto o el mensaje de error.
+   muestra el `sha256` devuelto o el mensaje de error.
 
 ## Índice por artículo+color
 
@@ -58,22 +56,23 @@ tres campos no vacíos, así que **siempre se envía un índice** (>= 1):
 
 El índice se calcula al subir, sobre el contenido final de la cola.
 
-## Contrato del webservice (igual que el cliente VCL `oda`)
+## Contrato de la API v1
 
-`POST` multipart/form-data a `upload_foto.php` con:
+`POST` multipart/form-data a `/api/v1/fotos/subir.php` con:
 
 | Campo             | Obligatorio | Notas                                  |
 |-------------------|-------------|----------------------------------------|
 | `imagen`          | sí          | El JPG reducido.                       |
 | `articulo`        | sí          | Código de artículo.                    |
-| `carpeta_cliente` | sí          | Carpeta del cliente en el servidor.    |
+| `referencia`      | sí          | Nombre de la instalación.            |
 | `color`           | sí          | Color.                                 |
 | `indice`          | sí          | Correlativo (1..n) por artículo+color. |
 | `nombre_original` | no          | Nombre del fichero local.              |
 | `osha1`           | no          | SHA1 local para verificación e2e.      |
 
-API key también por cabecera `X-API-Key`. Respuesta JSON:
-`{ "status": "success"|"error", "message": str, "sha1": str }`.
+El token se envía como `Authorization: Bearer fza_...`. La respuesta JSON
+usa `{ "ok": true, "datos": { "sha256_real": "..." } }`; los errores se
+devuelven en `error.mensaje`.
 
 ## Compilación y despliegue (RAD Studio)
 

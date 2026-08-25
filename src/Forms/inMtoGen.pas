@@ -284,12 +284,12 @@ uses inLibData,
      inLibUnitForm,
      inLibShowMto,
 
-     inMtoModalGenImpSave,
      UniDataGen, uGenericIfThen,
      UniDataGuiasGridRepositorio,
      UniDataPerfilesMtoRepositorio,
      inMtoFotoArticulo, inMtoStockConsulta,
      inMtoModalGridGuias,
+     inMtoGenPresentacionPerfilesVcl,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
      System.TypInfo, inLibDiag,
   inLibMsgComun, inLibMsgConfiguracion;
@@ -2048,26 +2048,13 @@ function TfrmMtoGen.SolicitarDestinoPerfil(
   const ADescripcion: string;
   ADescripcionEditable: Boolean;
   out APermisos: string): Boolean;
-var
-  oFormulario: TfrmModalGenImpSave;
 begin
-  Result := False;
-  APermisos := '';
-  oFormulario := TfrmModalGenImpSave.Create(Application);
-  try
-    oFormulario.edtNombreOrigen.Text := Self.Name;
-    oFormulario.edtDescripcion.Text := ADescripcion;
-    oFormulario.edtDescripcion.Enabled :=
-      ADescripcionEditable;
-    oFormulario.ShowModal;
-    if oFormulario.sFicha = 'S' then
-    begin
-      APermisos := oFormulario.cbbPermisos.Text;
-      Result := True;
-    end;
-  finally
-    FreeAndNil(oFormulario);
-  end;
+  Result := SolicitarDestinoPerfilMto(
+    Application,
+    Self.Name,
+    ADescripcion,
+    ADescripcionEditable,
+    APermisos);
 end;
 
 // ===========================================================================

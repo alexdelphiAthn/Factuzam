@@ -55,6 +55,28 @@ var
 
 implementation
 
+resourcestring
+  STituloSeleccionAlmacen = 'Elige almacén';
+  STituloConteoAlmacen = 'Almacén %s';
+  STituloConteoPlantilla = 'Plantilla %d';
+  STituloSeleccionPlantilla = 'Elige plantilla';
+  STituloSeleccionAlmacenOrigen = 'Almacén ORIGEN';
+  STituloSeleccionAlmacenDestino = 'Almacén DESTINO';
+  STituloConteoTraspaso = 'Traspaso %s -> %s';
+  SAvisoConfigurarServidorDispositivo =
+    'Antes configura el servidor y registra el dispositivo ' +
+    '(botón Configuración).';
+  SErrorServicioRecuento = 'Error: %s';
+  SAvisoSinAlmacenesSincronizados =
+    'No hay almacenes sincronizados en el servidor.';
+  SErrorCrearRecuento = 'No se pudo crear el recuento: %s';
+  SErrorDescargarPlantilla = 'No se pudo descargar la plantilla: %s';
+  SAvisoSinPlantillasPendientes =
+    'No hay plantillas pendientes en el servidor.';
+  SAvisoOrigenDestinoMismoAlmacen =
+    'El origen y el destino no pueden ser el mismo almacén.';
+  SErrorCrearTraspaso = 'No se pudo crear el traspaso: %s';
+
 constructor TfrmMenu.Create(AOwner: TComponent);
 begin
   inherited CreateNew(AOwner);
@@ -100,8 +122,7 @@ function TfrmMenu.ComprobarConfig: Boolean;
 begin
   Result := oConfig.EstaConfigurado;
   if not Result then
-    TDialogService.ShowMessage('Antes configura el servidor y registra el ' +
-      'dispositivo (botón Configuración).');
+    TDialogService.ShowMessage(SAvisoConfigurarServidorDispositivo);
 end;
 
 procedure TfrmMenu.AccionLibre(AModo: TModoRecuento);
@@ -116,10 +137,10 @@ begin
     oApi := TRecuentoApi.Create;
     try
       if not oApi.ListarAlmacenes(FAlmacenes) then
-        TDialogService.ShowMessage('Error: ' + oApi.UltimoError)
+        TDialogService.ShowMessage(
+          Format(SErrorServicioRecuento, [oApi.UltimoError]))
       else if Length(FAlmacenes) = 0 then
-        TDialogService.ShowMessage('No hay almacenes sincronizados en el ' +
-          'servidor.')
+        TDialogService.ShowMessage(SAvisoSinAlmacenesSincronizados)
       else
       begin
         SetLength(aCaptions, Length(FAlmacenes));
@@ -130,7 +151,8 @@ begin
                           FAlmacenes[i].Nombre;
           aValores[i] := FAlmacenes[i].CodigoEmp + '|' + FAlmacenes[i].CodigoAlm;
         end;
-        TfrmSelector.ElegirAsync(Self, 'Elige almacén', aCaptions, aValores,
+        TfrmSelector.ElegirAsync(Self, STituloSeleccionAlmacen,
+          aCaptions, aValores,
           procedure(AOk: Boolean; AValor: string)
           begin
             if AOk and (AValor <> '') then
@@ -158,10 +180,11 @@ begin
     oApi := TRecuentoApi.Create;
     try
       if oApi.CrearRecuentoLibre(sEmp, sAlm, '', idRec) then
-        TfrmConteo.IniciarAsync(Self, AModo, idRec, [], 'Almacén ' + sAlm)
+        TfrmConteo.IniciarAsync(Self, AModo, idRec, [],
+          Format(STituloConteoAlmacen, [sAlm]))
       else
-        TDialogService.ShowMessage('No se pudo crear el recuento: ' +
-          oApi.UltimoError);
+        TDialogService.ShowMessage(
+          Format(SErrorCrearRecuento, [oApi.UltimoError]));
     finally
       FreeAndNil(oApi);
     end;
@@ -177,10 +200,10 @@ begin
   try
     if oApi.DescargarCatalogo(AId, aCatalogo) then
       TfrmConteo.IniciarAsync(Self, mrPlantilla, AId, aCatalogo,
-        'Plantilla ' + IntToStr(AId))
+        Format(STituloConteoPlantilla, [AId]))
     else
-      TDialogService.ShowMessage('No se pudo descargar la plantilla: ' +
-        oApi.UltimoError);
+      TDialogService.ShowMessage(
+        Format(SErrorDescargarPlantilla, [oApi.UltimoError]));
   finally
     FreeAndNil(oApi);
   end;
@@ -208,10 +231,10 @@ begin
     oApi := TRecuentoApi.Create;
     try
       if not oApi.ListarPlantillas(FPlantillas) then
-        TDialogService.ShowMessage('Error: ' + oApi.UltimoError)
+        TDialogService.ShowMessage(
+          Format(SErrorServicioRecuento, [oApi.UltimoError]))
       else if Length(FPlantillas) = 0 then
-        TDialogService.ShowMessage('No hay plantillas pendientes en el ' +
-          'servidor.')
+        TDialogService.ShowMessage(SAvisoSinPlantillasPendientes)
       else
       begin
         SetLength(aCaptions, Length(FPlantillas));
@@ -225,7 +248,8 @@ begin
           aCaptions[i] := sCap;
           aValores[i] := IntToStr(FPlantillas[i].IdRecuento);
         end;
-        TfrmSelector.ElegirAsync(Self, 'Elige plantilla', aCaptions, aValores,
+        TfrmSelector.ElegirAsync(Self, STituloSeleccionPlantilla,
+          aCaptions, aValores,
           procedure(AOk: Boolean; AValor: string)
           begin
             if AOk and (AValor <> '') then
@@ -264,10 +288,10 @@ begin
     oApi := TRecuentoApi.Create;
     try
       if not oApi.ListarAlmacenes(FAlmacenes) then
-        TDialogService.ShowMessage('Error: ' + oApi.UltimoError)
+        TDialogService.ShowMessage(
+          Format(SErrorServicioRecuento, [oApi.UltimoError]))
       else if Length(FAlmacenes) = 0 then
-        TDialogService.ShowMessage('No hay almacenes sincronizados en el ' +
-          'servidor.')
+        TDialogService.ShowMessage(SAvisoSinAlmacenesSincronizados)
       else
       begin
         SetLength(aCaptions, Length(FAlmacenes));
@@ -278,7 +302,8 @@ begin
                           FAlmacenes[i].Nombre;
           aValores[i] := FAlmacenes[i].CodigoEmp + '|' + FAlmacenes[i].CodigoAlm;
         end;
-        TfrmSelector.ElegirAsync(Self, 'Almacén ORIGEN', aCaptions, aValores,
+        TfrmSelector.ElegirAsync(Self, STituloSeleccionAlmacenOrigen,
+          aCaptions, aValores,
           procedure(AOk: Boolean; AValor: string)
           begin
             if AOk and (AValor <> '') then
@@ -304,7 +329,8 @@ begin
     aCaptions[i] := FAlmacenes[i].CodigoAlm + ' - ' + FAlmacenes[i].Nombre;
     aValores[i] := FAlmacenes[i].CodigoEmp + '|' + FAlmacenes[i].CodigoAlm;
   end;
-  TfrmSelector.ElegirAsync(Self, 'Almacén DESTINO', aCaptions, aValores,
+  TfrmSelector.ElegirAsync(Self, STituloSeleccionAlmacenDestino,
+    aCaptions, aValores,
     procedure(AOk: Boolean; AValor: string)
     begin
       if AOk and (AValor <> '') then
@@ -323,8 +349,7 @@ begin
   if (Length(aOri) = 2) and (Length(aDes) = 2) then
   begin
     if SameText(aOri[1], aDes[1]) then
-      TDialogService.ShowMessage('El origen y el destino no pueden ser el ' +
-        'mismo almacén.')
+      TDialogService.ShowMessage(SAvisoOrigenDestinoMismoAlmacen)
     else
     begin
       oApi := TRecuentoApi.Create;
@@ -332,10 +357,10 @@ begin
         // El traspaso se cuenta por cantidad (cajas/unidades a mover).
         if oApi.CrearTraspaso(aOri[0], aOri[1], aDes[1], idRec) then
           TfrmConteo.IniciarAsync(Self, mrCodigosCantidad, idRec, [],
-            'Traspaso ' + aOri[1] + ' -> ' + aDes[1])
+            Format(STituloConteoTraspaso, [aOri[1], aDes[1]]))
         else
-          TDialogService.ShowMessage('No se pudo crear el traspaso: ' +
-            oApi.UltimoError);
+          TDialogService.ShowMessage(
+            Format(SErrorCrearTraspaso, [oApi.UltimoError]));
       finally
         FreeAndNil(oApi);
       end;

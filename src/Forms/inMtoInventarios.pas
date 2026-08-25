@@ -353,6 +353,12 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoInventario = 'Inventario_%s_%s';
+  SFiltroArchivoImportacionInventario =
+    'Archivos Excel (*.xlsx;*.xls)|*.xlsx;*.xls|' +
+    'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Todos|*.*';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure InicializarEntradaInventarioVcl(
@@ -1770,10 +1776,9 @@ begin
         fPreview.PopupParent := Self;
         fPreview.DialogoGuardar.InitialDir :=
           ParametrosApp.GetPath('appDirExcel');
-        fPreview.DialogoGuardar.FileName := 'Inventario_' +
-          dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString +
-          '_' +
-          dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString;
+        fPreview.DialogoGuardar.FileName := Format(SNombreArchivoInventario,
+          [dmmInventarios.unqryTablaG.FieldByName('SERIE_INV').AsString,
+           dmmInventarios.unqryTablaG.FieldByName('NUMERO_INV').AsString]);
         ExportarInventarioExcel(fPreview.dxSpreadSheet1,
           dmmInventarios.unqryTablaG, dmmInventarios.cdsLineas);
         Screen.Cursor := crDefault;
@@ -1892,9 +1897,7 @@ end;
 procedure TfrmMtoInventarios.edtRutaExcelPropertiesButtonClick(Sender: TObject;
   AButtonIndex: Integer);
 begin
-  dlgAbrir.Filter := 'Archivos Excel (*.xlsx;*.xls)|*.xlsx;*.xls|' +
-                     'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|' +
-                     'Todos|*.*';
+  dlgAbrir.Filter := SFiltroArchivoImportacionInventario;
 end;
 
 procedure TfrmMtoInventarios.btnCargarClick(Sender: TObject);

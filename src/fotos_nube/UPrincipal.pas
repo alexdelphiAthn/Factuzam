@@ -51,6 +51,14 @@ implementation
 
 {$R *.dfm}
 
+const
+  cMascaraImagenes = '*.jpg;*.jpeg;*.png;*.gif;*.webp';
+  cMascaraTodosArchivos = '*.*';
+
+resourcestring
+  SFiltroSeleccionImagen =
+    'Imágenes (%s)|%s|Todos los archivos (%s)|%s';
+
 // ----------------------------------------------------------------------
 // Aceptar certificados autofirmados (solo para pruebas)
 // ----------------------------------------------------------------------
@@ -70,9 +78,9 @@ var
 begin
   OpenDlg := TOpenDialog.Create(nil);
   try
-    OpenDlg.Filter :=
-      'Imágenes (*.jpg;*.jpeg;*.png;*.gif;*.webp)|*.jpg;*.jpeg;*.png;*.gif;*.webp|' +
-      'Todos los archivos (*.*)|*.*';
+    OpenDlg.Filter := Format(SFiltroSeleccionImagen,
+      [cMascaraImagenes, cMascaraImagenes,
+       cMascaraTodosArchivos, cMascaraTodosArchivos]);
     if OpenDlg.Execute then
       edArchivo.Text := OpenDlg.FileName;
   finally

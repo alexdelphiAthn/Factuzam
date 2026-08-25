@@ -12,7 +12,8 @@
 {    Raíz de composición de servicios, adaptadores y procesos de Factuzam.     }
 {    Su fan-out alto es intencionado porque construye implementaciones         }
 {    concretas y las expone mediante contratos estrechos; no aloja navegación  }
-{    ni lógica de pantallas. IA-S23: 49 dependencias; máximo permitido: 50.    }
+{    ni lógica de pantallas. Los procesos en segundo plano se delegan en una   }
+{    subraíz con dependencias explícitas y ciclo de vida propio.               }
 {******************************************************************************}
 unit UniDataComposicionAplicacion;
 
@@ -54,7 +55,8 @@ uses
   inLibPreviewTicket,
   inLibUnitForm,
   inLibPrestaShopCierre,
-  UniDataConn;
+  UniDataConn,
+  UniDataComposicionAplicacionProcesosSegundoPlano;
 
 type
   TComposicionAplicacion = class
@@ -87,9 +89,7 @@ type
     FServicioEnvioErrores: IServicioEnvioErrores;
     FRepositorioCopias: IRepositorioCopiasSeguridad;
     FOperaciones: ICasoUsoCopiasSeguridad;
-    FVentasWsCola: TObject;
-    FPrestaShopCola: TObject;
-    FProcesosSegundoPlanoIniciados: Boolean;
+    FProcesosSegundoPlano: TProcesosSegundoPlanoAplicacion;
     FCerrada: Boolean;
     function EjecutarCargaWorker(
       ACarga: TProc<TUniConnection>;
@@ -186,14 +186,8 @@ uses
   inLibConexionesUniDAC,
   inLibAuditoriaDatos,
   inLibMonitorSQLUniDAC,
-  inLibVentasWsCola,
-  inLibPrestaShopCola,
   inLibVerifactu,
   inLibVerifactuInstalacion,
-  inLibVerifactuCola,
-  UniDataVerifactuColaProcesador,
-  UniDataVentasWsSesion,
-  UniDataPrestaShopSesion,
   UniDataConfigCamposRepositorio,
   UniDataUnidadesMedidaRepositorio,
   UniDataRegistroPantallasRepositorio,
@@ -205,49 +199,6 @@ uses
 resourcestring
   SErrorServicioConexionesComposicionNoDisponible =
     'El servicio de conexiones no está disponible.';
-
-type
-  TCierreColaPrestaShopAdaptador = class(
-    TInterfacedObject,
-    ICierreColaPrestaShop)
-  private
-    FCola: TPrestaShopCola;
-  public
-    constructor Create(ACola: TPrestaShopCola);
-    function BloquearNuevasReclamaciones: Boolean;
-    procedure CancelarCierre;
-    procedure DetenerTrasTrabajoActual;
-    procedure DetenerLiberandoTrabajoActual;
-  end;
-
-constructor TCierreColaPrestaShopAdaptador.Create(ACola: TPrestaShopCola);
-begin
-  inherited Create;
-  if not Assigned(ACola) then
-    raise EArgumentNilException.Create('ACola');
-  FCola := ACola;
-end;
-
-function TCierreColaPrestaShopAdaptador.BloquearNuevasReclamaciones:
-  Boolean;
-begin
-  Result := FCola.BloquearNuevasReclamaciones;
-end;
-
-procedure TCierreColaPrestaShopAdaptador.CancelarCierre;
-begin
-  FCola.CancelarCierre;
-end;
-
-procedure TCierreColaPrestaShopAdaptador.DetenerTrasTrabajoActual;
-begin
-  FCola.DetenerTrasTrabajoActual;
-end;
-
-procedure TCierreColaPrestaShopAdaptador.DetenerLiberandoTrabajoActual;
-begin
-  FCola.DetenerLiberandoTrabajoActual;
-end;
 
 function EsEventoNoVerifactuArranqueCierre(
   ATipoEvento: Integer): Boolean;
@@ -506,6 +457,7 @@ begin
     FConexiones,
     FRegistroLog,
     FServiciosParametrosApp.Lectura);
+  FConfigCamposCarga.AsignarTraducciones(FTraducciones);
 end;
 
 procedure TComposicionAplicacion.CrearServiciosSesion;
@@ -766,70 +718,25 @@ begin
 end;
 
 procedure TComposicionAplicacion.IniciarProcesosSegundoPlano;
-var
-  oPrestaShopCola: TPrestaShopCola;
-  oVentasWsCola: TVentasWsCola;
 begin
-  if not FProcesosSegundoPlanoIniciados then
-  begin
-    oPrestaShopCola := nil;
-    oVentasWsCola := nil;
-    try
-      TVerifactuCola.IniciarHilo(
-        CrearProcesadorVerifactuColaUniDAC(
-          FConexiones,
-          FContextoSesion,
-          FServiciosParametrosApp.Lectura,
-          FServiciosParametrosCaja.Lectura,
-          FContextoSesion.Identidad.Usuario,
-          FRegistroLog));
-      oVentasWsCola := TVentasWsCola.Create(FRegistroLog);
-      oVentasWsCola.IniciarHilo(
-        FContextoSesion,
-        FServiciosParametrosApp.Lectura,
-        CrearFabricaSesionVentasWsUniDAC(FConexiones),
-        FContextoSesion.Identidad.Usuario);
-      oPrestaShopCola := TPrestaShopCola.Create(FRegistroLog);
-      oPrestaShopCola.IniciarHilo(
-        FContextoSesion,
-        FServiciosParametrosApp.Lectura,
-        CrearFabricaSesionPrestaShopColaUniDAC(FConexiones),
-        FContextoSesion.Identidad.Usuario);
-      FVentasWsCola := oVentasWsCola;
-      oVentasWsCola := nil;
-      FPrestaShopCola := oPrestaShopCola;
-      oPrestaShopCola := nil;
-      FProcesosSegundoPlanoIniciados := True;
-    except
-      FreeAndNil(oPrestaShopCola);
-      FreeAndNil(oVentasWsCola);
-      FreeAndNil(FPrestaShopCola);
-      FreeAndNil(FVentasWsCola);
-      try
-        TVerifactuCola.DetenerHilo;
-      finally
-        FProcesosSegundoPlanoIniciados := False;
-      end;
-      raise;
-    end;
-  end;
+  if not Assigned(FProcesosSegundoPlano) then
+    FProcesosSegundoPlano := TProcesosSegundoPlanoAplicacion.Create(
+      FConexiones,
+      FContextoSesion,
+      FServiciosParametrosApp.Lectura,
+      FServiciosParametrosCaja.Lectura,
+      FRegistroLog);
+  FProcesosSegundoPlano.Iniciar;
 end;
 
 function TComposicionAplicacion.PrepararCierrePrestaShop(
   const AConsultarDecision:
     TConsultarDecisionCierrePrestaShop): Boolean;
-var
-  oCierre: ICierreColaPrestaShop;
 begin
   Result := True;
-  if Assigned(FPrestaShopCola) then
-  begin
-    oCierre := TCierreColaPrestaShopAdaptador.Create(
-      TPrestaShopCola(FPrestaShopCola));
-    Result := IntentarCerrarColaPrestaShop(
-      oCierre,
+  if Assigned(FProcesosSegundoPlano) then
+    Result := FProcesosSegundoPlano.PrepararCierrePrestaShop(
       AConsultarDecision);
-  end;
 end;
 
 procedure TComposicionAplicacion.RegistrarInicioFiscal;
@@ -881,13 +788,8 @@ end;
 
 procedure TComposicionAplicacion.DetenerProcesosSegundoPlano;
 begin
-  if FProcesosSegundoPlanoIniciados then
-  begin
-    FreeAndNil(FPrestaShopCola);
-    FreeAndNil(FVentasWsCola);
-    TVerifactuCola.DetenerHilo;
-    FProcesosSegundoPlanoIniciados := False;
-  end;
+  if Assigned(FProcesosSegundoPlano) then
+    FProcesosSegundoPlano.Detener;
 end;
 
 procedure TComposicionAplicacion.LiberarRegistrosServicios;
@@ -907,6 +809,7 @@ begin
   begin
     FCerrada := True;
     DetenerProcesosSegundoPlano;
+    FreeAndNil(FProcesosSegundoPlano);
     FreeAndNil(FRegistroPantallas);
     if Assigned(FFotos) then
       FFotos.LiberarServicios;

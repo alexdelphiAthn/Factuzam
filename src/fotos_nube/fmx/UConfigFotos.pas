@@ -13,7 +13,7 @@
 {    un INI dentro del sandbox de la app (carpeta de documentos), de modo      }
 {    que funciona sin depender de la BBDD. Incluye la resolución máxima por    }
 {    defecto (1000 px) con la que se reducen las fotos antes de enviarlas al   }
-{    webservice (upload_foto.php / fotosnube).                                 }
+{    endpoint moderno de fotos de la API v1.                                  }
 {******************************************************************************}
 unit UConfigFotos;
 
@@ -47,7 +47,7 @@ type
     procedure Guardar;
     property Url: string read FUrl write FUrl;
     property ApiKey: string read FApiKey write FApiKey;
-    // Carpeta del cliente en el servidor (parámetro carpeta_cliente).
+    // Nombre de la instalación en la API (parámetro referencia).
     property CarpetaCliente: string read FCarpetaCliente
       write FCarpetaCliente;
     property ResolucionMaxima: Integer read FResolucionMaxima
@@ -56,6 +56,9 @@ type
   end;
 
 implementation
+
+uses
+  ConfiguracionClienteMovil;
 
 const
   cSeccion = 'FotosNube';
@@ -69,9 +72,9 @@ begin
     FRutaIni := RutaIniPorDefecto
   else
     FRutaIni := ARutaIni;
-  FUrl := '';
-  FApiKey := '';
-  FCarpetaCliente := '';
+  FUrl := cEndpointSubirFotosMovil;
+  FApiKey := cTokenApiMovil;
+  FCarpetaCliente := cReferenciaInstalacionMovil;
   FResolucionMaxima := cResolucionMaximaDefecto;
 end;
 

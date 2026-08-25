@@ -355,6 +355,12 @@ type
       const ALinea: TDatosLineaFactura);
     procedure ProcesarNuevoDeposito(
       const ALinea: TDatosLineaFactura);
+    function RegistrarOperacionVenta(
+      const ALinea: TDatosLineaFactura): string;
+    procedure RegistrarMovimientoVenta(
+      const ALinea: TDatosLineaFactura;
+      const ANumeroMovimiento, AEmpresaMovimiento,
+        AAlmacenOrigen, ATipoMovimiento: string);
     procedure ProcesarVenta(
       const ALinea: TDatosLineaFactura);
     procedure ProcesarLineas;
@@ -377,6 +383,9 @@ type
       const AEmpresa, AAlmacen, ATipoDoc: string): string;
     function ObtenerCosteMedioSkuAlmacen(
       const ASku, AAlmacen: string): Currency;
+    function RegistrarLineasTraspasoDevolucion(
+      const AEmpresaOrigen, ATipoDocumento, ASerieDocumento,
+        ANumeroDocumento, ANumeroOperacion: string): Currency;
     procedure GenerarTraspasoAutomaticoDevolucion;
   public
     constructor Create(
@@ -1520,27 +1529,16 @@ begin
   end;
 end;
 
-procedure TGrabacionFacturaCaja.ProcesarVenta(
-  const ALinea: TDatosLineaFactura);
+function TGrabacionFacturaCaja.RegistrarOperacionVenta(
+  const ALinea: TDatosLineaFactura): string;
 var
-  sAlmacenOrigen: string;
-  sEmpresaMovimiento: string;
-  sTipoMovimiento: string;
-  sNumeroMovimiento: string;
-  sIdDeposito: string;
   dImporteCierre: Currency;
-  SolicitudMovimiento: TSolicitudMovimientoAlmacenCaja;
+  sIdDeposito: string;
 begin
-  if (ALinea.TipoArticulo = 'ESTANDAR') and
-     FGenerarMovimientos then
-    sNumeroMovimiento := ObtenerSiguienteContador(
-      FDataModule.FConexion, 'MV', FUsuario)
-  else
-    sNumeroMovimiento := '';
   if ALinea.VieneDeDeposito = 'S' then
   begin
     sIdDeposito := ALinea.IdDeposito;
-    sAlmacenOrigen := FAlmacenDeposito;
+    Result := FAlmacenDeposito;
     FDataModule.CerrarDepositoCliente(
       FQuery, sIdDeposito, FEmpresa, FAlmacen,
       FCaja, FUsuario);
@@ -1562,7 +1560,7 @@ begin
   end
   else
   begin
-    sAlmacenOrigen := FAlmacen;
+    Result := FAlmacen;
     if ALinea.TotalCIva > 0 then
       FTotalVentasNormales :=
         FTotalVentasNormales + ALinea.TotalCIva
@@ -1570,6 +1568,51 @@ begin
       FTotalDevolucionesNormales :=
         FTotalDevolucionesNormales + Abs(ALinea.TotalCIva);
   end;
+end;
+
+procedure TGrabacionFacturaCaja.RegistrarMovimientoVenta(
+  const ALinea: TDatosLineaFactura;
+  const ANumeroMovimiento, AEmpresaMovimiento,
+    AAlmacenOrigen, ATipoMovimiento: string);
+var
+  Solicitud: TSolicitudMovimientoAlmacenCaja;
+begin
+  Solicitud := Default(TSolicitudMovimientoAlmacenCaja);
+  Solicitud.Movimiento.Numero := ANumeroMovimiento;
+  Solicitud.Movimiento.TipoDocumento := 'VE';
+  Solicitud.Movimiento.SerieDocumento := FSerieGenerada;
+  Solicitud.Movimiento.NumeroDocumento := FNumeroFactura;
+  Solicitud.Movimiento.Linea := ALinea.Linea;
+  Solicitud.Movimiento.Empresa := AEmpresaMovimiento;
+  Solicitud.Movimiento.Almacen := AAlmacenOrigen;
+  Solicitud.Movimiento.Unidad := ALinea.Sku;
+  Solicitud.Movimiento.Articulo := ALinea.Articulo;
+  Solicitud.Movimiento.TipoMovimiento := ATipoMovimiento;
+  Solicitud.Movimiento.Cantidad := ALinea.Cantidad;
+  Solicitud.Movimiento.Usuario := FUsuario;
+  Solicitud.Movimiento.Fecha := FFechaOperacion;
+  Solicitud.CajaDocumento := FCaja;
+  Solicitud.AlmacenDocumento := FAlmacen;
+  Solicitud.NumeroOperacion := FNumeroOperacion;
+  Solicitud.CodigoCliente := FCabecera.CodigoCliente;
+  FDataModule.InsertarMovimientoAlmacen(FQuery, Solicitud);
+end;
+
+procedure TGrabacionFacturaCaja.ProcesarVenta(
+  const ALinea: TDatosLineaFactura);
+var
+  sAlmacenOrigen: string;
+  sEmpresaMovimiento: string;
+  sTipoMovimiento: string;
+  sNumeroMovimiento: string;
+begin
+  if (ALinea.TipoArticulo = 'ESTANDAR') and
+     FGenerarMovimientos then
+    sNumeroMovimiento := ObtenerSiguienteContador(
+      FDataModule.FConexion, 'MV', FUsuario)
+  else
+    sNumeroMovimiento := '';
+  sAlmacenOrigen := RegistrarOperacionVenta(ALinea);
   if ALinea.Cantidad < 0 then
     sTipoMovimiento := 'E'
   else
@@ -1602,27 +1645,9 @@ begin
       FCaja, FNumeroOperacion, sNumeroMovimiento, FUsuario);
   if (ALinea.TipoArticulo = 'ESTANDAR') and
      FGenerarMovimientos then
-  begin
-    SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
-    SolicitudMovimiento.Movimiento.Numero := sNumeroMovimiento;
-    SolicitudMovimiento.Movimiento.TipoDocumento := 'VE';
-    SolicitudMovimiento.Movimiento.SerieDocumento := FSerieGenerada;
-    SolicitudMovimiento.Movimiento.NumeroDocumento := FNumeroFactura;
-    SolicitudMovimiento.Movimiento.Linea := ALinea.Linea;
-    SolicitudMovimiento.Movimiento.Empresa := sEmpresaMovimiento;
-    SolicitudMovimiento.Movimiento.Almacen := sAlmacenOrigen;
-    SolicitudMovimiento.Movimiento.Unidad := ALinea.Sku;
-    SolicitudMovimiento.Movimiento.Articulo := ALinea.Articulo;
-    SolicitudMovimiento.Movimiento.TipoMovimiento := sTipoMovimiento;
-    SolicitudMovimiento.Movimiento.Cantidad := ALinea.Cantidad;
-    SolicitudMovimiento.Movimiento.Usuario := FUsuario;
-    SolicitudMovimiento.Movimiento.Fecha := FFechaOperacion;
-    SolicitudMovimiento.CajaDocumento := FCaja;
-    SolicitudMovimiento.AlmacenDocumento := FAlmacen;
-    SolicitudMovimiento.NumeroOperacion := FNumeroOperacion;
-    SolicitudMovimiento.CodigoCliente := FCabecera.CodigoCliente;
-    FDataModule.InsertarMovimientoAlmacen(FQuery, SolicitudMovimiento);
-  end;
+    RegistrarMovimientoVenta(
+      ALinea, sNumeroMovimiento, sEmpresaMovimiento,
+      sAlmacenOrigen, sTipoMovimiento);
 end;
 
 procedure TGrabacionFacturaCaja.ProcesarLineas;
@@ -2138,20 +2163,84 @@ begin
   end;
 end;
 
+function TGrabacionFacturaCaja.RegistrarLineasTraspasoDevolucion(
+  const AEmpresaOrigen, ATipoDocumento, ASerieDocumento,
+    ANumeroDocumento, ANumeroOperacion: string): Currency;
+var
+  Coste: Currency;
+  Indice: Integer;
+  LineaDocumento: Integer;
+  NumeroLinea: string;
+  SolicitudMovimiento: TSolicitudMovimientoAlmacenCaja;
+begin
+  Result := 0;
+  LineaDocumento := 0;
+  for Indice := 0 to High(FLineasTraspasoDev) do
+  begin
+    LineaDocumento := LineaDocumento + 10;
+    NumeroLinea := Format('%.4d', [LineaDocumento]);
+    Coste := ObtenerCosteMedioSkuAlmacen(
+      FLineasTraspasoDev[Indice].Sku, FAlmacenOrigenDevolucion);
+    // Salida del almacén de origen del ticket hacia el actual
+    SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
+    SolicitudMovimiento.Movimiento.TipoDocumento := ATipoDocumento;
+    SolicitudMovimiento.Movimiento.SerieDocumento := ASerieDocumento;
+    SolicitudMovimiento.Movimiento.NumeroDocumento := ANumeroDocumento;
+    SolicitudMovimiento.Movimiento.Linea := NumeroLinea;
+    SolicitudMovimiento.Movimiento.Empresa := AEmpresaOrigen;
+    SolicitudMovimiento.Movimiento.Almacen := FAlmacenOrigenDevolucion;
+    SolicitudMovimiento.Movimiento.AlmacenContrapartida := FAlmacen;
+    SolicitudMovimiento.Movimiento.Unidad :=
+      FLineasTraspasoDev[Indice].Sku;
+    SolicitudMovimiento.Movimiento.Articulo :=
+      FLineasTraspasoDev[Indice].Articulo;
+    SolicitudMovimiento.Movimiento.TipoMovimiento := 'S';
+    SolicitudMovimiento.Movimiento.Cantidad :=
+      FLineasTraspasoDev[Indice].Cantidad;
+    SolicitudMovimiento.Movimiento.CosteUnitario := Coste;
+    SolicitudMovimiento.Movimiento.Usuario := FUsuario;
+    SolicitudMovimiento.Movimiento.Fecha := FFechaOperacion;
+    SolicitudMovimiento.CajaDocumento := FCaja;
+    SolicitudMovimiento.AlmacenDocumento := FAlmacenOrigenDevolucion;
+    SolicitudMovimiento.NumeroOperacion := ANumeroOperacion;
+    FDataModule.InsertarMovimientoAlmacen(FQuery, SolicitudMovimiento);
+    // Entrada en el almacén donde se hace la devolución
+    SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
+    SolicitudMovimiento.Movimiento.TipoDocumento := ATipoDocumento;
+    SolicitudMovimiento.Movimiento.SerieDocumento := ASerieDocumento;
+    SolicitudMovimiento.Movimiento.NumeroDocumento := ANumeroDocumento;
+    SolicitudMovimiento.Movimiento.Linea := NumeroLinea;
+    SolicitudMovimiento.Movimiento.Empresa := FEmpresa;
+    SolicitudMovimiento.Movimiento.Almacen := FAlmacen;
+    SolicitudMovimiento.Movimiento.AlmacenContrapartida :=
+      FAlmacenOrigenDevolucion;
+    SolicitudMovimiento.Movimiento.Unidad :=
+      FLineasTraspasoDev[Indice].Sku;
+    SolicitudMovimiento.Movimiento.Articulo :=
+      FLineasTraspasoDev[Indice].Articulo;
+    SolicitudMovimiento.Movimiento.TipoMovimiento := 'E';
+    SolicitudMovimiento.Movimiento.Cantidad :=
+      FLineasTraspasoDev[Indice].Cantidad;
+    SolicitudMovimiento.Movimiento.CosteUnitario := Coste;
+    SolicitudMovimiento.Movimiento.Usuario := FUsuario;
+    SolicitudMovimiento.Movimiento.Fecha := FFechaOperacion;
+    SolicitudMovimiento.CajaDocumento := FCaja;
+    SolicitudMovimiento.AlmacenDocumento := FAlmacenOrigenDevolucion;
+    SolicitudMovimiento.NumeroOperacion := ANumeroOperacion;
+    FDataModule.InsertarMovimientoAlmacen(FQuery, SolicitudMovimiento);
+    Result := Result + Coste * FLineasTraspasoDev[Indice].Cantidad;
+  end;
+end;
+
 procedure TGrabacionFacturaCaja.GenerarTraspasoAutomaticoDevolucion;
 var
   oStoredProc: TUniStoredProc;
   sTipoDoc, sSerieDoc: string;
   sNumeroDoc: string;
   sNumOperacion: string;
-  sLinea: string;
   sEmpresaOrigen: string;
   sEmpContra: string;
-  cCoste: Currency;
   cTotal: Currency;
-  i: Integer;
-  iLinea: Integer;
-  SolicitudMovimiento: TSolicitudMovimientoAlmacenCaja;
 begin
   // Devolución de un ticket de OTRA tienda: la entrada de la devolución
   // se hizo en el almacén de origen (ProcesarVenta) y aquí se genera el
@@ -2192,62 +2281,9 @@ begin
     end;
     sNumOperacion := FPersistencia.SiguienteOperacion(
       sEmpresaOrigen, FAlmacenOrigenDevolucion, FCaja, FUsuario);
-    cTotal := 0;
-    iLinea := 0;
-    for i := 0 to High(FLineasTraspasoDev) do
-    begin
-      iLinea := iLinea + 10;
-      sLinea := Format('%.4d', [iLinea]);
-      cCoste := ObtenerCosteMedioSkuAlmacen(
-        FLineasTraspasoDev[i].Sku, FAlmacenOrigenDevolucion);
-      // Salida del almacén de origen del ticket hacia el actual
-      SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
-      SolicitudMovimiento.Movimiento.TipoDocumento := sTipoDoc;
-      SolicitudMovimiento.Movimiento.SerieDocumento := sSerieDoc;
-      SolicitudMovimiento.Movimiento.NumeroDocumento := sNumeroDoc;
-      SolicitudMovimiento.Movimiento.Linea := sLinea;
-      SolicitudMovimiento.Movimiento.Empresa := sEmpresaOrigen;
-      SolicitudMovimiento.Movimiento.Almacen :=
-        FAlmacenOrigenDevolucion;
-      SolicitudMovimiento.Movimiento.AlmacenContrapartida := FAlmacen;
-      SolicitudMovimiento.Movimiento.Unidad := FLineasTraspasoDev[i].Sku;
-      SolicitudMovimiento.Movimiento.Articulo :=
-        FLineasTraspasoDev[i].Articulo;
-      SolicitudMovimiento.Movimiento.TipoMovimiento := 'S';
-      SolicitudMovimiento.Movimiento.Cantidad :=
-        FLineasTraspasoDev[i].Cantidad;
-      SolicitudMovimiento.Movimiento.CosteUnitario := cCoste;
-      SolicitudMovimiento.Movimiento.Usuario := FUsuario;
-      SolicitudMovimiento.Movimiento.Fecha := FFechaOperacion;
-      SolicitudMovimiento.CajaDocumento := FCaja;
-      SolicitudMovimiento.AlmacenDocumento := FAlmacenOrigenDevolucion;
-      SolicitudMovimiento.NumeroOperacion := sNumOperacion;
-      FDataModule.InsertarMovimientoAlmacen(FQuery, SolicitudMovimiento);
-      // Entrada en el almacén donde se hace la devolución
-      SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
-      SolicitudMovimiento.Movimiento.TipoDocumento := sTipoDoc;
-      SolicitudMovimiento.Movimiento.SerieDocumento := sSerieDoc;
-      SolicitudMovimiento.Movimiento.NumeroDocumento := sNumeroDoc;
-      SolicitudMovimiento.Movimiento.Linea := sLinea;
-      SolicitudMovimiento.Movimiento.Empresa := FEmpresa;
-      SolicitudMovimiento.Movimiento.Almacen := FAlmacen;
-      SolicitudMovimiento.Movimiento.AlmacenContrapartida :=
-        FAlmacenOrigenDevolucion;
-      SolicitudMovimiento.Movimiento.Unidad := FLineasTraspasoDev[i].Sku;
-      SolicitudMovimiento.Movimiento.Articulo :=
-        FLineasTraspasoDev[i].Articulo;
-      SolicitudMovimiento.Movimiento.TipoMovimiento := 'E';
-      SolicitudMovimiento.Movimiento.Cantidad :=
-        FLineasTraspasoDev[i].Cantidad;
-      SolicitudMovimiento.Movimiento.CosteUnitario := cCoste;
-      SolicitudMovimiento.Movimiento.Usuario := FUsuario;
-      SolicitudMovimiento.Movimiento.Fecha := FFechaOperacion;
-      SolicitudMovimiento.CajaDocumento := FCaja;
-      SolicitudMovimiento.AlmacenDocumento := FAlmacenOrigenDevolucion;
-      SolicitudMovimiento.NumeroOperacion := sNumOperacion;
-      FDataModule.InsertarMovimientoAlmacen(FQuery, SolicitudMovimiento);
-      cTotal := cTotal + cCoste * FLineasTraspasoDev[i].Cantidad;
-    end;
+    cTotal := RegistrarLineasTraspasoDevolucion(
+      sEmpresaOrigen, sTipoDoc, sSerieDoc, sNumeroDoc,
+      sNumOperacion);
     RecalcularMovimientosDocumento(FDataModule.FConexion, sTipoDoc,
       sSerieDoc, sNumeroDoc);
     // Operación del traspaso: registrada en el origen con contra el

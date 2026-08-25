@@ -76,6 +76,12 @@ uses
   System.Net.URLClient,
   System.SysUtils;
 
+resourcestring
+  SErrorConsultaSeguimientoIncidencia =
+    'No se pudo consultar la incidencia.';
+  SSeguimientoIncidenciaActualizado =
+    'Estado actualizado correctamente.';
+
 function JsonTexto(
   AJson: TJSONObject;
   const ANombre: string): string;
@@ -192,7 +198,7 @@ var
   oValor: TJSONValue;
 begin
   Result := Default(TResultadoSeguimientoError);
-  Result.Mensaje := 'No se pudo consultar la incidencia.';
+  Result.Mensaje := SErrorConsultaSeguimientoIncidencia;
   if Trim(AUrlEstado) <> '' then
   begin
     oHttp := THTTPClient.Create;
@@ -224,7 +230,7 @@ begin
       else
         oValor.Free;
       if Result.Ok and (Result.Mensaje = '') then
-        Result.Mensaje := 'Estado actualizado correctamente.';
+        Result.Mensaje := SSeguimientoIncidenciaActualizado;
     finally
       oHttp.Free;
     end;

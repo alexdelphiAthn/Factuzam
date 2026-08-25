@@ -60,6 +60,12 @@ uses
   Vcl.Clipbrd,
   Vcl.Dialogs;
 
+resourcestring
+  SErrorCopiarTextoPortapapeles =
+    'No se pudo copiar el texto al portapapeles: %s';
+  SBotonCancelarMensajeTexto = 'Cancelar';
+  SBotonEnviarMensajeTexto = 'Enviar';
+
 procedure TfrmModalMensajeTexto.btnCopiarClick(Sender: TObject);
 begin
   try
@@ -69,7 +75,7 @@ begin
   except
     on E: Exception do
       MessageDlg(
-        'No se pudo copiar el texto al portapapeles: ' + E.Message,
+        Format(SErrorCopiarTextoPortapapeles, [E.Message]),
         mtWarning,
         [mbOk],
         0);
@@ -106,11 +112,11 @@ begin
     oDialogo.Caption := ATitulo;
     oDialogo.mTexto.Properties.ReadOnly := False;
     oDialogo.mTexto.Text := ATexto;
-    oDialogo.btnCopiar.Caption := 'Cancelar';
+    oDialogo.btnCopiar.Caption := SBotonCancelarMensajeTexto;
     oDialogo.btnCopiar.Cancel := True;
     oDialogo.btnCopiar.OnClick := nil;
     oDialogo.btnCopiar.ModalResult := mrCancel;
-    oDialogo.btnCerrar.Caption := 'Enviar';
+    oDialogo.btnCerrar.Caption := SBotonEnviarMensajeTexto;
     oDialogo.btnCerrar.Cancel := False;
     oDialogo.btnCerrar.Default := True;
     oDialogo.btnCerrar.ModalResult := mrOk;

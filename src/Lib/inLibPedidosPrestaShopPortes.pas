@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibPedidosPrestaShopPortes                                 }
 {    Tipo:       Librería                                                      }
@@ -44,6 +44,15 @@ implementation
 uses
   System.Math;
 
+resourcestring
+  SErrorGastosTransportePrestaShopNegativos =
+    'Los gastos de transporte de PrestaShop no pueden ser negativos.';
+  SErrorPorcentajeIvaNormalNegativo =
+    'El porcentaje de IVA normal no puede ser negativo.';
+  SErrorPortesPrestaShopIvaNormalNoCoincide =
+    'Los portes de PrestaShop no corresponden al IVA normal configurado ' +
+    '(sin IVA: %.2f; con IVA: %.2f; IVA normal: %.2f%%).';
+
 const
   TOLERANCIA_REDONDEO_PORTES = 0.01;
 
@@ -56,23 +65,22 @@ begin
   Result := Default(TPortesPedidoPrestaShop);
   Result.DebeInsertarse :=
     (Abs(ATotalSinIva) >= 0.005) or (Abs(ATotalConIva) >= 0.005);
-  if not Result.DebeInsertarse then
-    Exit;
-  if (ATotalSinIva < 0) or (ATotalConIva < 0) then
-    raise EPortesPedidoPrestaShop.Create(
-      'Los gastos de transporte de PrestaShop no pueden ser negativos.');
-  if APorcentajeIvaNormal < 0 then
-    raise EPortesPedidoPrestaShop.Create(
-      'El porcentaje de IVA normal no puede ser negativo.');
-  TotalEsperado := ATotalSinIva * (1 + APorcentajeIvaNormal / 100);
-  if Abs(ATotalConIva - TotalEsperado) > TOLERANCIA_REDONDEO_PORTES then
-    raise EPortesPedidoPrestaShop.CreateFmt(
-      'Los portes de PrestaShop no corresponden al IVA normal configurado ' +
-      '(sin IVA: %.2f; con IVA: %.2f; IVA normal: %.2f%%).',
-      [ATotalSinIva, ATotalConIva, APorcentajeIvaNormal]);
-  Result.PrecioSinIva := ATotalSinIva;
-  Result.PrecioConIva := ATotalConIva;
-  Result.PorcentajeIva := APorcentajeIvaNormal;
+  if Result.DebeInsertarse then
+  begin
+    if (ATotalSinIva < 0) or (ATotalConIva < 0) then
+      raise EPortesPedidoPrestaShop.Create(
+        SErrorGastosTransportePrestaShopNegativos);
+    if APorcentajeIvaNormal < 0 then
+      raise EPortesPedidoPrestaShop.Create(SErrorPorcentajeIvaNormalNegativo);
+    TotalEsperado := ATotalSinIva * (1 + APorcentajeIvaNormal / 100);
+    if Abs(ATotalConIva - TotalEsperado) > TOLERANCIA_REDONDEO_PORTES then
+      raise EPortesPedidoPrestaShop.CreateFmt(
+        SErrorPortesPrestaShopIvaNormalNoCoincide,
+        [ATotalSinIva, ATotalConIva, APorcentajeIvaNormal]);
+    Result.PrecioSinIva := ATotalSinIva;
+    Result.PrecioConIva := ATotalConIva;
+    Result.PorcentajeIva := APorcentajeIvaNormal;
+  end;
 end;
 
 end.

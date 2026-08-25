@@ -50,6 +50,10 @@ type
       const AContexto: TContextoRestauracionCopiasVcl); static;
   end;
 
+function SolicitarNuevaContrasenaCopia(
+  AOwner: TComponent;
+  out AContrasena: string): Boolean;
+
 implementation
 
 uses
@@ -59,6 +63,15 @@ uses
   inLibCopiasSeguridadIntf,
   inLibMsgComun,
   inLibMsgConfiguracion;
+
+function SolicitarNuevaContrasenaCopia(
+  AOwner: TComponent;
+  out AContrasena: string): Boolean;
+begin
+  Result := TfrmModalContrasenaCopia.SolicitarNueva(
+    AOwner,
+    AContrasena);
+end;
 
 class procedure TCoordinadorRestauracionCopiasVcl.ConfigurarDialogo(
   const AContexto: TContextoRestauracionCopiasVcl);

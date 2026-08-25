@@ -241,6 +241,16 @@ end;
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoCopiaSeguridadLogon =
+    'copiaseguridad%s';
+  SEncabezadoRestauracionCopiaSeguridadLogon =
+    '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --';
+  SMensajeLicenciaEstablecida = 'Licencia establecida.';
+  SMensajeLicenciaSinNifEmpresa =
+    'No hay NIF de empresa configurado.';
+  SFormatoMensajeCopiaDemo = 'Copia DEMO. %s';
+
 constructor TfrmLogon.Create(
   AOwner: TComponent;
   const AFabricaConexiones: IFabricaConexionesUniDAC);
@@ -284,6 +294,7 @@ end;
 
 procedure TfrmLogon.btnSubirScriptClick(Sender: TObject);
 var
+  bScriptEjecutado: Boolean;
   sCredencial: string;
   oPerfilFormulario: TPerfilConexion;
   oPerfilAdministrativo: TPerfilConexion;
@@ -315,24 +326,28 @@ begin
 
     if openDialog.Execute then
     begin
+      bScriptEjecutado := False;
       try
         EjecutarScriptLogonUniDAC(
           FConexionLogon,
           opendialog.FileName,
           ResolverErrorScriptLogon);
+        bScriptEjecutado := True;
       except
         on E: EModificacionTablaFacturacionProtegida do
         begin
           RegistroLog.RegistrarAviso(E.Message);
           MessageDlg(E.Message, mtWarning, [mbOK], 0);
-          Exit;
         end;
       end;
-      if FConfiguracionConexionPendiente then
-        ConfirmarConfiguracionConexionVerificada;
-      RegistroLog.RegistrarInformacion(
-        'El script se ejecutó exitosamente');
-      ShowMessage(SScriptEjecutado);
+      if bScriptEjecutado then
+      begin
+        if FConfiguracionConexionPendiente then
+          ConfirmarConfiguracionConexionVerificada;
+        RegistroLog.RegistrarInformacion(
+          'El script se ejecutó exitosamente');
+        ShowMessage(SScriptEjecutado);
+      end;
     end
     else
     begin
@@ -351,14 +366,16 @@ end;
 procedure TfrmLogon.FormCreate(Sender: TObject);
 begin
   inherited;
-  if not EsOrdenParametrosNuevoEquipoValido then
+  if EsOrdenParametrosNuevoEquipoValido then
+  begin
+    CrearCasoUsoPreparacionLogon(
+      Self as IPasosPreparacionLogon).Ejecutar;
+  end
+  else
   begin
     FCerrarAplicacion := True;
     ShowMessage(SErrorOrdenParametrosNuevoEquipo);
-    Exit;
   end;
-  CrearCasoUsoPreparacionLogon(
-    Self as IPasosPreparacionLogon).Ejecutar;
 end;
 
 procedure TfrmLogon.PrepararLogon;
@@ -603,6 +620,7 @@ end;
 procedure TfrmLogon.PrepararNuevoEquipo;
 var
   bConmutadorMantenimiento: Boolean;
+  bContinuarPreparacion: Boolean;
   bPendienteInstalacion: Boolean;
   oPerfil: TPerfilConexion;
   sContrasenaNueva: string;
@@ -610,113 +628,113 @@ var
 begin
   sRutaIni := RutaIniAplicacion(GetUserFolder);
   bConmutadorMantenimiento := HayConmutadorNuevoEquipo;
-  bPendienteInstalacion :=
-    HayNuevoEquipoPendienteEnIni(sRutaIni);
+  bPendienteInstalacion := HayNuevoEquipoPendienteEnIni(sRutaIni);
   if bPendienteInstalacion then
   begin
     oPerfil := FFabricaConexiones.Perfil;
     bPendienteInstalacion := EsPerfilInstalacionDemoLocal(
-      oPerfil.Servidor,
-      oPerfil.BaseDatos,
-      oPerfil.Usuario,
-      oPerfil.Puerto);
+      oPerfil.Servidor, oPerfil.BaseDatos,
+      oPerfil.Usuario, oPerfil.Puerto);
     if not bPendienteInstalacion then
     begin
       RegistroLog.RegistrarAviso(
         'Se ignoró una marca de nuevo equipo fuera del perfil demo local.');
     end;
   end;
-  if not bConmutadorMantenimiento and
-     not bPendienteInstalacion then
-    Exit;
-  { El destino no se toma del INI: NomUser es editable y no concede
-    autoridad para restablecer una cuenta arbitraria. }
-  edtUser.Text := USUARIO_INICIAL_NUEVO_EQUIPO;
-  if not TfrmModalGenPass.SolicitarNueva(
-           Self,
-           edtUser.Text,
-           sContrasenaNueva) then
+  bContinuarPreparacion := bConmutadorMantenimiento or
+    bPendienteInstalacion;
+  if bContinuarPreparacion then
   begin
-    RegistroLog.RegistrarInformacion(
-      'Configuración de nuevo equipo cancelada.');
-    FCerrarAplicacion := True;
-    Exit;
-  end;
-  try
-    try
-      FAplicacionLogon.EstablecerContrasenaNuevoEquipo(
-        edtUser.Text,
-        sContrasenaNueva,
-        bPendienteInstalacion and
-          not bConmutadorMantenimiento);
-    except
-      on E: ENuevoEquipoDemoYaPreparado do
-      begin
-        try
-          CompletarNuevoEquipoPendienteEnIni(sRutaIni);
-        except
-          on ECompletar: Exception do
-          begin
-            RegistroLog.RegistrarAviso(
-              'No se pudo retirar la marca ya consumida de primera ' +
-              'ejecución: ' + ECompletar.Message);
-          end;
-        end;
-        RegistroLog.RegistrarAviso(E.Message);
-        ShowMessage(E.Message);
-        Exit;
-      end;
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarError(
-          'No se pudo completar el arranque de mantenimiento: ' +
-          E.ClassName + ': ' + E.Message);
-        ShowMessage(Format(SErrorPrepararNuevoEquipo, [E.Message]));
-        edtPass.Text := '';
-        FCerrarAplicacion := True;
-        Exit;
-      end;
-    end;
-
-    edtPass.Text := sContrasenaNueva;
-    { Conserva exactamente las opciones existentes, pero sustituye ahora la
-      credencial recordada para no dejar la contraseña anterior si el
-      usuario cierra el login manual que pueda mostrarse a continuación. }
-    try
-      SetIniValues;
-    except
-      on E: Exception do
-      begin
-        RegistroLog.RegistrarError(
-          'La contraseña se cambió, pero no se pudieron guardar las ' +
-          'preferencias de inicio: ' + E.ClassName + ': ' + E.Message);
-        ShowMessage(Format(
-          SErrorGuardarInicioTrasNuevoEquipo,
-          [E.Message]));
-      end;
-    end;
-    if bPendienteInstalacion then
+    { El destino no se toma del INI: NomUser es editable y no concede
+      autoridad para restablecer una cuenta arbitraria. }
+    edtUser.Text := USUARIO_INICIAL_NUEVO_EQUIPO;
+    bContinuarPreparacion := TfrmModalGenPass.SolicitarNueva(
+      Self, edtUser.Text, sContrasenaNueva);
+    if not bContinuarPreparacion then
     begin
+      RegistroLog.RegistrarInformacion(
+        'Configuración de nuevo equipo cancelada.');
+      FCerrarAplicacion := True;
+    end;
+  end;
+  if bContinuarPreparacion then
+  begin
+    try
       try
-        CompletarNuevoEquipoPendienteEnIni(sRutaIni);
+        FAplicacionLogon.EstablecerContrasenaNuevoEquipo(
+          edtUser.Text, sContrasenaNueva,
+          bPendienteInstalacion and not bConmutadorMantenimiento);
       except
+        on E: ENuevoEquipoDemoYaPreparado do
+        begin
+          try
+            CompletarNuevoEquipoPendienteEnIni(sRutaIni);
+          except
+            on ECompletar: Exception do
+            begin
+              RegistroLog.RegistrarAviso(
+                'No se pudo retirar la marca ya consumida de primera ' +
+                'ejecución: ' + ECompletar.Message);
+            end;
+          end;
+          RegistroLog.RegistrarAviso(E.Message);
+          ShowMessage(E.Message);
+          bContinuarPreparacion := False;
+        end;
         on E: Exception do
         begin
-          RegistroLog.RegistrarAviso(
-            'La contraseña se cambió, pero quedó pendiente retirar la ' +
-            'marca de primera ejecución: ' + E.Message);
-          ShowMessage(Format(
-            SErrorCompletarNuevoEquipoPendiente,
-            [E.Message]));
+          RegistroLog.RegistrarError(
+            'No se pudo completar el arranque de mantenimiento: ' +
+            E.ClassName + ': ' + E.Message);
+          ShowMessage(Format(SErrorPrepararNuevoEquipo, [E.Message]));
+          edtPass.Text := '';
+          FCerrarAplicacion := True;
+          bContinuarPreparacion := False;
         end;
       end;
+      if bContinuarPreparacion then
+      begin
+        edtPass.Text := sContrasenaNueva;
+        { Conserva exactamente las opciones existentes, pero sustituye ahora
+          la credencial recordada para no dejar la contraseña anterior si el
+          usuario cierra el login manual que pueda mostrarse a continuación. }
+        try
+          SetIniValues;
+        except
+          on E: Exception do
+          begin
+            RegistroLog.RegistrarError(
+              'La contraseña se cambió, pero no se pudieron guardar las ' +
+              'preferencias de inicio: ' + E.ClassName + ': ' + E.Message);
+            ShowMessage(Format(
+              SErrorGuardarInicioTrasNuevoEquipo,
+              [E.Message]));
+          end;
+        end;
+        if bPendienteInstalacion then
+        begin
+          try
+            CompletarNuevoEquipoPendienteEnIni(sRutaIni);
+          except
+            on E: Exception do
+            begin
+              RegistroLog.RegistrarAviso(
+                'La contraseña se cambió, pero quedó pendiente retirar la ' +
+                'marca de primera ejecución: ' + E.Message);
+              ShowMessage(Format(
+                SErrorCompletarNuevoEquipoPendiente,
+                [E.Message]));
+            end;
+          end;
+        end;
+        RegistroLog.RegistrarInformacion(
+          'Contraseña de acceso restablecida mediante el arranque de ' +
+          'mantenimiento.');
+      end;
+    finally
+      { El control conserva la única copia que consumirá el login. }
+      sContrasenaNueva := '';
     end;
-    RegistroLog.RegistrarInformacion(
-      'Contraseña de acceso restablecida mediante el arranque de ' +
-      'mantenimiento.');
-  finally
-    { El control conserva la única copia que consumirá el login. }
-    sContrasenaNueva := '';
   end;
 end;
 
@@ -733,32 +751,37 @@ begin
        (edtPassBD.Text = '') then
     begin
       ConfirmarConfiguracionConexionVerificada;
-      Exit(True);
+      Result := True;
     end;
-    ConectarPerfilFormulario(
-      edtNomBD.Text,
-      True);
-    CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
-      FConexionLogon,
-      edtNomBD.Text);
-    if not CheckResult.IsOK then
+    if not Result then
     begin
-      RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
-                            CheckResult.FormattedMessage);
-      ShowMessage(Format(SErrorEstructuraBBDD,
-                         [CheckResult.FormattedMessage]));
-      chkAuto.Checked := False;
-      EscribirCadenaIni(
-        'UserInfo', 'AutoLogin', 'No', GetUserFolder);
-      if not pnlBBDD.Visible then
-        btnConfClick(Self);
-      if FConexionLogon.Connected then
-        FConexionLogon.Disconnect;
-      DescartarConfiguracionConexionPendiente;
-      Exit;
+      ConectarPerfilFormulario(
+        edtNomBD.Text,
+        True);
+      CheckResult := UniDataDBStructureRepositorio.TDBStructureChecker.Check(
+        FConexionLogon,
+        edtNomBD.Text);
+      if CheckResult.IsOK then
+      begin
+        ConfirmarConfiguracionConexionVerificada;
+        Result := True;
+      end
+      else
+      begin
+        RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
+                              CheckResult.FormattedMessage);
+        ShowMessage(Format(SErrorEstructuraBBDD,
+                           [CheckResult.FormattedMessage]));
+        chkAuto.Checked := False;
+        EscribirCadenaIni(
+          'UserInfo', 'AutoLogin', 'No', GetUserFolder);
+        if not pnlBBDD.Visible then
+          btnConfClick(Self);
+        if FConexionLogon.Connected then
+          FConexionLogon.Disconnect;
+        DescartarConfiguracionConexionPendiente;
+      end;
     end;
-    ConfirmarConfiguracionConexionVerificada;
-    Result := True;
   except
     on E: Exception do
     begin
@@ -821,7 +844,7 @@ begin
       begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := elaValida;
-        FResultadoLicencia.Mensaje := 'Licencia establecida.';
+        FResultadoLicencia.Mensaje := SMensajeLicenciaEstablecida;
         RegistroLog.RegistrarInformacion(
           'Licencia establecida. Código: ' + sCodigo);
         ShowMessage(Format(SLicenciaEstablecida,
@@ -832,7 +855,7 @@ begin
       begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := elaSinNifEmpresa;
-        FResultadoLicencia.Mensaje := 'No hay NIF de empresa configurado.';
+        FResultadoLicencia.Mensaje := SMensajeLicenciaSinNifEmpresa;
         RegistroLog.RegistrarInformacion(
           'No se establece licencia porque no hay NIF de empresa.');
         ShowMessage(SLicenciaNoEstablecidaSinNif);
@@ -869,7 +892,8 @@ begin
       begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := Estado;
-        FResultadoLicencia.Mensaje := 'Copia DEMO. ' + sMensaje;
+        FResultadoLicencia.Mensaje :=
+          Format(SFormatoMensajeCopiaDemo, [sMensaje]);
         RegistroLog.RegistrarAviso('Aplicación en modo DEMO. ' + sMensaje);
         RegistroLog.RegistrarError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
@@ -880,7 +904,8 @@ begin
       begin
         FResultadoLicencia.Comprobada := True;
         FResultadoLicencia.Estado := elaInvalida;
-        FResultadoLicencia.Mensaje := 'Copia DEMO. ' + E.Message;
+        FResultadoLicencia.Mensaje :=
+          Format(SFormatoMensajeCopiaDemo, [E.Message]);
         RegistroLog.RegistrarError('Error validando licencia: ' + E.Message);
         RegistroLog.RegistrarAviso('Aplicación en modo DEMO por error ' +
                                 'validando licencia.');
@@ -1167,7 +1192,8 @@ begin
   else
   begin
     LogForm := TfrmMtoModalScriptLog.Create(Self);
-    LogForm.LogMemo.Lines.Add('-- RESTAURACIÓN DE COPIA DE SEGURIDAD --');
+    LogForm.LogMemo.Lines.Add(
+      SEncabezadoRestauracionCopiaSeguridadLogon);
     LogForm.LogMemo.Lines.Add(
       '-------------------------------------------------');
     if ALogBuffer <> nil then
@@ -1207,8 +1233,9 @@ begin
   oTipoFichero.DisplayName := SCaptionFiltroCopiasCifradas;
   oTipoFichero.FileMask := '*.crypt';
   saveDialog.FileTypeIndex := 1;
-  saveDialog.FileName := 'copiaseguridad' +
-    FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now) + '.crypt';
+  saveDialog.FileName := Format(
+    SNombreArchivoCopiaSeguridadLogon,
+    [FormatDateTime('_dd_mm_yyyy_HH_nn_ss', Now)]) + '.crypt';
 end;
 
 procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
@@ -1217,57 +1244,59 @@ var
   oWorker: TThread;
   sContrasenaCopia: string;
 begin
-  if not TfrmModalContrasenaCopia.SolicitarNueva(
-           Self,
-           sContrasenaCopia) then
-    Exit;
-  ConectarPerfilFormulario(
-    edtNomBD.Text,
-    True);
-  iButtonSel := 0;
-  ConfigurarDialogoCopiaProtegida;
-  if (saveDialog.Execute) then
+  if TfrmModalContrasenaCopia.SolicitarNueva(
+       Self,
+       sContrasenaCopia) then
   begin
-    saveDialog.FileName := ChangeFileExt(
-      saveDialog.FileName,
-      '.crypt');
-    if FileExists(savedialog.FileName) then
+    ConectarPerfilFormulario(
+      edtNomBD.Text,
+      True);
+    iButtonSel := 0;
+    ConfigurarDialogoCopiaProtegida;
+    if saveDialog.Execute then
     begin
-      iButtonSel := MessageDlg(SPreguntaReemplazarFichero,
-                               mtCustom, [mbYes, mbNo], 0);
-    end;
-    if ((iButtonSel = mrYes) or (not FileExists(saveDialog.FileName))) then
-    begin
-      ConfirmarConfiguracionConexionVerificada;
-      MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
-      oWorker := CrearWorkerCopiaProtegidaConexion(
-        FConexionLogon,
+      saveDialog.FileName := ChangeFileExt(
         saveDialog.FileName,
-        sContrasenaCopia,
-        WorkerProgreso,
-        BackupFinalizar);
-      FCancelaOperacionSolicitada := False;
-      FWorkerOperacion := oWorker;
-      try
-        oWorker.Start;
-      except
-        FWorkerOperacion := nil;
-        FreeAndNil(oWorker);
-        DescartarConfiguracionConexionPendiente;
-        raise;
+        '.crypt');
+      if FileExists(savedialog.FileName) then
+      begin
+        iButtonSel := MessageDlg(SPreguntaReemplazarFichero,
+                                 mtCustom, [mbYes, mbNo], 0);
       end;
-    end;
-    if (iButtonSel <> mrYes) and
-       FileExists(saveDialog.FileName) then
+      if ((iButtonSel = mrYes) or
+          (not FileExists(saveDialog.FileName))) then
+      begin
+        ConfirmarConfiguracionConexionVerificada;
+        MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
+        oWorker := CrearWorkerCopiaProtegidaConexion(
+          FConexionLogon,
+          saveDialog.FileName,
+          sContrasenaCopia,
+          WorkerProgreso,
+          BackupFinalizar);
+        FCancelaOperacionSolicitada := False;
+        FWorkerOperacion := oWorker;
+        try
+          oWorker.Start;
+        except
+          FWorkerOperacion := nil;
+          FreeAndNil(oWorker);
+          DescartarConfiguracionConexionPendiente;
+          raise;
+        end;
+      end;
+      if (iButtonSel <> mrYes) and
+         FileExists(saveDialog.FileName) then
+        DescartarConfiguracionConexionPendiente;
+    end
+    else
+    begin
       DescartarConfiguracionConexionPendiente;
-  end
-  else
-  begin
-    DescartarConfiguracionConexionPendiente;
-    RegistroLog.RegistrarError('La copia se canceló');
-    ShowMessage(SCopiaSeguridadCancelada);
+      RegistroLog.RegistrarError('La copia se canceló');
+      ShowMessage(SCopiaSeguridadCancelada);
+    end;
+    sContrasenaCopia := '';
   end;
-  sContrasenaCopia := '';
 end;
 
 procedure TfrmLogon.btnRecoverClick(Sender: TObject);

@@ -47,6 +47,7 @@ Linux64/
 *.o
 *.ppu
 link.res
+src/apps_fmx/recuento/RecuentoFzam.res
 ppas.sh
 src/utilfmt80/Ancho80
 tests/bin/

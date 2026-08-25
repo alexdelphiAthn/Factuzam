@@ -148,6 +148,17 @@ implementation
 
 {$R *.dfm}
 
+const
+  cMascaraImagenes = '*.jpg;*.jpeg;*.png;*.gif;*.webp';
+  cMascaraTodosArchivos = '*.*';
+
+resourcestring
+  SFiltroSeleccionImagen =
+    'Imágenes (%s)|%s|Todos los archivos (%s)|%s';
+  SPreguntaCancelarSubidaMasiva =
+    'Hay una subida masiva en curso. ¿Cancelar y salir?';
+  SPromptSeleccionarCarpetaFotosDemo = 'Carpeta con fotos para la demo';
+
 // ----------------------------------------------------------------------
 procedure TForm1.HTTPValidateServerCertificate(const Sender: TObject;
   const ARequest: TURLRequest; const Certificate: TCertificate;
@@ -178,7 +189,7 @@ procedure TForm1.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
 begin
   if FBatchRunning then
   begin
-    if MessageDlg('Hay una subida masiva en curso. ¿Cancelar y salir?',
+    if MessageDlg(SPreguntaCancelarSubidaMasiva,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if Assigned(FBatchCancel) then
@@ -209,9 +220,9 @@ var
 begin
   OpenDlg := TOpenDialog.Create(nil);
   try
-    OpenDlg.Filter :=
-      'Imágenes (*.jpg;*.jpeg;*.png;*.gif;*.webp)|*.jpg;*.jpeg;*.png;*.gif;*.webp|' +
-      'Todos los archivos (*.*)|*.*';
+    OpenDlg.Filter := Format(SFiltroSeleccionImagen,
+      [cMascaraImagenes, cMascaraImagenes,
+       cMascaraTodosArchivos, cMascaraTodosArchivos]);
     if OpenDlg.Execute then
       edArchivo.Text := OpenDlg.FileName;
   finally
@@ -1007,7 +1018,8 @@ var
   S: string;
 begin
   S := edDemoCarpeta.Text;
-  if SelectDirectory('Carpeta con fotos para la demo', '', S, [sdNewUI]) then
+  if SelectDirectory(SPromptSeleccionarCarpetaFotosDemo, '', S,
+    [sdNewUI]) then
     edDemoCarpeta.Text := S;
 end;
 

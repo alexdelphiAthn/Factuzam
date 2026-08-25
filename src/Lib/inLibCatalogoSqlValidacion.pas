@@ -242,6 +242,12 @@ begin
   end;
 end;
 
+function EsSelectConCte(const ASql: string): Boolean;
+begin
+  Result := (PrimerToken(ASql) = 'WITH') and
+    (PosicionPalabraNivelCero(ASql, 'SELECT') > 0);
+end;
+
 function EsNombreCampoSimple(
   const ACampo: string): Boolean;
 var
@@ -413,6 +419,8 @@ begin
        (AMotor = mbSQLServer) then
       sTipoEsperado := 'EXEC';
     if (sPrimerToken <> sTipoEsperado) and
+       not ((ADefinicion.TipoSentencia = tssSelect) and
+            EsSelectConCte(ASql)) and
        not ((ADefinicion.TipoSentencia = tssCall) and
             (AMotor = mbSQLServer) and
             (sPrimerToken = 'EXECUTE')) then
@@ -486,14 +494,13 @@ begin
       mbMariaDB);
     if Result.EsValido then
       for eMotor := Succ(mbMariaDB) to High(TMotorBBDD) do
-        if TieneVarianteSqlMotor(ADefinicion, eMotor) then
+        if Result.EsValido and
+           TieneVarianteSqlMotor(ADefinicion, eMotor) then
         begin
           Result := ValidarSql(
             ADefinicion,
             ObtenerSqlBaseMotor(ADefinicion, eMotor),
             eMotor);
-          if not Result.EsValido then
-            Exit;
         end;
   end;
 end;

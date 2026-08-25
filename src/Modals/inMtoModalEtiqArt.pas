@@ -92,6 +92,10 @@ implementation
 uses
   inLibMsgArticulos;
 
+resourcestring
+  STituloPersonalizacionImpresionEtiquetasArticulo =
+    'Personalizacion Impresion Etiquetas Articulo';
+
 procedure TfrmPrintEtiqArt.AfterReportLoaded;
 var
   i: Integer;
@@ -309,7 +313,8 @@ begin
     Self.Name, PerfilesEscritura, SolicitudPermisoLayout);
   try
     Layout.GuardarGeometria(Self);
-    if Layout.PreguntarYGrabar('Personalizacion Impresion Etiquetas Articulo')
+    if Layout.PreguntarYGrabar(
+      STituloPersonalizacionImpresionEtiquetasArticulo)
       then ShowMessage(SInfoLayoutEtiquetasGuardado);
   finally
     FreeAndNil(Layout);

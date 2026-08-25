@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Módulo:       inLibConexionPerfilIni                                       }
 {    Tipo:       Infraestructura                                               }
@@ -65,13 +65,14 @@ begin
     ASeccion,
     AClave,
     BoolToStr(AValorPredeterminado, True))));
-  if MatchText(sValor, ['1', 'true', 'yes', 'si', 'sí', 'on']) then
-    Exit(True);
-  if MatchText(sValor, ['0', 'false', 'no', 'off']) then
-    Exit(False);
-  raise EConvertError.CreateFmt(
-    SErrorValorPerfilNoBooleano,
-    [ASeccion, AClave]);
+  Result := MatchText(
+    sValor,
+    ['1', 'true', 'yes', 'si', 'sí', 'on']);
+  if not Result and
+     not MatchText(sValor, ['0', 'false', 'no', 'off']) then
+    raise EConvertError.CreateFmt(
+      SErrorValorPerfilNoBooleano,
+      [ASeccion, AClave]);
 end;
 
 function LeerEntero(

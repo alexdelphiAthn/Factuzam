@@ -87,8 +87,8 @@ type
     Lineas: TArray<TLineaArticuloPrestaShop>;
   end;
 
-  IRepositorioPrestaShopCola = interface
-    ['{D9C3F838-66D9-4B94-89F2-0BB742AD065E}']
+  IRepositorioPreparacionPrestaShopCola = interface
+    ['{D4D79B02-D8A0-455A-9CFC-C8CF25B260DF}']
     procedure EncolarCambio(
       const ACodigoArticulo, ACodigoUnidad: string;
       AEsPrecio, AEsStock: Boolean;
@@ -121,6 +121,11 @@ type
     function TieneVisibilidadPendiente(
       const AClaveInstalacion: string;
       AIdTienda: Integer): Boolean;
+  end;
+
+  IRepositorioPrestaShopCola = interface(
+    IRepositorioPreparacionPrestaShopCola)
+    ['{D9C3F838-66D9-4B94-89F2-0BB742AD065E}']
     function MarcarProcesando(
       AIdCola: Int64;
       const AClaveInstalacion: string;

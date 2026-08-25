@@ -65,6 +65,10 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  SErrorEliminarFormatoImpresionNoPermitido =
+    'El propietario no permite eliminar formatos de impresión.';
+
 procedure TfrmMtoModalGenImpEle.btnDeleteFormatoClick(Sender: TObject);
 begin
   inherited;
@@ -73,7 +77,7 @@ begin
     FEliminador.EliminarFormatoImpresion(sElegido, Self)
   else
     raise EInvalidCast.Create(
-      'El propietario no permite eliminar formatos de impresión.');
+      SErrorEliminarFormatoImpresionNoPermitido);
   sFicha := 'D';
 end;
 

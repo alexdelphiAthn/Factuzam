@@ -10,7 +10,7 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Cola de subida por lotes de fotos al webservice de Factuzam              }
-{    (upload_foto.php / fotosnube). Cada foto se identifica por código de      }
+{    (API v1 /fotos/subir.php). Cada foto se identifica por código de         }
 {    artículo y color; si hay más de una foto del mismo artículo+color se les  }
 {    asigna un índice correlativo. La subida se hace en un hilo de fondo y va  }
 {    notificando el estado de cada elemento a la interfaz. Mismo contrato      }
@@ -167,8 +167,10 @@ var
   Res: IHTTPResponse;
   Json: TJSONValue;
   Obj: TJSONObject;
+  Datos: TJSONObject;
+  ErrorObj: TJSONObject;
   Valor: TJSONValue;
-  Estado: string;
+  OkApi: Boolean;
   Cuerpo: string;
 begin
   Result := False;
@@ -177,23 +179,22 @@ begin
   try
     Form := TMultipartFormData.Create;
     try
-      // Mismos campos que espera upload_foto.php (oda).
+      // Campos del contrato moderno POST /api/v1/fotos/subir.php.
       Form.AddField('articulo', AItem.Articulo);
       Form.AddField('color', AItem.Color);
       Form.AddField('indice', AItem.Indice);
-      Form.AddField('carpeta_cliente', FCarpetaCliente);
+      Form.AddField('referencia', FCarpetaCliente);
       Form.AddField('nombre_original', ExtractFileName(AItem.Archivo));
       // SHA1 del fichero local para verificación extremo a extremo.
       Form.AddField('osha1',
         LowerCase(THashSHA1.GetHashStringFromFile(AItem.Archivo)));
       Form.AddFile('imagen', AItem.Archivo);
-      HTTP.CustomHeaders['X-API-Key'] := FApiKey;
+      HTTP.CustomHeaders['Authorization'] := 'Bearer ' + FApiKey;
       Res := HTTP.Post(FUrl, Form, nil);
       Cuerpo := Res.ContentAsString;
-      // Respuesta JSON { status, message, sha1, ... }. La parseamos
-      // siempre (tambien en error) para mostrar el 'message' del servidor,
-      // p.ej. "La carpeta del cliente 'X' no existe" en un 404.
-      Estado := '';
+      // API v1: {ok, datos:{sha256_real,...}, error:{mensaje,...}}.
+      // Se analiza tambien el cuerpo de error para mostrar el mensaje real.
+      OkApi := False;
       AItem.Hash := '';
       AItem.Mensaje := Cuerpo;
       Json := TJSONObject.ParseJSONValue(Cuerpo);
@@ -201,20 +202,28 @@ begin
         if Json is TJSONObject then
         begin
           Obj := TJSONObject(Json);
-          Valor := Obj.GetValue('status');
+          Valor := Obj.GetValue('ok');
           if Valor <> nil then
-            Estado := Valor.Value;
-          Valor := Obj.GetValue('sha1');
-          if Valor <> nil then
-            AItem.Hash := Valor.Value;
-          Valor := Obj.GetValue('message');
-          if Valor <> nil then
-            AItem.Mensaje := Valor.Value;
+            OkApi := SameText(Valor.Value, 'true');
+          if Obj.GetValue('datos') is TJSONObject then
+          begin
+            Datos := TJSONObject(Obj.GetValue('datos'));
+            Valor := Datos.GetValue('sha256_real');
+            if Valor <> nil then
+              AItem.Hash := Valor.Value;
+          end;
+          if Obj.GetValue('error') is TJSONObject then
+          begin
+            ErrorObj := TJSONObject(Obj.GetValue('error'));
+            Valor := ErrorObj.GetValue('mensaje');
+            if Valor <> nil then
+              AItem.Mensaje := Valor.Value;
+          end;
         end;
       finally
         Json.Free;
       end;
-      if (Res.StatusCode = 200) and SameText(Estado, 'success') then
+      if (Res.StatusCode >= 200) and (Res.StatusCode < 300) and OkApi then
       begin
         AItem.Estado := esOk;
         Result := True;

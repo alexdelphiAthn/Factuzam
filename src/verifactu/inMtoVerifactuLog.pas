@@ -74,6 +74,14 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SFiltroArchivoXmlNoVerifactu =
+    'Archivo XML|*.xml';
+  SFiltroArchivosXmlNoVerifactu =
+    'Archivos XML|*.xml|Todos los archivos|*.*';
+  SNombreArchivoExportacionNoVerifactu =
+    'NoVerifactu_%s.xml';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoVerifactuLog }
@@ -148,10 +156,11 @@ begin
   try
     oDialogo.Title := STituloGuardarExportacionNoVerifactu;
     oDialogo.InitialDir := TPath.GetDocumentsPath;
-    oDialogo.Filter := 'Archivo XML|*.xml';
+    oDialogo.Filter := SFiltroArchivoXmlNoVerifactu;
     oDialogo.DefaultExt := 'xml';
-    oDialogo.FileName := 'NoVerifactu_' +
-                         FormatDateTime('yyyymmdd_hhnnss', Now) + '.xml';
+    oDialogo.FileName := Format(
+      SNombreArchivoExportacionNoVerifactu,
+      [FormatDateTime('yyyymmdd_hhnnss', Now)]);
     if oDialogo.Execute then
     begin
       oResultado := ExportarRegistrosNoVerifactu(ParametrosApp,
@@ -182,7 +191,7 @@ begin
   try
     oDialogo.Title := STituloVerificarFicherosNoVerifactu;
     oDialogo.InitialDir := TPath.GetDocumentsPath;
-    oDialogo.Filter := 'Archivos XML|*.xml|Todos los archivos|*.*';
+    oDialogo.Filter := SFiltroArchivosXmlNoVerifactu;
     if oDialogo.Execute then
     begin
       InferirFicherosNoVerifactu(oDialogo.FileName, sEventos, sFacturacion);

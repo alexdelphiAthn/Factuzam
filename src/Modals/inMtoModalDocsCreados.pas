@@ -74,6 +74,12 @@ implementation
 
 {$R *.dfm}
 
+resourcestring
+  SCaptionTipoDocumentoCreado = 'Tipo';
+  SCaptionSerieDocumentoCreado = 'Serie';
+  SCaptionNumeroDocumentoCreado = 'Numero';
+  SCaptionAlmacenDocumentoCreado = 'Almacen';
+
 class function TfrmModalDocsCreados.Seleccionar(
   AOwner: TComponent;
   const ADocumentos: TDocumentosMaterializados;
@@ -129,19 +135,19 @@ begin
   tvDocs.ClearItems;
   Columna := tvDocs.CreateColumn;
   Columna.DataBinding.FieldName := 'TIPO';
-  Columna.Caption := 'Tipo';
+  Columna.Caption := SCaptionTipoDocumentoCreado;
   Columna.Width := 110;
   Columna := tvDocs.CreateColumn;
   Columna.DataBinding.FieldName := 'SERIE';
-  Columna.Caption := 'Serie';
+  Columna.Caption := SCaptionSerieDocumentoCreado;
   Columna.Width := 80;
   Columna := tvDocs.CreateColumn;
   Columna.DataBinding.FieldName := 'NUMERO';
-  Columna.Caption := 'Numero';
+  Columna.Caption := SCaptionNumeroDocumentoCreado;
   Columna.Width := 120;
   Columna := tvDocs.CreateColumn;
   Columna.DataBinding.FieldName := 'ALMACEN';
-  Columna.Caption := 'Almacen';
+  Columna.Caption := SCaptionAlmacenDocumentoCreado;
   Columna.Width := 140;
 end;
 

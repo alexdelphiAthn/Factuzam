@@ -1,4 +1,4 @@
-inherited frmModalCambioIva: TfrmModalCambioIva
+﻿inherited frmModalCambioIva: TfrmModalCambioIva
   BorderStyle = bsDialog
   Caption = 'Cambio de IVA'
   ClientHeight = 285

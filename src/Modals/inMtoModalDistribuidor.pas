@@ -154,6 +154,10 @@ uses
   UniDataConfiguracionPantalla,
   UniDataModoTallas;
 
+resourcestring
+  SCaptionAlmacenDistribuidorTallas = 'Almacen';
+  SCaptionNombreDistribuidorTallas = 'Nombre';
+
 type
   TDistribuidorTallasVisualMto = class(
     TInterfacedObject,
@@ -396,13 +400,13 @@ begin
   // en ellas via teclado ni click.
   Columna := tvCuadr.CreateColumn;
   Columna.DataBinding.FieldName := 'CODIGO_ALM';
-  Columna.Caption := 'Almacen';
+  Columna.Caption := SCaptionAlmacenDistribuidorTallas;
   Columna.Options.Editing := False;
   Columna.Options.Focusing := False;
   Columna.Width := 70;
   Columna := tvCuadr.CreateColumn;
   Columna.DataBinding.FieldName := 'NOMBRE_ALM';
-  Columna.Caption := 'Nombre';
+  Columna.Caption := SCaptionNombreDistribuidorTallas;
   Columna.Options.Editing := False;
   Columna.Options.Focusing := False;
   Columna.Width := 160;

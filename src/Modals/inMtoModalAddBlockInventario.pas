@@ -87,6 +87,10 @@ implementation
 uses
   inLibUser, inLibMsgArticulos;
 
+resourcestring
+  SCaptionExcluirArticulosYaEnInventario =
+    'Excluir articulos ya en el inventario';
+
 class function TfrmModalAddBlockInventario.Ejecutar(
   AOwner: TComponent;
   const AEmpresa, AAlmacen, ASerie, ANro: string): TAddBlockInventarioResult;
@@ -192,7 +196,7 @@ end;
 
 function TfrmModalAddBlockInventario.TextoExcluirYaCargados: string;
 begin
-  Result := 'Excluir articulos ya en el inventario';
+  Result := SCaptionExcluirArticulosYaEnInventario;
 end;
 
 // ============================================================================

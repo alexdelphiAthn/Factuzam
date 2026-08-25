@@ -148,6 +148,44 @@ uses
   inLibDevExcel,
   inLibMsgTickets;
 
+resourcestring
+  SFormatoReferenciaOperacionTiraCajaExcel = 'Op.%s';
+  STodasSeriesTiraCajaExcel = 'TODAS LAS SERIES';
+  SPrefijoSeriesTiraCajaExcel = 'SERIES: ';
+  SFormatoTituloTiraCajaExcel = 'TIRA DE CAJA · CAJA %s';
+  SFormatoPeriodoTiraCajaExcel = 'DEL %s  AL %s';
+  SOrdenCronologicoTiraCajaExcel = 'ORDEN: CRONOLOGICO';
+  SOrdenTipoDocumentoTiraCajaExcel = 'ORDEN: POR TIPO DE DOCUMENTO';
+  SColumnaTipoTiraCajaExcel = 'Tipo';
+  SColumnaFechaTiraCajaExcel = 'Fecha';
+  SColumnaDocumentoTiraCajaExcel = 'Documento';
+  SColumnaClienteDestinoTiraCajaExcel = 'Cliente/Destino';
+  SColumnaSkuTiraCajaExcel = 'SKU';
+  SColumnaDescripcionTiraCajaExcel = 'Descripción';
+  SColumnaCantidadTiraCajaExcel = 'Cantidad';
+  SColumnaImporteTiraCajaExcel = 'Importe';
+  SColumnaCobradoTiraCajaExcel = 'Cobrado';
+  SColumnaPendienteTiraCajaExcel = 'Pendiente';
+  STipoVentaTiraCajaExcel = 'Venta';
+  STipoTraspasoTiraCajaExcel = 'Traspaso';
+  STipoIngresoTiraCajaExcel = 'Ingreso';
+  STipoGastoTiraCajaExcel = 'Gasto';
+  STipoCreditoDepositoTiraCajaExcel = 'Crédito (depósito)';
+  STituloTraspasosTiraCajaExcel = 'TRASPASOS SALIENTES (ORIGEN)';
+  STituloIngresosTiraCajaExcel = 'INGRESOS POR CAJA';
+  STituloGastosTiraCajaExcel = 'GASTOS POR CAJA';
+  STituloDepositosTiraCajaExcel = 'VENTAS A CREDITO (DEPOSITOS)';
+  STituloVentasTiraCajaExcel = 'VENTAS FACTURADAS';
+  SSubtotalTraspasosTiraCajaExcel = 'SUBTOTAL TRASPASOS (coste)';
+  SSubtotalIngresosTiraCajaExcel = 'SUBTOTAL INGRESOS';
+  SSubtotalGastosTiraCajaExcel = 'SUBTOTAL GASTOS';
+  SSubtotalDepositosTiraCajaExcel = 'SUBTOTAL DEPOSITOS';
+  SSubtotalVentasTiraCajaExcel = 'SUBTOTAL VENTAS';
+  SSinOperacionesTiraCajaExcel = 'Sin operaciones';
+  STituloResumenTiraCajaExcel = 'RESUMEN';
+  SNombreHojaTiraCajaExcel = 'Tira de Caja';
+  SFormatoNombreArchivoTiraCajaExcel = 'TiraCaja_%s';
+
 type
   TImpresorTiraCajaTicket = class
   private
@@ -1045,7 +1083,8 @@ begin
       FOperacion.SerieFactura,
       FOperacion.NumeroFactura)
   else
-    Result := 'Op.' + FOperacion.NumeroOperacion;
+    Result := Format(SFormatoReferenciaOperacionTiraCajaExcel,
+      [FOperacion.NumeroOperacion]);
 end;
 
 function TExportadorTiraCajaExcel.FechaOperacion: string;
@@ -1059,10 +1098,10 @@ var
   iSerie: Integer;
 begin
   if Length(FSeries) = 0 then
-    Result := 'TODAS LAS SERIES'
+    Result := STodasSeriesTiraCajaExcel
   else
   begin
-    Result := 'SERIES: ';
+    Result := SPrefijoSeriesTiraCajaExcel;
     for iSerie := 0 to High(FSeries) do
     begin
       if iSerie > 0 then
@@ -1081,25 +1120,34 @@ end;
 
 procedure TExportadorTiraCajaExcel.EscribirCabecera;
 begin
-  W(FHoja, 0, COL_EXCEL_TIPO, 'TIRA DE CAJA · CAJA ' + FCaja, True);
-  W(FHoja, 1, COL_EXCEL_TIPO, 'DEL ' +
-    FormatDateTime('dd/mm/yyyy hh:nn', FFechaDesde) + '  AL ' +
-    FormatDateTime('dd/mm/yyyy hh:nn', FFechaHasta));
+  W(FHoja, 0, COL_EXCEL_TIPO,
+    Format(SFormatoTituloTiraCajaExcel, [FCaja]), True);
+  W(FHoja, 1, COL_EXCEL_TIPO,
+    Format(SFormatoPeriodoTiraCajaExcel,
+      [FormatDateTime('dd/mm/yyyy hh:nn', FFechaDesde),
+       FormatDateTime('dd/mm/yyyy hh:nn', FFechaHasta)]));
   W(FHoja, 2, COL_EXCEL_TIPO, TextoSeries);
   if FCronologico then
-    W(FHoja, 3, COL_EXCEL_TIPO, 'ORDEN: CRONOLOGICO')
+    W(FHoja, 3, COL_EXCEL_TIPO, SOrdenCronologicoTiraCajaExcel)
   else
-    W(FHoja, 3, COL_EXCEL_TIPO, 'ORDEN: POR TIPO DE DOCUMENTO');
-  W(FHoja, 5, COL_EXCEL_TIPO, 'Tipo', True);
-  W(FHoja, 5, COL_EXCEL_FECHA, 'Fecha', True);
-  W(FHoja, 5, COL_EXCEL_DOCUMENTO, 'Documento', True);
-  W(FHoja, 5, COL_EXCEL_REFERENCIA, 'Cliente/Destino', True);
-  W(FHoja, 5, COL_EXCEL_SKU, 'SKU', True);
-  W(FHoja, 5, COL_EXCEL_DESCRIPCION, 'Descripción', True);
-  W(FHoja, 5, COL_EXCEL_CANTIDAD, 'Cantidad', True, ssahRight);
-  W(FHoja, 5, COL_EXCEL_IMPORTE, 'Importe', True, ssahRight);
-  W(FHoja, 5, COL_EXCEL_COBRADO, 'Cobrado', True, ssahRight);
-  W(FHoja, 5, COL_EXCEL_PENDIENTE, 'Pendiente', True, ssahRight);
+    W(FHoja, 3, COL_EXCEL_TIPO, SOrdenTipoDocumentoTiraCajaExcel);
+  W(FHoja, 5, COL_EXCEL_TIPO, SColumnaTipoTiraCajaExcel, True);
+  W(FHoja, 5, COL_EXCEL_FECHA, SColumnaFechaTiraCajaExcel, True);
+  W(FHoja, 5, COL_EXCEL_DOCUMENTO,
+    SColumnaDocumentoTiraCajaExcel, True);
+  W(FHoja, 5, COL_EXCEL_REFERENCIA,
+    SColumnaClienteDestinoTiraCajaExcel, True);
+  W(FHoja, 5, COL_EXCEL_SKU, SColumnaSkuTiraCajaExcel, True);
+  W(FHoja, 5, COL_EXCEL_DESCRIPCION,
+    SColumnaDescripcionTiraCajaExcel, True);
+  W(FHoja, 5, COL_EXCEL_CANTIDAD,
+    SColumnaCantidadTiraCajaExcel, True, ssahRight);
+  W(FHoja, 5, COL_EXCEL_IMPORTE,
+    SColumnaImporteTiraCajaExcel, True, ssahRight);
+  W(FHoja, 5, COL_EXCEL_COBRADO,
+    SColumnaCobradoTiraCajaExcel, True, ssahRight);
+  W(FHoja, 5, COL_EXCEL_PENDIENTE,
+    SColumnaPendienteTiraCajaExcel, True, ssahRight);
   FFila := 6;
 end;
 
@@ -1117,7 +1165,7 @@ begin
     FOperacion.NumeroOperacion);
   for oLinea in aLineas do
   begin
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'Venta');
+    W(FHoja, FFila, COL_EXCEL_TIPO, STipoVentaTiraCajaExcel);
     W(FHoja, FFila, COL_EXCEL_FECHA, FechaOperacion);
     W(FHoja, FFila, COL_EXCEL_DOCUMENTO, sDocumento);
     W(FHoja, FFila, COL_EXCEL_SKU, oLinea.CodigoUnidad);
@@ -1154,7 +1202,7 @@ begin
   begin
     dCantidad := oLinea.Cantidad;
     dCoste := oLinea.PrecioCosteUnitario;
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'Traspaso');
+    W(FHoja, FFila, COL_EXCEL_TIPO, STipoTraspasoTiraCajaExcel);
     W(FHoja, FFila, COL_EXCEL_FECHA, FechaOperacion);
     W(FHoja, FFila, COL_EXCEL_DOCUMENTO, sDocumento);
     W(FHoja, FFila, COL_EXCEL_REFERENCIA, sDestino);
@@ -1180,11 +1228,12 @@ begin
   W(FHoja, FFila, COL_EXCEL_TIPO, ATipo);
   W(FHoja, FFila, COL_EXCEL_FECHA, FechaOperacion);
   W(FHoja, FFila, COL_EXCEL_DOCUMENTO,
-    'Op.' + FOperacion.NumeroOperacion);
+    Format(SFormatoReferenciaOperacionTiraCajaExcel,
+      [FOperacion.NumeroOperacion]));
   W(FHoja, FFila, COL_EXCEL_DESCRIPCION,
     Trim(FOperacion.ConceptoGastoIngreso));
   EscribirMoneda(FFila, COL_EXCEL_IMPORTE, dImporte);
-  if ATipo = 'Ingreso' then
+  if ATipo = STipoIngresoTiraCajaExcel then
   begin
     FImporteIngresos := FImporteIngresos + dImporte;
     Inc(FNumeroIngresos);
@@ -1215,10 +1264,11 @@ begin
     dCantidad := oDeposito.Cantidad;
     dAnticipo := oDeposito.ImporteAnticipo;
     dTotal := dPrecio * dCantidad;
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'Crédito (depósito)');
+    W(FHoja, FFila, COL_EXCEL_TIPO, STipoCreditoDepositoTiraCajaExcel);
     W(FHoja, FFila, COL_EXCEL_FECHA, FechaOperacion);
     W(FHoja, FFila, COL_EXCEL_DOCUMENTO,
-      'Op.' + FOperacion.NumeroOperacion);
+      Format(SFormatoReferenciaOperacionTiraCajaExcel,
+        [FOperacion.NumeroOperacion]));
     W(FHoja, FFila, COL_EXCEL_REFERENCIA,
       Trim(oDeposito.CodigoCliente + ' ' + oDeposito.Cliente));
     W(FHoja, FFila, COL_EXCEL_SKU, oDeposito.CodigoUnidad);
@@ -1239,16 +1289,16 @@ procedure TExportadorTiraCajaExcel.EscribirTituloGrupo(
 begin
   if AGrupo = 'TRA' then
     W(FHoja, FFila, COL_EXCEL_TIPO,
-      'TRASPASOS SALIENTES (ORIGEN)', True)
+      STituloTraspasosTiraCajaExcel, True)
   else if AGrupo = 'ING' then
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'INGRESOS POR CAJA', True)
+    W(FHoja, FFila, COL_EXCEL_TIPO, STituloIngresosTiraCajaExcel, True)
   else if AGrupo = 'GAS' then
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'GASTOS POR CAJA', True)
+    W(FHoja, FFila, COL_EXCEL_TIPO, STituloGastosTiraCajaExcel, True)
   else if AGrupo = 'DEP' then
     W(FHoja, FFila, COL_EXCEL_TIPO,
-      'VENTAS A CREDITO (DEPOSITOS)', True)
+      STituloDepositosTiraCajaExcel, True)
   else
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'VENTAS FACTURADAS', True);
+    W(FHoja, FFila, COL_EXCEL_TIPO, STituloVentasTiraCajaExcel, True);
   Inc(FFila);
 end;
 
@@ -1258,33 +1308,33 @@ begin
   if AGrupo = 'TRA' then
   begin
     W(FHoja, FFila, COL_EXCEL_DESCRIPCION,
-      'SUBTOTAL TRASPASOS (coste)', True, ssahRight);
+      SSubtotalTraspasosTiraCajaExcel, True, ssahRight);
     if FVerCoste then
       EscribirMoneda(FFila, COL_EXCEL_IMPORTE, FImporteTraspasos);
   end
   else if AGrupo = 'ING' then
   begin
     W(FHoja, FFila, COL_EXCEL_DESCRIPCION,
-      'SUBTOTAL INGRESOS', True, ssahRight);
+      SSubtotalIngresosTiraCajaExcel, True, ssahRight);
     EscribirMoneda(FFila, COL_EXCEL_IMPORTE, FImporteIngresos);
   end
   else if AGrupo = 'GAS' then
   begin
     W(FHoja, FFila, COL_EXCEL_DESCRIPCION,
-      'SUBTOTAL GASTOS', True, ssahRight);
+      SSubtotalGastosTiraCajaExcel, True, ssahRight);
     EscribirMoneda(FFila, COL_EXCEL_IMPORTE, FImporteGastos);
   end
   else if AGrupo = 'DEP' then
   begin
     W(FHoja, FFila, COL_EXCEL_DESCRIPCION,
-      'SUBTOTAL DEPOSITOS', True, ssahRight);
+      SSubtotalDepositosTiraCajaExcel, True, ssahRight);
     EscribirMoneda(FFila, COL_EXCEL_IMPORTE, FVentaDepositos);
     EscribirMoneda(FFila, COL_EXCEL_COBRADO, FCobroDepositos);
   end
   else
   begin
     W(FHoja, FFila, COL_EXCEL_DESCRIPCION,
-      'SUBTOTAL VENTAS', True, ssahRight);
+      SSubtotalVentasTiraCajaExcel, True, ssahRight);
     EscribirMoneda(FFila, COL_EXCEL_IMPORTE, FImporteVentas);
   end;
   Inc(FFila);
@@ -1295,9 +1345,9 @@ begin
   if AGrupo = 'TRA' then
     VolcarTraspaso
   else if AGrupo = 'ING' then
-    VolcarIngresoGasto('Ingreso')
+    VolcarIngresoGasto(STipoIngresoTiraCajaExcel)
   else if AGrupo = 'GAS' then
-    VolcarIngresoGasto('Gasto')
+    VolcarIngresoGasto(STipoGastoTiraCajaExcel)
   else if AGrupo = 'DEP' then
     VolcarDeposito
   else
@@ -1347,13 +1397,13 @@ procedure TExportadorTiraCajaExcel.EscribirCierre(
 begin
   if (FNumeroVentas + FNumeroTraspasos + FNumeroIngresos +
       FNumeroGastos + FNumeroDepositos) = 0 then
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'Sin operaciones')
+    W(FHoja, FFila, COL_EXCEL_TIPO, SSinOperacionesTiraCajaExcel)
   else if not FCronologico then
     EscribirSubtotalGrupo(AUltimoGrupo)
   else
   begin
     Inc(FFila);
-    W(FHoja, FFila, COL_EXCEL_TIPO, 'RESUMEN', True);
+    W(FHoja, FFila, COL_EXCEL_TIPO, STituloResumenTiraCajaExcel, True);
     Inc(FFila);
     if FNumeroVentas > 0 then
       EscribirSubtotalGrupo('VEN');
@@ -1374,7 +1424,7 @@ begin
   try
     if FPreview.HojaCalculo.SheetCount = 0 then
       FPreview.HojaCalculo.AddSheet(
-        'Tira de Caja', TdxSpreadSheetTableView);
+        SNombreHojaTiraCajaExcel, TdxSpreadSheetTableView);
     FHoja := FPreview.HojaCalculo.ActiveSheetAsTable;
     if FHoja <> nil then
     begin
@@ -1387,8 +1437,9 @@ begin
       end;
       if FPropietario is TForm then
         FPreview.AsignarPopupParent(TForm(FPropietario));
-      FPreview.AsignarNombreArchivo('TiraCaja_' +
-        FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now));
+      FPreview.AsignarNombreArchivo(
+        Format(SFormatoNombreArchivoTiraCajaExcel,
+          [FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now)]));
       FPreview.Mostrar;
     end;
   finally

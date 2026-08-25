@@ -393,6 +393,114 @@ begin
   AQuery.Close;
 end;
 
+procedure BloquearPedidosCompraReversion(
+  AQuery: TUniQuery;
+  const ADocumentos: TDocumentosReversionMaterializacion;
+  const ATablas: TTablasReversion);
+var
+  iDocumento: Integer;
+begin
+  for iDocumento := 0 to High(ADocumentos) do
+  begin
+    if SameText(ADocumentos[iDocumento].Tipo, 'PEDC') and
+       ATablas.TienePedidos then
+    begin
+      AQuery.SQL.Text :=
+        'SELECT SERIE_PEDC FROM fza_pedidos_compra ' +
+        ' WHERE SERIE_PEDC = :s AND NUMERO_PEDC = :n ' +
+        ' FOR UPDATE';
+      AQuery.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
+      AQuery.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
+      ConsumirBloqueo(AQuery);
+    end;
+  end;
+end;
+
+procedure BloquearAlbaranesCompraReversion(
+  AQuery: TUniQuery;
+  const ADocumentos: TDocumentosReversionMaterializacion;
+  const ATablas: TTablasReversion);
+var
+  iDocumento: Integer;
+begin
+  for iDocumento := 0 to High(ADocumentos) do
+  begin
+    if SameText(ADocumentos[iDocumento].Tipo, 'ALBC') and
+       ATablas.TieneAlbaranes then
+    begin
+      AQuery.SQL.Text :=
+        'SELECT SERIE_ALBC FROM fza_albaranes_compra ' +
+        ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n ' +
+        ' FOR UPDATE';
+      AQuery.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
+      AQuery.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
+      ConsumirBloqueo(AQuery);
+    end;
+  end;
+end;
+
+procedure CargarClavesStockReversion(AQuery: TUniQuery);
+begin
+  AQuery.SQL.Text :=
+    'INSERT INTO tmp_reversion_claves_stock (ALM, SKU) ' +
+    'SELECT DISTINCT O.ALM, O.SKU ' +
+    '  FROM ( ' +
+    '    SELECT COALESCE(' +
+    '             NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '             H.CODIGO_ALM_ALBC) AS ALM, ' +
+    '           L.CODIGO_UNIDAD_ALBCLIN AS SKU ' +
+    '      FROM fza_albaranes_compra H ' +
+    '      JOIN fza_albaranes_compra_lineas L ' +
+    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      JOIN tmp_reversion_documentos_albc D ' +
+    '        ON D.SERIE = H.SERIE_ALBC ' +
+    '       AND D.NUMERO = H.NUMERO_ALBC ' +
+    '     WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
+    '       AND NOT EXISTS ( ' +
+    '             SELECT 1 ' +
+    '               FROM fza_albaranes_compra_celdas C ' +
+    '              WHERE C.SERIE_ALBC_ALBCCEL = ' +
+    '                    L.SERIE_ALBC_ALBCLIN ' +
+    '                AND C.NUMERO_ALBC_ALBCCEL = ' +
+    '                    L.NUMERO_ALBC_ALBCLIN ' +
+    '                AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
+    '                    CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
+    '                AND C.CANTIDAD_ALBCCEL > 0) ' +
+    '    UNION ALL ' +
+    '    SELECT COALESCE(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
+    '                    NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
+    '                    H.CODIGO_ALM_ALBC), ' +
+    '           L.CODIGO_UNIDAD_ALBCLIN ' +
+    '      FROM fza_albaranes_compra H ' +
+    '      JOIN fza_albaranes_compra_lineas L ' +
+    '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
+    '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
+    '      JOIN fza_albaranes_compra_celdas C ' +
+    '        ON C.SERIE_ALBC_ALBCCEL = L.SERIE_ALBC_ALBCLIN ' +
+    '       AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
+    '       AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
+    '           CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
+    '      JOIN tmp_reversion_documentos_albc D ' +
+    '        ON D.SERIE = H.SERIE_ALBC ' +
+    '       AND D.NUMERO = H.NUMERO_ALBC ' +
+    '     WHERE C.CANTIDAD_ALBCCEL > 0 ' +
+    '    UNION ALL ' +
+    '    SELECT M.CODIGO_ALM_MOV, M.CODIGO_UNIDAD_MOV ' +
+    '      FROM fza_movimientos_almacen M ' +
+    '      JOIN tmp_reversion_documentos_albc D ' +
+    '        ON D.SERIE = M.SERIE_DOC_MOV ' +
+    '       AND D.NUMERO = M.NUMERO_DOC_MOV ' +
+    '     WHERE M.TIPO_DOC_MOV = ''AC'' ' +
+    '       AND IFNULL(M.ESACTIVO_MOV, ''S'') = ''S'' ' +
+    '  ) O ' +
+    ' WHERE IFNULL(O.ALM, '''') <> '''' ' +
+    '   AND IFNULL(O.SKU, '''') <> '''' ' +
+    ' ORDER BY O.ALM, O.SKU ' +
+    'ON DUPLICATE KEY UPDATE ALM = VALUES(ALM)';
+  AQuery.ExecSQL;
+end;
+
 procedure BloquearDocumentosReversion(
   ADM: TdmComprasSesiones;
   const ADocumentos: TDocumentosReversionMaterializacion;
@@ -406,34 +514,8 @@ begin
   try
     q.Connection := ADM.ConexionPrincipal;
     // Todos los escritores toman primero el pedido y despues el albaran.
-    for iDocumento := 0 to High(ADocumentos) do
-    begin
-      if SameText(ADocumentos[iDocumento].Tipo, 'PEDC') and
-         ATablas.TienePedidos then
-      begin
-        q.SQL.Text :=
-          'SELECT SERIE_PEDC FROM fza_pedidos_compra ' +
-          ' WHERE SERIE_PEDC = :s AND NUMERO_PEDC = :n ' +
-          ' FOR UPDATE';
-        q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
-        q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
-        ConsumirBloqueo(q);
-      end;
-    end;
-    for iDocumento := 0 to High(ADocumentos) do
-    begin
-      if SameText(ADocumentos[iDocumento].Tipo, 'ALBC') and
-         ATablas.TieneAlbaranes then
-      begin
-        q.SQL.Text :=
-          'SELECT SERIE_ALBC FROM fza_albaranes_compra ' +
-          ' WHERE SERIE_ALBC = :s AND NUMERO_ALBC = :n ' +
-          ' FOR UPDATE';
-        q.ParamByName('s').AsString := ADocumentos[iDocumento].Serie;
-        q.ParamByName('n').AsString := ADocumentos[iDocumento].Numero;
-        ConsumirBloqueo(q);
-      end;
-    end;
+    BloquearPedidosCompraReversion(q, ADocumentos, ATablas);
+    BloquearAlbaranesCompraReversion(q, ADocumentos, ATablas);
     q.SQL.Text :=
       'DROP TEMPORARY TABLE IF EXISTS tmp_reversion_documentos_albc';
     q.ExecSQL;
@@ -468,66 +550,7 @@ begin
       end;
     end;
     if bTieneAlbaranes then
-    begin
-      q.SQL.Text :=
-        'INSERT INTO tmp_reversion_claves_stock (ALM, SKU) ' +
-        'SELECT DISTINCT O.ALM, O.SKU ' +
-        '  FROM ( ' +
-        '    SELECT COALESCE(' +
-        '             NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '             H.CODIGO_ALM_ALBC) AS ALM, ' +
-        '           L.CODIGO_UNIDAD_ALBCLIN AS SKU ' +
-        '      FROM fza_albaranes_compra H ' +
-        '      JOIN fza_albaranes_compra_lineas L ' +
-        '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-        '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
-        '      JOIN tmp_reversion_documentos_albc D ' +
-        '        ON D.SERIE = H.SERIE_ALBC ' +
-        '       AND D.NUMERO = H.NUMERO_ALBC ' +
-        '     WHERE IFNULL(L.CANTIDAD_ALBCLIN, 0) > 0 ' +
-        '       AND NOT EXISTS ( ' +
-        '             SELECT 1 ' +
-        '               FROM fza_albaranes_compra_celdas C ' +
-        '              WHERE C.SERIE_ALBC_ALBCCEL = ' +
-        '                    L.SERIE_ALBC_ALBCLIN ' +
-        '                AND C.NUMERO_ALBC_ALBCCEL = ' +
-        '                    L.NUMERO_ALBC_ALBCLIN ' +
-        '                AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
-        '                    CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
-        '                AND C.CANTIDAD_ALBCCEL > 0) ' +
-        '    UNION ALL ' +
-        '    SELECT COALESCE(NULLIF(C.CODIGO_ALM_ALBCCEL, ''''), ' +
-        '                    NULLIF(L.CODIGO_ALMACEN_ALBCLIN, ''''), ' +
-        '                    H.CODIGO_ALM_ALBC), ' +
-        '           L.CODIGO_UNIDAD_ALBCLIN ' +
-        '      FROM fza_albaranes_compra H ' +
-        '      JOIN fza_albaranes_compra_lineas L ' +
-        '        ON L.SERIE_ALBC_ALBCLIN = H.SERIE_ALBC ' +
-        '       AND L.NUMERO_ALBC_ALBCLIN = H.NUMERO_ALBC ' +
-        '      JOIN fza_albaranes_compra_celdas C ' +
-        '        ON C.SERIE_ALBC_ALBCCEL = L.SERIE_ALBC_ALBCLIN ' +
-        '       AND C.NUMERO_ALBC_ALBCCEL = L.NUMERO_ALBC_ALBCLIN ' +
-        '       AND CAST(C.LINEA_ALBC_ALBCCEL AS UNSIGNED) = ' +
-        '           CAST(L.LINEA_ALBCLIN AS UNSIGNED) ' +
-        '      JOIN tmp_reversion_documentos_albc D ' +
-        '        ON D.SERIE = H.SERIE_ALBC ' +
-        '       AND D.NUMERO = H.NUMERO_ALBC ' +
-        '     WHERE C.CANTIDAD_ALBCCEL > 0 ' +
-        '    UNION ALL ' +
-        '    SELECT M.CODIGO_ALM_MOV, M.CODIGO_UNIDAD_MOV ' +
-        '      FROM fza_movimientos_almacen M ' +
-        '      JOIN tmp_reversion_documentos_albc D ' +
-        '        ON D.SERIE = M.SERIE_DOC_MOV ' +
-        '       AND D.NUMERO = M.NUMERO_DOC_MOV ' +
-        '     WHERE M.TIPO_DOC_MOV = ''AC'' ' +
-        '       AND IFNULL(M.ESACTIVO_MOV, ''S'') = ''S'' ' +
-        '  ) O ' +
-        ' WHERE IFNULL(O.ALM, '''') <> '''' ' +
-        '   AND IFNULL(O.SKU, '''') <> '''' ' +
-        ' ORDER BY O.ALM, O.SKU ' +
-        'ON DUPLICATE KEY UPDATE ALM = VALUES(ALM)';
-      q.ExecSQL;
-    end;
+      CargarClavesStockReversion(q);
     if bTieneAlbaranes and ATablas.TieneBloqueosStock then
     begin
       q.SQL.Text :=

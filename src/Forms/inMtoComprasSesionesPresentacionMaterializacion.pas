@@ -66,6 +66,13 @@ uses
   inMtoModalDocsCreados,
   inMtoModalIncidencias;
 
+resourcestring
+  STituloIncidenciasMaterializacionSesionCompra =
+    'Hay incidencias que impiden materializar la sesion:';
+  STituloErrorMaterializacionSesionCompra =
+    'No se pudo materializar la sesion:';
+  SMensajeErrorMaterializacionSesionCompra = '[MATERIALIZAR] %s';
+
 // Los callbacks se construyen por bloques para que ninguno supere el
 // tamano admitido y para que se lean las cuatro responsabilidades:
 // lecturas, escrituras, avisos y dialogos.
@@ -212,10 +219,10 @@ begin
       try
         for sIncidencia in AIncidencias do
           Lista.Add(sIncidencia);
-        TfrmModalIncidencias.Mostrar(
-          AEntorno.Propietario,
-          'Hay incidencias que impiden materializar la sesion:',
-          Lista);
+      TfrmModalIncidencias.Mostrar(
+        AEntorno.Propietario,
+        STituloIncidenciasMaterializacionSesionCompra,
+        Lista);
       finally
         FreeAndNil(Lista);
       end;
@@ -272,8 +279,8 @@ begin
     begin
       TfrmModalIncidencias.MostrarMensaje(
         AEntorno.Propietario,
-        'No se pudo materializar la sesion:',
-        '[MATERIALIZAR] ' + AMensaje);
+        STituloErrorMaterializacionSesionCompra,
+        Format(SMensajeErrorMaterializacionSesionCompra, [AMensaje]));
     end;
 end;
 

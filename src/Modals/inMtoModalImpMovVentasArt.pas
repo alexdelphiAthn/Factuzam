@@ -84,6 +84,16 @@ uses
   inLibHojaCalculoIntf, inLibHojaCalculoDevEx, dxSpreadSheet,
   inLibFotos, UniDataInformeMovimientosVentasArticuloRepositorio;
 
+resourcestring
+  STituloAgrupacionesMovimientosVentasArticulo = 'Agrupaciones';
+  SCaptionAlmacenAgrupacionMovimientosVentas = 'Almacén';
+  SCaptionProveedorAgrupacionMovimientosVentas = 'Proveedor';
+  SCaptionFamiliaAgrupacionMovimientosVentas = 'Familia';
+  SCaptionTemporadaAgrupacionMovimientosVentas = 'Temporada';
+  SCaptionColorAgrupacionMovimientosVentas = 'Color';
+  SNombreArchivoMovimientosVentasArticulos =
+    'Movimientos_ventas_articulos';
+
 { TfrmPrintMovVentasArt }
 
 function TfrmPrintMovVentasArt.FiltrosUsados: TFiltrosReport;
@@ -142,9 +152,13 @@ begin
   end;
   // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada/color.
   // + spin de nivel de familia (igual que el balance de almacén).
-  CrearTabAgrupacion('Agrupaciones',
+  CrearTabAgrupacion(STituloAgrupacionesMovimientosVentasArticulo,
     ['ALM', 'PRV', 'FAM', 'TMP', 'COL'],
-    ['Almacén', 'Proveedor', 'Familia', 'Temporada', 'Color'], True);
+    [SCaptionAlmacenAgrupacionMovimientosVentas,
+     SCaptionProveedorAgrupacionMovimientosVentas,
+     SCaptionFamiliaAgrupacionMovimientosVentas,
+     SCaptionTemporadaAgrupacionMovimientosVentas,
+     SCaptionColorAgrupacionMovimientosVentas], True);
 end;
 
 procedure TfrmPrintMovVentasArt.chkIniComprasChange(Sender: TObject);
@@ -214,25 +228,26 @@ var
   oComponente: TfrxComponent;
   sCampoColor: string;
 begin
-  if (FResultadoMovimientos = nil) or
-     (not FResultadoMovimientos.DataSet.Active) then
-    Exit;
-  sCampoColor := '';
-  if FResultadoMovimientos.DataSet.FindField('COLOR_ETIQUETA') <> nil then
-    sCampoColor := 'COLOR_ETIQUETA'
-  else if FResultadoMovimientos.DataSet.FindField('COLOR') <> nil then
-    sCampoColor := 'COLOR';
-  oComponente := frxrprt1.FindObject('MemoArtDesc');
-  if oComponente is TfrxMemoView then
+  if (FResultadoMovimientos <> nil) and
+     FResultadoMovimientos.DataSet.Active then
   begin
-    if sCampoColor <> '' then
-      TfrxMemoView(oComponente).Memo.Text :=
-        '[MovVentas."CODIGO_ART_ART"]  [MovVentas."' + sCampoColor + '"]' +
-        sLineBreak + '[MovVentas."DESCRIPCION_ART"]'
-    else
-      TfrxMemoView(oComponente).Memo.Text :=
-        '[MovVentas."CODIGO_ART_ART"]' + sLineBreak +
-        '[MovVentas."DESCRIPCION_ART"]';
+    sCampoColor := '';
+    if FResultadoMovimientos.DataSet.FindField('COLOR_ETIQUETA') <> nil then
+      sCampoColor := 'COLOR_ETIQUETA'
+    else if FResultadoMovimientos.DataSet.FindField('COLOR') <> nil then
+      sCampoColor := 'COLOR';
+    oComponente := frxrprt1.FindObject('MemoArtDesc');
+    if oComponente is TfrxMemoView then
+    begin
+      if sCampoColor <> '' then
+        TfrxMemoView(oComponente).Memo.Text :=
+          '[MovVentas."CODIGO_ART_ART"]  [MovVentas."' + sCampoColor + '"]' +
+          sLineBreak + '[MovVentas."DESCRIPCION_ART"]'
+      else
+        TfrxMemoView(oComponente).Memo.Text :=
+          '[MovVentas."CODIGO_ART_ART"]' + sLineBreak +
+          '[MovVentas."DESCRIPCION_ART"]';
+    end;
   end;
 end;
 
@@ -311,7 +326,8 @@ begin
     try
       fPreview.DialogoGuardar.InitialDir :=
         ParametrosApp.GetPath('appDirExcel');
-      fPreview.DialogoGuardar.FileName := 'Movimientos_ventas_articulos';
+      fPreview.DialogoGuardar.FileName :=
+        SNombreArchivoMovimientosVentasArticulos;
       oServiciosHoja := CrearServiciosHojaCalculoDevEx(
         fPreview.dxSpreadSheet1);
       ExportarMovVentasArtExcel(

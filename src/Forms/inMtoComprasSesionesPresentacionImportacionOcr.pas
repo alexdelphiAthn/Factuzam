@@ -1,4 +1,4 @@
-{******************************************************************************}
+﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoComprasSesionesPresentacionImportacionOcr                }
 {    Tipo:       Colaborador VCL                                               }
@@ -85,6 +85,22 @@ uses
   inLibComprasSesionesReglas,
   inLibMsgCompras,
   UniDataPedidoOcr;
+
+resourcestring
+  SErrorImportacionOcrSesionConLineas =
+    'La importación OCR requiere una sesión sin líneas.';
+  SErrorImportacionOcrSesionNoBorrador =
+    'Solo se puede importar sobre una sesión en borrador.';
+  SErrorImportacionOcrProveedorNoSeleccionado =
+    'Selecciona el proveedor de la sesión antes de importar.';
+  SErrorImportacionOcrDirectorioFotosNoConfigurado =
+    'El parámetro appDirFotos no está configurado.';
+  SErrorLineaOcrSinModelo = 'La línea OCR %d no tiene modelo.';
+  SErrorTallasOcrNoEncontradas =
+    'Ningún sistema de hasta %d posiciones contiene las tallas ' +
+    'del modelo %s: %s.';
+  SErrorReservarLineasImportacionOcr =
+    'No se pudo reservar el bloque de líneas de la sesión.';
 
 const
   EXTENSIONES_FOTO_PEDIDO_OCR: array[0..5] of string = (
@@ -195,24 +211,24 @@ begin
     raise Exception.Create(SErrorSesionCompraNoActiva);
   if not AEntorno.Datos.unqrySesionLin.IsEmpty then
     raise Exception.Create(
-      'La importación OCR requiere una sesión sin líneas.');
+      SErrorImportacionOcrSesionConLineas);
   if not SameText(
     Trim(AEntorno.Datos.unqryTablaG.FieldByName(
       'ESTADO_SES').AsString),
     'BORRADOR') then
     raise Exception.Create(
-      'Solo se puede importar sobre una sesión en borrador.');
+      SErrorImportacionOcrSesionNoBorrador);
   ATrabajo.Proveedor := Trim(
     AEntorno.Datos.unqryTablaG.FieldByName(
       'CODIGO_PRV_SES').AsString);
   if ATrabajo.Proveedor = '' then
     raise Exception.Create(
-      'Selecciona el proveedor de la sesión antes de importar.');
+      SErrorImportacionOcrProveedorNoSeleccionado);
   ATrabajo.DirectorioFotos := Trim(
     AEntorno.ObtenerDirectorioFotos());
   if ATrabajo.DirectorioFotos = '' then
     raise Exception.Create(
-      'El parámetro appDirFotos no está configurado.');
+      SErrorImportacionOcrDirectorioFotosNoConfigurado);
   if AEntorno.Datos.unqryTablaG.State in [dsEdit, dsInsert] then
     AEntorno.Datos.unqryTablaG.Post;
   ATrabajo.Serie := AEntorno.Datos.unqryTablaG.FieldByName(
@@ -240,15 +256,14 @@ begin
     begin
       if Trim(ATrabajo.Pedido.Lineas[iLinea].Modelo) = '' then
         raise Exception.CreateFmt(
-          'La línea OCR %d no tiene modelo.', [iLinea + 1]);
+          SErrorLineaOcrSinModelo, [iLinea + 1]);
       ATrabajo.Lineas[iLinea].Datos :=
         ATrabajo.Pedido.Lineas[iLinea];
       ATrabajo.Lineas[iLinea].Tallas := oCatalogo.Resolver(
         ATrabajo.Pedido.Lineas[iLinea].Tallas);
       if not ATrabajo.Lineas[iLinea].Tallas.Encontrada then
         raise Exception.CreateFmt(
-          'Ningún sistema de hasta %d posiciones contiene las tallas ' +
-          'del modelo %s: %s.',
+          SErrorTallasOcrNoEncontradas,
           [AEntorno.MaximoTallas,
            ATrabajo.Pedido.Lineas[iLinea].Modelo,
            ListaTallasPedidoOcr(ATrabajo.Pedido.Lineas[iLinea])]);
@@ -460,7 +475,7 @@ begin
       Length(ATrabajo.Lineas));
     if iPrimeraLinea <= 0 then
       raise Exception.Create(
-        'No se pudo reservar el bloque de líneas de la sesión.');
+        SErrorReservarLineasImportacionOcr);
     AEntorno.Datos.IniciarImportacionMasiva(
       iPrimeraLinea,
       Length(ATrabajo.Lineas));

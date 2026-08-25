@@ -62,6 +62,9 @@ implementation
 uses
   inLibArticulosPresentacion;
 
+resourcestring
+  SInfoSkuTallaPrecioTarifa = '    %s    Talla: %s';
+
 procedure TfrmMtoModalAddPreciosTar.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -125,8 +128,8 @@ begin
     oItem.Tag := i;
     oItem.Text := FOpcionesSkus[i].CodigoSku;
     if FOpcionesSkus[i].EsTalla then
-      oItem.Text := '    ' + oItem.Text + '    Talla: ' +
-        FOpcionesSkus[i].Talla;
+      oItem.Text := Format(SInfoSkuTallaPrecioTarifa,
+        [oItem.Text, FOpcionesSkus[i].Talla]);
     if FOpcionesSkus[i].EsTalla then
       oItem.ImageIndex := -1
     else

@@ -59,8 +59,8 @@ resourcestring
     '%d traducciones guardadas.';
   SPreguntaImportarCatalogo =
     'Se sincronizarán en español los resourcestring propios y de VCL, ' +
-    'los parámetros dinámicos, las traducciones de DevExpress y sus ' +
-    'personalizaciones. ' +
+    'los parámetros dinámicos, los títulos de fza_config_campos, las ' +
+    'traducciones de DevExpress y sus personalizaciones. ' +
     '¿Desea continuar?';
   SInfoCatalogoImportado =
     '%d traducciones españolas sincronizadas.';

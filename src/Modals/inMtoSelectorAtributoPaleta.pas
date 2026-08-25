@@ -62,9 +62,89 @@ type
     function Ejecutar(out AValor: string): Boolean;
   end;
 
+function CrearSelectorAtributoPaletaVcl: ISelectorAtributoPaleta;
+
 implementation
 
+uses
+  inLibAtributosPaleta;
+
 {$R *.dfm}
+
+type
+  TSelectorAtributoPaletaVcl = class(
+    TInterfacedObject,
+    ISelectorAtributoPaleta)
+  public
+    function Seleccionar(
+      AConexion: TUniConnection;
+      const ALecturas: ILecturasAtributosPaleta;
+      const AIdVariacion: string;
+      const AValores: array of string;
+      const AValorActual: string;
+      out AValor: string;
+      AScreenLeft, AScreenTop, AWidthHint: Integer;
+      const ACodigoArticulo: string): Boolean;
+  end;
+
+function CrearSelectorAtributoPaletaVcl: ISelectorAtributoPaleta;
+begin
+  Result := TSelectorAtributoPaletaVcl.Create;
+end;
+
+function TSelectorAtributoPaletaVcl.Seleccionar(
+  AConexion: TUniConnection;
+  const ALecturas: ILecturasAtributosPaleta;
+  const AIdVariacion: string;
+  const AValores: array of string;
+  const AValorActual: string;
+  out AValor: string;
+  AScreenLeft, AScreenTop, AWidthHint: Integer;
+  const ACodigoArticulo: string): Boolean;
+var
+  Formulario: TfrmSelectorAtributoPaleta;
+  Propietario: TComponent;
+  ResolverInfo: TResolverInfoAtributoPaleta;
+begin
+  AValor := '';
+  Propietario := Screen.ActiveForm;
+  ResolverInfo :=
+    function(
+      const AValorCandidato: string;
+      out AInfo: TInfoBasico): Boolean
+    begin
+      Result := False;
+      if Trim(AIdVariacion) <> '' then
+        Result := ObtenerInfoBasico(
+          AConexion,
+          AIdVariacion,
+          AValorCandidato,
+          AInfo);
+      if not Result then
+        Result := BuscarInfoBasicoEnArticulo(
+          AConexion,
+          AValorCandidato,
+          ObtenerMapaAtributosGlobal(AConexion),
+          AInfo);
+    end;
+  Formulario := TfrmSelectorAtributoPaleta.CreateConOpciones(
+    Propietario,
+    AConexion,
+    ALecturas,
+    ResolverInfo,
+    AIdVariacion,
+    AValores,
+    AValorActual,
+    AScreenLeft,
+    AScreenTop,
+    AWidthHint,
+    ACodigoArticulo);
+  try
+    Result := Formulario.Ejecutar(AValor);
+  finally
+    Formulario.Free;
+  end;
+end;
 
 constructor TfrmSelectorAtributoPaleta.CreateConOpciones(
   AOwner: TComponent;

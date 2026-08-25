@@ -68,6 +68,14 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SErrorTarifasCambiosSinSesionActiva =
+    'No hay ninguna sesion activa.';
+  SErrorTarifasCambiosSesionSinLineas =
+    'La sesion no tiene lineas.';
+  SErrorTarifasCambiosSesionAplicada =
+    'La sesion ya esta aplicada.';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmTarifasCambios.DataModuleCreate(Sender: TObject);
@@ -262,9 +270,9 @@ begin
   Result := 0;
   AMensaje := '';
   if (not unqryTablaG.Active) or unqryTablaG.IsEmpty then
-    AMensaje := 'No hay ninguna sesion activa.'
+    AMensaje := SErrorTarifasCambiosSinSesionActiva
   else if (not unqryLineas.Active) or unqryLineas.IsEmpty then
-    AMensaje := 'La sesion no tiene lineas.'
+    AMensaje := SErrorTarifasCambiosSesionSinLineas
   else
   begin
     sCampoOrigen := CampoCabecera('CAMPO_ORIGEN_TARC').AsString;
@@ -563,12 +571,12 @@ begin
   Result := 0;
   AMensaje := '';
   if (not unqryTablaG.Active) or unqryTablaG.IsEmpty then
-    AMensaje := 'No hay ninguna sesion activa.'
+    AMensaje := SErrorTarifasCambiosSinSesionActiva
   else if SameText(unqryTablaG.FieldByName('ESTADO_TARC').AsString,
     'APLICADA') then
-    AMensaje := 'La sesion ya esta aplicada.'
+    AMensaje := SErrorTarifasCambiosSesionAplicada
   else if (not unqryLineas.Active) or unqryLineas.IsEmpty then
-    AMensaje := 'La sesion no tiene lineas.'
+    AMensaje := SErrorTarifasCambiosSesionSinLineas
   else
   begin
     qryBusca := nil;

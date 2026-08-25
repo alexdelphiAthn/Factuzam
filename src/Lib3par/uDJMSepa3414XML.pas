@@ -107,6 +107,14 @@ end;
 implementation
 uses uDJMSepa, SysUtils, windows, dialogs;
 
+resourcestring
+ SErrorOrdenanteSepaPagoNoEncontrado =
+   'No se encontró Ordenante para el IBAN: %s';
+ SErrorMaximoPagosOrdenanteSepa =
+   'No admitimos más de 5000 pagos por Ordenante';
+ SErrorMaximoOrdenantesSepaPago =
+   'Solamente se admiten como máximo 10 Ordenantes';
+
 const
  C_Schema_34 = 'pain.001.001.03';
  C_INITIATOR_NAME_MAX_LENGTH = 70;
@@ -312,13 +320,14 @@ do begin
    end;
 if iOrdenanteFound=-1
 then begin
-     ShowMessage('No se encontró Ordenante para el IBAN: '+sIBANOrdenante);
+     ShowMessage(Format(SErrorOrdenanteSepaPagoNoEncontrado,
+       [sIBANOrdenante]));
      Exit;
      end;
 
 if FListOrdenantes[iOrdenanteFound].iPagos=5000
 then begin
-     showmessage(string('No admitimos más de 5000 pagos por Ordenante'));
+     showmessage(SErrorMaximoPagosOrdenanteSepa);
      Exit;
      end;
 
@@ -345,7 +354,7 @@ var
 begin
   if FiOrdenantes=10
   then begin
-       ShowMessage(string('Solamente se admiten como máximo 10 Ordenantes'));
+       ShowMessage(SErrorMaximoOrdenantesSepaPago);
        Exit;
        end;
   //si ya hay uno con esa cuenta, no lo añadimos

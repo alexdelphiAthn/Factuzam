@@ -103,6 +103,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SDescripcionGuardarPrecargaPagosCaja =
+    'Guardar precarga';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaPagosHist }
@@ -338,7 +342,8 @@ begin
   try
     formulario.edtDescripcion.Enabled := False;
     formulario.edtNombreOrigen.Text := Self.Name;
-    formulario.edtDescripcion.Text := 'Guardar precarga';
+    formulario.edtDescripcion.Text :=
+      SDescripcionGuardarPrecargaPagosCaja;
     formulario.ShowModal;
     if formulario.sFicha = 'S' then
       sPermisos := formulario.cbbPermisos.Text;

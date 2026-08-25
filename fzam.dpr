@@ -239,6 +239,8 @@ uses
     'src\Lib\inLibCambioArticuloColorIntf.pas',
   inLibCambioArticuloColor in
     'src\Lib\inLibCambioArticuloColor.pas',
+  inLibCambioArticuloColorHistoricoAmbito in
+    'src\Lib\inLibCambioArticuloColorHistoricoAmbito.pas',
   UniDataCambioArticuloColorHistorico in
     'src\DataModules\UniDataCambioArticuloColorHistorico.pas',
   UniDataCambioArticuloColorRepositorio in
@@ -269,6 +271,8 @@ uses
   inMtoArticulos in 'src\Forms\inMtoArticulos.pas' {frmMtoArticulos},
   inMtoArticulosGuardadoVcl in
     'src\Forms\inMtoArticulosGuardadoVcl.pas',
+  inMtoArticulosNavegacionFacturasVcl in
+    'src\Forms\inMtoArticulosNavegacionFacturasVcl.pas',
   inMtoArticulosStockVcl in 'src\Forms\inMtoArticulosStockVcl.pas',
   inMtoClientes in 'src\Forms\inMtoClientes.pas' {frmMtoClientes},
   inMtoContadores in 'src\Forms\inMtoContadores.pas' {frmMtoContadores},
@@ -355,6 +359,8 @@ uses
   UniDataConn in 'src\DataModules\UniDataConn.pas' {dmConn: TDataModule},
   UniDataComposicionAplicacion in
     'src\DataModules\UniDataComposicionAplicacion.pas',
+  UniDataComposicionAplicacionProcesosSegundoPlano in
+    'src\DataModules\UniDataComposicionAplicacionProcesosSegundoPlano.pas',
   inMtoMantenimientosInyeccionRaiz in
     'src\Core\inMtoMantenimientosInyeccionRaiz.pas',
   inMtoCajaInyeccionRaiz in
@@ -529,6 +535,8 @@ uses
   UniDataUsuariosPerfiles in 'src\DataModules\UniDataUsuariosPerfiles.pas' {dmUsuariosPerfiles: TDataModule},
   UniDataPermisosGrupo in 'src\DataModules\UniDataPermisosGrupo.pas' {dmPermisosGrupo: TDataModule},
   UniDataFacturas in 'src\DataModules\UniDataFacturas.pas' {dmFacturas: TdmFacturas},
+  UniDataComandoImprimirFacturasConsulta in
+    'src\DataModules\UniDataComandoImprimirFacturasConsulta.pas',
   UniDataFacturasConfiguracion in
     'src\DataModules\UniDataFacturasConfiguracion.pas',
   UniDataFacturasIncidenciaFiscal in
@@ -794,6 +802,8 @@ uses
     'src\Lib\inLibAppParamPersistenciaIntf.pas',
   UniDataAppParamRepositorio in
     'src\DataModules\UniDataAppParamRepositorio.pas',
+  UniDataAppParamGrupoUsuarioConsulta in
+    'src\DataModules\UniDataAppParamGrupoUsuarioConsulta.pas',
   inLibArticulosVariacionesIntf in
     'src\Lib\inLibArticulosVariacionesIntf.pas',
   UniDataArticulosVariaciones in
@@ -1447,6 +1457,8 @@ uses
     'src\Forms\inMtoInventariosPresentacionEntrada.pas',
   inMtoGenPresentacionFiltrosVcl in
     'src\Forms\inMtoGenPresentacionFiltrosVcl.pas',
+  inMtoGenPresentacionPerfilesVcl in
+    'src\Forms\inMtoGenPresentacionPerfilesVcl.pas',
   inMtoStockConsultaPresentacionArticuloVcl in
     'src\Forms\inMtoStockConsultaPresentacionArticuloVcl.pas',
   inMtoStockConsultaPresentacionComposicion in
@@ -1741,6 +1753,8 @@ begin
       TdxDiacriticStringNormalizationMode.System;
     Application.Initialize;
     ConfigurarLecturasAtributosPaleta(LecturasAtributosPaleta);
+    ConfigurarSelectorAtributoPaleta(
+      CrearSelectorAtributoPaletaVcl);
     Application.MainFormOnTaskbar := True;
     Application.Title := 'Fzam';
     RegistroLogAplicacion := CrearRegistroLog;

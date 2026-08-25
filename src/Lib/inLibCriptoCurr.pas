@@ -368,12 +368,13 @@ var
   i: Integer;
   oPrecio: TCoinPrice;
 begin
-  if not Assigned(ALista) then
-    Exit;
-  for i := 0 to ALista.Count - 1 do
+  if Assigned(ALista) then
   begin
-    oPrecio := ALista[i];
-    LiberarDiccionariosPrecio(oPrecio);
+    for i := 0 to ALista.Count - 1 do
+    begin
+      oPrecio := ALista[i];
+      LiberarDiccionariosPrecio(oPrecio);
+    end;
   end;
 end;
 

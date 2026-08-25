@@ -275,6 +275,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SOperacionEdicionTablaProtegida = 'EDICION';
+  SNombreComandoScript = 'Command%d';
+
 procedure TfrmMtoGeneradorProcesos.ActionCortarExecute(Sender: TObject);
 begin
   if DBSynEdit1.Focused then
@@ -749,7 +753,7 @@ begin
   MessageDlg(
     Format(
       SErrorModificacionTablaFacturacionProtegida,
-      ['EDICION', ATabla]),
+      [SOperacionEdicionTablaProtegida, ATabla]),
     mtWarning,
     [mbOK],
     0);
@@ -784,14 +788,14 @@ begin
   begin
     BloquearEdicionVistaFija;
     AvisarEdicionTablaProtegida(TablaProtegida);
-    Exit;
+  end
+  else if Assigned(FDatosVistaFija) then
+  begin
+    tvVista.OptionsData.Editing := True;
+    tvVista.OptionsData.Inserting := True;
+    tvVista.OptionsData.Deleting := True;
+    tvVista.OptionsData.Appending := True;
   end;
-  if not Assigned(FDatosVistaFija) then
-    Exit;
-  tvVista.OptionsData.Editing := True;
-  tvVista.OptionsData.Inserting := True;
-  tvVista.OptionsData.Deleting := True;
-  tvVista.OptionsData.Appending := True;
 end;
 
 procedure TfrmMtoGeneradorProcesos.btnEditarMetaClick(Sender: TObject);
@@ -801,15 +805,15 @@ begin
   begin
     BloquearEdicionContenidoMetadato;
     AvisarEdicionTablaProtegida(FNombreContenidoMetadato);
-    Exit;
+  end
+  else if (FNombreContenidoMetadato <> '') and
+          dmmGeneradorProcesos.unqryContenido.Active then
+  begin
+    tvMetadatostvVista.OptionsData.Editing := True;
+    tvMetadatostvVista.OptionsData.Inserting := True;
+    tvMetadatostvVista.OptionsData.Deleting := True;
+    tvMetadatostvVista.OptionsData.Appending := True;
   end;
-  if (FNombreContenidoMetadato = '') or
-     not dmmGeneradorProcesos.unqryContenido.Active then
-    Exit;
-  tvMetadatostvVista.OptionsData.Editing := True;
-  tvMetadatostvVista.OptionsData.Inserting := True;
-  tvMetadatostvVista.OptionsData.Deleting := True;
-  tvMetadatostvVista.OptionsData.Appending := True;
 end;
 
 procedure TfrmMtoGeneradorProcesos.LimpiarPestanasResultado;
@@ -992,7 +996,7 @@ begin
   Result := MessageDlg(
     Format(
       SPreguntaIgnorarErrorComandoScript,
-      ['Command' + IntToStr(AIndice + 1), MensajeCorto]),
+      [Format(SNombreComandoScript, [AIndice + 1]), MensajeCorto]),
     mtError,
     [mbYes, mbNo],
     0) = mrYes;

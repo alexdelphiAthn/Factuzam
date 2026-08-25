@@ -326,6 +326,11 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloBuscarArticulosFacturaCompra = 'Búsqueda de artículos';
+  STituloBuscarSkusFacturaCompra = 'SKUs del artículo %s';
+  STituloBuscarProveedoresFacturaCompra = 'Búsqueda de proveedores';
+
 type
   TfrmMtoFacturasCompraInyectada = class(TfrmMtoFacturasCompra)
   private
@@ -431,7 +436,7 @@ begin
     else
       Result := BuscarArticuloProveedorCompra(
         FBusquedasArticulos, BusquedaVisual, sPrv,
-        'Búsqueda de artículos', 'frmMtoFaccArtSearch', Self);
+        STituloBuscarArticulosFacturaCompra, 'frmMtoFaccArtSearch', Self);
   end;
 end;
 
@@ -460,7 +465,7 @@ begin
   else
     Result := BuscarSkuArticuloCompra(
       FBusquedasArticulos, BusquedaVisual, sArt,
-      'SKUs del artículo ' + sArt,
+      Format(STituloBuscarSkusFacturaCompra, [sArt]),
       'frmMtoFaccSkuSearch', Self);
 end;
 
@@ -1405,7 +1410,8 @@ begin
   oConsulta := FBusquedaProveedores.ConsultarProveedores;
   oDatos := oConsulta.DataSet;
   Result := BusquedaVisual.EjecutarBusquedaDataSet(
-    'Búsqueda de proveedores', oDatos, 'frmMtoFaccProvSearch', Self);
+    STituloBuscarProveedoresFacturaCompra, oDatos,
+    'frmMtoFaccProvSearch', Self);
   if Result then
     ACodigo := oDatos.FieldByName('CODIGO_PRV_PRV').AsString;
 end;

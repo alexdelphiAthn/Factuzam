@@ -127,6 +127,15 @@ uses
   inMtoModalGuardarFiltro, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
+resourcestring
+  SInfoFiltroSinCondiciones = '(sin condiciones)';
+  SNombreCopiaFiltro = '%s - copia';
+  STituloCompartirFiltroUsuario = 'Compartir filtro con usuario';
+  STituloCompartirFiltroGrupo = 'Compartir filtro con grupo';
+  SInfoFiltroTodosUsuarios = 'Todos los usuarios';
+  SInfoFiltroGrupo = 'Grupo: %s';
+  SInfoFiltroUsuario = 'Usuario: %s';
+
 type
   TcxFilterControlAcceso = class(TcxFilterControl)
   public
@@ -407,7 +416,7 @@ const
 var
   oControl: TcxFilterControl;
 begin
-  Result := '(sin condiciones)';
+  Result := SInfoFiltroSinCondiciones;
   if ABase64 <> '' then
   begin
     oControl := TcxFilterControl.Create(nil);
@@ -417,7 +426,7 @@ begin
       Result := Trim(oControl.FilterCaption);
       if Result = '' then
       begin
-        Result := '(sin condiciones)';
+        Result := SInfoFiltroSinCondiciones;
       end
       else if Length(Result) > MAX_CARACTERES_RESUMEN then
       begin
@@ -485,15 +494,15 @@ begin
     begin
       if info.TipoDestino = 'TODOS' then
       begin
-        sLinea := 'Todos los usuarios';
+        sLinea := SInfoFiltroTodosUsuarios;
       end
       else if info.TipoDestino = 'GRUPO' then
       begin
-        sLinea := 'Grupo: ' + info.UsuarioGrupo;
+        sLinea := Format(SInfoFiltroGrupo, [info.UsuarioGrupo]);
       end
       else
       begin
-        sLinea := 'Usuario: ' + info.UsuarioGrupo;
+        sLinea := Format(SInfoFiltroUsuario, [info.UsuarioGrupo]);
       end;
       lbCompartidoCon.Items.Add(sLinea);
     end;
@@ -624,8 +633,8 @@ begin
   end
   else
   begin
-    sNombreInicial := FListadoFiltros.FieldByName(
-      'NOMBRE_FILT').AsString + ' - copia';
+    sNombreInicial := Format(SNombreCopiaFiltro,
+      [FListadoFiltros.FieldByName('NOMBRE_FILT').AsString]);
     sDescripcionInicial := FListadoFiltros.FieldByName(
       'DESCRIPCION_FILT').AsString;
     res := TfrmModalGuardarFiltro.Ejecutar(Self, sNombreInicial,
@@ -710,7 +719,7 @@ begin
   oResultado := FRepositorioDestinos.ConsultarUsuarios(
     IdentidadActual.Usuario);
   if BusquedaVisual.EjecutarBusquedaDataSet(
-    'Compartir filtro con usuario',
+    STituloCompartirFiltroUsuario,
     oResultado.DataSet,
     'frmBuscarUsuarioFiltro',
     Self) then
@@ -736,7 +745,7 @@ begin
   begin
     oResultado := FRepositorioDestinos.ConsultarGrupos;
     if BusquedaVisual.EjecutarBusquedaDataSet(
-      'Compartir filtro con grupo',
+      STituloCompartirFiltroGrupo,
       oResultado.DataSet,
       'frmBuscarGrupoFiltro',
       Self) then

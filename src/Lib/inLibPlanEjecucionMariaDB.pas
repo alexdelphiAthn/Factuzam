@@ -59,6 +59,119 @@ uses
   System.Generics.Collections,
   System.JSON;
 
+resourcestring
+  SPlanNodoBloqueSelect = 'Bloque SELECT';
+  SPlanNodoBucleAnidado = 'Bucle anidado';
+  SPlanNodoLecturaTabla = 'Lectura de tabla';
+  SPlanNodoOrdenacionFilesort = 'Ordenación (filesort)';
+  SPlanNodoTablaTemporal = 'Tabla temporal';
+  SPlanNodoMaterializacion = 'Materialización';
+  SPlanNodoSubconsultas = 'Subconsultas';
+  SPlanNodoResultadoUnion = 'Resultado UNION';
+  SPlanNodoUnionBloques = 'Unión por bloques (BNL)';
+  SPlanNodoCacheExpresion = 'Caché de expresión';
+  SPlanNodoIndicesEvaluadosFila = 'Índices evaluados por fila';
+  SPlanNodoRamasUnion = 'Ramas de UNION';
+  SPlanNodoLecturaOrdenada = 'Lectura ordenada';
+  SPlanNodoEliminacionDuplicados = 'Eliminación de duplicados';
+  SPlanNodoAgrupacion = 'Agrupación';
+  SPlanNodoOrdenacion = 'Ordenación';
+  SPlanNodoFuncionesVentana = 'Funciones de ventana';
+  SPlanAccesoFilaConstante = 'MariaDB obtiene una sola fila constante.';
+  SPlanAccesoFilaUnicaIndice =
+    'Busca una única fila por índice por cada fila del nodo anterior.';
+  SPlanAccesoIndiceNoUnico =
+    'Busca por un índice no único usando un valor de referencia.';
+  SPlanAccesoIntervaloIndice = 'Recorre solamente un intervalo del índice.';
+  SPlanAccesoCombinacionIndices =
+    'Combina los resultados de varios índices.';
+  SPlanAccesoIndiceFulltext =
+    'Realiza una búsqueda mediante un índice FULLTEXT.';
+  SPlanAccesoIndiceConNulos =
+    'Busca por índice y comprueba también las filas con valor NULL.';
+  SPlanAccesoSubconsultaUnica =
+    'Resuelve la subconsulta mediante una búsqueda única por índice.';
+  SPlanAccesoSubconsultaIndice =
+    'Resuelve la subconsulta mediante una búsqueda por índice.';
+  SPlanAccesoIndiceCompleto = 'Recorre el índice completo.';
+  SPlanAccesoTablaCompleta = 'Escanea todas las filas de la tabla.';
+  SPlanAccesoTipo = 'MariaDB utiliza el tipo de acceso %s.';
+  SPlanAccesoGenerico = 'Lee filas de la tabla para continuar el plan.';
+  SPlanExplicacionBloqueSelect =
+    'Coordina las operaciones necesarias para producir el resultado de este ' +
+    'SELECT.';
+  SPlanExplicacionBucleAnidado =
+    'Por cada fila obtenida en un nodo se evalúa el siguiente nodo de la ' +
+    'unión.';
+  SPlanExplicacionOrdenacionFilesort =
+    'Ordena las filas fuera del orden natural de un índice; puede usar ' +
+    'memoria o disco.';
+  SPlanDetalleClaveOrdenacion = 'Clave de ordenación: %s.';
+  SPlanExplicacionTablaTemporal =
+    'Materializa un resultado intermedio en una tabla temporal.';
+  SPlanExplicacionMaterializacion =
+    'Ejecuta una subconsulta y conserva su resultado para reutilizarlo.';
+  SPlanExplicacionSubconsultas =
+    'Agrupa las subconsultas dependientes de este nodo.';
+  SPlanExplicacionResultadoUnion =
+    'Combina los resultados producidos por las ramas de una UNION.';
+  SPlanExplicacionUnionBloques =
+    'Guarda filas en un buffer y las compara por bloques con la siguiente ' +
+    'entrada.';
+  SPlanDetalleTamanoBuffer = 'Tamaño del buffer: %s.';
+  SPlanDetalleTipoUnion = 'Tipo de unión: %s.';
+  SPlanExplicacionCacheExpresion =
+    'Memoriza resultados de una expresión o subconsulta repetida.';
+  SPlanDetalleEstado = 'Estado: %s.';
+  SPlanExplicacionIndicesEvaluadosFila =
+    'No hay un único índice fijado de antemano; MariaDB evalúa los índices ' +
+    'disponibles para cada fila anterior.';
+  SPlanDetalleIndicesCandidatos = 'Índices candidatos: %s.';
+  SPlanExplicacionRamasUnion =
+    'Contiene las consultas individuales que forman la UNION.';
+  SPlanExplicacionLecturaOrdenada =
+    'Lee el resultado producido por una operacion de ordenacion.';
+  SPlanExplicacionEliminacionDuplicados =
+    'Descarta filas duplicadas del resultado intermedio.';
+  SPlanExplicacionAgrupacion =
+    'Agrupa filas para calcular agregados o resolver GROUP BY.';
+  SPlanExplicacionOrdenacion =
+    'Ordena las filas para satisfacer ORDER BY.';
+  SPlanExplicacionFuncionesVentana =
+    'Calcula funciones de ventana sobre las filas de entrada.';
+  SPlanExplicacionNodoGenerico = 'Nodo del plan de ejecución de MariaDB.';
+  SPlanDetalleCondicion = 'Condicion: %s.';
+  SErrorPlanJsonVacio = 'El plan de ejecución JSON está vacío.';
+  SErrorPlanJsonNoDevuelto =
+    'MariaDB no ha devuelto un JSON de plan valido.';
+  SErrorCadenaSinPlanJson =
+    'La cadena devuelta no contiene un plan JSON valido.';
+  SErrorPlanJsonSinNodos =
+    'El JSON no contiene nodos reconocibles de un plan de MariaDB.';
+  SErrorComentarioEjecutableSelect =
+    'No se admiten comentarios ejecutables ni pistas /*+ */ en el SELECT.';
+  SErrorComentarioSqlSinCerrar = 'El comentario SQL no está cerrado.';
+  SErrorLiteralSqlSinCerrar =
+    'Hay una cadena o identificador SQL sin cerrar.';
+  SErrorSqlCaracterNulo = 'El SQL contiene un carácter nulo no válido.';
+  SErrorSqlBarrasInvertidas =
+    'No se admiten barras invertidas: su interpretación depende de ' +
+    'NO_BACKSLASH_ESCAPES. Use comillas duplicadas en los literales.';
+  SErrorSelectIntoPlan =
+    'No se admite SELECT INTO, OUTFILE ni DUMPFILE para obtener el plan.';
+  SErrorPalabraSelectPlanNoAdmitida =
+    'No se admite %s en una SELECT destinada al plan de ejecución.';
+  SErrorPlanNoComienzaSelect =
+    'El plan solo admite una sentencia que comience por SELECT.';
+  SErrorSelectConInstruccionesPosteriores =
+    'Solo se admite una sentencia SELECT sin instrucciones posteriores.';
+  SErrorContenidoAntesSelect =
+    'Antes de SELECT solo puede haber espacios o comentarios.';
+  SErrorAsignacionVariablesSelect =
+    'No se admiten asignaciones de variables (:=) en la SELECT.';
+  SErrorSelectNoEncontrada = 'No se ha encontrado una sentencia SELECT.';
+  SErrorSelectVacia = 'La sentencia SELECT está vacía.';
+
 type
   TConstructorPlanMariaDB = class
   private
@@ -96,23 +209,21 @@ var
   oArray: TJSONArray;
 begin
   Result := '';
-  if not Assigned(AValor) or (AValor is TJSONNull) then
-    Exit;
-
-  if AValor is TJSONArray then
+  if Assigned(AValor) and not (AValor is TJSONNull) then
   begin
-    oArray := TJSONArray(AValor);
-    for i := 0 to oArray.Count - 1 do
+    if AValor is TJSONArray then
     begin
-      if Result <> '' then
-        Result := Result + ', ';
-      Result := Result + TextoValor(oArray.Items[i]);
+      oArray := TJSONArray(AValor);
+      for i := 0 to oArray.Count - 1 do
+      begin
+        if Result <> '' then
+          Result := Result + ', ';
+        Result := Result + TextoValor(oArray.Items[i]);
+      end;
     end;
-    Exit;
+    if not (AValor is TJSONObject) and not (AValor is TJSONArray) then
+      Result := AValor.Value;
   end;
-
-  if not (AValor is TJSONObject) then
-    Result := AValor.Value;
 end;
 
 function TextoObjeto(
@@ -131,14 +242,14 @@ var
 begin
   ANumero := 0;
   Result := Assigned(AValor) and not (AValor is TJSONNull);
-  if not Result then
-    Exit;
-
-  sValor := Trim(AValor.Value);
-  oFormato := TFormatSettings.Create;
-  oFormato.DecimalSeparator := '.';
-  oFormato.ThousandSeparator := #0;
-  Result := TryStrToFloat(sValor, ANumero, oFormato);
+  if Result then
+  begin
+    sValor := Trim(AValor.Value);
+    oFormato := TFormatSettings.Create;
+    oFormato.DecimalSeparator := '.';
+    oFormato.ThousandSeparator := #0;
+    Result := TryStrToFloat(sValor, ANumero, oFormato);
+  end;
 end;
 
 function IntentarNumeroObjeto(
@@ -194,47 +305,47 @@ begin
   if ATipo = 'query_block' then
   begin
     sDetalle := TextoObjeto(AObjeto, 'select_id');
-    Result := 'Bloque SELECT';
+    Result := SPlanNodoBloqueSelect;
     if sDetalle <> '' then
       Result := Result + ' ' + sDetalle;
   end
   else if ATipo = 'nested_loop' then
-    Result := 'Bucle anidado'
+    Result := SPlanNodoBucleAnidado
   else if ATipo = 'table' then
   begin
     sDetalle := TextoObjeto(AObjeto, 'table_name');
-    Result := 'Lectura de tabla';
+    Result := SPlanNodoLecturaTabla;
     if sDetalle <> '' then
       Result := Result + ' ' + sDetalle;
   end
   else if ATipo = 'filesort' then
-    Result := 'Ordenación (filesort)'
+    Result := SPlanNodoOrdenacionFilesort
   else if ATipo = 'temporary_table' then
-    Result := 'Tabla temporal'
+    Result := SPlanNodoTablaTemporal
   else if ATipo = 'materialized' then
-    Result := 'Materialización'
+    Result := SPlanNodoMaterializacion
   else if ATipo = 'subqueries' then
-    Result := 'Subconsultas'
+    Result := SPlanNodoSubconsultas
   else if ATipo = 'union_result' then
-    Result := 'Resultado UNION'
+    Result := SPlanNodoResultadoUnion
   else if ATipo = 'block-nl-join' then
-    Result := 'Unión por bloques (BNL)'
+    Result := SPlanNodoUnionBloques
   else if ATipo = 'expression_cache' then
-    Result := 'Caché de expresión'
+    Result := SPlanNodoCacheExpresion
   else if ATipo = 'range-checked' then
-    Result := 'Índices evaluados por fila'
+    Result := SPlanNodoIndicesEvaluadosFila
   else if ATipo = 'query_specifications' then
-    Result := 'Ramas de UNION'
+    Result := SPlanNodoRamasUnion
   else if ATipo = 'read_sorted_file' then
-    Result := 'Lectura ordenada'
+    Result := SPlanNodoLecturaOrdenada
   else if ATipo = 'duplicates_removal' then
-    Result := 'Eliminación de duplicados'
+    Result := SPlanNodoEliminacionDuplicados
   else if ATipo = 'grouping_operation' then
-    Result := 'Agrupación'
+    Result := SPlanNodoAgrupacion
   else if ATipo = 'ordering_operation' then
-    Result := 'Ordenación'
+    Result := SPlanNodoOrdenacion
   else if ATipo = 'window_functions_computation' then
-    Result := 'Funciones de ventana'
+    Result := SPlanNodoFuncionesVentana
   else
     Result := ATipo;
 end;
@@ -242,40 +353,41 @@ end;
 function ExplicacionAccesoTabla(const AAcceso: string): string;
 begin
   if SameText(AAcceso, 'system') or SameText(AAcceso, 'const') then
-    Result := 'MariaDB obtiene una sola fila constante.'
+    Result := SPlanAccesoFilaConstante
   else if SameText(AAcceso, 'eq_ref') then
-    Result := 'Busca una única fila por índice por cada fila del nodo anterior.'
+    Result := SPlanAccesoFilaUnicaIndice
   else if SameText(AAcceso, 'ref') then
-    Result := 'Busca por un índice no único usando un valor de referencia.'
+    Result := SPlanAccesoIndiceNoUnico
   else if SameText(AAcceso, 'range') then
-    Result := 'Recorre solamente un intervalo del índice.'
+    Result := SPlanAccesoIntervaloIndice
   else if SameText(AAcceso, 'index_merge') then
-    Result := 'Combina los resultados de varios índices.'
+    Result := SPlanAccesoCombinacionIndices
   else if SameText(AAcceso, 'fulltext') then
-    Result := 'Realiza una búsqueda mediante un índice FULLTEXT.'
+    Result := SPlanAccesoIndiceFulltext
   else if SameText(AAcceso, 'ref_or_null') then
-    Result := 'Busca por índice y comprueba también las filas con valor NULL.'
+    Result := SPlanAccesoIndiceConNulos
   else if SameText(AAcceso, 'unique_subquery') then
-    Result := 'Resuelve la subconsulta mediante una búsqueda única por índice.'
+    Result := SPlanAccesoSubconsultaUnica
   else if SameText(AAcceso, 'index_subquery') then
-    Result := 'Resuelve la subconsulta mediante una búsqueda por índice.'
+    Result := SPlanAccesoSubconsultaIndice
   else if SameText(AAcceso, 'index') then
-    Result := 'Recorre el índice completo.'
+    Result := SPlanAccesoIndiceCompleto
   else if SameText(AAcceso, 'ALL') then
-    Result := 'Escanea todas las filas de la tabla.'
+    Result := SPlanAccesoTablaCompleta
   else if AAcceso <> '' then
-    Result := 'MariaDB utiliza el tipo de acceso ' + AAcceso + '.'
+    Result := Format(SPlanAccesoTipo, [AAcceso])
   else
-    Result := 'Lee filas de la tabla para continuar el plan.';
+    Result := SPlanAccesoGenerico;
 end;
 
 procedure AnadirDetalle(var ATexto: string; const ADetalle: string);
 begin
-  if ADetalle = '' then
-    Exit;
-  if ATexto <> '' then
-    ATexto := ATexto + ' ';
-  ATexto := ATexto + ADetalle;
+  if ADetalle <> '' then
+  begin
+    if ATexto <> '' then
+      ATexto := ATexto + ' ';
+    ATexto := ATexto + ADetalle;
+  end;
 end;
 
 function ExplicacionTipo(
@@ -285,68 +397,68 @@ var
   sDetalle: string;
 begin
   if ATipo = 'query_block' then
-    Result := 'Coordina las operaciones necesarias para producir el resultado de este SELECT.'
+    Result := SPlanExplicacionBloqueSelect
   else if ATipo = 'nested_loop' then
-    Result := 'Por cada fila obtenida en un nodo se evalúa el siguiente nodo de la unión.'
+    Result := SPlanExplicacionBucleAnidado
   else if ATipo = 'table' then
     Result := ExplicacionAccesoTabla(TextoObjeto(AObjeto, 'access_type'))
   else if ATipo = 'filesort' then
   begin
-    Result := 'Ordena las filas fuera del orden natural de un índice; puede usar memoria o disco.';
+    Result := SPlanExplicacionOrdenacionFilesort;
     sDetalle := TextoObjeto(AObjeto, 'sort_key');
     if sDetalle <> '' then
-      AnadirDetalle(Result, 'Clave de ordenación: ' + sDetalle + '.');
+      AnadirDetalle(Result, Format(SPlanDetalleClaveOrdenacion, [sDetalle]));
   end
   else if ATipo = 'temporary_table' then
-    Result := 'Materializa un resultado intermedio en una tabla temporal.'
+    Result := SPlanExplicacionTablaTemporal
   else if ATipo = 'materialized' then
-    Result := 'Ejecuta una subconsulta y conserva su resultado para reutilizarlo.'
+    Result := SPlanExplicacionMaterializacion
   else if ATipo = 'subqueries' then
-    Result := 'Agrupa las subconsultas dependientes de este nodo.'
+    Result := SPlanExplicacionSubconsultas
   else if ATipo = 'union_result' then
-    Result := 'Combina los resultados producidos por las ramas de una UNION.'
+    Result := SPlanExplicacionResultadoUnion
   else if ATipo = 'block-nl-join' then
   begin
-    Result := 'Guarda filas en un buffer y las compara por bloques con la siguiente entrada.';
+    Result := SPlanExplicacionUnionBloques;
     sDetalle := TextoObjeto(AObjeto, 'buffer_size');
     if sDetalle <> '' then
-      AnadirDetalle(Result, 'Tamaño del buffer: ' + sDetalle + '.');
+      AnadirDetalle(Result, Format(SPlanDetalleTamanoBuffer, [sDetalle]));
     sDetalle := TextoObjeto(AObjeto, 'join_type');
     if sDetalle <> '' then
-      AnadirDetalle(Result, 'Tipo de unión: ' + sDetalle + '.');
+      AnadirDetalle(Result, Format(SPlanDetalleTipoUnion, [sDetalle]));
   end
   else if ATipo = 'expression_cache' then
   begin
-    Result := 'Memoriza resultados de una expresión o subconsulta repetida.';
+    Result := SPlanExplicacionCacheExpresion;
     sDetalle := TextoObjeto(AObjeto, 'state');
     if sDetalle <> '' then
-      AnadirDetalle(Result, 'Estado: ' + sDetalle + '.');
+      AnadirDetalle(Result, Format(SPlanDetalleEstado, [sDetalle]));
   end
   else if ATipo = 'range-checked' then
   begin
-    Result := 'No hay un único índice fijado de antemano; MariaDB evalúa los índices disponibles para cada fila anterior.';
+    Result := SPlanExplicacionIndicesEvaluadosFila;
     sDetalle := TextoObjeto(AObjeto, 'keys');
     if sDetalle <> '' then
-      AnadirDetalle(Result, 'Índices candidatos: ' + sDetalle + '.');
+      AnadirDetalle(Result, Format(SPlanDetalleIndicesCandidatos, [sDetalle]));
   end
   else if ATipo = 'query_specifications' then
-    Result := 'Contiene las consultas individuales que forman la UNION.'
+    Result := SPlanExplicacionRamasUnion
   else if ATipo = 'read_sorted_file' then
-    Result := 'Lee el resultado producido por una operacion de ordenacion.'
+    Result := SPlanExplicacionLecturaOrdenada
   else if ATipo = 'duplicates_removal' then
-    Result := 'Descarta filas duplicadas del resultado intermedio.'
+    Result := SPlanExplicacionEliminacionDuplicados
   else if ATipo = 'grouping_operation' then
-    Result := 'Agrupa filas para calcular agregados o resolver GROUP BY.'
+    Result := SPlanExplicacionAgrupacion
   else if ATipo = 'ordering_operation' then
-    Result := 'Ordena las filas para satisfacer ORDER BY.'
+    Result := SPlanExplicacionOrdenacion
   else if ATipo = 'window_functions_computation' then
-    Result := 'Calcula funciones de ventana sobre las filas de entrada.'
+    Result := SPlanExplicacionFuncionesVentana
   else
-    Result := 'Nodo del plan de ejecución de MariaDB.';
+    Result := SPlanExplicacionNodoGenerico;
 
   sDetalle := TextoObjeto(AObjeto, 'attached_condition');
   if sDetalle <> '' then
-    AnadirDetalle(Result, 'Condicion: ' + sDetalle + '.');
+    AnadirDetalle(Result, Format(SPlanDetalleCondicion, [sDetalle]));
 end;
 
 { TConstructorPlanMariaDB }
@@ -451,36 +563,36 @@ var
   oPar: TJSONPair;
   sTipo: string;
 begin
-  if not Assigned(AValor) then
-    Exit;
-
-  sTipo := TipoCanonico(AClave);
-  if EsTipoNodo(sTipo) then
+  if Assigned(AValor) then
   begin
-    iNodoId := AnadirNodo(sTipo, AValor, APadreId, ANivel);
-    APadreId := iNodoId;
-    Inc(ANivel);
-  end;
-
-  if AValor is TJSONObject then
-  begin
-    oObjeto := TJSONObject(AValor);
-    for i := 0 to oObjeto.Count - 1 do
+    sTipo := TipoCanonico(AClave);
+    if EsTipoNodo(sTipo) then
     begin
-      oPar := oObjeto.Pairs[i];
-      if (oPar.JsonValue is TJSONObject) or
-         (oPar.JsonValue is TJSONArray) then
-        ProcesarValor(oPar.JsonValue, oPar.JsonString.Value,
-          APadreId, ANivel);
+      iNodoId := AnadirNodo(sTipo, AValor, APadreId, ANivel);
+      APadreId := iNodoId;
+      Inc(ANivel);
     end;
-  end
-  else if AValor is TJSONArray then
-  begin
-    oArray := TJSONArray(AValor);
-    for i := 0 to oArray.Count - 1 do
-      if (oArray.Items[i] is TJSONObject) or
-         (oArray.Items[i] is TJSONArray) then
-        ProcesarValor(oArray.Items[i], '', APadreId, ANivel);
+
+    if AValor is TJSONObject then
+    begin
+      oObjeto := TJSONObject(AValor);
+      for i := 0 to oObjeto.Count - 1 do
+      begin
+        oPar := oObjeto.Pairs[i];
+        if (oPar.JsonValue is TJSONObject) or
+           (oPar.JsonValue is TJSONArray) then
+          ProcesarValor(oPar.JsonValue, oPar.JsonString.Value,
+            APadreId, ANivel);
+      end;
+    end
+    else if AValor is TJSONArray then
+    begin
+      oArray := TJSONArray(AValor);
+      for i := 0 to oArray.Count - 1 do
+        if (oArray.Items[i] is TJSONObject) or
+           (oArray.Items[i] is TJSONArray) then
+          ProcesarValor(oArray.Items[i], '', APadreId, ANivel);
+    end;
   end;
 end;
 
@@ -497,18 +609,19 @@ begin
   Result.EsReal := AEsReal;
 
   if Trim(AJson) = '' then
-    raise EConvertError.Create('El plan de ejecución JSON está vacío.');
+    raise EConvertError.Create(SErrorPlanJsonVacio);
 
   oRaiz := TJSONObject.ParseJSONValue(AJson);
   if not Assigned(oRaiz) then
-    raise EConvertError.Create('MariaDB no ha devuelto un JSON de plan valido.');
+    raise EConvertError.Create(SErrorPlanJsonNoDevuelto);
   try
-    { Algunos componentes de acceso pueden devolver el JSON como una cadena JSON. }
+    { Algunos componentes de acceso pueden devolver el JSON como una cadena }
+    { JSON. }
     if oRaiz is TJSONString then
     begin
       oRaizInterior := TJSONObject.ParseJSONValue(oRaiz.Value);
       if not Assigned(oRaizInterior) then
-        raise EConvertError.Create('La cadena devuelta no contiene un plan JSON valido.');
+        raise EConvertError.Create(SErrorCadenaSinPlanJson);
       try
         oConstructor := TConstructorPlanMariaDB.Create;
         try
@@ -534,8 +647,7 @@ begin
   end;
 
   if Length(Result.Nodos) = 0 then
-    raise EConvertError.Create(
-      'El JSON no contiene nodos reconocibles de un plan de MariaDB.');
+    raise EConvertError.Create(SErrorPlanJsonSinNodos);
 end;
 
 function EsInicioPalabraSQL(ACaracter: Char): Boolean;
@@ -581,15 +693,14 @@ begin
      CharInSet(ASQL[APosicion + 2], ['M', 'm']) and
      (ASQL[APosicion + 3] = '!'));
   if ARechazarEjecutable and EsEjecutable then
-    raise EArgumentException.Create(
-      'No se admiten comentarios ejecutables ni pistas /*+ */ en el SELECT.');
+    raise EArgumentException.Create(SErrorComentarioEjecutableSelect);
 
   Inc(APosicion, 2);
   while (APosicion + 1 <= Length(ASQL)) and
         not ((ASQL[APosicion] = '*') and (ASQL[APosicion + 1] = '/')) do
     Inc(APosicion);
   if APosicion + 1 > Length(ASQL) then
-    raise EArgumentException.Create('El comentario SQL no está cerrado.');
+    raise EArgumentException.Create(SErrorComentarioSqlSinCerrar);
   Inc(APosicion, 2);
 end;
 
@@ -597,29 +708,119 @@ procedure SaltarLiteral(
   const ASQL: string;
   var APosicion: Integer;
   ADelimitador: Char);
+var
+  bCerrado: Boolean;
 begin
+  bCerrado := False;
   Inc(APosicion);
-  while APosicion <= Length(ASQL) do
+  while (APosicion <= Length(ASQL)) and not bCerrado do
   begin
     if (ASQL[APosicion] = '\') and (APosicion < Length(ASQL)) then
-    begin
-      Inc(APosicion, 2);
-      Continue;
-    end;
-    if ASQL[APosicion] = ADelimitador then
+      Inc(APosicion, 2)
+    else if ASQL[APosicion] = ADelimitador then
     begin
       if (APosicion < Length(ASQL)) and
          (ASQL[APosicion + 1] = ADelimitador) then
+        Inc(APosicion, 2)
+      else
       begin
-        Inc(APosicion, 2);
-        Continue;
+        Inc(APosicion);
+        bCerrado := True;
       end;
+    end
+    else
       Inc(APosicion);
-      Exit;
-    end;
-    Inc(APosicion);
   end;
-  raise EArgumentException.Create('Hay una cadena o identificador SQL sin cerrar.');
+  if not bCerrado then
+    raise EArgumentException.Create(SErrorLiteralSqlSinCerrar);
+end;
+
+procedure ValidarCaracteresSelectParaPlan(const ASQL: string);
+begin
+  if Pos(#0, ASQL) > 0 then
+    raise EArgumentException.Create(SErrorSqlCaracterNulo);
+  if Pos('\', ASQL) > 0 then
+    raise EArgumentException.Create(SErrorSqlBarrasInvertidas);
+end;
+
+function IntentarSaltarSeparadorSQL(
+  const ASQL: string;
+  var APosicion: Integer): Boolean;
+begin
+  Result := True;
+  if CharInSet(ASQL[APosicion], [' ', #9, #10, #13]) then
+    Inc(APosicion)
+  else if EsInicioComentarioGuion(ASQL, APosicion) then
+  begin
+    Inc(APosicion, 2);
+    SaltarComentarioLinea(ASQL, APosicion);
+  end
+  else if ASQL[APosicion] = '#' then
+  begin
+    Inc(APosicion);
+    SaltarComentarioLinea(ASQL, APosicion);
+  end
+  else if (ASQL[APosicion] = '/') and
+          (APosicion < Length(ASQL)) and
+          (ASQL[APosicion + 1] = '*') then
+    SaltarComentarioBloque(ASQL, APosicion, True)
+  else
+    Result := False;
+end;
+
+function CoincideConAlgunaPalabra(
+  const APalabra: string;
+  const AAlternativas: array of string): Boolean;
+var
+  sAlternativa: string;
+begin
+  Result := False;
+  for sAlternativa in AAlternativas do
+    Result := Result or SameText(APalabra, sAlternativa);
+end;
+
+procedure ValidarPalabraSelectParaPlan(const APalabra: string);
+begin
+  if CoincideConAlgunaPalabra(
+       APalabra,
+       ['INTO', 'OUTFILE', 'DUMPFILE']) then
+    raise EArgumentException.Create(SErrorSelectIntoPlan);
+
+  if CoincideConAlgunaPalabra(
+       APalabra,
+       ['UPDATE', 'LOCK', 'GET_LOCK', 'RELEASE_LOCK', 'RELEASE_ALL_LOCKS',
+        'SLEEP', 'BENCHMARK', 'LOAD_FILE', 'NEXTVAL', 'SETVAL',
+        'LAST_INSERT_ID']) then
+    raise EArgumentException.CreateFmt(
+      SErrorPalabraSelectPlanNoAdmitida,
+      [APalabra]);
+end;
+
+procedure ProcesarPalabraSelect(
+  const ASQL: string;
+  var APosicion: Integer;
+  var AEsPrimeraPalabra: Boolean;
+  var AInicioSelect: Integer);
+var
+  iInicio: Integer;
+  sPalabra: string;
+begin
+  iInicio := APosicion;
+  Inc(APosicion);
+  while (APosicion <= Length(ASQL)) and
+        EsPartePalabraSQL(ASQL[APosicion]) do
+    Inc(APosicion);
+  sPalabra := Copy(ASQL, iInicio, APosicion - iInicio);
+
+  if AEsPrimeraPalabra then
+  begin
+    if not SameText(sPalabra, 'SELECT') then
+      raise EArgumentException.Create(SErrorPlanNoComienzaSelect);
+    AInicioSelect := iInicio;
+    AEsPrimeraPalabra := False;
+  end
+  else
+    ValidarPalabraSelectParaPlan(sPalabra);
 end;
 
 function NormalizarSelectParaPlan(const ASQL: string): string;
@@ -627,17 +828,10 @@ var
   EsPrimeraPalabra: Boolean;
   i: Integer;
   iFin: Integer;
-  iInicio: Integer;
   iInicioSelect: Integer;
   iPuntoComa: Integer;
-  sPalabra: string;
 begin
-  if Pos(#0, ASQL) > 0 then
-    raise EArgumentException.Create('El SQL contiene un carácter nulo no válido.');
-  if Pos('\', ASQL) > 0 then
-    raise EArgumentException.Create(
-      'No se admiten barras invertidas: su interpretación depende de ' +
-      'NO_BACKSLASH_ESCAPES. Use comillas duplicadas en los literales.');
+  ValidarCaracteresSelectParaPlan(ASQL);
 
   i := 1;
   iInicioSelect := 0;
@@ -646,101 +840,43 @@ begin
 
   while i <= Length(ASQL) do
   begin
-    if CharInSet(ASQL[i], [' ', #9, #10, #13]) then
+    if not IntentarSaltarSeparadorSQL(ASQL, i) then
     begin
-      Inc(i);
-      Continue;
-    end;
-
-    if EsInicioComentarioGuion(ASQL, i) then
-    begin
-      Inc(i, 2);
-      SaltarComentarioLinea(ASQL, i);
-      Continue;
-    end;
-    if ASQL[i] = '#' then
-    begin
-      Inc(i);
-      SaltarComentarioLinea(ASQL, i);
-      Continue;
-    end;
-    if (ASQL[i] = '/') and (i < Length(ASQL)) and
-       (ASQL[i + 1] = '*') then
-    begin
-      SaltarComentarioBloque(ASQL, i, True);
-      Continue;
-    end;
-
-    if iPuntoComa > 0 then
-      raise EArgumentException.Create(
-        'Solo se admite una sentencia SELECT sin instrucciones posteriores.');
-
-    if CharInSet(ASQL[i], ['''', '"', '`']) then
-    begin
-      if EsPrimeraPalabra then
+      if iPuntoComa > 0 then
         raise EArgumentException.Create(
-          'Antes de SELECT solo puede haber espacios o comentarios.');
-      SaltarLiteral(ASQL, i, ASQL[i]);
-      Continue;
-    end;
+          SErrorSelectConInstruccionesPosteriores);
 
-    if ASQL[i] = ';' then
-    begin
-      iPuntoComa := i;
-      Inc(i);
-      Continue;
-    end;
-
-    if EsInicioPalabraSQL(ASQL[i]) then
-    begin
-      iInicio := i;
-      Inc(i);
-      while (i <= Length(ASQL)) and EsPartePalabraSQL(ASQL[i]) do
-        Inc(i);
-      sPalabra := Copy(ASQL, iInicio, i - iInicio);
-
-      if EsPrimeraPalabra then
+      if CharInSet(ASQL[i], ['''', '"', '`']) then
       begin
-        if not SameText(sPalabra, 'SELECT') then
-          raise EArgumentException.Create(
-            'El plan solo admite una sentencia que comience por SELECT.');
-        iInicioSelect := iInicio;
-        EsPrimeraPalabra := False;
+        if EsPrimeraPalabra then
+          raise EArgumentException.Create(SErrorContenidoAntesSelect);
+        SaltarLiteral(ASQL, i, ASQL[i]);
       end
-      else if SameText(sPalabra, 'INTO') or
-              SameText(sPalabra, 'OUTFILE') or
-              SameText(sPalabra, 'DUMPFILE') then
-        raise EArgumentException.Create(
-          'No se admite SELECT INTO, OUTFILE ni DUMPFILE para obtener el plan.')
-      else if SameText(sPalabra, 'UPDATE') or
-              SameText(sPalabra, 'LOCK') or
-              SameText(sPalabra, 'GET_LOCK') or
-              SameText(sPalabra, 'RELEASE_LOCK') or
-              SameText(sPalabra, 'RELEASE_ALL_LOCKS') or
-              SameText(sPalabra, 'SLEEP') or
-              SameText(sPalabra, 'BENCHMARK') or
-              SameText(sPalabra, 'LOAD_FILE') or
-              SameText(sPalabra, 'NEXTVAL') or
-              SameText(sPalabra, 'SETVAL') or
-              SameText(sPalabra, 'LAST_INSERT_ID') then
-        raise EArgumentException.CreateFmt(
-          'No se admite %s en una SELECT destinada al plan de ejecución.',
-          [sPalabra]);
-      Continue;
+      else if ASQL[i] = ';' then
+      begin
+        iPuntoComa := i;
+        Inc(i);
+      end
+      else if EsInicioPalabraSQL(ASQL[i]) then
+        ProcesarPalabraSelect(
+          ASQL,
+          i,
+          EsPrimeraPalabra,
+          iInicioSelect)
+      else
+      begin
+        if EsPrimeraPalabra then
+          raise EArgumentException.Create(SErrorContenidoAntesSelect);
+        if (ASQL[i] = ':') and (i < Length(ASQL)) and
+           (ASQL[i + 1] = '=') then
+          raise EArgumentException.Create(SErrorAsignacionVariablesSelect);
+        Inc(i);
+      end;
     end;
-
-    if EsPrimeraPalabra then
-      raise EArgumentException.Create(
-        'Antes de SELECT solo puede haber espacios o comentarios.');
-    if (ASQL[i] = ':') and (i < Length(ASQL)) and
-       (ASQL[i + 1] = '=') then
-      raise EArgumentException.Create(
-        'No se admiten asignaciones de variables (:=) en la SELECT.');
-    Inc(i);
   end;
 
   if EsPrimeraPalabra or (iInicioSelect = 0) then
-    raise EArgumentException.Create('No se ha encontrado una sentencia SELECT.');
+    raise EArgumentException.Create(SErrorSelectNoEncontrada);
 
   if iPuntoComa > 0 then
     iFin := iPuntoComa - 1
@@ -748,7 +884,7 @@ begin
     iFin := Length(ASQL);
   Result := Trim(Copy(ASQL, iInicioSelect, iFin - iInicioSelect + 1));
   if Result = '' then
-    raise EArgumentException.Create('La sentencia SELECT está vacía.');
+    raise EArgumentException.Create(SErrorSelectVacia);
 end;
 
 function BuscarPalabraSelect(
@@ -763,37 +899,29 @@ begin
   Result := False;
   AInicio := 0;
   bInicioSentencia := True;
-  while APosicion <= Length(ASQL) do
+  while (APosicion <= Length(ASQL)) and not Result do
   begin
     if CharInSet(ASQL[APosicion], [' ', #9, #10, #13]) then
-    begin
-      Inc(APosicion);
-      Continue;
-    end;
-    if EsInicioComentarioGuion(ASQL, APosicion) then
+      Inc(APosicion)
+    else if EsInicioComentarioGuion(ASQL, APosicion) then
     begin
       Inc(APosicion, 2);
       SaltarComentarioLinea(ASQL, APosicion);
-      Continue;
-    end;
-    if ASQL[APosicion] = '#' then
+    end
+    else if ASQL[APosicion] = '#' then
     begin
       Inc(APosicion);
       SaltarComentarioLinea(ASQL, APosicion);
-      Continue;
-    end;
-    if (ASQL[APosicion] = '/') and (APosicion < Length(ASQL)) and
-       (ASQL[APosicion + 1] = '*') then
+    end
+    else if (ASQL[APosicion] = '/') and
+            (APosicion < Length(ASQL)) and
+            (ASQL[APosicion + 1] = '*') then
     begin
       SaltarComentarioBloque(ASQL, APosicion, False);
-      Continue;
-    end;
-    if CharInSet(ASQL[APosicion], ['''', '"', '`']) then
-    begin
-      SaltarLiteral(ASQL, APosicion, ASQL[APosicion]);
-      Continue;
-    end;
-    if EsInicioPalabraSQL(ASQL[APosicion]) then
+    end
+    else if CharInSet(ASQL[APosicion], ['''', '"', '`']) then
+      SaltarLiteral(ASQL, APosicion, ASQL[APosicion])
+    else if EsInicioPalabraSQL(ASQL[APosicion]) then
     begin
       iInicio := APosicion;
       Inc(APosicion);
@@ -804,20 +932,25 @@ begin
       if SameText(sPalabra, 'SELECT') and bInicioSentencia then
       begin
         AInicio := iInicio;
-        Exit(True);
+        Result := True;
+      end
+      else
+      begin
+        bInicioSentencia :=
+          SameText(sPalabra, 'BEGIN') or
+          SameText(sPalabra, 'THEN') or
+          SameText(sPalabra, 'ELSE') or
+          SameText(sPalabra, 'DO');
       end;
-      bInicioSentencia :=
-        SameText(sPalabra, 'BEGIN') or
-        SameText(sPalabra, 'THEN') or
-        SameText(sPalabra, 'ELSE') or
-        SameText(sPalabra, 'DO');
-      Continue;
-    end;
-    if CharInSet(ASQL[APosicion], [';', ':']) then
-      bInicioSentencia := True
+    end
     else
-      bInicioSentencia := False;
-    Inc(APosicion);
+    begin
+      if CharInSet(ASQL[APosicion], [';', ':']) then
+        bInicioSentencia := True
+      else
+        bInicioSentencia := False;
+      Inc(APosicion);
+    end;
   end;
 end;
 
@@ -828,67 +961,65 @@ function BuscarFinSentenciaSelect(
 var
   i: Integer;
 begin
+  Result := False;
+  AFin := Length(ASQL);
   i := AInicio;
-  while i <= Length(ASQL) do
+  while (i <= Length(ASQL)) and not Result do
   begin
     if EsInicioComentarioGuion(ASQL, i) then
     begin
       Inc(i, 2);
       SaltarComentarioLinea(ASQL, i);
-      Continue;
-    end;
-    if ASQL[i] = '#' then
+    end
+    else if ASQL[i] = '#' then
     begin
       Inc(i);
       SaltarComentarioLinea(ASQL, i);
-      Continue;
-    end;
-    if (ASQL[i] = '/') and (i < Length(ASQL)) and
-       (ASQL[i + 1] = '*') then
-    begin
-      SaltarComentarioBloque(ASQL, i, False);
-      Continue;
-    end;
-    if CharInSet(ASQL[i], ['''', '"', '`']) then
-    begin
-      SaltarLiteral(ASQL, i, ASQL[i]);
-      Continue;
-    end;
-    if ASQL[i] = ';' then
+    end
+    else if (ASQL[i] = '/') and (i < Length(ASQL)) and
+            (ASQL[i + 1] = '*') then
+      SaltarComentarioBloque(ASQL, i, False)
+    else if CharInSet(ASQL[i], ['''', '"', '`']) then
+      SaltarLiteral(ASQL, i, ASQL[i])
+    else if ASQL[i] = ';' then
     begin
       AFin := i - 1;
-      Exit(True);
-    end;
-    Inc(i);
+      Result := True;
+    end
+    else
+      Inc(i);
   end;
-  AFin := Length(ASQL);
-  Result := False;
 end;
 
 function ExtraerPrimeraSelectProcedimiento(
   const ADefinicion: string): string;
 var
+  bFinalizado: Boolean;
   i: Integer;
   iFin: Integer;
   iInicio: Integer;
   sCandidata: string;
 begin
   Result := '';
+  bFinalizado := False;
   i := 1;
-  while BuscarPalabraSelect(ADefinicion, i, iInicio) do
+  while not bFinalizado and
+        BuscarPalabraSelect(ADefinicion, i, iInicio) do
   begin
     if not BuscarFinSentenciaSelect(ADefinicion, iInicio, iFin) then
-      Exit;
-
-    sCandidata := Copy(ADefinicion, iInicio, iFin - iInicio + 1);
-    try
-      Result := NormalizarSelectParaPlan(sCandidata);
-      Exit;
-    except
-      on E: EArgumentException do
-      begin
-        i := iFin + 2;
-        Result := '';
+      bFinalizado := True
+    else
+    begin
+      sCandidata := Copy(ADefinicion, iInicio, iFin - iInicio + 1);
+      try
+        Result := NormalizarSelectParaPlan(sCandidata);
+        bFinalizado := True;
+      except
+        on E: EArgumentException do
+        begin
+          i := iFin + 2;
+          Result := '';
+        end;
       end;
     end;
   end;

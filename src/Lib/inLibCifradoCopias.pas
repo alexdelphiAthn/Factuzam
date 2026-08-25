@@ -52,6 +52,50 @@ uses
   DCPrijndael,
   inLibCifrado;
 
+resourcestring
+  SErrorInicializarGeneradorCriptografico =
+    'No se pudo inicializar el generador criptográfico.';
+  SErrorGenerarDatosAleatoriosSeguros =
+    'No se pudieron generar datos aleatorios seguros.';
+  SErrorContenidoCifradoLongitudInvalida =
+    'El contenido cifrado no tiene una longitud válida.';
+  SErrorRellenoCopiaCifradaInvalido =
+    'El relleno de la copia cifrada no es válido.';
+  SErrorRellenoCopiaCifradaDanado =
+    'El relleno de la copia cifrada está dañado.';
+  SErrorBase64CopiaCifradaInvalido =
+    'La copia cifrada contiene Base64 no válido: %s';
+  SErrorScriptComprimirVacio =
+    'El script que se va a comprimir está vacío.';
+  SErrorCopiaDescomprimidaTamanoMaximo =
+    'La copia descomprimida supera el tamaño permitido.';
+  SErrorZipCopiaUnicoArchivo =
+    'El ZIP de la copia debe contener un único archivo.';
+  SErrorZipCopiaSinScript =
+    'El ZIP de la copia no contiene el script esperado.';
+  SErrorScriptZipVacio =
+    'El script contenido en el ZIP está vacío.';
+  SErrorZipCopiaInvalido =
+    'El ZIP de la copia no es válido: %s';
+  SErrorFormatoCopiaNoValido =
+    'El formato solicitado para la copia no es válido.';
+  SErrorContrasenaCopiaVacia =
+    'La contraseña de la copia no puede estar vacía.';
+  SErrorCabeceraCopiaCifradaIncompleta =
+    'La cabecera de la copia cifrada está incompleta.';
+  SErrorVersionCopiaCifradaIncompatible =
+    'La versión de la copia cifrada no es compatible.';
+  SErrorIteracionesCopiaNoValido =
+    'El número de iteraciones de la copia no es válido.';
+  SErrorMetadatosCopiaCifradaInvalidos =
+    'Los metadatos de la copia cifrada no son válidos.';
+  SErrorContrasenaIncorrectaOCopiaDanada =
+    'La contraseña no es correcta o la copia está dañada.';
+  SErrorIndicarContrasenaCopia =
+    'Debe indicar la contraseña de la copia.';
+  SErrorAbrirCopiaCifradaHistorica =
+    'No se pudo abrir la copia cifrada histórica.';
+
 const
   CABECERA_CIFRADO = 'FZAM_COPIA_CIFRADA_V2';
   CABECERA_CIFRADO_ZLIB = 'FZAM_COPIA_CIFRADA_V3';
@@ -193,8 +237,7 @@ begin
     PROVEEDOR_RSA_AES,
     VERIFICAR_CONTEXTO) then
   begin
-    raise ECifradoCopia.Create(
-      'No se pudo inicializar el generador criptográfico.');
+    raise ECifradoCopia.Create(SErrorInicializarGeneradorCriptografico);
   end;
   try
     if not FzaCryptGenRandom(
@@ -202,8 +245,7 @@ begin
       DWORD(ALongitud),
       @Result[0]) then
     begin
-      raise ECifradoCopia.Create(
-        'No se pudieron generar datos aleatorios seguros.');
+      raise ECifradoCopia.Create(SErrorGenerarDatosAleatoriosSeguros);
     end;
   finally
     FzaCryptReleaseContext(hProveedor, 0);
@@ -255,8 +297,7 @@ begin
   if (Length(ADatos) = 0) or
      ((Length(ADatos) mod LONGITUD_BLOQUE_AES) <> 0) then
   begin
-    raise ECifradoCopia.Create(
-      'El contenido cifrado no tiene una longitud válida.');
+    raise ECifradoCopia.Create(SErrorContenidoCifradoLongitudInvalida);
   end;
   SetLength(Result, Length(ADatos));
   oCifrador := TDCP_rijndael.Create(nil);
@@ -277,15 +318,13 @@ begin
   if (iRelleno < 1) or
      (iRelleno > LONGITUD_BLOQUE_AES) then
   begin
-    raise ECifradoCopia.Create(
-      'El relleno de la copia cifrada no es válido.');
+    raise ECifradoCopia.Create(SErrorRellenoCopiaCifradaInvalido);
   end;
   for iIndice := Length(Result) - iRelleno to High(Result) do
   begin
     if Result[iIndice] <> Byte(iRelleno) then
     begin
-      raise ECifradoCopia.Create(
-        'El relleno de la copia cifrada está dañado.');
+      raise ECifradoCopia.Create(SErrorRellenoCopiaCifradaDanado);
     end;
   end;
   SetLength(Result, Length(Result) - iRelleno);
@@ -305,9 +344,9 @@ begin
   except
     on E: Exception do
     begin
-      raise ECifradoCopia.Create(
-        'La copia cifrada contiene Base64 no válido: ' +
-        E.Message);
+      raise ECifradoCopia.CreateFmt(
+        SErrorBase64CopiaCifradaInvalido,
+        [E.Message]);
     end;
   end;
 end;
@@ -358,14 +397,12 @@ var
 begin
   if Length(ADatos) = 0 then
   begin
-    raise ECifradoCopia.Create(
-      'El script que se va a comprimir está vacío.');
+    raise ECifradoCopia.Create(SErrorScriptComprimirVacio);
   end;
   if UInt64(Length(ADatos)) >
      UInt64(MAXIMO_DATOS_DESCOMPRIMIDOS) then
   begin
-    raise ECifradoCopia.Create(
-      'La copia descomprimida supera el tamaño permitido.');
+    raise ECifradoCopia.Create(SErrorCopiaDescomprimidaTamanoMaximo);
   end;
   oDestino := TMemoryStream.Create;
   oZip := TZipFile.Create;
@@ -408,8 +445,7 @@ begin
       begin
         if Destino.Size + Leidos > MAXIMO_DATOS_DESCOMPRIMIDOS then
         begin
-          raise ECifradoCopia.Create(
-            'La copia descomprimida supera el tamaño permitido.');
+          raise ECifradoCopia.Create(SErrorCopiaDescomprimidaTamanoMaximo);
         end;
         Destino.WriteBuffer(Buffer[0], Leidos);
         Leidos := Descompresor.Read(Buffer[0], Length(Buffer));
@@ -441,34 +477,31 @@ begin
       oZip.Open(oOrigen, zmRead);
       if oZip.FileCount <> 1 then
       begin
-        raise ECifradoCopia.Create(
-          'El ZIP de la copia debe contener un único archivo.');
+        raise ECifradoCopia.Create(SErrorZipCopiaUnicoArchivo);
       end;
       if not SameText(
         oZip.FileName[0],
         NOMBRE_ENTRADA_ZIP) then
       begin
-        raise ECifradoCopia.Create(
-          'El ZIP de la copia no contiene el script esperado.');
+        raise ECifradoCopia.Create(SErrorZipCopiaSinScript);
       end;
       oCabecera := oZip.FileInfo[0];
       if oCabecera.UncompressedSize64 = 0 then
       begin
-        raise ECifradoCopia.Create(
-          'El script contenido en el ZIP está vacío.');
+        raise ECifradoCopia.Create(SErrorScriptZipVacio);
       end;
       if oCabecera.UncompressedSize64 >
          UInt64(MAXIMO_DATOS_DESCOMPRIMIDOS) then
       begin
-        raise ECifradoCopia.Create(
-          'La copia descomprimida supera el tamaño permitido.');
+        raise ECifradoCopia.Create(SErrorCopiaDescomprimidaTamanoMaximo);
       end;
       oZip.Read(0, Result);
     except
       on E: EZipException do
       begin
-        raise ECifradoCopia.Create(
-          'El ZIP de la copia no es válido: ' + E.Message);
+        raise ECifradoCopia.CreateFmt(
+          SErrorZipCopiaInvalido,
+          [E.Message]);
       end;
     end;
   finally
@@ -529,8 +562,7 @@ begin
       ACabecera := CABECERA_CIFRADO_ZIP;
     end;
   else
-    raise ECifradoCopia.Create(
-      'El formato solicitado para la copia no es válido.');
+    raise ECifradoCopia.Create(SErrorFormatoCopiaNoValido);
   end;
 end;
 
@@ -551,8 +583,7 @@ var
 begin
   if Trim(AContrasena) = '' then
   begin
-    raise ECifradoCopia.Create(
-      'La contraseña de la copia no puede estar vacía.');
+    raise ECifradoCopia.Create(SErrorContrasenaCopiaVacia);
   end;
   aSal := GenerarBytesAleatorios(LONGITUD_SAL);
   aVector := GenerarBytesAleatorios(LONGITUD_VECTOR);
@@ -622,14 +653,12 @@ begin
     oLineas.Text := ADatos;
     if oLineas.Count < 6 then
     begin
-      raise ECifradoCopia.Create(
-        'La cabecera de la copia cifrada está incompleta.');
+      raise ECifradoCopia.Create(SErrorCabeceraCopiaCifradaIncompleta);
     end;
     Result.Cabecera := Trim(oLineas[0]);
     if ResolverFormatoCifrado(Result.Cabecera) <> AFormato then
     begin
-      raise ECifradoCopia.Create(
-        'La versión de la copia cifrada no es compatible.');
+      raise ECifradoCopia.Create(SErrorVersionCopiaCifradaIncompatible);
     end;
     Result.Iteraciones := StrToIntDef(
       Trim(oLineas[1]),
@@ -637,8 +666,7 @@ begin
     if (Result.Iteraciones < 10000) or
        (Result.Iteraciones > 1000000) then
     begin
-      raise ECifradoCopia.Create(
-        'El número de iteraciones de la copia no es válido.');
+      raise ECifradoCopia.Create(SErrorIteracionesCopiaNoValido);
     end;
     Result.Sal := DecodificarBase64(Trim(oLineas[2]));
     Result.Vector := DecodificarBase64(Trim(oLineas[3]));
@@ -656,8 +684,7 @@ begin
      (Length(ASobre.Vector) <> LONGITUD_VECTOR) or
      (Length(ASobre.Mac) <> LONGITUD_CLAVE) then
   begin
-    raise ECifradoCopia.Create(
-      'Los metadatos de la copia cifrada no son válidos.');
+    raise ECifradoCopia.Create(SErrorMetadatosCopiaCifradaInvalidos);
   end;
 end;
 
@@ -692,8 +719,7 @@ begin
     aClaveMac);
   if not ComparacionConstante(aMacCalculado, ASobre.Mac) then
   begin
-    raise ECifradoCopia.Create(
-      'La contraseña no es correcta o la copia está dañada.');
+    raise ECifradoCopia.Create(SErrorContrasenaIncorrectaOCopiaDanada);
   end;
 end;
 
@@ -708,8 +734,7 @@ var
 begin
   if Trim(AContrasena) = '' then
   begin
-    raise ECifradoCopia.Create(
-      'Debe indicar la contraseña de la copia.');
+    raise ECifradoCopia.Create(SErrorIndicarContrasenaCopia);
   end;
   Sobre := LeerSobreCifrado(ADatos, AFormato);
   ValidarDimensionesSobre(Sobre);
@@ -750,8 +775,7 @@ begin
       AnsiString(AContrasena));
     if Trim(Result) = '' then
     begin
-      raise ECifradoCopia.Create(
-        'No se pudo abrir la copia cifrada histórica.');
+      raise ECifradoCopia.Create(SErrorAbrirCopiaCifradaHistorica);
     end;
   end;
 end;

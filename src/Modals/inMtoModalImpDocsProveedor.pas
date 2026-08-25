@@ -67,6 +67,14 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  STituloTiposDocumentoInformeProveedor = 'Tipos doc.';
+  STituloSeriesDocumentoInformeProveedor = 'Series doc.';
+  SCaptionPedidosInformeProveedor = 'Pedidos';
+  SCaptionAlbaranesInformeProveedor = 'Albaranes';
+  SCaptionFacturasInformeProveedor = 'Facturas';
+  SCaptionDevolucionesInformeProveedor = 'Devoluciones';
+
 { TfrmPrintDocsProveedor }
 
 function TfrmPrintDocsProveedor.FiltrosUsados: TFiltrosReport;
@@ -92,9 +100,9 @@ end;
 
 procedure TfrmPrintDocsProveedor.CrearControlesPropios;
 begin
-  FclbTipos := CrearTabChecklist('Tipos doc.');
+  FclbTipos := CrearTabChecklist(STituloTiposDocumentoInformeProveedor);
   CargarTiposDocumento;
-  FclbSeries := CrearTabChecklist('Series doc.');
+  FclbSeries := CrearTabChecklist(STituloSeriesDocumentoInformeProveedor);
   CargarSeriesDocumento;
 end;
 
@@ -113,10 +121,10 @@ begin
   if FclbTipos <> nil then
   begin
     FclbTipos.Items.Clear;
-    Agregar('PED', 'Pedidos');
-    Agregar('ALB', 'Albaranes');
-    Agregar('FAC', 'Facturas');
-    Agregar('DEV', 'Devoluciones');
+    Agregar('PED', SCaptionPedidosInformeProveedor);
+    Agregar('ALB', SCaptionAlbaranesInformeProveedor);
+    Agregar('FAC', SCaptionFacturasInformeProveedor);
+    Agregar('DEV', SCaptionDevolucionesInformeProveedor);
   end;
 end;
 

@@ -150,6 +150,10 @@ uses
   Vcl.Forms,
   inLibMsgArticulos, inLibMsgVentas;
 
+resourcestring
+  STituloBusquedaDocumentosTrabajoAbiertos =
+    'Documentos de Trabajo abiertos';
+
 procedure TDocTrabajoLineaOrigen.Clear;
 begin
   CodigoArticulo := '';
@@ -240,7 +244,7 @@ begin
       sConsulta := ARepositorios.Lecturas.ConsultaDocumentosAbiertos(
         AContextoSesion.Identidad.Usuario);
     if ABusquedaVisual.EjecutarBusqueda(AConexion,
-                                       'Documentos de Trabajo abiertos',
+                                       STituloBusquedaDocumentosTrabajoAbiertos,
                                        sConsulta, 'ID_DTR', sId,
                                        'frmBuscarDocumentosTrabajo',
                                        frmParent) then

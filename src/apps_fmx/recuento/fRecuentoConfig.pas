@@ -38,6 +38,23 @@ type
 
 implementation
 
+const
+  cSeparadorRuta = '/';
+
+resourcestring
+  STituloConfiguracionRecuento = 'Configuración';
+  SBotonVolverConfiguracion = 'Volver';
+  SBotonGuardarConfiguracion = 'Guardar';
+  SBotonRegistrarDispositivo = 'Registrar disp.';
+  SEtiquetaClaveAlta = 'Clave de alta';
+  SEtiquetaNombreDispositivo = 'Nombre del dispositivo';
+  SEtiquetaOperario = 'Operario';
+  SEtiquetaCarpetaCliente = 'Carpeta de cliente';
+  SEtiquetaUrlServidor = 'URL del servidor (acaba en %s)';
+  SInfoConfiguracionGuardada = 'Configuración guardada';
+  SInfoDispositivoRegistrado = 'Dispositivo registrado correctamente';
+  SErrorRegistrarDispositivo = 'No se pudo registrar: %s';
+
 function TfrmConfig.NuevoEdit(const ATitulo, AValor: string): TEdit;
 var
   lbl: TLabel;
@@ -62,7 +79,7 @@ var
   layBotones: TLayout;
   btnRegistrar, btnGuardar, btnVolver: TButton;
 begin
-  Self.Caption := 'Configuración';
+  Self.Caption := STituloConfiguracionRecuento;
   layBotones := TLayout.Create(Self);
   layBotones.Parent := Self;
   layBotones.Align := TAlignLayout.Bottom;
@@ -71,27 +88,28 @@ begin
   btnVolver.Parent := layBotones;
   btnVolver.Align := TAlignLayout.Left;
   btnVolver.Width := 110;
-  btnVolver.Text := 'Volver';
+  btnVolver.Text := SBotonVolverConfiguracion;
   btnVolver.OnClick := OnVolverClick;
   btnGuardar := TButton.Create(Self);
   btnGuardar.Parent := layBotones;
   btnGuardar.Align := TAlignLayout.Left;
   btnGuardar.Width := 110;
-  btnGuardar.Text := 'Guardar';
+  btnGuardar.Text := SBotonGuardarConfiguracion;
   btnGuardar.OnClick := OnGuardarClick;
   btnRegistrar := TButton.Create(Self);
   btnRegistrar.Parent := layBotones;
   btnRegistrar.Align := TAlignLayout.Right;
   btnRegistrar.Width := 150;
-  btnRegistrar.Text := 'Registrar disp.';
+  btnRegistrar.Text := SBotonRegistrarDispositivo;
   btnRegistrar.OnClick := OnRegistrarClick;
   // Los edits se apilan por Align=Top en orden inverso de creación, así que
   // creamos primero el último (clave) para que quede abajo del bloque.
-  FClave       := NuevoEdit('Clave de alta', '');
-  FDispositivo := NuevoEdit('Nombre del dispositivo', oConfig.Dispositivo);
-  FOperario    := NuevoEdit('Operario', oConfig.Operario);
-  FCarpeta     := NuevoEdit('Carpeta de cliente', oConfig.Carpeta);
-  FUrl         := NuevoEdit('URL del servidor (acaba en /)', oConfig.UrlBase);
+  FClave       := NuevoEdit(SEtiquetaClaveAlta, '');
+  FDispositivo := NuevoEdit(SEtiquetaNombreDispositivo, oConfig.Dispositivo);
+  FOperario    := NuevoEdit(SEtiquetaOperario, oConfig.Operario);
+  FCarpeta     := NuevoEdit(SEtiquetaCarpetaCliente, oConfig.Carpeta);
+  FUrl         := NuevoEdit(Format(SEtiquetaUrlServidor, [cSeparadorRuta]),
+    oConfig.UrlBase);
 end;
 
 procedure TfrmConfig.VolcarAConfig;
@@ -106,7 +124,7 @@ end;
 procedure TfrmConfig.OnGuardarClick(Sender: TObject);
 begin
   VolcarAConfig;
-  TDialogService.ShowMessage('Configuración guardada');
+  TDialogService.ShowMessage(SInfoConfiguracionGuardada);
 end;
 
 procedure TfrmConfig.OnRegistrarClick(Sender: TObject);
@@ -123,10 +141,11 @@ begin
     begin
       oConfig.Token := sToken;
       oConfig.Guardar;
-      TDialogService.ShowMessage('Dispositivo registrado correctamente');
+      TDialogService.ShowMessage(SInfoDispositivoRegistrado);
     end
     else
-      TDialogService.ShowMessage('No se pudo registrar: ' + oApi.UltimoError);
+      TDialogService.ShowMessage(
+        Format(SErrorRegistrarDispositivo, [oApi.UltimoError]));
   finally
     FreeAndNil(oApi);
   end;

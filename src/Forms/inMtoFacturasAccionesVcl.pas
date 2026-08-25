@@ -52,6 +52,65 @@ uses
   inLibMsgFacturas, inMtoComandoImprimirFacturas,
   inMtoModalFacRec, inMtoModalImpFac, inMtoModalFacturarTicket;
 
+resourcestring
+  STituloSeleccionarCarpetaFacturas = 'Seleccione una carpeta';
+  SResumenCorreosLoteFacturas =
+    'Emails enviados: %d. Sin email: %d. Errores de envío: %d.';
+  SInfoEmailNoSolicitadoLoteFacturas = 'Email solicitado: No';
+  SInfoEmailSolicitadoLoteFacturas = 'Email solicitado: Sí';
+  SInfoEmailsEnviadosLoteFacturas = 'Emails enviados: %d';
+  SInfoSinEmailClienteLoteFacturas = 'Sin EMAIL_CLIENTE_FAC: %d';
+  SInfoErroresEnvioLoteFacturas = 'Errores de envío: %d';
+  SInfoDetalleEnviosLoteFacturas = 'Detalle de envíos:';
+  SErrorPrepararCarpetaTrabajoLoteFacturas =
+    'No se puede preparar la carpeta "%s".';
+
+type
+  TCoordinadorImpresionFacturaVcl = class
+  private
+    FOwnerFormulario: TComponent;
+    FOwnerLote: TComponent;
+    FFacturas: TdmFacturas;
+    FCabecera: TDataSet;
+    FConexiones: IServicioConexiones;
+    FContextoSesion: IContextoSesionAplicacion;
+    FParametros: IParametrosAplicacion;
+    FPermisos: IPermisosAplicacion;
+    FRegistroLog: IRegistroLog;
+    FObtenerFiltradas: TObtenerFacturasFiltradasVcl;
+    FFormulario: TfrmPrintFac;
+    FEmailFactura: string;
+    FEmailRespuesta: string;
+    FNombreEmpresa: string;
+    FReferencia: string;
+    function EnviarPdf(
+      const ARutaPdf, AEmail: string;
+      out AMensaje: string): Boolean;
+    function SeleccionarDirectorioPdf(var ADirectorio: string): Boolean;
+    function ExportarLotePdf(
+      const AReferencias: TReferenciasComandoFactura;
+      const AFormato: string;
+      AEnviarEmail: Boolean): Boolean;
+    function ImprimirLote(
+      const AReferencias: TReferenciasComandoFactura;
+      const AFormato: string;
+      AEnviarEmail: Boolean): Boolean;
+  public
+    constructor Create(
+      AOwnerSesion: TComponent;
+      AFacturas: TdmFacturas;
+      ACabecera: TDataSet;
+      const AConexiones: IServicioConexiones;
+      const AContextoSesion: IContextoSesionAplicacion;
+      const AParametros: IParametrosAplicacion;
+      const APermisos: IPermisosAplicacion;
+      const ARegistroLog: IRegistroLog;
+      const AObtenerFiltradas: TObtenerFacturasFiltradasVcl);
+    procedure ConfigurarFormulario(
+      AFormulario: TfrmPrintFac;
+      APuedeUsarActual: Boolean);
+  end;
+
 procedure ArchivarFacturaConsolidadaVcl(
   AFacturas: TdmFacturas;
   const ASerie, ANumero: string;
@@ -74,18 +133,19 @@ function TextoResumenCorreoLote(
   const ADetalle: string): string;
 begin
   if not ACorreoSolicitado then
+    Result := SInfoEmailNoSolicitadoLoteFacturas + sLineBreak
+  else
   begin
-    Result := 'Email solicitado: No' + sLineBreak;
-    Exit;
+    Result :=
+      SInfoEmailSolicitadoLoteFacturas + sLineBreak +
+      Format(SInfoEmailsEnviadosLoteFacturas, [AEnviados]) + sLineBreak +
+      Format(SInfoSinEmailClienteLoteFacturas, [ASinDestinatario]) +
+      sLineBreak +
+      Format(SInfoErroresEnvioLoteFacturas, [AConError]) + sLineBreak;
+    if Trim(ADetalle) <> '' then
+      Result := Result + sLineBreak +
+        SInfoDetalleEnviosLoteFacturas + sLineBreak + ADetalle + sLineBreak;
   end;
-  Result :=
-    'Email solicitado: Sí' + sLineBreak +
-    Format('Emails enviados: %d', [AEnviados]) + sLineBreak +
-    Format('Sin EMAIL_CLIENTE_FAC: %d', [ASinDestinatario]) + sLineBreak +
-    Format('Errores de envío: %d', [AConError]) + sLineBreak;
-  if Trim(ADetalle) <> '' then
-    Result := Result + sLineBreak +
-      'Detalle de envíos:' + sLineBreak + ADetalle + sLineBreak;
 end;
 
 function TieneIncidenciasCorreoLote(
@@ -138,7 +198,7 @@ begin
     if not System.SysUtils.DirectoryExists(ADirectorio) and
        not System.SysUtils.ForceDirectories(ADirectorio) then
       raise Exception.CreateFmt(
-        'No se puede preparar la carpeta "%s".',
+        SErrorPrepararCarpetaTrabajoLoteFacturas,
         [ADirectorio]);
     ARuta := TPath.Combine(ADirectorio, 'trabajo_lote.txt');
     if AResultado.EsError or TieneIncidenciasCorreoLote(
@@ -184,7 +244,7 @@ begin
     if not System.SysUtils.DirectoryExists(ADirectorio) and
        not System.SysUtils.ForceDirectories(ADirectorio) then
       raise Exception.CreateFmt(
-        'No se puede preparar la carpeta "%s".',
+        SErrorPrepararCarpetaTrabajoLoteFacturas,
         [ADirectorio]);
     ARuta := TPath.Combine(ADirectorio, 'trabajo_lote.txt');
     if (AResultado.Error <> '') or TieneIncidenciasCorreoLote(
@@ -221,6 +281,295 @@ begin
   end;
 end;
 
+procedure MostrarResultadoImpresionLote(
+  const AParametros: IParametrosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  const AFormato, AImpresora: string;
+  const AResultado: TResultadoLoteImpresionFacturas);
+var
+  sDirectorioTrabajo: string;
+  sErrorTrabajo: string;
+  sMensaje: string;
+  sRutaTrabajo: string;
+begin
+  if AResultado.Error <> '' then
+    sMensaje := Format(
+      SErrorLoteImpresionFacturas,
+      [AResultado.Impresas, AResultado.Solicitadas, AResultado.Error])
+  else
+    sMensaje := Format(
+      SInfoLoteImpresionFacturas,
+      [AResultado.Impresas, AResultado.OmitidasNoConsolidadas]);
+
+  if AResultado.CorreoSolicitado then
+  begin
+    sMensaje := sMensaje + sLineBreak + sLineBreak +
+      Format(
+        SResumenCorreosLoteFacturas,
+        [AResultado.CorreosEnviados,
+         AResultado.CorreosSinDestinatario,
+         AResultado.CorreosConError]);
+    sDirectorioTrabajo := AParametros.GetPath('appDirPDF');
+    if Trim(sDirectorioTrabajo) = '' then
+      sDirectorioTrabajo := TPath.Combine(
+        TPath.GetDocumentsPath,
+        'Factuzam');
+    if GuardarTrabajoLoteImpresion(
+      sDirectorioTrabajo,
+      AFormato,
+      AImpresora,
+      AResultado,
+      sRutaTrabajo,
+      sErrorTrabajo) then
+      sMensaje := sMensaje + sLineBreak + sLineBreak +
+        Format(SInfoTrabajoLoteGuardado, [sRutaTrabajo])
+    else
+    begin
+      sMensaje := sMensaje + sLineBreak + sLineBreak +
+        Format(SErrorGuardarTrabajoLote, [sErrorTrabajo]);
+      if Assigned(ARegistroLog) then
+        ARegistroLog.RegistrarError(sMensaje);
+    end;
+  end;
+
+  if (AResultado.Error <> '') or
+     (AResultado.CorreosConError > 0) or
+     (AResultado.CorreosSinDestinatario > 0) then
+    MessageDlg(sMensaje, mtError, [mbOK], 0)
+  else
+    MessageDlg(sMensaje, mtInformation, [mbOK], 0);
+end;
+
+{ TCoordinadorImpresionFacturaVcl }
+
+constructor TCoordinadorImpresionFacturaVcl.Create(
+  AOwnerSesion: TComponent;
+  AFacturas: TdmFacturas;
+  ACabecera: TDataSet;
+  const AConexiones: IServicioConexiones;
+  const AContextoSesion: IContextoSesionAplicacion;
+  const AParametros: IParametrosAplicacion;
+  const APermisos: IPermisosAplicacion;
+  const ARegistroLog: IRegistroLog;
+  const AObtenerFiltradas: TObtenerFacturasFiltradasVcl);
+begin
+  inherited Create;
+  FOwnerFormulario := AOwnerSesion;
+  if FOwnerFormulario = nil then
+    FOwnerFormulario := Application;
+  FOwnerLote := Application.MainForm;
+  if FOwnerLote = nil then
+    FOwnerLote := FOwnerFormulario;
+  FFacturas := AFacturas;
+  FCabecera := ACabecera;
+  FConexiones := AConexiones;
+  FContextoSesion := AContextoSesion;
+  FParametros := AParametros;
+  FPermisos := APermisos;
+  FRegistroLog := ARegistroLog;
+  FObtenerFiltradas := AObtenerFiltradas;
+  FEmailFactura := Trim(
+    FCabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString);
+  FNombreEmpresa := Trim(
+    FCabecera.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
+  FEmailRespuesta := Trim(
+    FCabecera.FieldByName('EMAIL_EMPRESA_FAC').AsString);
+  FReferencia :=
+    FCabecera.FieldByName(fseriefac).AsString + '\' +
+    FCabecera.FieldByName(fnrofac).AsString;
+end;
+
+procedure TCoordinadorImpresionFacturaVcl.ConfigurarFormulario(
+  AFormulario: TfrmPrintFac;
+  APuedeUsarActual: Boolean);
+begin
+  FFormulario := AFormulario;
+  FFormulario.edtNroFac.Text := FCabecera.FindField(fnrofac).AsString;
+  FFormulario.edtSerie.Text := FCabecera.FindField(fseriefac).AsString;
+  FFormulario.ConfigurarDataModule(FFacturas);
+  FFormulario.ConfigurarCorreo(
+    FEmailFactura,
+    function(
+      const ARutaPdf, AEmail: string;
+      out AMensaje: string): Boolean
+    begin
+      Result := EnviarPdf(ARutaPdf, AEmail, AMensaje);
+    end);
+  FFormulario.ConfigurarLote(
+    APuedeUsarActual,
+    FObtenerFiltradas,
+    function(
+      const AReferencias: TReferenciasComandoFactura;
+      const AFormato: string;
+      AEnviarEmail: Boolean): Boolean
+    begin
+      Result := ExportarLotePdf(AReferencias, AFormato, AEnviarEmail);
+    end,
+    function(
+      const AReferencias: TReferenciasComandoFactura;
+      const AFormato: string;
+      AEnviarEmail: Boolean): Boolean
+    begin
+      Result := ImprimirLote(AReferencias, AFormato, AEnviarEmail);
+    end);
+end;
+
+function TCoordinadorImpresionFacturaVcl.EnviarPdf(
+  const ARutaPdf, AEmail: string;
+  out AMensaje: string): Boolean;
+begin
+  Result := EnviarPdfFacturaVcl(
+    FParametros,
+    FRegistroLog,
+    FReferencia,
+    FNombreEmpresa,
+    FEmailRespuesta,
+    AEmail,
+    ARutaPdf,
+    AMensaje);
+end;
+
+function TCoordinadorImpresionFacturaVcl.SeleccionarDirectorioPdf(
+  var ADirectorio: string): Boolean;
+var
+  oDialogo: TFileOpenDialog;
+begin
+  oDialogo := TFileOpenDialog.Create(nil);
+  try
+    oDialogo.Title := STituloSeleccionarCarpetaFacturas;
+    oDialogo.Options :=
+      [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist];
+    if DirectoryExists(ADirectorio) then
+      oDialogo.DefaultFolder := ADirectorio;
+    // El modal de impresion es fsStayOnTop: el dialogo debe ser suyo
+    // para que Windows lo mantenga visible por encima.
+    Result := oDialogo.Execute(FFormulario.Handle);
+    if Result then
+      ADirectorio := oDialogo.FileName;
+  finally
+    oDialogo.Free;
+  end;
+end;
+
+function TCoordinadorImpresionFacturaVcl.ExportarLotePdf(
+  const AReferencias: TReferenciasComandoFactura;
+  const AFormato: string;
+  AEnviarEmail: Boolean): Boolean;
+var
+  oResultado: TResultadoComandoImprimirFacturas;
+  oTipoMensaje: TMsgDlgType;
+  sDirectorio: string;
+  sErrorTrabajo: string;
+  sMensaje: string;
+  sRutaTrabajo: string;
+begin
+  Result := False;
+  sDirectorio := FParametros.GetPath('appDirPDF');
+  if SeleccionarDirectorioPdf(sDirectorio) then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      try
+        oResultado := EjecutarComandoImprimirFacturas(
+          TArray<string>.Create(
+            '/imprimirfacturas',
+            SerializarReferenciasComandoFacturas(AReferencias),
+            AFormato,
+            sDirectorio),
+          FOwnerFormulario,
+          FConexiones.ConexionPrincipal,
+          FContextoSesion,
+          FParametros,
+          FPermisos,
+          FRegistroLog,
+          AEnviarEmail);
+      except
+        on E: Exception do
+        begin
+          oResultado := Default(TResultadoComandoImprimirFacturas);
+          oResultado.CodigoSalida := 1;
+          oResultado.EsError := True;
+          oResultado.Mensaje := E.ClassName + ': ' + E.Message;
+          oResultado.CorreoSolicitado := AEnviarEmail;
+        end;
+      end;
+      sMensaje := oResultado.Mensaje;
+      if oResultado.CorreoSolicitado then
+        sMensaje := sMensaje + sLineBreak + sLineBreak +
+          Format(
+            SResumenCorreosLoteFacturas,
+            [oResultado.CorreosEnviados,
+             oResultado.CorreosSinDestinatario,
+             oResultado.CorreosConError]);
+      if GuardarTrabajoLotePdf(
+        sDirectorio,
+        AFormato,
+        oResultado,
+        sRutaTrabajo,
+        sErrorTrabajo) then
+        sMensaje := sMensaje + sLineBreak + sLineBreak +
+          Format(SInfoTrabajoLoteGuardado, [sRutaTrabajo])
+      else
+      begin
+        sMensaje := sMensaje + sLineBreak + sLineBreak +
+          Format(SErrorGuardarTrabajoLote, [sErrorTrabajo]);
+        oResultado.EsError := True;
+        if Assigned(FRegistroLog) then
+          FRegistroLog.RegistrarError(sMensaje);
+      end;
+    finally
+      Screen.Cursor := crDefault;
+    end;
+
+    if oResultado.EsError or
+       (oResultado.CorreosConError > 0) or
+       (oResultado.CorreosSinDestinatario > 0) then
+      oTipoMensaje := mtError
+    else
+      oTipoMensaje := mtInformation;
+    MessageDlg(sMensaje, oTipoMensaje, [mbOK], 0);
+    Result := True;
+  end;
+end;
+
+function TCoordinadorImpresionFacturaVcl.ImprimirLote(
+  const AReferencias: TReferenciasComandoFactura;
+  const AFormato: string;
+  AEnviarEmail: Boolean): Boolean;
+var
+  oParametros: IParametrosAplicacion;
+  oRegistroLog: IRegistroLog;
+  sFormato: string;
+  sImpresora: string;
+begin
+  oParametros := FParametros;
+  oRegistroLog := FRegistroLog;
+  sFormato := AFormato;
+  sImpresora := FParametros.GetString('appImpresoraInformes', '');
+  IniciarLoteImpresionFacturas(
+    AReferencias,
+    AFormato,
+    sImpresora,
+    FOwnerLote,
+    FConexiones.ConexionPrincipal,
+    FConexiones,
+    FContextoSesion,
+    FParametros,
+    FPermisos,
+    FRegistroLog,
+    AEnviarEmail,
+    procedure(const AResultado: TResultadoLoteImpresionFacturas)
+    begin
+      MostrarResultadoImpresionLote(
+        oParametros,
+        oRegistroLog,
+        sFormato,
+        sImpresora,
+        AResultado);
+    end);
+  Result := True;
+end;
+
 procedure ImprimirFacturaVcl(
   AOwnerSesion: TComponent;
   AFacturas: TdmFacturas;
@@ -235,24 +584,19 @@ procedure ImprimirFacturaVcl(
   const AObtenerFiltradas: TObtenerFacturasFiltradasVcl);
 var
   bPuedeUsarActual: Boolean;
-  Fase: string;
-  Formulario: TfrmPrintFac;
-  oOwnerFormulario: TComponent;
-  oOwnerLote: TComponent;
-  sEmailFactura: string;
-  sEmailRespuesta: string;
-  sNombreEmpresa: string;
-  sReferencia: string;
+  oCoordinador: TCoordinadorImpresionFacturaVcl;
+  oFormulario: TfrmPrintFac;
+  sFase: string;
 begin
   if not APuedeImprimir then
     Abort;
   if SinVerifactuActivo(AParametros) and
      Assigned(AGuardarPendiente) then
     AGuardarPendiente();
-  Fase := ACabecera.FieldByName(ffasefac).AsString;
+  sFase := ACabecera.FieldByName(ffasefac).AsString;
   bPuedeUsarActual :=
     not (
-      ((Fase = '') or SameText(Fase, 'BORRADOR')) and
+      ((sFase = '') or SameText(sFase, 'BORRADOR')) and
       (ACabecera.FieldByName(fescon).AsString <> 'S') and
       (ModoVerifactu(AParametros) <> mvSinVerifactu));
   if not bPuedeUsarActual and not Assigned(AObtenerFiltradas) then
@@ -260,227 +604,27 @@ begin
     ShowMessage(SAvisoBorradorPendienteImpresionFiscal);
     Abort;
   end;
-  oOwnerFormulario := AOwnerSesion;
-  if oOwnerFormulario = nil then
-    oOwnerFormulario := Application;
-  oOwnerLote := Application.MainForm;
-  if oOwnerLote = nil then
-    oOwnerLote := oOwnerFormulario;
-  Formulario := TfrmPrintFac.Create(oOwnerFormulario);
+
+  oCoordinador := TCoordinadorImpresionFacturaVcl.Create(
+    AOwnerSesion,
+    AFacturas,
+    ACabecera,
+    AConexiones,
+    AContextoSesion,
+    AParametros,
+    APermisos,
+    ARegistroLog,
+    AObtenerFiltradas);
   try
-    Formulario.edtNroFac.Text :=
-      ACabecera.FindField(fnrofac).AsString;
-    Formulario.edtSerie.Text :=
-      ACabecera.FindField(fseriefac).AsString;
-    Formulario.ConfigurarDataModule(AFacturas);
-    sEmailFactura := Trim(
-      ACabecera.FieldByName('EMAIL_CLIENTE_FAC').AsString);
-    sNombreEmpresa := Trim(
-      ACabecera.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString);
-    sEmailRespuesta := Trim(
-      ACabecera.FieldByName('EMAIL_EMPRESA_FAC').AsString);
-    sReferencia :=
-      ACabecera.FieldByName(fseriefac).AsString + '\' +
-      ACabecera.FieldByName(fnrofac).AsString;
-    Formulario.ConfigurarCorreo(
-      sEmailFactura,
-      function(
-        const ARutaPdf, AEmail: string;
-        out AMensaje: string): Boolean
-      begin
-        Result := EnviarPdfFacturaVcl(
-          AParametros,
-          ARegistroLog,
-          sReferencia,
-          sNombreEmpresa,
-          sEmailRespuesta,
-          AEmail,
-          ARutaPdf,
-          AMensaje);
-      end);
-    Formulario.ConfigurarLote(
-      bPuedeUsarActual,
-      AObtenerFiltradas,
-      function(
-        const AReferencias: TReferenciasComandoFactura;
-        const AFormato: string;
-        AEnviarEmail: Boolean): Boolean
-      var
-        oDialogo: TFileOpenDialog;
-        oResultado: TResultadoComandoImprimirFacturas;
-        oTipoMensaje: TMsgDlgType;
-        sDirectorio: string;
-        sErrorTrabajo: string;
-        sMensaje: string;
-        sRutaTrabajo: string;
-      begin
-        Result := False;
-        sDirectorio := AParametros.GetPath('appDirPDF');
-        oDialogo := TFileOpenDialog.Create(nil);
-        try
-          oDialogo.Title := 'Seleccione una carpeta';
-          oDialogo.Options :=
-            [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist];
-          if DirectoryExists(sDirectorio) then
-            oDialogo.DefaultFolder := sDirectorio;
-          // El modal de impresion es fsStayOnTop: el dialogo debe ser suyo
-          // para que Windows lo mantenga visible por encima.
-          if not oDialogo.Execute(Formulario.Handle) then
-            Exit;
-          sDirectorio := oDialogo.FileName;
-        finally
-          oDialogo.Free;
-        end;
-        Screen.Cursor := crHourGlass;
-        try
-          try
-            oResultado := EjecutarComandoImprimirFacturas(
-              TArray<string>.Create(
-                '/imprimirfacturas',
-                SerializarReferenciasComandoFacturas(AReferencias),
-                AFormato,
-                sDirectorio),
-              oOwnerFormulario,
-              AConexiones.ConexionPrincipal,
-              AContextoSesion,
-              AParametros,
-              APermisos,
-              ARegistroLog,
-              AEnviarEmail);
-          except
-            on E: Exception do
-            begin
-              oResultado := Default(TResultadoComandoImprimirFacturas);
-              oResultado.CodigoSalida := 1;
-              oResultado.EsError := True;
-              oResultado.Mensaje := E.ClassName + ': ' + E.Message;
-              oResultado.CorreoSolicitado := AEnviarEmail;
-            end;
-          end;
-          sMensaje := oResultado.Mensaje;
-          if oResultado.CorreoSolicitado then
-            sMensaje := sMensaje + sLineBreak + sLineBreak +
-              Format(
-                'Emails enviados: %d. Sin email: %d. Errores de envío: %d.',
-                [oResultado.CorreosEnviados,
-                 oResultado.CorreosSinDestinatario,
-                 oResultado.CorreosConError]);
-          if GuardarTrabajoLotePdf(
-            sDirectorio,
-            AFormato,
-            oResultado,
-            sRutaTrabajo,
-            sErrorTrabajo) then
-          begin
-            sMensaje := sMensaje + sLineBreak + sLineBreak +
-              Format(SInfoTrabajoLoteGuardado, [sRutaTrabajo]);
-          end
-          else
-          begin
-            sMensaje := sMensaje + sLineBreak + sLineBreak +
-              Format(SErrorGuardarTrabajoLote, [sErrorTrabajo]);
-            oResultado.EsError := True;
-            if Assigned(ARegistroLog) then
-              ARegistroLog.RegistrarError(sMensaje);
-          end;
-        finally
-          Screen.Cursor := crDefault;
-        end;
-        if oResultado.EsError or
-           (oResultado.CorreosConError > 0) or
-           (oResultado.CorreosSinDestinatario > 0) then
-          oTipoMensaje := mtError
-        else
-          oTipoMensaje := mtInformation;
-        MessageDlg(sMensaje, oTipoMensaje, [mbOK], 0);
-        Result := True;
-      end,
-      function(
-        const AReferencias: TReferenciasComandoFactura;
-        const AFormato: string;
-        AEnviarEmail: Boolean): Boolean
-      var
-        sDirectorioTrabajo: string;
-        sErrorTrabajo: string;
-        sImpresora: string;
-        sRutaTrabajo: string;
-      begin
-        sImpresora := AParametros.GetString(
-          'appImpresoraInformes', '');
-        IniciarLoteImpresionFacturas(
-          AReferencias,
-          AFormato,
-          sImpresora,
-          oOwnerLote,
-          AConexiones.ConexionPrincipal,
-          AConexiones,
-          AContextoSesion,
-          AParametros,
-          APermisos,
-          ARegistroLog,
-          AEnviarEmail,
-          procedure(
-            const AResultado: TResultadoLoteImpresionFacturas)
-          var
-            sMensaje: string;
-          begin
-            if AResultado.Error <> '' then
-            begin
-              sMensaje := Format(
-                SErrorLoteImpresionFacturas,
-                [AResultado.Impresas,
-                 AResultado.Solicitadas,
-                 AResultado.Error]);
-            end
-            else
-            begin
-              sMensaje := Format(
-                SInfoLoteImpresionFacturas,
-                [AResultado.Impresas,
-                 AResultado.OmitidasNoConsolidadas]);
-            end;
-            if AResultado.CorreoSolicitado then
-            begin
-              sMensaje := sMensaje + sLineBreak + sLineBreak +
-                Format(
-                  'Emails enviados: %d. Sin email: %d. Errores de envío: %d.',
-                  [AResultado.CorreosEnviados,
-                   AResultado.CorreosSinDestinatario,
-                   AResultado.CorreosConError]);
-              sDirectorioTrabajo := AParametros.GetPath('appDirPDF');
-              if Trim(sDirectorioTrabajo) = '' then
-                sDirectorioTrabajo := TPath.Combine(
-                  TPath.GetDocumentsPath,
-                  'Factuzam');
-              if GuardarTrabajoLoteImpresion(
-                sDirectorioTrabajo,
-                AFormato,
-                sImpresora,
-                AResultado,
-                sRutaTrabajo,
-                sErrorTrabajo) then
-                sMensaje := sMensaje + sLineBreak + sLineBreak +
-                  Format(SInfoTrabajoLoteGuardado, [sRutaTrabajo])
-              else
-              begin
-                sMensaje := sMensaje + sLineBreak + sLineBreak +
-                  Format(SErrorGuardarTrabajoLote, [sErrorTrabajo]);
-                if Assigned(ARegistroLog) then
-                  ARegistroLog.RegistrarError(sMensaje);
-              end;
-            end;
-            if (AResultado.Error <> '') or
-               (AResultado.CorreosConError > 0) or
-               (AResultado.CorreosSinDestinatario > 0) then
-              MessageDlg(sMensaje, mtError, [mbOK], 0)
-            else
-              MessageDlg(sMensaje, mtInformation, [mbOK], 0);
-          end);
-        Result := True;
-      end);
-    Formulario.ShowModal;
+    oFormulario := TfrmPrintFac.Create(oCoordinador.FOwnerFormulario);
+    try
+      oCoordinador.ConfigurarFormulario(oFormulario, bPuedeUsarActual);
+      oFormulario.ShowModal;
+    finally
+      oFormulario.Free;
+    end;
   finally
-    Formulario.Free;
+    oCoordinador.Free;
   end;
 end;
 

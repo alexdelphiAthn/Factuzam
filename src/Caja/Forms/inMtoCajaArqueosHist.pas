@@ -90,6 +90,10 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SFormatoNombreArchivoArqueosCaja =
+    'Arqueos_%s.xlsx';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TfrmMtoCajaArqueosHist }
@@ -133,8 +137,9 @@ begin
   if not PuedeExportar then
     Abort;
   dlgGuardar.DefaultExtension := 'xlsx';
-  dlgGuardar.FileName := 'Arqueos_' +
-    FormatDateTime('yyyymmdd', Now) + '.xlsx';
+  dlgGuardar.FileName := Format(
+    SFormatoNombreArchivoArqueosCaja,
+    [FormatDateTime('yyyymmdd', Now)]);
   if dlgGuardar.Execute then
     ExportGridToXLSX(dlgGuardar.FileName, cxGrdPrincipal);
 end;

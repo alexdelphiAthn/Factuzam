@@ -74,6 +74,31 @@ uses
   System.SysUtils,
   UniDataImpuestosRepositorio;
 
+resourcestring
+  SErrorCrearServicioGastosTransporte =
+    'No se pudo crear el servicio GASTOS_T.';
+  SErrorArticuloGastosTransporteInactivo =
+    'El artículo GASTOS_T existe, pero está inactivo.';
+  SErrorCodigoGastosTransporteNoServicio =
+    'El código GASTOS_T ya existe y no es un servicio.';
+  SErrorServicioGastosTransporteIvaNoNormal =
+    'El servicio GASTOS_T debe tener IVA normal (tipo N).';
+  SErrorServicioGastosTransporteConVariaciones =
+    'El servicio GASTOS_T no puede tener variaciones.';
+  SErrorServicioGastosTransporteTrazable =
+    'El servicio GASTOS_T no puede ser trazable.';
+  SErrorCrearSkuGastosTransporte =
+    'No se pudo crear el SKU GASTOS_T.';
+  SErrorSkuGastosTransporteOtroArticulo =
+    'El SKU GASTOS_T ya está asociado a otro artículo.';
+  SErrorSkuGastosTransporteConVariacion =
+    'El SKU GASTOS_T debe ser un SKU simple, sin variación.';
+  SErrorSkuGastosTransporteInactivo =
+    'El SKU GASTOS_T existe, pero está inactivo.';
+  SErrorConfiguracionIvaPedidoPrestaShopNoEncontrada =
+    'No se encontró una configuración de IVA vigente para la empresa ' +
+    'en la fecha del pedido de PrestaShop.';
+
 function PorcentajeTipoIva(
   const ATipoIva: string;
   const AImpuestos: TPorcentajesImpuestos): Double;
@@ -325,8 +350,7 @@ begin
     CODIGO_ARTICULO_GASTOS_TRANSPORTE;
   AConsulta.Open;
   if AConsulta.Eof then
-    raise EPortesPedidoPrestaShop.Create(
-      'No se pudo crear el servicio GASTOS_T.');
+    raise EPortesPedidoPrestaShop.Create(SErrorCrearServicioGastosTransporte);
   sActivo := Trim(AConsulta.FieldByName('ESACTIVO_ART').AsString);
   sTipoArticulo := Trim(AConsulta.FieldByName('TIPO_ART').AsString);
   sTipoIva := Trim(AConsulta.FieldByName('TIPO_IVA_ART').AsString);
@@ -334,19 +358,19 @@ begin
   sTrazable := Trim(AConsulta.FieldByName('ESTRAZABLE_ART').AsString);
   if not SameText(sActivo, 'S') then
     raise EPortesPedidoPrestaShop.Create(
-      'El artículo GASTOS_T existe, pero está inactivo.');
+      SErrorArticuloGastosTransporteInactivo);
   if not SameText(sTipoArticulo, TIPO_ARTICULO_GASTOS_TRANSPORTE) then
     raise EPortesPedidoPrestaShop.Create(
-      'El código GASTOS_T ya existe y no es un servicio.');
+      SErrorCodigoGastosTransporteNoServicio);
   if not SameText(sTipoIva, TIPO_IVA_GASTOS_TRANSPORTE) then
     raise EPortesPedidoPrestaShop.Create(
-      'El servicio GASTOS_T debe tener IVA normal (tipo N).');
+      SErrorServicioGastosTransporteIvaNoNormal);
   if not SameText(sVariacion, 'N') then
     raise EPortesPedidoPrestaShop.Create(
-      'El servicio GASTOS_T no puede tener variaciones.');
+      SErrorServicioGastosTransporteConVariaciones);
   if not SameText(sTrazable, 'N') then
     raise EPortesPedidoPrestaShop.Create(
-      'El servicio GASTOS_T no puede ser trazable.');
+      SErrorServicioGastosTransporteTrazable);
   AConsulta.Close;
   AConsulta.SQL.Text :=
     'UPDATE fza_articulos SET DESCRIPCION_ART = :DESCRIPCION, ' +
@@ -380,20 +404,16 @@ begin
   AConsulta.ParamByName('SKU').AsString := CODIGO_SKU_GASTOS_TRANSPORTE;
   AConsulta.Open;
   if AConsulta.Eof then
-    raise EPortesPedidoPrestaShop.Create(
-      'No se pudo crear el SKU GASTOS_T.');
+    raise EPortesPedidoPrestaShop.Create(SErrorCrearSkuGastosTransporte);
   sArticuloSku := Trim(AConsulta.FieldByName('CODIGO_ART_SKU').AsString);
   sVariacion := Trim(AConsulta.FieldByName('CODIGO_VAR_SKU').AsString);
   sActivo := Trim(AConsulta.FieldByName('ESACTIVO_SKU').AsString);
   if not SameText(sArticuloSku, CODIGO_ARTICULO_GASTOS_TRANSPORTE) then
-    raise EPortesPedidoPrestaShop.Create(
-      'El SKU GASTOS_T ya está asociado a otro artículo.');
+    raise EPortesPedidoPrestaShop.Create(SErrorSkuGastosTransporteOtroArticulo);
   if sVariacion <> '-' then
-    raise EPortesPedidoPrestaShop.Create(
-      'El SKU GASTOS_T debe ser un SKU simple, sin variación.');
+    raise EPortesPedidoPrestaShop.Create(SErrorSkuGastosTransporteConVariacion);
   if not SameText(sActivo, 'S') then
-    raise EPortesPedidoPrestaShop.Create(
-      'El SKU GASTOS_T existe, pero está inactivo.');
+    raise EPortesPedidoPrestaShop.Create(SErrorSkuGastosTransporteInactivo);
   AConsulta.Close;
 end;
 
@@ -520,8 +540,7 @@ begin
       (Abs(AEntrada.Pedido.TotalPortesCIVA) >= 0.005);
     if not bTieneImpuestos then
       raise EPortesPedidoPrestaShop.Create(
-        'No se encontró una configuración de IVA vigente para la empresa ' +
-        'en la fecha del pedido de PrestaShop.');
+        SErrorConfiguracionIvaPedidoPrestaShopNoEncontrada);
     oPortes := Default(TPortesPedidoPrestaShop);
     if bHayImportePortes then
       oPortes := PrepararPortesPedidoPrestaShop(

@@ -77,6 +77,26 @@ uses
   dxSpreadSheet, inLibFotos,
   UniDataInformeBalanceSinTallasRepositorio;
 
+resourcestring
+  SNombreArchivoBalanceAlmacenSinTallas =
+    'Balance_almacen_sin_tallas';
+  SCaptionBandasBalanceSinTallas = 'Bandas';
+  SCaptionAgrupacionesBalanceSinTallas = 'Agrupaciones';
+  SCaptionAlmacenBalanceSinTallas = 'Almacén';
+  SCaptionProveedorBalanceSinTallas = 'Proveedor';
+  SCaptionFamiliaBalanceSinTallas = 'Familia';
+  SCaptionTemporadaBalanceSinTallas = 'Temporada';
+  SCaptionEntradasBalanceSinTallas = 'Entradas';
+  SCaptionVentasBalanceSinTallas = 'Ventas';
+  SCaptionExistenciasFinalesBalanceSinTallas = 'Existencias finales';
+  SCaptionExistenciasInicialesBalanceSinTallas = 'Existencias iniciales';
+  SCaptionEntradaCompraBalanceSinTallas = 'Ent. compra';
+  SCaptionAlbaranEntradaBalanceSinTallas = 'Alb. entrada';
+  SCaptionTraspasosBalanceSinTallas = 'Traspasos (neto)';
+  SCaptionDepositosBalanceSinTallas = 'Depósitos (neto)';
+  SCaptionRegularizacionesBalanceSinTallas = 'Regulariz.';
+  SCaptionAlbaranVentaBalanceSinTallas = 'Alb. venta';
+
 { TfrmPrintBalanceSinTallas }
 
 function TfrmPrintBalanceSinTallas.FiltrosUsados: TFiltrosReport;
@@ -127,13 +147,16 @@ begin
     FrgDetalle.Properties.OnEditValueChanged := rgConfigChange;
   end;
   // Pestaña "Bandas": qué bandas mostrar (según modo/detalle).
-  FclbBandas := CrearTabChecklist('Bandas');
+  FclbBandas := CrearTabChecklist(SCaptionBandasBalanceSinTallas);
   CargarBandas;
   // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada reordenables
   // + spin de nivel de familia.
-  CrearTabAgrupacion('Agrupaciones',
+  CrearTabAgrupacion(SCaptionAgrupacionesBalanceSinTallas,
     ['ALM', 'PRV', 'FAM', 'TMP'],
-    ['Almac' + #233 + 'n', 'Proveedor', 'Familia', 'Temporada'], True);
+    [SCaptionAlmacenBalanceSinTallas,
+     SCaptionProveedorBalanceSinTallas,
+     SCaptionFamiliaBalanceSinTallas,
+     SCaptionTemporadaBalanceSinTallas], True);
 end;
 
 procedure TfrmPrintBalanceSinTallas.ActualizarHabilitacion;
@@ -173,31 +196,31 @@ begin
     if (FrgModo <> nil) and (FrgModo.ItemIndex = 1) then
     begin
       // Por acumulados (sin Salidas: traspasos neteados en Entradas).
-      Agregar('ENT',    'Entradas');
-      Agregar('VEN',    'Ventas');
-      Agregar('EXIFIN', 'Existencias finales');
+      Agregar('ENT',    SCaptionEntradasBalanceSinTallas);
+      Agregar('VEN',    SCaptionVentasBalanceSinTallas);
+      Agregar('EXIFIN', SCaptionExistenciasFinalesBalanceSinTallas);
     end
     else if (FrgDetalle <> nil) and (FrgDetalle.ItemIndex = 1) then
     begin
       // Entre fechas, desglosado (subtipos Ctrl+U; traspasos/depósitos netos,
       // sin bandas de salida salvo alb. venta).
-      Agregar('EXIINI', 'Existencias iniciales');
-      Agregar('ENTCMP', 'Ent. compra');
-      Agregar('ENTALB', 'Alb. entrada');
-      Agregar('ENTTRA', 'Traspasos (neto)');
-      Agregar('ENTDEP', string('Dep'#243'sitos (neto)'));
-      Agregar('ENTREG', 'Regulariz.');
-      Agregar('SALALB', 'Alb. venta');
-      Agregar('VEN',    'Ventas');
-      Agregar('EXIFIN', 'Existencias finales');
+      Agregar('EXIINI', SCaptionExistenciasInicialesBalanceSinTallas);
+      Agregar('ENTCMP', SCaptionEntradaCompraBalanceSinTallas);
+      Agregar('ENTALB', SCaptionAlbaranEntradaBalanceSinTallas);
+      Agregar('ENTTRA', SCaptionTraspasosBalanceSinTallas);
+      Agregar('ENTDEP', SCaptionDepositosBalanceSinTallas);
+      Agregar('ENTREG', SCaptionRegularizacionesBalanceSinTallas);
+      Agregar('SALALB', SCaptionAlbaranVentaBalanceSinTallas);
+      Agregar('VEN',    SCaptionVentasBalanceSinTallas);
+      Agregar('EXIFIN', SCaptionExistenciasFinalesBalanceSinTallas);
     end
     else
     begin
       // Entre fechas, simplificado (sin Salidas).
-      Agregar('EXIINI', 'Existencias iniciales');
-      Agregar('ENT',    'Entradas');
-      Agregar('VEN',    'Ventas');
-      Agregar('EXIFIN', 'Existencias finales');
+      Agregar('EXIINI', SCaptionExistenciasInicialesBalanceSinTallas);
+      Agregar('ENT',    SCaptionEntradasBalanceSinTallas);
+      Agregar('VEN',    SCaptionVentasBalanceSinTallas);
+      Agregar('EXIFIN', SCaptionExistenciasFinalesBalanceSinTallas);
     end;
   end;
 end;
@@ -333,7 +356,8 @@ begin
     try
       fPreview.DialogoGuardar.InitialDir :=
         ParametrosApp.GetPath('appDirExcel');
-      fPreview.DialogoGuardar.FileName := 'Balance_almacen_sin_tallas';
+      fPreview.DialogoGuardar.FileName :=
+        SNombreArchivoBalanceAlmacenSinTallas;
       ExportarBalanceSinTallasExcel(
         fPreview.dxSpreadSheet1, FResultadoBalance.DataSet, FotosArticulos);
       fPreview.ShowModal;

@@ -28,14 +28,8 @@ type
     uctSegundoPlano
   );
 
-  IFabricaConexionesUniDAC = interface
-    ['{C1A49483-4701-4B86-96E6-D608928DA9B3}']
-    function GetPerfil: TPerfilConexion;
-    function GetCapacidades: TCapacidadesMotorBBDD;
-    function GetDialectoSql: IDialectoSql;
-    function CrearConexion(AOwner: TComponent): TUniConnection;
-    function CrearPerfilAdministrativo(
-      const APerfilBase: TPerfilConexion): TPerfilConexion;
+  IConfiguradorConexionesUniDAC = interface
+    ['{DB12E7C0-73F9-4413-8574-84818B5EEA2B}']
     procedure ConfigurarConexion(AConexion: TUniConnection);
     procedure ConfigurarConexionTemporal(
       AConexion: TUniConnection;
@@ -54,6 +48,16 @@ type
       const APerfil: TPerfilConexion;
       const ACredencial: string);
     procedure GuardarConfiguracion;
+  end;
+
+  IFabricaConexionesUniDAC = interface(IConfiguradorConexionesUniDAC)
+    ['{C1A49483-4701-4B86-96E6-D608928DA9B3}']
+    function GetPerfil: TPerfilConexion;
+    function GetCapacidades: TCapacidadesMotorBBDD;
+    function GetDialectoSql: IDialectoSql;
+    function CrearConexion(AOwner: TComponent): TUniConnection;
+    function CrearPerfilAdministrativo(
+      const APerfilBase: TPerfilConexion): TPerfilConexion;
     function FormatearError(
       ACodigo: Integer;
       const AMensaje: string;

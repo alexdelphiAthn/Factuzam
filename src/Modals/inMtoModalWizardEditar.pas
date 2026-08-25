@@ -152,8 +152,16 @@ uses
   UniDataConn, inLibUser, inLibGlobalVar,
   inLibMsgComun, UniDataWizardEditarRepositorio;
 
-const
-  ITEM_NUEVO = '<< Nuevo formato >>';
+resourcestring
+  SItemNuevoFormatoWizard = '<< Nuevo formato >>';
+  STituloPasoFormatoWizard = 'Paso 1 de 2 — Formato a editar';
+  SSubtituloPasoFormatoWizard =
+    'Elige un formato existente o crea uno nuevo. ' +
+    'El nombre y el permiso quedan fijados durante toda la edición.';
+  STituloPasoGuiasWizard = 'Paso 2 de 2 — Guías de datos';
+  SSubtituloPasoGuiasWizard =
+    'Consulta los datasets disponibles del informe y configura ' +
+    'las guías auxiliares que se ligarán al formato.';
 
 procedure TfrmModalWizardEditar.FormCreate(Sender: TObject);
 begin
@@ -192,16 +200,10 @@ begin
   // los seteamos en codigo para no depender de propiedades anidadas
   // en el DFM que podrian variar entre versiones de TJvWizard.
   try
-    pgFormato.Header.Title.Text :=
-      'Paso 1 de 2 — Formato a editar';
-    pgFormato.Header.Subtitle.Text :=
-      'Elige un formato existente o crea uno nuevo. ' +
-      'El nombre y el permiso quedan fijados durante toda la edición.';
-    pgGuias.Header.Title.Text :=
-      'Paso 2 de 2 — Guías de datos';
-    pgGuias.Header.Subtitle.Text :=
-      'Consulta los datasets disponibles del informe y configura ' +
-      'las guías auxiliares que se ligarán al formato.';
+    pgFormato.Header.Title.Text := STituloPasoFormatoWizard;
+    pgFormato.Header.Subtitle.Text := SSubtituloPasoFormatoWizard;
+    pgGuias.Header.Title.Text := STituloPasoGuiasWizard;
+    pgGuias.Header.Subtitle.Text := SSubtituloPasoGuiasWizard;
   except
     // Si la version de TJvWizard difiere y estas propiedades no
     // existen, no es critico: el wizard sigue funcionando.
@@ -252,7 +254,7 @@ begin
   cbbFormato.Properties.Items.BeginUpdate;
   try
     cbbFormato.Properties.Items.Clear;
-    cbbFormato.Properties.Items.Add(ITEM_NUEVO);
+    cbbFormato.Properties.Items.Add(SItemNuevoFormatoWizard);
     for i := 0 to Length(formatos) - 1 do
       cbbFormato.Properties.Items.Add(formatos[i]);
   finally
@@ -278,7 +280,7 @@ end;
 function TfrmModalWizardEditar.EsFormatoNuevo: Boolean;
 begin
   Result := (cbbFormato.ItemIndex <= 0) or
-            SameText(Trim(cbbFormato.Text), ITEM_NUEVO);
+            SameText(Trim(cbbFormato.Text), SItemNuevoFormatoWizard);
 end;
 
 function TfrmModalWizardEditar.NombreFinal: string;
@@ -314,7 +316,7 @@ begin
     ShowMessage(SErrorNombreFormatoWizardNoIndicado);
     Stop := True;
   end
-  else if SameText(NombreFinal, ITEM_NUEVO) then
+  else if SameText(NombreFinal, SItemNuevoFormatoWizard) then
   begin
     ShowMessage(SErrorNombreFormatoWizardNoModificado);
     Stop := True;

@@ -58,6 +58,11 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoFacturaCompraVertical = 'FacCompraV_%s_%s';
+  STituloPreviewFacturaCompraVertical = 'FACTURA DE COMPRA';
+  SEtiquetaAlmacenDestinoFacturaCompraVertical = 'ALMACEN DESTINO';
+
 procedure TfrmPrintFacCompraV.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
@@ -69,8 +74,8 @@ begin
   begin
     dmFacc.PrepararPrintSku(edtSerie.Text, edtNumero.Text);
     cfg := Default(TDocCompraCabCfg);
-    cfg.Titulo         := 'FACTURA DE COMPRA';
-    cfg.EtiquetaIzq    := 'ALMACEN DESTINO';
+    cfg.Titulo         := STituloPreviewFacturaCompraVertical;
+    cfg.EtiquetaIzq    := SEtiquetaAlmacenDestinoFacturaCompraVertical;
     cfg.FieldRazonIzq  := 'NOMBRE_ALM_FACC';
     cfg.FieldDirIzq    := 'DIRECCION_ALM_FACC';
     cfg.FieldCPIzq     := 'CODIGO_POSTAL_ALM_FACC';
@@ -99,7 +104,8 @@ begin
         fPreview.DialogoGuardar.InitialDir :=
           ParametrosApp.GetPath('appDirExcel');
         fPreview.DialogoGuardar.FileName :=
-          'FacCompraV_' + edtSerie.Text + '_' + edtNumero.Text;
+          Format(SNombreArchivoFacturaCompraVertical,
+            [edtSerie.Text, edtNumero.Text]);
         ExportarDocCompraVertical(ConexionPrincipal,fPreview.dxSpreadSheet1,
           dmFacc.unqryCabFaccPrint,
           dmFacc.unqryLinFaccSkuPrint,

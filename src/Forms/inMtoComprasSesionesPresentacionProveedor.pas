@@ -116,6 +116,9 @@ uses
   inLibPresentacionDocumento,
   UniDataComprasSesionesOperaciones;
 
+resourcestring
+  STituloBuscarProveedoresSesionCompra = 'Busqueda de proveedores';
+
 const
   // Eje de variacion de color en fza_atributos_valores.
   cIdVaColor = 'CO';
@@ -229,7 +232,7 @@ begin
                mtInformation, [mbOk], 0)
   else if FEntorno.BusquedaVisual.EjecutarBusqueda(
     FEntorno.Conexion,
-    'Busqueda de proveedores',
+    STituloBuscarProveedoresSesionCompra,
     'SELECT * FROM vi_proveedores ORDER BY RAZON_SOCIAL_PRV',
     'CODIGO_PRV_PRV',
     sCodigo,

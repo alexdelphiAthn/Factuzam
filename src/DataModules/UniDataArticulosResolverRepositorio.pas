@@ -465,14 +465,10 @@ var
   oDefinicion: TDefinicionSql;
   sModo: string;
 begin
-  Result := False;
-  if (not Assigned(FConexion)) or (ACodigoTarifa = '') then
-    Exit;
-  if not DescuentoTarifaVigente(ACodigoTarifa, AFecha) then
-    Exit;
-
-  Result := True;
-  if Assigned(FConexion) and (ACodigoTarifa <> '') then
+  Result := Assigned(FConexion) and (ACodigoTarifa <> '');
+  if Result then
+    Result := DescuentoTarifaVigente(ACodigoTarifa, AFecha);
+  if Result then
   begin
     oConsulta := TUniQuery.Create(nil);
     try

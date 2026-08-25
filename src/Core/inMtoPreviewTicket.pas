@@ -112,6 +112,14 @@ uses
   System.UITypes, inLibMsgComun,
   inLibMsgFacturas, inLibTraducciones;
 
+resourcestring
+  SFiltroArchivoPdfTicket =
+    'PDF|*.pdf';
+  SFiltroArchivoPngTicket =
+    'PNG|*.png';
+  SNombreArchivoTicket =
+    'Ticket_%s';
+
 type
   TPreviewTicketMto = class(TInterfacedObject, IPreviewTicket)
   public
@@ -1158,13 +1166,14 @@ var
 begin
   sSrc := FRutaPDFReal;
   bOrigenDisponible := (sSrc <> '') and FileExists(sSrc);
-  SaveDialog1.Filter := 'PDF|*.pdf';
+  SaveDialog1.Filter := SFiltroArchivoPdfTicket;
   SaveDialog1.DefaultExt := 'pdf';
   if sSrc <> '' then
     sNombrePDF := ExtractFileName(sSrc)
   else
-    sNombrePDF := 'Ticket_' + FormatDateTime('yyyy_mm_dd_hh_nn_ss',
-                                             Now) + '.pdf';
+    sNombrePDF := Format(
+      SNombreArchivoTicket,
+      [FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now)]) + '.pdf';
   SaveDialog1.FileName := sNombrePDF;
   if SaveDialog1.Execute then
   begin
@@ -1206,10 +1215,11 @@ end;
 
 procedure TFormVisualizador.btnPNGClick(Sender: TObject);
 begin
-  SaveDialog1.Filter := 'PNG|*.png';
+  SaveDialog1.Filter := SFiltroArchivoPngTicket;
   SaveDialog1.DefaultExt := 'png';
-  SaveDialog1.FileName := 'Ticket_' +
-    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.png';
+  SaveDialog1.FileName := Format(
+    SNombreArchivoTicket,
+    [FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now)]) + '.png';
   if SaveDialog1.Execute then
   begin
     GuardarPNG(SaveDialog1.FileName);

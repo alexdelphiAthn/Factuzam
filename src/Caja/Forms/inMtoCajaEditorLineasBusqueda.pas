@@ -72,6 +72,9 @@ uses
   cxDBExtLookupComboBox, inLibAtributosPaleta,
   inMtoCajaEditorLineasDecisiones;
 
+resourcestring
+  STituloBusquedaArticulosCaja = 'Búsqueda de Artículos en Caja';
+
 constructor TBusquedaEditorLineasCajaVcl.Create(
   const AContexto: TContextoBusquedaEditorLineasCajaVcl);
 begin
@@ -389,7 +392,7 @@ begin
     'Hasta',
     'dd/mm/yyyy');
   if FContexto.BusquedaVisual.EjecutarBusquedaDataSet(
-       'Búsqueda de Artículos en Caja',
+       STituloBusquedaArticulosCaja,
        Datos,
        'frmMtoArtFacSearch',
        FContexto.Formulario) then

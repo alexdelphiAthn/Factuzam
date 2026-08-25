@@ -65,6 +65,11 @@ uses
 
 {$R *.dfm}
 
+resourcestring
+  SNombreArchivoSesionCompra = 'Sesion_%s_%s';
+  STituloPreviewSesionCompra = 'SESION DE COMPRA';
+  SEtiquetaEmpresaSesionCompra = 'EMPRESA';
+
 procedure TfrmPrintSesion.btnExcelClick(Sender: TObject);
 var
   fPreview: TfrmMtoPreviewExcel;
@@ -74,8 +79,8 @@ begin
   begin
     dmSesion.PrepararPrint(edtSerie.Text, edtNumero.Text);
   cfg := Default(TDocCompraCabCfg);
-  cfg.Titulo         := 'SESION DE COMPRA';
-  cfg.EtiquetaIzq    := 'EMPRESA';
+  cfg.Titulo         := STituloPreviewSesionCompra;
+  cfg.EtiquetaIzq    := SEtiquetaEmpresaSesionCompra;
   cfg.FieldRazonIzq  := 'RAZON_SOCIAL_EMP';
   cfg.FieldDirIzq    := 'DIRECCION1_EMP';
   cfg.FieldCPIzq     := 'CODIGO_POSTAL_EMP';
@@ -103,7 +108,8 @@ begin
     fPreview.DialogoGuardar.InitialDir :=
       ParametrosApp.GetPath('appDirExcel');
     fPreview.DialogoGuardar.FileName :=
-      'Sesion_' + edtSerie.Text + '_' + edtNumero.Text;
+      Format(SNombreArchivoSesionCompra,
+        [edtSerie.Text, edtNumero.Text]);
     try
       ExportarDocCompraHorizontal(ConexionPrincipal,fPreview.dxSpreadSheet1,
         dmSesion.unqryCabSesionPrint,

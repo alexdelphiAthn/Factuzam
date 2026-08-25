@@ -53,6 +53,9 @@ implementation
 uses
   Vcl.Dialogs, inLibMsgComun, inLibMsgVentas;
 
+resourcestring
+  STituloDatosSepaRemesa = 'Datos SEPA de la remesa';
+
 function LimpiarValorSepa(const AValor: string): string;
 begin
   Result := UpperCase(Trim(AValor));
@@ -72,7 +75,7 @@ begin
   // Modal programatico: no hay .dfm que cargar.
   inherited CreateNew(AOwner);
   BorderStyle := bsDialog;
-  Caption := 'Datos SEPA de la remesa';
+  Caption := STituloDatosSepaRemesa;
   ClientHeight := 520;
   ClientWidth := 900;
   Position := poScreenCenter;

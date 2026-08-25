@@ -77,7 +77,100 @@ uses
   System.Hash,
   System.JSON,
   System.Generics.Collections,
-  Data.DB;
+  Data.DB,
+  inLibCambioArticuloColorHistoricoAmbito;
+
+resourcestring
+  SErrorIdentificadorSqlHistoricoNoPermitido =
+    'Identificador SQL no permitido: %s.';
+  SErrorTipoOperacionHistoricoNoPermitido =
+    'Tipo de operación histórico no permitido: %s.';
+  SErrorTipoObjetoHistoricoNoPermitido =
+    'Tipo de objeto histórico no permitido: %s.';
+  SErrorAmbitoHistoricoAlterado =
+    'El histórico contiene un ámbito no persistible o alterado.';
+  SErrorIdentificadorHistoricoNoGenerado =
+    'No se pudo generar el identificador del histórico.';
+  SErrorTablaHistoricoNoExiste =
+    'La tabla %s no existe en la base de datos actual.';
+  SErrorTablaHistoricoSinClavePrimaria =
+    'La tabla %s no tiene una clave primaria reversible.';
+  SErrorCabeceraHistoricoNoAplicada =
+    'No se pudo aplicar la cabecera del histórico.';
+  SErrorHistoricoFueraTransaccion =
+    'El histórico debe iniciarse dentro de la transacción del cambio.';
+  SErrorOperacionHistoricoEnCurso =
+    'Ya hay una operación de histórico en curso.';
+  SErrorUsuarioHistoricoObligatorio =
+    'El usuario del histórico es obligatorio.';
+  SErrorOperacionHistoricoNoPreparadaCaptura =
+    'No hay una operación preparada para capturar instantáneas.';
+  SErrorLineasFacturaProtegidasHistorico =
+    'Las líneas de factura están protegidas y no se historizan.';
+  SErrorTablaHistoricoAutocontenida =
+    'La tabla del histórico no puede contenerse a sí misma.';
+  SErrorTablaAmbitoHistoricoDuplicada =
+    'La tabla %s ya tiene un ámbito en esta operación.';
+  SErrorParametrosAmbitoHistoricoNoCoinciden =
+    'Los nombres y valores de parámetros no coinciden.';
+  SErrorAmbitoHistoricoConParametros =
+    'El ámbito histórico debe usar literales y no parámetros.';
+  SErrorAmbitoHistoricoNoPersistible =
+    'El ámbito histórico no admite parámetros, variables, referencias ' +
+    'temporales ni sentencias no persistibles.';
+  SErrorOperacionHistoricoNoPreparadaCompletar =
+    'No hay una operación preparada para completar.';
+  SErrorEsquemaCambioDuranteOperacion =
+    'El esquema cambió durante la operación: %s.';
+  SErrorOperacionHistoricaNoExisteAplicada =
+    'La operación histórica no existe o no está aplicada.';
+  SErrorVersionHistoricoNoCompatible =
+    'La versión del histórico no es compatible.';
+  SErrorDetalleHistoricoAlterado =
+    'El detalle del histórico está incompleto o alterado.';
+  SErrorAmbitosFilasHistoricoIncompletos =
+    'El histórico no conserva todos sus ámbitos de filas.';
+  SErrorCantidadFilasHistoricoNoCoincide =
+    'El número de filas del histórico no coincide con su cabecera.';
+  SErrorTablaProtegidaHistorico =
+    'El histórico contiene una tabla protegida.';
+  SErrorEsquemaTablaHistoricoModificado =
+    'El esquema de %s cambió desde la operación original.';
+  SErrorClaveJsonHistoricoInvalida =
+    'El histórico contiene una clave JSON no válida.';
+  SErrorClavePrimariaHistoricoIncompleta =
+    'El histórico no contiene toda la clave primaria.';
+  SErrorAmbitoHistoricoDivergente =
+    'El ámbito histórico contiene filas nuevas, retiradas o modificadas en ' +
+    '%s.';
+  SErrorEstadoFilaHistoricoInesperado =
+    'La fila histórica ya no tiene el estado esperado en %s.';
+  SErrorFilaHistoricoModificada =
+    'La fila histórica fue modificada después en %s.';
+  SErrorDatosJsonHistoricoInvalidos =
+    'El histórico contiene datos JSON no válidos.';
+  SErrorCamposHistoricoIncompletos =
+    'El histórico no contiene todos los campos de %s.';
+  SErrorRetiradaFilaHistoricoFallida =
+    'No se pudo retirar exactamente una fila de %s.';
+  SErrorRestauracionFilaHistoricoFallida =
+    'No se pudo restaurar exactamente una fila de %s.';
+  SErrorAccionHistoricoNoReconocida =
+    'El histórico contiene una acción no reconocida.';
+  SErrorReversionDeReversion =
+    'Una reversión no se puede volver a revertir.';
+  SErrorOperacionHistoricaYaRevertida =
+    'La operación histórica ya tiene una reversión aplicada.';
+  SErrorDependenciaPosteriorHistorico =
+    'Hay una operación posterior que depende de las mismas filas.';
+  SErrorFacturasRelacionadasHistorico =
+    'Hay líneas de factura asociadas; no se puede revertir.';
+  SErrorReversionSinTransaccion =
+    'La reversión requiere una transacción activa.';
+  SErrorOperacionReversionNoIndicada =
+    'Debe indicarse la operación que se quiere revertir.';
+  SErrorUsuarioReversionObligatorio =
+    'El usuario de la reversión es obligatorio.';
 
 const
   TABLA_HISTORICO = 'fza_articulos_cambios_historico';
@@ -122,14 +215,6 @@ type
     destructor Destroy; override;
     property Columnas: TObjectList<TColumnaHistorico> read FColumnas;
     property Firma: string read FFirma write FFirma;
-  end;
-
-  TFilaHistorico = class
-  public
-    Clave: string;
-    HashClave: string;
-    Datos: string;
-    HashDatos: string;
   end;
 
   TAmbitoHistorico = class
@@ -199,16 +284,6 @@ type
     procedure ValidarIdentificador(const AIdentificador: string);
     procedure ValidarTipoOperacion(const ATipoOperacion: string);
     procedure ValidarTipoObjeto(const ATipoObjeto: string);
-    function CondicionAmbitoEsPersistible(
-      const ACondicion: string): Boolean;
-    function CrearClaveAmbito(const ACondicion: string): string;
-    function ExtraerCondicionAmbito(const AClave: string): string;
-    function CrearResumenAmbito(
-      AFilas: TObjectList<TFilaHistorico>): string;
-    function ResumenAmbitoEsValido(const ADatos: string): Boolean;
-    function CrearEstadoAmbito(
-      const ACondicion: string;
-      AFilas: TObjectList<TFilaHistorico>): TFilaHistorico;
     function GenerarUuid: string;
     function CalcularHash(const ATexto: string): string;
     function BuscarAmbito(const ATabla: string): TAmbitoHistorico;
@@ -361,6 +436,16 @@ begin
   inherited Destroy;
 end;
 
+function ExtraerCondicionAmbitoVerificada(const AClave: string): string;
+begin
+  if not TCodificadorAmbitoHistorico.IntentarExtraerCondicion(
+    AClave,
+    Result) then
+    raise EHistoricoCambioArticuloColor.Create(
+      crhNoReversible,
+      SErrorAmbitoHistoricoAlterado);
+end;
+
 { THistoricoCambioArticuloColorImpl }
 
 constructor THistoricoCambioArticuloColorImpl.Create(
@@ -416,7 +501,7 @@ begin
   end;
   if not EsValido then
     raise EArgumentException.CreateFmt(
-      'Identificador SQL no permitido: %s.',
+      SErrorIdentificadorSqlHistoricoNoPermitido,
       [AIdentificador]);
 end;
 
@@ -431,7 +516,7 @@ begin
     SameText(ATipoOperacion, TIPO_FUSION_COLOR);
   if not EsValido then
     raise EArgumentException.CreateFmt(
-      'Tipo de operación histórico no permitido: %s.',
+      SErrorTipoOperacionHistoricoNoPermitido,
       [ATipoOperacion]);
 end;
 
@@ -441,276 +526,8 @@ begin
   if not SameText(ATipoObjeto, OBJETO_ARTICULO) and
      not SameText(ATipoObjeto, OBJETO_COLOR) then
     raise EArgumentException.CreateFmt(
-      'Tipo de objeto histórico no permitido: %s.',
+      SErrorTipoObjetoHistoricoNoPermitido,
       [ATipoObjeto]);
-end;
-
-function THistoricoCambioArticuloColorImpl.
-  CondicionAmbitoEsPersistible(const ACondicion: string): Boolean;
-var
-  cCaracter: Char;
-  EnIdentificador: Boolean;
-  EnTexto: Boolean;
-  i: Integer;
-  sSinLiterales: string;
-  sToken: string;
-  sTokenMayusculas: string;
-
-  function TokenNoPermitido(const AToken: string): Boolean;
-  begin
-    sTokenMayusculas := UpperCase(AToken);
-    Result := (sTokenMayusculas = 'TEMP') or
-      (sTokenMayusculas = 'TMP') or
-      (sTokenMayusculas = 'TEMPORARY') or
-      (Copy(sTokenMayusculas, 1, 4) = 'TMP_') or
-      (Copy(sTokenMayusculas, 1, 5) = 'TEMP_') or
-      (sTokenMayusculas = 'DROP') or
-      (sTokenMayusculas = 'ALTER') or
-      (sTokenMayusculas = 'CREATE') or
-      (sTokenMayusculas = 'INSERT') or
-      (sTokenMayusculas = 'UPDATE') or
-      (sTokenMayusculas = 'DELETE') or
-      (sTokenMayusculas = 'REPLACE') or
-      (sTokenMayusculas = 'TRUNCATE') or
-      (sTokenMayusculas = 'CALL') or
-      (sTokenMayusculas = 'LOAD') or
-      (sTokenMayusculas = 'OUTFILE') or
-      (sTokenMayusculas = 'INFILE') or
-      (sTokenMayusculas = 'INTO');
-  end;
-
-begin
-  EnIdentificador := False;
-  EnTexto := False;
-  i := 1;
-  sSinLiterales := '';
-  while i <= Length(ACondicion) do
-  begin
-    cCaracter := ACondicion[i];
-    if EnTexto then
-    begin
-      sSinLiterales := sSinLiterales + ' ';
-      if cCaracter = '''' then
-      begin
-        if (i < Length(ACondicion)) and
-           (ACondicion[i + 1] = '''') then
-        begin
-          sSinLiterales := sSinLiterales + ' ';
-          Inc(i);
-        end
-        else
-          EnTexto := False;
-      end
-      else if (cCaracter = '\') and
-              (i < Length(ACondicion)) then
-      begin
-        sSinLiterales := sSinLiterales + ' ';
-        Inc(i);
-      end;
-    end
-    else if EnIdentificador then
-    begin
-      if cCaracter = '`' then
-      begin
-        EnIdentificador := False;
-        sSinLiterales := sSinLiterales + ' ';
-      end
-      else
-        sSinLiterales := sSinLiterales + cCaracter;
-    end
-    else if cCaracter = '''' then
-    begin
-      EnTexto := True;
-      sSinLiterales := sSinLiterales + ' ';
-    end
-    else if cCaracter = '`' then
-    begin
-      EnIdentificador := True;
-      sSinLiterales := sSinLiterales + ' ';
-    end
-    else
-      sSinLiterales := sSinLiterales + cCaracter;
-    Inc(i);
-  end;
-  Result := not EnTexto and not EnIdentificador;
-  Result := Result and (Pos(':', sSinLiterales) = 0);
-  Result := Result and (Pos('?', sSinLiterales) = 0);
-  Result := Result and (Pos('@', sSinLiterales) = 0);
-  Result := Result and (Pos('#', sSinLiterales) = 0);
-  Result := Result and (Pos(';', sSinLiterales) = 0);
-  Result := Result and (Pos('"', sSinLiterales) = 0);
-  Result := Result and (Pos('--', sSinLiterales) = 0);
-  Result := Result and (Pos('/*', sSinLiterales) = 0);
-  Result := Result and (Pos('*/', sSinLiterales) = 0);
-  sToken := '';
-  i := 1;
-  while Result and (i <= Length(sSinLiterales) + 1) do
-  begin
-    if (i <= Length(sSinLiterales)) and
-       CharInSet(
-         sSinLiterales[i],
-         ['A'..'Z', 'a'..'z', '0'..'9', '_']) then
-      sToken := sToken + sSinLiterales[i]
-    else
-    begin
-      if sToken <> '' then
-        Result := not TokenNoPermitido(sToken);
-      sToken := '';
-    end;
-    Inc(i);
-  end;
-end;
-
-function THistoricoCambioArticuloColorImpl.CrearClaveAmbito(
-  const ACondicion: string): string;
-var
-  oJson: TJSONObject;
-begin
-  oJson := TJSONObject.Create;
-  try
-    oJson.AddPair(
-      'CONDICION',
-      TJSONString.Create(Trim(ACondicion)));
-    Result := oJson.ToJSON;
-  finally
-    oJson.Free;
-  end;
-end;
-
-function THistoricoCambioArticuloColorImpl.ExtraerCondicionAmbito(
-  const AClave: string): string;
-var
-  EsValida: Boolean;
-  oJson: TJSONObject;
-  oRaiz: TJSONValue;
-  oValor: TJSONValue;
-begin
-  Result := '';
-  EsValida := False;
-  oRaiz := TJSONObject.ParseJSONValue(AClave);
-  try
-    if oRaiz is TJSONObject then
-    begin
-      oJson := TJSONObject(oRaiz);
-      oValor := oJson.GetValue('CONDICION');
-      EsValida := (oJson.Count = 1) and
-        (oValor is TJSONString);
-      if EsValida then
-      begin
-        Result := oValor.Value;
-        EsValida := CondicionAmbitoEsPersistible(Result) and
-          (CrearClaveAmbito(Result) = AClave);
-      end;
-    end;
-  finally
-    oRaiz.Free;
-  end;
-  if not EsValida then
-    raise EHistoricoCambioArticuloColor.Create(
-      crhNoReversible,
-      'El histórico contiene un ámbito no persistible o alterado.');
-end;
-
-function THistoricoCambioArticuloColorImpl.CrearResumenAmbito(
-  AFilas: TObjectList<TFilaHistorico>): string;
-var
-  oBase: TStringBuilder;
-  oFila: TFilaHistorico;
-  oJson: TJSONObject;
-  sHuella: string;
-begin
-  oBase := TStringBuilder.Create;
-  oJson := TJSONObject.Create;
-  try
-    for oFila in AFilas do
-    begin
-      oBase.Append(oFila.HashClave);
-      oBase.Append(':');
-      oBase.Append(oFila.HashDatos);
-      oBase.Append(';');
-    end;
-    sHuella := CalcularHash(oBase.ToString);
-    oJson.AddPair(
-      'CANTIDAD',
-      TJSONNumber.Create(AFilas.Count));
-    oJson.AddPair(
-      'HUELLA',
-      TJSONString.Create(sHuella));
-    Result := oJson.ToJSON;
-  finally
-    oJson.Free;
-    oBase.Free;
-  end;
-end;
-
-function THistoricoCambioArticuloColorImpl.ResumenAmbitoEsValido(
-  const ADatos: string): Boolean;
-var
-  cCaracter: Char;
-  EsHuellaValida: Boolean;
-  i: Integer;
-  iCantidad: Integer;
-  oCanonico: TJSONObject;
-  oCantidad: TJSONValue;
-  oHuella: TJSONValue;
-  oJson: TJSONObject;
-  oRaiz: TJSONValue;
-begin
-  Result := False;
-  oRaiz := TJSONObject.ParseJSONValue(ADatos);
-  try
-    if oRaiz is TJSONObject then
-    begin
-      oJson := TJSONObject(oRaiz);
-      oCantidad := oJson.GetValue('CANTIDAD');
-      oHuella := oJson.GetValue('HUELLA');
-      Result := (oJson.Count = 2) and
-        (oCantidad is TJSONNumber) and
-        (oHuella is TJSONString) and
-        TryStrToInt(oCantidad.Value, iCantidad) and
-        (iCantidad >= 0);
-      if Result then
-      begin
-        EsHuellaValida := Length(oHuella.Value) = 64;
-        i := 1;
-        while EsHuellaValida and (i <= Length(oHuella.Value)) do
-        begin
-          cCaracter := oHuella.Value[i];
-          EsHuellaValida := CharInSet(cCaracter, ['0'..'9', 'a'..'f']);
-          Inc(i);
-        end;
-        Result := EsHuellaValida;
-      end;
-      if Result then
-      begin
-        oCanonico := TJSONObject.Create;
-        try
-          oCanonico.AddPair(
-            'CANTIDAD',
-            TJSONNumber.Create(iCantidad));
-          oCanonico.AddPair(
-            'HUELLA',
-            TJSONString.Create(oHuella.Value));
-          Result := oCanonico.ToJSON = ADatos;
-        finally
-          oCanonico.Free;
-        end;
-      end;
-    end;
-  finally
-    oRaiz.Free;
-  end;
-end;
-
-function THistoricoCambioArticuloColorImpl.CrearEstadoAmbito(
-  const ACondicion: string;
-  AFilas: TObjectList<TFilaHistorico>): TFilaHistorico;
-begin
-  Result := TFilaHistorico.Create;
-  Result.Clave := CrearClaveAmbito(ACondicion);
-  Result.HashClave := CalcularHash(Result.Clave);
-  Result.Datos := CrearResumenAmbito(AFilas);
-  Result.HashDatos := CalcularHash(Result.Datos);
 end;
 
 function THistoricoCambioArticuloColorImpl.GenerarUuid: string;
@@ -720,7 +537,7 @@ begin
   if CreateGUID(oGuid) <> 0 then
     raise EHistoricoCambioArticuloColor.Create(
       crhErrorTecnico,
-      'No se pudo generar el identificador del histórico.');
+      SErrorIdentificadorHistoricoNoGenerado);
   Result := GUIDToString(oGuid);
   Result := Copy(Result, 2, Length(Result) - 2);
 end;
@@ -787,27 +604,32 @@ begin
       while not oConsulta.Eof do
       begin
         oColumna := TColumnaHistorico.Create;
-        oColumna.Nombre := oConsulta.FieldByName(
-          'COLUMN_NAME').AsString;
-        oColumna.Tipo := oConsulta.FieldByName('COLUMN_TYPE').AsString;
-        oColumna.TipoDatos := oConsulta.FieldByName(
-          'DATA_TYPE').AsString;
-        oColumna.EsNulable := oConsulta.FieldByName(
-          'IS_NULLABLE').AsString;
-        if oConsulta.FieldByName('COLUMN_DEFAULT').IsNull then
-          oColumna.ValorDefecto := '<NULL>'
-        else
-          oColumna.ValorDefecto := oConsulta.FieldByName(
-            'COLUMN_DEFAULT').AsString;
-        oColumna.JuegoCaracteres := oConsulta.FieldByName(
-          'CHARACTER_SET_NAME').AsString;
-        oColumna.Intercalacion := oConsulta.FieldByName(
-          'COLLATION_NAME').AsString;
-        oColumna.Extra := oConsulta.FieldByName('EXTRA').AsString;
-        oColumna.ExpresionGenerada := oConsulta.FieldByName(
-          'GENERATION_EXPRESSION').AsString;
-        oColumna.EsClave := stClaves.IndexOf(oColumna.Nombre) >= 0;
-        Result.Columnas.Add(oColumna);
+        try
+          oColumna.Nombre := oConsulta.FieldByName(
+            'COLUMN_NAME').AsString;
+          oColumna.Tipo := oConsulta.FieldByName('COLUMN_TYPE').AsString;
+          oColumna.TipoDatos := oConsulta.FieldByName(
+            'DATA_TYPE').AsString;
+          oColumna.EsNulable := oConsulta.FieldByName(
+            'IS_NULLABLE').AsString;
+          if oConsulta.FieldByName('COLUMN_DEFAULT').IsNull then
+            oColumna.ValorDefecto := '<NULL>'
+          else
+            oColumna.ValorDefecto := oConsulta.FieldByName(
+              'COLUMN_DEFAULT').AsString;
+          oColumna.JuegoCaracteres := oConsulta.FieldByName(
+            'CHARACTER_SET_NAME').AsString;
+          oColumna.Intercalacion := oConsulta.FieldByName(
+            'COLLATION_NAME').AsString;
+          oColumna.Extra := oConsulta.FieldByName('EXTRA').AsString;
+          oColumna.ExpresionGenerada := oConsulta.FieldByName(
+            'GENERATION_EXPRESSION').AsString;
+          oColumna.EsClave := stClaves.IndexOf(oColumna.Nombre) >= 0;
+          Result.Columnas.Add(oColumna);
+        except
+          oColumna.Free;
+          raise;
+        end;
         sBaseFirma := sBaseFirma + IntToStr(Result.Columnas.Count) +
           '|' + oColumna.Nombre + '|' + oColumna.Tipo + '|' +
           oColumna.TipoDatos + '|' + oColumna.EsNulable + '|' +
@@ -819,11 +641,11 @@ begin
       end;
       if Result.Columnas.Count = 0 then
         raise EArgumentException.CreateFmt(
-          'La tabla %s no existe en la base de datos actual.',
+          SErrorTablaHistoricoNoExiste,
           [ATabla]);
       if stClaves.Count = 0 then
         raise EArgumentException.CreateFmt(
-          'La tabla %s no tiene una clave primaria reversible.',
+          SErrorTablaHistoricoSinClavePrimaria,
           [ATabla]);
       Result.Firma := CalcularHash(sBaseFirma);
     except
@@ -966,17 +788,22 @@ begin
     while not oConsulta.Eof do
     begin
       oFila := TFilaHistorico.Create;
-      oFila.Clave := CrearJsonFila(
-        oConsulta,
-        AMetadatos,
-        True);
-      oFila.HashClave := CalcularHash(oFila.Clave);
-      oFila.Datos := CrearJsonFila(
-        oConsulta,
-        AMetadatos,
-        False);
-      oFila.HashDatos := CalcularHash(oFila.Datos);
-      ADestino.Add(oFila);
+      try
+        oFila.Clave := CrearJsonFila(
+          oConsulta,
+          AMetadatos,
+          True);
+        oFila.HashClave := CalcularHash(oFila.Clave);
+        oFila.Datos := CrearJsonFila(
+          oConsulta,
+          AMetadatos,
+          False);
+        oFila.HashDatos := CalcularHash(oFila.Datos);
+        ADestino.Add(oFila);
+      except
+        oFila.Free;
+        raise;
+      end;
       oConsulta.Next;
     end;
   finally
@@ -1046,7 +873,7 @@ begin
     if oConsulta.RowsAffected <> 1 then
       raise EHistoricoCambioArticuloColor.Create(
         crhErrorTecnico,
-        'No se pudo aplicar la cabecera del histórico.');
+        SErrorCabeceraHistoricoNoAplicada);
   finally
     oConsulta.Free;
   end;
@@ -1279,11 +1106,11 @@ var
   oDespues: TFilaHistorico;
   oDetalle: TDetalleHistorico;
 begin
-  oAntes := CrearEstadoAmbito(
+  oAntes := TCodificadorAmbitoHistorico.CrearEstado(
     AAmbito.Condicion,
     AAmbito.Antes);
   try
-    oDespues := CrearEstadoAmbito(
+    oDespues := TCodificadorAmbitoHistorico.CrearEstado(
       AAmbito.Condicion,
       ADespues);
     try
@@ -1321,15 +1148,15 @@ begin
   if not FConexion.InTransaction then
     raise EHistoricoCambioArticuloColor.Create(
       crhErrorTecnico,
-      'El histórico debe iniciarse dentro de la transacción del cambio.');
+      SErrorHistoricoFueraTransaccion);
   if FIniciada and not FCompletada then
     raise EHistoricoCambioArticuloColor.Create(
       crhErrorTecnico,
-      'Ya hay una operación de histórico en curso.');
+      SErrorOperacionHistoricoEnCurso);
   ValidarTipoOperacion(ATipoOperacion);
   ValidarTipoObjeto(ATipoObjeto);
   if Trim(AUsuario) = '' then
-    raise EArgumentException.Create('El usuario del histórico es obligatorio.');
+    raise EArgumentException.Create(SErrorUsuarioHistoricoObligatorio);
   FAmbitos.Clear;
   FIdOperacion := GenerarUuid;
   FTipoOperacion := UpperCase(ATipoOperacion);
@@ -1359,28 +1186,23 @@ begin
   if not FIniciada or FCompletada then
     raise EHistoricoCambioArticuloColor.Create(
       crhErrorTecnico,
-      'No hay una operación preparada para capturar instantáneas.');
+      SErrorOperacionHistoricoNoPreparadaCaptura);
   ValidarIdentificador(ATabla);
   if SameText(ATabla, TABLA_FACTURAS) then
-    raise EArgumentException.Create(
-      'Las líneas de factura están protegidas y no se historizan.');
+    raise EArgumentException.Create(SErrorLineasFacturaProtegidasHistorico);
   if SameText(ATabla, TABLA_HISTORICO) then
-    raise EArgumentException.Create(
-      'La tabla del histórico no puede contenerse a sí misma.');
+    raise EArgumentException.Create(SErrorTablaHistoricoAutocontenida);
   if Assigned(BuscarAmbito(ATabla)) then
     raise EArgumentException.CreateFmt(
-      'La tabla %s ya tiene un ámbito en esta operación.',
+      SErrorTablaAmbitoHistoricoDuplicada,
       [ATabla]);
   if Length(ANombres) <> Length(AValores) then
-    raise EArgumentException.Create(
-      'Los nombres y valores de parámetros no coinciden.');
+    raise EArgumentException.Create(SErrorParametrosAmbitoHistoricoNoCoinciden);
   if (Length(ANombres) <> 0) or (Length(AValores) <> 0) then
-    raise EArgumentException.Create(
-      'El ámbito histórico debe usar literales y no parámetros.');
-  if not CondicionAmbitoEsPersistible(ACondicion) then
-    raise EArgumentException.Create(
-      'El ámbito histórico no admite parámetros, variables, ' +
-      'referencias temporales ni sentencias no persistibles.');
+    raise EArgumentException.Create(SErrorAmbitoHistoricoConParametros);
+  if not TCodificadorAmbitoHistorico.CondicionEsPersistible(
+    ACondicion) then
+    raise EArgumentException.Create(SErrorAmbitoHistoricoNoPersistible);
   oAmbito := TAmbitoHistorico.Create;
   try
     oAmbito.Tabla := ATabla;
@@ -1411,7 +1233,7 @@ begin
   if not FIniciada or FCompletada then
     raise EHistoricoCambioArticuloColor.Create(
       crhErrorTecnico,
-      'No hay una operación preparada para completar.');
+      SErrorOperacionHistoricoNoPreparadaCompletar);
   iCantidadFilas := 0;
   oDespues := TObjectList<TFilaHistorico>.Create(True);
   try
@@ -1422,8 +1244,7 @@ begin
         if oMetadatos.Firma <> oAmbito.Metadatos.Firma then
           raise EHistoricoCambioArticuloColor.Create(
             crhEsquemaModificado,
-            'El esquema cambió durante la operación: ' +
-            oAmbito.Tabla + '.');
+            Format(SErrorEsquemaCambioDuranteOperacion, [oAmbito.Tabla]));
       finally
         oMetadatos.Free;
       end;
@@ -1474,27 +1295,32 @@ begin
     if oConsulta.Eof then
       raise EHistoricoCambioArticuloColor.Create(
         crhNoEncontrada,
-        'La operación histórica no existe o no está aplicada.');
+        SErrorOperacionHistoricaNoExisteAplicada);
     if oConsulta.FieldByName('VERSION_FORMATO_ACH').AsInteger <>
        VERSION_FORMATO then
       raise EHistoricoCambioArticuloColor.Create(
         crhNoReversible,
-        'La versión del histórico no es compatible.');
+        SErrorVersionHistoricoNoCompatible);
     Result := TOperacionHistorico.Create;
-    Result.IdFila := oConsulta.FieldByName('ID_ACH').AsLargeInt;
-    Result.Id := oConsulta.FieldByName('ID_OPERACION_ACH').AsString;
-    Result.TipoOperacion := oConsulta.FieldByName(
-      'TIPO_OPERACION_ACH').AsString;
-    Result.TipoObjeto := oConsulta.FieldByName(
-      'TIPO_OBJETO_ACH').AsString;
-    Result.CodigoOrigen := oConsulta.FieldByName(
-      'CODIGO_ORIGEN_ACH').AsString;
-    Result.CodigoDestino := oConsulta.FieldByName(
-      'CODIGO_DESTINO_ACH').AsString;
-    Result.CantidadFilas := oConsulta.FieldByName(
-      'CANTIDAD_FILAS_ACH').AsInteger;
-    Result.CantidadUnidades := oConsulta.FieldByName(
-      'CANTIDAD_UNIDADES_ACH').AsInteger;
+    try
+      Result.IdFila := oConsulta.FieldByName('ID_ACH').AsLargeInt;
+      Result.Id := oConsulta.FieldByName('ID_OPERACION_ACH').AsString;
+      Result.TipoOperacion := oConsulta.FieldByName(
+        'TIPO_OPERACION_ACH').AsString;
+      Result.TipoObjeto := oConsulta.FieldByName(
+        'TIPO_OBJETO_ACH').AsString;
+      Result.CodigoOrigen := oConsulta.FieldByName(
+        'CODIGO_ORIGEN_ACH').AsString;
+      Result.CodigoDestino := oConsulta.FieldByName(
+        'CODIGO_DESTINO_ACH').AsString;
+      Result.CantidadFilas := oConsulta.FieldByName(
+        'CANTIDAD_FILAS_ACH').AsInteger;
+      Result.CantidadUnidades := oConsulta.FieldByName(
+        'CANTIDAD_UNIDADES_ACH').AsInteger;
+    except
+      Result.Free;
+      raise;
+    end;
   finally
     oConsulta.Free;
   end;
@@ -1526,42 +1352,47 @@ begin
       while not oConsulta.Eof do
       begin
         oDetalle := TDetalleHistorico.Create;
-        oDetalle.Orden := oConsulta.FieldByName('ORDEN_ACH').AsInteger;
-        oDetalle.TipoRegistro := oConsulta.FieldByName(
-          'TIPO_REGISTRO_ACH').AsString;
-        oDetalle.TipoOperacion := oConsulta.FieldByName(
-          'TIPO_OPERACION_ACH').AsString;
-        oDetalle.TipoObjeto := oConsulta.FieldByName(
-          'TIPO_OBJETO_ACH').AsString;
-        oDetalle.Tabla := oConsulta.FieldByName('TABLA_ACH').AsString;
-        oDetalle.Accion := oConsulta.FieldByName('ACCION_ACH').AsString;
-        oDetalle.TieneClaveAntes := not oConsulta.FieldByName(
-          'CLAVE_ANTES_ACH').IsNull;
-        oDetalle.TieneClaveDespues := not oConsulta.FieldByName(
-          'CLAVE_DESPUES_ACH').IsNull;
-        oDetalle.TieneDatosAntes := not oConsulta.FieldByName(
-          'DATOS_ANTES_ACH').IsNull;
-        oDetalle.TieneDatosDespues := not oConsulta.FieldByName(
-          'DATOS_DESPUES_ACH').IsNull;
-        oDetalle.ClaveAntes := oConsulta.FieldByName(
-          'CLAVE_ANTES_ACH').AsString;
-        oDetalle.ClaveDespues := oConsulta.FieldByName(
-          'CLAVE_DESPUES_ACH').AsString;
-        oDetalle.HashClaveAntes := oConsulta.FieldByName(
-          'HASH_CLAVE_ANTES_ACH').AsString;
-        oDetalle.HashClaveDespues := oConsulta.FieldByName(
-          'HASH_CLAVE_DESPUES_ACH').AsString;
-        oDetalle.DatosAntes := oConsulta.FieldByName(
-          'DATOS_ANTES_ACH').AsString;
-        oDetalle.DatosDespues := oConsulta.FieldByName(
-          'DATOS_DESPUES_ACH').AsString;
-        oDetalle.HashAntes := oConsulta.FieldByName(
-          'HASH_ANTES_ACH').AsString;
-        oDetalle.HashDespues := oConsulta.FieldByName(
-          'HASH_DESPUES_ACH').AsString;
-        oDetalle.FirmaEsquema := oConsulta.FieldByName(
-          'FIRMA_ESQUEMA_ACH').AsString;
-        Result.Add(oDetalle);
+        try
+          oDetalle.Orden := oConsulta.FieldByName('ORDEN_ACH').AsInteger;
+          oDetalle.TipoRegistro := oConsulta.FieldByName(
+            'TIPO_REGISTRO_ACH').AsString;
+          oDetalle.TipoOperacion := oConsulta.FieldByName(
+            'TIPO_OPERACION_ACH').AsString;
+          oDetalle.TipoObjeto := oConsulta.FieldByName(
+            'TIPO_OBJETO_ACH').AsString;
+          oDetalle.Tabla := oConsulta.FieldByName('TABLA_ACH').AsString;
+          oDetalle.Accion := oConsulta.FieldByName('ACCION_ACH').AsString;
+          oDetalle.TieneClaveAntes := not oConsulta.FieldByName(
+            'CLAVE_ANTES_ACH').IsNull;
+          oDetalle.TieneClaveDespues := not oConsulta.FieldByName(
+            'CLAVE_DESPUES_ACH').IsNull;
+          oDetalle.TieneDatosAntes := not oConsulta.FieldByName(
+            'DATOS_ANTES_ACH').IsNull;
+          oDetalle.TieneDatosDespues := not oConsulta.FieldByName(
+            'DATOS_DESPUES_ACH').IsNull;
+          oDetalle.ClaveAntes := oConsulta.FieldByName(
+            'CLAVE_ANTES_ACH').AsString;
+          oDetalle.ClaveDespues := oConsulta.FieldByName(
+            'CLAVE_DESPUES_ACH').AsString;
+          oDetalle.HashClaveAntes := oConsulta.FieldByName(
+            'HASH_CLAVE_ANTES_ACH').AsString;
+          oDetalle.HashClaveDespues := oConsulta.FieldByName(
+            'HASH_CLAVE_DESPUES_ACH').AsString;
+          oDetalle.DatosAntes := oConsulta.FieldByName(
+            'DATOS_ANTES_ACH').AsString;
+          oDetalle.DatosDespues := oConsulta.FieldByName(
+            'DATOS_DESPUES_ACH').AsString;
+          oDetalle.HashAntes := oConsulta.FieldByName(
+            'HASH_ANTES_ACH').AsString;
+          oDetalle.HashDespues := oConsulta.FieldByName(
+            'HASH_DESPUES_ACH').AsString;
+          oDetalle.FirmaEsquema := oConsulta.FieldByName(
+            'FIRMA_ESQUEMA_ACH').AsString;
+          Result.Add(oDetalle);
+        except
+          oDetalle.Free;
+          raise;
+        end;
         oConsulta.Next;
       end;
     except
@@ -1640,14 +1471,16 @@ begin
           oDetalle.TieneDatosDespues;
         if EsFormaValida then
         begin
-          sCondicionAntes := ExtraerCondicionAmbito(
+          sCondicionAntes := ExtraerCondicionAmbitoVerificada(
             oDetalle.ClaveAntes);
-          sCondicionDespues := ExtraerCondicionAmbito(
+          sCondicionDespues := ExtraerCondicionAmbitoVerificada(
             oDetalle.ClaveDespues);
           EsFormaValida := sCondicionAntes = sCondicionDespues;
           EsFormaValida := EsFormaValida and
-            ResumenAmbitoEsValido(oDetalle.DatosAntes) and
-            ResumenAmbitoEsValido(oDetalle.DatosDespues) and
+            TCodificadorAmbitoHistorico.ResumenEsValido(
+              oDetalle.DatosAntes) and
+            TCodificadorAmbitoHistorico.ResumenEsValido(
+              oDetalle.DatosDespues) and
             (stAmbitos.IndexOf(oDetalle.Tabla) < 0);
           if EsFormaValida then
             stAmbitos.Add(oDetalle.Tabla);
@@ -1671,13 +1504,13 @@ begin
       if not EsFormaValida then
         raise EHistoricoCambioArticuloColor.Create(
           crhNoReversible,
-          'El detalle del histórico está incompleto o alterado.');
+          SErrorDetalleHistoricoAlterado);
       Inc(iOrdenEsperado);
     end;
     if stAmbitos.Count <> stTablas.Count then
       raise EHistoricoCambioArticuloColor.Create(
         crhNoReversible,
-        'El histórico no conserva todos sus ámbitos de filas.');
+        SErrorAmbitosFilasHistoricoIncompletos);
   finally
     stTablas.Free;
     stAmbitos.Free;
@@ -1685,7 +1518,7 @@ begin
   if iCantidadFilas <> AOperacion.CantidadFilas then
     raise EHistoricoCambioArticuloColor.Create(
       crhNoReversible,
-      'El número de filas del histórico no coincide con su cabecera.');
+      SErrorCantidadFilasHistoricoNoCoincide);
 end;
 
 function THistoricoCambioArticuloColorImpl.TieneReversionAplicada(
@@ -1835,7 +1668,7 @@ begin
        SameText(oDetalle.Tabla, TABLA_HISTORICO) then
       raise EHistoricoCambioArticuloColor.Create(
         crhNoReversible,
-        'El histórico contiene una tabla protegida.');
+        SErrorTablaProtegidaHistorico);
     if not AMetadatos.TryGetValue(oDetalle.Tabla, oMetadatos) then
     begin
       oMetadatos := CargarMetadatos(oDetalle.Tabla);
@@ -1844,8 +1677,7 @@ begin
     if oMetadatos.Firma <> oDetalle.FirmaEsquema then
       raise EHistoricoCambioArticuloColor.Create(
         crhEsquemaModificado,
-        'El esquema de ' + oDetalle.Tabla +
-        ' cambió desde la operación original.');
+        Format(SErrorEsquemaTablaHistoricoModificado, [oDetalle.Tabla]));
   end;
 end;
 
@@ -1872,7 +1704,7 @@ begin
     oRaiz.Free;
     raise EHistoricoCambioArticuloColor.Create(
       crhNoReversible,
-      'El histórico contiene una clave JSON no válida.');
+      SErrorClaveJsonHistoricoInvalida);
   end;
   oJson := TJSONObject(oRaiz);
   oConsulta := NuevaConsulta;
@@ -1888,7 +1720,7 @@ begin
         if not Assigned(oValor) then
           raise EHistoricoCambioArticuloColor.Create(
             crhNoReversible,
-            'El histórico no contiene toda la clave primaria.');
+            SErrorClavePrimariaHistoricoIncompleta);
         if sCondicion <> '' then
           sCondicion := sCondicion + ' AND ';
         if oValor is TJSONNull then
@@ -1960,7 +1792,7 @@ begin
     sDatosEsperados := ADetalle.DatosAntes;
     sHashEsperado := ADetalle.HashAntes;
   end;
-  sCondicion := ExtraerCondicionAmbito(sClave);
+  sCondicion := ExtraerCondicionAmbitoVerificada(sClave);
   oFilas := TObjectList<TFilaHistorico>.Create(True);
   try
     CapturarFilas(
@@ -1969,14 +1801,13 @@ begin
       AMetadatos,
       oFilas,
       True);
-    sDatosActuales := CrearResumenAmbito(oFilas);
+    sDatosActuales := TCodificadorAmbitoHistorico.CrearResumen(oFilas);
     sHashActual := CalcularHash(sDatosActuales);
     if (sHashActual <> sHashEsperado) or
        (sDatosActuales <> sDatosEsperados) then
       raise EHistoricoCambioArticuloColor.Create(
         crhDatosDivergentes,
-        'El ámbito histórico contiene filas nuevas, retiradas o ' +
-        'modificadas en ' + ADetalle.Tabla + '.');
+        Format(SErrorAmbitoHistoricoDivergente, [ADetalle.Tabla]));
   finally
     oFilas.Free;
   end;
@@ -2036,15 +1867,13 @@ begin
       if EsPresente <> EsEsperada then
         raise EHistoricoCambioArticuloColor.Create(
           crhDatosDivergentes,
-          'La fila histórica ya no tiene el estado esperado en ' +
-          oDetalle.Tabla + '.');
+          Format(SErrorEstadoFilaHistoricoInesperado, [oDetalle.Tabla]));
       if EsEsperada and
          ((sHashActual <> sHashEsperado) or
           (sDatosActuales <> sDatosEsperados)) then
         raise EHistoricoCambioArticuloColor.Create(
           crhDatosDivergentes,
-          'La fila histórica fue modificada después en ' +
-          oDetalle.Tabla + '.');
+          Format(SErrorFilaHistoricoModificada, [oDetalle.Tabla]));
     end;
   end;
 end;
@@ -2069,7 +1898,7 @@ begin
     oRaiz.Free;
     raise EHistoricoCambioArticuloColor.Create(
       crhNoReversible,
-      'El histórico contiene una clave JSON no válida.');
+      SErrorClaveJsonHistoricoInvalida);
   end;
   oJson := TJSONObject(oRaiz);
   oConsulta := NuevaConsulta;
@@ -2085,7 +1914,7 @@ begin
         if not Assigned(oValor) then
           raise EHistoricoCambioArticuloColor.Create(
             crhNoReversible,
-            'El histórico no contiene toda la clave primaria.');
+            SErrorClavePrimariaHistoricoIncompleta);
         if sCondicion <> '' then
           sCondicion := sCondicion + ' AND ';
         if oValor is TJSONNull then
@@ -2120,7 +1949,7 @@ begin
     if oConsulta.RowsAffected <> 1 then
       raise EHistoricoCambioArticuloColor.Create(
         crhDatosDivergentes,
-        'No se pudo retirar exactamente una fila de ' + ATabla + '.');
+        Format(SErrorRetiradaFilaHistoricoFallida, [ATabla]));
   finally
     oConsulta.Free;
     oJson.Free;
@@ -2148,7 +1977,7 @@ begin
     oRaiz.Free;
     raise EHistoricoCambioArticuloColor.Create(
       crhNoReversible,
-      'El histórico contiene datos JSON no válidos.');
+      SErrorDatosJsonHistoricoInvalidos);
   end;
   oJson := TJSONObject(oRaiz);
   oConsulta := NuevaConsulta;
@@ -2165,7 +1994,7 @@ begin
         if not Assigned(oValor) then
           raise EHistoricoCambioArticuloColor.Create(
             crhNoReversible,
-            'El histórico no contiene todos los campos de ' + ATabla + '.');
+            Format(SErrorCamposHistoricoIncompletos, [ATabla]));
         if sCampos <> '' then
         begin
           sCampos := sCampos + ', ';
@@ -2205,7 +2034,7 @@ begin
     if oConsulta.RowsAffected <> 1 then
       raise EHistoricoCambioArticuloColor.Create(
         crhDatosDivergentes,
-        'No se pudo restaurar exactamente una fila de ' + ATabla + '.');
+        Format(SErrorRestauracionFilaHistoricoFallida, [ATabla]));
   finally
     oConsulta.Free;
     oJson.Free;
@@ -2263,7 +2092,7 @@ begin
   else
     raise EHistoricoCambioArticuloColor.Create(
       crhNoReversible,
-      'El histórico contiene una acción no reconocida.');
+      SErrorAccionHistoricoNoReconocida);
 end;
 
 procedure THistoricoCambioArticuloColorImpl.RegistrarReversion(
@@ -2329,19 +2158,19 @@ begin
     if SameText(oOperacion.TipoOperacion, TIPO_REVERSION) then
       raise EHistoricoCambioArticuloColor.Create(
         crhNoReversible,
-        'Una reversión no se puede volver a revertir.');
+        SErrorReversionDeReversion);
     if TieneReversionAplicada(oOperacion.Id) then
       raise EHistoricoCambioArticuloColor.Create(
         crhYaRevertida,
-        'La operación histórica ya tiene una reversión aplicada.');
+        SErrorOperacionHistoricaYaRevertida);
     if TieneDependenciaPosterior(oOperacion) then
       raise EHistoricoCambioArticuloColor.Create(
         crhDependenciaPosterior,
-        'Hay una operación posterior que depende de las mismas filas.');
+        SErrorDependenciaPosteriorHistorico);
     if HayFacturasRelacionadas(oOperacion) then
       raise EHistoricoCambioArticuloColor.Create(
         crhVentaFacturada,
-        'Hay líneas de factura asociadas; no se puede revertir.');
+        SErrorFacturasRelacionadasHistorico);
     oDetalles := CargarDetalles(oOperacion.Id);
     try
       ValidarDetalles(oOperacion, oDetalles);
@@ -2388,15 +2217,15 @@ begin
   if AExigirTransaccion and EsTransaccionPropia then
     Result := TResultadoReversionHistorico.Error(
       crhErrorTecnico,
-      'La reversión requiere una transacción activa.')
+      SErrorReversionSinTransaccion)
   else if Trim(AIdOperacion) = '' then
     Result := TResultadoReversionHistorico.Error(
       crhNoEncontrada,
-      'Debe indicarse la operación que se quiere revertir.')
+      SErrorOperacionReversionNoIndicada)
   else if Trim(AUsuario) = '' then
     Result := TResultadoReversionHistorico.Error(
       crhErrorTecnico,
-      'El usuario de la reversión es obligatorio.')
+      SErrorUsuarioReversionObligatorio)
   else
   begin
     EsPuntoGuardado := False;
