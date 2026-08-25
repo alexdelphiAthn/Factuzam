@@ -809,8 +809,11 @@ end;
 procedure TfrmMtoGen.ResetearGridPerfil(
   const ANombreGrid, ANombreFormulario, APermisos: string);
 begin
-  (tdmDataModule as TdmBase).ResetGridsProfile(
-    ANombreGrid, ANombreFormulario, APermisos);
+  if not Assigned(PerfilesEscritura) then
+    raise Exception.Create(
+      SErrorServicioPerfilesUsuarioNoConfigurado);
+  PerfilesEscritura.EliminarPerfil(
+    APermisos, ANombreFormulario);
 end;
 
 procedure TfrmMtoGen.PrepararBusquedaExterna(const ABusq: string);

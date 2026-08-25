@@ -31,7 +31,9 @@ function CrearRepositorioPivoteVenta(AConexion: TUniConnection;
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, Data.DB,
+  inLibGridArticulosPersistenciaIntf,
+  UniDataGridArticulosRepositorio;
 
 type
   TContextoRepositorioPivoteVenta = record
@@ -475,49 +477,22 @@ end;
 function TRepositorioPivoteVentaUniDAC.ElegirArticuloDesdeBusqueda(
   const AAlmacenStock: string; out ACodigoArticulo: string): Boolean;
 var
-  oConsulta: TUniQuery;
+  oConsulta: IConsultaArticulosGrid;
+  oDataSet: TDataSet;
 begin
   Result := False;
   ACodigoArticulo := '';
   if FConexion <> nil then
   begin
-    oConsulta := CrearConsulta;
-    try
-      oConsulta.SQL.Text :=
-        'SELECT a.CODIGO_ART_ART AS ARTICULO,' +
-        '       a.DESCRIPCION_ART AS DESCRIPCION,' +
-        '       COALESCE((SELECT GROUP_CONCAT(' +
-        '                          DISTINCT ap.REF_PROVEEDOR_AP' +
-        '                                     SEPARATOR '' '')' +
-        '                   FROM fza_articulos_proveedores ap' +
-        '                  WHERE ap.CODIGO_ART_AP = a.CODIGO_ART_ART' +
-        '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL), ' +
-        '                '''') AS REFPRV,' +
-        '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
-        '                   FROM fza_articulos_stockactual st' +
-        '                   JOIN fza_articulos_skus sk' +
-        '                     ON sk.CODIGO_UNIDAD_SKU = ' +
-        '                        st.CODIGO_UNIDAD_STK' +
-        '                  WHERE sk.CODIGO_ART_SKU = a.CODIGO_ART_ART' +
-        '                    AND st.CODIGO_ALM_STK = :ALM), 0) ' +
-        '         AS STOCK' +
-        '  FROM fza_articulos a' +
-        ' WHERE a.ESACTIVO_ART = ''S''' +
-        '   AND a.TIPO_ART = ''ESTANDAR''' +
-        ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
-      oConsulta.ParamByName('ALM').AsString := AAlmacenStock;
-      oConsulta.Open;
-      if FContexto.BusquedaVisual.EjecutarBusqueda(FConexion,
-                                         'Búsqueda de artículos',
-                                         oConsulta,
-                                         'frmMtoArtTraspasoSearch') then
-      begin
-        ACodigoArticulo :=
-          oConsulta.FieldByName('ARTICULO').AsString;
-        Result := ACodigoArticulo <> '';
-      end;
-    finally
-      FreeAndNil(oConsulta);
+    oConsulta := CrearConsultaArticulosGridUniDAC(FConexion);
+    oConsulta.Aplicar(AAlmacenStock);
+    oDataSet := oConsulta.DataSet;
+    if FContexto.BusquedaVisual.EjecutarBusquedaDataSet(
+         'Búsqueda de artículos', oDataSet,
+         'frmMtoArtTraspasoSearch') then
+    begin
+      ACodigoArticulo := oDataSet.FieldByName('ARTICULO').AsString;
+      Result := ACodigoArticulo <> '';
     end;
   end;
 end;

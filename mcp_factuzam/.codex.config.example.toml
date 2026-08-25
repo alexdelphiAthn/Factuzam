@@ -1,0 +1,62 @@
+# Copia esta tabla en UNA de estas ubicaciones:
+#   Proyecto: <raíz Factuzam>\.codex\config.toml
+#   Usuario:  %USERPROFILE%\.codex\config.toml
+#
+# Sustituye las dos rutas absolutas. Los valores sensibles no se guardan aquí:
+# `env_vars` solo autoriza a Codex a reenviar variables ya presentes en su
+# entorno de proceso.
+
+[mcp_servers.factuzam]
+command = 'C:\RUTA\A\Factuzam\mcp_factuzam\.venv\Scripts\factuzam-mcp.exe'
+args = []
+cwd = 'C:\RUTA\A\Factuzam\mcp_factuzam'
+enabled = true
+required = false
+startup_timeout_sec = 20
+tool_timeout_sec = 120
+
+env_vars = [
+  "FACTUZAM_DB_HOST",
+  "FACTUZAM_DB_PORT",
+  "FACTUZAM_DB_NAME",
+  "FACTUZAM_DB_USER",
+  "FACTUZAM_DB_PASSWORD",
+  "FACTUZAM_DB_CREDENTIAL_TARGET",
+  "FACTUZAM_DB_SSL_CA",
+  "FACTUZAM_DB_CONNECT_TIMEOUT",
+  "FACTUZAM_DB_READ_TIMEOUT",
+  "FACTUZAM_DB_WRITE_TIMEOUT",
+  "FACTUZAM_MCP_PRINCIPAL",
+  "FACTUZAM_MCP_SCOPES",
+  "FACTUZAM_MCP_TRANSPORTE",
+  "FACTUZAM_EMPRESAS_PERMITIDAS",
+  "FACTUZAM_ALMACENES_PERMITIDOS",
+  "FACTUZAM_CAJAS_PERMITIDAS",
+  "FACTUZAM_MCP_MAX_REPORT_DAYS",
+  "FACTUZAM_MCP_MAX_STOCK_PAGE_SIZE",
+  "FACTUZAM_MCP_MAX_STOCK_OFFSET",
+  "FACTUZAM_MCP_MAX_REPORT_ROWS",
+  "FACTUZAM_MCP_MAX_PURCHASE_LOOKBACK_DAYS",
+  "FACTUZAM_VENTAS_HABILITADAS",
+  "FACTUZAM_VENTAS_BRIDGE_URL",
+  "FACTUZAM_VENTAS_BRIDGE_TOKEN",
+  "FACTUZAM_VENTAS_BRIDGE_TIMEOUT_SECONDS",
+  "FACTUZAM_VENTAS_BRIDGE_MAX_RESPONSE_BYTES",
+]
+
+enabled_tools = [
+  "estado_integracion_factuzam",
+  "consultar_stock",
+  "informe_movimientos_venta",
+  "preparar_venta",
+  "crear_venta",
+  "consultar_estado_venta",
+]
+
+# Aprueba automáticamente las lecturas y solicita confirmación para tools que
+# el servidor marque como escritura. La regla específica mantiene el cierre
+# aunque cambien las anotaciones generales en el futuro.
+default_tools_approval_mode = "writes"
+
+[mcp_servers.factuzam.tools.crear_venta]
+approval_mode = "prompt"

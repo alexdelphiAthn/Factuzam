@@ -97,9 +97,9 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Generics.Collections, Data.DBCommon, Uni,
+  System.SysUtils, System.Generics.Collections, Uni,
   Vcl.Controls, cxGridDBTableView, inLibDevExp, inLibUser,
-  inLibMsgComun, inLibMsgConfiguracion;
+  inLibDatasets, inLibMsgComun, inLibMsgConfiguracion;
 
 constructor TGestorPerfilesMto.Create(
   AFormulario: TCustomForm;
@@ -174,7 +174,9 @@ begin
   if Assigned(FDatos) and Assigned(FDatos.DataSet) then
   begin
     if FDatos.DataSet is TUniQuery then
-      Result := GetTableNameFromQuery(
+      // El extractor RTL toma el primer FROM aunque pertenezca a una
+      // subconsulta. El detector propio solo acepta el FROM de nivel cero.
+      Result := ExtraerTablaDeSQL(
         TUniQuery(FDatos.DataSet).SQL.Text)
     else if FDatos.DataSet is TUniStoredProc then
       Result := TUniStoredProc(FDatos.DataSet).StoredProcName;
@@ -388,25 +390,21 @@ end;
 procedure TGestorPerfilesMto.ResetearLayout(
   const ADescripcion: string);
 var
-  i: Integer;
   sPermisos: string;
-  oGrid: TcxCustomGridTableView;
 begin
   if Assigned(FSolicitarDestino) and
      FSolicitarDestino(
        ADescripcion, True, sPermisos) then
   begin
-    for i := 0 to FFormulario.ComponentCount - 1 do
-    begin
-      if FFormulario.Components[i] is TcxCustomGridTableView then
-      begin
-        oGrid := TcxCustomGridTableView(
-          FFormulario.Components[i]);
-        if Assigned(FResetearGrid) then
-          FResetearGrid(
-            oGrid.Name, FFormulario.Name, sPermisos);
-      end;
-    end;
+    if not Assigned(FServicioEscritura) then
+      raise Exception.Create(
+        SErrorServicioPerfilesUsuarioNoConfigurado);
+
+    // El layout se guarda bajo la clave del formulario, no por grid. Usar
+    // el servicio evita depender del data module (los buscadores externos
+    // no tienen uno) y resincroniza la cache despues del borrado.
+    FServicioEscritura.EliminarPerfil(
+      sPermisos, FFormulario.Name);
     if Assigned(FBorrarGuias) then
       FBorrarGuias;
   end;

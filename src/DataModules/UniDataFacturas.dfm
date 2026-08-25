@@ -638,13 +638,20 @@
   object unqryArtDataLinFac: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'select * '
-      '  from vi_art_busquedas'
-      ' where (codigo_tar_arttar = :tarifa'
-      '    or codigo_tar_arttar is null)'
-      '   AND FECHA_DESDE_ARTTAR < :FECHA_FAC'
-      '   AND (FECHA_HASTA_ARTTAR IS NULL'
-      '        OR FECHA_HASTA_ARTTAR > :FECHA_FAC)')
+      'select v.*,'
+      '       coalesce(pv.PV, ap.VALOR_LIBRE_ARTPROP, '#39#39') as TEMPORADA'
+      '  from vi_art_busquedas v'
+      '  left join fza_articulos_propiedades ap'
+      '    on ap.CODIGO_ART_ART = v.CODIGO_ART_ART'
+      '   and ap.CODIGO_PROP_ARTPROP = '#39'TEMPORADA'#39
+      '   and ap.CODIGO_UNIDAD_ARTPROP = '#39#39
+      '  left join fza_propiedades_valores pv'
+      '    on pv.ID_PV_ARTPROP = ap.ID_PV_ARTPROP'
+      ' where (v.CODIGO_TAR_ARTTAR = :tarifa'
+      '    or v.CODIGO_TAR_ARTTAR is null)'
+      '   and v.FECHA_DESDE_ARTTAR < :FECHA_FAC'
+      '   and (v.FECHA_HASTA_ARTTAR is null'
+      '        or v.FECHA_HASTA_ARTTAR > :FECHA_FAC)')
     Left = 200
     Top = 429
     ParamData = <

@@ -66,3 +66,9 @@ database.cfg
 
 # Laboratorio local de PrestaShop (instalacion, datos y credenciales locales)
 /tmp/prestashop_factuzam_lab/
+
+# Entorno y cachés del servidor MCP de Factuzam
+/mcp_factuzam/.venv/
+/mcp_factuzam/.pytest_cache/
+/mcp_factuzam/**/__pycache__/
+/mcp_factuzam/**/*.pyc

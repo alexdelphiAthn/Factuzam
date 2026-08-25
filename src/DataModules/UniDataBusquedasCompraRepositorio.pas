@@ -31,7 +31,9 @@ const
   SQL_ARTICULOS_PROVEEDOR =
     'SELECT art.CODIGO_ART_ART, art.ESACTIVO_ART, art.ORDEN_ART, ' +
     '       art.DESCRIPCION_ART, art.CODIGO_FAM_ART, ' +
-    '       fam.DESCRIPCION_FAM, art.TIPO_IVA_ART, ' +
+    '       fam.DESCRIPCION_FAM, ' +
+    '       COALESCE(pv.PV, artprop.VALOR_LIBRE_ARTPROP, '''') ' +
+    '         AS TEMPORADA, art.TIPO_IVA_ART, ' +
     '       iva.NOMBRE_TIPO_IVA_IVATIP, art.TIPO_CANTIDAD_ART, ' +
     '       ap.CODIGO_PRV_AP, prv.RAZON_SOCIAL_PRV, ' +
     '       prv.NOMBRE_PRV, ' +
@@ -42,6 +44,12 @@ const
     '    ON art.CODIGO_ART_ART = ap.CODIGO_ART_AP ' +
     '  LEFT JOIN fza_articulos_familias fam ' +
     '    ON fam.CODIGO_FAM_FAM = art.CODIGO_FAM_ART ' +
+    '  LEFT JOIN fza_articulos_propiedades artprop ' +
+    '    ON artprop.CODIGO_ART_ART = art.CODIGO_ART_ART ' +
+    '   AND artprop.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    '   AND artprop.CODIGO_UNIDAD_ARTPROP = '''' ' +
+    '  LEFT JOIN fza_propiedades_valores pv ' +
+    '    ON pv.ID_PV_ARTPROP = artprop.ID_PV_ARTPROP ' +
     '  LEFT JOIN fza_ivas_tipos iva ' +
     '    ON iva.CODIGO_ABREVIATURA_IVA_IVATIP = art.TIPO_IVA_ART ' +
     '  LEFT JOIN fza_proveedores prv ' +

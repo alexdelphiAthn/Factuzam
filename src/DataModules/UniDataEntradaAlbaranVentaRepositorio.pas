@@ -25,13 +25,21 @@ uses
 
 const
   SQL_ARTICULOS =
-    'SELECT * ' +
-    'FROM vi_art_busquedas ' +
-    'WHERE (CODIGO_TAR_ARTTAR = :tarifa ' +
-    'OR CODIGO_TAR_ARTTAR IS NULL) ' +
-    'AND FECHA_DESDE_ARTTAR < :fecha ' +
-    'AND (FECHA_HASTA_ARTTAR IS NULL ' +
-    'OR FECHA_HASTA_ARTTAR > :fecha)';
+    'SELECT v.*, ' +
+    '       COALESCE(pv.PV, artprop.VALOR_LIBRE_ARTPROP, '''') ' +
+    '         AS TEMPORADA ' +
+    '  FROM vi_art_busquedas v ' +
+    '  LEFT JOIN fza_articulos_propiedades artprop ' +
+    '    ON artprop.CODIGO_ART_ART = v.CODIGO_ART_ART ' +
+    '   AND artprop.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    '   AND artprop.CODIGO_UNIDAD_ARTPROP = '''' ' +
+    '  LEFT JOIN fza_propiedades_valores pv ' +
+    '    ON pv.ID_PV_ARTPROP = artprop.ID_PV_ARTPROP ' +
+    ' WHERE (v.CODIGO_TAR_ARTTAR = :tarifa ' +
+    '    OR v.CODIGO_TAR_ARTTAR IS NULL) ' +
+    '   AND v.FECHA_DESDE_ARTTAR < :fecha ' +
+    '   AND (v.FECHA_HASTA_ARTTAR IS NULL ' +
+    '        OR v.FECHA_HASTA_ARTTAR > :fecha)';
   SQL_SKUS =
     'SELECT SK.CODIGO_UNIDAD_SKU, SK.CODIGO_ART_SKU, ' +
     'GROUP_CONCAT(AV.AV ORDER BY COALESCE(VA.ORDEN_VA, 999), ' +
