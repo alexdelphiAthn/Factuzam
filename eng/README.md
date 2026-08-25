@@ -81,6 +81,8 @@ el repositorio. Reutiliza las cuatro variables requeridas para compilar y la
 selección de informes se fija en `PascalAnalyzer.ini`, por lo que no depende de
 las preferencias de Pascal Analyzer de cada desarrollador. Para que el
 resultado sea comparable, el runner exige Pascal Analyzer 9.21.5.
+Genera los informes Totals, Modules, Strong Warnings, Warnings, Memory,
+Complexity, Exception y Security, junto con el SBOM CycloneDX asociado.
 
 Validar la instalación sin ejecutar el análisis:
 

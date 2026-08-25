@@ -102,19 +102,19 @@ var
   sReferencia: string;
   sRutaPdf: string;
 begin
-  DatosFactura := TdmFacturas.Create(FPropietario);
-  DatosFactura.ConfigurarServicios(
-    CrearServiciosFactura(
-      FConexion,
-      TRepositorioFacturas.Create(FConexion),
-      CrearRepositorioLecturasFacturaUniDAC(FConexion),
-      CrearPersistenciaFacturasUniDAC(FConexion),
-      TRepositorioArticulosResolver.Create(
-        FConexion,
-        FParametrosCaja),
-      CrearServicioVerifactuColaUniDAC(FConexion)));
   Formulario := nil;
+  DatosFactura := TdmFacturas.Create(FPropietario);
   try
+    DatosFactura.ConfigurarServicios(
+      CrearServiciosFactura(
+        FConexion,
+        TRepositorioFacturas.Create(FConexion),
+        CrearRepositorioLecturasFacturaUniDAC(FConexion),
+        CrearPersistenciaFacturasUniDAC(FConexion),
+        TRepositorioArticulosResolver.Create(
+          FConexion,
+          FParametrosCaja),
+        CrearServicioVerifactuColaUniDAC(FConexion)));
     Formulario := TfrmPrintFac.Create(Application);
     Formulario.edtSerie.Text := ASerie;
     Formulario.edtNroFac.Text := ANumero;

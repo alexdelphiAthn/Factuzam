@@ -335,11 +335,25 @@ end;
 
 destructor TLog.Destroy;
 begin
-  WriteToLog('Fin de sesión de log.', ltInfo);
-  FMonitorSQL := nil;
-  if FMutexHandle <> 0 then
-    CloseHandle(FMutexHandle);
-  inherited;
+  try
+    try
+      WriteToLog('Fin de sesión de log.', ltInfo);
+    except
+      // Un destructor no debe propagar un fallo secundario del propio log.
+      FLogFlags := [];
+    end;
+  finally
+    try
+      FMonitorSQL := nil;
+    finally
+      if FMutexHandle <> 0 then
+      begin
+        CloseHandle(FMutexHandle);
+        FMutexHandle := 0;
+      end;
+      inherited;
+    end;
+  end;
 end;
 
 procedure TLog.AsignarMonitorSQL(

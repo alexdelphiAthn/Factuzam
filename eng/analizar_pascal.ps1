@@ -503,6 +503,9 @@ $informesEsperados = @(
   'Strong Warnings.txt',
   'Warnings.txt',
   'Memory.txt',
+  'Exception.txt',
+  'Security.txt',
+  'SBOM.json',
   'Complexity.txt'
 )
 $informesFaltantes = [System.Collections.Generic.List[string]]::new()

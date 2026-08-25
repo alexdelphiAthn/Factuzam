@@ -406,25 +406,28 @@ var
 begin
   oEstado := TJSONObject.Create;
   try
-    sCarpeta := CarpetaCacheDeclaracionesSif;
-    TDirectory.CreateDirectory(sCarpeta);
-    oEstado.AddPair('sif', cCodigoSifFactuzam);
-    oEstado.AddPair('version', AVersion);
-    oEstado.AddPair('estado', 'LOCAL');
-    oEstado.AddPair('archivo', NombreArchivoDeclaracionSif(AVersion));
-    oEstado.AddPair('origen_ultima_consulta', AOrigen);
-    oEstado.AddPair('instante_ultima_consulta',
-      FormatDateTime('yyyy-mm-dd"T"hh:nn:ss', Now));
-    TFile.WriteAllText(RutaEstadoDeclaracionSif(AVersion),
-                       oEstado.ToJSON, TEncoding.UTF8);
-  except
-    on E: Exception do
-      if Assigned(ARegistroLog) then
-        ARegistroLog.RegistrarAviso(
-          'No se pudo registrar el estado local de la ' +
-          'declaración responsable: ' + E.Message);
+    try
+      sCarpeta := CarpetaCacheDeclaracionesSif;
+      TDirectory.CreateDirectory(sCarpeta);
+      oEstado.AddPair('sif', cCodigoSifFactuzam);
+      oEstado.AddPair('version', AVersion);
+      oEstado.AddPair('estado', 'LOCAL');
+      oEstado.AddPair('archivo', NombreArchivoDeclaracionSif(AVersion));
+      oEstado.AddPair('origen_ultima_consulta', AOrigen);
+      oEstado.AddPair('instante_ultima_consulta',
+        FormatDateTime('yyyy-mm-dd"T"hh:nn:ss', Now));
+      TFile.WriteAllText(RutaEstadoDeclaracionSif(AVersion),
+                         oEstado.ToJSON, TEncoding.UTF8);
+    except
+      on E: Exception do
+        if Assigned(ARegistroLog) then
+          ARegistroLog.RegistrarAviso(
+            'No se pudo registrar el estado local de la ' +
+            'declaración responsable: ' + E.Message);
+    end;
+  finally
+    FreeAndNil(oEstado);
   end;
-  FreeAndNil(oEstado);
 end;
 
 function CargarDeclaracionCacheSif(const AVersion: string;

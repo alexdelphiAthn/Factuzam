@@ -137,6 +137,37 @@ uses
 const
   BYTES_ENTRE_PROGRESO_RESTAURACION = 4 * 1024 * 1024;
 
+function TotalProgresoRestauracion(ATotalBytes: Int64): Integer;
+var
+  iTotalKb: Int64;
+begin
+  if ATotalBytes <= 0 then
+    Exit(1);
+  iTotalKb := 1 + ((ATotalBytes - 1) div 1024);
+  if iTotalKb > MaxInt then
+    Result := MaxInt
+  else
+    Result := Integer(iTotalKb);
+end;
+
+function PosicionProgresoRestauracion(
+  APosicionBytes, ATotalBytes: Int64;
+  ATotalProgreso: Integer): Integer;
+var
+  iTotalKb: Int64;
+begin
+  if (APosicionBytes <= 0) or (ATotalBytes <= 0) then
+    Exit(0);
+  if APosicionBytes >= ATotalBytes then
+    Exit(ATotalProgreso);
+  iTotalKb := 1 + ((ATotalBytes - 1) div 1024);
+  if iTotalKb <= MaxInt then
+    Result := Integer(APosicionBytes div 1024)
+  else
+    Result := Trunc(
+      (APosicionBytes / ATotalBytes) * ATotalProgreso);
+end;
+
 constructor TEjecutorRestauracionSQL.Create(
   const APersistencia: IPersistenciaRestauracionBackup;
   AComprobarCancelacion: TComprobarCancelacionBackupEvent;
@@ -175,11 +206,7 @@ begin
   FErrores := 0;
   FPrimerError := '';
   FUltimaPosicionNotificada := 0;
-  FTotal := Integer(FFlujo.Size div 1024);
-  if FTotal <= 0 then
-  begin
-    FTotal := 1;
-  end;
+  FTotal := TotalProgresoRestauracion(FFlujo.Size);
   FPosicion := 0;
   if Assigned(FLog) then
   begin
@@ -193,7 +220,10 @@ procedure TEjecutorRestauracionSQL.NotificarProgreso(AForzar: Boolean);
 begin
   if Assigned(FFlujo) then
   begin
-    FPosicion := Integer(FFlujo.Position div 1024);
+    FPosicion := PosicionProgresoRestauracion(
+      FFlujo.Position,
+      FFlujo.Size,
+      FTotal);
     if FPosicion > FTotal then
     begin
       FPosicion := FTotal;
