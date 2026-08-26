@@ -241,7 +241,7 @@ type
   public
     constructor Create(AOwner: TComponent;
       AFotosArticulos: TFotosArticulos;
-      const AFotos: TArray<TFotoInfo>);
+      const AFotos: TArray<TFotoInfo>); reintroduce;
     function Ejecutar(out AFoto: TFotoInfo): Boolean;
   end;
 
