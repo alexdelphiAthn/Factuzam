@@ -200,6 +200,101 @@ uses
 
 {$R *.dfm}
 
+type
+  TIconoFoto = (
+    ifChevronAbajo,
+    ifChevronArriba,
+    ifDescargar,
+    ifEstrellaVacia,
+    ifEstrellaLlena,
+    ifAnterior,
+    ifSiguiente,
+    ifAnadir,
+    ifSustituirPredeterminada,
+    ifSustituirNivel,
+    ifSustituirLinea,
+    ifRotarIzquierda,
+    ifRotarDerecha,
+    ifEliminar,
+    ifGuardarLayout);
+
+const
+  SSvgInicio =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">' +
+    '<g fill="none" stroke="#505050" stroke-width="2" ' +
+    'stroke-linecap="round" stroke-linejoin="round">';
+  SSvgFin = '</g></svg>';
+
+function CuerpoIconoFoto(AIcono: TIconoFoto): string;
+begin
+  case AIcono of
+    ifChevronAbajo:
+      Result := '<path d="M5 9l7 7 7-7"/>';
+    ifChevronArriba:
+      Result := '<path d="M5 15l7-7 7 7"/>';
+    ifDescargar:
+      Result :=
+        '<path d="M12 3v12M7 10l5 5 5-5M5 20h14"/>';
+    ifEstrellaVacia:
+      Result :=
+        '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3' +
+        '-5.6 3 1.1-6.2L3 9.6l6.2-.9z"/>';
+    ifEstrellaLlena:
+      Result :=
+        '<path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3' +
+        '-5.6 3 1.1-6.2L3 9.6l6.2-.9z" fill="#505050"/>';
+    ifAnterior:
+      Result := '<path d="M15 5l-7 7 7 7"/>';
+    ifSiguiente:
+      Result := '<path d="M9 5l7 7-7 7"/>';
+    ifAnadir:
+      Result := '<path d="M12 4v16M4 12h16"/>';
+    ifSustituirPredeterminada:
+      Result :=
+        '<path d="M7 2l1.5 3 3.3.5-2.4 2.3.6 3.2-3-1.6-3 1.6' +
+        '.6-3.2-2.4-2.3 3.3-.5z" fill="#505050"/>' +
+        '<path d="M14 7h6v6M20 7a8 8 0 0 1-8 13"/>';
+    ifSustituirNivel:
+      Result :=
+        '<rect x="3" y="4" width="9" height="9"/>' +
+        '<path d="M7.5 4v9M3 8.5h9M14 7h6v6' +
+        'M20 7a8 8 0 0 1-8 13"/>';
+    ifSustituirLinea:
+      Result :=
+        '<path d="M3 5h9M3 9h8M3 13h6M14 7h6v6' +
+        'M20 7a8 8 0 0 1-8 13"/>';
+    ifRotarIzquierda:
+      Result :=
+        '<path d="M4 4v6h6M4.5 10a8 8 0 1 1 2 7"/>';
+    ifRotarDerecha:
+      Result :=
+        '<path d="M20 4v6h-6M19.5 10a8 8 0 1 0-2 7"/>';
+    ifEliminar:
+      Result :=
+        '<path d="M4 7h16M9 7V4h6v3M6 7l1 14h10l1-14' +
+        'M10 11v6M14 11v6"/>';
+    ifGuardarLayout:
+      Result :=
+        '<path d="M4 3h13l3 3v15H4zM7 3v7h9V3M7 21v-7h10v7"/>';
+  end;
+end;
+
+procedure AsignarIconoFoto(AButton: TcxButton; AIcono: TIconoFoto);
+var
+  Flujo: TStringStream;
+begin
+  AButton.Caption := '';
+  Flujo := TStringStream.Create(
+    SSvgInicio + CuerpoIconoFoto(AIcono) + SSvgFin,
+    TEncoding.UTF8);
+  try
+    AButton.OptionsImage.Glyph.LoadFromStream(Flujo);
+    AButton.OptionsImage.Glyph.SourceDPI := 96;
+  finally
+    Flujo.Free;
+  end;
+end;
+
 function FotoFlotanteActual: TfrmFotoArticulo;
 var
   Componente: TComponent;
@@ -293,21 +388,19 @@ end;
 
 procedure TfrmFotoArticulo.AplicarAspectoBotonesCompactos;
 begin
-  btnDescargarNube.Caption := #$2193;
-  btnFotoAnterior.Caption := #$2190;
-  btnFotoSiguiente.Caption := #$2192;
-  btnAnadirFoto.Caption := '+';
-  btnCambiarSku.Caption := '&G' + #$2026;
-  btnRotarIzq.Caption := '&I' + #$21B6;
-  btnRotarDer.Caption := '&D' + #$21B7;
-  btnQuitar.Caption := '&Q' + #$00D7;
-  btnLayout.Caption := '&L' + #$25A6;
+  AsignarIconoFoto(btnDescargarNube, ifDescargar);
+  AsignarIconoFoto(btnFotoAnterior, ifAnterior);
+  AsignarIconoFoto(btnFotoSiguiente, ifSiguiente);
+  AsignarIconoFoto(btnAnadirFoto, ifAnadir);
+  AsignarIconoFoto(btnCambiarSku, ifSustituirNivel);
+  AsignarIconoFoto(btnRotarIzq, ifRotarIzquierda);
+  AsignarIconoFoto(btnRotarDer, ifRotarDerecha);
+  AsignarIconoFoto(btnQuitar, ifEliminar);
+  AsignarIconoFoto(btnLayout, ifGuardarLayout);
   if FModoSesion and not FFotoDefinitivaSesion then
-  begin
-    btnCambiarArt.Caption := '&F' + #$2026
-  end
+    AsignarIconoFoto(btnCambiarArt, ifSustituirLinea)
   else
-    btnCambiarArt.Caption := '&A' + #$2026;
+    AsignarIconoFoto(btnCambiarArt, ifSustituirPredeterminada);
 
   btnToggle.Hint := SHintMostrarControlesFoto;
   btnDescargarNube.Hint := SHintBajarFotosServidor;
@@ -325,22 +418,11 @@ begin
   btnQuitar.Hint := SHintQuitarFoto;
   btnLayout.Hint := SHintGuardarLayoutFoto;
 
-  btnToggle.Font.Name := 'Segoe UI Symbol';
-  btnDescargarNube.Font.Name := 'Segoe UI Symbol';
-  btnMarcarPredeterminada.Font.Name := 'Segoe UI Symbol';
-  btnFotoAnterior.Font.Name := 'Segoe UI Symbol';
-  btnFotoSiguiente.Font.Name := 'Segoe UI Symbol';
-  btnCambiarArt.Font.Name := 'Segoe UI Symbol';
-  btnCambiarSku.Font.Name := 'Segoe UI Symbol';
-  btnRotarIzq.Font.Name := 'Segoe UI Symbol';
-  btnRotarDer.Font.Name := 'Segoe UI Symbol';
-  btnQuitar.Font.Name := 'Segoe UI Symbol';
-  btnLayout.Font.Name := 'Segoe UI Symbol';
   AjustarBotonToggle;
   if FUltimaInfo.Encontrada and (FUltimaInfo.Orden = 1) then
-    btnMarcarPredeterminada.Caption := #$2605
+    AsignarIconoFoto(btnMarcarPredeterminada, ifEstrellaLlena)
   else
-    btnMarcarPredeterminada.Caption := #$2606;
+    AsignarIconoFoto(btnMarcarPredeterminada, ifEstrellaVacia);
 end;
 
 procedure TfrmFotoArticulo.AjustarBarraSuperior;
@@ -469,9 +551,9 @@ end;
 procedure TfrmFotoArticulo.AjustarBotonToggle;
 begin
   if pnlControles.Visible then
-    btnToggle.Caption := #$25B2
+    AsignarIconoFoto(btnToggle, ifChevronArriba)
   else
-    btnToggle.Caption := #$25BC;
+    AsignarIconoFoto(btnToggle, ifChevronAbajo);
 end;
 
 procedure TfrmFotoArticulo.btnToggleClick(Sender: TObject);
@@ -674,9 +756,9 @@ begin
     bCatalogo and FUltimaInfo.Encontrada and
     (FUltimaInfo.Orden > 1);
   if FUltimaInfo.Encontrada and (FUltimaInfo.Orden = 1) then
-    btnMarcarPredeterminada.Caption := #$2605
+    AsignarIconoFoto(btnMarcarPredeterminada, ifEstrellaLlena)
   else
-    btnMarcarPredeterminada.Caption := #$2606;
+    AsignarIconoFoto(btnMarcarPredeterminada, ifEstrellaVacia);
   if FIndiceFoto >= 0 then
     lblNumeroFoto.Caption := Format('%d/%d',
       [FIndiceFoto + 1, Length(FFotosColeccion)])

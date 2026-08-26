@@ -27,7 +27,7 @@
       Top = 4
       Width = 32
       Height = 28
-      Caption = #9660
+      Caption = ''
       Hint = 'Mostrar u ocultar controles (F11)'
       ParentShowHint = False
       ShowHint = True
@@ -39,7 +39,7 @@
       Top = 4
       Width = 32
       Height = 28
-      Caption = #8595
+      Caption = ''
       Hint = 'Bajar fotos del servidor'
       ParentShowHint = False
       ShowHint = True
@@ -63,7 +63,7 @@
       Width = 32
       Height = 28
       Anchors = [akTop, akRight]
-      Caption = #9734
+      Caption = ''
       Hint = 'Establecer esta foto como predeterminada'
       ParentShowHint = False
       ShowHint = True
@@ -76,7 +76,7 @@
       Width = 32
       Height = 28
       Anchors = [akTop, akRight]
-      Caption = #8592
+      Caption = ''
       Hint = 'Foto anterior'
       ParentShowHint = False
       ShowHint = True
@@ -99,7 +99,7 @@
       Width = 32
       Height = 28
       Anchors = [akTop, akRight]
-      Caption = #8594
+      Caption = ''
       Hint = 'Foto siguiente'
       ParentShowHint = False
       ShowHint = True
@@ -112,7 +112,7 @@
       Width = 32
       Height = 28
       Anchors = [akTop, akRight]
-      Caption = '+'
+      Caption = ''
       Hint = 'A'#241'adir foto'
       ParentShowHint = False
       ShowHint = True
@@ -174,8 +174,8 @@
       Top = 58
       Width = 44
       Height = 32
-      Caption = '&A'#8230
-      Hint = 'Sustituir la foto principal del art'#237'culo'
+      Caption = ''
+      Hint = 'Sustituir la foto predeterminada del art'#237'culo'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 2
@@ -186,8 +186,8 @@
       Top = 58
       Width = 44
       Height = 32
-      Caption = '&G'#8230
-      Hint = 'Sustituir la foto principal del nivel seleccionado'
+      Caption = ''
+      Hint = 'Sustituir la foto predeterminada del nivel seleccionado'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 3
@@ -198,8 +198,8 @@
       Top = 58
       Width = 44
       Height = 32
-      Caption = '&Q'#215
-      Hint = 'Quitar la foto visible'
+      Caption = ''
+      Hint = 'Eliminar definitivamente la foto visible'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 6
@@ -210,7 +210,7 @@
       Top = 58
       Width = 44
       Height = 32
-      Caption = '&I'#8630
+      Caption = ''
       Hint = 'Rotar la foto visible a la izquierda'
       ParentShowHint = False
       ShowHint = True
@@ -222,7 +222,7 @@
       Top = 58
       Width = 44
       Height = 32
-      Caption = '&D'#8631
+      Caption = ''
       Hint = 'Rotar la foto visible a la derecha'
       ParentShowHint = False
       ShowHint = True
@@ -234,7 +234,7 @@
       Top = 58
       Width = 44
       Height = 32
-      Caption = '&L'#9638
+      Caption = ''
       Hint = 'Guardar posici'#243'n, tama'#241'o y resoluci'#243'n'
       ParentShowHint = False
       ShowHint = True

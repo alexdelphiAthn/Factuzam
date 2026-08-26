@@ -36,13 +36,13 @@ resourcestring
   SHintAnadirFoto =
     'Añadir foto';
   SHintCambiarFotoArticulo =
-    'Sustituir la foto principal del artículo';
+    'Sustituir la foto predeterminada del artículo';
   SHintCambiarFotoNivel =
-    'Sustituir la foto principal del nivel seleccionado';
+    'Sustituir la foto predeterminada del nivel seleccionado';
   SHintCambiarFotoLinea =
     'Cambiar la foto de la línea';
   SHintQuitarFoto =
-    'Quitar la foto visible';
+    'Eliminar definitivamente la foto visible';
   SHintRotarFotoIzquierda =
     'Rotar la foto visible a la izquierda';
   SHintRotarFotoDerecha =
