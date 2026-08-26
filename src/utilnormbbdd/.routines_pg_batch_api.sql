@@ -569,6 +569,8 @@ IS 'Consulta datos mínimos de artículo; CALL(código, NULL, NULL).';
 -- PRC_GET_DATA_CLIENTE
 -- Contrato: devuelve los 19 atributos OUT en el mismo orden que MariaDB. Si no
 -- existe, sólo razón social toma CLIENTE NO ENCONTRADO y el resto queda NULL.
+-- CODIGO_ZONA_IVA_CLIENTE no existe en fza_clientes en este mismo dump; el OUT
+-- se conserva por compatibilidad de firma y se devuelve siempre como NULL.
 -- ============================================================================
 CREATE PROCEDURE prc_get_data_cliente(
   IN p_codigo_cliente character varying(10),
@@ -597,7 +599,7 @@ AS $routine$
 BEGIN
   SELECT c.razonsocial_cliente,
          c.nif_cliente,
-         c.codigo_zona_iva_cliente,
+         NULL::integer,
          c.movil_cliente,
          c.esiva_recargo_cliente,
          c.esretenciones_cliente,
@@ -643,7 +645,7 @@ END;
 $routine$;
 
 COMMENT ON PROCEDURE prc_get_data_cliente(character varying)
-IS 'Devuelve datos fiscales y postales del cliente mediante 19 parámetros OUT.';
+IS 'Devuelve datos fiscales y postales; zona IVA queda NULL porque la columna del origen no existe.';
 
 -- ============================================================================
 -- PRC_GET_IVA_ZONA_FECHA
@@ -652,7 +654,9 @@ IS 'Devuelve datos fiscales y postales del cliente mediante 19 parámetros OUT.'
 -- interpreta la intención como: IVA del grupo p_zona vigente en p_fecha,
 -- eligiendo la vigencia más reciente. p_resul vale 1 si existe y 0 si no.
 -- GRUPO_ZONA_IVA es varchar en el dump y p_zona es integer; se conserva la
--- comparación numérica de MariaDB, incluidos códigos con ceros iniciales.
+-- comparación numérica de MariaDB, incluidos códigos con ceros iniciales. Si
+-- coexisten, por ejemplo, "3" y "003", se prioriza la coincidencia textual
+-- exacta porque la firma integer no permite al llamador distinguirlas.
 -- ============================================================================
 CREATE PROCEDURE prc_get_iva_zona_fecha(
   IN p_fecha date,
@@ -694,7 +698,8 @@ BEGIN
          THEN btrim(i.grupo_zona_iva)::numeric = p_zona
        ELSE false
      END
-   ORDER BY i.fecha_desde_iva DESC,
+   ORDER BY (btrim(i.grupo_zona_iva) = p_zona::text) DESC,
+            i.fecha_desde_iva DESC,
             i.codigo_iva
    LIMIT 1;
 
@@ -1186,4 +1191,3 @@ $routine$;
 COMMENT ON PROCEDURE prc_setperfilformulario(
   character varying, character varying, character varying, character varying
 ) IS 'Upsert de VALUE_PERFILES por usuario/grupo, formulario y subkey.';
-

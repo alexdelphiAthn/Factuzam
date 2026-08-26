@@ -771,8 +771,12 @@ def build() -> str:
         raise ValueError(f"Expected 45 source routines, found {len(routine_names)}")
 
     routine_bytes = ROUTINES.read_bytes()
-    routine_hash = hashlib.sha256(routine_bytes).hexdigest()
     routine_sql = routine_bytes.decode("utf-8-sig").strip()
+    # The SQL files are checked out as CRLF in this repository.  Hash the
+    # logical LF form so provenance stays identical across Git platforms.
+    routine_hash = hashlib.sha256(
+        routine_sql.replace("\r\n", "\n").encode("utf-8")
+    ).hexdigest()
     translated_routine_names = {
         name.casefold()
         for name in re.findall(
@@ -820,7 +824,7 @@ def build() -> str:
         "-- Factuzam: bootstrap PostgreSQL (fase 2)",
         "-- Generado desde factuzam_original.sql (volcado MariaDB).",
         f"-- SHA-256 del origen: {source_hash}",
-        f"-- SHA-256 del módulo de rutinas PostgreSQL: {routine_hash}",
+        f"-- SHA-256 canónico del módulo de rutinas PostgreSQL: {routine_hash}",
         "-- Objetivo: PostgreSQL 16 o posterior; codificación UTF-8.",
         "-- Alcance: tablas, datos, índices, comentarios, triggers, vistas y 45 rutinas.",
         "-- Los resultsets dinámicos se exponen mediante refcursor (CALL + FETCH en una transacción).",

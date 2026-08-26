@@ -4,20 +4,6 @@ IA-S32 elimina del proyecto las rutas propias de una máquina. El proyecto
 importa `Factuzam.Dependencias.props` y obtiene sus dependencias mediante
 propiedades MSBuild o variables de entorno.
 
-## Migraciones funcionales
-
-Antes de desplegar un binario con galerías de fotos, aplique una vez
-`eng\migraciones\20260826_fotos_multiples.sql` sobre cada base de datos. El
-script conserva las fotos existentes como posición 1 y puede ejecutarse de
-nuevo sin duplicar la columna ni la clave primaria. Todos los puestos que
-compartan la base deben actualizarse juntos: una versión antigua no conoce la
-posición de la foto al rotar o eliminar.
-
-Para evitar que las temporadas específicas de color/SKU multipliquen filas en
-Archivo > Artículos, aplique también
-`eng\migraciones\20260826_vi_articulos_sin_duplicados.sql`. La migración solo
-recrea `vi_articulos`; no elimina artículos ni propiedades.
-
 ## Variables requeridas
 
 | Variable | Directorio esperado |
