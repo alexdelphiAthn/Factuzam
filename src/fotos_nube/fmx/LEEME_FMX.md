@@ -5,9 +5,9 @@ la cámara del dispositivo, las reduce a una resolución máxima configurable
 (por defecto **1000 px** en el lado mayor) y las sube **por lotes** al
 endpoint de fotos de la API v1 de Factuzam (`/api/v1/fotos/subir.php`).
 
-Cada foto se identifica por **código de artículo** y **color** (ambos
-obligatorios); a cada foto se le asigna un **índice correlativo**
-automático dentro de su grupo artículo+color (1, 2, 3…).
+Cada foto se identifica por **código de artículo**, **color** e **índice**.
+Los tres valores son visibles antes de capturarla; el índice vale **1 por
+defecto** y debe ser un entero mayor o igual que 1.
 
 Es un proyecto Delphi **independiente** (`SubirFotosFmx.dpr`), igual que
 `utilnormbbdd` o `utilmigsqlsrv`: **no** se compila dentro de `fzam.dproj`.
@@ -36,10 +36,10 @@ fmx/
    carpeta de documentos de la app (sandbox). La ruta exacta se muestra en
    pantalla. La referencia debe coincidir con la asociada al token.
 2. **Capturar** (pestaña *Capturar*): se teclea el **código de artículo**
-   y el **color** (ambos obligatorios); *Hacer foto* abre la cámara y
-   *Elegir de galería* la toma del carrete. Cada foto se reduce al máximo
-   configurado y se añade a la cola con su artículo+color y estado
-   *Pendiente*.
+   el **color** y el **índice de foto** (1 por defecto); *Hacer foto* abre
+   la cámara y *Elegir de galería* la toma del carrete. Cada foto se reduce
+   al máximo configurado y se añade a la cola con su artículo+color+índice
+   y estado *Pendiente*.
 3. **Subir todas**: envía en segundo plano todas las fotos no subidas.
    Cada elemento pasa a *Subiendo…* → *Subida OK* / *Error*, y el log
    muestra el `sha256` devuelto o el mensaje de error.
@@ -47,14 +47,18 @@ fmx/
 ## Índice por artículo+color
 
 El webservice nombra cada fichero como `ARTICULO_COLOR_INDICE` y exige los
-tres campos no vacíos, así que **siempre se envía un índice** (>= 1):
+tres campos no vacíos, así que **siempre se envía el índice visible** (>= 1):
 
 - Una sola foto de un artículo+color → `indice` = 1
   (`ARTICULO_COLOR_1_real.png`).
-- Varias del mismo artículo+color → `indice` = 1, 2, 3… en el orden de
-  la cola (`_1_…`, `_2_…`, etc.).
+- Varias del mismo artículo+color → se indica 1, 2, 3… antes de capturar
+  cada una (`_1_…`, `_2_…`, etc.).
 
-El índice se calcula al subir, sobre el contenido final de la cola.
+El índice queda guardado al encolar y no se recalcula al subir, por lo que
+el nombre remoto coincide con el valor mostrado al hacer la foto. Después de
+encolar correctamente, el campo avanza al siguiente número. La app rechaza
+dos fotos pendientes con el mismo artículo, color e índice para evitar que
+una sobrescriba a la otra.
 
 ## Contrato de la API v1
 
@@ -66,7 +70,7 @@ El índice se calcula al subir, sobre el contenido final de la cola.
 | `articulo`        | sí          | Código de artículo.                    |
 | `referencia`      | sí          | Nombre de la instalación.            |
 | `color`           | sí          | Color.                                 |
-| `indice`          | sí          | Correlativo (1..n) por artículo+color. |
+| `indice`          | sí          | Entero visible >= 1; valor inicial 1.  |
 | `nombre_original` | no          | Nombre del fichero local.              |
 | `osha1`           | no          | SHA1 local para verificación e2e.      |
 

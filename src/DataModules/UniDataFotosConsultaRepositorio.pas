@@ -29,6 +29,7 @@ uses
 const
   fcodartfot = 'CODIGO_ART_FOT';
   fcodunidadfot = 'CODIGO_UNIDAD_FOT';
+  fordenfot = 'ORDEN_FOT';
   fnomfot = 'NOMBRE_FOT_FOT';
   fextfot = 'EXTENSION_ORIGEN_FOT';
 
@@ -54,6 +55,9 @@ type
     function BuscarFotosArticulos(
       const ACodigosArticulo: TArray<string>):
       TArray<TMetadatosFotoPersistida>;
+    function BuscarFotosColeccion(
+      const ACodigoArticulo, ACodigoUnidad: string):
+      TArray<TMetadatosFotoPersistida>;
   end;
 
 function LeerMetadatosFoto(
@@ -64,6 +68,7 @@ begin
     AConsulta.FieldByName(fcodartfot).AsString;
   Result.CodigoUnidad :=
     AConsulta.FieldByName(fcodunidadfot).AsString;
+  Result.Orden := AConsulta.FieldByName(fordenfot).AsInteger;
   Result.Nombre := AConsulta.FieldByName(fnomfot).AsString;
   Result.Extension := AConsulta.FieldByName(fextfot).AsString;
 end;
@@ -106,10 +111,14 @@ begin
         sParametros := sParametros + ':P' + IntToStr(iUnidad);
       end;
       oConsulta.SQL.Text :=
-        ' SELECT * FROM fza_articulos_fotos ' +
+        ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, ' +
+        '        NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
+        '   FROM fza_articulos_fotos ' +
         '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
         '    AND CODIGO_UNIDAD_FOT IN (' + sParametros + ') ' +
-        '  ORDER BY LENGTH(CODIGO_UNIDAD_FOT) DESC ' +
+        '    AND ORDEN_FOT = 1 ' +
+        '  ORDER BY LENGTH(CODIGO_UNIDAD_FOT) DESC, ' +
+        '           CODIGO_UNIDAD_FOT DESC, NOMBRE_FOT_FOT ' +
         '  LIMIT 1';
       oConsulta.ParamByName('CODIGO_ART').AsString :=
         ACodigoArticulo;
@@ -136,9 +145,13 @@ begin
   oConsulta := NuevaConsulta;
   try
     oConsulta.SQL.Text :=
-      ' SELECT * FROM fza_articulos_fotos ' +
+      ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, ' +
+      '        NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
+      '   FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
       '    AND CODIGO_UNIDAD_FOT = '''' ' +
+      '    AND ORDEN_FOT = 1 ' +
+      '  ORDER BY NOMBRE_FOT_FOT ' +
       '  LIMIT 1';
     oConsulta.ParamByName('CODIGO_ART').AsString :=
       ACodigoArticulo;
@@ -161,9 +174,12 @@ begin
   oConsulta := NuevaConsulta;
   try
     oConsulta.SQL.Text :=
-      ' SELECT * FROM fza_articulos_fotos ' +
+      ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, ' +
+      '        NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
+      '   FROM fza_articulos_fotos ' +
       '  WHERE CODIGO_ART_FOT = :CODIGO_ART ' +
       '    AND CODIGO_UNIDAD_FOT <> '''' ' +
+      '    AND ORDEN_FOT = 1 ' +
       '  ORDER BY CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT ' +
       '  LIMIT 1';
     oConsulta.ParamByName('CODIGO_ART').AsString :=
@@ -199,12 +215,13 @@ begin
         sParametros := sParametros + ':A' + IntToStr(iArticulo);
       end;
       oConsulta.SQL.Text :=
-        ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ' +
+        ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, ' +
         '        NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
         '   FROM fza_articulos_fotos ' +
         '  WHERE CODIGO_ART_FOT IN (' + sParametros + ') ' +
+        '    AND ORDEN_FOT = 1 ' +
         '  ORDER BY CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ' +
-        '           NOMBRE_FOT_FOT';
+        '           ORDEN_FOT, NOMBRE_FOT_FOT';
       for iArticulo := 0 to High(ACodigosArticulo) do
         oConsulta.ParamByName('A' + IntToStr(iArticulo)).AsString :=
           ACodigosArticulo[iArticulo];
@@ -219,6 +236,40 @@ begin
     finally
       FreeAndNil(oConsulta);
     end;
+  end;
+end;
+
+function TRepositorioConsultaFotosUniDAC.BuscarFotosColeccion(
+  const ACodigoArticulo, ACodigoUnidad: string):
+  TArray<TMetadatosFotoPersistida>;
+var
+  oConsulta: TUniQuery;
+  iFoto: Integer;
+begin
+  SetLength(Result, 0);
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, ' +
+      '        NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
+      '   FROM fza_articulos_fotos ' +
+      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
+      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD ' +
+      '  ORDER BY ORDEN_FOT, NOMBRE_FOT_FOT';
+    oConsulta.ParamByName('CODIGO_ART').AsString :=
+      ACodigoArticulo;
+    oConsulta.ParamByName('CODIGO_UNIDAD').AsString :=
+      ACodigoUnidad;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iFoto := Length(Result);
+      SetLength(Result, iFoto + 1);
+      Result[iFoto] := LeerMetadatosFoto(oConsulta);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
   end;
 end;
 

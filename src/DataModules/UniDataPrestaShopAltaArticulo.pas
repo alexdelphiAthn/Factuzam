@@ -165,10 +165,10 @@ const
 
   SQL_FOTOS =
     'SELECT CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT, ' +
-    'EXTENSION_ORIGEN_FOT FROM fza_articulos_fotos ' +
+    'EXTENSION_ORIGEN_FOT, ORDEN_FOT FROM fza_articulos_fotos ' +
     'WHERE CODIGO_ART_FOT = :ARTICULO ' +
     'ORDER BY CASE WHEN CODIGO_UNIDAD_FOT = '''' THEN 0 ELSE 1 END, ' +
-    'CODIGO_UNIDAD_FOT';
+    'CODIGO_UNIDAD_FOT, ORDEN_FOT';
 
 type
   TParametrosFotosPerfil = class(TInterfacedObject,
@@ -819,7 +819,11 @@ begin
           [oFoto.CodigoUnidad, AArticulo.Codigo]);
       oFoto.Nombre := Trim(
         oConsulta.FieldByName('NOMBRE_FOT_FOT').AsString);
-      oFoto.Principal := oFoto.CodigoUnidad = '';
+      // Sólo la primera foto general es la principal. Las restantes
+      // pertenecen a la misma galería, pero PrestaShop debe recibir una
+      // única imagen marcada como principal.
+      oFoto.Principal := (oFoto.CodigoUnidad = '') and
+        (oConsulta.FieldByName('ORDEN_FOT').AsInteger = 1);
       oInfo.Clear;
       oInfo.Encontrada := True;
       oInfo.CodigoArt := AArticulo.Codigo;

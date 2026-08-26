@@ -44,6 +44,7 @@ const
   foSku = inLibFotosTipos.foSku;
   fcodartfot = inLibFotosTipos.fcodartfot;
   fcodunidadfot = inLibFotosTipos.fcodunidadfot;
+  fordenfot = inLibFotosTipos.fordenfot;
   fnomfot = inLibFotosTipos.fnomfot;
   fextfot = inLibFotosTipos.fextfot;
   finstalta = inLibFotosTipos.finstalta;
@@ -78,15 +79,22 @@ type
       AResolucion: TFotoResolucion): string; override;
     function Resolver(const ACodArt,
       ACodSku: string): TFotoInfo; override;
+    function ResolverColeccion(const ACodArt,
+      ACodSku: string): TArray<TFotoInfo>;
     function ResolverArticulosLote(
       const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
     procedure PrecargarFotosLote(const ACodigos: TArray<string>);
     procedure LimpiarPrecargaFotos;
     function Guardar(const ACodArt, ACodSku, AFicheroOrigen,
       AUsuario: string): TFotoInfo;
+    function Anadir(const ACodArt, ACodSku, AFicheroOrigen,
+      AUsuario: string): TFotoInfo;
     function Rotar(const ACodArt, ACodSku: string;
-      AHorario: Boolean; const AUsuario: string): TFotoInfo;
-    procedure Eliminar(const ACodArt, ACodUnidad: string);
+      AHorario: Boolean; const AUsuario: string): TFotoInfo; overload;
+    function Rotar(const AInfo: TFotoInfo; AHorario: Boolean;
+      const AUsuario: string): TFotoInfo; overload;
+    procedure Eliminar(const ACodArt, ACodUnidad: string); overload;
+    procedure Eliminar(const AInfo: TFotoInfo); overload;
     procedure HandlerReportBeforePrint(
       Component: TfrxReportComponent);
     procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
@@ -175,6 +183,12 @@ begin
   Result := FConsulta.Resolver(ACodArt, ACodSku);
 end;
 
+function TFotosArticulos.ResolverColeccion(const ACodArt,
+  ACodSku: string): TArray<TFotoInfo>;
+begin
+  Result := FConsulta.ResolverColeccion(ACodArt, ACodSku);
+end;
+
 function TFotosArticulos.ResolverArticulosLote(
   const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
 begin
@@ -199,6 +213,13 @@ begin
     ACodArt, ACodSku, AFicheroOrigen, AUsuario);
 end;
 
+function TFotosArticulos.Anadir(const ACodArt, ACodSku,
+  AFicheroOrigen, AUsuario: string): TFotoInfo;
+begin
+  Result := FEdicion.Anadir(
+    ACodArt, ACodSku, AFicheroOrigen, AUsuario);
+end;
+
 function TFotosArticulos.Rotar(const ACodArt, ACodSku: string;
   AHorario: Boolean; const AUsuario: string): TFotoInfo;
 begin
@@ -206,10 +227,21 @@ begin
     ACodArt, ACodSku, AHorario, AUsuario);
 end;
 
+function TFotosArticulos.Rotar(const AInfo: TFotoInfo;
+  AHorario: Boolean; const AUsuario: string): TFotoInfo;
+begin
+  Result := FEdicion.Rotar(AInfo, AHorario, AUsuario);
+end;
+
 procedure TFotosArticulos.Eliminar(const ACodArt,
   ACodUnidad: string);
 begin
   FEdicion.Eliminar(ACodArt, ACodUnidad);
+end;
+
+procedure TFotosArticulos.Eliminar(const AInfo: TFotoInfo);
+begin
+  FEdicion.Eliminar(AInfo);
 end;
 
 procedure TFotosArticulos.HandlerReportBeforePrint(

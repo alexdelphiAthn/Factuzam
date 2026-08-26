@@ -301,10 +301,10 @@ begin
   try
     oConsulta.SQL.Text :=
       'INSERT INTO fza_articulos_fotos ' +
-      '  (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT, ' +
+      '  (CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, NOMBRE_FOT_FOT, ' +
       '   EXTENSION_ORIGEN_FOT, INSTANTE_ALTA, USUARIO_ALTA, ' +
       '   INSTANTE_MODIF, USUARIO_MODIF) ' +
-      'VALUES (:a, :u, :nom, :ext, NOW(), :usr, NOW(), :usr) ' +
+      'VALUES (:a, :u, 1, :nom, :ext, NOW(), :usr, NOW(), :usr) ' +
       'ON DUPLICATE KEY UPDATE ' +
       '  NOMBRE_FOT_FOT       = :nom, ' +
       '  EXTENSION_ORIGEN_FOT = :ext, ' +

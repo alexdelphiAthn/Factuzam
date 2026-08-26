@@ -3,6 +3,7 @@
   Caption = 'Foto del art'#237'culo / SKU'
   ClientHeight = 600
   ClientWidth = 720
+  Constraints.MinWidth = 736
   FormStyle = fsStayOnTop
   Position = poDesigned
   StyleElements = [seFont, seClient, seBorder]
@@ -49,6 +50,55 @@
       Visible = False
       Width = 69
       Transparent = True
+    end
+    object btnFotoAnterior: TcxButton
+      Left = 480
+      Top = 4
+      Width = 40
+      Height = 30
+      Anchors = [akTop, akRight]
+      Caption = '<'
+      Hint = 'Foto anterior'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 3
+      OnClick = btnFotoAnteriorClick
+    end
+    object lblNumeroFoto: TcxLabel
+      Left = 524
+      Top = 8
+      Anchors = [akTop, akRight]
+      Caption = '0/0'
+      Properties.Alignment.Horz = taCenter
+      TabOrder = 4
+      Transparent = True
+      Width = 76
+    end
+    object btnFotoSiguiente: TcxButton
+      Left = 604
+      Top = 4
+      Width = 40
+      Height = 30
+      Anchors = [akTop, akRight]
+      Caption = '>'
+      Hint = 'Foto siguiente'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 5
+      OnClick = btnFotoSiguienteClick
+    end
+    object btnAnadirFoto: TcxButton
+      Left = 648
+      Top = 4
+      Width = 64
+      Height = 30
+      Anchors = [akTop, akRight]
+      Caption = '+'
+      Hint = 'A'#241'adir foto'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 6
+      OnClick = btnAnadirFotoClick
     end
   end
   object pnlControles: TPanel [1]

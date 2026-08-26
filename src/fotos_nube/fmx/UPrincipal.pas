@@ -13,8 +13,8 @@
 {    fotos con la cámara (o elegirlas de la galería) asociándolas a un código  }
 {    de artículo y un color, las reduce a la resolución máxima configurada     }
 {    (por defecto 1000 px), las acumula en una cola por lotes y las sube al    }
-{    endpoint de fotos de la API v1 de Factuzam. Si hay varias fotos del       }
-{    fotos del mismo artículo+color se les asigna un índice correlativo.       }
+{    endpoint de fotos de la API v1 de Factuzam. El índice visible identifica }
+{    cada foto y vale 1 por defecto.                                           }
 {******************************************************************************}
 unit UPrincipal;
 
@@ -35,10 +35,14 @@ type
     TabControl1: TTabControl;
     tabCapturar: TTabItem;
     tabConfig: TTabItem;
+    cajaCaptura: TVertScrollBox;
+    lytCaptura: TLayout;
     lblArticulo: TLabel;
     edArticulo: TEdit;
     lblColor: TLabel;
     edColor: TEdit;
+    lblIndice: TLabel;
+    edIndice: TEdit;
     imgPrevia: TImage;
     btnCamara: TButton;
     btnGaleria: TButton;
@@ -61,6 +65,7 @@ type
     actElegirFoto: TTakePhotoFromLibraryAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure btnCamaraClick(Sender: TObject);
     procedure btnGaleriaClick(Sender: TObject);
     procedure btnSubirClick(Sender: TObject);
@@ -70,11 +75,16 @@ type
   private
     FConfig: TConfigFotos;
     FCola: TColaFotos;
+    FArticuloCaptura: string;
+    FColorCaptura: string;
+    FIndiceCaptura: Integer;
+    FSubidaEnCurso: Boolean;
     procedure Log(const S: string);
     procedure ConfigAUI;
     procedure UIAConfig;
     procedure RefrescarCola;
     procedure ProcesarImagen(const AImagen: TBitmap);
+    procedure EstablecerSubidaEnCurso(const AValor: Boolean);
     // Pide el permiso de camara (Android) y, si se concede, ejecuta
     // ATrasConceder. En el resto de plataformas ejecuta directamente.
     procedure ConPermisoCamara(const ATrasConceder: TProc);
@@ -96,7 +106,7 @@ uses
 {$ENDIF}
 
 const
-  cVersionApp = '1.0.0.202605290000.alpha';
+  cVersionApp = '1.0.0.202608260001.alpha';
 
 procedure TfrmPrincipal.Log(const S: string);
 begin
@@ -110,16 +120,32 @@ begin
   FConfig := TConfigFotos.Create;
   FConfig.Cargar;
   FCola := TColaFotos.Create;
+  EstablecerSubidaEnCurso(False);
   ConfigAUI;
   RefrescarCola;
   Log('Factuzam Fotos Nube ' + cVersionApp);
   Log('Configuración: ' + FConfig.RutaIni);
 end;
 
+procedure TfrmPrincipal.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := not FSubidaEnCurso;
+  if not CanClose then
+    Log('Espera a que termine la subida antes de cerrar la aplicación');
+end;
+
 procedure TfrmPrincipal.FormDestroy(Sender: TObject);
 begin
   FCola.Free;
   FConfig.Free;
+end;
+
+procedure TfrmPrincipal.EstablecerSubidaEnCurso(const AValor: Boolean);
+begin
+  FSubidaEnCurso := AValor;
+  btnCamara.Enabled := not AValor;
+  btnGaleria.Enabled := not AValor;
+  btnSubir.Enabled := not AValor;
 end;
 
 procedure TfrmPrincipal.ConfigAUI;
@@ -181,9 +207,11 @@ begin
 end;
 
 function TfrmPrincipal.ValidarDatosFoto: Boolean;
+var
+  Indice: Integer;
 begin
-  // Artículo y color son obligatorios: el webservice nombra el fichero
-  // como ARTICULO_COLOR_INDICE y exige los tres campos no vacíos.
+  // El webservice nombra el fichero como ARTICULO_COLOR_INDICE y exige los
+  // tres valores. El índice debe ser un entero positivo.
   Result := True;
   if Trim(edArticulo.Text) = '' then
   begin
@@ -196,6 +224,20 @@ begin
     Log('Indica el color antes de hacer la foto');
     edColor.SetFocus;
     Result := False;
+  end
+  else if (not TryStrToInt(Trim(edIndice.Text), Indice)) or (Indice < 1) then
+  begin
+    Log('El índice de foto debe ser un número entero mayor o igual que 1');
+    edIndice.SetFocus;
+    Result := False;
+  end
+  else
+  begin
+    // Normaliza ceros a la izquierda y espacios antes de encolar.
+    edIndice.Text := IntToStr(Indice);
+    FArticuloCaptura := Trim(edArticulo.Text);
+    FColorCaptura := Trim(edColor.Text);
+    FIndiceCaptura := Indice;
   end;
 end;
 
@@ -238,6 +280,14 @@ var
   Reducida: TBitmap;
   Ruta: string;
 begin
+  // La actividad de cámara/galería puede devolver el resultado después de
+  // haber empezado un lote. No se modifica la cola mientras el hilo la usa.
+  if FSubidaEnCurso then
+  begin
+    Log('Foto descartada: hay una subida en curso');
+    Exit;
+  end;
+
   // Aplicamos el tope de resolución (defensivo, además del de la
   // captura) y guardamos la foto en JPG para encolarla con su
   // artículo+color.
@@ -249,11 +299,23 @@ begin
     Ruta := System.IOUtils.TPath.Combine(System.IOUtils.TPath.GetTempPath,
       'foto_' + FormatDateTime('yyyymmdd_hhnnsszzz', Now) + '.jpg');
     Reducida.SaveToFile(Ruta);
-    FCola.Add(Ruta, Trim(edArticulo.Text), Trim(edColor.Text));
+    try
+      FCola.Add(Ruta, FArticuloCaptura, FColorCaptura, FIndiceCaptura);
+    except
+      on E: Exception do
+      begin
+        if System.IOUtils.TFile.Exists(Ruta) then
+          System.IOUtils.TFile.Delete(Ruta);
+        Log('Foto no encolada: ' + E.Message);
+        Exit;
+      end;
+    end;
     RefrescarCola;
-    Log(Format('Foto encolada %dx%d: %s / %s',
-      [Reducida.Width, Reducida.Height, Trim(edArticulo.Text),
-       Trim(edColor.Text)]));
+    Log(Format('Foto encolada %dx%d: %s / %s / índice %d',
+      [Reducida.Width, Reducida.Height, FArticuloCaptura,
+       FColorCaptura, FIndiceCaptura]));
+    if FIndiceCaptura < MaxInt then
+      edIndice.Text := IntToStr(FIndiceCaptura + 1);
   finally
     Reducida.Free;
   end;
@@ -273,6 +335,7 @@ begin
       Etiqueta := Item.Articulo;
       if Item.Color <> '' then
         Etiqueta := Etiqueta + ' / ' + Item.Color;
+      Etiqueta := Etiqueta + ' / foto ' + Item.Indice;
       // La apariencia por defecto del TListView solo muestra Text, asi
       // que metemos el estado en la misma linea para no perderlo.
       Etiqueta := Etiqueta + '  [' + EstadoTexto(Item.Estado) + ']';
@@ -287,6 +350,9 @@ end;
 
 procedure TfrmPrincipal.btnSubirClick(Sender: TObject);
 begin
+  if FSubidaEnCurso then
+    Exit;
+
   UIAConfig;
   if FConfig.Url = '' then
   begin
@@ -305,24 +371,34 @@ begin
     FCola.Url := FConfig.Url;
     FCola.ApiKey := FConfig.ApiKey;
     FCola.CarpetaCliente := FConfig.CarpetaCliente;
-    btnSubir.Enabled := False;
-    Log('Subiendo lote de fotos...');
-    FCola.SubirTodasAsync(
-      procedure(const AItem: TFotoItem)
+    try
+      EstablecerSubidaEnCurso(True);
+      Log('Subiendo lote de fotos...');
+      FCola.SubirTodasAsync(
+        procedure(const AItem: TFotoItem)
+        begin
+          RefrescarCola;
+          if AItem.Estado = esError then
+            Log('Error en ' + AItem.Articulo + ': ' + AItem.Mensaje)
+          else if AItem.Estado = esOk then
+            Log('OK ' + AItem.Articulo + ' (sha1 ' + AItem.Hash + ')');
+        end,
+        procedure(const AOk, AError: Integer)
+        begin
+          // Se desbloquea primero para que incluso un fallo al refrescar o
+          // escribir el log no deje la aplicación atrapada.
+          EstablecerSubidaEnCurso(False);
+          RefrescarCola;
+          Log(Format('Lote finalizado: %d OK, %d con error',
+            [AOk, AError]));
+        end);
+    except
+      on E: Exception do
       begin
-        RefrescarCola;
-        if AItem.Estado = esError then
-          Log('Error en ' + AItem.Articulo + ': ' + AItem.Mensaje)
-        else if AItem.Estado = esOk then
-          Log('OK ' + AItem.Articulo + ' (sha1 ' + AItem.Hash + ')');
-      end,
-      procedure(const AOk, AError: Integer)
-      begin
-        btnSubir.Enabled := True;
-        RefrescarCola;
-        Log(Format('Lote finalizado: %d OK, %d con error',
-          [AOk, AError]));
-      end);
+        EstablecerSubidaEnCurso(False);
+        Log('No se pudo iniciar la subida: ' + E.Message);
+      end;
+    end;
   end;
 end;
 

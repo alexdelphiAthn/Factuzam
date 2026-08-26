@@ -45,6 +45,7 @@ function buscar_foto(PDO $pdo, string $articulo, string $unidad): ?array
              ON a.CODIGO_ART_ART = f.CODIGO_ART_FOT
             AND a.ESACTIVO_ART = 'S'
           WHERE f.CODIGO_ART_FOT = :articulo
+            AND f.ORDEN_FOT = 1
           ORDER BY f.CODIGO_UNIDAD_FOT, f.NOMBRE_FOT_FOT"
     );
     $consulta->execute(['articulo' => $articulo]);

@@ -8,6 +8,7 @@ object frmPrincipal: TfrmPrincipal
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop, iPhone, iPad]
   OnCreate = FormCreate
+  OnCloseQuery = FormCloseQuery
   OnDestroy = FormDestroy
   DesignerMasterStyle = 0
   object memoLog: TMemo
@@ -50,6 +51,20 @@ object frmPrincipal: TfrmPrincipal
       Text = 'Capturar'
       ExplicitSize.cx = 100.000000000000000000
       ExplicitSize.cy = 50.000000000000000000
+      object cajaCaptura: TVertScrollBox
+        Align = Client
+        Size.Width = 360.000000000000000000
+        Size.Height = 484.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Viewport.Width = 360.000000000000000000
+        Viewport.Height = 484.000000000000000000
+        object lytCaptura: TLayout
+          Align = Top
+          Size.Width = 360.000000000000000000
+          Size.Height = 560.000000000000000000
+          Size.PlatformDefault = False
+          TabOrder = 0
       object lblArticulo: TLabel
         Align = Top
         Margins.Left = 6.000000000000000000
@@ -102,6 +117,34 @@ object frmPrincipal: TfrmPrincipal
         Size.PlatformDefault = False
         TextPrompt = 'Color'
       end
+      object lblIndice: TLabel
+        Align = Top
+        Margins.Left = 6.000000000000000000
+        Margins.Top = 4.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Position.X = 6.000000000000000000
+        Position.Y = 130.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 18.000000000000000000
+        Size.PlatformDefault = False
+        Text = #205'ndice de foto (m'#237'nimo 1)'
+        TabOrder = 4
+      end
+      object edIndice: TEdit
+        Touch.InteractiveGestures = [LongTap, DoubleTap]
+        Align = Top
+        TabOrder = 5
+        KeyboardType = NumberPad
+        Text = '1'
+        Position.X = 6.000000000000000000
+        Position.Y = 148.000000000000000000
+        Margins.Left = 6.000000000000000000
+        Margins.Right = 6.000000000000000000
+        Size.Width = 348.000000000000000000
+        Size.Height = 40.000000000000000000
+        Size.PlatformDefault = False
+        TextPrompt = #205'ndice de foto'
+      end
       object imgPrevia: TImage
         MultiResBitmap = <
           item
@@ -111,9 +154,9 @@ object frmPrincipal: TfrmPrincipal
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 132.000000000000000000
+        Position.Y = 194.000000000000000000
         Size.Width = 348.000000000000000000
-        Size.Height = 140.000000000000000000
+        Size.Height = 90.000000000000000000
         Size.PlatformDefault = False
       end
       object btnCamara: TButton
@@ -122,11 +165,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 278.000000000000000000
+        Position.Y = 290.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 6
         Text = 'Hacer foto'
         OnClick = btnCamaraClick
       end
@@ -136,11 +179,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Top = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 328.000000000000000000
+        Position.Y = 340.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 5
+        TabOrder = 7
         Text = 'Elegir de galer'#237'a'
         OnClick = btnGaleriaClick
       end
@@ -151,11 +194,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Right = 6.000000000000000000
         Margins.Bottom = 6.000000000000000000
         Position.X = 6.000000000000000000
-        Position.Y = 434.000000000000000000
+        Position.Y = 510.000000000000000000
         Size.Width = 348.000000000000000000
         Size.Height = 44.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 6
+        TabOrder = 8
         Text = 'Subir todas (0)'
         OnClick = btnSubirClick
       end
@@ -168,9 +211,11 @@ object frmPrincipal: TfrmPrincipal
         Margins.Left = 6.000000000000000000
         Margins.Right = 6.000000000000000000
         Size.Width = 348.000000000000000000
-        Size.Height = 56.000000000000000000
+        Size.Height = 120.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 7
+        TabOrder = 9
+      end
+        end
       end
     end
     object tabConfig: TTabItem

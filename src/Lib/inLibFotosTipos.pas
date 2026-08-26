@@ -21,6 +21,7 @@ uses
 const
   fcodartfot = 'CODIGO_ART_FOT';
   fcodunidadfot = 'CODIGO_UNIDAD_FOT';
+  fordenfot = 'ORDEN_FOT';
   fnomfot = 'NOMBRE_FOT_FOT';
   fextfot = 'EXTENSION_ORIGEN_FOT';
   finstalta = 'INSTANTE_ALTA';
@@ -43,6 +44,7 @@ type
     CodigoArt       : string;
     CodigoSku       : string;
     ClaveResuelta   : string;
+    Orden           : Integer;
     NombreBase      : string;
     ExtensionOrigen : string;
     procedure Clear;
@@ -67,6 +69,7 @@ begin
   CodigoArt := '';
   CodigoSku := '';
   ClaveResuelta := '';
+  Orden := 0;
   NombreBase := '';
   ExtensionOrigen := '';
 end;

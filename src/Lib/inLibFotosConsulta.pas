@@ -38,6 +38,8 @@ type
     procedure LiberarServicios;
     function Resolver(const ACodigoArticulo,
       ACodigoSku: string): TFotoInfo;
+    function ResolverColeccion(const ACodigoArticulo,
+      ACodigoSku: string): TArray<TFotoInfo>;
     function ResolverArticulosLote(
       const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
     procedure PrecargarFotosLote(const ACodigos: TArray<string>);
@@ -191,6 +193,7 @@ begin
           else
             Result.Origen := foSkuPrefijo;
           Result.ClaveResuelta := oMetadatos.CodigoUnidad;
+          Result.Orden := oMetadatos.Orden;
           Result.NombreBase := oMetadatos.Nombre;
           Result.ExtensionOrigen := oMetadatos.Extension;
         end;
@@ -204,6 +207,7 @@ begin
           Result.Encontrada := True;
           Result.Origen := foArticulo;
           Result.ClaveResuelta := '';
+          Result.Orden := oMetadatos.Orden;
           Result.NombreBase := oMetadatos.Nombre;
           Result.ExtensionOrigen := oMetadatos.Extension;
         end;
@@ -217,11 +221,40 @@ begin
           Result.Encontrada := True;
           Result.Origen := foSkuPrefijo;
           Result.ClaveResuelta := oMetadatos.CodigoUnidad;
+          Result.Orden := oMetadatos.Orden;
           Result.NombreBase := oMetadatos.Nombre;
           Result.ExtensionOrigen := oMetadatos.Extension;
         end;
       end;
     end;
+  end;
+end;
+
+function TConsultaFotos.ResolverColeccion(const ACodigoArticulo,
+  ACodigoSku: string): TArray<TFotoInfo>;
+var
+  oPrincipal: TFotoInfo;
+  aMetadatos: TArray<TMetadatosFotoPersistida>;
+  iFoto: Integer;
+begin
+  SetLength(Result, 0);
+  oPrincipal := Resolver(ACodigoArticulo, ACodigoSku);
+  if not oPrincipal.Encontrada then
+    Exit;
+  aMetadatos := FRepositorio.BuscarFotosColeccion(
+    ACodigoArticulo, oPrincipal.ClaveResuelta);
+  SetLength(Result, Length(aMetadatos));
+  for iFoto := 0 to High(aMetadatos) do
+  begin
+    Result[iFoto].Clear;
+    Result[iFoto].Encontrada := True;
+    Result[iFoto].Origen := oPrincipal.Origen;
+    Result[iFoto].CodigoArt := ACodigoArticulo;
+    Result[iFoto].CodigoSku := ACodigoSku;
+    Result[iFoto].ClaveResuelta := aMetadatos[iFoto].CodigoUnidad;
+    Result[iFoto].Orden := aMetadatos[iFoto].Orden;
+    Result[iFoto].NombreBase := aMetadatos[iFoto].Nombre;
+    Result[iFoto].ExtensionOrigen := aMetadatos[iFoto].Extension;
   end;
 end;
 
@@ -235,9 +268,11 @@ var
   sUnidad        : string;
   sNombreArticulo: string;
   sExtArticulo   : string;
+  iOrdenArticulo : Integer;
   sUnidadPrimera : string;
   sNombrePrimero : string;
   sExtPrimera    : string;
+  iOrdenPrimero  : Integer;
   iFotosArticulo : Integer;
   iFoto          : Integer;
   bFotoArticulo  : Boolean;
@@ -254,6 +289,7 @@ var
       begin
         oInfo.Encontrada := True;
         oInfo.Origen := foArticulo;
+        oInfo.Orden := iOrdenArticulo;
         oInfo.NombreBase := sNombreArticulo;
         oInfo.ExtensionOrigen := sExtArticulo;
       end
@@ -265,6 +301,7 @@ var
         else
           oInfo.Origen := foSkuPrefijo;
         oInfo.ClaveResuelta := sUnidadPrimera;
+        oInfo.Orden := iOrdenPrimero;
         oInfo.NombreBase := sNombrePrimero;
         oInfo.ExtensionOrigen := sExtPrimera;
       end;
@@ -285,8 +322,10 @@ begin
       sUnidadPrimera := '';
       sNombrePrimero := '';
       sExtPrimera := '';
+      iOrdenPrimero := 0;
       sNombreArticulo := '';
       sExtArticulo := '';
+      iOrdenArticulo := 0;
       for iFoto := 0 to High(aMetadatos) do
       begin
         sArticulo := aMetadatos[iFoto].CodigoArticulo;
@@ -297,6 +336,13 @@ begin
           sArticuloActual := sArticulo;
           iFotosArticulo := 0;
           bFotoArticulo := False;
+          sUnidadPrimera := '';
+          sNombrePrimero := '';
+          sExtPrimera := '';
+          iOrdenPrimero := 0;
+          sNombreArticulo := '';
+          sExtArticulo := '';
+          iOrdenArticulo := 0;
         end;
         Inc(iFotosArticulo);
         if iFotosArticulo = 1 then
@@ -304,12 +350,14 @@ begin
           sUnidadPrimera := sUnidad;
           sNombrePrimero := aMetadatos[iFoto].Nombre;
           sExtPrimera := aMetadatos[iFoto].Extension;
+          iOrdenPrimero := aMetadatos[iFoto].Orden;
         end;
         if sUnidad = '' then
         begin
           bFotoArticulo := True;
           sNombreArticulo := aMetadatos[iFoto].Nombre;
           sExtArticulo := aMetadatos[iFoto].Extension;
+          iOrdenArticulo := aMetadatos[iFoto].Orden;
         end;
       end;
       FinalizarArticulo(sArticuloActual);

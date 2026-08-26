@@ -330,6 +330,7 @@ begin
           ' SELECT CODIGO_UNIDAD_FOT, NOMBRE_FOT_FOT ' +
           ' FROM fza_articulos_fotos ' +
           ' WHERE CODIGO_ART_FOT = :ART ' +
+          '   AND ORDEN_FOT = 1 ' +
           '   AND (CODIGO_UNIDAD_FOT = :SKU ' +
           '        OR :SKU LIKE CONCAT(CODIGO_UNIDAD_FOT, ''/%'') ' +
           '        OR CODIGO_UNIDAD_FOT = '''') ' +

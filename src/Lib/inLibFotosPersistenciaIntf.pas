@@ -23,6 +23,7 @@ type
   TMetadatosFotoPersistida = record
     CodigoArticulo: string;
     CodigoUnidad: string;
+    Orden: Integer;
     Nombre: string;
     Extension: string;
   end;
@@ -41,21 +42,47 @@ type
     function BuscarFotosArticulos(
       const ACodigosArticulo: TArray<string>):
       TArray<TMetadatosFotoPersistida>;
+    function BuscarFotosColeccion(
+      const ACodigoArticulo, ACodigoUnidad: string):
+      TArray<TMetadatosFotoPersistida>;
   end;
   IRepositorioEdicionFotos = interface
     ['{52F8D4B6-F889-4663-B8FC-1C2E9A3DB102}']
     function BuscarFotoEditable(
       const ACodigoArticulo, ACodigoUnidad: string;
-      out AMetadatos: TMetadatosFotoPersistida): Boolean;
+      out AMetadatos: TMetadatosFotoPersistida): Boolean; overload;
+    function BuscarFotoEditable(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrden: Integer;
+      out AMetadatos: TMetadatosFotoPersistida): Boolean; overload;
+    function BuscarFotosEditables(
+      const ACodigoArticulo, ACodigoUnidad: string):
+      TArray<TMetadatosFotoPersistida>;
     procedure GuardarFoto(
       const AMetadatos: TMetadatosFotoPersistida;
+      const ANombreAnterior, AUsuario: string);
+    procedure AnadirFoto(
+      var AMetadatos: TMetadatosFotoPersistida;
       const AUsuario: string);
     procedure ActualizarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad, ANombre, AUsuario: string);
+      const ACodigoArticulo, ACodigoUnidad, ANombre,
+        AUsuario: string); overload;
+    procedure ActualizarNombreFoto(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrden: Integer;
+      const ANombreAnterior, ANombre,
+        AUsuario: string); overload;
     function BuscarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad: string): string;
+      const ACodigoArticulo, ACodigoUnidad: string): string; overload;
+    function BuscarNombreFoto(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrden: Integer): string; overload;
     procedure EliminarFoto(
-      const ACodigoArticulo, ACodigoUnidad: string);
+      const ACodigoArticulo, ACodigoUnidad: string); overload;
+    procedure EliminarFoto(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrden: Integer;
+      const ANombreEsperado: string); overload;
   end;
   TRepositoriosFotos = record
     Consulta: IRepositorioConsultaFotos;

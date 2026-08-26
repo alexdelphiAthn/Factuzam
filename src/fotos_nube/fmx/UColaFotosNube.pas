@@ -11,8 +11,7 @@
 {  Descripción:                                                                }
 {    Cola de subida por lotes de fotos al webservice de Factuzam              }
 {    (API v1 /fotos/subir.php). Cada foto se identifica por código de         }
-{    artículo y color; si hay más de una foto del mismo artículo+color se les  }
-{    asigna un índice correlativo. La subida se hace en un hilo de fondo y va  }
+{    artículo, color e índice. La subida se hace en un hilo de fondo y va      }
 {    notificando el estado de cada elemento a la interfaz. Mismo contrato      }
 {    multipart que el cliente VCL existente (UFotoUploader).                   }
 {******************************************************************************}
@@ -54,25 +53,32 @@ type
     FUrl: string;
     FApiKey: string;
     FCarpetaCliente: string;
+    FSubiendo: Boolean;
+    function GetItems: TEnumerable<TFotoItem>;
     function SubirUno(const AItem: TFotoItem): Boolean;
-    // Índice correlativo (1..n) de la foto dentro de su grupo
-    // artículo+color. Se envía siempre porque el webservice exige
-    // articulo+color+indice no vacíos para nombrar el fichero; cuando
-    // sólo hay una foto del grupo el índice es 1.
+    // Compatibilidad con los llamadores que no indican el índice: calcula
+    // el siguiente índice libre tras el máximo de su grupo artículo+color.
     function CalcularIndice(const AItem: TFotoItem): string;
     procedure NotificarItem(const AProgreso: TProgresoFotoProc;
       const AItem: TFotoItem);
   public
     constructor Create;
     destructor Destroy; override;
+    // La firma histórica conserva el índice correlativo automático.
     function Add(const AArchivo, AArticulo, AColor: string): TFotoItem;
+      overload;
+    // La app usa esta firma para conservar el índice elegido al capturar.
+    function Add(const AArchivo, AArticulo, AColor: string;
+      const AIndice: Integer): TFotoItem; overload;
     procedure Limpiar;
     function PendientesCount: Integer;
     // Sube en segundo plano todas las fotos no subidas. Notifica por
     // AProgreso cada cambio de estado y AFin al terminar el lote.
     procedure SubirTodasAsync(AProgreso: TProgresoFotoProc;
       AFin: TFinLoteProc);
-    property Items: TObjectList<TFotoItem> read FItems;
+    // Vista de solo lectura: las mutaciones deben pasar por Add/Limpiar para
+    // respetar la guardia de una subida en curso.
+    property Items: TEnumerable<TFotoItem> read GetItems;
     property Url: string read FUrl write FUrl;
     property ApiKey: string read FApiKey write FApiKey;
     property CarpetaCliente: string read FCarpetaCliente
@@ -102,6 +108,7 @@ constructor TColaFotos.Create;
 begin
   inherited Create;
   FItems := TObjectList<TFotoItem>.Create(True);
+  FSubiendo := False;
 end;
 
 destructor TColaFotos.Destroy;
@@ -112,16 +119,53 @@ end;
 
 function TColaFotos.Add(const AArchivo, AArticulo, AColor: string): TFotoItem;
 begin
+  if FSubiendo then
+    raise Exception.Create('No se pueden añadir fotos durante una subida');
   Result := TFotoItem.Create;
   Result.Archivo := AArchivo;
   Result.Articulo := AArticulo;
   Result.Color := AColor;
   Result.Estado := esPendiente;
   FItems.Add(Result);
+  Result.Indice := CalcularIndice(Result);
+end;
+
+function TColaFotos.GetItems: TEnumerable<TFotoItem>;
+begin
+  Result := FItems;
+end;
+
+function TColaFotos.Add(const AArchivo, AArticulo, AColor: string;
+  const AIndice: Integer): TFotoItem;
+var
+  Otro: TFotoItem;
+begin
+  if FSubiendo then
+    raise Exception.Create('No se pueden añadir fotos durante una subida');
+  if AIndice < 1 then
+    raise EArgumentException.Create('El índice de foto debe ser mayor o igual que 1');
+  for Otro in FItems do
+    if (Otro.Estado <> esOk) and
+       SameText(Trim(Otro.Articulo), Trim(AArticulo)) and
+       SameText(Trim(Otro.Color), Trim(AColor)) and
+       (StrToIntDef(Otro.Indice, 0) = AIndice) then
+      raise EArgumentException.CreateFmt(
+        'Ya hay una foto pendiente para %s / %s / índice %d',
+        [AArticulo, AColor, AIndice]);
+
+  Result := TFotoItem.Create;
+  Result.Archivo := AArchivo;
+  Result.Articulo := AArticulo;
+  Result.Color := AColor;
+  Result.Indice := IntToStr(AIndice);
+  Result.Estado := esPendiente;
+  FItems.Add(Result);
 end;
 
 procedure TColaFotos.Limpiar;
 begin
+  if FSubiendo then
+    raise Exception.Create('No se puede vaciar la cola durante una subida');
   FItems.Clear;
 end;
 
@@ -138,26 +182,22 @@ end;
 function TColaFotos.CalcularIndice(const AItem: TFotoItem): string;
 var
   Otro: TFotoItem;
-  Ordinal: Integer;
-  Encontrado: Boolean;
+  IndiceOtro: Integer;
+  Siguiente: Integer;
 begin
-  // Posición (1..n) de esta foto dentro de su grupo artículo+color, en
-  // el orden de la cola. Siempre >= 1: el webservice nombra el fichero
-  // como ARTICULO_COLOR_INDICE y exige el índice no vacío.
-  Ordinal := 0;
-  Encontrado := False;
+  // Usar máximo+1 evita colisiones si un llamador histórico comparte cola
+  // con fotos que ya traen índices explícitos o no correlativos.
+  Siguiente := 1;
   for Otro in FItems do
-  begin
-    if (not Encontrado) and
-       SameText(Otro.Articulo, AItem.Articulo) and
-       SameText(Otro.Color, AItem.Color) then
+    if (Otro <> AItem) and
+       SameText(Trim(Otro.Articulo), Trim(AItem.Articulo)) and
+       SameText(Trim(Otro.Color), Trim(AItem.Color)) then
     begin
-      Inc(Ordinal);
-      if Otro = AItem then
-        Encontrado := True;
+      IndiceOtro := StrToIntDef(Otro.Indice, 0);
+      if IndiceOtro >= Siguiente then
+        Siguiente := IndiceOtro + 1;
     end;
-  end;
-  Result := IntToStr(Ordinal);
+  Result := IntToStr(Siguiente);
 end;
 
 function TColaFotos.SubirUno(const AItem: TFotoItem): Boolean;
@@ -174,7 +214,10 @@ var
   Cuerpo: string;
 begin
   Result := False;
-  AItem.Indice := CalcularIndice(AItem);
+  // Los elementos nuevos ya traen el índice elegido en la interfaz. Este
+  // fallback conserva la compatibilidad con colas creadas por código antiguo.
+  if StrToIntDef(AItem.Indice, 0) < 1 then
+    AItem.Indice := CalcularIndice(AItem);
   HTTP := THTTPClient.Create;
   try
     Form := TMultipartFormData.Create;
@@ -258,38 +301,66 @@ end;
 
 procedure TColaFotos.SubirTodasAsync(AProgreso: TProgresoFotoProc;
   AFin: TFinLoteProc);
+var
+  Lote: TArray<TFotoItem>;
 begin
+  if FSubiendo then
+    raise Exception.Create('Ya hay una subida en curso');
+
+  // La instantánea evita enumerar TObjectList desde el hilo mientras la UI
+  // pudiera intentar modificarla. Los elementos siguen perteneciendo a
+  // FItems y el formulario impide cerrarse hasta recibir AFin.
+  Lote := FItems.ToArray;
+  FSubiendo := True;
   // Hilo de fondo: la subida no debe bloquear la interfaz.
-  TThread.CreateAnonymousThread(
-    procedure
-    var
-      Item: TFotoItem;
-      TotalOk: Integer;
-      TotalError: Integer;
-    begin
-      TotalOk := 0;
-      TotalError := 0;
-      for Item in FItems do
+  try
+    TThread.CreateAnonymousThread(
+      procedure
+      var
+        Item: TFotoItem;
+        TotalOk: Integer;
+        TotalError: Integer;
       begin
-        // Saltamos las que ya están subidas correctamente.
-        if Item.Estado <> esOk then
-        begin
-          Item.Estado := esSubiendo;
-          NotificarItem(AProgreso, Item);
-          if SubirUno(Item) then
-            Inc(TotalOk)
-          else
-            Inc(TotalError);
-          NotificarItem(AProgreso, Item);
-        end;
-      end;
-      if Assigned(AFin) then
-        TThread.Queue(nil,
-          procedure
+        TotalOk := 0;
+        TotalError := 0;
+        try
+          for Item in Lote do
           begin
-            AFin(TotalOk, TotalError);
-          end);
-    end).Start;
+            // Saltamos las que ya están subidas correctamente.
+            if Item.Estado <> esOk then
+            begin
+              try
+                Item.Estado := esSubiendo;
+                NotificarItem(AProgreso, Item);
+                if SubirUno(Item) then
+                  Inc(TotalOk)
+                else
+                  Inc(TotalError);
+              except
+                on E: Exception do
+                begin
+                  Item.Estado := esError;
+                  Item.Mensaje := E.Message;
+                  Inc(TotalError);
+                end;
+              end;
+              NotificarItem(AProgreso, Item);
+            end;
+          end;
+        finally
+          FSubiendo := False;
+          if Assigned(AFin) then
+            TThread.Queue(nil,
+              procedure
+              begin
+                AFin(TotalOk, TotalError);
+              end);
+        end;
+      end).Start;
+  except
+    FSubiendo := False;
+    raise;
+  end;
 end;
 
 end.

@@ -170,6 +170,7 @@ begin
   Result.CodigoArt := ACodigoArticuloTentativo;
   Result.CodigoSku := ACodigoUnidad;
   Result.ClaveResuelta := ACodigoUnidad;
+  Result.Orden := 1;
   Result.NombreBase := sNombreNuevo;
   Result.ExtensionOrigen := sExtension;
 end;
@@ -248,6 +249,7 @@ begin
     Result.CodigoArt := oMetadatos.CodigoArticuloTentativo;
     Result.CodigoSku := ACodigoSolicitado;
     Result.ClaveResuelta := ACodigoUnidad;
+    Result.Orden := 1;
     Result.NombreBase := oMetadatos.Nombre;
     Result.ExtensionOrigen := oMetadatos.Extension;
   end;
@@ -333,6 +335,7 @@ begin
   Result.CodigoArt := oMetadatos.CodigoArticuloTentativo;
   Result.CodigoSku := ACodigoUnidad;
   Result.ClaveResuelta := ACodigoUnidad;
+  Result.Orden := 1;
   Result.NombreBase := sNombreNuevo;
   Result.ExtensionOrigen := oMetadatos.Extension;
 end;

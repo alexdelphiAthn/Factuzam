@@ -1310,7 +1310,8 @@ begin
       TABLA_TEMPORAL + '` mapa ON mapa.`ORIGEN` = ' +
       'origen.`CODIGO_UNIDAD_FOT` JOIN `fza_articulos_fotos` destino ' +
       'ON destino.`CODIGO_UNIDAD_FOT` = mapa.`DESTINO` AND ' +
-      'destino.`CODIGO_ART_FOT` = ' + sArticuloDestino + ' LIMIT 1',
+      'destino.`CODIGO_ART_FOT` = ' + sArticuloDestino + ' AND ' +
+      'destino.`ORDEN_FOT` = origen.`ORDEN_FOT` LIMIT 1',
       ['ARTICULO'],
       [AArticuloDestino]);
   end;
@@ -2683,7 +2684,8 @@ begin
       'origen.`CODIGO_UNIDAD_FOT` JOIN `fza_articulos_fotos` destino ' +
       'ON destino.`CODIGO_ART_FOT` = :NUEVO AND ' +
       'destino.`CODIGO_UNIDAD_FOT` = COALESCE(' +
-      'mapa.`DESTINO`, origen.`CODIGO_UNIDAD_FOT`) ' +
+      'mapa.`DESTINO`, origen.`CODIGO_UNIDAD_FOT`) AND ' +
+      'destino.`ORDEN_FOT` = origen.`ORDEN_FOT` ' +
       'WHERE origen.`CODIGO_ART_FOT` = :ANTERIOR LIMIT 1',
       ['ANTERIOR', 'NUEVO'],
       [AAnterior, ANuevo]);

@@ -54,6 +54,10 @@ type
     btnToggle        : TcxButton;
     btnDescargarNube : TcxButton;
     lblOrigen        : TcxLabel;
+    btnFotoAnterior  : TcxButton;
+    lblNumeroFoto    : TcxLabel;
+    btnFotoSiguiente : TcxButton;
+    btnAnadirFoto    : TcxButton;
     pnlControles     : TPanel;
     rgResolucion     : TcxRadioGroup;
     lblNivel         : TcxLabel;
@@ -81,6 +85,9 @@ type
     procedure btnRotarIzqClick(Sender: TObject);
     procedure btnRotarDerClick(Sender: TObject);
     procedure btnLayoutClick(Sender: TObject);
+    procedure btnFotoAnteriorClick(Sender: TObject);
+    procedure btnFotoSiguienteClick(Sender: TObject);
+    procedure btnAnadirFotoClick(Sender: TObject);
   private
     FCodigoArt              : string;
     FCodigoSku              : string;
@@ -104,7 +111,16 @@ type
     FCodigoArtTentativoSesion: string;
     FCodigoUnidadSesion     : string;
     FFotoDefinitivaSesion   : Boolean;
+    FFotosColeccion         : TArray<TFotoInfo>;
+    FIndiceFoto             : Integer;
     procedure CargarFotoActual;
+    procedure CargarColeccionArticulo(
+      const ANombrePreferido: string;
+      AOrdenPreferido, AIndiceAlternativo: Integer);
+    procedure SeleccionarFoto(AIndice: Integer);
+    procedure ActualizarControlesGaleria;
+    procedure ActualizarOrigenFotoArticulo;
+    procedure ActualizarCaptionArticulo;
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
     function  ClaveNivelSeleccionado: string;
@@ -228,6 +244,8 @@ begin
   FGpImagen        := nil;
   FModoSesion      := False;
   FLineaSesion     := 0;
+  FFotosColeccion  := nil;
+  FIndiceFoto      := -1;
   // El bitmap GDI+ ya viene al tamaño del control; que TImage NO lo reescale
   // (si no, al cambiar el area -p.ej. colapsar el panel de controles- la foto
   // sale pequeña hasta el siguiente repintado).
@@ -294,6 +312,8 @@ begin
   Self.Caption := '';
   FCodigoArt   := '';
   FCodigoSku   := '';
+  FFotosColeccion := nil;
+  FIndiceFoto := -1;
   FUltimaInfo.Clear;
   inherited;
 end;
@@ -456,7 +476,18 @@ begin
 end;
 
 procedure TfrmFotoArticulo.SetArticuloSku(const ACodArt, ACodSku: string);
+var
+  bMismoContexto  : Boolean;
+  sNombrePreferido: string;
 begin
+  // Una recarga del mismo artículo/SKU (por ejemplo, tras bajar fotos de
+  // nube) no debe devolver al usuario a la primera foto. Al cambiar de
+  // contexto, en cambio, la colección siempre empieza por la primera.
+  bMismoContexto := (not FModoSesion) and
+    SameText(FCodigoArt, ACodArt) and SameText(FCodigoSku, ACodSku);
+  sNombrePreferido := '';
+  if bMismoContexto and FUltimaInfo.Encontrada then
+    sNombrePreferido := FUltimaInfo.NombreBase;
   FModoSesion := False;
   FFotoDefinitivaSesion := False;
   FPadreResolverSesion := nil;
@@ -469,27 +500,126 @@ begin
   FCodigoArt := ACodArt;
   FCodigoSku := ACodSku;
   PrepararControlesArticulo;
-  FUltimaInfo := FotosArticulos.Resolver(ACodArt, ACodSku);
+  RellenarNivelesSku;
+  if bMismoContexto then
+    CargarColeccionArticulo(sNombrePreferido, 0, 0)
+  else
+    CargarColeccionArticulo('', 0, 0);
+end;
+
+procedure TfrmFotoArticulo.CargarColeccionArticulo(
+  const ANombrePreferido: string;
+  AOrdenPreferido, AIndiceAlternativo: Integer);
+var
+  i      : Integer;
+  iIndice: Integer;
+begin
+  FFotosColeccion := FotosArticulos.ResolverColeccion(
+    FCodigoArt, FCodigoSku);
+  iIndice := -1;
+
+  // NombreBase identifica de forma inequívoca la foto que ya se estaba
+  // mostrando. Orden sirve de respaldo tras rotarla, porque esa operación
+  // cambia el nombre físico pero mantiene su posición en la colección.
+  if ANombrePreferido <> '' then
+    for i := 0 to High(FFotosColeccion) do
+      if SameText(FFotosColeccion[i].NombreBase, ANombrePreferido) then
+      begin
+        iIndice := i;
+        Break;
+      end;
+  if (iIndice < 0) and (AOrdenPreferido > 0) then
+    for i := 0 to High(FFotosColeccion) do
+      if FFotosColeccion[i].Orden = AOrdenPreferido then
+      begin
+        iIndice := i;
+        Break;
+      end;
+
+  if Length(FFotosColeccion) = 0 then
+    iIndice := -1
+  else if iIndice < 0 then
+  begin
+    if AIndiceAlternativo < 0 then
+      iIndice := 0
+    else if AIndiceAlternativo > High(FFotosColeccion) then
+      iIndice := High(FFotosColeccion)
+    else
+      iIndice := AIndiceAlternativo;
+  end;
+  SeleccionarFoto(iIndice);
+end;
+
+procedure TfrmFotoArticulo.SeleccionarFoto(AIndice: Integer);
+begin
+  if Length(FFotosColeccion) = 0 then
+    FIndiceFoto := -1
+  else if AIndice < 0 then
+    FIndiceFoto := 0
+  else if AIndice > High(FFotosColeccion) then
+    FIndiceFoto := High(FFotosColeccion)
+  else
+    FIndiceFoto := AIndice;
+
+  FUltimaInfo.Clear;
+  if FIndiceFoto >= 0 then
+    FUltimaInfo := FFotosColeccion[FIndiceFoto];
+  ActualizarOrigenFotoArticulo;
+  ActualizarControlesGaleria;
+  CargarFotoActual;
+end;
+
+procedure TfrmFotoArticulo.ActualizarControlesGaleria;
+var
+  bCatalogo: Boolean;
+begin
+  bCatalogo := not FModoSesion;
+  btnFotoAnterior.Visible := bCatalogo;
+  lblNumeroFoto.Visible := bCatalogo;
+  btnFotoSiguiente.Visible := bCatalogo;
+  btnAnadirFoto.Visible := bCatalogo;
+
+  btnFotoAnterior.Enabled := bCatalogo and (FIndiceFoto > 0);
+  btnFotoSiguiente.Enabled := bCatalogo and (FIndiceFoto >= 0) and
+    (FIndiceFoto < High(FFotosColeccion));
+  btnAnadirFoto.Enabled := bCatalogo and (FCodigoArt <> '');
+  if FIndiceFoto >= 0 then
+    lblNumeroFoto.Caption := Format('%d/%d',
+      [FIndiceFoto + 1, Length(FFotosColeccion)])
+  else
+    lblNumeroFoto.Caption := '0/0';
+  if bCatalogo then
+    ActualizarCaptionArticulo;
+end;
+
+procedure TfrmFotoArticulo.ActualizarOrigenFotoArticulo;
+begin
   case FUltimaInfo.Origen of
     foSku        : lblOrigen.Caption :=
-      Format(SCaptionFotoDelSku, [ACodSku]);
+      Format(SCaptionFotoDelSku, [FCodigoSku]);
     foSkuPrefijo : lblOrigen.Caption :=
       Format(SCaptionFotoHeredadaGrupo, [FUltimaInfo.ClaveResuelta]);
     foArticulo   : lblOrigen.Caption :=
-      Format(SCaptionFotoHeredadaArticulo, [ACodArt]);
+      Format(SCaptionFotoHeredadaArticulo, [FCodigoArt]);
     foSinFoto    : lblOrigen.Caption :=
       Format(SCaptionSinFotoPara,
-             [ACodArt, IfThen(ACodSku <> '', ' / ' + ACodSku, '')]);
+        [FCodigoArt, IfThen(FCodigoSku <> '', ' / ' + FCodigoSku, '')]);
   end;
-  // Reflejamos en el caption (titulo de la ventana) solo el codigo del
-  // articulo o SKU activo: tanto el contexto como el icono de la
-  // barra de tareas ya identifican que es una pantalla de fotos.
-  if ACodSku <> '' then
-    Self.Caption := ACodSku
+end;
+
+procedure TfrmFotoArticulo.ActualizarCaptionArticulo;
+var
+  sCodigo: string;
+begin
+  if FCodigoSku <> '' then
+    sCodigo := FCodigoSku
   else
-    Self.Caption := ACodArt;
-  RellenarNivelesSku;
-  CargarFotoActual;
+    sCodigo := FCodigoArt;
+  if FIndiceFoto >= 0 then
+    Self.Caption := Format('%s — Foto %d/%d',
+      [sCodigo, FIndiceFoto + 1, Length(FFotosColeccion)])
+  else
+    Self.Caption := Format('%s — Sin fotos', [sCodigo]);
 end;
 
 procedure TfrmFotoArticulo.PrepararControlesArticulo;
@@ -497,11 +627,19 @@ begin
   btnDescargarNube.Visible := True;
   btnCambiarArt.Caption := 'Cambiar foto del &artículo';
   btnCambiarSku.Visible := True;
+  btnFotoAnterior.Visible := True;
+  lblNumeroFoto.Visible := True;
+  btnFotoSiguiente.Visible := True;
+  btnAnadirFoto.Visible := True;
 end;
 
 procedure TfrmFotoArticulo.PrepararControlesSesion(AExpandir: Boolean);
 begin
   btnDescargarNube.Visible := False;
+  btnFotoAnterior.Visible := False;
+  lblNumeroFoto.Visible := False;
+  btnFotoSiguiente.Visible := False;
+  btnAnadirFoto.Visible := False;
   if FFotoDefinitivaSesion then
     btnCambiarArt.Caption := 'Cambiar foto del &artículo'
   else
@@ -532,6 +670,8 @@ begin
   FCodigoUnidadSesion := ACodUnidad;
   FCodigoArt := ACodArtTentativo;
   FCodigoSku := ACodUnidad;
+  FFotosColeccion := nil;
+  FIndiceFoto := -1;
   FUltimaInfo.Clear;
   if ACodArtTentativo <> '' then
     FUltimaInfo := FotosArticulos.Resolver(
@@ -722,6 +862,65 @@ end;
 //   Botones: cambiar / quitar / rotar
 // ---------------------------------------------------------------------
 
+procedure TfrmFotoArticulo.btnFotoAnteriorClick(Sender: TObject);
+begin
+  inherited;
+  if (not FModoSesion) and (FIndiceFoto > 0) then
+    SeleccionarFoto(FIndiceFoto - 1);
+end;
+
+procedure TfrmFotoArticulo.btnFotoSiguienteClick(Sender: TObject);
+begin
+  inherited;
+  if (not FModoSesion) and (FIndiceFoto >= 0) and
+     (FIndiceFoto < High(FFotosColeccion)) then
+    SeleccionarFoto(FIndiceFoto + 1);
+end;
+
+procedure TfrmFotoArticulo.btnAnadirFotoClick(Sender: TObject);
+var
+  iIndiceAlternativo: Integer;
+  oNueva              : TFotoInfo;
+  sUnidad             : string;
+begin
+  inherited;
+  if FModoSesion then
+    Exit;
+  if FCodigoArt = '' then
+  begin
+    ShowMessage(SErrorFotoArticuloNoActivo);
+    Exit;
+  end;
+
+  // Sin SKU, el alta pertenece siempre a la galería general del artículo,
+  // incluso si la vista usa como fallback la primera foto de una unidad.
+  // Con SKU se añade al nivel efectivo mostrado o, si aún no hay fotos, al
+  // nivel elegido en el combo.
+  if FCodigoSku = '' then
+    sUnidad := ''
+  else if FUltimaInfo.Encontrada then
+    sUnidad := FUltimaInfo.ClaveResuelta
+  else
+    sUnidad := ClaveNivelSeleccionado;
+
+  if dlgAbrirFoto.Execute then
+  begin
+    try
+      iIndiceAlternativo := Length(FFotosColeccion);
+      oNueva := FotosArticulos.Anadir(
+        FCodigoArt,
+        sUnidad,
+        dlgAbrirFoto.FileName,
+        IdentidadSesion.Usuario);
+      CargarColeccionArticulo(
+        oNueva.NombreBase, oNueva.Orden, iIndiceAlternativo);
+    except
+      on E: Exception do
+        ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+    end;
+  end;
+end;
+
 procedure TfrmFotoArticulo.btnCambiarArtClick(Sender: TObject);
 var
   bGuardada: Boolean;
@@ -815,6 +1014,8 @@ begin
 end;
 
 procedure TfrmFotoArticulo.btnQuitarClick(Sender: TObject);
+var
+  iIndiceAnterior: Integer;
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
@@ -853,13 +1054,17 @@ begin
     end
     else
     begin
-      FotosArticulos.Eliminar(FCodigoArt, FUltimaInfo.ClaveResuelta);
-      SetArticuloSku(FCodigoArt, FCodigoSku);
+      iIndiceAnterior := FIndiceFoto;
+      FotosArticulos.Eliminar(FUltimaInfo);
+      CargarColeccionArticulo('', 0, iIndiceAnterior);
     end;
   end;
 end;
 
 procedure TfrmFotoArticulo.btnRotarIzqClick(Sender: TObject);
+var
+  iIndiceAnterior: Integer;
+  oRotada        : TFotoInfo;
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
@@ -900,17 +1105,21 @@ begin
     end
     else
     begin
-      FotosArticulos.Rotar(
-        FCodigoArt,
-        FCodigoSku,
+      iIndiceAnterior := FIndiceFoto;
+      oRotada := FotosArticulos.Rotar(
+        FUltimaInfo,
         False,
         IdentidadSesion.Usuario);
-      SetArticuloSku(FCodigoArt, FCodigoSku);
+      CargarColeccionArticulo(
+        oRotada.NombreBase, oRotada.Orden, iIndiceAnterior);
     end;
   end;
 end;
 
 procedure TfrmFotoArticulo.btnRotarDerClick(Sender: TObject);
+var
+  iIndiceAnterior: Integer;
+  oRotada        : TFotoInfo;
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
@@ -951,12 +1160,13 @@ begin
     end
     else
     begin
-      FotosArticulos.Rotar(
-        FCodigoArt,
-        FCodigoSku,
+      iIndiceAnterior := FIndiceFoto;
+      oRotada := FotosArticulos.Rotar(
+        FUltimaInfo,
         True,
         IdentidadSesion.Usuario);
-      SetArticuloSku(FCodigoArt, FCodigoSku);
+      CargarColeccionArticulo(
+        oRotada.NombreBase, oRotada.Orden, iIndiceAnterior);
     end;
   end;
 end;
