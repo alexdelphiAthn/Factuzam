@@ -20,7 +20,11 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 SOURCE = HERE / "factuzam_original.sql"
 TARGET = HERE / "factuzam_original_postgresql.sql"
-ROUTINES = HERE / "factuzam_original_postgresql_routines.sql"
+ROUTINE_FILES = (
+    HERE / ".routines_pg_batch_api.sql",
+    HERE / ".routines_pg_batch_dml.sql",
+    HERE / ".routines_pg_batch_pivot.sql",
+)
 EPOCH_SENTINEL = "1970-01-01 00:00:00"
 
 
@@ -770,19 +774,26 @@ def build() -> str:
     if len(routine_names) != 45:
         raise ValueError(f"Expected 45 source routines, found {len(routine_names)}")
 
-    routine_bytes = ROUTINES.read_bytes()
-    routine_sql = routine_bytes.decode("utf-8-sig").strip()
-    # The SQL files are checked out as CRLF in this repository.  Hash the
-    # logical LF form so provenance stays identical across Git platforms.
+    routine_parts: list[str] = []
+    routine_hash_parts: list[str] = []
+    for routine_file in ROUTINE_FILES:
+        part = routine_file.read_bytes().decode("utf-8-sig").strip()
+        logical_part = part.replace("\r\n", "\n")
+        routine_parts.append(f"-- Módulo: {routine_file.name}\n{logical_part}")
+        routine_hash_parts.append(f"{routine_file.name}\n{logical_part}\n")
+    routine_sql = "\n\n".join(routine_parts)
+    # Hash the logical LF form plus each file name, so provenance is stable
+    # across Git platforms and also detects module reordering.
     routine_hash = hashlib.sha256(
-        routine_sql.replace("\r\n", "\n").encode("utf-8")
+        "".join(routine_hash_parts).encode("utf-8")
     ).hexdigest()
+    translated_routine_matches = re.findall(
+        r"(?im)^CREATE(?:\s+OR\s+REPLACE)?\s+(?:PROCEDURE|FUNCTION)\s+([a-z_]\w*)\s*\(",
+        routine_sql,
+    )
     translated_routine_names = {
         name.casefold()
-        for name in re.findall(
-            r"(?im)^CREATE(?:\s+OR\s+REPLACE)?\s+(?:PROCEDURE|FUNCTION)\s+([a-z_]\w*)\s*\(",
-            routine_sql,
-        )
+        for name in translated_routine_matches
     }
     missing_routines = sorted(
         name for name in routine_names if name.casefold() not in translated_routine_names
@@ -790,6 +801,12 @@ def build() -> str:
     if missing_routines:
         raise ValueError(
             "Missing PostgreSQL routine adapters: " + ", ".join(missing_routines)
+        )
+    if len(translated_routine_matches) != 45 or len(translated_routine_names) != 45:
+        raise ValueError(
+            "Expected exactly 45 unique PostgreSQL routine adapters, found "
+            f"{len(translated_routine_matches)} definitions / "
+            f"{len(translated_routine_names)} unique names"
         )
 
     expected_inventory = {
@@ -824,8 +841,9 @@ def build() -> str:
         "-- Factuzam: bootstrap PostgreSQL (fase 2)",
         "-- Generado desde factuzam_original.sql (volcado MariaDB).",
         f"-- SHA-256 del origen: {source_hash}",
-        f"-- SHA-256 canónico del módulo de rutinas PostgreSQL: {routine_hash}",
+        f"-- SHA-256 canónico de los módulos de rutinas PostgreSQL: {routine_hash}",
         "-- Objetivo: PostgreSQL 16 o posterior; codificación UTF-8.",
+        "-- Dependencia: extensión contrib trusted unaccent.",
         "-- Alcance: tablas, datos, índices, comentarios, triggers, vistas y 45 rutinas.",
         "-- Los resultsets dinámicos se exponen mediante refcursor (CALL + FETCH en una transacción).",
         "-- Las rutinas no hacen COMMIT/ROLLBACK interno: participan en la transacción llamadora.",
@@ -843,6 +861,8 @@ def build() -> str:
         "SET LOCAL search_path = public;",
         "SET LOCAL client_encoding = 'UTF8';",
         "SET LOCAL standard_conforming_strings = on;",
+        "SET LOCAL check_function_bodies = on;",
+        "CREATE EXTENSION IF NOT EXISTS unaccent WITH SCHEMA public;",
         "",
         "-- Eliminar primero las vistas conocidas para que el script pueda repetirse.",
     ]

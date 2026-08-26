@@ -1,5 +1,5 @@
 -- ============================================================================
--- Factuzam: borrador PostgreSQL 16 de rutinas de API/consulta
+-- Factuzam: módulo PostgreSQL 16 de rutinas de API/consulta
 -- Origen: bloque real de rutinas de factuzam_original.sql.
 --
 -- Contrato general:
@@ -18,9 +18,7 @@
 --   * statement_timestamp() reproduce el reloj por sentencia de MariaDB.
 -- ============================================================================
 
-SET search_path = public;
-
--- Limpiar las firmas exactas para que este borrador sea repetible.
+-- Limpiar las firmas exactas para que este módulo sea repetible.
 DROP FUNCTION IF EXISTS prc_busqueda_articulos(
   character varying, character varying, date, character varying, smallint, smallint
 );
@@ -125,7 +123,7 @@ COMMENT ON PROCEDURE prc_get_crear_valor(
 -- PRC_AGREGAR_VALOR_CONJUNTO
 -- Contrato: obtiene el atributo del conjunto, crea/reutiliza el valor y enlaza
 -- ambos de forma idempotente. El origen usa el nombre obsoleto ID_VA_AC; este
--- borrador usa ID_ATRIBUTO_AC, que es la columna existente en el mismo dump.
+-- módulo usa ID_ATRIBUTO_AC, que es la columna existente en el mismo dump.
 -- ============================================================================
 CREATE PROCEDURE prc_agregar_valor_conjunto(
   IN p_id_conjunto integer,
@@ -176,7 +174,8 @@ COMMENT ON PROCEDURE prc_agregar_valor_conjunto(
 -- PRC_BUSQUEDA_ARTICULOS
 -- Cambio de llamada: el SELECT libre de MariaDB se expone como función de
 -- tabla. Usar SELECT * FROM prc_busqueda_articulos(...).
--- p_token conserva la semántica LIKE: el llamador aporta %/_ si quiere patrón.
+-- p_token conserva el patrón %/_ del llamador y la comparación sin distinguir
+-- mayúsculas de la intercalación usada por MariaDB.
 -- ============================================================================
 CREATE FUNCTION prc_busqueda_articulos(
   p_tarifa character varying(10),
@@ -246,50 +245,99 @@ BEGIN
            )
       ) AS detalle
      GROUP BY detalle.cod_art
+  ),
+  articulos_base AS (
+    -- La vista histórica multiplica un artículo por todas sus tarifas de SKU,
+    -- aunque el resultset no contiene código de unidad. Conservamos sólo las
+    -- columnas propias del artículo/proveedor y resolvemos abajo una tarifa
+    -- base vigente y determinista.
+    SELECT DISTINCT
+           v.codigo_articulo,
+           v.activo_articulo,
+           v.descripcion_articulo,
+           v.codigo_familia_articulo,
+           v.descripcion_familia,
+           v.codigo_proveedor,
+           v.razon_social_proveedor,
+           v.esproveedorprincipal,
+           v.precio_ult_compra,
+           v.nombre_tipo_iva,
+           v.tipoiva_articulo,
+           v.tipo_cantidad_articulo,
+           v.usuariomodif,
+           v.instantealta,
+           v.instantemodif,
+           v.usuarioalta,
+           v.esactivo_fijo_articulo
+      FROM vi_art_busquedas AS v
   )
-  SELECT v.codigo_articulo,
-         v.activo_articulo,
-         v.descripcion_articulo,
-         v.codigo_familia_articulo,
-         v.descripcion_familia,
-         v.codigo_proveedor,
-         v.razon_social_proveedor,
-         v.esproveedorprincipal,
-         v.precio_ult_compra,
-         v.codigo_tarifa,
-         v.nombre_tarifa,
-         v.preciosalida_tarifa,
-         v.precio_dto_tarifa,
-         v.porcen_dto_tarifa,
-         v.preciofinal_tarifa,
-         v.fecha_desde_tarifa,
-         v.fecha_hasta_tarifa,
-         v.esimp_incl_tarifa,
-         v.nombre_tipo_iva,
-         v.tipoiva_articulo,
-         v.tipo_cantidad_articulo,
-         v.usuariomodif,
-         v.instantealta,
-         v.instantemodif,
-         v.usuarioalta,
-         v.esactivo_fijo_articulo,
+  SELECT b.codigo_articulo,
+         b.activo_articulo,
+         b.descripcion_articulo,
+         b.codigo_familia_articulo,
+         b.descripcion_familia,
+         b.codigo_proveedor,
+         b.razon_social_proveedor,
+         b.esproveedorprincipal,
+         b.precio_ult_compra,
+         tv.codigo_tarifa,
+         tv.nombre_tarifa,
+         tv.preciosalida_tarifa,
+         tv.precio_dto_tarifa,
+         tv.porcen_dto_tarifa,
+         tv.preciofinal_tarifa,
+         tv.fecha_desde_tarifa,
+         tv.fecha_hasta_tarifa,
+         tv.esimp_incl_tarifa,
+         b.nombre_tipo_iva,
+         b.tipoiva_articulo,
+         b.tipo_cantidad_articulo,
+         b.usuariomodif,
+         b.instantealta,
+         b.instantemodif,
+         b.usuarioalta,
+         b.esactivo_fijo_articulo,
          coalesce(stk.stock_disponible, 0::numeric)
-    FROM vi_art_busquedas AS v
+    FROM articulos_base AS b
+    LEFT JOIN LATERAL (
+      SELECT t.codigo_tarifa,
+             tarifa.nombre_tarifa,
+             t.preciosalida_tarifa,
+             t.precio_dto_tarifa,
+             t.porcen_dto_tarifa,
+             t.preciofinal_tarifa,
+             t.fecha_desde_tarifa,
+             t.fecha_hasta_tarifa,
+             tarifa.esimp_incl_tarifa
+        FROM fza_articulos_tarifas AS t
+        LEFT JOIN fza_tarifas AS tarifa
+          ON tarifa.codigo_tarifa = t.codigo_tarifa
+       WHERE t.codigo_articulo_tarifa = b.codigo_articulo
+         AND t.codigo_tarifa = v_tarifa
+         AND coalesce(t.codigo_unidad_tarifa, '') = ''
+         AND coalesce(t.activo_tarifa, 'S') = 'S'
+         AND t.fecha_desde_tarifa <= v_fecha
+         AND (t.fecha_hasta_tarifa IS NULL
+              OR t.fecha_hasta_tarifa >= v_fecha)
+       ORDER BY t.fecha_desde_tarifa DESC,
+                t.codigo_unico_tarifa DESC
+       LIMIT 1
+    ) AS tv ON true
     LEFT JOIN stock_por_articulo AS stk
-      ON stk.cod_art = v.codigo_articulo
-   WHERE (v.codigo_tarifa = v_tarifa OR v.codigo_tarifa IS NULL)
-     AND v.fecha_desde_tarifa <= v_fecha
-     AND (v.fecha_hasta_tarifa IS NULL OR v.fecha_hasta_tarifa >= v_fecha)
-     AND (
+      ON stk.cod_art = b.codigo_articulo
+   WHERE (
        p_token IS NULL
        OR p_token = ''
-       OR v.codigo_articulo LIKE p_token
-       OR v.descripcion_articulo LIKE p_token
-       OR v.descripcion_familia LIKE p_token
+       OR public.unaccent(b.codigo_articulo)
+          ILIKE public.unaccent(p_token)
+       OR public.unaccent(b.descripcion_articulo)
+          ILIKE public.unaccent(p_token)
+       OR public.unaccent(b.descripcion_familia)
+          ILIKE public.unaccent(p_token)
      )
      AND (p_solostock = 0 OR coalesce(stk.stock_disponible, 0::numeric) > 0)
-     AND (p_solotarifa = 0 OR v.codigo_tarifa IS NOT NULL)
-   ORDER BY v.codigo_articulo;
+     AND (p_solotarifa = 0 OR tv.codigo_tarifa IS NOT NULL)
+   ORDER BY b.codigo_articulo;
 END;
 $routine$;
 
@@ -435,9 +483,9 @@ IS 'Incrementa el contador genérico; el argumento INOUT se pasa como valor o NU
 
 -- ============================================================================
 -- PRC_FNC_GET_PRECIO_ARTICULO_FECHA
--- Contrato: copia a los cuatro INOUT la única tarifa del artículo vigente en
--- la fecha. Cero filas conserva los valores de entrada; más de una fila lanza
--- cardinality_violation, igual que SELECT ... INTO de MariaDB.
+-- Contrato reparado: devuelve una sola tarifa base, activa, vigente y marcada
+-- como default. Las tarifas específicas de SKU no son identificables por esta
+-- firma histórica y no deben volver ambiguo el precio del artículo padre.
 -- ============================================================================
 CREATE PROCEDURE prc_fnc_get_precio_articulo_fecha(
   IN p_codigo_articulo character varying(20),
@@ -451,35 +499,35 @@ LANGUAGE plpgsql
 AS $routine$
 DECLARE
   v_tarifa fza_articulos_tarifas%ROWTYPE;
-  v_filas integer := 0;
 BEGIN
-  FOR v_tarifa IN
-    SELECT at.*
-      FROM fza_articulos_tarifas AS at
-     WHERE at.codigo_articulo_tarifa = p_codigo_articulo
-       AND at.fecha_desde_tarifa <= p_fecha
-       AND (at.fecha_hasta_tarifa IS NULL OR at.fecha_hasta_tarifa >= p_fecha)
-  LOOP
-    v_filas := v_filas + 1;
-    IF v_filas > 1 THEN
-      RAISE EXCEPTION
-        'PRC_FNC_GET_PRECIO_ARTICULO_FECHA devolvió más de una tarifa para artículo % y fecha %',
-        p_codigo_articulo,
-        p_fecha
-        USING ERRCODE = '21000';
-    END IF;
+  SELECT at.*
+    INTO v_tarifa
+    FROM fza_articulos_tarifas AS at
+    JOIN fza_tarifas AS tarifa
+      ON tarifa.codigo_tarifa = at.codigo_tarifa
+     AND tarifa.esdefault_tarifa = 'S'
+   WHERE at.codigo_articulo_tarifa = p_codigo_articulo
+     AND coalesce(at.codigo_unidad_tarifa, '') = ''
+     AND coalesce(at.activo_tarifa, 'S') = 'S'
+     AND at.fecha_desde_tarifa <= p_fecha
+     AND (at.fecha_hasta_tarifa IS NULL
+          OR at.fecha_hasta_tarifa >= p_fecha)
+   ORDER BY at.fecha_desde_tarifa DESC,
+            at.codigo_unico_tarifa DESC
+   LIMIT 1;
 
+  IF FOUND THEN
     p_preciosalida_tarifa := v_tarifa.preciosalida_tarifa;
     p_preciofinal_tarifa := v_tarifa.preciofinal_tarifa;
     p_porcen_dto_tarifa := v_tarifa.porcen_dto_tarifa;
     p_precio_dto_tarifa := v_tarifa.precio_dto_tarifa;
-  END LOOP;
+  END IF;
 END;
 $routine$;
 
 COMMENT ON PROCEDURE prc_fnc_get_precio_articulo_fecha(
   character varying, date, numeric, numeric, numeric, numeric
-) IS 'Obtiene una única tarifa vigente; los cuatro importes son INOUT.';
+) IS 'Obtiene la tarifa base/default vigente; los cuatro importes son INOUT.';
 
 -- ============================================================================
 -- PRC_FNC_GET_SERIE_TIPODOC

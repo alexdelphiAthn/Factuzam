@@ -49,6 +49,8 @@ type
     procedure Eliminar(const ACodigoArticulo,
       ACodigoUnidad: string); overload;
     procedure Eliminar(const AInfo: TFotoInfo); overload;
+    function MarcarPredeterminada(const AInfo: TFotoInfo;
+      const AUsuario: string): TFotoInfo;
   end;
 
 implementation
@@ -316,8 +318,7 @@ begin
        oMetadatos)) then
     raise Exception.Create(SErrorFotoNoRegistradaParaRotar);
   if not SameText(oMetadatos.Nombre, AInfo.NombreBase) then
-    raise Exception.Create(
-      'La foto seleccionada ha cambiado; actualiza la galería e inténtalo de nuevo.');
+    raise Exception.Create(SErrorFotoSeleccionadaCambio);
   sClave := FAlmacenamiento.ClaveNombre(
     AInfo.CodigoArt, AInfo.ClaveResuelta);
   sNombreAnterior := oMetadatos.Nombre;
@@ -398,14 +399,35 @@ begin
        oMetadatos) then
   begin
     if not SameText(oMetadatos.Nombre, AInfo.NombreBase) then
-      raise Exception.Create(
-        'La foto seleccionada ha cambiado; actualiza la galería e inténtalo de nuevo.');
+      raise Exception.Create(SErrorFotoSeleccionadaCambio);
     FRepositorio.EliminarFoto(
       AInfo.CodigoArt, AInfo.ClaveResuelta, AInfo.Orden,
       oMetadatos.Nombre);
     FAlmacenamiento.BorrarCopias(oMetadatos.Nombre);
     FConsulta.LimpiarPrecargaFotos;
   end;
+end;
+
+function TEdicionFotos.MarcarPredeterminada(
+  const AInfo: TFotoInfo;
+  const AUsuario: string): TFotoInfo;
+begin
+  if (not AInfo.Encontrada) or (AInfo.CodigoArt = '') or
+     (AInfo.Orden < 1) or (AInfo.NombreBase = '') then
+    raise Exception.Create(
+      SErrorFotoNoRegistradaParaPredeterminar);
+  try
+    FRepositorio.MarcarFotoPredeterminada(
+      AInfo.CodigoArt,
+      AInfo.ClaveResuelta,
+      AInfo.Orden,
+      AInfo.NombreBase,
+      AUsuario);
+  finally
+    FConsulta.LimpiarPrecargaFotos;
+  end;
+  Result := AInfo;
+  Result.Orden := 1;
 end;
 
 end.

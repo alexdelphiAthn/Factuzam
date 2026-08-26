@@ -24,7 +24,8 @@ function CrearRepositorioEdicionFotosUniDAC(
 implementation
 
 uses
-  System.SysUtils, System.Hash;
+  Winapi.Windows, System.SysUtils, System.Hash,
+  inLibMsgArticulos;
 
 const
   fcodartfot = 'CODIGO_ART_FOT';
@@ -47,6 +48,21 @@ type
     procedure LiberarBloqueoColeccion(AConsulta: TUniQuery;
       const AClave: string);
     procedure ComprobarSinTransaccionExterna;
+    function BloquearFilasYObtenerOrdenTemporal(
+      AConsulta: TUniQuery;
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrdenEsperado: Integer;
+      const ANombreEsperado: string): Integer;
+    procedure CambiarOrdenFoto(
+      AConsulta: TUniQuery;
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrdenOrigen, AOrdenDestino: Integer;
+      const ANombreEsperado, AUsuario: string);
+    procedure DesplazarFotosAnteriores(
+      AConsulta: TUniQuery;
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrdenEsperado: Integer;
+      const AUsuario: string);
   public
     constructor Create(AConexion: TUniConnection);
     function BuscarFotoEditable(
@@ -66,24 +82,17 @@ type
       var AMetadatos: TMetadatosFotoPersistida;
       const AUsuario: string);
     procedure ActualizarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad, ANombre,
-        AUsuario: string); overload;
-    procedure ActualizarNombreFoto(
       const ACodigoArticulo, ACodigoUnidad: string;
       AOrden: Integer;
-      const ANombreAnterior, ANombre,
-        AUsuario: string); overload;
-    function BuscarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad: string): string; overload;
-    function BuscarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad: string;
-      AOrden: Integer): string; overload;
-    procedure EliminarFoto(
-      const ACodigoArticulo, ACodigoUnidad: string); overload;
+      const ANombreAnterior, ANombre, AUsuario: string);
     procedure EliminarFoto(
       const ACodigoArticulo, ACodigoUnidad: string;
       AOrden: Integer;
-      const ANombreEsperado: string); overload;
+      const ANombreEsperado: string);
+    procedure MarcarFotoPredeterminada(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrdenEsperado: Integer;
+      const ANombreEsperado, AUsuario: string);
   end;
 
 function LeerMetadatosFoto(
@@ -139,13 +148,17 @@ end;
 procedure TRepositorioEdicionFotosUniDAC.LiberarBloqueoColeccion(
   AConsulta: TUniQuery; const AClave: string);
 var
-  iIntento: Integer;
+  iIntento : Integer;
+  bLiberada: Boolean;
 begin
   // La mutación ya puede estar confirmada, por lo que un fallo al liberar no
   // se propaga al llamador. Se reintenta; si se perdió la conexión, el propio
   // servidor libera automáticamente sus bloqueos de sesión.
-  for iIntento := 1 to 3 do
+  iIntento := 0;
+  bLiberada := False;
+  while (iIntento < 3) and not bLiberada do
   begin
+    Inc(iIntento);
     try
       AConsulta.Close;
       AConsulta.SQL.Text :=
@@ -153,9 +166,12 @@ begin
       AConsulta.ParamByName('CLAVE_BLOQUEO').AsString := AClave;
       AConsulta.Open;
       AConsulta.Close;
-      Exit;
+      bLiberada := True;
     except
-      // Reintentar con la misma conexión.
+      on E: Exception do
+        OutputDebugString(PChar(Format(
+          'No se pudo liberar el bloqueo de fotos (intento %d): %s',
+          [iIntento, E.Message])));
     end;
   end;
 end;
@@ -165,6 +181,113 @@ begin
   if FConexion.InTransaction then
     raise Exception.Create(
       'No se pueden modificar fotos dentro de una transacción externa.');
+end;
+
+function TRepositorioEdicionFotosUniDAC.
+  BloquearFilasYObtenerOrdenTemporal(
+  AConsulta: TUniQuery;
+  const ACodigoArticulo, ACodigoUnidad: string;
+  AOrdenEsperado: Integer;
+  const ANombreEsperado: string): Integer;
+var
+  bSeleccionEncontrada: Boolean;
+  iOrdenActual         : Integer;
+  iOrdenSiguiente      : Integer;
+begin
+  bSeleccionEncontrada := False;
+  iOrdenSiguiente := 1;
+  AConsulta.Close;
+  AConsulta.SQL.Text :=
+    ' SELECT ORDEN_FOT, NOMBRE_FOT_FOT ' +
+    '   FROM fza_articulos_fotos ' +
+    '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
+    '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD ' +
+    '  ORDER BY ORDEN_FOT ' +
+    '  FOR UPDATE';
+  AConsulta.ParamByName('CODIGO_ART').AsString :=
+    ACodigoArticulo;
+  AConsulta.ParamByName('CODIGO_UNIDAD').AsString :=
+    ACodigoUnidad;
+  AConsulta.Open;
+  while not AConsulta.Eof do
+  begin
+    iOrdenActual := AConsulta.FieldByName(fordenfot).AsInteger;
+    if iOrdenActual <> iOrdenSiguiente then
+      raise Exception.Create(SErrorGaleriaFotosCambio);
+    if (iOrdenActual = AOrdenEsperado) and
+       SameText(AConsulta.FieldByName(fnomfot).AsString,
+         ANombreEsperado) then
+      bSeleccionEncontrada := True;
+    if iOrdenSiguiente = MaxInt then
+      raise Exception.Create(SErrorGaleriaFotosCambio);
+    Inc(iOrdenSiguiente);
+    AConsulta.Next;
+  end;
+  AConsulta.Close;
+  if not bSeleccionEncontrada then
+    raise Exception.Create(SErrorFotoSeleccionadaCambio);
+  Result := iOrdenSiguiente;
+end;
+
+procedure TRepositorioEdicionFotosUniDAC.CambiarOrdenFoto(
+  AConsulta: TUniQuery;
+  const ACodigoArticulo, ACodigoUnidad: string;
+  AOrdenOrigen, AOrdenDestino: Integer;
+  const ANombreEsperado, AUsuario: string);
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text :=
+    ' UPDATE fza_articulos_fotos ' +
+    '    SET ORDEN_FOT      = :ORDEN_DESTINO, ' +
+    '        INSTANTE_MODIF = NOW(), ' +
+    '        USUARIO_MODIF  = :USUARIO ' +
+    '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
+    '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD ' +
+    '    AND ORDEN_FOT         = :ORDEN_ORIGEN ' +
+    '    AND NOMBRE_FOT_FOT    = :NOMBRE_ESPERADO';
+  AConsulta.ParamByName('ORDEN_DESTINO').AsInteger :=
+    AOrdenDestino;
+  AConsulta.ParamByName('USUARIO').AsString := AUsuario;
+  AConsulta.ParamByName('CODIGO_ART').AsString :=
+    ACodigoArticulo;
+  AConsulta.ParamByName('CODIGO_UNIDAD').AsString :=
+    ACodigoUnidad;
+  AConsulta.ParamByName('ORDEN_ORIGEN').AsInteger :=
+    AOrdenOrigen;
+  AConsulta.ParamByName('NOMBRE_ESPERADO').AsString :=
+    ANombreEsperado;
+  AConsulta.Execute;
+  if AConsulta.RowsAffected <> 1 then
+    raise Exception.Create(SErrorFotoSeleccionadaCambio);
+end;
+
+procedure TRepositorioEdicionFotosUniDAC.DesplazarFotosAnteriores(
+  AConsulta: TUniQuery;
+  const ACodigoArticulo, ACodigoUnidad: string;
+  AOrdenEsperado: Integer;
+  const AUsuario: string);
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text :=
+    ' UPDATE fza_articulos_fotos ' +
+    '    SET ORDEN_FOT      = ORDEN_FOT + 1, ' +
+    '        INSTANTE_MODIF = NOW(), ' +
+    '        USUARIO_MODIF  = :USUARIO ' +
+    '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
+    '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD ' +
+    '    AND ORDEN_FOT        >= 1 ' +
+    '    AND ORDEN_FOT         < :ORDEN_ESPERADO ' +
+    '  ORDER BY ORDEN_FOT DESC';
+  AConsulta.ParamByName('USUARIO').AsString := AUsuario;
+  AConsulta.ParamByName('CODIGO_ART').AsString :=
+    ACodigoArticulo;
+  AConsulta.ParamByName('CODIGO_UNIDAD').AsString :=
+    ACodigoUnidad;
+  AConsulta.ParamByName('ORDEN_ESPERADO').AsInteger :=
+    AOrdenEsperado;
+  AConsulta.Execute;
+  if AConsulta.RowsAffected <> AOrdenEsperado - 1 then
+    raise Exception.Create(SErrorGaleriaFotosCambio);
 end;
 
 function TRepositorioEdicionFotosUniDAC.BuscarFotoEditable(
@@ -293,8 +416,7 @@ begin
       oConsulta.ExecSQL;
       if (ANombreAnterior <> '') and
          (oConsulta.RowsAffected <> 1) then
-        raise Exception.Create(
-          'La foto principal ha cambiado; actualiza la galería e inténtalo de nuevo.');
+        raise Exception.Create(SErrorFotoSeleccionadaCambio);
       FConexion.Commit;
     except
       if FConexion.InTransaction then
@@ -370,21 +492,6 @@ begin
 end;
 
 procedure TRepositorioEdicionFotosUniDAC.ActualizarNombreFoto(
-  const ACodigoArticulo, ACodigoUnidad, ANombre, AUsuario: string);
-var
-  sNombreAnterior: string;
-begin
-  sNombreAnterior := BuscarNombreFoto(
-    ACodigoArticulo, ACodigoUnidad, 1);
-  if sNombreAnterior = '' then
-    raise Exception.Create(
-      'La foto que se iba a actualizar ya no existe.');
-  ActualizarNombreFoto(
-    ACodigoArticulo, ACodigoUnidad, 1,
-    sNombreAnterior, ANombre, AUsuario);
-end;
-
-procedure TRepositorioEdicionFotosUniDAC.ActualizarNombreFoto(
   const ACodigoArticulo, ACodigoUnidad: string;
   AOrden: Integer; const ANombreAnterior, ANombre,
   AUsuario: string);
@@ -415,8 +522,7 @@ begin
         ANombreAnterior;
       oConsulta.Execute;
       if oConsulta.RowsAffected <> 1 then
-        raise Exception.Create(
-          'La foto seleccionada ha cambiado; actualiza la galería e inténtalo de nuevo.');
+        raise Exception.Create(SErrorFotoSeleccionadaCambio);
       FConexion.Commit;
     except
       if FConexion.InTransaction then
@@ -428,54 +534,6 @@ begin
   end;
 end;
 
-function TRepositorioEdicionFotosUniDAC.BuscarNombreFoto(
-  const ACodigoArticulo, ACodigoUnidad: string): string;
-begin
-  Result := BuscarNombreFoto(ACodigoArticulo, ACodigoUnidad, 1);
-end;
-
-function TRepositorioEdicionFotosUniDAC.BuscarNombreFoto(
-  const ACodigoArticulo, ACodigoUnidad: string;
-  AOrden: Integer): string;
-var
-  oConsulta: TUniQuery;
-begin
-  Result := '';
-  oConsulta := NuevaConsulta;
-  try
-    oConsulta.SQL.Text :=
-      ' SELECT NOMBRE_FOT_FOT ' +
-      '   FROM fza_articulos_fotos ' +
-      '  WHERE CODIGO_ART_FOT    = :CODIGO_ART ' +
-      '    AND CODIGO_UNIDAD_FOT = :CODIGO_UNIDAD ' +
-      '    AND ORDEN_FOT         = :ORDEN ' +
-      '  ORDER BY NOMBRE_FOT_FOT ' +
-      '  LIMIT 1';
-    oConsulta.ParamByName('CODIGO_ART').AsString :=
-      ACodigoArticulo;
-    oConsulta.ParamByName('CODIGO_UNIDAD').AsString :=
-      ACodigoUnidad;
-    oConsulta.ParamByName('ORDEN').AsInteger := AOrden;
-    oConsulta.Open;
-    if not oConsulta.Eof then
-      Result := oConsulta.FieldByName(fnomfot).AsString;
-  finally
-    FreeAndNil(oConsulta);
-  end;
-end;
-
-procedure TRepositorioEdicionFotosUniDAC.EliminarFoto(
-  const ACodigoArticulo, ACodigoUnidad: string);
-var
-  sNombreEsperado: string;
-begin
-  sNombreEsperado := BuscarNombreFoto(
-    ACodigoArticulo, ACodigoUnidad, 1);
-  if sNombreEsperado <> '' then
-    EliminarFoto(
-      ACodigoArticulo, ACodigoUnidad, 1, sNombreEsperado);
-end;
-
 procedure TRepositorioEdicionFotosUniDAC.EliminarFoto(
   const ACodigoArticulo, ACodigoUnidad: string;
   AOrden: Integer; const ANombreEsperado: string);
@@ -485,7 +543,8 @@ var
   bBloqueada   : Boolean;
 begin
   if AOrden < 1 then
-    Exit;
+    raise EArgumentOutOfRangeException.Create(
+      'El orden de la foto debe ser mayor que cero.');
   ComprobarSinTransaccionExterna;
   sClaveBloqueo := ClaveBloqueoColeccion(
     ACodigoArticulo, ACodigoUnidad);
@@ -511,8 +570,7 @@ begin
         ANombreEsperado;
       oConsulta.Execute;
       if oConsulta.RowsAffected <> 1 then
-        raise Exception.Create(
-          'La foto seleccionada ha cambiado; actualiza la galería e inténtalo de nuevo.');
+        raise Exception.Create(SErrorFotoSeleccionadaCambio);
 
       oConsulta.SQL.Text :=
         ' UPDATE fza_articulos_fotos ' +
@@ -527,6 +585,74 @@ begin
         ACodigoUnidad;
       oConsulta.ParamByName('ORDEN').AsInteger := AOrden;
       oConsulta.Execute;
+      FConexion.Commit;
+    except
+      if FConexion.InTransaction then
+        FConexion.Rollback;
+      raise;
+    end;
+  finally
+    if bBloqueada then
+      LiberarBloqueoColeccion(oConsulta, sClaveBloqueo);
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TRepositorioEdicionFotosUniDAC.MarcarFotoPredeterminada(
+  const ACodigoArticulo, ACodigoUnidad: string;
+  AOrdenEsperado: Integer;
+  const ANombreEsperado, AUsuario: string);
+var
+  bBloqueada    : Boolean;
+  iOrdenTemporal: Integer;
+  oConsulta     : TUniQuery;
+  sClaveBloqueo: string;
+begin
+  if (ACodigoArticulo = '') or (AOrdenEsperado < 1) or
+     (ANombreEsperado = '') then
+    raise Exception.Create(
+      SErrorFotoNoRegistradaParaPredeterminar);
+  ComprobarSinTransaccionExterna;
+  sClaveBloqueo := ClaveBloqueoColeccion(
+    ACodigoArticulo, ACodigoUnidad);
+  bBloqueada := False;
+  oConsulta := NuevaConsulta;
+  try
+    AdquirirBloqueoColeccion(oConsulta, sClaveBloqueo);
+    bBloqueada := True;
+    FConexion.StartTransaction;
+    try
+      iOrdenTemporal := BloquearFilasYObtenerOrdenTemporal(
+        oConsulta,
+        ACodigoArticulo,
+        ACodigoUnidad,
+        AOrdenEsperado,
+        ANombreEsperado);
+      if AOrdenEsperado > 1 then
+      begin
+        CambiarOrdenFoto(
+          oConsulta,
+          ACodigoArticulo,
+          ACodigoUnidad,
+          AOrdenEsperado,
+          iOrdenTemporal,
+          ANombreEsperado,
+          AUsuario);
+        DesplazarFotosAnteriores(
+          oConsulta,
+          ACodigoArticulo,
+          ACodigoUnidad,
+          AOrdenEsperado,
+          AUsuario);
+        CambiarOrdenFoto(
+          oConsulta,
+          ACodigoArticulo,
+          ACodigoUnidad,
+          iOrdenTemporal,
+          1,
+          ANombreEsperado,
+          AUsuario);
+      end;
       FConexion.Commit;
     except
       if FConexion.InTransaction then

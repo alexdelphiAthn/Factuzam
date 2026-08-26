@@ -223,6 +223,13 @@ resourcestring
     'El parametro appDirFotos no esta configurado.';
   SErrorFotoNoRegistradaParaRotar =
     'No hay foto registrada para rotar.';
+  SErrorFotoNoRegistradaParaPredeterminar =
+    'No hay foto registrada para marcar como predeterminada.';
+  SErrorFotoSeleccionadaCambio =
+    'La foto seleccionada ha cambiado; actualiza la galería e inténtalo ' +
+    'de nuevo.';
+  SErrorGaleriaFotosCambio =
+    'La galería de fotos ha cambiado; actualízala e inténtalo de nuevo.';
   SErrorFotoSesionSinSerie =
     'Foto de sesion: falta SERIE_SES.';
   SErrorFotoSesionSinNumero =

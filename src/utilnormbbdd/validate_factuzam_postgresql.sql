@@ -3,6 +3,8 @@
 --   psql -X -v ON_ERROR_STOP=1 -d BASE_NUEVA \
 --     -f src/utilnormbbdd/validate_factuzam_postgresql.sql
 
+\set ON_ERROR_STOP on
+
 BEGIN;
 SET LOCAL search_path = public, pg_catalog;
 SET LOCAL client_min_messages = notice;
@@ -176,17 +178,41 @@ DECLARE
     'sp_recalcular_pmp_sku',
     'sp_recalcular_pmp_sku_almacen'
   ];
+  expected_functions constant text[] := ARRAY[
+    'prc_busqueda_articulos',
+    'prc_getperfilformulario'
+  ];
   missing_tables text[];
   missing_views text[];
   missing_routines text[];
   actual_tables integer;
   actual_views integer;
   matched_routines integer;
+  actual_routines integer;
+  actual_functions integer;
+  actual_procedures integer;
+  actual_primary_keys integer;
+  actual_secondary_indexes integer;
+  actual_identity_columns integer;
+  actual_triggers integer;
+  actual_column_comments integer;
+  total_rows bigint := 0;
+  relation_name text;
+  relation_rows bigint;
 BEGIN
   IF current_setting('server_version_num')::integer < 160000 THEN
     RAISE EXCEPTION 'Factuzam requiere PostgreSQL 16 o posterior; servidor: %',
       current_setting('server_version');
   END IF;
+
+  IF NOT EXISTS (
+    SELECT 1
+      FROM pg_catalog.pg_extension AS e
+     WHERE e.extname = 'unaccent'
+  ) THEN
+    RAISE EXCEPTION 'Falta la extensión PostgreSQL requerida: unaccent';
+  END IF;
+  RAISE NOTICE 'OK: extensión unaccent instalada';
 
   IF cardinality(expected_tables) <> 66
      OR cardinality(expected_views) <> 50
@@ -268,6 +294,16 @@ BEGIN
      AND p.prokind IN ('f', 'p')
      AND p.proname = ANY(expected_routines);
 
+  SELECT count(*),
+         count(*) FILTER (WHERE p.prokind = 'f'),
+         count(*) FILTER (WHERE p.prokind = 'p')
+    INTO actual_routines, actual_functions, actual_procedures
+    FROM pg_catalog.pg_proc AS p
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
+   WHERE n.nspname = 'public'
+     AND p.prokind IN ('f', 'p')
+     AND p.proname = ANY(expected_routines);
+
   IF coalesce(cardinality(missing_routines), 0) <> 0 THEN
     RAISE EXCEPTION 'Faltan rutinas fuente Factuzam: %',
       array_to_string(missing_routines, ', ');
@@ -276,7 +312,96 @@ BEGIN
     RAISE EXCEPTION 'Inventario de rutinas fuente inesperado: esperadas 45, encontradas %',
       matched_routines;
   END IF;
-  RAISE NOTICE 'OK: los 45 nombres de rutina fuente existen como procedure o function';
+  IF actual_routines <> 45 OR actual_functions <> 2 OR actual_procedures <> 43 THEN
+    RAISE EXCEPTION
+      'Inventario de definiciones inesperado: total %, funciones %, procedimientos % (esperado 45/2/43)',
+      actual_routines, actual_functions, actual_procedures;
+  END IF;
+  IF EXISTS (
+    SELECT 1
+      FROM pg_catalog.pg_proc AS p
+      JOIN pg_catalog.pg_namespace AS n ON n.oid = p.pronamespace
+     WHERE n.nspname = 'public'
+       AND p.proname = ANY(expected_routines)
+       AND ((p.proname = ANY(expected_functions) AND p.prokind <> 'f')
+         OR (NOT (p.proname = ANY(expected_functions)) AND p.prokind <> 'p'))
+  ) THEN
+    RAISE EXCEPTION 'Una rutina Factuzam tiene un tipo function/procedure inesperado';
+  END IF;
+  RAISE NOTICE 'OK: 45 rutinas sin overloads obsoletos (2 funciones y 43 procedimientos)';
+
+  SELECT count(*)
+    INTO actual_primary_keys
+    FROM pg_catalog.pg_constraint AS con
+    JOIN pg_catalog.pg_class AS rel ON rel.oid = con.conrelid
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = rel.relnamespace
+   WHERE n.nspname = 'public'
+     AND con.contype = 'p';
+
+  SELECT count(*)
+    INTO actual_secondary_indexes
+    FROM pg_catalog.pg_index AS idx
+    JOIN pg_catalog.pg_class AS rel ON rel.oid = idx.indrelid
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = rel.relnamespace
+    LEFT JOIN pg_catalog.pg_constraint AS con
+      ON con.conindid = idx.indexrelid
+     AND con.contype = 'p'
+   WHERE n.nspname = 'public'
+     AND con.oid IS NULL;
+
+  SELECT count(*)
+    INTO actual_identity_columns
+    FROM information_schema.columns
+   WHERE table_schema = 'public'
+     AND is_identity = 'YES';
+
+  SELECT count(*)
+    INTO actual_triggers
+    FROM pg_catalog.pg_trigger AS trg
+    JOIN pg_catalog.pg_class AS rel ON rel.oid = trg.tgrelid
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = rel.relnamespace
+   WHERE n.nspname = 'public'
+     AND NOT trg.tgisinternal;
+
+  SELECT count(*)
+    INTO actual_column_comments
+    FROM pg_catalog.pg_description AS des
+    JOIN pg_catalog.pg_class AS rel ON rel.oid = des.objoid
+    JOIN pg_catalog.pg_namespace AS n ON n.oid = rel.relnamespace
+   WHERE n.nspname = 'public'
+     AND des.classoid = 'pg_catalog.pg_class'::regclass
+     AND des.objsubid > 0;
+
+  IF actual_primary_keys <> 65
+     OR actual_secondary_indexes <> 77
+     OR actual_identity_columns <> 10
+     OR actual_triggers <> 47
+     OR actual_column_comments <> 249 THEN
+    RAISE EXCEPTION
+      'Inventario estructural inesperado: PK %, índices %, identities %, triggers %, comentarios %',
+      actual_primary_keys, actual_secondary_indexes, actual_identity_columns,
+      actual_triggers, actual_column_comments;
+  END IF;
+  RAISE NOTICE 'OK: 65 PK, 77 índices, 10 identities, 47 triggers y 249 comentarios';
+
+  FOR relation_name IN
+    SELECT rel.relname
+      FROM pg_catalog.pg_class AS rel
+      JOIN pg_catalog.pg_namespace AS n ON n.oid = rel.relnamespace
+     WHERE n.nspname = 'public'
+       AND rel.relkind IN ('r', 'p')
+     ORDER BY rel.relname
+  LOOP
+    EXECUTE format('SELECT count(*) FROM public.%I', relation_name)
+      INTO relation_rows;
+    total_rows := total_rows + relation_rows;
+  END LOOP;
+
+  IF total_rows <> 7063 THEN
+    RAISE EXCEPTION 'Inventario de datos inesperado: esperadas 7063 filas, encontradas %',
+      total_rows;
+  END IF;
+  RAISE NOTICE 'OK: 7063 filas de datos cargadas';
   RAISE NOTICE 'Smoke test de catálogo Factuzam superado; se ejecutará ROLLBACK';
 END;
 $validate$;

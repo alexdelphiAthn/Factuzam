@@ -1,5 +1,5 @@
 -- ============================================================================
--- Factuzam: rutinas PostgreSQL, fase 2 (lote DML)
+-- Factuzam: módulo PostgreSQL 16 de rutinas DML
 -- Origen: las definiciones MariaDB de factuzam_original.sql.
 --
 -- Las rutinas no abren ni cierran transacciones. Toda la llamada participa en
@@ -7,12 +7,9 @@
 -- expresan mediante bloques EXCEPTION de PL/pgSQL, que revierten su subbloque
 -- antes de propagar el error.
 --
--- Los SELECT escalares de salida se exponen como parametros OUT. Por ejemplo:
---   CALL prc_realizar_traspaso(..., NULL);
+-- Los SELECT escalares de salida se exponen como OUT/INOUT. Los traspasos
+-- conservan CALL con sus seis entradas porque el mensaje tiene valor DEFAULT.
 -- ============================================================================
-
-SET check_function_bodies = on;
-SET search_path = public;
 
 -- --------------------------------------------------------------------------
 -- Dependencias de inventario y almacen
@@ -48,55 +45,74 @@ LANGUAGE plpgsql
 AS $routine$
 DECLARE
   v_pmp_actual numeric(19,6) := 0;
+  v_coste_unitario_final numeric(19,6) := 0;
   v_precio_final numeric(19,6);
   v_coste_final numeric(19,6);
 BEGIN
-  SELECT COALESCE(
-           (
-             SELECT stk.precio_medio_stk
-               FROM fza_articulos_stockactual AS stk
-              WHERE stk.codigo_almacen_stk = p_codigo_almacen_mov
-                AND stk.codigo_unidad_stk = p_codigo_unidad_mov
-              LIMIT 1
-           ),
-           0
-         )
-    INTO v_pmp_actual;
+  -- Se materializa y bloquea el saldo base para serializar movimientos del
+  -- mismo SKU/almacen y calcular la salida con un PMP coherente.
+  INSERT INTO fza_articulos_stockactual (
+    codigo_almacen_stk, codigo_unidad_stk, lote_stk,
+    cantidad_stk, valor_total_stk, precio_medio_stk, instantemodif
+  ) VALUES (
+    p_codigo_almacen_mov, p_codigo_unidad_mov, '',
+    0, 0, 0, statement_timestamp()
+  )
+  ON CONFLICT (codigo_almacen_stk, codigo_unidad_stk, lote_stk)
+  DO NOTHING;
+
+  SELECT COALESCE(stk.precio_medio_stk, 0)
+    INTO v_pmp_actual
+    FROM fza_articulos_stockactual AS stk
+   WHERE stk.codigo_almacen_stk = p_codigo_almacen_mov
+     AND stk.codigo_unidad_stk = p_codigo_unidad_mov
+     AND stk.lote_stk = ''
+   FOR UPDATE;
 
   IF p_tipo_movimiento_mov = 'S' THEN
     v_precio_final := v_pmp_actual;
-    v_coste_final := p_cantidad_mov * v_pmp_actual;
+    v_coste_unitario_final := v_pmp_actual;
+    v_coste_final := COALESCE(p_cantidad_mov, 0) * v_pmp_actual;
   ELSE
-    v_precio_final := p_precio_medio_mov;
-    v_coste_final := p_total_coste_mov;
+    -- En el contrato MariaDB, p_precio_medio_mov es el coste unitario de una
+    -- entrada. Guardarlo tambien en PRECIO_COSTE_UNITARIO_MOV es esencial:
+    -- los procedimientos de reconstruccion del PMP leen esa columna.
+    v_coste_unitario_final := COALESCE(p_precio_medio_mov, 0);
+    v_precio_final := v_coste_unitario_final;
+    v_coste_final := COALESCE(
+      p_total_coste_mov,
+      COALESCE(p_cantidad_mov, 0) * v_coste_unitario_final
+    );
   END IF;
 
   INSERT INTO fza_movimientos_almacen (
     numero_mov,
     tipo_doc_mov, serie_doc_mov, nro_doc_mov, linea_mov,
     codigo_empresa_mov, codigo_almacen_mov, codigo_almacen_contra_mov,
-    codigo_unidad_mov, tipo_movimiento_mov, cantidad_mov,
-    precio_medio_mov, total_coste_mov,
-    fecha_mov, usuarioalta, usuariomodif,
+    codigo_unidad_mov, lote_mov, tipo_movimiento_mov, cantidad_mov,
+    precio_coste_unitario_mov, precio_medio_mov, total_coste_mov,
+    fecha_mov, instantealta, instantemodif, usuarioalta, usuariomodif,
     codigo_almacen_doc_mov, numero_operacion_doc_mov, codigo_caja_doc_mov,
     codigo_cliente_mov, codigo_articulo_mov
   ) VALUES (
     p_numero_mov,
     p_tipo_doc_mov, p_serie_doc_mov, p_nro_doc_mov, p_linea_mov,
     p_codigo_empresa_mov, p_codigo_almacen_mov, p_codigo_almacen_contra_mov,
-    p_codigo_unidad_mov, p_tipo_movimiento_mov, p_cantidad_mov,
-    v_precio_final, v_coste_final,
-    statement_timestamp(), p_usuario, p_usuario,
+    p_codigo_unidad_mov, '', p_tipo_movimiento_mov, p_cantidad_mov,
+    v_coste_unitario_final, v_precio_final, v_coste_final,
+    statement_timestamp(), statement_timestamp(), statement_timestamp(),
+    p_usuario, p_usuario,
     p_almacen_doc, p_numop_doc, p_codigo_caja_doc_mov,
     p_codcliente, p_codarticulo
   );
 
   INSERT INTO fza_articulos_stockactual (
-    codigo_almacen_stk, codigo_unidad_stk,
+    codigo_almacen_stk, codigo_unidad_stk, lote_stk,
     cantidad_stk, valor_total_stk, precio_medio_stk, instantemodif
   ) VALUES (
     p_codigo_almacen_mov,
     p_codigo_unidad_mov,
+    '',
     CASE WHEN p_tipo_movimiento_mov = 'E'
          THEN p_cantidad_mov ELSE -p_cantidad_mov END,
     CASE WHEN p_tipo_movimiento_mov = 'E'
@@ -154,6 +170,12 @@ BEGIN
      AND i.nro_inventario = p_nro
    FOR UPDATE;
 
+  IF v_estado IS NULL THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P0001',
+      MESSAGE = 'Error: el inventario no existe.';
+  END IF;
+
   IF v_estado <> 'ABIERTO' THEN
     RAISE EXCEPTION USING
       ERRCODE = 'P0001',
@@ -163,6 +185,7 @@ BEGIN
   FOR v_linea IN
     SELECT l.linea_inventario_linea,
            l.codigo_unidad_inventario_linea,
+           COALESCE(l.lote_inventario_linea, '') AS lote_inventario_linea,
            l.cantidad_fisica_inventario_linea,
            l.precio_medio_nuevo_inventario_linea,
            l.fecha_recuento_inventario_linea
@@ -188,6 +211,7 @@ BEGIN
       FROM fza_movimientos_almacen AS m
      WHERE m.codigo_almacen_mov = p_almacen
        AND m.codigo_unidad_mov = v_linea.codigo_unidad_inventario_linea
+       AND COALESCE(m.lote_mov, '') = v_linea.lote_inventario_linea
        AND m.fecha_mov <= v_fecha_recuento
        AND m.esactivo_mov = 'S';
 
@@ -195,9 +219,10 @@ BEGIN
              (
                SELECT m.precio_medio_mov
                  FROM fza_movimientos_almacen AS m
-                WHERE m.codigo_almacen_mov = p_almacen
-                  AND m.codigo_unidad_mov = v_linea.codigo_unidad_inventario_linea
-                  AND m.fecha_mov <= v_fecha_recuento
+                 WHERE m.codigo_almacen_mov = p_almacen
+                   AND m.codigo_unidad_mov = v_linea.codigo_unidad_inventario_linea
+                   AND COALESCE(m.lote_mov, '') = v_linea.lote_inventario_linea
+                   AND m.fecha_mov <= v_fecha_recuento
                   AND m.esactivo_mov = 'S'
                 ORDER BY m.fecha_mov DESC, m.numero_mov DESC
                 LIMIT 1
@@ -278,6 +303,8 @@ DECLARE
   v_linea record;
   v_mov_salida varchar(20);
   v_mov_entrada varchar(20);
+  v_clave_mov text;
+  v_stock_actual numeric(19,6);
 BEGIN
   SELECT i.estado_inventario
     INTO v_estado
@@ -287,6 +314,12 @@ BEGIN
      AND i.serie_inventario = p_serie
      AND i.nro_inventario = p_nro
    FOR UPDATE;
+
+  IF v_estado IS NULL THEN
+    RAISE EXCEPTION USING
+      ERRCODE = 'P0001',
+      MESSAGE = 'Error: el inventario no existe.';
+  END IF;
 
   IF v_estado <> 'ABIERTO' THEN
     RAISE EXCEPTION USING
@@ -298,6 +331,8 @@ BEGIN
     SELECT l.linea_inventario_linea,
            l.codigo_articulo_inventario_linea,
            l.codigo_unidad_inventario_linea,
+           COALESCE(l.lote_inventario_linea, '') AS lote_inventario_linea,
+           l.fecha_caducidad_inventario_linea,
            l.cantidad_teorica_inventario_linea,
            l.cantidad_fisica_inventario_linea,
            l.precio_medio_nuevo_inventario_linea,
@@ -313,15 +348,93 @@ BEGIN
        AND l.codigo_almacen_inventario_linea = p_almacen
        AND l.serie_inventario_linea = p_serie
        AND l.nro_inventario_linea = p_nro
+     ORDER BY l.codigo_unidad_inventario_linea,
+              COALESCE(l.lote_inventario_linea, ''),
+              l.linea_inventario_linea
   LOOP
-    v_mov_salida := left(
-      'IV-' || p_nro || '-' || v_linea.linea_inventario_linea || 'S',
-      20
+    -- Serializa con el procedimiento público de movimientos (que bloquea el
+    -- saldo sin lote) y, si procede, con el saldo del lote contado.
+    INSERT INTO fza_articulos_stockactual (
+      codigo_almacen_stk, codigo_unidad_stk, lote_stk,
+      cantidad_stk, valor_total_stk, precio_medio_stk, instantemodif
+    ) VALUES (
+      p_almacen, v_linea.codigo_unidad_inventario_linea, '',
+      0, 0, 0, statement_timestamp()
+    )
+    ON CONFLICT (codigo_almacen_stk, codigo_unidad_stk, lote_stk)
+    DO NOTHING;
+
+    PERFORM 1
+      FROM fza_articulos_stockactual AS stk
+     WHERE stk.codigo_almacen_stk = p_almacen
+       AND stk.codigo_unidad_stk = v_linea.codigo_unidad_inventario_linea
+       AND stk.lote_stk = ''
+     FOR UPDATE;
+
+    IF v_linea.lote_inventario_linea <> '' THEN
+      INSERT INTO fza_articulos_stockactual (
+        codigo_almacen_stk, codigo_unidad_stk, lote_stk,
+        cantidad_stk, valor_total_stk, precio_medio_stk, instantemodif
+      ) VALUES (
+        p_almacen, v_linea.codigo_unidad_inventario_linea,
+        v_linea.lote_inventario_linea,
+        0, 0, 0, statement_timestamp()
+      )
+      ON CONFLICT (codigo_almacen_stk, codigo_unidad_stk, lote_stk)
+      DO NOTHING;
+
+      PERFORM 1
+        FROM fza_articulos_stockactual AS stk
+       WHERE stk.codigo_almacen_stk = p_almacen
+         AND stk.codigo_unidad_stk = v_linea.codigo_unidad_inventario_linea
+         AND stk.lote_stk = v_linea.lote_inventario_linea
+       FOR UPDATE;
+    END IF;
+
+    -- No aplica una foto obsoleta si el kardex cambió desde el último cálculo
+    -- teórico. El usuario debe recalcular y revisar de nuevo las diferencias.
+    SELECT COALESCE(
+             SUM(
+               CASE WHEN m.tipo_movimiento_mov = 'E'
+                    THEN m.cantidad_mov ELSE -m.cantidad_mov END
+             ),
+             0
+           )
+      INTO v_stock_actual
+      FROM fza_movimientos_almacen AS m
+     WHERE m.codigo_almacen_mov = p_almacen
+       AND m.codigo_unidad_mov = v_linea.codigo_unidad_inventario_linea
+       AND COALESCE(m.lote_mov, '') = v_linea.lote_inventario_linea
+       AND m.fecha_mov <= v_linea.fecha_recuento
+       AND COALESCE(m.esactivo_mov, 'S') = 'S';
+
+    IF v_stock_actual IS DISTINCT FROM
+       v_linea.cantidad_teorica_inventario_linea THEN
+      RAISE EXCEPTION USING
+        ERRCODE = '40001',
+        MESSAGE = format(
+          'El stock de %s (lote %s) cambió desde el cálculo del inventario.',
+          v_linea.codigo_unidad_inventario_linea,
+          CASE WHEN v_linea.lote_inventario_linea = ''
+               THEN 'sin lote' ELSE v_linea.lote_inventario_linea END
+        ),
+        HINT = 'Ejecute de nuevo PRC_FZA_INVENTARIOS_ACTUALIZAR_TEORICO antes de aplicar.';
+    END IF;
+
+    -- NUMERO_MOV sólo admite 20 caracteres. Un hash de toda la clave del
+    -- documento evita la truncación y distingue empresa, almacén, serie,
+    -- número, línea y sentido; una colisión excepcional falla por la PK.
+    v_clave_mov := md5(
+      to_jsonb(ARRAY[
+        p_empresa,
+        p_almacen,
+        p_serie,
+        p_nro,
+        v_linea.linea_inventario_linea
+      ]::text[])::text
     );
-    v_mov_entrada := left(
-      'IV-' || p_nro || '-' || v_linea.linea_inventario_linea || 'E',
-      20
-    );
+    v_mov_salida := 'I' || left(v_clave_mov, 18) || 'S';
+    v_mov_entrada := 'I' || left(v_clave_mov, 18) || 'E';
 
     IF v_linea.cantidad_teorica_inventario_linea > 0 THEN
       CALL prc_fza_movimientos_almacen_insert(
@@ -335,7 +448,9 @@ BEGIN
       );
 
       UPDATE fza_movimientos_almacen AS m
-         SET fecha_mov = v_linea.fecha_recuento
+         SET fecha_mov = v_linea.fecha_recuento,
+             lote_mov = v_linea.lote_inventario_linea,
+             fecha_caducidad_mov = v_linea.fecha_caducidad_inventario_linea
        WHERE m.numero_mov = v_mov_salida;
     ELSIF v_linea.cantidad_teorica_inventario_linea < 0 THEN
       CALL prc_fza_movimientos_almacen_insert(
@@ -344,12 +459,17 @@ BEGIN
         p_empresa, p_almacen, NULL,
         v_linea.codigo_unidad_inventario_linea,
         'E', abs(v_linea.cantidad_teorica_inventario_linea),
-        0, 0, p_usuario, p_almacen, NULL, NULL, NULL,
+        v_linea.precio_medio_nuevo_inventario_linea,
+        abs(v_linea.cantidad_teorica_inventario_linea)
+          * v_linea.precio_medio_nuevo_inventario_linea,
+        p_usuario, p_almacen, NULL, NULL, NULL,
         v_linea.codigo_articulo_inventario_linea
       );
 
       UPDATE fza_movimientos_almacen AS m
-         SET fecha_mov = v_linea.fecha_recuento
+         SET fecha_mov = v_linea.fecha_recuento,
+             lote_mov = v_linea.lote_inventario_linea,
+             fecha_caducidad_mov = v_linea.fecha_caducidad_inventario_linea
        WHERE m.numero_mov = v_mov_salida;
     END IF;
 
@@ -368,16 +488,29 @@ BEGIN
       );
 
       UPDATE fza_movimientos_almacen AS m
-         SET fecha_mov = v_linea.fecha_recuento
+         SET fecha_mov = v_linea.fecha_recuento,
+             lote_mov = v_linea.lote_inventario_linea,
+             fecha_caducidad_mov = v_linea.fecha_caducidad_inventario_linea
        WHERE m.numero_mov = v_mov_entrada;
     END IF;
 
-    -- La fuente tiene dos llamadas de aridad 2. El contrato real es
-    -- (empresa, sku, almacen); se corrige de forma deliberada.
+    -- La inserción pública conserva su contrato histórico sin lote y actualiza
+    -- primero el saldo por defecto. Tras asignar el lote al movimiento se
+    -- reconstruyen tanto ese saldo por defecto como el lote contado.
+    IF v_linea.lote_inventario_linea <> '' THEN
+      CALL sp_recalcular_pmp_sku_almacen(
+        p_empresa,
+        v_linea.codigo_unidad_inventario_linea,
+        p_almacen,
+        ''
+      );
+    END IF;
+
     CALL sp_recalcular_pmp_sku_almacen(
       p_empresa,
       v_linea.codigo_unidad_inventario_linea,
-      p_almacen
+      p_almacen,
+      v_linea.lote_inventario_linea
     );
   END LOOP;
 
@@ -409,8 +542,7 @@ LANGUAGE plpgsql
 AS $routine$
 DECLARE
   v_estado varchar(20);
-  v_patron varchar(50);
-  v_sku varchar(50);
+  v_clave record;
 BEGIN
   SELECT i.estado_inventario
     INTO v_estado
@@ -433,28 +565,35 @@ BEGIN
       MESSAGE = 'Error: el inventario debe estar APLICADO para eliminar la regularización.';
   END IF;
 
-  v_patron := 'IV-' || p_nro || '-%';
-
   DROP TABLE IF EXISTS pg_temp.tmp_skus_afectados;
   CREATE TEMPORARY TABLE tmp_skus_afectados (
-    sku varchar(50) PRIMARY KEY
+    sku varchar(50) NOT NULL,
+    lote varchar(50) NOT NULL,
+    PRIMARY KEY (sku, lote)
   ) ON COMMIT DROP;
 
-  INSERT INTO tmp_skus_afectados (sku)
-  SELECT DISTINCT m.codigo_unidad_mov
+  INSERT INTO tmp_skus_afectados (sku, lote)
+  SELECT DISTINCT m.codigo_unidad_mov, COALESCE(m.lote_mov, '')
     FROM fza_movimientos_almacen AS m
-   WHERE m.codigo_almacen_mov = p_almacen
-     AND m.numero_mov LIKE v_patron;
+   WHERE m.tipo_doc_mov = 'IN'
+     AND m.codigo_empresa_mov = p_empresa
+     AND m.codigo_almacen_mov = p_almacen
+     AND m.serie_doc_mov = p_serie
+     AND m.nro_doc_mov = p_nro;
 
   DELETE FROM fza_movimientos_almacen AS m
-   WHERE m.codigo_almacen_mov = p_almacen
-     AND m.numero_mov LIKE v_patron;
+   WHERE m.tipo_doc_mov = 'IN'
+     AND m.codigo_empresa_mov = p_empresa
+     AND m.codigo_almacen_mov = p_almacen
+     AND m.serie_doc_mov = p_serie
+     AND m.nro_doc_mov = p_nro;
 
-  FOR v_sku IN
-    SELECT t.sku FROM tmp_skus_afectados AS t
+  FOR v_clave IN
+    SELECT t.sku, t.lote FROM tmp_skus_afectados AS t
   LOOP
-    -- Segunda llamada de aridad 2 corregida al contrato real.
-    CALL sp_recalcular_pmp_sku_almacen(p_empresa, v_sku, p_almacen);
+    CALL sp_recalcular_pmp_sku_almacen(
+      p_empresa, v_clave.sku, p_almacen, v_clave.lote
+    );
   END LOOP;
 
   UPDATE fza_inventarios AS i
@@ -473,11 +612,15 @@ EXCEPTION
 END;
 $routine$;
 
+DROP PROCEDURE IF EXISTS sp_recalcular_pmp_sku_almacen(
+  varchar, varchar, varchar, varchar
+);
 DROP PROCEDURE IF EXISTS sp_recalcular_pmp_sku_almacen(varchar, varchar, varchar);
 CREATE PROCEDURE sp_recalcular_pmp_sku_almacen(
   IN p_codigo_empresa varchar(20),
   IN p_codigo_sku varchar(50),
-  IN p_codigo_almacen varchar(10)
+  IN p_codigo_almacen varchar(10),
+  IN p_lote varchar(50) DEFAULT ''
 )
 LANGUAGE plpgsql
 AS $routine$
@@ -486,16 +629,71 @@ DECLARE
   v_stock_acumulado numeric(19,6) := 0;
   v_valor_acumulado numeric(19,6) := 0;
   v_pmp_actual numeric(19,6) := 0;
+  v_fecha_caducidad date;
+  v_num_caducidades integer;
 BEGIN
+  -- La PK de stock no contiene empresa. Se conserva p_codigo_empresa para no
+  -- romper las llamadas existentes, pero el saldo se calcula sobre todas las
+  -- empresas que comparten almacen, SKU y lote.
+  INSERT INTO fza_articulos_stockactual (
+    codigo_almacen_stk, codigo_unidad_stk, lote_stk,
+    cantidad_stk, valor_total_stk, precio_medio_stk, instantemodif
+  ) VALUES (
+    p_codigo_almacen, p_codigo_sku, COALESCE(p_lote, ''),
+    0, 0, 0, statement_timestamp()
+  )
+  ON CONFLICT (codigo_almacen_stk, codigo_unidad_stk, lote_stk)
+  DO NOTHING;
+
+  -- Usa el mismo orden de bloqueo que el procedimiento de insercion para que
+  -- un movimiento concurrente no quede fuera del saldo reconstruido.
+  PERFORM 1
+    FROM fza_articulos_stockactual AS stk
+   WHERE stk.codigo_almacen_stk = p_codigo_almacen
+     AND stk.codigo_unidad_stk = p_codigo_sku
+     AND stk.lote_stk = COALESCE(p_lote, '')
+   FOR UPDATE;
+
+  SELECT min(m.fecha_caducidad_mov),
+         count(DISTINCT m.fecha_caducidad_mov)
+    INTO v_fecha_caducidad, v_num_caducidades
+    FROM fza_movimientos_almacen AS m
+   WHERE m.codigo_unidad_mov = p_codigo_sku
+     AND m.codigo_almacen_mov = p_codigo_almacen
+     AND COALESCE(m.lote_mov, '') = COALESCE(p_lote, '')
+     AND COALESCE(m.esactivo_mov, 'S') = 'S';
+
+  IF v_num_caducidades > 1 THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22000',
+      MESSAGE = format(
+        'El lote %s de %s tiene fechas de caducidad incompatibles.',
+        CASE WHEN COALESCE(p_lote, '') = ''
+             THEN 'sin lote' ELSE p_lote END,
+        p_codigo_sku
+      ),
+      DETAIL = 'Un saldo por lote sólo puede conservar una fecha de caducidad.';
+  END IF;
+
   FOR v_mov IN
-    SELECT m.tipo_doc_mov, m.serie_doc_mov, m.nro_doc_mov, m.linea_mov,
-           m.tipo_movimiento_mov, m.cantidad_mov,
-           m.precio_coste_unitario_mov
+    SELECT m.numero_mov, m.tipo_movimiento_mov,
+           COALESCE(m.cantidad_mov, 0) AS cantidad_mov,
+           CASE
+             WHEN COALESCE(m.precio_coste_unitario_mov, 0) <> 0
+             THEN m.precio_coste_unitario_mov
+             WHEN COALESCE(m.cantidad_mov, 0) <> 0
+              AND COALESCE(m.total_coste_mov, 0) <> 0
+             THEN m.total_coste_mov / m.cantidad_mov
+             ELSE COALESCE(m.precio_medio_mov, 0)
+           END AS precio_coste_unitario_mov
       FROM fza_movimientos_almacen AS m
-     WHERE m.codigo_empresa_mov = p_codigo_empresa
-       AND m.codigo_unidad_mov = p_codigo_sku
+     WHERE m.codigo_unidad_mov = p_codigo_sku
        AND m.codigo_almacen_mov = p_codigo_almacen
-     ORDER BY m.fecha_mov ASC
+       AND COALESCE(m.lote_mov, '') = COALESCE(p_lote, '')
+       AND COALESCE(m.esactivo_mov, 'S') = 'S'
+     ORDER BY m.fecha_mov ASC NULLS FIRST,
+              m.instantealta ASC NULLS FIRST,
+              m.numero_mov ASC
      FOR UPDATE
   LOOP
     IF v_mov.tipo_movimiento_mov = 'E' THEN
@@ -517,29 +715,33 @@ BEGIN
 
     UPDATE fza_movimientos_almacen AS m
        SET precio_medio_mov = v_pmp_actual,
+           precio_coste_unitario_mov = CASE
+             WHEN v_mov.tipo_movimiento_mov = 'E'
+             THEN v_mov.precio_coste_unitario_mov
+             ELSE m.precio_coste_unitario_mov
+           END,
            total_coste_mov = CASE
              WHEN v_mov.tipo_movimiento_mov = 'E'
              THEN v_mov.cantidad_mov * v_mov.precio_coste_unitario_mov
              ELSE v_mov.cantidad_mov * v_pmp_actual
            END
-     WHERE m.tipo_doc_mov = v_mov.tipo_doc_mov
-       AND m.serie_doc_mov = v_mov.serie_doc_mov
-       AND m.nro_doc_mov = v_mov.nro_doc_mov
-       AND m.linea_mov = v_mov.linea_mov;
+     WHERE m.numero_mov = v_mov.numero_mov;
   END LOOP;
 
   INSERT INTO fza_articulos_stockactual (
-    codigo_almacen_stk, codigo_unidad_stk, cantidad_stk,
-    valor_total_stk, precio_medio_stk, instantemodif
+    codigo_almacen_stk, codigo_unidad_stk, lote_stk, cantidad_stk,
+    valor_total_stk, precio_medio_stk, fecha_caducidad_stk, instantemodif
   ) VALUES (
-    p_codigo_almacen, p_codigo_sku, v_stock_acumulado,
-    v_valor_acumulado, v_pmp_actual, statement_timestamp()
+    p_codigo_almacen, p_codigo_sku, COALESCE(p_lote, ''), v_stock_acumulado,
+    v_valor_acumulado, v_pmp_actual, v_fecha_caducidad,
+    statement_timestamp()
   )
   ON CONFLICT (codigo_almacen_stk, codigo_unidad_stk, lote_stk)
   DO UPDATE SET
     cantidad_stk = EXCLUDED.cantidad_stk,
     valor_total_stk = EXCLUDED.valor_total_stk,
     precio_medio_stk = EXCLUDED.precio_medio_stk,
+    fecha_caducidad_stk = EXCLUDED.fecha_caducidad_stk,
     instantemodif = statement_timestamp();
 END;
 $routine$;
@@ -559,13 +761,25 @@ DECLARE
 BEGIN
   -- La fuente recibe p_fecha_desde pero recorre deliberadamente todo el kardex.
   FOR v_mov IN
-    SELECT m.tipo_doc_mov, m.serie_doc_mov, m.nro_doc_mov, m.linea_mov,
-           m.tipo_movimiento_mov, m.cantidad_mov,
-           m.precio_coste_unitario_mov, m.fecha_mov
+    SELECT m.numero_mov, m.tipo_movimiento_mov,
+           COALESCE(m.cantidad_mov, 0) AS cantidad_mov,
+           CASE
+             WHEN COALESCE(m.precio_coste_unitario_mov, 0) <> 0
+             THEN m.precio_coste_unitario_mov
+             WHEN COALESCE(m.cantidad_mov, 0) <> 0
+              AND COALESCE(m.total_coste_mov, 0) <> 0
+             THEN m.total_coste_mov / m.cantidad_mov
+             ELSE COALESCE(m.precio_medio_mov, 0)
+           END AS precio_coste_unitario_mov,
+           m.fecha_mov
       FROM fza_movimientos_almacen AS m
      WHERE m.codigo_empresa_mov = p_codigo_empresa
        AND m.codigo_unidad_mov = p_codigo_sku
-     ORDER BY m.fecha_mov ASC, m.instantealta ASC
+       AND COALESCE(m.esactivo_mov, 'S') = 'S'
+     ORDER BY m.fecha_mov ASC NULLS FIRST,
+              m.instantealta ASC NULLS FIRST,
+              m.numero_mov ASC
+     FOR UPDATE
   LOOP
     IF v_mov.tipo_movimiento_mov = 'E' THEN
       IF v_stock_acumulado <= 0 THEN
@@ -583,10 +797,7 @@ BEGIN
 
     UPDATE fza_movimientos_almacen AS m
        SET precio_medio_mov = v_pmp_actual
-     WHERE m.tipo_doc_mov = v_mov.tipo_doc_mov
-       AND m.serie_doc_mov = v_mov.serie_doc_mov
-       AND m.nro_doc_mov = v_mov.nro_doc_mov
-       AND m.linea_mov = v_mov.linea_mov;
+     WHERE m.numero_mov = v_mov.numero_mov;
   END LOOP;
 END;
 $routine$;
@@ -739,32 +950,25 @@ AS $routine$
 BEGIN
   IF trim(p_codigo_proveedor) <> ''
      AND trim(p_codigo_articulo) <> '' THEN
-    IF EXISTS (
-      SELECT 1
-        FROM fza_articulos_proveedores AS ap
-       WHERE ap.codigo_proveedor_articulo_proveedor = p_codigo_proveedor
-         AND ap.codigo_articulo_articulo_proveedor = p_codigo_articulo
-    ) THEN
-      UPDATE fza_articulos_proveedores AS ap
-         SET precio_ult_compra_articulo_proveedor = p_precio_ult_compra,
-             esproveedorprincipal_articulo_proveedor = p_esproveedorprincipal,
-             usuariomodif = p_usuario,
-             instantemodif = statement_timestamp()
-       WHERE ap.codigo_proveedor_articulo_proveedor = p_codigo_proveedor
-         AND ap.codigo_articulo_articulo_proveedor = p_codigo_articulo;
-    ELSE
-      INSERT INTO fza_articulos_proveedores (
-        codigo_proveedor_articulo_proveedor,
-        codigo_articulo_articulo_proveedor,
-        precio_ult_compra_articulo_proveedor,
-        esproveedorprincipal_articulo_proveedor,
-        usuariomodif, instantemodif, usuarioalta, instantealta
-      ) VALUES (
-        p_codigo_proveedor, p_codigo_articulo,
-        p_precio_ult_compra, p_esproveedorprincipal,
-        p_usuario, statement_timestamp(), p_usuario, statement_timestamp()
-      );
-    END IF;
+    INSERT INTO fza_articulos_proveedores (
+      codigo_proveedor_articulo_proveedor,
+      codigo_articulo_articulo_proveedor,
+      precio_ult_compra_articulo_proveedor,
+      esproveedorprincipal_articulo_proveedor,
+      usuariomodif, instantemodif, usuarioalta, instantealta
+    ) VALUES (
+      p_codigo_proveedor, p_codigo_articulo,
+      p_precio_ult_compra, p_esproveedorprincipal,
+      p_usuario, statement_timestamp(), p_usuario, statement_timestamp()
+    )
+    ON CONFLICT (
+      codigo_proveedor_articulo_proveedor,
+      codigo_articulo_articulo_proveedor
+    ) DO UPDATE SET
+      precio_ult_compra_articulo_proveedor = EXCLUDED.precio_ult_compra_articulo_proveedor,
+      esproveedorprincipal_articulo_proveedor = EXCLUDED.esproveedorprincipal_articulo_proveedor,
+      usuariomodif = EXCLUDED.usuariomodif,
+      instantemodif = statement_timestamp();
   END IF;
 EXCEPTION
   WHEN OTHERS THEN
@@ -784,18 +988,14 @@ DECLARE
   p_cont bigint;
 BEGIN
   IF trim(p_codigo_familia) <> '' THEN
-    IF EXISTS (
-      SELECT 1
-        FROM fza_articulos_familias AS f
-       WHERE f.codigo_familia = p_codigo_familia
-    ) THEN
-      UPDATE fza_articulos_familias AS f
-         SET nombre_familia = p_nombre_familia,
-             descripcion_familia = p_nombre_familia,
-             usuariomodif = p_usuario,
-             instantemodif = statement_timestamp()
-       WHERE f.codigo_familia = p_codigo_familia;
-    ELSE
+    UPDATE fza_articulos_familias AS f
+       SET nombre_familia = p_nombre_familia,
+           descripcion_familia = p_nombre_familia,
+           usuariomodif = p_usuario,
+           instantemodif = statement_timestamp()
+     WHERE f.codigo_familia = p_codigo_familia;
+
+    IF NOT FOUND THEN
       CALL prc_fnc_get_next_nro_doc('FO', p_cont);
 
       INSERT INTO fza_articulos_familias (
@@ -804,7 +1004,12 @@ BEGIN
       ) VALUES (
         p_codigo_familia, p_cont, p_nombre_familia, p_nombre_familia,
         p_usuario, statement_timestamp(), p_usuario, statement_timestamp()
-      );
+      )
+      ON CONFLICT (codigo_familia) DO UPDATE SET
+        nombre_familia = EXCLUDED.nombre_familia,
+        descripcion_familia = EXCLUDED.descripcion_familia,
+        usuariomodif = EXCLUDED.usuariomodif,
+        instantemodif = statement_timestamp();
     END IF;
   END IF;
 EXCEPTION
@@ -825,17 +1030,13 @@ DECLARE
   p_cont bigint;
 BEGIN
   IF trim(p_codigo_proveedor) <> '' THEN
-    IF EXISTS (
-      SELECT 1
-        FROM fza_proveedores AS p
-       WHERE p.codigo_proveedor = p_codigo_proveedor
-    ) THEN
-      UPDATE fza_proveedores AS p
-         SET razonsocial_proveedor = p_razonsocial_proveedor,
-             usuariomodif = p_usuario,
-             instantemodif = statement_timestamp()
-       WHERE p.codigo_proveedor = p_codigo_proveedor;
-    ELSE
+    UPDATE fza_proveedores AS p
+       SET razonsocial_proveedor = p_razonsocial_proveedor,
+           usuariomodif = p_usuario,
+           instantemodif = statement_timestamp()
+     WHERE p.codigo_proveedor = p_codigo_proveedor;
+
+    IF NOT FOUND THEN
       CALL prc_fnc_get_next_nro_doc('PO', p_cont);
 
       INSERT INTO fza_proveedores (
@@ -844,7 +1045,11 @@ BEGIN
       ) VALUES (
         p_codigo_proveedor, p_cont, p_razonsocial_proveedor,
         p_usuario, statement_timestamp(), p_usuario, statement_timestamp()
-      );
+      )
+      ON CONFLICT (codigo_proveedor) DO UPDATE SET
+        razonsocial_proveedor = EXCLUDED.razonsocial_proveedor,
+        usuariomodif = EXCLUDED.usuariomodif,
+        instantemodif = statement_timestamp();
     END IF;
   END IF;
 EXCEPTION
@@ -868,22 +1073,38 @@ CREATE PROCEDURE prc_crear_actualizar_tarifa(
 LANGUAGE plpgsql
 AS $routine$
 DECLARE
-  pp_preciosalida_tarifa numeric(19,6);
-  pp_preciofinal_tarifa numeric(19,6);
-  pp_porcen_dto_tarifa numeric(19,6);
-  pp_precio_dto_tarifa numeric(19,6);
+  v_codigo_unico_tarifa integer;
+  v_hoy date := statement_timestamp()::date;
+  v_fecha_hasta_nueva date;
 BEGIN
   IF trim(p_codigo_tarifa) <> '' THEN
-    CALL prc_fnc_get_precio_articulo_fecha(
-      p_codigo_articulo,
-      current_date,
-      pp_preciosalida_tarifa,
-      pp_preciofinal_tarifa,
-      pp_porcen_dto_tarifa,
-      pp_precio_dto_tarifa
+    -- La fuente preguntaba por cualquier tarifa vigente del articulo, de modo
+    -- que una tarifa distinta podia impedir el INSERT. Serializamos por la
+    -- clave logica y elegimos solo la vigencia base de la tarifa solicitada.
+    PERFORM pg_advisory_xact_lock(
+      hashtextextended(
+        length(coalesce(p_codigo_articulo, ''))::text || ':' ||
+        coalesce(p_codigo_articulo, '') || p_codigo_tarifa,
+        0
+      )
     );
 
-    IF pp_preciofinal_tarifa IS NOT NULL THEN
+    SELECT t.codigo_unico_tarifa
+      INTO v_codigo_unico_tarifa
+      FROM fza_articulos_tarifas AS t
+     WHERE t.codigo_articulo_tarifa = p_codigo_articulo
+       AND t.codigo_tarifa = p_codigo_tarifa
+       AND coalesce(t.codigo_unidad_tarifa, '') = ''
+       AND coalesce(t.activo_tarifa, 'S') = 'S'
+       AND (t.fecha_desde_tarifa IS NULL
+            OR t.fecha_desde_tarifa <= v_hoy)
+       AND (t.fecha_hasta_tarifa IS NULL
+            OR t.fecha_hasta_tarifa >= v_hoy)
+     ORDER BY t.fecha_desde_tarifa DESC NULLS LAST,
+              t.codigo_unico_tarifa DESC
+     LIMIT 1;
+
+    IF v_codigo_unico_tarifa IS NOT NULL THEN
       UPDATE fza_articulos_tarifas AS t
          SET preciosalida_tarifa = p_preciosalida_tarifa,
              preciofinal_tarifa = p_preciofinal_tarifa,
@@ -891,18 +1112,30 @@ BEGIN
              porcen_dto_tarifa = p_porcen_dto_tarifa,
              usuariomodif = p_usuario,
              instantemodif = statement_timestamp()
-       WHERE t.codigo_articulo_tarifa = p_codigo_articulo
-         AND t.codigo_tarifa = p_codigo_tarifa;
+       WHERE t.codigo_unico_tarifa = v_codigo_unico_tarifa;
     ELSE
+      -- Si ya hay una vigencia futura, la nueva termina el día anterior para
+      -- no crear un solape cuando aquella entre en vigor.
+      SELECT min(t.fecha_desde_tarifa) - 1
+        INTO v_fecha_hasta_nueva
+        FROM fza_articulos_tarifas AS t
+       WHERE t.codigo_articulo_tarifa = p_codigo_articulo
+         AND t.codigo_tarifa = p_codigo_tarifa
+         AND coalesce(t.codigo_unidad_tarifa, '') = ''
+         AND coalesce(t.activo_tarifa, 'S') = 'S'
+         AND t.fecha_desde_tarifa > v_hoy;
+
       INSERT INTO fza_articulos_tarifas (
         codigo_articulo_tarifa, codigo_tarifa,
         preciosalida_tarifa, preciofinal_tarifa,
-        precio_dto_tarifa, porcen_dto_tarifa, fecha_desde_tarifa,
+        precio_dto_tarifa, porcen_dto_tarifa,
+        fecha_desde_tarifa, fecha_hasta_tarifa,
         usuariomodif, instantemodif, usuarioalta, instantealta
       ) VALUES (
         p_codigo_articulo, p_codigo_tarifa,
         p_preciosalida_tarifa, p_preciofinal_tarifa,
-        p_precio_dto_tarifa, p_porcen_dto_tarifa, current_date,
+        p_precio_dto_tarifa, p_porcen_dto_tarifa,
+        v_hoy, v_fecha_hasta_nueva,
         p_usuario, statement_timestamp(), p_usuario, statement_timestamp()
       );
     END IF;
@@ -943,20 +1176,17 @@ DECLARE
   p_cont bigint;
 BEGIN
   IF trim(p_codigo_articulo) <> '' THEN
-    IF EXISTS (
-      SELECT 1 FROM fza_articulos AS a
-       WHERE a.codigo_articulo = p_codigo_articulo
-    ) THEN
-      UPDATE fza_articulos AS a
-         SET descripcion_articulo = p_descripcion_articulo,
-             esactivo_fijo_articulo = p_esactivo_fijo_articulo,
-             tipoiva_articulo = p_tipoiva_articulo,
-             tipo_cantidad_articulo = p_tipo_cantidad_articulo,
-             codigo_familia_articulo = p_codigo_familia,
-             usuariomodif = p_usuario,
-             instantemodif = statement_timestamp()
-       WHERE a.codigo_articulo = p_codigo_articulo;
-    ELSE
+    UPDATE fza_articulos AS a
+       SET descripcion_articulo = p_descripcion_articulo,
+           esactivo_fijo_articulo = p_esactivo_fijo_articulo,
+           tipoiva_articulo = p_tipoiva_articulo,
+           tipo_cantidad_articulo = p_tipo_cantidad_articulo,
+           codigo_familia_articulo = p_codigo_familia,
+           usuariomodif = p_usuario,
+           instantemodif = statement_timestamp()
+     WHERE a.codigo_articulo = p_codigo_articulo;
+
+    IF NOT FOUND THEN
       CALL prc_fnc_get_next_nro_doc('AO', p_cont);
 
       INSERT INTO fza_articulos (
@@ -973,7 +1203,15 @@ BEGIN
         p_codigo_familia, p_esactivo_fijo_articulo,
         '',
         p_usuario, statement_timestamp(), p_usuario, statement_timestamp()
-      );
+      )
+      ON CONFLICT (codigo_articulo) DO UPDATE SET
+        descripcion_articulo = EXCLUDED.descripcion_articulo,
+        esactivo_fijo_articulo = EXCLUDED.esactivo_fijo_articulo,
+        tipoiva_articulo = EXCLUDED.tipoiva_articulo,
+        tipo_cantidad_articulo = EXCLUDED.tipo_cantidad_articulo,
+        codigo_familia_articulo = EXCLUDED.codigo_familia_articulo,
+        usuariomodif = EXCLUDED.usuariomodif,
+        instantemodif = statement_timestamp();
     END IF;
 
     CALL prc_crear_actualizar_familia(
@@ -1027,52 +1265,46 @@ CREATE PROCEDURE prc_crear_actualizar_cliente(
 LANGUAGE plpgsql
 AS $routine$
 BEGIN
-  IF EXISTS (
-    SELECT 1 FROM fza_clientes AS c
-     WHERE c.codigo_cliente = p_codigo_cliente
-  ) THEN
-    UPDATE fza_clientes AS c
-       SET razonsocial_cliente = p_razonsocial_cliente,
-           nif_cliente = p_nif_cliente,
-           movil_cliente = p_movil_cliente,
-           email_cliente = p_email_cliente,
-           direccion1_cliente = p_direccion1_cliente,
-           direccion2_cliente = p_direccion2_cliente,
-           poblacion_cliente = p_poblacion_cliente,
-           provincia_cliente = p_provincia_cliente,
-           cpostal_cliente = p_cpostal_cliente,
-           nombre_pais_cliente = p_pais_cliente,
-           codigo_pais_cliente = p_cod_pais_cliente,
-           esiva_exento_cliente = p_esiva_exento_cliente,
-           esretenciones_cliente = p_esretenciones_cliente,
-           esiva_recargo_cliente = p_esiva_recargo_cliente,
-           esregimenespecialagricola_cliente = p_esregimenespecialagricola_cliente,
-           esintracomunitario_cliente = p_esintracomunitario_cliente,
-           tarifa_articulo_cliente = p_tarifa_articulo_cliente,
-           usuariomodif = p_usuario,
-           instantemodif = statement_timestamp()
-     WHERE c.codigo_cliente = p_codigo_cliente;
-  ELSE
-    INSERT INTO fza_clientes (
-      codigo_cliente, razonsocial_cliente, nif_cliente, movil_cliente,
-      email_cliente, direccion1_cliente, direccion2_cliente,
-      poblacion_cliente, provincia_cliente, cpostal_cliente,
-      nombre_pais_cliente, codigo_pais_cliente,
-      esiva_exento_cliente, esretenciones_cliente, esiva_recargo_cliente,
-      esregimenespecialagricola_cliente, esintracomunitario_cliente,
-      tarifa_articulo_cliente,
-      usuariomodif, usuarioalta, instantealta, instantemodif
-    ) VALUES (
-      p_codigo_cliente, p_razonsocial_cliente, p_nif_cliente, p_movil_cliente,
-      p_email_cliente, p_direccion1_cliente, p_direccion2_cliente,
-      p_poblacion_cliente, p_provincia_cliente, p_cpostal_cliente,
-      p_pais_cliente, p_cod_pais_cliente,
-      p_esiva_exento_cliente, p_esretenciones_cliente, p_esiva_recargo_cliente,
-      p_esregimenespecialagricola_cliente, p_esintracomunitario_cliente,
-      p_tarifa_articulo_cliente,
-      p_usuario, p_usuario, statement_timestamp(), statement_timestamp()
-    );
-  END IF;
+  INSERT INTO fza_clientes (
+    codigo_cliente, razonsocial_cliente, nif_cliente, movil_cliente,
+    email_cliente, direccion1_cliente, direccion2_cliente,
+    poblacion_cliente, provincia_cliente, cpostal_cliente,
+    nombre_pais_cliente, codigo_pais_cliente,
+    esiva_exento_cliente, esretenciones_cliente, esiva_recargo_cliente,
+    esregimenespecialagricola_cliente, esintracomunitario_cliente,
+    tarifa_articulo_cliente,
+    usuariomodif, usuarioalta, instantealta, instantemodif
+  ) VALUES (
+    p_codigo_cliente, p_razonsocial_cliente, p_nif_cliente, p_movil_cliente,
+    p_email_cliente, p_direccion1_cliente, p_direccion2_cliente,
+    p_poblacion_cliente, p_provincia_cliente, p_cpostal_cliente,
+    p_pais_cliente, p_cod_pais_cliente,
+    p_esiva_exento_cliente, p_esretenciones_cliente, p_esiva_recargo_cliente,
+    p_esregimenespecialagricola_cliente, p_esintracomunitario_cliente,
+    p_tarifa_articulo_cliente,
+    p_usuario, p_usuario, statement_timestamp(), statement_timestamp()
+  )
+  ON CONFLICT (codigo_cliente) DO UPDATE SET
+    razonsocial_cliente = EXCLUDED.razonsocial_cliente,
+    nif_cliente = EXCLUDED.nif_cliente,
+    movil_cliente = EXCLUDED.movil_cliente,
+    email_cliente = EXCLUDED.email_cliente,
+    direccion1_cliente = EXCLUDED.direccion1_cliente,
+    direccion2_cliente = EXCLUDED.direccion2_cliente,
+    poblacion_cliente = EXCLUDED.poblacion_cliente,
+    provincia_cliente = EXCLUDED.provincia_cliente,
+    cpostal_cliente = EXCLUDED.cpostal_cliente,
+    nombre_pais_cliente = EXCLUDED.nombre_pais_cliente,
+    codigo_pais_cliente = EXCLUDED.codigo_pais_cliente,
+    esiva_exento_cliente = EXCLUDED.esiva_exento_cliente,
+    esretenciones_cliente = EXCLUDED.esretenciones_cliente,
+    esiva_recargo_cliente = EXCLUDED.esiva_recargo_cliente,
+    esregimenespecialagricola_cliente =
+      EXCLUDED.esregimenespecialagricola_cliente,
+    esintracomunitario_cliente = EXCLUDED.esintracomunitario_cliente,
+    tarifa_articulo_cliente = EXCLUDED.tarifa_articulo_cliente,
+    usuariomodif = EXCLUDED.usuariomodif,
+    instantemodif = statement_timestamp();
 EXCEPTION
   WHEN OTHERS THEN
     RAISE;
@@ -1107,47 +1339,41 @@ LANGUAGE plpgsql
 AS $routine$
 BEGIN
   -- p_iva_recargo_empresa tambien queda sin uso en la fuente MariaDB.
-  IF EXISTS (
-    SELECT 1 FROM fza_empresas AS e
-     WHERE e.codigo_empresa = p_codigo_empresa
-  ) THEN
-    UPDATE fza_empresas AS e
-       SET razonsocial_empresa = p_razonsocial_empresa,
-           nif_empresa = p_nif_empresa,
-           movil_empresa = p_movil_empresa,
-           email_empresa = p_email_empresa,
-           direccion1_empresa = p_direccion1_empresa,
-           direccion2_empresa = p_direccion2_empresa,
-           poblacion_empresa = p_poblacion_empresa,
-           provincia_empresa = p_provincia_empresa,
-           cpostal_empresa = p_cpostal_empresa,
-           nombre_pais_empresa = p_pais_empresa,
-           codigo_pais_empresa = p_codpais_empresa,
-           esretenciones_empresa = p_retenciones_empresa,
-           esregimenespecialagricola_empresa = p_regimenespecialagricola_empresa,
-           grupo_zona_iva_empresa = p_grupo_zona_iva_empresa,
-           usuariomodif = p_usuario,
-           instantemodif = statement_timestamp()
-     WHERE e.codigo_empresa = p_codigo_empresa;
-  ELSE
-    INSERT INTO fza_empresas (
-      codigo_empresa, razonsocial_empresa, nif_empresa, movil_empresa,
-      email_empresa, direccion1_empresa, direccion2_empresa,
-      poblacion_empresa, provincia_empresa, cpostal_empresa,
-      nombre_pais_empresa, codigo_pais_empresa,
-      esretenciones_empresa, esregimenespecialagricola_empresa,
-      grupo_zona_iva_empresa,
-      usuariomodif, usuarioalta, instantealta, instantemodif
-    ) VALUES (
-      p_codigo_empresa, p_razonsocial_empresa, p_nif_empresa, p_movil_empresa,
-      p_email_empresa, p_direccion1_empresa, p_direccion2_empresa,
-      p_poblacion_empresa, p_provincia_empresa, p_cpostal_empresa,
-      p_pais_empresa, p_codpais_empresa,
-      p_retenciones_empresa, p_regimenespecialagricola_empresa,
-      p_grupo_zona_iva_empresa,
-      p_usuario, p_usuario, statement_timestamp(), statement_timestamp()
-    );
-  END IF;
+  INSERT INTO fza_empresas (
+    codigo_empresa, razonsocial_empresa, nif_empresa, movil_empresa,
+    email_empresa, direccion1_empresa, direccion2_empresa,
+    poblacion_empresa, provincia_empresa, cpostal_empresa,
+    nombre_pais_empresa, codigo_pais_empresa,
+    esretenciones_empresa, esregimenespecialagricola_empresa,
+    grupo_zona_iva_empresa,
+    usuariomodif, usuarioalta, instantealta, instantemodif
+  ) VALUES (
+    p_codigo_empresa, p_razonsocial_empresa, p_nif_empresa, p_movil_empresa,
+    p_email_empresa, p_direccion1_empresa, p_direccion2_empresa,
+    p_poblacion_empresa, p_provincia_empresa, p_cpostal_empresa,
+    p_pais_empresa, p_codpais_empresa,
+    p_retenciones_empresa, p_regimenespecialagricola_empresa,
+    p_grupo_zona_iva_empresa,
+    p_usuario, p_usuario, statement_timestamp(), statement_timestamp()
+  )
+  ON CONFLICT (codigo_empresa) DO UPDATE SET
+    razonsocial_empresa = EXCLUDED.razonsocial_empresa,
+    nif_empresa = EXCLUDED.nif_empresa,
+    movil_empresa = EXCLUDED.movil_empresa,
+    email_empresa = EXCLUDED.email_empresa,
+    direccion1_empresa = EXCLUDED.direccion1_empresa,
+    direccion2_empresa = EXCLUDED.direccion2_empresa,
+    poblacion_empresa = EXCLUDED.poblacion_empresa,
+    provincia_empresa = EXCLUDED.provincia_empresa,
+    cpostal_empresa = EXCLUDED.cpostal_empresa,
+    nombre_pais_empresa = EXCLUDED.nombre_pais_empresa,
+    codigo_pais_empresa = EXCLUDED.codigo_pais_empresa,
+    esretenciones_empresa = EXCLUDED.esretenciones_empresa,
+    esregimenespecialagricola_empresa =
+      EXCLUDED.esregimenespecialagricola_empresa,
+    grupo_zona_iva_empresa = EXCLUDED.grupo_zona_iva_empresa,
+    usuariomodif = EXCLUDED.usuariomodif,
+    instantemodif = statement_timestamp();
 EXCEPTION
   WHEN OTHERS THEN
     RAISE;
@@ -1168,30 +1394,21 @@ CREATE PROCEDURE prc_crear_actualizar_key(
 LANGUAGE plpgsql
 AS $routine$
 BEGIN
-  IF EXISTS (
-    SELECT 1
-      FROM fza_usuarios_perfiles AS up
-     WHERE up.usuario_grupo_perfiles = p_usuario
-       AND up.key_perfiles = p_key
-       AND up.subkey_perfiles = p_subkey
-  ) THEN
-    UPDATE fza_usuarios_perfiles AS up
-       SET value_perfiles = p_value,
-           value_text_perfiles = p_value_text,
-           usuariomodif = p_usuario_modif
-     WHERE up.usuario_grupo_perfiles = p_usuario
-       AND up.key_perfiles = p_key
-       AND up.subkey_perfiles = p_subkey;
-  ELSE
-    INSERT INTO fza_usuarios_perfiles (
-      usuario_grupo_perfiles, key_perfiles, subkey_perfiles,
-      value_perfiles, value_text_perfiles,
-      instantealta, usuarioalta, usuariomodif
-    ) VALUES (
-      p_usuario, p_key, p_subkey, p_value, p_value_text,
-      statement_timestamp(), p_usuario_modif, p_usuario_modif
-    );
-  END IF;
+  INSERT INTO fza_usuarios_perfiles (
+    usuario_grupo_perfiles, key_perfiles, subkey_perfiles,
+    value_perfiles, value_text_perfiles,
+    instantealta, usuarioalta, usuariomodif
+  ) VALUES (
+    p_usuario, p_key, p_subkey, p_value, p_value_text,
+    statement_timestamp(), p_usuario_modif, p_usuario_modif
+  )
+  ON CONFLICT (
+    usuario_grupo_perfiles, key_perfiles, subkey_perfiles
+  ) DO UPDATE SET
+    value_perfiles = EXCLUDED.value_perfiles,
+    value_text_perfiles = EXCLUDED.value_text_perfiles,
+    usuariomodif = EXCLUDED.usuariomodif,
+    instantemodif = statement_timestamp();
 EXCEPTION
   WHEN OTHERS THEN
     RAISE;
@@ -1250,9 +1467,18 @@ DECLARE
   v_venta_act_fij varchar(1);
   v_codigo_empresa varchar(8);
 BEGIN
-  -- La definicion fuente contiene literalmente dos huecos "resto de la
-  -- logica". Se conserva ese comportamiento incompleto: no se inventa el
-  -- recorrido ni el calculo de bases/impuestos ausentes.
+  -- El volcado MariaDB contiene literalmente dos huecos "resto de la
+  -- logica": no abre/recorre el cursor de lineas y deja todos los acumulados
+  -- a cero. Ejecutarlo borraria importes financieros validos. Fallamos antes
+  -- de escribir hasta que se recuperen las reglas de negocio originales.
+  RAISE EXCEPTION USING
+    ERRCODE = '0A000',
+    MESSAGE = 'PRC_CALCULAR_FACTURA_NETOS no esta implementado en el volcado de origen',
+    DETAIL = 'La rutina MariaDB omite el recorrido de lineas y el calculo de bases e impuestos; se ha bloqueado para evitar poner facturas a cero.',
+    HINT = 'Recupere la implementacion completa y anada casos de prueba fiscales antes de habilitarla.';
+
+  -- El SQL incompleto se conserva debajo como referencia de migracion. Es
+  -- inalcanzable por el RAISE anterior y, por tanto, no modifica datos.
   SELECT f.porcen_ivan_factura,
          f.porcen_ivar_factura,
          f.porcen_ivas_factura,
@@ -1337,6 +1563,270 @@ EXCEPTION
 END;
 $routine$;
 
+DROP PROCEDURE IF EXISTS prc_crear_factura_abono(
+  varchar, varchar, varchar, varchar, date, varchar
+);
+CREATE PROCEDURE prc_crear_factura_abono(
+  IN p_id_serie_factura varchar(200),
+  IN p_id_num_factura varchar(200),
+  IN p_id_serie_factura_abono varchar(200),
+  IN p_id_codigo_empresa varchar(200),
+  IN p_fecha_factura_abono date,
+  OUT p_id_num_factura_abono varchar(200),
+  IN p_usuario varchar(100)
+)
+LANGUAGE plpgsql
+AS $routine$
+DECLARE
+  v_contador varchar(200);
+  v_fecha date;
+BEGIN
+  CALL prc_get_next_cont_fact_serie(
+    p_id_serie_factura_abono,
+    'FC',
+    p_id_codigo_empresa,
+    p_usuario,
+    v_contador
+  );
+
+  v_fecha := p_fecha_factura_abono;
+  p_id_num_factura_abono := v_contador;
+
+  INSERT INTO fza_facturas (
+    nro_factura, serie_factura, fecha_factura, codigo_empresa_factura,
+    razonsocial_empresa_factura, nif_empresa_factura, movil_empresa_factura,
+    email_empresa_factura, direccion1_empresa_factura, direccion2_empresa_factura,
+    poblacion_empresa_factura, provincia_empresa_factura, nombre_pais_empresa_factura,
+    codigo_pais_empresa_factura, cpostal_empresa_factura,
+    esretenciones_empresa_factura, grupo_zona_iva_empresa_factura,
+    esregimenespecialagricola_empresa_factura, codigo_cliente_factura,
+    razonsocial_cliente_factura, nif_cliente_factura, movil_cliente_factura,
+    email_cliente_factura, direccion1_cliente_factura, direccion2_cliente_factura,
+    poblacion_cliente_factura, provincia_cliente_factura, cpostal_cliente_factura,
+    nombre_pais_cliente_factura, codigo_pais_cliente_factura,
+    esiva_recargo_cliente_factura, esiva_exento_cliente_factura,
+    esregimenespecialagricola_cliente_factura, esretenciones_cliente_factura,
+    tarifa_articulo_cliente_factura, esimp_incl_tarifa_cliente_factura,
+    esintracomunitario_cliente_factura, esirpf_imp_incl_zona_iva_factura,
+    esaplica_re_zona_iva_factura, esivaagricola_zona_iva_factura,
+    palabra_reports_zona_iva_factura, codigo_iva_factura,
+    esventa_activo_fijo_factura, porcen_ivan_factura, total_ivan_factura,
+    porcen_ren_factura, total_ren_factura, total_basei_ivan_factura,
+    porcen_ivar_factura, total_ivar_factura, porcen_rer_factura,
+    total_rer_factura, total_basei_ivar_factura, porcen_ivas_factura,
+    total_ivas_factura, porcen_res_factura, total_res_factura,
+    total_basei_ivas_factura, porcen_ivae_factura, total_ivae_factura,
+    porcen_ree_factura, total_ree_factura, total_basei_ivae_factura,
+    total_bases_factura, total_impuestos_factura, forma_pago_factura,
+    porcen_retencion_factura, total_retencion_factura, total_liquido_factura,
+    nro_factura_abono_factura, serie_factura_abono_factura,
+    texto_legal_factura_cliente_factura, texto_legal_factura_empresa_factura,
+    documento_factura, comentarios_factura, contador_lineas_factura,
+    escreararticulos_factura, esdescripciones_amp_factura,
+    esfechadeentrega_factura, instantemodif, instantealta, usuarioalta,
+    usuariomodif
+  )
+  SELECT
+    v_contador, p_id_serie_factura_abono, v_fecha, f.codigo_empresa_factura,
+    f.razonsocial_empresa_factura, f.nif_empresa_factura, f.movil_empresa_factura,
+    f.email_empresa_factura, f.direccion1_empresa_factura,
+    f.direccion2_empresa_factura, f.poblacion_empresa_factura,
+    f.provincia_empresa_factura, f.nombre_pais_empresa_factura,
+    f.codigo_pais_empresa_factura, f.cpostal_empresa_factura,
+    f.esretenciones_empresa_factura, f.grupo_zona_iva_empresa_factura,
+    f.esregimenespecialagricola_empresa_factura, f.codigo_cliente_factura,
+    f.razonsocial_cliente_factura, f.nif_cliente_factura,
+    f.movil_cliente_factura, f.email_cliente_factura,
+    f.direccion1_cliente_factura, f.direccion2_cliente_factura,
+    f.poblacion_cliente_factura, f.provincia_cliente_factura,
+    f.cpostal_cliente_factura, f.nombre_pais_cliente_factura,
+    f.codigo_pais_cliente_factura, f.esiva_recargo_cliente_factura,
+    f.esiva_exento_cliente_factura,
+    f.esregimenespecialagricola_cliente_factura,
+    f.esretenciones_cliente_factura, f.tarifa_articulo_cliente_factura,
+    f.esimp_incl_tarifa_cliente_factura, f.esintracomunitario_cliente_factura,
+    f.esirpf_imp_incl_zona_iva_factura, f.esaplica_re_zona_iva_factura,
+    f.esivaagricola_zona_iva_factura, f.palabra_reports_zona_iva_factura,
+    f.codigo_iva_factura, f.esventa_activo_fijo_factura,
+    f.porcen_ivan_factura, f.total_ivan_factura, f.porcen_ren_factura,
+    f.total_ren_factura, f.total_basei_ivan_factura, f.porcen_ivar_factura,
+    f.total_ivar_factura, f.porcen_rer_factura, f.total_rer_factura,
+    f.total_basei_ivar_factura, f.porcen_ivas_factura, f.total_ivas_factura,
+    f.porcen_res_factura, f.total_res_factura, f.total_basei_ivas_factura,
+    f.porcen_ivae_factura, f.total_ivae_factura, f.porcen_ree_factura,
+    f.total_ree_factura, f.total_basei_ivae_factura, f.total_bases_factura,
+    f.total_impuestos_factura, f.forma_pago_factura,
+    f.porcen_retencion_factura, f.total_retencion_factura,
+    f.total_liquido_factura, f.nro_factura_abono_factura,
+    f.serie_factura_abono_factura, f.texto_legal_factura_cliente_factura,
+    f.texto_legal_factura_empresa_factura, f.documento_factura,
+    f.comentarios_factura, f.contador_lineas_factura,
+    f.escreararticulos_factura, f.esdescripciones_amp_factura,
+    f.esfechadeentrega_factura, statement_timestamp(), statement_timestamp(),
+    p_usuario, p_usuario
+  FROM fza_facturas AS f
+  WHERE f.nro_factura = p_id_num_factura
+    AND f.serie_factura = p_id_serie_factura;
+
+  INSERT INTO fza_facturas_lineas (
+    nro_factura_linea, serie_factura_linea, linea_factura_linea,
+    codigo_articulo_factura_linea, tipo_cantidad_articulo_factura_linea,
+    esimp_incl_tarifa_factura_linea, tipoiva_articulo_factura_linea,
+    descripcion_articulo_factura_linea, cantidad_factura_linea,
+    precioventa_siva_articulo_factura_linea, porcen_iva_factura_linea,
+    precioventa_civa_articulo_factura_linea, total_factura_linea,
+    instantemodif, instantealta, usuarioalta, usuariomodif
+  )
+  SELECT
+    v_contador, p_id_serie_factura_abono, l.linea_factura_linea,
+    l.codigo_articulo_factura_linea, l.tipo_cantidad_articulo_factura_linea,
+    l.esimp_incl_tarifa_factura_linea, l.tipoiva_articulo_factura_linea,
+    l.descripcion_articulo_factura_linea, l.cantidad_factura_linea * -1,
+    l.precioventa_siva_articulo_factura_linea, l.porcen_iva_factura_linea,
+    l.precioventa_civa_articulo_factura_linea, l.total_factura_linea * -1,
+    statement_timestamp(), statement_timestamp(), p_usuario, p_usuario
+  FROM fza_facturas_lineas AS l
+  WHERE l.serie_factura_linea = p_id_serie_factura
+    AND l.nro_factura_linea = p_id_num_factura;
+
+  CALL prc_calcular_factura_netos(p_id_serie_factura_abono, v_contador);
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE;
+END;
+$routine$;
+
+DROP PROCEDURE IF EXISTS prc_crear_factura_duplicada(
+  varchar, varchar, varchar, varchar, date, varchar
+);
+CREATE PROCEDURE prc_crear_factura_duplicada(
+  IN p_id_serie_factura varchar(200),
+  IN p_id_num_factura varchar(200),
+  IN p_id_serie_factura_destino varchar(200),
+  IN p_id_codigo_empresa varchar(200),
+  IN p_fecha_factura_destino date,
+  IN p_usuario varchar(100),
+  OUT p_id_num_factura_destino varchar(200)
+)
+LANGUAGE plpgsql
+AS $routine$
+DECLARE
+  v_contador varchar(200);
+  v_fecha date;
+BEGIN
+  CALL prc_get_next_cont_fact_serie(
+    p_id_serie_factura_destino,
+    'FC',
+    p_id_codigo_empresa,
+    p_usuario,
+    v_contador
+  );
+
+  v_fecha := p_fecha_factura_destino;
+  p_id_num_factura_destino := v_contador;
+
+  INSERT INTO fza_facturas (
+    nro_factura, serie_factura, fecha_factura, codigo_empresa_factura,
+    razonsocial_empresa_factura, nif_empresa_factura, movil_empresa_factura,
+    email_empresa_factura, direccion1_empresa_factura, direccion2_empresa_factura,
+    poblacion_empresa_factura, provincia_empresa_factura, nombre_pais_empresa_factura,
+    codigo_pais_empresa_factura, cpostal_empresa_factura,
+    esretenciones_empresa_factura, grupo_zona_iva_empresa_factura,
+    esregimenespecialagricola_empresa_factura, codigo_cliente_factura,
+    razonsocial_cliente_factura, nif_cliente_factura, movil_cliente_factura,
+    email_cliente_factura, direccion1_cliente_factura, direccion2_cliente_factura,
+    poblacion_cliente_factura, provincia_cliente_factura, cpostal_cliente_factura,
+    nombre_pais_cliente_factura, codigo_pais_cliente_factura,
+    esiva_recargo_cliente_factura, esiva_exento_cliente_factura,
+    esregimenespecialagricola_cliente_factura, esretenciones_cliente_factura,
+    tarifa_articulo_cliente_factura, esimp_incl_tarifa_cliente_factura,
+    esintracomunitario_cliente_factura, esirpf_imp_incl_zona_iva_factura,
+    esaplica_re_zona_iva_factura, esivaagricola_zona_iva_factura,
+    palabra_reports_zona_iva_factura, codigo_iva_factura,
+    esventa_activo_fijo_factura, porcen_ivan_factura, total_ivan_factura,
+    porcen_ren_factura, total_ren_factura, total_basei_ivan_factura,
+    porcen_ivar_factura, total_ivar_factura, porcen_rer_factura,
+    total_rer_factura, total_basei_ivar_factura, porcen_ivas_factura,
+    total_ivas_factura, porcen_res_factura, total_res_factura,
+    total_basei_ivas_factura, porcen_ivae_factura, total_ivae_factura,
+    porcen_ree_factura, total_ree_factura, total_basei_ivae_factura,
+    total_bases_factura, total_impuestos_factura, forma_pago_factura,
+    porcen_retencion_factura, total_retencion_factura, total_liquido_factura,
+    nro_factura_abono_factura, serie_factura_abono_factura,
+    texto_legal_factura_cliente_factura, texto_legal_factura_empresa_factura,
+    documento_factura, comentarios_factura, contador_lineas_factura,
+    escreararticulos_factura, esdescripciones_amp_factura,
+    esfechadeentrega_factura, instantemodif, instantealta, usuarioalta,
+    usuariomodif
+  )
+  SELECT
+    v_contador, p_id_serie_factura_destino, v_fecha, f.codigo_empresa_factura,
+    f.razonsocial_empresa_factura, f.nif_empresa_factura, f.movil_empresa_factura,
+    f.email_empresa_factura, f.direccion1_empresa_factura,
+    f.direccion2_empresa_factura, f.poblacion_empresa_factura,
+    f.provincia_empresa_factura, f.nombre_pais_empresa_factura,
+    f.codigo_pais_empresa_factura, f.cpostal_empresa_factura,
+    f.esretenciones_empresa_factura, f.grupo_zona_iva_empresa_factura,
+    f.esregimenespecialagricola_empresa_factura, f.codigo_cliente_factura,
+    f.razonsocial_cliente_factura, f.nif_cliente_factura,
+    f.movil_cliente_factura, f.email_cliente_factura,
+    f.direccion1_cliente_factura, f.direccion2_cliente_factura,
+    f.poblacion_cliente_factura, f.provincia_cliente_factura,
+    f.cpostal_cliente_factura, f.nombre_pais_cliente_factura,
+    f.codigo_pais_cliente_factura, f.esiva_recargo_cliente_factura,
+    f.esiva_exento_cliente_factura,
+    f.esregimenespecialagricola_cliente_factura,
+    f.esretenciones_cliente_factura, f.tarifa_articulo_cliente_factura,
+    f.esimp_incl_tarifa_cliente_factura, f.esintracomunitario_cliente_factura,
+    f.esirpf_imp_incl_zona_iva_factura, f.esaplica_re_zona_iva_factura,
+    f.esivaagricola_zona_iva_factura, f.palabra_reports_zona_iva_factura,
+    f.codigo_iva_factura, f.esventa_activo_fijo_factura,
+    f.porcen_ivan_factura, f.total_ivan_factura, f.porcen_ren_factura,
+    f.total_ren_factura, f.total_basei_ivan_factura, f.porcen_ivar_factura,
+    f.total_ivar_factura, f.porcen_rer_factura, f.total_rer_factura,
+    f.total_basei_ivar_factura, f.porcen_ivas_factura, f.total_ivas_factura,
+    f.porcen_res_factura, f.total_res_factura, f.total_basei_ivas_factura,
+    f.porcen_ivae_factura, f.total_ivae_factura, f.porcen_ree_factura,
+    f.total_ree_factura, f.total_basei_ivae_factura, f.total_bases_factura,
+    f.total_impuestos_factura, f.forma_pago_factura,
+    f.porcen_retencion_factura, f.total_retencion_factura,
+    f.total_liquido_factura, f.nro_factura_abono_factura,
+    f.serie_factura_abono_factura, f.texto_legal_factura_cliente_factura,
+    f.texto_legal_factura_empresa_factura, f.documento_factura,
+    f.comentarios_factura, f.contador_lineas_factura,
+    f.escreararticulos_factura, f.esdescripciones_amp_factura,
+    f.esfechadeentrega_factura, statement_timestamp(), statement_timestamp(),
+    p_usuario, p_usuario
+  FROM fza_facturas AS f
+  WHERE f.nro_factura = p_id_num_factura
+    AND f.serie_factura = p_id_serie_factura;
+
+  INSERT INTO fza_facturas_lineas (
+    nro_factura_linea, serie_factura_linea, linea_factura_linea,
+    codigo_articulo_factura_linea, tipo_cantidad_articulo_factura_linea,
+    esimp_incl_tarifa_factura_linea, tipoiva_articulo_factura_linea,
+    descripcion_articulo_factura_linea, cantidad_factura_linea,
+    precioventa_siva_articulo_factura_linea, porcen_iva_factura_linea,
+    precioventa_civa_articulo_factura_linea, total_factura_linea,
+    instantemodif, instantealta, usuarioalta, usuariomodif
+  )
+  SELECT
+    v_contador, p_id_serie_factura_destino, l.linea_factura_linea,
+    l.codigo_articulo_factura_linea, l.tipo_cantidad_articulo_factura_linea,
+    l.esimp_incl_tarifa_factura_linea, l.tipoiva_articulo_factura_linea,
+    l.descripcion_articulo_factura_linea, l.cantidad_factura_linea,
+    l.precioventa_siva_articulo_factura_linea, l.porcen_iva_factura_linea,
+    l.precioventa_civa_articulo_factura_linea, l.total_factura_linea,
+    statement_timestamp(), statement_timestamp(), p_usuario, p_usuario
+  FROM fza_facturas_lineas AS l
+  WHERE l.serie_factura_linea = p_id_serie_factura
+    AND l.nro_factura_linea = p_id_num_factura;
+EXCEPTION
+  WHEN OTHERS THEN
+    RAISE;
+END;
+$routine$;
+
 DROP PROCEDURE IF EXISTS prc_crear_actualizar_test();
 CREATE PROCEDURE prc_crear_actualizar_test(OUT p_mensaje text)
 LANGUAGE plpgsql
@@ -1364,34 +1854,37 @@ DROP PROCEDURE IF EXISTS prc_crear_metadatos(varchar);
 CREATE PROCEDURE prc_crear_metadatos(IN p_databasename varchar(100))
 LANGUAGE plpgsql
 AS $routine$
+DECLARE
+  v_schema name;
 BEGIN
-  DROP TABLE IF EXISTS fza_metadatos;
-  CREATE TABLE fza_metadatos (
-    codigo_metadato integer GENERATED BY DEFAULT AS IDENTITY (START WITH 4),
-    nombre_metadato varchar(100) NOT NULL,
-    parent_metadato varchar(20) NOT NULL,
-    PRIMARY KEY (codigo_metadato)
-  );
+  -- La aplicacion MariaDB pasa el nombre de la base de datos. En PostgreSQL
+  -- los objetos estan en un esquema; el nombre de la BD actual se traduce al
+  -- primer esquema efectivo (public en el script generado).
+  IF p_databasename IS NULL
+     OR btrim(p_databasename) = ''
+     OR lower(p_databasename) = lower(current_database()) THEN
+    v_schema := current_schema();
+  ELSIF EXISTS (
+    SELECT 1
+      FROM information_schema.schemata AS s
+     WHERE lower(s.schema_name) = lower(p_databasename)
+  ) THEN
+    SELECT s.schema_name::name
+      INTO v_schema
+      FROM information_schema.schemata AS s
+     WHERE lower(s.schema_name) = lower(p_databasename)
+     ORDER BY (s.schema_name = p_databasename) DESC
+     LIMIT 1;
+  ELSE
+    RAISE EXCEPTION USING
+      ERRCODE = '3F000',
+      MESSAGE = format('No existe el esquema PostgreSQL %L', p_databasename),
+      HINT = 'Pase current_database(), public o el nombre de un esquema existente.';
+  END IF;
 
-  INSERT INTO fza_metadatos (parent_metadato, nombre_metadato)
-  SELECT '1', t.table_name
-    FROM information_schema.tables AS t
-   WHERE t.table_schema = p_databasename
-     AND t.table_type = 'BASE TABLE';
-
-  INSERT INTO fza_metadatos (parent_metadato, nombre_metadato)
-  SELECT '2', t.table_name
-    FROM information_schema.tables AS t
-   WHERE t.table_schema = p_databasename
-     AND t.table_type = 'VIEW';
-
-  INSERT INTO fza_metadatos (parent_metadato, nombre_metadato)
-  -- specific_name incorpora el OID en PostgreSQL; routine_name conserva el
-  -- nombre que SPECIFIC_NAME representa en el origen MariaDB.
-  SELECT '3', r.routine_name
-    FROM information_schema.routines AS r
-   WHERE r.routine_schema = p_databasename
-     AND r.routine_type = 'PROCEDURE';
+  -- Conserva la tabla declarada por el DDL principal y solo renueva su
+  -- contenido; asi no se pierden permisos, dependencias ni comentarios.
+  TRUNCATE TABLE fza_metadatos RESTART IDENTITY;
 
   INSERT INTO fza_metadatos (
     codigo_metadato, parent_metadato, nombre_metadato
@@ -1399,6 +1892,36 @@ BEGIN
     (1, '-1', 'Tablas'),
     (2, '-1', 'Vistas'),
     (3, '-1', 'Procedimientos');
+
+  ALTER TABLE fza_metadatos
+    ALTER COLUMN codigo_metadato RESTART WITH 4;
+
+  INSERT INTO fza_metadatos (parent_metadato, nombre_metadato)
+  SELECT '1', t.table_name
+     FROM information_schema.tables AS t
+   WHERE t.table_schema = v_schema
+     AND t.table_type = 'BASE TABLE'
+   ORDER BY t.table_name;
+
+  INSERT INTO fza_metadatos (parent_metadato, nombre_metadato)
+  SELECT '2', t.table_name
+     FROM information_schema.tables AS t
+   WHERE t.table_schema = v_schema
+     AND t.table_type = 'VIEW'
+   ORDER BY t.table_name;
+
+  INSERT INTO fza_metadatos (parent_metadato, nombre_metadato)
+  -- Dos adapters son FUNCTION para conservar result sets; se incluyen junto
+  -- con los PROCEDURE y se deduplican por nombre de rutina fuente.
+  SELECT '3', q.routine_name
+    FROM (
+      SELECT DISTINCT r.routine_name
+        FROM information_schema.routines AS r
+       WHERE r.routine_schema = v_schema
+         AND (left(r.routine_name, 4) = 'prc_'
+              OR left(r.routine_name, 3) = 'sp_')
+    ) AS q
+   ORDER BY q.routine_name;
 EXCEPTION
   WHEN OTHERS THEN
     RAISE;
@@ -1433,6 +1956,9 @@ DECLARE
   v_importe_recibo numeric(18,6);
   v_importe_resto numeric(18,6);
   v_importe_anticipo numeric(18,6);
+  v_importe_base numeric(18,6);
+  v_importe_acumulado numeric(18,6);
+  v_n_plazos_resto integer;
   v_fecha_vencimiento date;
   v_fecha_factura date;
 BEGIN
@@ -1498,21 +2024,45 @@ BEGIN
         statement_timestamp(), statement_timestamp(), p_usuario, p_usuario
       );
     ELSIF v_n_plazos >= 1 THEN
+      v_porcen_anticipo := coalesce(v_porcen_anticipo, 0);
+      v_dias_entre_plazos := coalesce(v_dias_entre_plazos, 0);
+      v_importe_anticipo := round(
+        v_total_liquido_factura * (v_porcen_anticipo / 100),
+        6
+      );
+      v_importe_resto := v_total_liquido_factura - v_importe_anticipo;
+      v_n_plazos_resto := CASE
+        WHEN v_porcen_anticipo > 0 THEN v_n_plazos - 1
+        ELSE v_n_plazos
+      END;
+
+      IF v_n_plazos_resto > 0 THEN
+        v_importe_base := round(
+          v_importe_resto / v_n_plazos_resto,
+          6
+        );
+      ELSE
+        -- Un único plazo debe liquidar el total aunque tenga anticipo parcial.
+        v_importe_base := v_total_liquido_factura;
+      END IF;
+
+      v_importe_acumulado := 0;
       v_i := 1;
       WHILE v_i <= v_n_plazos LOOP
         IF v_i = 1 THEN
           v_fecha_vencimiento := v_fecha_factura + v_dias_entre_plazos;
-          v_importe_anticipo := v_total_liquido_factura
-                                * (v_porcen_anticipo / 100);
-          v_importe_resto := v_total_liquido_factura - v_importe_anticipo;
         END IF;
 
-        IF v_i = 1 AND v_porcen_anticipo > 0 THEN
+        IF v_i = v_n_plazos THEN
+          -- Compensa en el último plazo cualquier diferencia de redondeo.
+          v_importe_recibo := round(
+            v_total_liquido_factura - v_importe_acumulado,
+            6
+          );
+        ELSIF v_i = 1 AND v_porcen_anticipo > 0 THEN
           v_importe_recibo := v_importe_anticipo;
-        ELSIF v_n_plazos > 1 THEN
-          v_importe_recibo := v_importe_resto / v_n_plazos;
         ELSE
-          v_importe_recibo := v_importe_resto;
+          v_importe_recibo := v_importe_base;
         END IF;
 
         CALL prc_get_numeros_a_letras(v_importe_recibo, v_importe_letra);
@@ -1543,6 +2093,10 @@ BEGIN
           statement_timestamp(), statement_timestamp(), p_usuario, p_usuario
         );
 
+        v_importe_acumulado := round(
+          v_importe_acumulado + v_importe_recibo,
+          6
+        );
         v_i := v_i + 1;
       END LOOP;
     END IF;
@@ -1554,6 +2108,9 @@ END;
 $routine$;
 
 DROP PROCEDURE IF EXISTS prc_crear_traspaso(
+  varchar, varchar, varchar, varchar, varchar, numeric, text
+);
+DROP PROCEDURE IF EXISTS prc_crear_traspaso(
   varchar, varchar, varchar, varchar, varchar, numeric
 );
 CREATE PROCEDURE prc_crear_traspaso(
@@ -1563,48 +2120,93 @@ CREATE PROCEDURE prc_crear_traspaso(
   IN p_almacen_destino varchar(10),
   IN p_sku varchar(50),
   IN p_cantidad numeric(19,6),
-  OUT p_mensaje text
+  INOUT p_mensaje text DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $routine$
 DECLARE
   v_serie varchar(20) := 'TRAS';
   v_nro_doc varchar(20);
+  v_consecutivo bigint;
+  v_numero_salida varchar(20);
+  v_numero_entrada varchar(20);
+  v_pmp_traspaso numeric(19,6);
 BEGIN
-  v_nro_doc := to_char(statement_timestamp(), 'YYYYMMDDHH24MISS');
+  IF p_cantidad IS NULL OR p_cantidad <= 0 THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22023',
+      MESSAGE = 'La cantidad del traspaso debe ser mayor que cero.';
+  END IF;
 
-  -- La fuente no proporciona NUMERO_MOV, aunque la tabla actual lo exige.
-  -- Se conserva la lista de columnas original sin inventar un identificador.
-  INSERT INTO fza_movimientos_almacen (
-    tipo_doc_mov, serie_doc_mov, nro_doc_mov, linea_mov,
-    codigo_empresa_mov, codigo_almacen_mov, codigo_almacen_contra_mov,
-    fecha_mov, codigo_unidad_mov, tipo_movimiento_mov, cantidad_mov,
-    descripcion_articulo_mov, usuarioalta, usuariomodif
-  ) VALUES (
-    'TR', v_serie, v_nro_doc, '001',
-    p_empresa, p_almacen_origen, p_almacen_destino,
-    statement_timestamp(), p_sku, 'S', p_cantidad,
-    'Traspaso a ' || p_almacen_destino, p_usuario, p_usuario
+  IF p_almacen_origen = p_almacen_destino THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '22023',
+      MESSAGE = 'Los almacenes de origen y destino deben ser distintos.';
+  END IF;
+
+  -- Serializa la asignacion del par de PK sin introducir una secuencia
+  -- adicional en el esquema. El bloqueo se mantiene hasta finalizar la
+  -- transaccion del llamador, de modo que los dos movimientos son atomicos.
+  PERFORM pg_advisory_xact_lock(
+    hashtextextended('factuzam:traspaso:numero_mov', 0)
   );
 
-  INSERT INTO fza_movimientos_almacen (
-    tipo_doc_mov, serie_doc_mov, nro_doc_mov, linea_mov,
-    codigo_empresa_mov, codigo_almacen_mov, codigo_almacen_contra_mov,
-    fecha_mov, codigo_unidad_mov, tipo_movimiento_mov, cantidad_mov,
-    descripcion_articulo_mov, usuarioalta, usuariomodif,
-    tipo_doc_ref_mov, serie_doc_ref_mov, nro_doc_ref_mov, linea_ref_mov
-  ) VALUES (
-    'TR', v_serie, v_nro_doc, '002',
-    p_empresa, p_almacen_destino, p_almacen_origen,
-    statement_timestamp(), p_sku, 'E', p_cantidad,
-    'Traspaso desde ' || p_almacen_origen, p_usuario, p_usuario,
-    'TR', v_serie, v_nro_doc, '001'
+  SELECT COALESCE(
+           MAX(substring(m.numero_mov FROM 3 FOR 17)::bigint),
+           0
+         ) + 1
+    INTO v_consecutivo
+    FROM fza_movimientos_almacen AS m
+   WHERE m.numero_mov ~ '^TR[0-9]{17}[SE]$';
+
+  IF v_consecutivo > 99999999999999999 THEN
+    RAISE EXCEPTION USING
+      ERRCODE = '54000',
+      MESSAGE = 'Se ha agotado el rango de identificadores de traspaso.';
+  END IF;
+
+  v_nro_doc := lpad(v_consecutivo::text, 17, '0');
+  v_numero_salida := 'TR' || v_nro_doc || 'S';
+  v_numero_entrada := 'TR' || v_nro_doc || 'E';
+
+  CALL prc_fza_movimientos_almacen_insert(
+    v_numero_salida, 'TR', v_serie, v_nro_doc, '001',
+    p_empresa, p_almacen_origen, p_almacen_destino, p_sku,
+    'S', p_cantidad, 0, 0, p_usuario,
+    p_almacen_origen, NULL, NULL, NULL, NULL
   );
+
+  SELECT m.precio_medio_mov
+    INTO STRICT v_pmp_traspaso
+    FROM fza_movimientos_almacen AS m
+   WHERE m.numero_mov = v_numero_salida;
+
+  CALL prc_fza_movimientos_almacen_insert(
+    v_numero_entrada, 'TR', v_serie, v_nro_doc, '002',
+    p_empresa, p_almacen_destino, p_almacen_origen, p_sku,
+    'E', p_cantidad, v_pmp_traspaso, p_cantidad * v_pmp_traspaso,
+    p_usuario, p_almacen_origen, NULL, NULL, NULL, NULL
+  );
+
+  UPDATE fza_movimientos_almacen AS m
+     SET descripcion_articulo_mov = 'Traspaso a ' || p_almacen_destino
+   WHERE m.numero_mov = v_numero_salida;
+
+  UPDATE fza_movimientos_almacen AS m
+     SET descripcion_articulo_mov = 'Traspaso desde ' || p_almacen_origen,
+         tipo_doc_ref_mov = 'TR',
+         serie_doc_ref_mov = v_serie,
+         nro_doc_ref_mov = v_nro_doc,
+         linea_ref_mov = '001'
+   WHERE m.numero_mov = v_numero_entrada;
 
   p_mensaje := 'Traspaso realizado. Doc: ' || v_serie || '-' || v_nro_doc;
 END;
 $routine$;
 
+DROP PROCEDURE IF EXISTS prc_realizar_traspaso(
+  varchar, varchar, varchar, varchar, varchar, numeric, text
+);
 DROP PROCEDURE IF EXISTS prc_realizar_traspaso(
   varchar, varchar, varchar, varchar, varchar, numeric
 );
@@ -1615,73 +2217,55 @@ CREATE PROCEDURE prc_realizar_traspaso(
   IN p_almacen_destino varchar(10),
   IN p_sku varchar(50),
   IN p_cantidad numeric(19,6),
-  OUT p_mensaje text
+  INOUT p_mensaje text DEFAULT NULL
 )
 LANGUAGE plpgsql
 AS $routine$
-DECLARE
-  v_serie varchar(20) := 'TRAS';
-  v_nro_doc varchar(20);
 BEGIN
-  v_nro_doc := to_char(statement_timestamp(), 'YYYYMMDDHH24MISS');
-
-  -- Igual que PRC_CREAR_TRASPASO, la fuente omite NUMERO_MOV.
-  INSERT INTO fza_movimientos_almacen (
-    tipo_doc_mov, serie_doc_mov, nro_doc_mov, linea_mov,
-    codigo_empresa_mov, codigo_almacen_mov, codigo_almacen_contra_mov,
-    fecha_mov, codigo_unidad_mov, tipo_movimiento_mov, cantidad_mov,
-    descripcion_articulo_mov, usuarioalta, usuariomodif
-  ) VALUES (
-    'TR', v_serie, v_nro_doc, '001',
-    p_empresa, p_almacen_origen, p_almacen_destino,
-    statement_timestamp(), p_sku, 'S', p_cantidad,
-    'Traspaso a ' || p_almacen_destino, p_usuario, p_usuario
+  CALL prc_crear_traspaso(
+    p_usuario, p_empresa, p_almacen_origen, p_almacen_destino,
+    p_sku, p_cantidad, p_mensaje
   );
-
-  INSERT INTO fza_movimientos_almacen (
-    tipo_doc_mov, serie_doc_mov, nro_doc_mov, linea_mov,
-    codigo_empresa_mov, codigo_almacen_mov, codigo_almacen_contra_mov,
-    fecha_mov, codigo_unidad_mov, tipo_movimiento_mov, cantidad_mov,
-    descripcion_articulo_mov, usuarioalta, usuariomodif,
-    tipo_doc_ref_mov, serie_doc_ref_mov, nro_doc_ref_mov, linea_ref_mov
-  ) VALUES (
-    'TR', v_serie, v_nro_doc, '002',
-    p_empresa, p_almacen_destino, p_almacen_origen,
-    statement_timestamp(), p_sku, 'E', p_cantidad,
-    'Traspaso desde ' || p_almacen_origen, p_usuario, p_usuario,
-    'TR', v_serie, v_nro_doc, '001'
-  );
-
-  p_mensaje := 'Traspaso realizado. Doc: ' || v_serie || '-' || v_nro_doc;
-EXCEPTION
-  WHEN OTHERS THEN
-    RAISE;
 END;
 $routine$;
 
 DROP PROCEDURE IF EXISTS prc_recalcular_stock();
-CREATE PROCEDURE prc_recalcular_stock(OUT p_mensaje text)
+CREATE PROCEDURE prc_recalcular_stock()
 LANGUAGE plpgsql
 AS $routine$
+DECLARE
+  v_clave record;
 BEGIN
-  DELETE FROM fza_articulos_stockactual;
-
-  INSERT INTO fza_articulos_stockactual (
-    codigo_almacen_stk, codigo_unidad_stk, cantidad_stk, instantemodif
-  )
-  SELECT m.codigo_almacen_mov,
-         m.codigo_unidad_mov,
-         SUM(CASE WHEN m.tipo_movimiento_mov = 'E'
-                  THEN m.cantidad_mov ELSE -m.cantidad_mov END),
-         statement_timestamp()
-    FROM fza_movimientos_almacen AS m
-   GROUP BY m.codigo_almacen_mov, m.codigo_unidad_mov;
-
-  p_mensaje := 'Stock recalculado correctamente.';
-EXCEPTION
-  WHEN OTHERS THEN
-    -- Un bloque EXCEPTION revierte automaticamente el DELETE/INSERT, como el
-    -- handler con ROLLBACK del origen, pero mantiene el contrato de mensaje.
-    p_mensaje := 'ERROR: No se pudo recalcular el stock';
+  -- Recalcula cada clave fisica sin borrar la tabla de saldos. La UNION hace
+  -- que una fila sin movimientos quede a cero conservando sus pendientes.
+  -- La empresa no forma parte de la PK y, por tanto, no separa saldos.
+  FOR v_clave IN
+    SELECT clave.codigo_almacen,
+           clave.codigo_unidad,
+           clave.lote
+      FROM (
+        SELECT stk.codigo_almacen_stk AS codigo_almacen,
+               stk.codigo_unidad_stk AS codigo_unidad,
+               stk.lote_stk AS lote
+          FROM fza_articulos_stockactual AS stk
+        UNION
+        SELECT m.codigo_almacen_mov,
+               m.codigo_unidad_mov,
+               COALESCE(m.lote_mov, '')
+          FROM fza_movimientos_almacen AS m
+         WHERE m.codigo_almacen_mov IS NOT NULL
+           AND m.codigo_unidad_mov IS NOT NULL
+      ) AS clave
+     ORDER BY clave.codigo_almacen,
+              clave.codigo_unidad,
+              clave.lote
+  LOOP
+    CALL sp_recalcular_pmp_sku_almacen(
+      NULL,
+      v_clave.codigo_unidad,
+      v_clave.codigo_almacen,
+      v_clave.lote
+    );
+  END LOOP;
 END;
 $routine$;

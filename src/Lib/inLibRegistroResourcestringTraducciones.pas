@@ -521,6 +521,24 @@ begin
       SErrorFotoNoRegistradaParaRotar);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SErrorFotoNoRegistradaParaPredeterminar',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorFotoNoRegistradaParaPredeterminar);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorFotoSeleccionadaCambio',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorFotoSeleccionadaCambio);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorGaleriaFotosCambio',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorGaleriaFotosCambio);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SErrorFotoSesionSinSerie',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.

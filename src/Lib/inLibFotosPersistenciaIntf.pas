@@ -47,7 +47,7 @@ type
       TArray<TMetadatosFotoPersistida>;
   end;
   IRepositorioEdicionFotos = interface
-    ['{52F8D4B6-F889-4663-B8FC-1C2E9A3DB102}']
+    ['{CE045E9E-16D8-4F75-A72D-08F142690E9A}']
     function BuscarFotoEditable(
       const ACodigoArticulo, ACodigoUnidad: string;
       out AMetadatos: TMetadatosFotoPersistida): Boolean; overload;
@@ -65,24 +65,17 @@ type
       var AMetadatos: TMetadatosFotoPersistida;
       const AUsuario: string);
     procedure ActualizarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad, ANombre,
-        AUsuario: string); overload;
-    procedure ActualizarNombreFoto(
       const ACodigoArticulo, ACodigoUnidad: string;
       AOrden: Integer;
-      const ANombreAnterior, ANombre,
-        AUsuario: string); overload;
-    function BuscarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad: string): string; overload;
-    function BuscarNombreFoto(
-      const ACodigoArticulo, ACodigoUnidad: string;
-      AOrden: Integer): string; overload;
-    procedure EliminarFoto(
-      const ACodigoArticulo, ACodigoUnidad: string); overload;
+      const ANombreAnterior, ANombre, AUsuario: string);
     procedure EliminarFoto(
       const ACodigoArticulo, ACodigoUnidad: string;
       AOrden: Integer;
-      const ANombreEsperado: string); overload;
+      const ANombreEsperado: string);
+    procedure MarcarFotoPredeterminada(
+      const ACodigoArticulo, ACodigoUnidad: string;
+      AOrdenEsperado: Integer;
+      const ANombreEsperado, AUsuario: string);
   end;
   TRepositoriosFotos = record
     Consulta: IRepositorioConsultaFotos;

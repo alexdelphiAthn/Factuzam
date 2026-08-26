@@ -1,5 +1,5 @@
--- PostgreSQL adapters for the two routines whose result shape is dynamic.
--- Contract: call inside a transaction with a cursor name, then FETCH it:
+-- Adaptadores PostgreSQL para las dos rutinas cuyo resultado es dinámico.
+-- Contrato: llamar dentro de una transacción y leer el cursor en ella:
 --   BEGIN;
 --   CALL prc_get_caja_stock_pivotado('ARTICULO', 'factuzam_stock');
 --   FETCH ALL FROM factuzam_stock;
@@ -123,11 +123,14 @@ BEGIN
             JOIN fza_atributos_valores AS av_p
               ON av_p.id_valor_av = ask_p.id_valor_sa
              AND av_p.id_va_av = %L
-            LEFT JOIN fza_atributos_sku AS ask_g
-              ON ask_g.codigo_unidad_sa = sku.codigo_unidad_sku
-            LEFT JOIN fza_atributos_valores AS av_g
-              ON av_g.id_valor_av = ask_g.id_valor_sa
-             AND av_g.id_va_av = %L
+            LEFT JOIN LATERAL (
+              SELECT av_grupo.valor_av
+                FROM fza_atributos_sku AS ask_grupo
+                JOIN fza_atributos_valores AS av_grupo
+                  ON av_grupo.id_valor_av = ask_grupo.id_valor_sa
+                 AND av_grupo.id_va_av = %L
+               WHERE ask_grupo.codigo_unidad_sa = sku.codigo_unidad_sku
+            ) AS av_g ON true
            WHERE sku.codigo_articulo_sku = %L
                  %s
            GROUP BY av_g.valor_av, alm.nombre_almacen_alm
@@ -238,11 +241,14 @@ BEGIN
       );
       v_src_select_fila := ', av_fila.valor_av AS valor_fila';
       v_join_fila := format(
-        ' LEFT JOIN fza_atributos_sku AS ask_fila'
-        ' ON ask_fila.codigo_unidad_sa = sku.codigo_unidad_sku'
-        ' LEFT JOIN fza_atributos_valores AS av_fila'
-        ' ON av_fila.id_valor_av = ask_fila.id_valor_sa'
-        ' AND av_fila.id_va_av = %L ',
+        ' LEFT JOIN LATERAL ('
+        ' SELECT av_atributo_fila.valor_av'
+        ' FROM fza_atributos_sku AS ask_atributo_fila'
+        ' JOIN fza_atributos_valores AS av_atributo_fila'
+        ' ON av_atributo_fila.id_valor_av = ask_atributo_fila.id_valor_sa'
+        ' AND av_atributo_fila.id_va_av = %L'
+        ' WHERE ask_atributo_fila.codigo_unidad_sa = sku.codigo_unidad_sku'
+        ' ) AS av_fila ON true ',
         v_id_atributo_fila
       );
       v_groupby_fila := ', src.valor_fila';

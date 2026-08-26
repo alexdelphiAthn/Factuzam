@@ -1,0 +1,449 @@
+{
+  "inicio": "2026-08-26T07:30:18.7800276+02:00",
+  "fin": "2026-08-26T07:30:20.4463296+02:00",
+  "duracion_segundos": 1.666,
+  "host": {
+    "procesador": "Intel(R) Core(TM) 7 240H",
+    "memoria_bytes": 16763547648,
+    "sistema": "Microsoft Windows NT 10.0.26200.0"
+  },
+  "carga": {
+    "articulos": 1000,
+    "movimientos": 1000,
+    "pasadas": 1,
+    "rondas": 1,
+    "busquedas_por_ronda": 100,
+    "listados_por_ronda": 10,
+    "agregaciones_por_ronda": 1,
+    "actualizaciones_por_pasada": 100
+  },
+  "metadatos_motores": [
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "motor",
+      "Valor": "MariaDB"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "articulos",
+      "Valor": "1000"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "movimientos",
+      "Valor": "1000"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "rondas",
+      "Valor": "1"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "server_version",
+      "Valor": "12.3.2-MariaDB"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "buffer_bytes",
+      "Valor": "2095054848"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "durability",
+      "Valor": "innodb_flush_log_at_trx_commit=1;sync_binlog=0"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "rows_verified",
+      "Valor": "2000"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "data_index_bytes",
+      "Valor": "425984"
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Nombre": "rows_final",
+      "Valor": "2000"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "motor",
+      "Valor": "PostgreSQL"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "articulos",
+      "Valor": "1000"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "movimientos",
+      "Valor": "1000"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "rondas",
+      "Valor": "1"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "server_version",
+      "Valor": "PostgreSQL 17.11 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "buffer_bytes",
+      "Valor": "134217728"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "durability",
+      "Valor": "fsync=on;synchronous_commit=on;full_page_writes=on"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "rows_verified",
+      "Valor": "2000"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "data_index_bytes",
+      "Valor": "524288"
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Nombre": "rows_final",
+      "Valor": "2000"
+    }
+  ],
+  "resultados": [
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "conexion",
+      "Ronda": 1,
+      "Operaciones": 10,
+      "Microsegundos": 5349,
+      "Milisegundos": 5.349,
+      "OperacionesPorSegundo": 1869.508,
+      "Checksum": 10
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "carga_articulos",
+      "Ronda": 1,
+      "Operaciones": 1000,
+      "Microsegundos": 65279,
+      "Milisegundos": 65.279,
+      "OperacionesPorSegundo": 15318.862,
+      "Checksum": 1000
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "carga_movimientos",
+      "Ronda": 1,
+      "Operaciones": 1000,
+      "Microsegundos": 58309,
+      "Milisegundos": 58.309,
+      "OperacionesPorSegundo": 17150.011,
+      "Checksum": 1000
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "busqueda_pk",
+      "Ronda": 1,
+      "Operaciones": 100,
+      "Microsegundos": 9596,
+      "Milisegundos": 9.596,
+      "OperacionesPorSegundo": 10421.009,
+      "Checksum": 1845890
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "listado_filtrado",
+      "Ronda": 1,
+      "Operaciones": 10,
+      "Microsegundos": 1937,
+      "Milisegundos": 1.937,
+      "OperacionesPorSegundo": 5162.623,
+      "Checksum": 712600
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "agregado_ventas",
+      "Ronda": 1,
+      "Operaciones": 1,
+      "Microsegundos": 591,
+      "Milisegundos": 0.591,
+      "OperacionesPorSegundo": 1692.047,
+      "Checksum": 6101138
+    },
+    {
+      "Motor": "MariaDB",
+      "Pasada": 1,
+      "Metrica": "actualizacion_stock",
+      "Ronda": 1,
+      "Operaciones": 100,
+      "Microsegundos": 6198,
+      "Milisegundos": 6.198,
+      "OperacionesPorSegundo": 16134.237,
+      "Checksum": 100
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "conexion",
+      "Ronda": 1,
+      "Operaciones": 10,
+      "Microsegundos": 459393,
+      "Milisegundos": 459.393,
+      "OperacionesPorSegundo": 21.768,
+      "Checksum": 10
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "carga_articulos",
+      "Ronda": 1,
+      "Operaciones": 1000,
+      "Microsegundos": 70905,
+      "Milisegundos": 70.905,
+      "OperacionesPorSegundo": 14103.378,
+      "Checksum": 1000
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "carga_movimientos",
+      "Ronda": 1,
+      "Operaciones": 1000,
+      "Microsegundos": 101547,
+      "Milisegundos": 101.547,
+      "OperacionesPorSegundo": 9847.657,
+      "Checksum": 1000
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "busqueda_pk",
+      "Ronda": 1,
+      "Operaciones": 100,
+      "Microsegundos": 17289,
+      "Milisegundos": 17.289,
+      "OperacionesPorSegundo": 5784.025,
+      "Checksum": 1845890
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "listado_filtrado",
+      "Ronda": 1,
+      "Operaciones": 10,
+      "Microsegundos": 2237,
+      "Milisegundos": 2.237,
+      "OperacionesPorSegundo": 4470.273,
+      "Checksum": 712600
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "agregado_ventas",
+      "Ronda": 1,
+      "Operaciones": 1,
+      "Microsegundos": 769,
+      "Milisegundos": 0.769,
+      "OperacionesPorSegundo": 1300.39,
+      "Checksum": 6101138
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Pasada": 1,
+      "Metrica": "actualizacion_stock",
+      "Ronda": 1,
+      "Operaciones": 100,
+      "Microsegundos": 7151,
+      "Milisegundos": 7.151,
+      "OperacionesPorSegundo": 13984.058,
+      "Checksum": 100
+    }
+  ],
+  "resumen": [
+    {
+      "Motor": "MariaDB",
+      "Metrica": "actualizacion_stock",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 61.98,
+      "OperacionesPorSegundoMediana": 16134.237
+    },
+    {
+      "Motor": "MariaDB",
+      "Metrica": "agregado_ventas",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 591.0,
+      "OperacionesPorSegundoMediana": 1692.047
+    },
+    {
+      "Motor": "MariaDB",
+      "Metrica": "busqueda_pk",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 95.96,
+      "OperacionesPorSegundoMediana": 10421.009
+    },
+    {
+      "Motor": "MariaDB",
+      "Metrica": "carga_articulos",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 65.279,
+      "OperacionesPorSegundoMediana": 15318.862
+    },
+    {
+      "Motor": "MariaDB",
+      "Metrica": "carga_movimientos",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 58.309,
+      "OperacionesPorSegundoMediana": 17150.011
+    },
+    {
+      "Motor": "MariaDB",
+      "Metrica": "conexion",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 534.9,
+      "OperacionesPorSegundoMediana": 1869.508
+    },
+    {
+      "Motor": "MariaDB",
+      "Metrica": "listado_filtrado",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 193.7,
+      "OperacionesPorSegundoMediana": 5162.623
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "actualizacion_stock",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 71.51,
+      "OperacionesPorSegundoMediana": 13984.058
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "agregado_ventas",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 769.0,
+      "OperacionesPorSegundoMediana": 1300.39
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "busqueda_pk",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 172.89,
+      "OperacionesPorSegundoMediana": 5784.025
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "carga_articulos",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 70.905,
+      "OperacionesPorSegundoMediana": 14103.378
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "carga_movimientos",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 101.547,
+      "OperacionesPorSegundoMediana": 9847.657
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "conexion",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 45939.3,
+      "OperacionesPorSegundoMediana": 21.768
+    },
+    {
+      "Motor": "PostgreSQL",
+      "Metrica": "listado_filtrado",
+      "Muestras": 1,
+      "MicrosegundosPorOperacionMediana": 223.7,
+      "OperacionesPorSegundoMediana": 4470.273
+    }
+  ],
+  "comparacion": [
+    {
+      "Metrica": "actualizacion_stock",
+      "MariaDB_us_operacion": 61.98,
+      "PostgreSQL_us_operacion": 71.51,
+      "Ganador": "MariaDB",
+      "Factor": 1.154
+    },
+    {
+      "Metrica": "agregado_ventas",
+      "MariaDB_us_operacion": 591.0,
+      "PostgreSQL_us_operacion": 769.0,
+      "Ganador": "MariaDB",
+      "Factor": 1.301
+    },
+    {
+      "Metrica": "busqueda_pk",
+      "MariaDB_us_operacion": 95.96,
+      "PostgreSQL_us_operacion": 172.89,
+      "Ganador": "MariaDB",
+      "Factor": 1.802
+    },
+    {
+      "Metrica": "carga_articulos",
+      "MariaDB_us_operacion": 65.279,
+      "PostgreSQL_us_operacion": 70.905,
+      "Ganador": "MariaDB",
+      "Factor": 1.086
+    },
+    {
+      "Metrica": "carga_movimientos",
+      "MariaDB_us_operacion": 58.309,
+      "PostgreSQL_us_operacion": 101.547,
+      "Ganador": "MariaDB",
+      "Factor": 1.742
+    },
+    {
+      "Metrica": "conexion",
+      "MariaDB_us_operacion": 534.9,
+      "PostgreSQL_us_operacion": 45939.3,
+      "Ganador": "MariaDB",
+      "Factor": 85.884
+    },
+    {
+      "Metrica": "listado_filtrado",
+      "MariaDB_us_operacion": 193.7,
+      "PostgreSQL_us_operacion": 223.7,
+      "Ganador": "MariaDB",
+      "Factor": 1.155
+    }
+  ]
+}

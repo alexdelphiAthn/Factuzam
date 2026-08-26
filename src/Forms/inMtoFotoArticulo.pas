@@ -13,10 +13,9 @@
 {    articulo o SKU activo en la pantalla que lo invoca con Ctrl+F.        }
 {    Render por GDI (TImage + Vcl.Imaging.PngImage).                           }
 {                                                                              }
-{    UI con panel de controles desplegable: por defecto solo se ve la imagen   }
-{    y un boton pequeno arriba (▼ Controles). Al pulsarlo se estira hacia     }
-{    abajo el panel con resolucion, cambiar foto, rotar y quitar; un nuevo    }
-{    click lo encoge. F11 hace lo mismo desde teclado.                         }
+{    UI compacta con una barra de iconos y un panel desplegable para           }
+{    resolucion, sustitucion, giro, borrado y layout. Cada accion expone su    }
+{    descripcion mediante Hint. F11 abre o cierra el panel.                    }
 {                                                                              }
 {    Alt+F12 guarda la geometria de la ventana (igual patron que               }
 {    inMtoConsultaOpe), via TLayoutSaver. FormShow restaura.                   }
@@ -54,6 +53,7 @@ type
     btnToggle        : TcxButton;
     btnDescargarNube : TcxButton;
     lblOrigen        : TcxLabel;
+    btnMarcarPredeterminada: TcxButton;
     btnFotoAnterior  : TcxButton;
     lblNumeroFoto    : TcxLabel;
     btnFotoSiguiente : TcxButton;
@@ -88,6 +88,7 @@ type
     procedure btnFotoAnteriorClick(Sender: TObject);
     procedure btnFotoSiguienteClick(Sender: TObject);
     procedure btnAnadirFotoClick(Sender: TObject);
+    procedure btnMarcarPredeterminadaClick(Sender: TObject);
   private
     FCodigoArt              : string;
     FCodigoSku              : string;
@@ -113,11 +114,15 @@ type
     FFotoDefinitivaSesion   : Boolean;
     FFotosColeccion         : TArray<TFotoInfo>;
     FIndiceFoto             : Integer;
+    FInicializacionCompleta : Boolean;
+    procedure AplicarAspectoBotonesCompactos;
+    procedure AjustarBarraSuperior;
     procedure CargarFotoActual;
     procedure CargarColeccionArticulo(
       const ANombrePreferido: string;
       AOrdenPreferido, AIndiceAlternativo: Integer);
     procedure SeleccionarFoto(AIndice: Integer);
+    procedure MarcarFotoActualPredeterminada;
     procedure ActualizarControlesGaleria;
     procedure ActualizarOrigenFotoArticulo;
     procedure ActualizarCaptionArticulo;
@@ -146,6 +151,7 @@ type
     procedure AjustarBotonToggle;
     procedure GuardarLayout;
   public
+    procedure AplicarTraduccionActual; override;
     /// Carga la foto del par (articulo, sku). Llamar tras Create o cuando
     /// se quiera refrescar (al cambiar el registro activo).
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
@@ -254,13 +260,16 @@ begin
   imgFoto.Center       := False;
   // Por defecto el panel de controles esta encogido.
   pnlControles.Visible := False;
-  AjustarBotonToggle;
+  FInicializacionCompleta := True;
+  AplicarAspectoBotonesCompactos;
+  AjustarBarraSuperior;
 end;
 
 procedure TfrmFotoArticulo.FormShow(Sender: TObject);
 begin
   inherited;
   RestaurarGeometriaGuardada;
+  AjustarBarraSuperior;
   // En el PRIMER show, imgFoto aun no tiene su tamano final cuando se pinto la
   // foto (sale en blanco). Diferimos un repintado a cuando el layout cuaje.
   TThread.ForceQueue(nil,
@@ -273,6 +282,64 @@ begin
          Formulario.Visible then
         Formulario.PintarFotoGDIPlus;
     end);
+end;
+
+procedure TfrmFotoArticulo.AplicarTraduccionActual;
+begin
+  inherited;
+  AplicarAspectoBotonesCompactos;
+end;
+
+procedure TfrmFotoArticulo.AplicarAspectoBotonesCompactos;
+begin
+  btnDescargarNube.Caption := #$2193;
+  btnFotoAnterior.Caption := #$2190;
+  btnFotoSiguiente.Caption := #$2192;
+  btnAnadirFoto.Caption := '+';
+  btnCambiarSku.Caption := '&G' + #$2026;
+  btnRotarIzq.Caption := '&I' + #$21B6;
+  btnRotarDer.Caption := '&D' + #$21B7;
+  btnQuitar.Caption := '&Q' + #$00D7;
+  btnLayout.Caption := '&L' + #$25A6;
+  if FModoSesion and not FFotoDefinitivaSesion then
+    btnCambiarArt.Caption := '&F' + #$2026
+  else
+    btnCambiarArt.Caption := '&A' + #$2026;
+
+  btnToggle.Font.Name := 'Segoe UI Symbol';
+  btnDescargarNube.Font.Name := 'Segoe UI Symbol';
+  btnMarcarPredeterminada.Font.Name := 'Segoe UI Symbol';
+  btnFotoAnterior.Font.Name := 'Segoe UI Symbol';
+  btnFotoSiguiente.Font.Name := 'Segoe UI Symbol';
+  btnCambiarArt.Font.Name := 'Segoe UI Symbol';
+  btnCambiarSku.Font.Name := 'Segoe UI Symbol';
+  btnRotarIzq.Font.Name := 'Segoe UI Symbol';
+  btnRotarDer.Font.Name := 'Segoe UI Symbol';
+  btnQuitar.Font.Name := 'Segoe UI Symbol';
+  btnLayout.Font.Name := 'Segoe UI Symbol';
+  AjustarBotonToggle;
+  if FUltimaInfo.Encontrada and (FUltimaInfo.Orden = 1) then
+    btnMarcarPredeterminada.Caption := #$2605
+  else
+    btnMarcarPredeterminada.Caption := #$2606;
+end;
+
+procedure TfrmFotoArticulo.AjustarBarraSuperior;
+var
+  iIzquierdaGaleria: Integer;
+begin
+  iIzquierdaGaleria := pnlTop.ClientWidth - 200;
+  if iIzquierdaGaleria < 80 then
+    iIzquierdaGaleria := 80;
+  btnMarcarPredeterminada.Left := iIzquierdaGaleria;
+  btnFotoAnterior.Left := iIzquierdaGaleria + 36;
+  lblNumeroFoto.Left := iIzquierdaGaleria + 72;
+  btnFotoSiguiente.Left := iIzquierdaGaleria + 128;
+  btnAnadirFoto.Left := iIzquierdaGaleria + 164;
+  if iIzquierdaGaleria > lblOrigen.Left + 8 then
+    lblOrigen.Width := iIzquierdaGaleria - lblOrigen.Left - 8
+  else
+    lblOrigen.Width := 0;
 end;
 
 procedure TfrmFotoArticulo.RestaurarGeometriaGuardada;
@@ -383,9 +450,9 @@ end;
 procedure TfrmFotoArticulo.AjustarBotonToggle;
 begin
   if pnlControles.Visible then
-    btnToggle.Caption := SCaptionControlesExpandido
+    btnToggle.Caption := #$25B2
   else
-    btnToggle.Caption := SCaptionControlesContraido;
+    btnToggle.Caption := #$25BC;
 end;
 
 procedure TfrmFotoArticulo.btnToggleClick(Sender: TObject);
@@ -578,11 +645,19 @@ begin
   lblNumeroFoto.Visible := bCatalogo;
   btnFotoSiguiente.Visible := bCatalogo;
   btnAnadirFoto.Visible := bCatalogo;
+  btnMarcarPredeterminada.Visible := bCatalogo;
 
   btnFotoAnterior.Enabled := bCatalogo and (FIndiceFoto > 0);
   btnFotoSiguiente.Enabled := bCatalogo and (FIndiceFoto >= 0) and
     (FIndiceFoto < High(FFotosColeccion));
   btnAnadirFoto.Enabled := bCatalogo and (FCodigoArt <> '');
+  btnMarcarPredeterminada.Enabled :=
+    bCatalogo and FUltimaInfo.Encontrada and
+    (FUltimaInfo.Orden > 1);
+  if FUltimaInfo.Encontrada and (FUltimaInfo.Orden = 1) then
+    btnMarcarPredeterminada.Caption := #$2605
+  else
+    btnMarcarPredeterminada.Caption := #$2606;
   if FIndiceFoto >= 0 then
     lblNumeroFoto.Caption := Format('%d/%d',
       [FIndiceFoto + 1, Length(FFotosColeccion)])
@@ -625,12 +700,15 @@ end;
 procedure TfrmFotoArticulo.PrepararControlesArticulo;
 begin
   btnDescargarNube.Visible := True;
-  btnCambiarArt.Caption := 'Cambiar foto del &artículo';
+  btnCambiarArt.Hint :=
+    'Sustituir la foto principal del artículo';
   btnCambiarSku.Visible := True;
+  btnMarcarPredeterminada.Visible := True;
   btnFotoAnterior.Visible := True;
   lblNumeroFoto.Visible := True;
   btnFotoSiguiente.Visible := True;
   btnAnadirFoto.Visible := True;
+  AplicarAspectoBotonesCompactos;
 end;
 
 procedure TfrmFotoArticulo.PrepararControlesSesion(AExpandir: Boolean);
@@ -640,10 +718,12 @@ begin
   lblNumeroFoto.Visible := False;
   btnFotoSiguiente.Visible := False;
   btnAnadirFoto.Visible := False;
+  btnMarcarPredeterminada.Visible := False;
   if FFotoDefinitivaSesion then
-    btnCambiarArt.Caption := 'Cambiar foto del &artículo'
+    btnCambiarArt.Hint :=
+      'Sustituir la foto principal del artículo'
   else
-    btnCambiarArt.Caption := 'Cambiar foto de la &línea';
+    btnCambiarArt.Hint := 'Cambiar la foto de la línea';
   btnCambiarSku.Visible := False;
   lblNivel.Visible := False;
   cbbNivelSku.Visible := False;
@@ -652,6 +732,7 @@ begin
     pnlControles.Visible := True;
     AjustarBotonToggle;
   end;
+  AplicarAspectoBotonesCompactos;
 end;
 
 procedure TfrmFotoArticulo.SetSesion(const ASerieSesion,
@@ -848,6 +929,8 @@ end;
 procedure TfrmFotoArticulo.Resize;
 begin
   inherited;
+  if FInicializacionCompleta then
+    AjustarBarraSuperior;
   PintarFotoGDIPlus;
 end;
 
@@ -884,36 +967,62 @@ var
   sUnidad             : string;
 begin
   inherited;
-  if FModoSesion then
-    Exit;
-  if FCodigoArt = '' then
+  if not FModoSesion then
   begin
-    ShowMessage(SErrorFotoArticuloNoActivo);
-    Exit;
+    if FCodigoArt = '' then
+      ShowMessage(SErrorFotoArticuloNoActivo)
+    else
+    begin
+      // Sin SKU, el alta pertenece siempre a la galería general del
+      // artículo, incluso si la vista usa como fallback la primera foto de
+      // una unidad. Con SKU se añade al nivel efectivo mostrado o, si aún no
+      // hay fotos, al nivel elegido en el combo.
+      if FCodigoSku = '' then
+        sUnidad := ''
+      else if FUltimaInfo.Encontrada then
+        sUnidad := FUltimaInfo.ClaveResuelta
+      else
+        sUnidad := ClaveNivelSeleccionado;
+
+      if dlgAbrirFoto.Execute then
+      begin
+        try
+          iIndiceAlternativo := Length(FFotosColeccion);
+          oNueva := FotosArticulos.Anadir(
+            FCodigoArt,
+            sUnidad,
+            dlgAbrirFoto.FileName,
+            IdentidadSesion.Usuario);
+          CargarColeccionArticulo(
+            oNueva.NombreBase, oNueva.Orden, iIndiceAlternativo);
+        except
+          on E: Exception do
+            ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+        end;
+      end;
+    end;
   end;
+end;
 
-  // Sin SKU, el alta pertenece siempre a la galería general del artículo,
-  // incluso si la vista usa como fallback la primera foto de una unidad.
-  // Con SKU se añade al nivel efectivo mostrado o, si aún no hay fotos, al
-  // nivel elegido en el combo.
-  if FCodigoSku = '' then
-    sUnidad := ''
-  else if FUltimaInfo.Encontrada then
-    sUnidad := FUltimaInfo.ClaveResuelta
-  else
-    sUnidad := ClaveNivelSeleccionado;
+procedure TfrmFotoArticulo.btnMarcarPredeterminadaClick(
+  Sender: TObject);
+begin
+  inherited;
+  MarcarFotoActualPredeterminada;
+end;
 
-  if dlgAbrirFoto.Execute then
+procedure TfrmFotoArticulo.MarcarFotoActualPredeterminada;
+var
+  oPredeterminada: TFotoInfo;
+begin
+  if (not FModoSesion) and FUltimaInfo.Encontrada and
+     (FUltimaInfo.Orden > 1) then
   begin
     try
-      iIndiceAlternativo := Length(FFotosColeccion);
-      oNueva := FotosArticulos.Anadir(
-        FCodigoArt,
-        sUnidad,
-        dlgAbrirFoto.FileName,
-        IdentidadSesion.Usuario);
+      oPredeterminada := FotosArticulos.MarcarPredeterminada(
+        FUltimaInfo, IdentidadSesion.Usuario);
       CargarColeccionArticulo(
-        oNueva.NombreBase, oNueva.Orden, iIndiceAlternativo);
+        oPredeterminada.NombreBase, 1, 0);
     except
       on E: Exception do
         ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));

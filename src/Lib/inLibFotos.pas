@@ -95,6 +95,8 @@ type
       const AUsuario: string): TFotoInfo; overload;
     procedure Eliminar(const ACodArt, ACodUnidad: string); overload;
     procedure Eliminar(const AInfo: TFotoInfo); overload;
+    function MarcarPredeterminada(const AInfo: TFotoInfo;
+      const AUsuario: string): TFotoInfo;
     procedure HandlerReportBeforePrint(
       Component: TfrxReportComponent);
     procedure LeerArtSkuDeDataSet(ADataSet: TDataSet;
@@ -242,6 +244,13 @@ end;
 procedure TFotosArticulos.Eliminar(const AInfo: TFotoInfo);
 begin
   FEdicion.Eliminar(AInfo);
+end;
+
+function TFotosArticulos.MarcarPredeterminada(
+  const AInfo: TFotoInfo;
+  const AUsuario: string): TFotoInfo;
+begin
+  Result := FEdicion.MarcarPredeterminada(AInfo, AUsuario);
 end;
 
 procedure TFotosArticulos.HandlerReportBeforePrint(

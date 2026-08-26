@@ -1,9 +1,8 @@
 ﻿inherited frmFotoArticulo: TfrmFotoArticulo
   BorderIcons = [biSystemMenu]
   Caption = 'Foto del art'#237'culo / SKU'
-  ClientHeight = 600
-  ClientWidth = 720
-  Constraints.MinWidth = 736
+  ClientHeight = 520
+  ClientWidth = 520
   FormStyle = fsStayOnTop
   Position = poDesigned
   StyleElements = [seFont, seClient, seBorder]
@@ -11,109 +10,127 @@
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
-  ExplicitWidth = 736
-  ExplicitHeight = 639
+  ExplicitWidth = 536
+  ExplicitHeight = 559
   TextHeight = 19
   object pnlTop: TPanel [0]
     Left = 0
     Top = 0
-    Width = 720
-    Height = 38
+    Width = 520
+    Height = 36
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 722
     object btnToggle: TcxButton
       Left = 4
       Top = 4
-      Width = 130
-      Height = 30
-      Caption = #9660' Controles'
+      Width = 32
+      Height = 28
+      Caption = #9660
+      Hint = 'Mostrar u ocultar controles (F11)'
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 0
       OnClick = btnToggleClick
     end
     object btnDescargarNube: TcxButton
-      Left = 140
+      Left = 40
       Top = 4
-      Width = 188
-      Height = 30
-      Caption = 'Bajar fotos del servidor'
+      Width = 32
+      Height = 28
+      Caption = #8595
+      Hint = 'Bajar fotos del servidor'
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 1
       OnClick = btnDescargarNubeClick
     end
     object lblOrigen: TcxLabel
-      Left = 336
-      Top = 8
+      Left = 80
+      Top = 7
+      Anchors = [akLeft, akTop, akRight]
       Caption = 'Sin foto'
       Properties.WordWrap = True
       TabOrder = 2
       Visible = False
-      Width = 69
+      Width = 232
       Transparent = True
     end
-    object btnFotoAnterior: TcxButton
-      Left = 480
+    object btnMarcarPredeterminada: TcxButton
+      Left = 320
       Top = 4
-      Width = 40
-      Height = 30
+      Width = 32
+      Height = 28
       Anchors = [akTop, akRight]
-      Caption = '<'
-      Hint = 'Foto anterior'
+      Caption = #9734
+      Hint = 'Establecer esta foto como predeterminada'
       ParentShowHint = False
       ShowHint = True
       TabOrder = 3
+      OnClick = btnMarcarPredeterminadaClick
+    end
+    object btnFotoAnterior: TcxButton
+      Left = 356
+      Top = 4
+      Width = 32
+      Height = 28
+      Anchors = [akTop, akRight]
+      Caption = #8592
+      Hint = 'Foto anterior'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 4
       OnClick = btnFotoAnteriorClick
     end
     object lblNumeroFoto: TcxLabel
-      Left = 524
-      Top = 8
+      Left = 392
+      Top = 7
       Anchors = [akTop, akRight]
       Caption = '0/0'
       Properties.Alignment.Horz = taCenter
-      TabOrder = 4
+      TabOrder = 5
       Transparent = True
-      Width = 76
+      Width = 52
     end
     object btnFotoSiguiente: TcxButton
-      Left = 604
+      Left = 448
       Top = 4
-      Width = 40
-      Height = 30
+      Width = 32
+      Height = 28
       Anchors = [akTop, akRight]
-      Caption = '>'
+      Caption = #8594
       Hint = 'Foto siguiente'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 5
+      TabOrder = 6
       OnClick = btnFotoSiguienteClick
     end
     object btnAnadirFoto: TcxButton
-      Left = 648
+      Left = 484
       Top = 4
-      Width = 64
-      Height = 30
+      Width = 32
+      Height = 28
       Anchors = [akTop, akRight]
       Caption = '+'
       Hint = 'A'#241'adir foto'
       ParentShowHint = False
       ShowHint = True
-      TabOrder = 6
+      TabOrder = 7
       OnClick = btnAnadirFotoClick
     end
   end
   object pnlControles: TPanel [1]
     Left = 0
-    Top = 38
-    Width = 720
-    Height = 180
+    Top = 36
+    Width = 520
+    Height = 94
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
     Visible = False
-    ExplicitWidth = 722
     object rgResolucion: TcxRadioGroup
-      Left = 8
-      Top = 4
+      Left = 4
+      Top = 2
       Caption = ' Resoluci'#243'n '
       Properties.Columns = 3
       Properties.Items = <
@@ -133,93 +150,110 @@
       ItemIndex = 0
       Style.BorderStyle = ebsOffice11
       TabOrder = 0
-      Height = 65
-      Width = 360
+      Height = 52
+      Width = 200
     end
     object lblNivel: TcxLabel
-      Left = 380
-      Top = 4
-      Caption = 'Nivel al que aplica el cambio:'
-      TabOrder = 7
+      Left = 212
+      Top = 2
+      Caption = 'Nivel:'
+      TabOrder = 8
       Transparent = True
     end
     object cbbNivelSku: TcxComboBox
-      Left = 380
-      Top = 36
+      Left = 212
+      Top = 24
+      Anchors = [akLeft, akTop, akRight]
       Properties.DropDownListStyle = lsFixedList
       TabOrder = 1
-      Width = 332
+      Width = 304
     end
     object btnCambiarArt: TcxButton
-      Left = 8
-      Top = 84
-      Width = 220
-      Height = 40
-      Caption = 'Cambiar foto del &art'#237'culo'
+      Left = 4
+      Top = 58
+      Width = 44
+      Height = 32
+      Caption = '&A'#8230
+      Hint = 'Sustituir la foto principal del art'#237'culo'
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 2
       OnClick = btnCambiarArtClick
     end
     object btnCambiarSku: TcxButton
-      Left = 8
-      Top = 130
-      Width = 220
-      Height = 40
-      Caption = 'Cambiar foto del &grupo'
+      Left = 52
+      Top = 58
+      Width = 44
+      Height = 32
+      Caption = '&G'#8230
+      Hint = 'Sustituir la foto principal del nivel seleccionado'
+      ParentShowHint = False
+      ShowHint = True
       TabOrder = 3
       OnClick = btnCambiarSkuClick
     end
     object btnQuitar: TcxButton
-      Left = 472
-      Top = 84
-      Width = 240
-      Height = 40
-      Caption = '&Quitar foto'
-      TabOrder = 4
+      Left = 212
+      Top = 58
+      Width = 44
+      Height = 32
+      Caption = '&Q'#215
+      Hint = 'Quitar la foto visible'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 6
       OnClick = btnQuitarClick
     end
     object btnRotarIzq: TcxButton
-      Left = 240
-      Top = 84
-      Width = 220
-      Height = 40
-      Caption = 'Rotar &izquierda'
-      TabOrder = 5
+      Left = 108
+      Top = 58
+      Width = 44
+      Height = 32
+      Caption = '&I'#8630
+      Hint = 'Rotar la foto visible a la izquierda'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 4
       OnClick = btnRotarIzqClick
     end
     object btnRotarDer: TcxButton
-      Left = 240
-      Top = 130
-      Width = 220
-      Height = 40
-      Caption = 'Rotar &derecha'
-      TabOrder = 6
+      Left = 156
+      Top = 58
+      Width = 44
+      Height = 32
+      Caption = '&D'#8631
+      Hint = 'Rotar la foto visible a la derecha'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 5
       OnClick = btnRotarDerClick
     end
     object btnLayout: TcxButton
-      Left = 472
-      Top = 130
-      Width = 240
-      Height = 40
-      Caption = 'Guardar &layout'
-      TabOrder = 8
+      Left = 268
+      Top = 58
+      Width = 44
+      Height = 32
+      Caption = '&L'#9638
+      Hint = 'Guardar posici'#243'n, tama'#241'o y resoluci'#243'n'
+      ParentShowHint = False
+      ShowHint = True
+      TabOrder = 7
       OnClick = btnLayoutClick
     end
   end
   object pnlImage: TPanel [2]
     Left = 0
-    Top = 218
-    Width = 720
-    Height = 382
+    Top = 130
+    Width = 520
+    Height = 390
     Align = alClient
     BevelOuter = bvLowered
     TabOrder = 2
-    ExplicitWidth = 718
-    ExplicitHeight = 374
     object imgFoto: TImage
       Left = 1
       Top = 1
-      Width = 718
-      Height = 380
+      Width = 518
+      Height = 388
       Align = alClient
       Center = True
       Proportional = True
@@ -227,7 +261,7 @@
     end
   end
   inherited Localizer1: TcxLocalizer
-    Left = 624
+    Left = 424
   end
   object dlgAbrirFoto: TOpenDialog
     Filter = 
@@ -235,7 +269,7 @@
       '|*.png|JPG|*.jpg;*.jpeg|GIF|*.gif|WebP|*.webp|AVIF|*.avif|HEIC|*' +
       '.heic;*.heif|BMP|*.bmp|Todos|*.*'
     Title = 'Seleccionar foto'
-    Left = 624
+    Left = 424
     Top = 16
   end
 end
