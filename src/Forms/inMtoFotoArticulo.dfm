@@ -18,15 +18,15 @@
     Left = 0
     Top = 0
     Width = 520
-    Height = 36
+    Height = 26
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
     object btnToggle: TcxButton
-      Left = 4
-      Top = 4
-      Width = 32
-      Height = 28
+      Left = 2
+      Top = 2
+      Width = 22
+      Height = 22
       Caption = ''
       Hint = 'Mostrar u ocultar controles (F11)'
       ParentShowHint = False
@@ -35,10 +35,10 @@
       OnClick = btnToggleClick
     end
     object btnDescargarNube: TcxButton
-      Left = 40
-      Top = 4
-      Width = 32
-      Height = 28
+      Left = 26
+      Top = 2
+      Width = 22
+      Height = 22
       Caption = ''
       Hint = 'Bajar fotos del servidor'
       ParentShowHint = False
@@ -47,21 +47,21 @@
       OnClick = btnDescargarNubeClick
     end
     object lblOrigen: TcxLabel
-      Left = 80
-      Top = 7
+      Left = 50
+      Top = 3
       Anchors = [akLeft, akTop, akRight]
       Caption = 'Sin foto'
       Properties.WordWrap = True
       TabOrder = 2
       Visible = False
-      Width = 232
+      Width = 346
       Transparent = True
     end
     object btnMarcarPredeterminada: TcxButton
-      Left = 320
-      Top = 4
-      Width = 32
-      Height = 28
+      Left = 398
+      Top = 2
+      Width = 22
+      Height = 22
       Anchors = [akTop, akRight]
       Caption = ''
       Hint = 'Establecer esta foto como predeterminada'
@@ -71,10 +71,10 @@
       OnClick = btnMarcarPredeterminadaClick
     end
     object btnFotoAnterior: TcxButton
-      Left = 356
-      Top = 4
-      Width = 32
-      Height = 28
+      Left = 422
+      Top = 2
+      Width = 22
+      Height = 22
       Anchors = [akTop, akRight]
       Caption = ''
       Hint = 'Foto anterior'
@@ -84,20 +84,20 @@
       OnClick = btnFotoAnteriorClick
     end
     object lblNumeroFoto: TcxLabel
-      Left = 392
-      Top = 7
+      Left = 446
+      Top = 3
       Anchors = [akTop, akRight]
       Caption = '0/0'
       Properties.Alignment.Horz = taCenter
       TabOrder = 5
       Transparent = True
-      Width = 52
+      Width = 24
     end
     object btnFotoSiguiente: TcxButton
-      Left = 448
-      Top = 4
-      Width = 32
-      Height = 28
+      Left = 472
+      Top = 2
+      Width = 22
+      Height = 22
       Anchors = [akTop, akRight]
       Caption = ''
       Hint = 'Foto siguiente'
@@ -107,10 +107,10 @@
       OnClick = btnFotoSiguienteClick
     end
     object btnAnadirFoto: TcxButton
-      Left = 484
-      Top = 4
-      Width = 32
-      Height = 28
+      Left = 496
+      Top = 2
+      Width = 22
+      Height = 22
       Anchors = [akTop, akRight]
       Caption = ''
       Hint = 'A'#241'adir foto'
@@ -122,16 +122,16 @@
   end
   object pnlControles: TPanel [1]
     Left = 0
-    Top = 36
+    Top = 26
     Width = 520
-    Height = 94
+    Height = 72
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
     Visible = False
     object rgResolucion: TcxRadioGroup
-      Left = 4
-      Top = 2
+      Left = 2
+      Top = 1
       Caption = ' Resoluci'#243'n '
       Properties.Columns = 3
       Properties.Items = <
@@ -151,29 +151,29 @@
       ItemIndex = 0
       Style.BorderStyle = ebsOffice11
       TabOrder = 0
-      Height = 52
-      Width = 200
+      Height = 40
+      Width = 194
     end
     object lblNivel: TcxLabel
-      Left = 212
-      Top = 2
+      Left = 202
+      Top = 1
       Caption = 'Nivel:'
       TabOrder = 8
       Transparent = True
     end
     object cbbNivelSku: TcxComboBox
-      Left = 212
-      Top = 24
+      Left = 202
+      Top = 19
       Anchors = [akLeft, akTop, akRight]
       Properties.DropDownListStyle = lsFixedList
       TabOrder = 1
-      Width = 304
+      Width = 316
     end
     object btnCambiarArt: TcxButton
-      Left = 4
-      Top = 58
-      Width = 44
-      Height = 32
+      Left = 2
+      Top = 44
+      Width = 26
+      Height = 24
       Caption = ''
       Hint = 'Sustituir la foto predeterminada del art'#237'culo'
       ParentShowHint = False
@@ -182,10 +182,10 @@
       OnClick = btnCambiarArtClick
     end
     object btnCambiarSku: TcxButton
-      Left = 52
-      Top = 58
-      Width = 44
-      Height = 32
+      Left = 30
+      Top = 44
+      Width = 26
+      Height = 24
       Caption = ''
       Hint = 'Sustituir la foto predeterminada del nivel seleccionado'
       ParentShowHint = False
@@ -194,10 +194,10 @@
       OnClick = btnCambiarSkuClick
     end
     object btnQuitar: TcxButton
-      Left = 212
-      Top = 58
-      Width = 44
-      Height = 32
+      Left = 114
+      Top = 44
+      Width = 26
+      Height = 24
       Caption = ''
       Hint = 'Eliminar definitivamente la foto visible'
       ParentShowHint = False
@@ -206,10 +206,10 @@
       OnClick = btnQuitarClick
     end
     object btnRotarIzq: TcxButton
-      Left = 108
-      Top = 58
-      Width = 44
-      Height = 32
+      Left = 58
+      Top = 44
+      Width = 26
+      Height = 24
       Caption = ''
       Hint = 'Rotar la foto visible a la izquierda'
       ParentShowHint = False
@@ -218,10 +218,10 @@
       OnClick = btnRotarIzqClick
     end
     object btnRotarDer: TcxButton
-      Left = 156
-      Top = 58
-      Width = 44
-      Height = 32
+      Left = 86
+      Top = 44
+      Width = 26
+      Height = 24
       Caption = ''
       Hint = 'Rotar la foto visible a la derecha'
       ParentShowHint = False
@@ -230,10 +230,10 @@
       OnClick = btnRotarDerClick
     end
     object btnLayout: TcxButton
-      Left = 268
-      Top = 58
-      Width = 44
-      Height = 32
+      Left = 142
+      Top = 44
+      Width = 26
+      Height = 24
       Caption = ''
       Hint = 'Guardar posici'#243'n, tama'#241'o y resoluci'#243'n'
       ParentShowHint = False
@@ -244,9 +244,9 @@
   end
   object pnlImage: TPanel [2]
     Left = 0
-    Top = 130
+    Top = 98
     Width = 520
-    Height = 390
+    Height = 422
     Align = alClient
     BevelOuter = bvLowered
     TabOrder = 2
@@ -254,7 +254,7 @@
       Left = 1
       Top = 1
       Width = 518
-      Height = 388
+      Height = 420
       Align = alClient
       Center = True
       Proportional = True

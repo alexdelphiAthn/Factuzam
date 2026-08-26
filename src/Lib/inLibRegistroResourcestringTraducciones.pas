@@ -103,6 +103,15 @@ begin
     'SCaptionFotoSesion',
     @inLibMsgFotos.SCaptionFotoSesion);
   RegistrarTextoFoto(ARegistrar,
+    'STituloSeleccionarFotoVariacion',
+    @inLibMsgFotos.STituloSeleccionarFotoVariacion);
+  RegistrarTextoFoto(ARegistrar,
+    'SCaptionUsarFotoVariacion',
+    @inLibMsgFotos.SCaptionUsarFotoVariacion);
+  RegistrarTextoFoto(ARegistrar,
+    'SCaptionFotoVariacion',
+    @inLibMsgFotos.SCaptionFotoVariacion);
+  RegistrarTextoFoto(ARegistrar,
     'STituloLayoutFotoArticulo',
     @inLibMsgFotos.STituloLayoutFotoArticulo);
 end;

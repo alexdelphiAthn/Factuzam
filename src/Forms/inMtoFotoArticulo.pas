@@ -117,6 +117,7 @@ type
     FInicializacionCompleta : Boolean;
     procedure AplicarAspectoBotonesCompactos;
     procedure AjustarBarraSuperior;
+    procedure AjustarPanelControles;
     procedure CargarFotoActual;
     procedure CargarColeccionArticulo(
       const ANombrePreferido: string;
@@ -130,6 +131,8 @@ type
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
     function  ClaveNivelSeleccionado: string;
+    function  SeleccionarRutaPredeterminada(
+      out ARutaFoto: string): Boolean;
     procedure DesengancharDataChange;
     procedure DesengancharDataSource(ADataSource: TDataSource);
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
@@ -196,7 +199,8 @@ procedure MostrarFotoSesionFlotante(AOwner: TComponent;
 implementation
 
 uses
-  inLibMsgArticulos, inLibMsgCompras, inLibMsgFotos;
+  inLibMsgArticulos, inLibMsgCompras, inLibMsgComun,
+  inLibMsgFotos;
 
 {$R *.dfm}
 
@@ -217,6 +221,29 @@ type
     ifRotarDerecha,
     ifEliminar,
     ifGuardarLayout);
+
+  TSelectorFotoVariacion = class(TForm)
+  private
+    FFotosArticulos: TFotosArticulos;
+    FFotos         : TArray<TFotoInfo>;
+    FIndice        : Integer;
+    FImagen        : TImage;
+    FContador      : TLabel;
+    FAnterior      : TcxButton;
+    FSiguiente     : TcxButton;
+    FUsar          : TButton;
+    procedure ActualizarFoto;
+    procedure AnteriorClick(Sender: TObject);
+    procedure SiguienteClick(Sender: TObject);
+    procedure FotoDobleClick(Sender: TObject);
+    procedure TeclaPulsada(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
+  public
+    constructor Create(AOwner: TComponent;
+      AFotosArticulos: TFotosArticulos;
+      const AFotos: TArray<TFotoInfo>);
+    function Ejecutar(out AFoto: TFotoInfo): Boolean;
+  end;
 
 const
   SSvgInicio =
@@ -290,9 +317,225 @@ begin
   try
     AButton.OptionsImage.Glyph.LoadFromStream(Flujo);
     AButton.OptionsImage.Glyph.SourceDPI := 96;
+    AButton.OptionsImage.Glyph.SourceWidth := 14;
+    AButton.OptionsImage.Glyph.SourceHeight := 14;
   finally
     Flujo.Free;
   end;
+end;
+
+function RutaFotoDisponible(AFotosArticulos: TFotosArticulos;
+  const AInfo: TFotoInfo;
+  AResolucionPreferida: TFotoResolucion): string;
+begin
+  Result := AFotosArticulos.RutaFoto(
+    AInfo, AResolucionPreferida);
+  if (Result = '') and (AResolucionPreferida <> frReal) then
+    Result := AFotosArticulos.RutaFoto(AInfo, frReal);
+  if (Result = '') and (AResolucionPreferida <> frPx600) then
+    Result := AFotosArticulos.RutaFoto(AInfo, frPx600);
+  if (Result = '') and (AResolucionPreferida <> frPx300) then
+    Result := AFotosArticulos.RutaFoto(AInfo, frPx300);
+end;
+
+constructor TSelectorFotoVariacion.Create(AOwner: TComponent;
+  AFotosArticulos: TFotosArticulos;
+  const AFotos: TArray<TFotoInfo>);
+var
+  iPpi        : Integer;
+  iMargen     : Integer;
+  iAltoBoton  : Integer;
+  oPanelTop   : TPanel;
+  oPanelBottom: TPanel;
+  oCancelar   : TButton;
+begin
+  inherited CreateNew(AOwner);
+  FFotosArticulos := AFotosArticulos;
+  FFotos := AFotos;
+  FIndice := 0;
+  iPpi := Screen.PixelsPerInch;
+  iMargen := MulDiv(6, iPpi, USER_DEFAULT_SCREEN_DPI);
+  iAltoBoton := MulDiv(26, iPpi, USER_DEFAULT_SCREEN_DPI);
+
+  Caption := STituloSeleccionarFotoVariacion;
+  Position := poOwnerFormCenter;
+  BorderStyle := bsSizeable;
+  BorderIcons := [biSystemMenu, biMaximize];
+  KeyPreview := True;
+  ShowHint := True;
+  DoubleBuffered := True;
+  ClientWidth := MulDiv(480, iPpi, USER_DEFAULT_SCREEN_DPI);
+  ClientHeight := MulDiv(390, iPpi, USER_DEFAULT_SCREEN_DPI);
+  OnKeyDown := TeclaPulsada;
+  if AOwner is TCustomForm then
+  begin
+    PopupMode := pmExplicit;
+    PopupParent := TCustomForm(AOwner);
+    Font.Assign(TCustomForm(AOwner).Font);
+  end;
+
+  oPanelTop := TPanel.Create(Self);
+  oPanelTop.Parent := Self;
+  oPanelTop.Align := alTop;
+  oPanelTop.BevelOuter := bvNone;
+  oPanelTop.Height := iAltoBoton + (2 * iMargen);
+
+  FAnterior := TcxButton.Create(Self);
+  FAnterior.Parent := oPanelTop;
+  FAnterior.SetBounds(iMargen, iMargen,
+    iAltoBoton, iAltoBoton);
+  FAnterior.Hint := SHintFotoAnterior;
+  FAnterior.OnClick := AnteriorClick;
+  AsignarIconoFoto(FAnterior, ifAnterior);
+
+  FSiguiente := TcxButton.Create(Self);
+  FSiguiente.Parent := oPanelTop;
+  FSiguiente.SetBounds(iMargen + iAltoBoton + iMargen,
+    iMargen, iAltoBoton, iAltoBoton);
+  FSiguiente.Hint := SHintFotoSiguiente;
+  FSiguiente.OnClick := SiguienteClick;
+  AsignarIconoFoto(FSiguiente, ifSiguiente);
+
+  FContador := TLabel.Create(Self);
+  FContador.Parent := oPanelTop;
+  FContador.AutoSize := False;
+  FContador.Alignment := taCenter;
+  FContador.Layout := tlCenter;
+  FContador.Left := FSiguiente.Left + FSiguiente.Width + iMargen;
+  FContador.Top := iMargen;
+  FContador.Width := oPanelTop.ClientWidth -
+    FContador.Left - iMargen;
+  FContador.Height := iAltoBoton;
+  FContador.Anchors := [akLeft, akTop, akRight];
+
+  oPanelBottom := TPanel.Create(Self);
+  oPanelBottom.Parent := Self;
+  oPanelBottom.Align := alBottom;
+  oPanelBottom.BevelOuter := bvNone;
+  oPanelBottom.Height := MulDiv(
+    42, iPpi, USER_DEFAULT_SCREEN_DPI);
+
+  oCancelar := TButton.Create(Self);
+  oCancelar.Parent := oPanelBottom;
+  oCancelar.Caption := SCaptionCancelar;
+  oCancelar.Cancel := True;
+  oCancelar.ModalResult := mrCancel;
+  oCancelar.Width := MulDiv(
+    90, iPpi, USER_DEFAULT_SCREEN_DPI);
+  oCancelar.Height := iAltoBoton;
+  oCancelar.Left := oPanelBottom.ClientWidth -
+    oCancelar.Width - iMargen;
+  oCancelar.Top := iMargen;
+  oCancelar.Anchors := [akTop, akRight];
+
+  FUsar := TButton.Create(Self);
+  FUsar.Parent := oPanelBottom;
+  FUsar.Caption := SCaptionUsarFotoVariacion;
+  FUsar.Default := True;
+  FUsar.ModalResult := mrOk;
+  FUsar.Width := MulDiv(
+    132, iPpi, USER_DEFAULT_SCREEN_DPI);
+  FUsar.Height := iAltoBoton;
+  FUsar.Left := oCancelar.Left - FUsar.Width - iMargen;
+  FUsar.Top := iMargen;
+  FUsar.Anchors := [akTop, akRight];
+
+  FImagen := TImage.Create(Self);
+  FImagen.Parent := Self;
+  FImagen.Align := alClient;
+  FImagen.AlignWithMargins := True;
+  FImagen.Margins.Left := iMargen;
+  FImagen.Margins.Top := iMargen;
+  FImagen.Margins.Right := iMargen;
+  FImagen.Margins.Bottom := iMargen;
+  FImagen.Stretch := True;
+  FImagen.Proportional := True;
+  FImagen.Center := True;
+  FImagen.OnDblClick := FotoDobleClick;
+  ActualizarFoto;
+end;
+
+procedure TSelectorFotoVariacion.ActualizarFoto;
+var
+  sRuta: string;
+begin
+  FImagen.Picture.Assign(nil);
+  FUsar.Enabled := (FIndice >= 0) and
+    (FIndice < Length(FFotos));
+  if FUsar.Enabled then
+  begin
+    sRuta := RutaFotoDisponible(
+      FFotosArticulos, FFotos[FIndice], frPx600);
+    try
+      FImagen.Picture.LoadFromFile(sRuta);
+    except
+      FImagen.Picture.Assign(nil);
+      FUsar.Enabled := False;
+    end;
+    FContador.Caption := Format(
+      SCaptionFotoVariacion,
+      [FFotos[FIndice].ClaveResuelta,
+       FFotos[FIndice].Orden,
+       FIndice + 1,
+       Length(FFotos)]);
+  end;
+  FAnterior.Enabled := Length(FFotos) > 1;
+  FSiguiente.Enabled := FAnterior.Enabled;
+end;
+
+procedure TSelectorFotoVariacion.AnteriorClick(Sender: TObject);
+begin
+  if Length(FFotos) > 1 then
+  begin
+    if FIndice > 0 then
+      Dec(FIndice)
+    else
+      FIndice := High(FFotos);
+    ActualizarFoto;
+  end;
+end;
+
+procedure TSelectorFotoVariacion.SiguienteClick(Sender: TObject);
+begin
+  if Length(FFotos) > 1 then
+  begin
+    if FIndice < High(FFotos) then
+      Inc(FIndice)
+    else
+      FIndice := 0;
+    ActualizarFoto;
+  end;
+end;
+
+procedure TSelectorFotoVariacion.FotoDobleClick(Sender: TObject);
+begin
+  if FUsar.Enabled then
+    ModalResult := mrOk;
+end;
+
+procedure TSelectorFotoVariacion.TeclaPulsada(
+  Sender: TObject; var Key: Word; Shift: TShiftState);
+begin
+  if Key = VK_LEFT then
+  begin
+    AnteriorClick(Self);
+    Key := 0;
+  end
+  else if Key = VK_RIGHT then
+  begin
+    SiguienteClick(Self);
+    Key := 0;
+  end;
+end;
+
+function TSelectorFotoVariacion.Ejecutar(
+  out AFoto: TFotoInfo): Boolean;
+begin
+  AFoto.Clear;
+  Result := (Length(FFotos) > 0) and
+    (ShowModal = mrOk) and FUsar.Enabled;
+  if Result then
+    AFoto := FFotos[FIndice];
 end;
 
 function FotoFlotanteActual: TfrmFotoArticulo;
@@ -353,11 +596,17 @@ begin
   imgFoto.Stretch      := False;
   imgFoto.Proportional := False;
   imgFoto.Center       := False;
+  rgResolucion.Style.Font.Size := 9;
+  lblNumeroFoto.Style.Font.Size := 9;
+  lblOrigen.Style.Font.Size := 9;
+  lblNivel.Style.Font.Size := 9;
+  cbbNivelSku.Style.Font.Size := 9;
   // Por defecto el panel de controles esta encogido.
   pnlControles.Visible := False;
   FInicializacionCompleta := True;
   AplicarAspectoBotonesCompactos;
   AjustarBarraSuperior;
+  AjustarPanelControles;
 end;
 
 procedure TfrmFotoArticulo.FormShow(Sender: TObject);
@@ -365,6 +614,7 @@ begin
   inherited;
   RestaurarGeometriaGuardada;
   AjustarBarraSuperior;
+  AjustarPanelControles;
   // En el PRIMER show, imgFoto aun no tiene su tamano final cuando se pinto la
   // foto (sale en blanco). Diferimos un repintado a cuando el layout cuaje.
   TThread.ForceQueue(nil,
@@ -427,20 +677,169 @@ end;
 
 procedure TfrmFotoArticulo.AjustarBarraSuperior;
 var
-  iIzquierdaGaleria: Integer;
+  iAltoBoton        : Integer;
+  iAnchoBoton       : Integer;
+  iAnchoContador    : Integer;
+  iAnchoNecesario   : Integer;
+  iIzquierda        : Integer;
+  iIzquierdaGaleria : Integer;
+  iMargen           : Integer;
+  iSeparacion       : Integer;
 begin
-  iIzquierdaGaleria := pnlTop.ClientWidth - 200;
-  if iIzquierdaGaleria < 80 then
-    iIzquierdaGaleria := 80;
-  btnMarcarPredeterminada.Left := iIzquierdaGaleria;
-  btnFotoAnterior.Left := iIzquierdaGaleria + 36;
-  lblNumeroFoto.Left := iIzquierdaGaleria + 72;
-  btnFotoSiguiente.Left := iIzquierdaGaleria + 128;
-  btnAnadirFoto.Left := iIzquierdaGaleria + 164;
-  if iIzquierdaGaleria > lblOrigen.Left + 8 then
-    lblOrigen.Width := iIzquierdaGaleria - lblOrigen.Left - 8
+  iMargen := MulDiv(2, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iSeparacion := iMargen;
+  iAnchoBoton := MulDiv(22, CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI);
+  iAltoBoton := iAnchoBoton;
+  iAnchoContador := MulDiv(24, CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI);
+  iAnchoNecesario := (6 * iAnchoBoton) + iAnchoContador +
+    (6 * iSeparacion) + (2 * iMargen);
+  if iAnchoNecesario > pnlTop.ClientWidth then
+  begin
+    iAnchoContador := MulDiv(22, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    iAnchoBoton := (pnlTop.ClientWidth - iAnchoContador -
+      (6 * iSeparacion) - (2 * iMargen)) div 6;
+    if iAnchoBoton < MulDiv(14, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI) then
+      iAnchoBoton := MulDiv(14, CurrentPPI,
+        USER_DEFAULT_SCREEN_DPI);
+    if iAltoBoton > iAnchoBoton then
+      iAltoBoton := iAnchoBoton;
+  end;
+  pnlTop.Height := iAltoBoton + (2 * iMargen);
+
+  iIzquierda := iMargen;
+  btnToggle.SetBounds(iIzquierda, iMargen,
+    iAnchoBoton, iAltoBoton);
+  Inc(iIzquierda, iAnchoBoton + iSeparacion);
+  btnDescargarNube.SetBounds(iIzquierda, iMargen,
+    iAnchoBoton, iAltoBoton);
+
+  iIzquierdaGaleria := pnlTop.ClientWidth - iMargen -
+    (4 * iAnchoBoton) - iAnchoContador -
+    (4 * iSeparacion);
+  btnMarcarPredeterminada.SetBounds(
+    iIzquierdaGaleria, iMargen, iAnchoBoton, iAltoBoton);
+  Inc(iIzquierdaGaleria, iAnchoBoton + iSeparacion);
+  btnFotoAnterior.SetBounds(
+    iIzquierdaGaleria, iMargen, iAnchoBoton, iAltoBoton);
+  Inc(iIzquierdaGaleria, iAnchoBoton + iSeparacion);
+  lblNumeroFoto.Left := iIzquierdaGaleria;
+  lblNumeroFoto.Width := iAnchoContador;
+  lblNumeroFoto.Top := (pnlTop.ClientHeight -
+    lblNumeroFoto.Height) div 2;
+  Inc(iIzquierdaGaleria, iAnchoContador + iSeparacion);
+  btnFotoSiguiente.SetBounds(
+    iIzquierdaGaleria, iMargen, iAnchoBoton, iAltoBoton);
+  Inc(iIzquierdaGaleria, iAnchoBoton + iSeparacion);
+  btnAnadirFoto.SetBounds(
+    iIzquierdaGaleria, iMargen, iAnchoBoton, iAltoBoton);
+
+  lblOrigen.Left := btnDescargarNube.Left +
+    btnDescargarNube.Width + iSeparacion;
+  lblOrigen.Top := (pnlTop.ClientHeight - lblOrigen.Height) div 2;
+  iAnchoNecesario := btnMarcarPredeterminada.Left -
+    lblOrigen.Left - iSeparacion;
+  if iAnchoNecesario > 0 then
+    lblOrigen.Width := iAnchoNecesario
   else
     lblOrigen.Width := 0;
+end;
+
+procedure TfrmFotoArticulo.AjustarPanelControles;
+var
+  aBotones        : array[0..5] of TcxButton;
+  bNivelApilado   : Boolean;
+  iAltoBoton      : Integer;
+  iAnchoBoton     : Integer;
+  iAnchoDisponible: Integer;
+  iBoton          : Integer;
+  iIzquierda      : Integer;
+  iMargen         : Integer;
+  iSeparacion     : Integer;
+  iTopBotones     : Integer;
+begin
+  iMargen := MulDiv(2, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iSeparacion := iMargen;
+  iAnchoBoton := MulDiv(26, CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI);
+  iAltoBoton := MulDiv(24, CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI);
+  iAnchoDisponible := pnlControles.ClientWidth -
+    (2 * iMargen) - (5 * iSeparacion);
+  if (6 * iAnchoBoton) > iAnchoDisponible then
+    iAnchoBoton := iAnchoDisponible div 6;
+  if iAnchoBoton < MulDiv(18, CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI) then
+    iAnchoBoton := MulDiv(18, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+
+  rgResolucion.Left := iMargen;
+  rgResolucion.Top := iMargen div 2;
+  rgResolucion.Height := MulDiv(40, CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI);
+  bNivelApilado := cbbNivelSku.Visible and
+    (pnlControles.ClientWidth < MulDiv(360, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI));
+  if bNivelApilado then
+  begin
+    rgResolucion.Width := pnlControles.ClientWidth -
+      (2 * iMargen);
+    lblNivel.Left := iMargen;
+    lblNivel.Top := MulDiv(43, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    cbbNivelSku.Left := MulDiv(48, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    cbbNivelSku.Top := MulDiv(40, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    cbbNivelSku.Width := pnlControles.ClientWidth -
+      cbbNivelSku.Left - iMargen;
+    if cbbNivelSku.Width < 0 then
+      cbbNivelSku.Width := 0;
+    iTopBotones := MulDiv(68, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    pnlControles.Height := MulDiv(96, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+  end
+  else
+  begin
+    rgResolucion.Width := MulDiv(194, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    if rgResolucion.Width > pnlControles.ClientWidth -
+       (2 * iMargen) then
+      rgResolucion.Width := pnlControles.ClientWidth -
+        (2 * iMargen);
+    lblNivel.Left := rgResolucion.Left + rgResolucion.Width +
+      MulDiv(6, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+    lblNivel.Top := iMargen div 2;
+    cbbNivelSku.Left := lblNivel.Left;
+    cbbNivelSku.Top := MulDiv(19, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    cbbNivelSku.Width := pnlControles.ClientWidth -
+      cbbNivelSku.Left - iMargen;
+    if cbbNivelSku.Width < 0 then
+      cbbNivelSku.Width := 0;
+    iTopBotones := MulDiv(44, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    pnlControles.Height := MulDiv(72, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+  end;
+
+  aBotones[0] := btnCambiarArt;
+  aBotones[1] := btnCambiarSku;
+  aBotones[2] := btnRotarIzq;
+  aBotones[3] := btnRotarDer;
+  aBotones[4] := btnQuitar;
+  aBotones[5] := btnLayout;
+  iIzquierda := iMargen;
+  for iBoton := 0 to High(aBotones) do
+  begin
+    aBotones[iBoton].SetBounds(
+      iIzquierda, iTopBotones, iAnchoBoton, iAltoBoton);
+    Inc(iIzquierda, iAnchoBoton + iSeparacion);
+  end;
 end;
 
 procedure TfrmFotoArticulo.RestaurarGeometriaGuardada;
@@ -542,6 +941,7 @@ end;
 procedure TfrmFotoArticulo.ToggleControles;
 begin
   pnlControles.Visible := not pnlControles.Visible;
+  AjustarPanelControles;
   AjustarBotonToggle;
   // Reencajar la foto: al cambiar la visibilidad del panel, imgFoto cambia de
   // tamaño pero el Resize del form no salta (la ventana no cambia de tamaño).
@@ -945,6 +1345,7 @@ begin
   finally
     cbbNivelSku.Properties.Items.EndUpdate;
   end;
+  AjustarPanelControles;
 end;
 
 function TfrmFotoArticulo.ClaveNivelSeleccionado: string;
@@ -956,6 +1357,41 @@ begin
     Result := cbbNivelSku.Properties.Items[cbbNivelSku.ItemIndex]
   else
     Result := FCodigoSku;
+end;
+
+function TfrmFotoArticulo.SeleccionarRutaPredeterminada(
+  out ARutaFoto: string): Boolean;
+var
+  aDisponibles: TArray<TFotoInfo>;
+  aVariaciones: TArray<TFotoInfo>;
+  iFoto       : Integer;
+  oSeleccion  : TFotoInfo;
+  oSelector   : TSelectorFotoVariacion;
+begin
+  ARutaFoto := '';
+  SetLength(aDisponibles, 0);
+  aVariaciones := FotosArticulos.ResolverFotosVariaciones(
+    FCodigoArt);
+  for iFoto := 0 to High(aVariaciones) do
+    if RutaFotoDisponible(
+      FotosArticulos, aVariaciones[iFoto], frReal) <> '' then
+      aDisponibles := aDisponibles + [aVariaciones[iFoto]];
+
+  if Length(aDisponibles) > 0 then
+  begin
+    oSelector := TSelectorFotoVariacion.Create(
+      Self, FotosArticulos, aDisponibles);
+    try
+      if oSelector.Ejecutar(oSeleccion) then
+        ARutaFoto := RutaFotoDisponible(
+          FotosArticulos, oSeleccion, frReal);
+    finally
+      FreeAndNil(oSelector);
+    end;
+  end
+  else if dlgAbrirFoto.Execute then
+    ARutaFoto := dlgAbrirFoto.FileName;
+  Result := ARutaFoto <> '';
 end;
 
 procedure TfrmFotoArticulo.CargarFotoActual;
@@ -1033,7 +1469,10 @@ procedure TfrmFotoArticulo.Resize;
 begin
   inherited;
   if FInicializacionCompleta then
+  begin
     AjustarBarraSuperior;
+    AjustarPanelControles;
+  end;
   PintarFotoGDIPlus;
 end;
 
@@ -1135,59 +1574,73 @@ end;
 
 procedure TfrmFotoArticulo.btnCambiarArtClick(Sender: TObject);
 var
-  bGuardada: Boolean;
+  bGuardada   : Boolean;
+  bRutaElegida: Boolean;
+  sRutaFoto   : string;
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
     ShowMessage(SErrorLineaSesionSinCodigoArticulo)
   else if (not FModoSesion) and (FCodigoArt = '') then
     ShowMessage(SErrorFotoArticuloNoActivo)
-  else if dlgAbrirFoto.Execute then
+  else
   begin
-    bGuardada := True;
-    try
-      if FModoSesion and FFotoDefinitivaSesion then
-        FotosArticulos.Guardar(
-          FCodigoArtTentativoSesion,
-          FUltimaInfo.ClaveResuelta,
-          dlgAbrirFoto.FileName,
-          IdentidadSesion.Usuario)
-      else if FModoSesion then
-        FotosArticulos.Sesion.Guardar(
-          FSerieSesion,
-          FNumeroSesion,
-          FLineaSesion,
-          FCodigoArtTentativoSesion,
-          FCodigoUnidadSesion,
-          dlgAbrirFoto.FileName,
-          IdentidadSesion.Usuario)
-      else
-        FotosArticulos.Guardar(
-          FCodigoArt,
-          '',
-          dlgAbrirFoto.FileName,
-          IdentidadSesion.Usuario);
-    except
-      on E: Exception do
-      begin
-        bGuardada := False;
-        ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
-      end;
-    end;
-    if bGuardada then
+    sRutaFoto := '';
+    if FModoSesion then
     begin
-      if FModoSesion then
+      bRutaElegida := dlgAbrirFoto.Execute;
+      if bRutaElegida then
+        sRutaFoto := dlgAbrirFoto.FileName;
+    end
+    else
+      bRutaElegida := SeleccionarRutaPredeterminada(sRutaFoto);
+    if bRutaElegida then
+    begin
+      bGuardada := True;
+      try
+        if FModoSesion and FFotoDefinitivaSesion then
+          FotosArticulos.Guardar(
+            FCodigoArtTentativoSesion,
+            FUltimaInfo.ClaveResuelta,
+            sRutaFoto,
+            IdentidadSesion.Usuario)
+        else if FModoSesion then
+          FotosArticulos.Sesion.Guardar(
+            FSerieSesion,
+            FNumeroSesion,
+            FLineaSesion,
+            FCodigoArtTentativoSesion,
+            FCodigoUnidadSesion,
+            sRutaFoto,
+            IdentidadSesion.Usuario)
+        else
+          FotosArticulos.Guardar(
+            FCodigoArt,
+            '',
+            sRutaFoto,
+            IdentidadSesion.Usuario);
+      except
+        on E: Exception do
+        begin
+          bGuardada := False;
+          ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+        end;
+      end;
+      if bGuardada then
       begin
-        SetSesion(
-          FSerieSesion,
-          FNumeroSesion,
-          FLineaSesion,
-          FCodigoArtTentativoSesion,
-          FCodigoUnidadSesion);
-        NotificarCambioFotoSesion;
-      end
-      else
-        SetArticuloSku(FCodigoArt, FCodigoSku);
+        if FModoSesion then
+        begin
+          SetSesion(
+            FSerieSesion,
+            FNumeroSesion,
+            FLineaSesion,
+            FCodigoArtTentativoSesion,
+            FCodigoUnidadSesion);
+          NotificarCambioFotoSesion;
+        end
+        else
+          SetArticuloSku(FCodigoArt, FCodigoSku);
+      end;
     end;
   end;
 end;

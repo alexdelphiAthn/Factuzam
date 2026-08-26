@@ -45,6 +45,9 @@ type
     function BuscarFotosColeccion(
       const ACodigoArticulo, ACodigoUnidad: string):
       TArray<TMetadatosFotoPersistida>;
+    function BuscarFotosVariaciones(
+      const ACodigoArticulo: string):
+      TArray<TMetadatosFotoPersistida>;
   end;
   IRepositorioEdicionFotos = interface
     ['{CE045E9E-16D8-4F75-A72D-08F142690E9A}']

@@ -58,6 +58,9 @@ type
     function BuscarFotosColeccion(
       const ACodigoArticulo, ACodigoUnidad: string):
       TArray<TMetadatosFotoPersistida>;
+    function BuscarFotosVariaciones(
+      const ACodigoArticulo: string):
+      TArray<TMetadatosFotoPersistida>;
   end;
 
 function LeerMetadatosFoto(
@@ -260,6 +263,38 @@ begin
       ACodigoArticulo;
     oConsulta.ParamByName('CODIGO_UNIDAD').AsString :=
       ACodigoUnidad;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iFoto := Length(Result);
+      SetLength(Result, iFoto + 1);
+      Result[iFoto] := LeerMetadatosFoto(oConsulta);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioConsultaFotosUniDAC.BuscarFotosVariaciones(
+  const ACodigoArticulo: string):
+  TArray<TMetadatosFotoPersistida>;
+var
+  oConsulta: TUniQuery;
+  iFoto: Integer;
+begin
+  SetLength(Result, 0);
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text :=
+      ' SELECT CODIGO_ART_FOT, CODIGO_UNIDAD_FOT, ORDEN_FOT, ' +
+      '        NOMBRE_FOT_FOT, EXTENSION_ORIGEN_FOT ' +
+      '   FROM fza_articulos_fotos ' +
+      '  WHERE CODIGO_ART_FOT = :CODIGO_ART ' +
+      '    AND CODIGO_UNIDAD_FOT <> '''' ' +
+      '  ORDER BY CODIGO_UNIDAD_FOT, ORDEN_FOT, NOMBRE_FOT_FOT';
+    oConsulta.ParamByName('CODIGO_ART').AsString :=
+      ACodigoArticulo;
     oConsulta.Open;
     while not oConsulta.Eof do
     begin

@@ -81,6 +81,8 @@ type
       ACodSku: string): TFotoInfo; override;
     function ResolverColeccion(const ACodArt,
       ACodSku: string): TArray<TFotoInfo>;
+    function ResolverFotosVariaciones(
+      const ACodArt: string): TArray<TFotoInfo>;
     function ResolverArticulosLote(
       const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
     procedure PrecargarFotosLote(const ACodigos: TArray<string>);
@@ -189,6 +191,12 @@ function TFotosArticulos.ResolverColeccion(const ACodArt,
   ACodSku: string): TArray<TFotoInfo>;
 begin
   Result := FConsulta.ResolverColeccion(ACodArt, ACodSku);
+end;
+
+function TFotosArticulos.ResolverFotosVariaciones(
+  const ACodArt: string): TArray<TFotoInfo>;
+begin
+  Result := FConsulta.ResolverFotosVariaciones(ACodArt);
 end;
 
 function TFotosArticulos.ResolverArticulosLote(

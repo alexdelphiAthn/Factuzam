@@ -40,6 +40,8 @@ type
       ACodigoSku: string): TFotoInfo;
     function ResolverColeccion(const ACodigoArticulo,
       ACodigoSku: string): TArray<TFotoInfo>;
+    function ResolverFotosVariaciones(
+      const ACodigoArticulo: string): TArray<TFotoInfo>;
     function ResolverArticulosLote(
       const ACodigos: TArray<string>): TDictionary<string, TFotoInfo>;
     procedure PrecargarFotosLote(const ACodigos: TArray<string>);
@@ -255,6 +257,33 @@ begin
     Result[iFoto].Orden := aMetadatos[iFoto].Orden;
     Result[iFoto].NombreBase := aMetadatos[iFoto].Nombre;
     Result[iFoto].ExtensionOrigen := aMetadatos[iFoto].Extension;
+  end;
+end;
+
+function TConsultaFotos.ResolverFotosVariaciones(
+  const ACodigoArticulo: string): TArray<TFotoInfo>;
+var
+  aMetadatos: TArray<TMetadatosFotoPersistida>;
+  iFoto: Integer;
+begin
+  SetLength(Result, 0);
+  if ACodigoArticulo <> '' then
+  begin
+    aMetadatos := FRepositorio.BuscarFotosVariaciones(
+      ACodigoArticulo);
+    SetLength(Result, Length(aMetadatos));
+    for iFoto := 0 to High(aMetadatos) do
+    begin
+      Result[iFoto].Clear;
+      Result[iFoto].Encontrada := True;
+      Result[iFoto].Origen := foSku;
+      Result[iFoto].CodigoArt := ACodigoArticulo;
+      Result[iFoto].CodigoSku := aMetadatos[iFoto].CodigoUnidad;
+      Result[iFoto].ClaveResuelta := aMetadatos[iFoto].CodigoUnidad;
+      Result[iFoto].Orden := aMetadatos[iFoto].Orden;
+      Result[iFoto].NombreBase := aMetadatos[iFoto].Nombre;
+      Result[iFoto].ExtensionOrigen := aMetadatos[iFoto].Extension;
+    end;
   end;
 end;
 

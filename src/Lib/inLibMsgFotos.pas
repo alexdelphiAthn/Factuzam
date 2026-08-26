@@ -36,7 +36,8 @@ resourcestring
   SHintAnadirFoto =
     'Añadir foto';
   SHintCambiarFotoArticulo =
-    'Sustituir la foto predeterminada del artículo';
+    'Elegir una foto de variación como predeterminada; si no hay, ' +
+    'seleccionar un archivo';
   SHintCambiarFotoNivel =
     'Sustituir la foto predeterminada del nivel seleccionado';
   SHintCambiarFotoLinea =
@@ -55,6 +56,12 @@ resourcestring
     '%s — Sin fotos';
   SCaptionFotoSesion =
     'Sesión %s/%s · línea %d · %s';
+  STituloSeleccionarFotoVariacion =
+    'Elegir foto predeterminada';
+  SCaptionUsarFotoVariacion =
+    'Usar esta foto';
+  SCaptionFotoVariacion =
+    '%s · Foto %d · %d/%d';
   STituloLayoutFotoArticulo =
     'Foto del artículo / SKU';
 
