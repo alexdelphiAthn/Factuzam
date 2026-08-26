@@ -57,7 +57,7 @@ implementation
 
 uses
   Winapi.Windows, System.SysUtils, System.IOUtils,
-  inLibMsgArticulos;
+  inLibMsgArticulos, inLibMsgFotos;
 
 constructor TEdicionFotos.Create(AConsulta: TConsultaFotos;
   AAlmacenamiento: TAlmacenamientoFotos);

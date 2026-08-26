@@ -1,5 +1,6 @@
 ﻿inherited frmFotoArticulo: TfrmFotoArticulo
-  BorderIcons = [biSystemMenu]
+  BorderIcons = [biSystemMenu, biMinimize, biMaximize]
+  BorderStyle = bsSizeable
   Caption = 'Foto del art'#237'culo / SKU'
   ClientHeight = 520
   ClientWidth = 520

@@ -20,6 +20,7 @@ uses
   inLibMsgConexion,
   inLibMsgConfiguracion,
   inLibMsgFacturas,
+  inLibMsgFotos,
   inLibMsgIntegraciones,
   inLibMsgLogon,
   inLibMsgSql,
@@ -30,9 +31,86 @@ uses
   Vcl.Consts;
 
 {$WARN SYMBOL_DEPRECATED OFF}
+
+procedure RegistrarTextoFoto(
+  const ARegistrar: TRegistrarResourcestringTraduccion;
+  const ANombre: string; ARecurso: PResStringRec);
+begin
+  ARegistrar(
+    'inLibMsgFotos.' + ANombre,
+    'src/Lib/inLibMsgFotos.pas',
+    ARecurso);
+end;
+
+procedure EnumerarResourcestringsFotos(
+  const ARegistrar: TRegistrarResourcestringTraduccion);
+begin
+  RegistrarTextoFoto(ARegistrar,
+    'SErrorFotoNoRegistradaParaPredeterminar',
+    @inLibMsgFotos.SErrorFotoNoRegistradaParaPredeterminar);
+  RegistrarTextoFoto(ARegistrar,
+    'SErrorFotoSeleccionadaCambio',
+    @inLibMsgFotos.SErrorFotoSeleccionadaCambio);
+  RegistrarTextoFoto(ARegistrar,
+    'SErrorGaleriaFotosCambio',
+    @inLibMsgFotos.SErrorGaleriaFotosCambio);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintMostrarControlesFoto',
+    @inLibMsgFotos.SHintMostrarControlesFoto);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintBajarFotosServidor',
+    @inLibMsgFotos.SHintBajarFotosServidor);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintFotoPredeterminada',
+    @inLibMsgFotos.SHintFotoPredeterminada);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintFotoAnterior',
+    @inLibMsgFotos.SHintFotoAnterior);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintFotoSiguiente',
+    @inLibMsgFotos.SHintFotoSiguiente);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintAnadirFoto',
+    @inLibMsgFotos.SHintAnadirFoto);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintCambiarFotoArticulo',
+    @inLibMsgFotos.SHintCambiarFotoArticulo);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintCambiarFotoNivel',
+    @inLibMsgFotos.SHintCambiarFotoNivel);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintCambiarFotoLinea',
+    @inLibMsgFotos.SHintCambiarFotoLinea);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintQuitarFoto',
+    @inLibMsgFotos.SHintQuitarFoto);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintRotarFotoIzquierda',
+    @inLibMsgFotos.SHintRotarFotoIzquierda);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintRotarFotoDerecha',
+    @inLibMsgFotos.SHintRotarFotoDerecha);
+  RegistrarTextoFoto(ARegistrar,
+    'SHintGuardarLayoutFoto',
+    @inLibMsgFotos.SHintGuardarLayoutFoto);
+  RegistrarTextoFoto(ARegistrar,
+    'SCaptionGaleriaConFotos',
+    @inLibMsgFotos.SCaptionGaleriaConFotos);
+  RegistrarTextoFoto(ARegistrar,
+    'SCaptionGaleriaSinFotos',
+    @inLibMsgFotos.SCaptionGaleriaSinFotos);
+  RegistrarTextoFoto(ARegistrar,
+    'SCaptionFotoSesion',
+    @inLibMsgFotos.SCaptionFotoSesion);
+  RegistrarTextoFoto(ARegistrar,
+    'STituloLayoutFotoArticulo',
+    @inLibMsgFotos.STituloLayoutFotoArticulo);
+end;
+
 procedure EnumerarResourcestringsTraduccion(
   const ARegistrar: TRegistrarResourcestringTraduccion);
 begin
+  EnumerarResourcestringsFotos(ARegistrar);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SErrorLineaAlbaranSinArticulo',
@@ -519,24 +597,6 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       SErrorFotoNoRegistradaParaRotar);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorFotoNoRegistradaParaPredeterminar',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorFotoNoRegistradaParaPredeterminar);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorFotoSeleccionadaCambio',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorFotoSeleccionadaCambio);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SErrorGaleriaFotosCambio',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SErrorGaleriaFotosCambio);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SErrorFotoSesionSinSerie',

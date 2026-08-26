@@ -84,6 +84,7 @@ uses
   inLibMsgSql in 'src\Lib\inLibMsgSql.pas',
   inLibMsgSqlSeguro in 'src\Lib\inLibMsgSqlSeguro.pas',
   inLibMsgArticulos in 'src\Lib\inLibMsgArticulos.pas',
+  inLibMsgFotos in 'src\Lib\inLibMsgFotos.pas',
   inLibMsgVentas in 'src\Lib\inLibMsgVentas.pas',
   inLibMsgCompras in 'src\Lib\inLibMsgCompras.pas',
   inLibMsgFacturas in 'src\Lib\inLibMsgFacturas.pas',

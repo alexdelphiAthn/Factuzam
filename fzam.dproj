@@ -222,6 +222,7 @@
         <DCCReference Include="src\Lib\inLibMsgSql.pas"/>
         <DCCReference Include="src\Lib\inLibMsgSqlSeguro.pas"/>
         <DCCReference Include="src\Lib\inLibMsgArticulos.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgFotos.pas"/>
         <DCCReference Include="src\Lib\inLibMsgVentas.pas"/>
         <DCCReference Include="src\Lib\inLibMsgCompras.pas"/>
         <DCCReference Include="src\Lib\inLibMsgFacturas.pas"/>

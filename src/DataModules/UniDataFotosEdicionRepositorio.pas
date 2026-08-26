@@ -25,7 +25,7 @@ implementation
 
 uses
   Winapi.Windows, System.SysUtils, System.Hash,
-  inLibMsgArticulos;
+  inLibMsgFotos;
 
 const
   fcodartfot = 'CODIGO_ART_FOT';

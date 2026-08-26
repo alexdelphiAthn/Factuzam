@@ -126,6 +126,7 @@ type
     procedure ActualizarControlesGaleria;
     procedure ActualizarOrigenFotoArticulo;
     procedure ActualizarCaptionArticulo;
+    procedure ActualizarCaptionActual;
     function  ResolucionElegida: TFotoResolucion;
     procedure RellenarNivelesSku;
     function  ClaveNivelSeleccionado: string;
@@ -195,12 +196,9 @@ procedure MostrarFotoSesionFlotante(AOwner: TComponent;
 implementation
 
 uses
-  inLibMsgArticulos, inLibMsgCompras;
+  inLibMsgArticulos, inLibMsgCompras, inLibMsgFotos;
 
 {$R *.dfm}
-
-resourcestring
-  STituloLayoutFotoArticulo = 'Foto del artículo / SKU';
 
 function FotoFlotanteActual: TfrmFotoArticulo;
 var
@@ -223,6 +221,8 @@ begin
   // Alt+F12 no sean sobrescritos al mostrarse el form. Si no hay
   // layout guardado, FormShow centra manualmente.
   Self.Position    := poDesigned;
+  Self.BorderStyle := bsSizeable;
+  Self.BorderIcons := [biSystemMenu, biMinimize, biMaximize];
   Self.FormStyle   := fsStayOnTop;
   // KeyPreview procesa teclas cuando la flotante esta activa (tras
   // click directo del usuario). El auto-show usa SW_SHOWNOACTIVATE
@@ -288,6 +288,7 @@ procedure TfrmFotoArticulo.AplicarTraduccionActual;
 begin
   inherited;
   AplicarAspectoBotonesCompactos;
+  ActualizarCaptionActual;
 end;
 
 procedure TfrmFotoArticulo.AplicarAspectoBotonesCompactos;
@@ -302,9 +303,27 @@ begin
   btnQuitar.Caption := '&Q' + #$00D7;
   btnLayout.Caption := '&L' + #$25A6;
   if FModoSesion and not FFotoDefinitivaSesion then
+  begin
     btnCambiarArt.Caption := '&F' + #$2026
+  end
   else
     btnCambiarArt.Caption := '&A' + #$2026;
+
+  btnToggle.Hint := SHintMostrarControlesFoto;
+  btnDescargarNube.Hint := SHintBajarFotosServidor;
+  btnMarcarPredeterminada.Hint := SHintFotoPredeterminada;
+  btnFotoAnterior.Hint := SHintFotoAnterior;
+  btnFotoSiguiente.Hint := SHintFotoSiguiente;
+  btnAnadirFoto.Hint := SHintAnadirFoto;
+  if FModoSesion and not FFotoDefinitivaSesion then
+    btnCambiarArt.Hint := SHintCambiarFotoLinea
+  else
+    btnCambiarArt.Hint := SHintCambiarFotoArticulo;
+  btnCambiarSku.Hint := SHintCambiarFotoNivel;
+  btnRotarIzq.Hint := SHintRotarFotoIzquierda;
+  btnRotarDer.Hint := SHintRotarFotoDerecha;
+  btnQuitar.Hint := SHintQuitarFoto;
+  btnLayout.Hint := SHintGuardarLayoutFoto;
 
   btnToggle.Font.Name := 'Segoe UI Symbol';
   btnDescargarNube.Font.Name := 'Segoe UI Symbol';
@@ -691,17 +710,26 @@ begin
   else
     sCodigo := FCodigoArt;
   if FIndiceFoto >= 0 then
-    Self.Caption := Format('%s — Foto %d/%d',
+    Self.Caption := Format(SCaptionGaleriaConFotos,
       [sCodigo, FIndiceFoto + 1, Length(FFotosColeccion)])
   else
-    Self.Caption := Format('%s — Sin fotos', [sCodigo]);
+    Self.Caption := Format(SCaptionGaleriaSinFotos, [sCodigo]);
+end;
+
+procedure TfrmFotoArticulo.ActualizarCaptionActual;
+begin
+  if FModoSesion then
+    Self.Caption := Format(
+      SCaptionFotoSesion,
+      [FSerieSesion, FNumeroSesion, FLineaSesion,
+       FCodigoArtTentativoSesion])
+  else if (FCodigoArt <> '') or (FCodigoSku <> '') then
+    ActualizarCaptionArticulo;
 end;
 
 procedure TfrmFotoArticulo.PrepararControlesArticulo;
 begin
   btnDescargarNube.Visible := True;
-  btnCambiarArt.Hint :=
-    'Sustituir la foto principal del artículo';
   btnCambiarSku.Visible := True;
   btnMarcarPredeterminada.Visible := True;
   btnFotoAnterior.Visible := True;
@@ -719,11 +747,6 @@ begin
   btnFotoSiguiente.Visible := False;
   btnAnadirFoto.Visible := False;
   btnMarcarPredeterminada.Visible := False;
-  if FFotoDefinitivaSesion then
-    btnCambiarArt.Hint :=
-      'Sustituir la foto principal del artículo'
-  else
-    btnCambiarArt.Hint := 'Cambiar la foto de la línea';
   btnCambiarSku.Visible := False;
   lblNivel.Visible := False;
   cbbNivelSku.Visible := False;
@@ -774,9 +797,7 @@ begin
   else
     lblOrigen.Caption := Format(
       SCaptionLineaSinFotoProvisional, [ALinea]);
-  Self.Caption := Format(
-    'Sesión %s/%s · línea %d · %s',
-    [ASerieSesion, ANumeroSesion, ALinea, ACodArtTentativo]);
+  ActualizarCaptionActual;
   CargarFotoActual;
 end;
 
