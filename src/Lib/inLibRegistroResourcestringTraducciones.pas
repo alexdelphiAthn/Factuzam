@@ -73,6 +73,9 @@ begin
     'SHintAnadirFoto',
     @inLibMsgFotos.SHintAnadirFoto);
   RegistrarTextoFoto(ARegistrar,
+    'SHintResolucionFoto',
+    @inLibMsgFotos.SHintResolucionFoto);
+  RegistrarTextoFoto(ARegistrar,
     'SHintCambiarFotoArticulo',
     @inLibMsgFotos.SHintCambiarFotoArticulo);
   RegistrarTextoFoto(ARegistrar,

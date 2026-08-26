@@ -133,6 +133,8 @@ type
     function  ClaveNivelSeleccionado: string;
     function  SeleccionarRutaPredeterminada(
       out ARutaFoto: string): Boolean;
+    procedure AsegurarPredeterminadaArticulo(
+      const ARutaFoto: string);
     procedure DesengancharDataChange;
     procedure DesengancharDataSource(ADataSource: TDataSource);
     procedure OnPadreDataChange(Sender: TObject; Field: TField);
@@ -658,6 +660,10 @@ begin
   btnFotoAnterior.Hint := SHintFotoAnterior;
   btnFotoSiguiente.Hint := SHintFotoSiguiente;
   btnAnadirFoto.Hint := SHintAnadirFoto;
+  rgResolucion.Caption := '';
+  rgResolucion.Hint := SHintResolucionFoto;
+  rgResolucion.ParentShowHint := False;
+  rgResolucion.ShowHint := True;
   if FModoSesion and not FFotoDefinitivaSesion then
     btnCambiarArt.Hint := SHintCambiarFotoLinea
   else
@@ -778,7 +784,7 @@ begin
 
   rgResolucion.Left := iMargen;
   rgResolucion.Top := iMargen div 2;
-  rgResolucion.Height := MulDiv(40, CurrentPPI,
+  rgResolucion.Height := MulDiv(24, CurrentPPI,
     USER_DEFAULT_SCREEN_DPI);
   bNivelApilado := cbbNivelSku.Visible and
     (pnlControles.ClientWidth < MulDiv(360, CurrentPPI,
@@ -788,19 +794,19 @@ begin
     rgResolucion.Width := pnlControles.ClientWidth -
       (2 * iMargen);
     lblNivel.Left := iMargen;
-    lblNivel.Top := MulDiv(43, CurrentPPI,
+    lblNivel.Top := MulDiv(28, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
     cbbNivelSku.Left := MulDiv(48, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
-    cbbNivelSku.Top := MulDiv(40, CurrentPPI,
+    cbbNivelSku.Top := MulDiv(26, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
     cbbNivelSku.Width := pnlControles.ClientWidth -
       cbbNivelSku.Left - iMargen;
     if cbbNivelSku.Width < 0 then
       cbbNivelSku.Width := 0;
-    iTopBotones := MulDiv(68, CurrentPPI,
+    iTopBotones := MulDiv(52, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
-    pnlControles.Height := MulDiv(96, CurrentPPI,
+    pnlControles.Height := MulDiv(78, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
   end
   else
@@ -813,17 +819,17 @@ begin
         (2 * iMargen);
     lblNivel.Left := rgResolucion.Left + rgResolucion.Width +
       MulDiv(6, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
-    lblNivel.Top := iMargen div 2;
-    cbbNivelSku.Left := lblNivel.Left;
-    cbbNivelSku.Top := MulDiv(19, CurrentPPI,
-      USER_DEFAULT_SCREEN_DPI);
+    lblNivel.Top := iMargen;
+    cbbNivelSku.Left := lblNivel.Left +
+      lblNivel.Width + iMargen;
+    cbbNivelSku.Top := iMargen;
     cbbNivelSku.Width := pnlControles.ClientWidth -
       cbbNivelSku.Left - iMargen;
     if cbbNivelSku.Width < 0 then
       cbbNivelSku.Width := 0;
-    iTopBotones := MulDiv(44, CurrentPPI,
+    iTopBotones := MulDiv(28, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
-    pnlControles.Height := MulDiv(72, CurrentPPI,
+    pnlControles.Height := MulDiv(54, CurrentPPI,
       USER_DEFAULT_SCREEN_DPI);
   end;
 
@@ -1394,6 +1400,19 @@ begin
   Result := ARutaFoto <> '';
 end;
 
+procedure TfrmFotoArticulo.AsegurarPredeterminadaArticulo(
+  const ARutaFoto: string);
+var
+  oActual: TFotoInfo;
+begin
+  oActual := FotosArticulos.Resolver(FCodigoArt, '');
+  if (ARutaFoto <> '') and
+     ((not oActual.Encontrada) or
+      (oActual.Origen <> foArticulo)) then
+    FotosArticulos.Guardar(
+      FCodigoArt, '', ARutaFoto, IdentidadSesion.Usuario);
+end;
+
 procedure TfrmFotoArticulo.CargarFotoActual;
 begin
   FreeAndNil(FGpImagen);
@@ -1537,6 +1556,9 @@ begin
             IdentidadSesion.Usuario);
           CargarColeccionArticulo(
             oNueva.NombreBase, oNueva.Orden, iIndiceAlternativo);
+          if (sUnidad <> '') and (oNueva.Orden = 1) then
+            AsegurarPredeterminadaArticulo(
+              dlgAbrirFoto.FileName);
         except
           on E: Exception do
             ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
@@ -1665,6 +1687,8 @@ begin
       try
         FotosArticulos.Guardar(FCodigoArt, sClave, dlgAbrirFoto.FileName,
           IdentidadSesion.Usuario);
+        AsegurarPredeterminadaArticulo(
+          dlgAbrirFoto.FileName);
       except
         on E: Exception do
         begin

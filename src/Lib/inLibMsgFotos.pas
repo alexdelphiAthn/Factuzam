@@ -35,6 +35,8 @@ resourcestring
     'Foto siguiente';
   SHintAnadirFoto =
     'Añadir foto';
+  SHintResolucionFoto =
+    'Resolución de la foto mostrada';
   SHintCambiarFotoArticulo =
     'Elegir una foto de variación como predeterminada; si no hay, ' +
     'seleccionar un archivo';

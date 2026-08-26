@@ -124,7 +124,7 @@
     Left = 0
     Top = 26
     Width = 520
-    Height = 72
+    Height = 54
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
@@ -132,7 +132,9 @@
     object rgResolucion: TcxRadioGroup
       Left = 2
       Top = 1
-      Caption = ' Resoluci'#243'n '
+      Caption = ''
+      Hint = 'Resoluci'#243'n de la foto mostrada'
+      ParentShowHint = False
       Properties.Columns = 3
       Properties.Items = <
         item
@@ -150,28 +152,29 @@
       Properties.OnEditValueChanged = rgResolucionPropertiesEditValueChanged
       ItemIndex = 0
       Style.BorderStyle = ebsOffice11
+      ShowHint = True
       TabOrder = 0
-      Height = 40
+      Height = 24
       Width = 194
     end
     object lblNivel: TcxLabel
       Left = 202
-      Top = 1
+      Top = 2
       Caption = 'Nivel:'
       TabOrder = 8
       Transparent = True
     end
     object cbbNivelSku: TcxComboBox
-      Left = 202
-      Top = 19
+      Left = 244
+      Top = 2
       Anchors = [akLeft, akTop, akRight]
       Properties.DropDownListStyle = lsFixedList
       TabOrder = 1
-      Width = 316
+      Width = 274
     end
     object btnCambiarArt: TcxButton
       Left = 2
-      Top = 44
+      Top = 28
       Width = 26
       Height = 24
       Caption = ''
@@ -183,7 +186,7 @@
     end
     object btnCambiarSku: TcxButton
       Left = 30
-      Top = 44
+      Top = 28
       Width = 26
       Height = 24
       Caption = ''
@@ -195,7 +198,7 @@
     end
     object btnQuitar: TcxButton
       Left = 114
-      Top = 44
+      Top = 28
       Width = 26
       Height = 24
       Caption = ''
@@ -207,7 +210,7 @@
     end
     object btnRotarIzq: TcxButton
       Left = 58
-      Top = 44
+      Top = 28
       Width = 26
       Height = 24
       Caption = ''
@@ -219,7 +222,7 @@
     end
     object btnRotarDer: TcxButton
       Left = 86
-      Top = 44
+      Top = 28
       Width = 26
       Height = 24
       Caption = ''
@@ -231,7 +234,7 @@
     end
     object btnLayout: TcxButton
       Left = 142
-      Top = 44
+      Top = 28
       Width = 26
       Height = 24
       Caption = ''
@@ -244,9 +247,9 @@
   end
   object pnlImage: TPanel [2]
     Left = 0
-    Top = 98
+    Top = 80
     Width = 520
-    Height = 422
+    Height = 440
     Align = alClient
     BevelOuter = bvLowered
     TabOrder = 2
@@ -254,7 +257,7 @@
       Left = 1
       Top = 1
       Width = 518
-      Height = 420
+      Height = 438
       Align = alClient
       Center = True
       Proportional = True
