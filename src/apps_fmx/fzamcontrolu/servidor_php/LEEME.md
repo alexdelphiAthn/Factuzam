@@ -4,7 +4,30 @@ Estos endpoints se instalan en el mismo servidor de la red interna que accede
 a la base de datos de Factuzam. El teléfono nunca se conecta directamente a
 MariaDB/MySQL.
 
-## Instalación
+## Instalador completo para Windows
+
+El paquete `FzamControlU-Servidor-2026.08.27.1-x64.exe` incluye Apache,
+PHP x64 Thread Safe, PDO MySQL, Visual C++ y esta API. Se genera con
+`C:\DISCO_DURO\proyectos\factuzam_web\scripts\instalador_fzamcontrolu\Crear-Instalador.ps1`
+y se entrega en
+`C:\DISCO_DURO\proyectos\factuzam_web\build\FzamControlU-Servidor`.
+
+El asistente ofrece puerto HTTP **80 por defecto**, editable, y un botón
+para comprobar MariaDB. Comprueba conexión, columnas y permisos con consultas
+de solo lectura; no instala MariaDB, crea usuarios ni ejecuta migraciones.
+
+Utiliza una carpeta propia (`C:\FactuzamControlU`) y el servicio
+`FzamControlUApache`, sin modificar el Apache/PHP existente. Solo publica
+`fzamcontrolu\publico`; `fzamcontrolu\privado` queda fuera del `DocumentRoot`
+y protegida por permisos de Windows. Genera el secreto de tokens durante la
+instalación y desactiva la escritura de `ULTIMO_LOGIN_USU`.
+
+La regla opcional de firewall admite el puerto elegido solo desde la subred
+local en perfiles Privado/Dominio. HTTP es para una LAN controlada; no se
+configuran certificados HTTPS ni acceso público a Internet. Al finalizar se
+presentan las URL que pueden copiarse en la app Android.
+
+## Instalación manual
 
 1. Requiere PHP 8.1 o posterior con `pdo_mysql` y acceso de lectura a la base
    de datos Factuzam.
@@ -28,16 +51,32 @@ GRANT SELECT ON Factuzam.fza_articulos TO 'fzamcontrolu'@'servidor-web';
 GRANT SELECT ON Factuzam.fza_articulos_skus TO 'fzamcontrolu'@'servidor-web';
 GRANT SELECT ON Factuzam.fza_codigos_barras TO 'fzamcontrolu'@'servidor-web';
 GRANT SELECT ON Factuzam.fza_articulos_fotos TO 'fzamcontrolu'@'servidor-web';
-GRANT UPDATE (ULTIMO_LOGIN_USU) ON Factuzam.fza_usuarios
+GRANT SELECT (
+  CODIGO_UNIDAD_STK, CODIGO_ALM_STK, CANTIDAD_STK,
+  CANTIDAD_ENT_COMPRA_STK, CANTIDAD_ENT_TRASPASO_STK,
+  CANTIDAD_ENT_DEPOSITO_STK, CANTIDAD_ENT_REGULAR_STK,
+  CANTIDAD_ENT_ALBENTRADA_STK, CANTIDAD_SAL_VENTA_STK
+) ON Factuzam.fza_articulos_stockactual
   TO 'fzamcontrolu'@'servidor-web';
-GRANT EXECUTE ON PROCEDURE Factuzam.PRC_GET_CAJA_STOCK_PIVOTADO
+GRANT SELECT (CODIGO_UNIDAD_PDR, CODIGO_ALM_PDR, CANTIDAD_PDR)
+  ON Factuzam.fza_articulos_pdte_recibir
+  TO 'fzamcontrolu'@'servidor-web';
+GRANT SELECT (CODIGO_UNIDAD_SKU_SA, ID_AV_SA)
+  ON Factuzam.fza_atributos_sku TO 'fzamcontrolu'@'servidor-web';
+GRANT SELECT (ID_AV, ID_VA_AV, AV, ORDEN_AV)
+  ON Factuzam.fza_atributos_valores TO 'fzamcontrolu'@'servidor-web';
+GRANT SELECT (
+  CODIGO_ALM_ALM, NOMBRE_ALM_ALM, ESACTIVO_ALM, TIPO_USO_ALM,
+  ORDEN_ALM
+)
+  ON Factuzam.fza_almacenes TO 'fzamcontrolu'@'servidor-web';
+GRANT UPDATE (ULTIMO_LOGIN_USU) ON Factuzam.fza_usuarios
   TO 'fzamcontrolu'@'servidor-web';
 ```
 
-El procedimiento se ejecuta con la seguridad definida en la instalación de
-Factuzam. Si allí está configurado como `SQL SECURITY INVOKER`, habrá que
-conceder también lectura sobre las tablas que utiliza para calcular el stock.
-La actualización de `ULTIMO_LOGIN_USU` puede desactivarse con
+La consulta de los cuatro estados usa SQL normalizado y parámetros PDO; no
+depende de `PRC_GET_CAJA_STOCK_PIVOTADO`. La actualización de
+`ULTIMO_LOGIN_USU` puede desactivarse con
 `CFG_ACTUALIZAR_ULTIMO_LOGIN=false` si se prefiere una cuenta estrictamente de
 solo lectura.
 
@@ -49,14 +88,31 @@ $http_authorization;`.
 
 - `POST login.php`: JSON `usuario` y `password`; devuelve `token` y
   `expira_en` dentro de `datos`.
-- `GET stock.php?articulo=...`: acepta artículo, SKU o código de barras y exige
-  `Authorization: Bearer ...`.
+- `GET stock.php?articulo=...&estado=...`: acepta artículo, SKU o código de
+  barras y exige `Authorization: Bearer ...`. `estado` admite `stock`,
+  `entradas`, `ventas` y `pte_recibir`; si se omite conserva `stock` por
+  compatibilidad.
 - `GET foto.php?articulo=...&unidad=...`: devuelve el PNG de 300 px con el
   mismo Bearer. La URL la genera `stock.php`; no se aceptan rutas de disco.
 
 `stock.php` y `foto.php` respetan `menu.mnuConsultaStocks` con la misma
 precedencia que Factuzam: usuario, grupo y `Todos`; los grupos administradores
 omiten la restricción y la ausencia de una regla permite el acceso.
+
+La respuesta de stock incluye `estado`, `cantidad_total`, los catálogos
+simples `colores` y `almacenes`, `almacenes_predeterminados` y el detalle por
+color, talla y almacén. Los catálogos se consultan de forma independiente para
+que sigan completos aunque el estado elegido no tenga cantidades. Los
+almacenes se identifican de forma consistente como `CÓDIGO - NOMBRE`.
+`almacenes_predeterminados` replica Control U: solo tipos `ESTANDAR` o
+`ESTANDARD` quedan marcados al abrir; depósitos, taras y tránsito siguen
+disponibles en Filtros, pero empiezan desmarcados. Los campos
+`cantidad_total_predeterminada` y
+`cantidad_unidad_consultada_predeterminada` excluyen esos almacenes
+auxiliares. `cantidad_unidad_consultada_por_almacen` permite actualizar la
+cantidad de la variante leída al cambiar los filtros. Se mantiene
+`stock_total` como alias de `cantidad_total` para versiones anteriores de la
+app.
 
 La contraseña se compara con el MD5 heredado que ya usa Factuzam. No es un
 mecanismo moderno: el endpoint no empeora el formato existente, pero se

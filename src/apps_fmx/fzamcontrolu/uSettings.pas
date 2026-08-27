@@ -7,6 +7,7 @@
   - Credenciales (usuario + password) ofuscadas con XOR + Base64
   - Token JWT ofuscado, su fecha de expiracion y el servidor que lo emitio
   - Una unica URL base para login, stock y foto
+  - Preferencias de visualizacion de la consulta
 
   El fichero se guarda como JSON en:
     Windows : %USERPROFILE%\FzamControlU\config.json
@@ -51,6 +52,10 @@ type
     // URL unica del servidor. Login, stock y foto comparten este origen.
     class procedure GuardarBaseUrl(const Url: string); static;
     class function LeerBaseUrl: string; static;
+
+    // Preferencias de la rejilla de stock.
+    class procedure GuardarOcultarColumnasCero(Valor: Boolean); static;
+    class function LeerOcultarColumnasCero: Boolean; static;
   end;
 
 implementation
@@ -291,6 +296,24 @@ begin
   Result := NormalizarUrlBase(LeerString('api', 'base_url'));
   if Result = '' then
     Result := URL_DEFAULT;
+end;
+
+class procedure TSettings.GuardarOcultarColumnasCero(Valor: Boolean);
+begin
+  if Valor then
+    EscribirString('vista', 'ocultar_columnas_cero', 'S')
+  else
+    EscribirString('vista', 'ocultar_columnas_cero', 'N');
+end;
+
+class function TSettings.LeerOcultarColumnasCero: Boolean;
+var
+  Valor: string;
+begin
+  Valor := LeerString('vista', 'ocultar_columnas_cero');
+  // Para instalaciones previas, la nueva opcion comienza activada.
+  Result := (Valor = '') or SameText(Valor, 'S') or
+    SameText(Valor, 'TRUE') or (Valor = '1');
 end;
 
 end.

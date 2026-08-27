@@ -59,6 +59,16 @@
       Text = 'Por Color'
       OnClick = btnAgruparClick
     end
+    object btnFiltros: TButton
+      Position.X = 302.000000000000000000
+      Position.Y = 10.000000000000000000
+      Size.Width = 56.000000000000000000
+      Size.Height = 36.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 4
+      Text = 'Filtros'
+      OnClick = btnFiltrosClick
+    end
   end
   object pnlArticulo: TPanel
     Align = Top
@@ -102,7 +112,53 @@
         Text = 'Sin foto'#13#10'300 px'
       end
     end
-    object lblArticulo: TLabel
+    object pnlEstado: TPanel
+      Align = Bottom
+      Position.Y = 82.000000000000000000
+      Size.Width = 276.000000000000000000
+      Size.Height = 42.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 1
+      object lblEstado: TLabel
+        Position.X = 6.000000000000000000
+        Position.Y = 1.000000000000000000
+        Size.Width = 50.000000000000000000
+        Size.Height = 40.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 13.000000000000000000
+        TextSettings.VertAlign = Center
+        HitTest = False
+        Text = 'Estado'
+      end
+      object cboEstado: TComboBox
+        Position.X = 58.000000000000000000
+        Position.Y = 2.000000000000000000
+        Size.Width = 188.000000000000000000
+        Size.Height = 38.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 0
+        Items.Strings = (
+          'Stock'
+          'Entradas'
+          'Ventas'
+          'Ptes. de recibir')
+        ItemIndex = 0
+        OnChange = cboEstadoChange
+      end
+      object rctEstado: TRectangle
+        Position.X = 250.000000000000000000
+        Position.Y = 13.000000000000000000
+        Size.Width = 16.000000000000000000
+        Size.Height = 16.000000000000000000
+        Size.PlatformDefault = False
+        Fill.Color = claNavy
+        HitTest = False
+        Stroke.Color = claGray
+        XRadius = 3.000000000000000000
+        YRadius = 3.000000000000000000
+      end
+    end
+    object sbArticulo: TVertScrollBox
       Align = Client
       Margins.Left = 10.000000000000000000
       Margins.Top = 8.000000000000000000
@@ -113,11 +169,23 @@
       Size.Width = 260.000000000000000000
       Size.Height = 108.000000000000000000
       Size.PlatformDefault = False
-      TextSettings.Font.Size = 15.000000000000000000
-      TextSettings.VertAlign = Center
-      HitTest = False
-      Text = 'Introduce o escanea un articulo.'
-      WordWrap = True
+      ShowScrollBars = True
+      TabOrder = 2
+      Viewport.Width = 255.000000000000000000
+      Viewport.Height = 108.000000000000000000
+      object lblArticulo: TLabel
+        Align = Top
+        AutoSize = True
+        Margins.Right = 4.000000000000000000
+        Size.Width = 251.000000000000000000
+        Size.Height = 54.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 15.000000000000000000
+        TextSettings.VertAlign = Leading
+        HitTest = False
+        Text = 'Introduce o escanea un articulo.'
+        WordWrap = True
+      end
     end
   end
   object pnlBottom: TPanel
@@ -127,22 +195,66 @@
     Size.Height = 40.000000000000000000
     Size.PlatformDefault = False
     TabOrder = 2
-    object lblTotal: TLabel
-      Position.X = 60.000000000000000000
-      Size.Width = 332.000000000000000000
+    object sbTotal: TVertScrollBox
+      Align = Client
+      Margins.Left = 100.000000000000000000
+      Margins.Right = 64.000000000000000000
+      Position.X = 100.000000000000000000
+      Size.Width = 236.000000000000000000
       Size.Height = 40.000000000000000000
       Size.PlatformDefault = False
-      TextSettings.Font.Size = 14.000000000000000000
-      Text = 'Introduce un codigo y pulsa Buscar'
+      ShowScrollBars = True
+      TabOrder = 3
+      Viewport.Width = 231.000000000000000000
+      Viewport.Height = 40.000000000000000000
+      object lblTotal: TLabel
+        Align = Top
+        AutoSize = True
+        Margins.Left = 4.000000000000000000
+        Margins.Top = 2.000000000000000000
+        Margins.Right = 4.000000000000000000
+        Margins.Bottom = 2.000000000000000000
+        Position.X = 4.000000000000000000
+        Position.Y = 2.000000000000000000
+        Size.Width = 223.000000000000000000
+        Size.Height = 34.000000000000000000
+        Size.PlatformDefault = False
+        TextSettings.Font.Size = 14.000000000000000000
+        TextSettings.VertAlign = Leading
+        HitTest = False
+        Text = 'Introduce un codigo y pulsa Buscar'
+        WordWrap = True
+      end
     end
-    object btnSalir: TButton
+    object btnAnterior: TButton
       Position.X = 2.000000000000000000
       Position.Y = 4.000000000000000000
-      Size.Width = 49.000000000000000000
+      Size.Width = 44.000000000000000000
       Size.Height = 32.000000000000000000
       Size.PlatformDefault = False
       StyleLookup = 'backtoolbutton'
       TabOrder = 0
+      Text = 'Anterior'
+      OnClick = btnAnteriorClick
+    end
+    object btnSiguiente: TButton
+      Position.X = 50.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 44.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      StyleLookup = 'forwardtoolbutton'
+      TabOrder = 1
+      Text = 'Siguiente'
+      OnClick = btnSiguienteClick
+    end
+    object btnSalir: TButton
+      Position.X = 342.000000000000000000
+      Position.Y = 4.000000000000000000
+      Size.Width = 56.000000000000000000
+      Size.Height = 32.000000000000000000
+      Size.PlatformDefault = False
+      TabOrder = 2
       Text = 'Salir'
       OnClick = btnSalirClick
     end
@@ -158,6 +270,7 @@
     TabOrder = 3
     RowCount = 0
     OnCellClick = grdStockCellClick
+    OnDrawColumnCell = grdStockDrawColumnCell
     Viewport.Width = 396.000000000000000000
     Viewport.Height = 355.000000000000000000
   end

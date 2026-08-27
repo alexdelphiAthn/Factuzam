@@ -22,9 +22,20 @@ uses
 type
   EApiError = class(Exception);
 
+  TEstadoConsultaStock = (
+    ecStock,
+    ecEntradas,
+    ecVentas,
+    ecPendienteRecibir);
+
   TStockItem = record
     Color: string;
     Talla: string;
+    Almacen: string;
+    Unidades: Double;
+  end;
+
+  TCantidadUnidadAlmacen = record
     Almacen: string;
     Unidades: Double;
   end;
@@ -33,7 +44,14 @@ type
     Articulo: string;
     Descripcion: string;
     Total: Double;
+    UnidadConsultada: string;
+    TotalUnidadConsultada: Double;
     Items: TArray<TStockItem>;
+    Colores: TArray<string>;
+    Almacenes: TArray<string>;
+    AlmacenesPredeterminados: TArray<string>;
+    TieneAlmacenesPredeterminados: Boolean;
+    CantidadesUnidadPorAlmacen: TArray<TCantidadUnidadAlmacen>;
     FotoUrl300: string;
     FotoBase64300: string;
     BaseUrl: string;
@@ -43,10 +61,17 @@ type
   private
     class function GetJson(const Url: string): TJSONObject; static;
   public
-    class function ConsultarStock(const Articulo: string): TStockResultado; static;
+    class function ConsultarStock(
+      const Articulo: string;
+      Estado: TEstadoConsultaStock = ecStock): TStockResultado; static;
     class function DescargarFoto300(
       const Stock: TStockResultado): TBytes; static;
   end;
+
+function CodigoEstadoConsultaStock(
+  Estado: TEstadoConsultaStock): string;
+function NombreEstadoConsultaStock(
+  Estado: TEstadoConsultaStock): string;
 
 implementation
 
@@ -91,6 +116,60 @@ begin
   Valor := Json.GetValue(Clave);
   if Assigned(Valor) and not (Valor is TJSONNull) then
     Result := Valor.Value;
+end;
+
+function CodigoEstadoConsultaStock(
+  Estado: TEstadoConsultaStock): string;
+begin
+  case Estado of
+    ecEntradas:
+      Result := 'entradas';
+    ecVentas:
+      Result := 'ventas';
+    ecPendienteRecibir:
+      Result := 'pte_recibir';
+  else
+    Result := 'stock';
+  end;
+end;
+
+function NombreEstadoConsultaStock(
+  Estado: TEstadoConsultaStock): string;
+begin
+  case Estado of
+    ecEntradas:
+      Result := 'Entradas';
+    ecVentas:
+      Result := 'Ventas';
+    ecPendienteRecibir:
+      Result := 'Ptes. de recibir';
+  else
+    Result := 'Stock';
+  end;
+end;
+
+function JsonArrayStrings(
+  Json: TJSONObject;
+  const Clave: string): TArray<string>;
+var
+  Arreglo: TJSONArray;
+  i: Integer;
+  Valor: TJSONValue;
+begin
+  SetLength(Result, 0);
+  if (Json <> nil) and (Json.GetValue(Clave) is TJSONArray) then
+  begin
+    Arreglo := Json.GetValue(Clave) as TJSONArray;
+    for i := 0 to Arreglo.Count - 1 do
+    begin
+      Valor := Arreglo.Items[i];
+      if (Valor <> nil) and not (Valor is TJSONNull) then
+      begin
+        SetLength(Result, Length(Result) + 1);
+        Result[High(Result)] := Valor.Value;
+      end;
+    end;
+  end;
 end;
 
 function DecodificarFotoBase64(const Texto: string): TBytes;
@@ -227,36 +306,99 @@ begin
   end;
 end;
 
-class function TApiClient.ConsultarStock(const Articulo: string): TStockResultado;
+class function TApiClient.ConsultarStock(
+  const Articulo: string;
+  Estado: TEstadoConsultaStock): TStockResultado;
 var
   Json, Datos: TJSONObject;
-  Detalle, Tallas, Almacenes: TJSONObject;
-  ColorPair, TallaPair, AlmPair: TJSONPair;
+  Detalle, Tallas, Almacenes, CantidadesUnidad: TJSONObject;
+  ColorPair, TallaPair, AlmPair, CantidadPair: TJSONPair;
   Items: TList<TStockItem>;
+  CantidadesUnidadLista: TList<TCantidadUnidadAlmacen>;
   Item: TStockItem;
-  ErrorUrl, Url, UrlBase: string;
+  CantidadUnidad: TCantidadUnidadAlmacen;
+  ErrorUrl, EstadoDevuelto, Url, UrlBase: string;
 begin
   Result := Default(TStockResultado);
   UrlBase := TSettings.LeerBaseUrl;
   if not ValidarUrlBasePermitida(UrlBase, ErrorUrl) then
     raise EApiError.Create(ErrorUrl);
   UrlBase := NormalizarUrlBase(UrlBase);
-  if not ConstruirUrlMismoOrigen(UrlBase,
-    'stock.php?articulo=' + TNetEncoding.URL.Encode(Articulo), Url,
+  if not ConstruirUrlMismoOrigen(
+    UrlBase,
+    'stock.php?articulo=' + TNetEncoding.URL.Encode(Articulo) +
+      '&estado=' + CodigoEstadoConsultaStock(Estado),
+    Url,
     ErrorUrl) then
     raise EApiError.Create(ErrorUrl);
 
   Json := GetJson(Url);
   Items := TList<TStockItem>.Create;
+  CantidadesUnidadLista := TList<TCantidadUnidadAlmacen>.Create;
   try
     Datos := Json;
     if Json.GetValue('datos') is TJSONObject then
       Datos := Json.GetValue('datos') as TJSONObject;
 
+    EstadoDevuelto := JsonString(Datos, 'estado');
+    if (EstadoDevuelto = '') and (Estado <> ecStock) then
+      raise EApiError.Create(
+        'El servidor no admite esta consulta. Actualiza el servicio local.')
+    else if (EstadoDevuelto <> '') and not SameText(
+      EstadoDevuelto,
+      CodigoEstadoConsultaStock(Estado)) then
+      raise EApiError.Create(
+        'El servidor ha devuelto un estado de stock distinto al solicitado.');
+
     Result.Articulo := JsonString(Datos, 'articulo');
     Result.Descripcion := JsonString(Datos, 'descripcion');
-    Result.Total := StrToFloatDef(JsonString(Datos, 'stock_total'), 0,
+    Result.Total := StrToFloatDef(
+      JsonString(Datos, 'cantidad_total_predeterminada'),
+      StrToFloatDef(
+        JsonString(Datos, 'cantidad_total'),
+        StrToFloatDef(
+          JsonString(Datos, 'stock_total'),
+          0,
+          TFormatSettings.Invariant),
+        TFormatSettings.Invariant),
       TFormatSettings.Invariant);
+    Result.UnidadConsultada := JsonString(Datos, 'unidad_consultada');
+    Result.TotalUnidadConsultada := StrToFloatDef(
+      JsonString(
+        Datos,
+        'cantidad_unidad_consultada_predeterminada'),
+      StrToFloatDef(
+        JsonString(Datos, 'cantidad_unidad_consultada'),
+        StrToFloatDef(
+          JsonString(Datos, 'stock_unidad_consultada'),
+          0,
+          TFormatSettings.Invariant),
+        TFormatSettings.Invariant),
+      TFormatSettings.Invariant);
+    Result.Colores := JsonArrayStrings(Datos, 'colores');
+    Result.Almacenes := JsonArrayStrings(Datos, 'almacenes');
+    Result.AlmacenesPredeterminados := JsonArrayStrings(
+      Datos,
+      'almacenes_predeterminados');
+    Result.TieneAlmacenesPredeterminados :=
+      Datos.GetValue('almacenes_predeterminados') is TJSONArray;
+    if Datos.GetValue(
+      'cantidad_unidad_consultada_por_almacen') is TJSONObject then
+    begin
+      CantidadesUnidad := Datos.GetValue(
+        'cantidad_unidad_consultada_por_almacen') as TJSONObject;
+      for CantidadPair in CantidadesUnidad do
+      begin
+        CantidadUnidad.Almacen := CantidadPair.JsonString.Value;
+        CantidadUnidad.Unidades := StrToFloatDef(
+          CantidadPair.JsonValue.Value,
+          0,
+          TFormatSettings.Invariant);
+        CantidadesUnidadLista.Add(CantidadUnidad);
+      end;
+      Result.CantidadesUnidadPorAlmacen :=
+        CantidadesUnidadLista.ToArray;
+    end;
     Result.FotoUrl300 := JsonString(Datos, 'foto_300_url');
     if Result.FotoUrl300 = '' then
       Result.FotoUrl300 := JsonString(Datos, 'foto_url');
@@ -296,6 +438,7 @@ begin
 
     Result.Items := Items.ToArray;
   finally
+    CantidadesUnidadLista.Free;
     Items.Free;
     Json.Free;
   end;

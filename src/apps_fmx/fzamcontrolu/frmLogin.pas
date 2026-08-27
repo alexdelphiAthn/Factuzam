@@ -39,6 +39,7 @@ type
     lblPassword: TLabel;
     edtPassword: TEdit;
     chkRecordar: TCheckBox;
+    chkOcultarCeros: TCheckBox;
     btnEntrar: TButton;
     lblError: TLabel;
     procedure FormShow(Sender: TObject);
@@ -61,6 +62,8 @@ begin
   lblError.Text := '';
 
   edtUrl.Text := TSettings.LeerBaseUrl;
+  chkOcultarCeros.IsChecked :=
+    TSettings.LeerOcultarColumnasCero;
 
   if TSettings.HayCredenciales then
   begin
@@ -87,6 +90,8 @@ begin
     try
       // Guardar la URL antes del login (TAuthService usa LeerBaseUrl).
       TSettings.GuardarBaseUrl(Trim(edtUrl.Text));
+      TSettings.GuardarOcultarColumnasCero(
+        chkOcultarCeros.IsChecked);
 
       TAuthService.Login(Trim(edtUsuario.Text), edtPassword.Text);
 

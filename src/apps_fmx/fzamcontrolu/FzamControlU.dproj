@@ -260,6 +260,10 @@
             <Form>FormStock</Form>
             <FormType>fmx</FormType>
         </DCCReference>
+        <DCCReference Include="frmFiltrosStock.pas">
+            <Form>FormFiltrosStock</Form>
+            <FormType>fmx</FormType>
+        </DCCReference>
         <DCCReference Include="frmEscaner.pas">
             <Form>FormEscaner</Form>
             <FormType>fmx</FormType>

@@ -8,6 +8,8 @@
   FormFactor.Height = 480
   FormFactor.Devices = [Desktop]
   OnClose = FormClose
+  OnDestroy = FormDestroy
+  OnResize = FormResize
   OnShow = FormShow
   DesignerMasterStyle = 0
   object pnlTop: TPanel
@@ -45,14 +47,25 @@
     Size.PlatformDefault = False
     TabOrder = 1
     object btnCapturar: TButton
-      Position.X = 100.000000000000000000
+      Position.X = 8.000000000000000000
       Position.Y = 8.000000000000000000
-      Size.Width = 200.000000000000000000
+      Size.Width = 188.000000000000000000
       Size.Height = 44.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       Text = 'Capturar ahora'
       OnClick = btnCapturarClick
+    end
+    object btnLinterna: TButton
+      Position.X = 204.000000000000000000
+      Position.Y = 8.000000000000000000
+      Size.Width = 188.000000000000000000
+      Size.Height = 44.000000000000000000
+      Size.PlatformDefault = False
+      Enabled = False
+      TabOrder = 1
+      Text = 'Linterna OFF'
+      OnClick = btnLinternaClick
     end
   end
   object imgPreview: TImage
@@ -63,7 +76,8 @@
     Size.Width = 400.000000000000000000
     Size.Height = 484.000000000000000000
     Size.PlatformDefault = False
-    WrapMode = Stretch
+    HitTest = False
+    WrapMode = Fit
   end
   object cam: TCameraComponent
     OnSampleBufferReady = camSampleBufferReady

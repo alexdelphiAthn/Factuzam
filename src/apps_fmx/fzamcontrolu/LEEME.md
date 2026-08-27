@@ -8,9 +8,19 @@ Windows o Android. Parte del proyecto `ControlU`, pero vive aislado de
 
 - Acceso por una única URL base del servidor interno, usuario Factuzam y
   contraseña.
-- Consulta manual de artículo o lectura EAN-13 con la cámara.
-- Stock pivotado por color o almacén, con tallas y totales.
+- Consulta manual de artículo o lectura EAN-8/EAN-13 con la cámara. El lector
+  ofrece una linterna continua cuando la cámara trasera del dispositivo la
+  admite y la apaga antes de cerrar o liberar la cámara.
+- Consulta de Stock, Entradas, Ventas y Ptes. de recibir. Stock es siempre el
+  estado inicial.
+- Cantidades pivotadas por color o almacén, con tallas y totales. El color de
+  las cifras identifica el estado seleccionado.
 - Filas desplegables para ver el segundo nivel de detalle.
+- Filtros de colores y almacenes, columnas sin cantidad ocultables y
+  desplazamiento horizontal para sistemas con muchas tallas.
+- Los almacenes auxiliares (depósitos, taras y tránsito) aparecen en Filtros,
+  pero están desmarcados inicialmente igual que en Control U.
+- Histórico de los últimos artículos leídos con navegación anterior/siguiente.
 - Foto representativa del artículo en la esquina superior derecha.
 
 La foto se descarga en PNG y se limita en el cliente a **300 px en el lado
@@ -23,8 +33,11 @@ La carpeta `servidor_php` incluye los endpoints listos para instalar en el
 servidor interno. El móvil no se conecta directamente a la base de datos:
 
 1. `POST <url-base>/login.php` con JSON `usuario` y `password`.
-2. `GET <url-base>/stock.php?articulo=...` con
+2. `GET <url-base>/stock.php?articulo=...&estado=stock` con
    `Authorization: Bearer <token>`.
+
+`estado` admite `stock`, `entradas`, `ventas` y `pte_recibir`. Si se omite se
+utiliza `stock` para conservar compatibilidad con clientes anteriores.
 
 La URL base identifica la carpeta que contiene ambos PHP; por ejemplo,
 `http://192.168.1.20/fzamcontrolu`. No existe un fallback a otro servidor:
@@ -51,12 +64,22 @@ de Factuzam `{ "datos": { ... } }`:
   "datos": {
     "articulo": "ABRIGO-PAÑO",
     "descripcion": "Abrigo de paño caballero",
+    "estado": "stock",
+    "cantidad_total": 6,
     "stock_total": 6,
+    "unidad_consultada": "ABRIGO-PAÑO/CAMEL/M",
+    "cantidad_unidad_consultada": 2,
+    "cantidad_unidad_consultada_por_almacen": {
+      "GEN - Almacén Central": 2
+    },
+    "colores": ["CAMEL"],
+    "almacenes": ["GEN - Almacén Central"],
+    "almacenes_predeterminados": ["GEN - Almacén Central"],
     "foto_300_url": "foto.php?articulo=ABRIGO-PA%C3%91O",
     "detalle": {
       "CAMEL": {
-        "M": { "GEN": 2 },
-        "L": { "GEN": 4 }
+        "M": { "GEN - Almacén Central": 2 },
+        "L": { "GEN - Almacén Central": 4 }
       }
     }
   }
@@ -102,6 +125,10 @@ permisos mínimos de base de datos están documentados en
 
 La configuración se guarda en `FzamControlU/config.json`, dentro del espacio
 privado de documentos de la aplicación.
+
+En el acceso también se guarda la preferencia **Ocultar tallas sin stock**.
+Está activada por defecto y solo oculta columnas cuya cantidad visible sea
+cero en todas las filas; no elimina colores ni almacenes.
 
 Para desplegar los PHP, publica únicamente `servidor_php/publico` y crea
 `servidor_php/privado/config.php` a partir de la plantilla. Ese fichero real

@@ -19,7 +19,7 @@
     Viewport.Height = 600.000000000000000000
     object Layout1: TLayout
       Size.Width = 420.000000000000000000
-      Size.Height = 620.000000000000000000
+      Size.Height = 660.000000000000000000
       Size.PlatformDefault = False
       TabOrder = 0
       object lblTitulo: TLabel
@@ -105,19 +105,29 @@
         TabOrder = 3
         Text = 'Recordar acceso en este dispositivo'
       end
+      object chkOcultarCeros: TCheckBox
+        IsChecked = True
+        Position.X = 24.000000000000000000
+        Position.Y = 386.000000000000000000
+        Size.Width = 372.000000000000000000
+        Size.Height = 26.000000000000000000
+        Size.PlatformDefault = False
+        TabOrder = 4
+        Text = 'Ocultar tallas sin stock (columnas a cero)'
+      end
       object btnEntrar: TButton
         Position.X = 24.000000000000000000
-        Position.Y = 392.000000000000000000
+        Position.Y = 426.000000000000000000
         Size.Width = 372.000000000000000000
         Size.Height = 48.000000000000000000
         Size.PlatformDefault = False
-        TabOrder = 4
+        TabOrder = 5
         Text = 'Entrar'
         OnClick = btnEntrarClick
       end
       object lblError: TLabel
         Position.X = 24.000000000000000000
-        Position.Y = 452.000000000000000000
+        Position.Y = 486.000000000000000000
         Size.Width = 372.000000000000000000
         Size.Height = 100.000000000000000000
         Size.PlatformDefault = False

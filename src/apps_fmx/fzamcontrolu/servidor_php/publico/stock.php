@@ -14,14 +14,39 @@ ejecutar_endpoint(function (): void {
     if ($codigo === '') {
         abortar_api(400, 'CODIGO_INVALIDO', 'Indica un articulo, SKU o codigo de barras.');
     }
+    $estado = normalizar_estado_stock($_GET['estado'] ?? null);
 
     $pdo = conexion_bd();
     $identidad = resolver_articulo($pdo, $codigo);
     if ($identidad === null) {
         abortar_api(404, 'ARTICULO_NO_ENCONTRADO', 'No existe el articulo indicado.');
     }
-    $filas = consultar_filas_stock($pdo, $identidad['consulta_stock']);
-    $stock = transformar_filas_stock($filas, $identidad['articulo']);
+    // Un SKU o un codigo de barras solo identifican la variante escaneada.
+    // La pantalla de Control U debe mostrar el conjunto completo del articulo:
+    // todos sus colores, tallas y almacenes.
+    $filas = consultar_filas_stock(
+        $pdo,
+        $identidad['articulo'],
+        $estado
+    );
+    $stock = transformar_filas_estado_stock(
+        $filas,
+        $identidad['unidad']
+    );
+    $catalogosDetalle = catalogos_detalle_stock($stock['detalle']);
+    $colores = completar_catalogo_stock(
+        consultar_catalogo_colores_stock(
+            $pdo,
+            $identidad['articulo']
+        ),
+        $catalogosDetalle['colores']
+    );
+    $almacenes = completar_catalogo_stock(
+        consultar_catalogo_almacenes_stock($pdo),
+        $catalogosDetalle['almacenes']
+    );
+    $almacenesPredeterminados =
+        consultar_almacenes_predeterminados_stock($pdo);
 
     $parametrosFoto = ['articulo' => $identidad['articulo']];
     if ($identidad['unidad'] !== '') {
@@ -30,7 +55,25 @@ ejecutar_endpoint(function (): void {
     responder_ok([
         'articulo' => $identidad['articulo'],
         'descripcion' => $identidad['descripcion'],
-        'stock_total' => $stock['stock_total'],
+        'estado' => $estado,
+        'cantidad_total' => $stock['cantidad_total'],
+        'cantidad_total_predeterminada' =>
+            $stock['cantidad_total_predeterminada'],
+        // Se conserva para clientes anteriores y para la version Android
+        // que todavia utiliza este nombre para todos los estados.
+        'stock_total' => $stock['cantidad_total'],
+        'unidad_consultada' => $identidad['unidad'],
+        'cantidad_unidad_consultada' =>
+            $stock['cantidad_unidad_consultada'],
+        'cantidad_unidad_consultada_predeterminada' =>
+            $stock['cantidad_unidad_consultada_predeterminada'],
+        'cantidad_unidad_consultada_por_almacen' =>
+            (object) $stock['cantidad_unidad_consultada_por_almacen'],
+        'stock_unidad_consultada' =>
+            $stock['cantidad_unidad_consultada'],
+        'colores' => $colores,
+        'almacenes' => $almacenes,
+        'almacenes_predeterminados' => $almacenesPredeterminados,
         'foto_300_url' => 'foto.php?' . http_build_query(
             $parametrosFoto,
             '',

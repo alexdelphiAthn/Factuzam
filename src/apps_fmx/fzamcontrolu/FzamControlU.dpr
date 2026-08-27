@@ -8,6 +8,7 @@ uses
   uApiClient in 'uApiClient.pas',
   frmLogin in 'frmLogin.pas' {FormLogin},
   frmStock in 'frmStock.pas' {FormStock},
+  frmFiltrosStock in 'frmFiltrosStock.pas' {FormFiltrosStock},
   frmEscaner in 'frmEscaner.pas' {FormEscaner};
 
 {$R *.res}
