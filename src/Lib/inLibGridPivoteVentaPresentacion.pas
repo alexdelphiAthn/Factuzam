@@ -89,6 +89,7 @@ type
     // Tras Montar, la primera publicación vuelve al inicio para que el
     // scroll heredado no oculte filas pivotadas.
     FScrollInicialPendiente: Boolean;
+    FAnchosInicialesPendientes: Boolean;
     FTimerRecarga       : TTimer;
     function CdsLineas: TDataSet;
     procedure TimerRecargaTimer(Sender: TObject);
@@ -97,6 +98,14 @@ type
     procedure CdsAfterPost(DataSet: TDataSet);
     procedure CdsAfterScroll(DataSet: TDataSet);
     procedure CrearColumnas;
+    function EscalarAncho(AAncho: Integer): Integer;
+    procedure PrepararAnchoColumna(AColumna: TcxGridColumn;
+      AAncho: Integer);
+    function TextoCeldaDibujada(ARegistro: Integer;
+      AColumna: TcxGridColumn): string;
+    procedure AjustarAnchoDibujo(AColumna: TcxGridColumn;
+      AMargen: Integer; ANegrita: Boolean);
+    procedure AjustarAnchosIniciales;
     procedure AplicarVisibilidadTallas;
     procedure AplicarVisibilidadTipoCantidad;
     procedure ColocarBloqueColumnas;
@@ -178,7 +187,7 @@ type
 implementation
 
 uses
-  inLibAtributosPaleta, inLibMsgArticulos;
+  inLibAtributosPaleta, inLibMsgArticulos, inLibDevExp;
 
 const
   ANCHO_COLUMNA_TALLA_TRES_CANT = 62;
@@ -240,6 +249,10 @@ end;
 procedure TPresentacionPivoteVenta.Montar;
 begin
   FScrollInicialPendiente := True;
+  FAnchosInicialesPendientes := True;
+  // SKU y desglose pueden dejarlo activo: las tallas necesitan scroll,
+  // no comprimir todas las columnas para encajarlas en el ancho del grid.
+  FCfg.View.OptionsView.ColumnAutoWidth := False;
   CrearColumnas;
   FVista.Preparar;
   FCfg.View.OnEditing := ViewEditing;
@@ -351,7 +364,7 @@ begin
     FColArticulo := FCfg.View.CreateColumn;
     FColArticulo.Caption := 'Artículo';
     FColArticulo.DataBinding.FieldName := FCfg.CampoArticuloHost;
-    FColArticulo.Width := 160;
+    PrepararAnchoColumna(FColArticulo, 160);
     FColArticulo.Options.Editing := True;
     FColArticulo.PropertiesClass := TcxButtonEditProperties;
     PropiedadesArticulo := TcxButtonEditProperties(FColArticulo.Properties);
@@ -363,12 +376,12 @@ begin
     PropiedadesArticulo.OnValidate := ArticuloValidate;
     FColColor := FCfg.View.CreateColumn;
     FColColor.Caption := 'Color';
-    FColColor.Width := 125;
+    PrepararAnchoColumna(FColColor, 125);
     FColColor.Options.Editing := False;
     FColColor.DataBinding.ValueTypeClass := TcxStringValueType;
     FColTipoCantidad := FCfg.View.CreateColumn;
     FColTipoCantidad.Caption := 'Tipo';
-    FColTipoCantidad.Width := 105;
+    PrepararAnchoColumna(FColTipoCantidad, 105);
     FColTipoCantidad.Options.Editing := False;
     FColTipoCantidad.DataBinding.ValueTypeClass := TcxStringValueType;
     SetLength(FColumnasTallas, FCfg.MaxColumnas);
@@ -377,7 +390,7 @@ begin
       oCol := FCfg.View.CreateColumn;
       oCol.Tag := i;
       oCol.Caption := '·';
-      oCol.Width := ANCHO_COLUMNA_TALLA_TRES_CANT;
+      PrepararAnchoColumna(oCol, ANCHO_COLUMNA_TALLA_TRES_CANT);
       oCol.Visible := False;
       oCol.DataBinding.ValueTypeClass := TcxFloatValueType;
       oCol.PropertiesClass := TcxCurrencyEditProperties;
@@ -391,6 +404,99 @@ begin
     end;
   finally
     FCfg.View.EndUpdate;
+  end;
+end;
+
+function TPresentacionPivoteVenta.EscalarAncho(AAncho: Integer): Integer;
+var
+  iPpi: Integer;
+begin
+  iPpi := USER_DEFAULT_SCREEN_DPI;
+  if Assigned(FCfg.View.Control) then
+    iPpi := FCfg.View.Control.CurrentPPI;
+  Result := MulDiv(AAncho, iPpi, USER_DEFAULT_SCREEN_DPI);
+end;
+
+procedure TPresentacionPivoteVenta.PrepararAnchoColumna(
+  AColumna: TcxGridColumn; AAncho: Integer);
+begin
+  AColumna.MinWidth := EscalarAncho(AAncho);
+  AColumna.Width := AColumna.MinWidth;
+end;
+
+function TPresentacionPivoteVenta.TextoCeldaDibujada(
+  ARegistro: Integer; AColumna: TcxGridColumn): string;
+var
+  iLineaVista: Integer;
+  oGrupo: TGrupoPivoteVenta;
+begin
+  Result := FCfg.View.DataController.DisplayTexts[ARegistro,
+    AColumna.Index];
+  // El dibujo del color usa el codigo si no hay descripcion.
+  if (AColumna = FColColor) and (Result = '') then
+  begin
+    iLineaVista := StrToIntDef(VarToStr(
+      FCfg.View.DataController.Values[ARegistro,
+        FColLineaVista.Index]), 0);
+    if FModelo.Grupo(FModelo.ObtenerLineaBase(iLineaVista), oGrupo) then
+      Result := oGrupo.ColorCodigo;
+  end;
+end;
+
+procedure TPresentacionPivoteVenta.AjustarAnchoDibujo(
+  AColumna: TcxGridColumn; AMargen: Integer; ANegrita: Boolean);
+var
+  oMedicion: TBitmap;
+  rParametros: TcxViewParams;
+  iRegistro, iAncho, iTexto: Integer;
+begin
+  if AColumna.ActuallyVisible and
+     TcxCustomGridTableItemAccess.CanHorzSize(AColumna) then
+  begin
+    oMedicion := TBitmap.Create;
+    try
+      AColumna.Styles.GetContentParams(nil, rParametros);
+      oMedicion.Canvas.Font.Assign(rParametros.Font);
+      if ANegrita then
+        oMedicion.Canvas.Font.Style := [fsBold];
+      iAncho := AColumna.Width;
+      for iRegistro := 0 to FCfg.View.DataController.RecordCount - 1 do
+      begin
+        iTexto := oMedicion.Canvas.TextWidth(
+          TextoCeldaDibujada(iRegistro, AColumna)) + EscalarAncho(AMargen);
+        if iTexto > iAncho then
+          iAncho := iTexto;
+      end;
+      if (AColumna.BestFitMaxWidth > 0) and
+         (iAncho > AColumna.BestFitMaxWidth) then
+        iAncho := AColumna.BestFitMaxWidth;
+      AColumna.Width := iAncho;
+    finally
+      FreeAndNil(oMedicion);
+    end;
+  end;
+end;
+
+procedure TPresentacionPivoteVenta.AjustarAnchosIniciales;
+var
+  iColumna: Integer;
+begin
+  // La fila ficticia de un documento vacio no consume el primer ajuste.
+  // Las columnas host se crean despues de Montar; medir al publicar evita
+  // hacerlo contra la vista vacia y no pisa anchos manuales al dar foco.
+  if FAnchosInicialesPendientes and (FModelo.LineasVista.Count > 0) then
+  begin
+    FAnchosInicialesPendientes := False;
+    FCfg.View.BeginUpdate;
+    try
+      AplicarBestFitConMargen(FCfg.View);
+      AjustarAnchoDibujo(FColColor, ANCHO_SWATCH_PX, False);
+      AjustarAnchoDibujo(FColTipoCantidad, 24, True);
+      for iColumna := 0 to High(FColumnasTallas) do
+        AjustarAnchoDibujo(FColumnasTallas[iColumna], 24, True);
+    finally
+      FCfg.View.EndUpdate;
+    end;
   end;
 end;
 
@@ -622,6 +728,8 @@ begin
     FCfg.View.DataController.FocusedRecordIndex := 0;
     FCfg.View.Controller.TopRecordIndex := 0;
   end;
+  ActualizarCaptionsLineaActiva;
+  AjustarAnchosIniciales;
 end;
 
 function TPresentacionPivoteVenta.EnfocarEditorArticulo: Boolean;

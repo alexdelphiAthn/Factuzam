@@ -269,7 +269,6 @@ var
   bYaExiste: Boolean;
   col: TcxGridDBColumn;
   ds: TDataSet;
-  sTit: string;
   sTabla: string;
   iAncho: Integer;
 begin
@@ -302,15 +301,11 @@ begin
   // Asignar properties por prefijo (PRECIO_/TOTAL_/IMPORTE_ -> currency €,
   // PORCENTAJE_ -> %, VALOR_/CANTIDAD_ -> numerico, ESxxx -> checkbox S/N).
   AplicarPropertiesPorPrefijo(cxGrdDBTabPrin);
+  AplicarTitulosConfiguracionCampos;
   if DebeAjustarColumnasAutomaticamente then
-    cxGrdDBTabPrin.ApplyBestFit();
-  // Títulos y anchos desde el contrato de configuración de campos.
-  // sustituye los nombres crudos de columna (CODIGO_PRV_PRV, RAZON_SOCIAL_PRV
-  // ...) por el TITULO_VISUAL_CC configurado. Es el mismo origen que usa
-  // PonerAnchosTitulos en los Mtos normales, pero el buscador crea sus
-  // columnas a mano y no pasa por esa ruta (va ligada a oApplyWidth), asi que
-  // lo aplicamos aqui explicitamente. Tras ApplyBestFit para que el ancho
-  // configurado prevalezca.
+    AplicarBestFitConMargen(cxGrdDBTabPrin);
+  // Los titulos se asignan antes de medir. El ancho configurado conserva
+  // su prioridad sobre el autoajuste, igual que el perfil aplicado despues.
   if Assigned(ConfiguracionCampos) and
      ConfiguracionCampos.Cargada then
   begin
@@ -319,9 +314,6 @@ begin
     begin
       col := cxGrdDBTabPrin.Columns[i] as TcxGridDBColumn;
       sField := col.DataBinding.FieldName;
-      sTit := ConfiguracionCampos.ObtenerTitulo(sField, sTabla);
-      if sTit <> '' then
-        col.Caption := sTit;
       iAncho := ConfiguracionCampos.ObtenerAncho(sField, sTabla);
       if iAncho > 0 then
         col.Width := iAncho;

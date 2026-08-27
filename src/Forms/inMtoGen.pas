@@ -476,7 +476,6 @@ end;
 
 procedure TfrmMtoGen.sbBestFitClick(Sender: TObject);
 const
-  ANCHO_MARGEN_BESTFIT_96_DPI = 16;
   ANCHO_MIN_SISTEMA_TALLAS_96_DPI = 270;
 
   procedure AjustarGrid(AGrid: TcxCustomGrid);
@@ -492,9 +491,7 @@ const
         oVista := TcxCustomGridTableView(AGrid.Views[iVista]);
         oVista.BeginUpdate;
         try
-          // Con AItem = nil, DevExpress calcula el ancho de todos los
-          // elementos visibles de la vista, incluidos los encabezados.
-          oVista.ApplyBestFit(nil, True, False);
+          AplicarBestFitConMargen(oVista);
 
           // ApplyBestFit solo mide el texto. Las columnas Color pintan antes
           // un cuadradito que tambien necesita espacio; el evento de dibujo
@@ -502,17 +499,13 @@ const
           // identificamos por nombre/caption y no por OnCustomDrawCell.
           for iItem := 0 to oVista.ItemCount - 1 do
           begin
-            if oVista.Items[iItem] is TcxGridColumn then
+            if (oVista.Items[iItem] is TcxGridColumn) and
+               oVista.Items[iItem].ActuallyVisible and
+               not oVista.IsPattern and
+               TcxCustomGridTableItemAccess.CanHorzSize(
+                 oVista.Items[iItem]) then
             begin
               oItem := TcxGridColumn(oVista.Items[iItem]);
-              // A escalas de Windows superiores al 100 %, el ancho medido
-              // por DevExpress queda demasiado justo y puede perder las
-              // ultimas letras del encabezado. Dejamos un margen pequeno y
-              // proporcional al DPI sin reducir la fuente.
-              oItem.Width := oItem.Width + MulDiv(
-                ANCHO_MARGEN_BESTFIT_96_DPI, CurrentPPI,
-                USER_DEFAULT_SCREEN_DPI);
-
               if (Pos('COLOR', UpperCase(oItem.Name)) > 0) or
                  SameText(Trim(oItem.Caption), 'Color') then
                 oItem.Width := oItem.Width + ANCHO_SWATCH_PX;

@@ -1226,10 +1226,8 @@ begin
   end;
 end;
 
-// Hook AfterOpen del detail: cada vez que se abre el cursor (entrar al
-// form o navegar a otro pedido) ajustamos el ancho de columnas al
-// contenido. Asi no salen textos truncados como "Verde botel" o
-// "rón choc" en la columna Color.
+// El modo bandas mide al publicar su vista temporal, no al abrir el cursor
+// real: en ese momento la vista aun puede estar vacia.
 procedure TfrmMtoPedidosCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
 begin
   if tvLineasPedido <> nil then
@@ -1246,7 +1244,9 @@ procedure TfrmMtoPedidosCompra.BestFitConSwatch;
 var
   i: Integer;
 begin
-  if tvLineasPedido <> nil then
+  if (tvLineasPedido <> nil) and
+     not (FColsModoConstruido and
+          (FModoEntradaSel = mcsTallasHorPed)) then
   begin
     tvLineasPedido.ApplyBestFit;
     if Assigned(FColColorPivot) and FColColorPivot.Visible then

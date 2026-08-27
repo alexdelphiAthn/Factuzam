@@ -79,6 +79,7 @@ type
     FEstilos: array[TEstadoStock] of TcxStyle;
     FEsModoColor: Boolean;
     FEsModoTodo: Boolean;
+    function EscalarAncho(AAncho96Dpi: Integer): Integer;
     procedure CrearEstilos(AOwner: TComponent);
     procedure DibujarCelda(Sender: TcxCustomGridTableView;
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
@@ -336,6 +337,7 @@ begin
   FOrigen := TDataSource.Create(AOwner);
   FOrigen.DataSet := nil;
   FVista.DataController.DataSource := FOrigen;
+  FVista.OptionsView.ColumnAutoWidth := False;
   FVista.OnCustomDrawCell := DibujarCelda;
   CrearEstilos(AOwner);
 end;
@@ -375,6 +377,17 @@ begin
   FResultado := nil;
 end;
 
+function TPresentadorPivoteStock.EscalarAncho(
+  AAncho96Dpi: Integer): Integer;
+var
+  iPpi: Integer;
+begin
+  iPpi := USER_DEFAULT_SCREEN_DPI;
+  if (FVista <> nil) and (FVista.Site <> nil) then
+    iPpi := FVista.Site.CurrentPPI;
+  Result := MulDiv(AAncho96Dpi, iPpi, USER_DEFAULT_SCREEN_DPI);
+end;
+
 function TPresentadorPivoteStock.ListarTallas(
   const ACodigoArticulo: string;
   const AColores: TArray<string>): TArray<TInfoColumna>;
@@ -388,12 +401,6 @@ procedure TPresentadorPivoteStock.Consultar(
 begin
   FResultado := FRepositorio.Consultar(ASolicitud, ATallas);
   FOrigen.DataSet := FResultado.DataSet;
-  // Las columnas son dinamicas y los valores no existen cuando se crean.
-  // El BestFit debe hacerse despues de enlazar el dataset para medir tanto
-  // la cabecera como el contenido real.
-  FVista.ApplyBestFit(nil, True, False);
-  if FEsModoColor and (FColumnaGrupo <> nil) then
-    AjustarAnchoColumnaParaSwatch(FConexion, FColumnaGrupo, nil);
 end;
 
 procedure TPresentadorPivoteStock.ConfigurarColumnaDatos(
@@ -444,18 +451,21 @@ begin
     Columna := FVista.CreateColumn;
     Columna.Caption := Definicion.Titulo;
     Columna.DataBinding.FieldName := Definicion.Campo;
-    Columna.Width := Definicion.Ancho;
+    // Los datos breves no deben estrechar la rejilla en cada recarga.
+    // El usuario puede ampliar estos anchos; el minimo protege la lectura.
+    Columna.MinWidth := EscalarAncho(Definicion.Ancho);
+    Columna.Width := Columna.MinWidth;
     case Definicion.Clase of
       cpsGrupo:
         begin
-          Columna.BestFitMaxWidth := 360;
+          Columna.BestFitMaxWidth := EscalarAncho(360);
           Columna.HeaderAlignmentHorz := taLeftJustify;
           Columna.Options.Sorting := False;
           FColumnaGrupo := Columna;
         end;
       cpsEstado:
         begin
-          Columna.BestFitMaxWidth := 180;
+          Columna.BestFitMaxWidth := EscalarAncho(180);
           Columna.OnGetDisplayText := EstadoGetDisplayText;
           Columna.HeaderAlignmentHorz := taLeftJustify;
           Columna.Options.Sorting := False;
@@ -464,7 +474,7 @@ begin
         end;
     else
       begin
-        Columna.BestFitMaxWidth := 110;
+        Columna.BestFitMaxWidth := EscalarAncho(110);
         ConfigurarColumnaDatos(Columna, AEstado);
       end;
     end;

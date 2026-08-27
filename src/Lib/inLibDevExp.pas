@@ -89,6 +89,9 @@ uses
   // defecto); FECHA_/INSTANTE_ son date/datetime (cxGrid usa
   // TcxDateEditProperties por defecto). Por eso quedan fuera.
   procedure AplicarPropertiesPorPrefijo(AView: TcxCustomGridTableView);
+  // Autoajuste con margen DPI para texto, tambien en vistas no visibles.
+  // Conserva los limites explicitos, los editores compactos y AutoWidth.
+  procedure AplicarBestFitConMargen(AVista: TcxCustomGridTableView);
   procedure ExportarExcel(
                           const AParametrosApp: IParametrosAplicacion;
                           AcxGrd: TcxGrid;
@@ -122,11 +125,117 @@ implementation
   uses inLibWin,
        inLibMsgComun,
        inLibDatasets,
-       inLibDir, uGenericIfThen;
+       inLibDir, uGenericIfThen, cxImageComboBox;
 
 resourcestring
   SCaptionFiltroArchivoExportacion =
     'Archivo %s';
+
+function EsColumnaBestFitCompacta(AColumna: TcxGridColumn): Boolean;
+var
+  oPropiedades: TcxCustomEditProperties;
+begin
+  oPropiedades := AColumna.GetProperties;
+  Result := (oPropiedades is TcxCustomCheckBoxProperties) or
+            (oPropiedades is TcxCustomImageProperties);
+  if oPropiedades is TcxCustomImageComboBoxProperties then
+    Result := not TcxCustomImageComboBoxProperties(
+      oPropiedades).ShowDescriptions;
+end;
+
+function AnchoCabeceraBestFit(AColumna: TcxGridColumn;
+  ALienzo: TCanvas): Integer;
+var
+  rParametros: TcxViewParams;
+  sLinea: string;
+  iAncho: Integer;
+begin
+  Result := 0;
+  if TcxGridTableView(AColumna.GridView).OptionsView.Header then
+  begin
+    AColumna.Styles.GetHeaderParams(rParametros);
+    ALienzo.Font.Assign(rParametros.Font);
+    for sLinea in AColumna.Caption.Split([#13, #10]) do
+    begin
+      iAncho := ALienzo.TextWidth(sLinea);
+      if iAncho > Result then
+        Result := iAncho;
+    end;
+  end;
+end;
+
+procedure AjustarColumnaBestFit(AColumna: TcxGridColumn;
+  ALienzo: TCanvas; AMargen: Integer);
+var
+  iAncho, iCabecera: Integer;
+begin
+  if not EsColumnaBestFitCompacta(AColumna) then
+  begin
+    iAncho := AColumna.Width;
+    // DevExpress omite la cabecera cuando la vista aun esta oculta.
+    iCabecera := AnchoCabeceraBestFit(AColumna, ALienzo);
+    if iCabecera > iAncho then
+      iAncho := iCabecera;
+    Inc(iAncho, AMargen);
+    if (AColumna.BestFitMaxWidth > 0) and
+       (iAncho > AColumna.BestFitMaxWidth) then
+      iAncho := AColumna.BestFitMaxWidth;
+    // Width aplica tambien MinWidth, incluso si supera BestFitMaxWidth.
+    AColumna.Width := iAncho;
+  end;
+end;
+
+procedure AplicarBestFitTablaConMargen(AVista: TcxGridTableView);
+const
+  MARGEN_BESTFIT_96_DPI = 24;
+var
+  oMedicion: TBitmap;
+  iColumna, iPpi, iMargen: Integer;
+begin
+  if AVista.OptionsView.ColumnAutoWidth then
+    AVista.ApplyBestFit(nil, True, False)
+  else if not AVista.IsPattern then
+  begin
+    iPpi := USER_DEFAULT_SCREEN_DPI;
+    if Assigned(AVista.Control) then
+      iPpi := AVista.Control.CurrentPPI;
+    iMargen := MulDiv(MARGEN_BESTFIT_96_DPI, iPpi,
+      USER_DEFAULT_SCREEN_DPI);
+    oMedicion := TBitmap.Create;
+    try
+      // VisibleItems puede estar vacio en niveles ocultos. ActuallyVisible
+      // respeta la visibilidad de cada columna sin exigir una vista activa.
+      for iColumna := 0 to AVista.ColumnCount - 1 do
+        if AVista.Columns[iColumna].ActuallyVisible and
+           TcxCustomGridTableItemAccess.CanHorzSize(
+             AVista.Columns[iColumna]) then
+        begin
+          AVista.Columns[iColumna].ApplyBestFit(True, False);
+          AjustarColumnaBestFit(AVista.Columns[iColumna],
+            oMedicion.Canvas, iMargen);
+        end;
+    finally
+      FreeAndNil(oMedicion);
+    end;
+  end;
+end;
+
+procedure AplicarBestFitConMargen(AVista: TcxCustomGridTableView);
+begin
+  if Assigned(AVista) then
+  begin
+    AVista.BeginUpdate;
+    try
+      // Volver a medir impide acumular el margen en ajustes sucesivos.
+      if AVista is TcxGridTableView then
+        AplicarBestFitTablaConMargen(TcxGridTableView(AVista))
+      else
+        AVista.ApplyBestFit(nil, True, False);
+    finally
+      AVista.EndUpdate;
+    end;
+  end;
+end;
 
 procedure GridRecalc(AConexion: TUniConnection;
                      const ARepositorioLecturas:

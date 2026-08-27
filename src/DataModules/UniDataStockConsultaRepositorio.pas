@@ -870,7 +870,18 @@ begin
   sFiltroColores := ListaSql(ASolicitud.Colores);
   sHaving := '';
   if ASolicitud.OcultarCeros then
-    sHaving := ' HAVING COALESCE(SUM(B.CANTIDAD), 0) <> 0 ';
+  begin
+    // El total puede ser cero aunque haya cantidades compensadas entre
+    // tallas (por ejemplo, S=-3 y L=3). En ese caso la fila contiene stock
+    // significativo y no debe ocultarse.
+    sHaving := ' HAVING (COALESCE(SUM(B.CANTIDAD), 0) <> 0';
+    for i := 0 to High(ATallas) do
+      sHaving := sHaving + Format(
+        ' OR COALESCE(SUM(CASE WHEN B.TALLA_AV = %s ' +
+        'THEN B.CANTIDAD ELSE 0 END), 0) <> 0',
+        [QuotedStr(ATallas[i].Codigo)]);
+    sHaving := sHaving + ') ';
+  end;
   if bEsTodo then
   begin
     sExtraSelect := ', B.ESTADO_NUM AS ESTADO_NUM';
