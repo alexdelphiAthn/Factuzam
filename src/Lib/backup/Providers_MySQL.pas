@@ -683,7 +683,7 @@ end;
 class function TMySQLMetadataProvider.StripDefiner(
   const SQL: string): string;
 const
-  // SHOW CREATE entrecomilla la cuenta. Se admiten tambien cuentas simples,
+  // SHOW CREATE entrecomilla la cuenta. Se admiten también cuentas simples,
   // comillas duplicadas y escapes de los literales, sin consumir el cuerpo.
   sParteCuenta =
     '(?:`(?:``|[^`])*`|' +
@@ -703,12 +703,12 @@ var
 begin
   Result := SQL;
   // Solo se retira DEFINER=<cuenta> de la cabecera. Buscar PROCEDURE u otras
-  // palabras en todo el DDL truncaba vistas que las incluian como literales.
+  // palabras en todo el DDL truncaba vistas que las incluían como literales.
   // SQL SECURITY se conserva: INVOKER no debe convertirse en DEFINER.
   oCoincidencia := TRegEx.Match(SQL, sPatronCabecera, [roIgnoreCase]);
   if oCoincidencia.Success then
     Result := oCoincidencia.Groups['inicio'].Value +
-      Copy(SQL, oCoincidencia.Index + oCoincidencia.Length + 1, MaxInt);
+      Copy(SQL, oCoincidencia.Length + 1, MaxInt);
 end;
 
 
