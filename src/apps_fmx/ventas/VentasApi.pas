@@ -20,7 +20,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.JSON,
   System.Net.HttpClient, System.Net.URLClient,
-  VentasModelo;
+  VentasModelo, VentasTicket;
 
 type
   TVentasApi = class
@@ -34,13 +34,17 @@ type
       out ARespuesta: TRespuestaLineas): Boolean;
     function DescargarFoto(const ARutaRelativa: string;
       const ARutaDestino: string): Boolean;
+    function DescargarTicket(const APeticion: TPeticionTicketVenta;
+      const ACancelacion: ICancelacionTicketVenta):
+      TResultadoTicketVenta;
     property UltimoError: string read FUltimoError;
   end;
 
 implementation
 
 uses
-  System.NetEncoding, System.IOUtils, System.DateUtils, VentasConfig;
+  System.NetEncoding, System.IOUtils, System.DateUtils,
+  System.Generics.Collections, VentasConfig;
 
 // ============================================================================
 //   Ayudas JSON
@@ -364,6 +368,12 @@ begin
       FreeAndNil(oHttp);
     end;
   end;
+end;
+
+function TVentasApi.DescargarTicket(const APeticion: TPeticionTicketVenta;
+  const ACancelacion: ICancelacionTicketVenta): TResultadoTicketVenta;
+begin
+  Result := TClienteTicketVenta.Descargar(APeticion, ACancelacion);
 end;
 
 end.

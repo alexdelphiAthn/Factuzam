@@ -18,20 +18,32 @@ unit fVentasFicha;
 interface
 
 uses
-  System.Classes, FMX.Forms, FMX.Controls, FMX.Objects,
-  VentasModelo;
+  System.Classes, System.UITypes,
+  FMX.Forms, FMX.Controls, FMX.Objects, FMX.StdCtrls,
+  VentasModelo, VentasTicket;
 
 type
   TfrmFicha = class(TForm)
   private
     FContenido: TControl;
     FFoto: TImage;
+    FBotonTicket: TButton;
+    FEstadoTicket: TLabel;
+    FLinea: TLineaVenta;
+    FCancelacionTicket: ICancelacionTicketVenta;
     procedure AgregarDato(const AEtiqueta, AValor: string);
     procedure AgregarSeparador;
+    procedure ConstruirBotones;
     procedure Construir(const ALinea: TLineaVenta;
       const ARutaFoto: string);
+    procedure CancelarTicket;
+    procedure FinalizarTicket(const AResultado: TResultadoTicketVenta);
+    procedure IniciarTicket;
+    procedure OnTicketClick(Sender: TObject);
+    procedure OnFichaCerrar(Sender: TObject; var AAccion: TCloseAction);
     procedure OnCerrarClick(Sender: TObject);
   public
+    destructor Destroy; override;
     class procedure Mostrar(AOwner: TComponent;
       const ALinea: TLineaVenta; const ARutaFoto: string);
   end;
@@ -39,8 +51,9 @@ type
 implementation
 
 uses
-  System.SysUtils, System.Types, System.UITypes, System.IOUtils,
-  FMX.Types, FMX.StdCtrls, FMX.Layouts, FMX.Graphics;
+  System.SysUtils, System.Types, System.IOUtils,
+  System.Threading, FMX.Types, FMX.Layouts, FMX.Graphics,
+  VentasApi, VentasConfig, VentasVisor;
 
 const
   cEtiquetaSku = 'SKU';
@@ -66,6 +79,15 @@ resourcestring
   SEtiquetaEmpresa = 'Empresa';
   SEtiquetaEstado = 'Estado';
   SEstadoVentaAnulada = 'VENTA ANULADA';
+  SBotonVerTicket = 'Ver ticket';
+  SDescargandoTicket = 'Descargando ticket…';
+  STicketNoIniciado = 'No se pudo iniciar la descarga del ticket.';
+
+destructor TfrmFicha.Destroy;
+begin
+  CancelarTicket;
+  inherited;
+end;
 
 function Moneda(AValor: Double): string;
 begin
@@ -119,15 +141,10 @@ begin
   linSep.Margins.Bottom := 6;
 end;
 
-procedure TfrmFicha.Construir(const ALinea: TLineaVenta;
-  const ARutaFoto: string);
+procedure TfrmFicha.ConstruirBotones;
 var
-  bHayFoto: Boolean;
   btnCerrar: TButton;
-  lblTitulo: TLabel;
-  scbDatos: TVertScrollBox;
 begin
-  Self.Caption := STituloDetalleVenta;
   btnCerrar := TButton.Create(Self);
   btnCerrar.Parent := Self;
   btnCerrar.Align := TAlignLayout.Bottom;
@@ -135,6 +152,33 @@ begin
   btnCerrar.Margins.Rect := RectF(12, 8, 12, 12);
   btnCerrar.Text := SBotonCerrarDetalleVenta;
   btnCerrar.OnClick := OnCerrarClick;
+  FBotonTicket := TButton.Create(Self);
+  FBotonTicket.Parent := Self;
+  FBotonTicket.Align := TAlignLayout.Bottom;
+  FBotonTicket.Height := 48;
+  FBotonTicket.Margins.Rect := RectF(12, 4, 12, 0);
+  FBotonTicket.Text := SBotonVerTicket;
+  FBotonTicket.OnClick := OnTicketClick;
+  FEstadoTicket := TLabel.Create(Self);
+  FEstadoTicket.Parent := Self;
+  FEstadoTicket.Align := TAlignLayout.Bottom;
+  FEstadoTicket.Height := 54;
+  FEstadoTicket.Margins.Rect := RectF(12, 4, 12, 0);
+  FEstadoTicket.WordWrap := True;
+  FEstadoTicket.Visible := False;
+end;
+
+procedure TfrmFicha.Construir(const ALinea: TLineaVenta;
+  const ARutaFoto: string);
+var
+  bHayFoto: Boolean;
+  lblTitulo: TLabel;
+  scbDatos: TVertScrollBox;
+begin
+  FLinea := ALinea;
+  Self.Caption := STituloDetalleVenta;
+  Self.OnClose := OnFichaCerrar;
+  ConstruirBotones;
   lblTitulo := TLabel.Create(Self);
   lblTitulo.Parent := Self;
   lblTitulo.Align := TAlignLayout.Top;
@@ -196,7 +240,88 @@ end;
 
 procedure TfrmFicha.OnCerrarClick(Sender: TObject);
 begin
+  CancelarTicket;
   ModalResult := mrOk;
+end;
+
+procedure TfrmFicha.OnFichaCerrar(Sender: TObject;
+  var AAccion: TCloseAction);
+begin
+  CancelarTicket;
+end;
+
+procedure TfrmFicha.CancelarTicket;
+begin
+  if Assigned(FCancelacionTicket) then
+    FCancelacionTicket.Cancelar;
+end;
+
+procedure TfrmFicha.FinalizarTicket(
+  const AResultado: TResultadoTicketVenta);
+var
+  sError: string;
+begin
+  FBotonTicket.Enabled := True;
+  FBotonTicket.Text := SBotonVerTicket;
+  sError := AResultado.Error;
+  if sError = '' then
+    AbrirTicketVenta(AResultado.Contenido, sError);
+  FEstadoTicket.Text := sError;
+  FEstadoTicket.Visible := sError <> '';
+end;
+
+procedure TfrmFicha.IniciarTicket;
+var
+  oCancelacion: ICancelacionTicketVenta;
+  oPeticion: TPeticionTicketVenta;
+begin
+  CancelarTicket;
+  oCancelacion := TCancelacionTicketVenta.Create;
+  FCancelacionTicket := oCancelacion;
+  oPeticion.Empresa := FLinea.Empresa;
+  oPeticion.Serie := FLinea.Serie;
+  oPeticion.Numero := FLinea.Numero;
+  oPeticion.UrlBase := oConfig.UrlBase;
+  oPeticion.Token := oConfig.Token;
+  FBotonTicket.Enabled := False;
+  FBotonTicket.Text := SDescargandoTicket;
+  FEstadoTicket.Visible := False;
+  TTask.Run(
+    procedure
+    var
+      oApi: TVentasApi;
+      oResultado: TResultadoTicketVenta;
+    begin
+      oApi := TVentasApi.Create;
+      try
+        oResultado := oApi.DescargarTicket(oPeticion, oCancelacion);
+      finally
+        FreeAndNil(oApi);
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          // La cancelación sobrevive a la ficha; no se accede al formulario
+          // después de cerrarlo ni se abre un PDF de una petición anterior.
+          if not oCancelacion.EstaCancelado then
+            FinalizarTicket(oResultado);
+        end);
+    end);
+end;
+
+procedure TfrmFicha.OnTicketClick(Sender: TObject);
+begin
+  try
+    IniciarTicket;
+  except
+    on E: Exception do
+    begin
+      FBotonTicket.Enabled := True;
+      FBotonTicket.Text := SBotonVerTicket;
+      FEstadoTicket.Text := STicketNoIniciado;
+      FEstadoTicket.Visible := True;
+    end;
+  end;
 end;
 
 class procedure TfrmFicha.Mostrar(AOwner: TComponent;

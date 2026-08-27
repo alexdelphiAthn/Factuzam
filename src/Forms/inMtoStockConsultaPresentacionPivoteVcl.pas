@@ -125,6 +125,14 @@ uses
   inLibAtributosPaleta,
   inLibMsgArticulos;
 
+type
+  TColumnaPivoteStock = class(TcxGridDBColumn)
+  protected
+    procedure ChangeScale(M, D: Integer); override;
+  public
+    constructor CrearEnVista(AVista: TcxGridDBTableView);
+  end;
+
 const
   ANCHO_RADIO_MODO = 110;
   ALTO_RADIO_MODO = 22;
@@ -135,6 +143,24 @@ const
   MARGEN_LEYENDA = 8;
   SEPARACION_LEYENDA = 14;
   FORMATO_CANTIDAD_STOCK = '#,##0.##;-#,##0.##;0';
+
+constructor TColumnaPivoteStock.CrearEnVista(
+  AVista: TcxGridDBTableView);
+begin
+  inherited Create(AVista.Owner);
+  SetParentComponent(AVista);
+end;
+
+procedure TColumnaPivoteStock.ChangeScale(M, D: Integer);
+var
+  iAnchoAnterior: Integer;
+begin
+  iAnchoAnterior := Width;
+  inherited ChangeScale(M, D);
+  // DevExpress escala primero MinWidth y puede elevar Width al nuevo
+  // mínimo. El ancho original, incluido el manual, se escala una sola vez.
+  Width := MulDiv(iAnchoAnterior, M, D);
+end;
 
 constructor TPresentadorEstadosStock.Create(
   AOwner: TComponent;
@@ -448,13 +474,14 @@ begin
     SCaptionColEstado, SCaptionColTotal);
   for Definicion in Definiciones do
   begin
-    Columna := FVista.CreateColumn;
+    Columna := TColumnaPivoteStock.CrearEnVista(FVista);
+    // Fijar Width antes de MinWidth y del campo: si ya coincide con el
+    // mínimo, DevExpress no lo guarda como asignado y al abrir el dataset
+    // lo sustituye por DisplayWidth, aunque ColumnAutoWidth sea False.
+    Columna.Width := EscalarAncho(Definicion.Ancho);
+    Columna.MinWidth := Columna.Width;
     Columna.Caption := Definicion.Titulo;
     Columna.DataBinding.FieldName := Definicion.Campo;
-    // Los datos breves no deben estrechar la rejilla en cada recarga.
-    // El usuario puede ampliar estos anchos; el minimo protege la lectura.
-    Columna.MinWidth := EscalarAncho(Definicion.Ancho);
-    Columna.Width := Columna.MinWidth;
     case Definicion.Clase of
       cpsGrupo:
         begin

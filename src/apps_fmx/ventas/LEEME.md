@@ -34,6 +34,17 @@ totales pasan a ser los de lo filtrado y se rotula «(filtrado)».
 
 ## Manejo
 
+- En la ficha de una venta, **Ver ticket** descarga su PDF almacenado en
+  `api_ventas_documentos`. Usa `ventas/documento.php` con `ventas:leer`,
+  sin volver a enviar la venta ni poner la API en el enlace.
+- Android abre el visor PDF instalado mediante un permiso temporal de
+  lectura; Windows usa su aplicación PDF asociada. Se necesita un visor
+  PDF instalado. En iPhone se usa la consulta web de ventas; la apertura
+  nativa iOS no está verificada en esta entrega.
+- Cada apertura comprueba nuevamente la credencial y valida el tamaño
+  (máximo 20 MB), formato y SHA-256 del PDF. Los temporales son privados,
+  no se reutilizan, y los de más de ocho horas se eliminan al abrir otro
+  ticket. Cerrar la ficha cancela la apertura pendiente.
 - **◀ / ▶** cambian de día. Tocar la fecha vuelve a hoy.
 - El buscador filtra en local sobre lo ya descargado, así que va instantáneo
   y no vuelve a llamar al servidor.

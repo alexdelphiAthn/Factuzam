@@ -357,9 +357,12 @@ type
     // tambien dispara DataChange y reconstruir ahi encadenaba una
     // tormenta de SQL por cada click (10/07/26).
     FPedidoModoActual: string;
+    FTemporizadorAnchosInline: TTimer;
     procedure ConstruirModoEntrada;
     function  PedidoClaveActual: string;
     procedure CrearColumnasHostPedidoCompra;
+    procedure ProgramarAnchosTallasInline;
+    procedure AjustarAnchosTallasInline(Sender: TObject);
     procedure MostrarColumnasAtributoGlobalesPedc;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
                                   ADescripcion: string;
@@ -748,6 +751,8 @@ procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
 var
   bHuboCambios: Boolean;
 begin
+  if Assigned(FTemporizadorAnchosInline) then
+    FTemporizadorAnchosInline.Enabled := False;
   FRecepcionVcl := nil;
   FAplicacionArticuloCompra := nil;
   FValidadorArticulos := nil;
@@ -1226,8 +1231,8 @@ begin
   end;
 end;
 
-// El modo bandas mide al publicar su vista temporal, no al abrir el cursor
-// real: en ese momento la vista aun puede estar vacia.
+// Los modos horizontales miden tras publicar sus columnas y celdas, no
+// al abrir el cursor real: la vista aun puede estar vacia en ese momento.
 procedure TfrmMtoPedidosCompra.unqryLineasAfterOpenHook(DataSet: TDataSet);
 begin
   if tvLineasPedido <> nil then
@@ -1246,7 +1251,7 @@ var
 begin
   if (tvLineasPedido <> nil) and
      not (FColsModoConstruido and
-          (FModoEntradaSel = mcsTallasHorPed)) then
+          (FModoEntradaSel in [mcsTallasInline, mcsTallasHorPed])) then
   begin
     tvLineasPedido.ApplyBestFit;
     if Assigned(FColColorPivot) and FColColorPivot.Visible then
@@ -2034,6 +2039,39 @@ begin
   // Orden normal del documento: la LINEA delante del bloque de
   // articulo que creo el modo (las columnas del host nacen detras).
   ColLinea.Index := 0;
+  ProgramarAnchosTallasInline;
+end;
+
+procedure TfrmMtoPedidosCompra.ProgramarAnchosTallasInline;
+begin
+  if FModoEntradaSel = mcsTallasInline then
+  begin
+    // La primera pasada protege tambien columnas aun ocultas. La segunda
+    // mide los captions y cantidades que publica el timer del modo.
+    AjustarAnchosTallasPedidoCompra(tvLineasPedido, CANT_TALLAS_MAX);
+    if not Assigned(FTemporizadorAnchosInline) then
+    begin
+      FTemporizadorAnchosInline := TTimer.Create(Self);
+      FTemporizadorAnchosInline.Enabled := False;
+      FTemporizadorAnchosInline.Interval := 10;
+      FTemporizadorAnchosInline.OnTimer := AjustarAnchosTallasInline;
+    end;
+    FTemporizadorAnchosInline.Enabled := False;
+    FTemporizadorAnchosInline.Enabled := True;
+  end;
+end;
+
+procedure TfrmMtoPedidosCompra.AjustarAnchosTallasInline(Sender: TObject);
+begin
+  FTemporizadorAnchosInline.Enabled := False;
+  if FColsModoConstruido and (FModoEntradaSel = mcsTallasInline) and
+     not (csDestroying in ComponentState) then
+  begin
+    if FConstruyendoModo then
+      FTemporizadorAnchosInline.Enabled := True
+    else
+      AjustarAnchosTallasPedidoCompra(tvLineasPedido, CANT_TALLAS_MAX);
+  end;
 end;
 
 procedure TfrmMtoPedidosCompra.ModoEntradaResuelto(const ACodArt, ASku,

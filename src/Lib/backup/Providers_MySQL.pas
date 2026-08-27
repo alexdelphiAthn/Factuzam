@@ -59,8 +59,8 @@ type
                      const Filter: string = ''): TDataSet;
     function GetRowCount(const TableName: string;
                          const Filter: string = ''): Integer;
-  private
-    function StripDefiner(const SQL: string): string;
+  protected
+    class function StripDefiner(const SQL: string): string; static;
   end;
 
 // Raíz de composición: entrega juntas las vistas del proveedor MySQL
@@ -69,6 +69,9 @@ function CrearServiciosLecturaMySQL(AConn: TUniConnection;
                                     TServiciosLecturaBBDD;
 
 implementation
+
+uses
+  System.RegularExpressions;
 
 function CrearServiciosLecturaMySQL(AConn: TUniConnection;
                                     const ANombreBBDD: string):
@@ -677,38 +680,35 @@ begin
             (Caracter = '_');
 end;
 
-function TMySQLMetadataProvider.StripDefiner(const SQL: string): string;
+class function TMySQLMetadataProvider.StripDefiner(
+  const SQL: string): string;
+const
+  // SHOW CREATE entrecomilla la cuenta. Se admiten tambien cuentas simples,
+  // comillas duplicadas y escapes de los literales, sin consumir el cuerpo.
+  sParteCuenta =
+    '(?:`(?:``|[^`])*`|' +
+    '''(?:''''|\\.|[^''\\])*''|' +
+    '"(?:""|\\.|[^"\\])*"|' +
+    '[A-Z0-9_$%.\-]+)';
+  sPatronCabecera =
+    '\A(?<inicio>\s*CREATE\s+(?:OR\s+REPLACE\s+)?' +
+    '(?:ALGORITHM\s*=\s*(?:UNDEFINED|MERGE|TEMPTABLE)\s+)?)' +
+    'DEFINER\s*=\s*' +
+    '(?:CURRENT_USER(?:\s*\(\s*\))?|' +
+    sParteCuenta + '(?:\s*@\s*' + sParteCuenta + ')?)' +
+    '\s+(?=(?:SQL\s+SECURITY\s+(?:DEFINER|INVOKER)\s+)?' +
+    '(?:VIEW|PROCEDURE|FUNCTION|TRIGGER|EVENT)\b)';
 var
-  PosDefiner, PosEnd: Integer;
-  UpperSQL: string;
+  oCoincidencia: TMatch;
 begin
   Result := SQL;
-  UpperSQL := UpperCase(SQL);
-  PosDefiner := Pos('DEFINER=', UpperSQL);
-  if PosDefiner > 0 then
-  begin
-    PosEnd := 0;
-    // 1. Buscar PROCEDURE (Prioridad alta para evitar error
-    //    con SQLEXCEPTION en el cuerpo)
-    if (PosEnd = 0) then PosEnd := PosEx('PROCEDURE', UpperSQL, PosDefiner);
-    // 2. Buscar TRIGGER
-    if (PosEnd = 0) then PosEnd := PosEx('TRIGGER', UpperSQL, PosDefiner);
-    // 3. Buscar FUNCTION
-    if (PosEnd = 0) then PosEnd := PosEx('FUNCTION', UpperSQL, PosDefiner);
-    // 4. Buscar VIEW (Esto limpiará también el
-    //    'SQL SECURITY' si está antes del VIEW)
-    if (PosEnd = 0) then PosEnd := PosEx('VIEW', UpperSQL, PosDefiner);
-    // NOTA: Hemos eliminado la búsqueda genérica de 'SQL' porque causaba
-    // falsos positivos con variables o handlers como 'SQLEXCEPTION'.
-    if (PosEnd > 0) then
-    begin
-      // Cortamos desde el inicio del DEFINER hasta justo antes del
-      // tipo de objeto Y Agregamos un espacio por seguridad para evitar
-      // concatenaciones tipo "UNDEFINEDVIEW"
-      Result := Trim(Copy(Result, 1, PosDefiner - 1) + ' ' +
-                     Copy(Result, PosEnd, Length(Result)));
-    end;
-  end;
+  // Solo se retira DEFINER=<cuenta> de la cabecera. Buscar PROCEDURE u otras
+  // palabras en todo el DDL truncaba vistas que las incluian como literales.
+  // SQL SECURITY se conserva: INVOKER no debe convertirse en DEFINER.
+  oCoincidencia := TRegEx.Match(SQL, sPatronCabecera, [roIgnoreCase]);
+  if oCoincidencia.Success then
+    Result := oCoincidencia.Groups['inicio'].Value +
+      Copy(SQL, oCoincidencia.Index + oCoincidencia.Length + 1, MaxInt);
 end;
 
 

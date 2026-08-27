@@ -1402,6 +1402,11 @@ uses
     {frmModalMovimientosSku},
   inMtoModalFotoArticulo in 'src\Modals\inMtoModalFotoArticulo.pas',
   inMtoModalFiltroArt in 'src\Modals\inMtoModalFiltroArt.pas',
+  inLibPrecargaComprasIntf in 'src\Lib\inLibPrecargaComprasIntf.pas',
+  inLibPrecargaMantenimientos in 'src\Lib\inLibPrecargaMantenimientos.pas',
+  inLibPrecargaCompras in 'src\Lib\inLibPrecargaCompras.pas',
+  UniDataPrecargaCompras in 'src\DataModules\UniDataPrecargaCompras.pas',
+  inMtoModalFiltroCompras in 'src\Modals\inMtoModalFiltroCompras.pas',
   inMtoComprasSesiones in 'src\Forms\inMtoComprasSesiones.pas' {frmMtoComprasSesiones},
   inMtoComprasSesionesMaterializacionVcl in
     'src\Forms\inMtoComprasSesionesMaterializacionVcl.pas',

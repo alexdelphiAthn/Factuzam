@@ -22,6 +22,8 @@ uses
   VentasModelo in 'VentasModelo.pas',
   VentasConfig in 'VentasConfig.pas',
   VentasApi in 'VentasApi.pas',
+  VentasTicket in 'VentasTicket.pas',
+  VentasVisor in 'VentasVisor.pas',
   fVentasListado in 'fVentasListado.pas',
   fVentasFicha in 'fVentasFicha.pas',
   fVentasConfig in 'fVentasConfig.pas';

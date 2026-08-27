@@ -12,6 +12,13 @@
     <ItemGroup Condition="'$(Platform)'=='OSX64'"/>
     <ItemGroup Condition="'$(Platform)'=='Win32'"/>
     <ItemGroup Condition="'$(Platform)'=='Android64'">
+        <DeployFile Include="tickets_paths.xml">
+            <RemoteDir>VentasFzam\res\xml\</RemoteDir>
+            <RemoteName>tickets_paths.xml</RemoteName>
+            <DeployClass>File</DeployClass>
+            <Operation>1</Operation>
+            <Overwrite>True</Overwrite>
+        </DeployFile>
         <DeployFile Include="Android64\Debug\styles-v35.xml" Condition="'$(Config)'=='Debug'">
             <RemoteDir>VentasFzam\res\values-v35\</RemoteDir>
             <RemoteName>styles.xml</RemoteName>

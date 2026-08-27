@@ -18,6 +18,20 @@ unit inLibVentanaEmbebidaIntf;
 interface
 
 type
+  TRolAperturaMantenimiento = (
+    ramBusqueda,
+    ramPrimeraLista,
+    ramListaAdicional
+  );
+
+  // Contrato opcional: se consulta antes del primer Open, ya embebido.
+  // Cancelar la precarga impide abrir la lista sin el filtro elegido.
+  IMantenimientoConPrecarga = interface
+    ['{E99426A4-E942-45F4-A63E-EE0E75317E26}']
+    function PrepararPrecarga(
+      ARol: TRolAperturaMantenimiento): Boolean;
+  end;
+
   // Ventana embebida en el marco principal.
   IVentanaEmbebida = interface
     ['{782AB710-5D2A-4C5D-9523-A686807D5078}']
@@ -48,6 +62,41 @@ type
     function LocalizarYEnfocar(const ABusq: string): Boolean;
   end;
 
+// La instancia 1 se reserva a busqueda; las listas empiezan por la 2.
+// Cero identifica los mantenimientos configurados con una sola ventana.
+function RolAperturaMantenimiento(
+  ABusqueda: Boolean;
+  ANumeroInstancia: Integer): TRolAperturaMantenimiento;
+function PrepararPrecargaMantenimiento(
+  const AMantenimiento: IMantenimientoEmbebido;
+  ARol: TRolAperturaMantenimiento): Boolean;
+
 implementation
+
+uses
+  System.SysUtils;
+
+function RolAperturaMantenimiento(
+  ABusqueda: Boolean;
+  ANumeroInstancia: Integer): TRolAperturaMantenimiento;
+begin
+  if ABusqueda then
+    Result := ramBusqueda
+  else if ANumeroInstancia > 2 then
+    Result := ramListaAdicional
+  else
+    Result := ramPrimeraLista;
+end;
+
+function PrepararPrecargaMantenimiento(
+  const AMantenimiento: IMantenimientoEmbebido;
+  ARol: TRolAperturaMantenimiento): Boolean;
+var
+  oPrecarga: IMantenimientoConPrecarga;
+begin
+  Result := True;
+  if Supports(AMantenimiento, IMantenimientoConPrecarga, oPrecarga) then
+    Result := oPrecarga.PrepararPrecarga(ARol);
+end;
 
 end.

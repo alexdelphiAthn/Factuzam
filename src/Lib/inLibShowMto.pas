@@ -176,6 +176,7 @@ type
     Formulario: TForm;
     Clave: string;
     Titulo: string;
+    Rol: TRolAperturaMantenimiento;
   end;
 
 function ResolverPantallaAccesible(
@@ -242,6 +243,7 @@ begin
   Result.Formulario := nil;
   Result.Clave := AContexto.Pantalla.Call;
   Result.Titulo := AContexto.Pantalla.Caption;
+  iInstancia := 0;
   if AContexto.Pantalla.NumVentanas > 1 then
   begin
     if AContexto.Busqueda <> '' then
@@ -253,6 +255,8 @@ begin
     Result.Titulo := AContexto.Pantalla.Caption + ' ' +
       IntToStr(iInstancia);
   end;
+  Result.Rol := RolAperturaMantenimiento(
+    AContexto.Busqueda <> '', iInstancia);
   Result.Formulario := AContexto.Gestor.FormPorClave(Result.Clave);
 end;
 
@@ -335,9 +339,11 @@ end;
 
 procedure AbrirMantenimiento(
   const AContexto: TContextoAperturaPantalla;
+  const ADestino: TDestinoAperturaPantalla;
   const AMantenimiento: IMantenimientoEmbebido);
 begin
-  if Assigned(AMantenimiento) then
+  if Assigned(AMantenimiento) and
+     PrepararPrecargaMantenimiento(AMantenimiento, ADestino.Rol) then
   begin
     if AContexto.Busqueda <> '' then
     begin
@@ -376,7 +382,7 @@ begin
       oMto := ActivarMantenimiento(oContexto, oDestino)
     else
       oMto := CrearMantenimiento(oContexto, oDestino);
-    AbrirMantenimiento(oContexto, oMto);
+    AbrirMantenimiento(oContexto, oDestino, oMto);
   end;
 end;
 

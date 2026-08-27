@@ -142,6 +142,8 @@ function CrearConfigColumnasSkuDocumento(
 function CrearColumnaHostDocumento(
   AVista: TcxGridDBTableView; const ACaption, ACampo: string;
   AAncho: Integer; AEditable: Boolean): TcxGridDBColumn;
+procedure AjustarAnchosTallasPedidoCompra(
+  AVista: TcxGridDBTableView; AMaxTallas: Integer);
 function CrearColumnasHostDocumentoCompra(
   AVista: TcxGridDBTableView; AModo: TModoColumnasSku;
   const APrefijoLinea: string): TColumnasHostDocumentoCompra;
@@ -182,9 +184,98 @@ procedure ConfigurarEventosTallasDocumento(
 implementation
 
 uses
-  System.SysUtils, Winapi.Windows, cxDataStorage, cxButtonEdit,
+  System.SysUtils, System.Math, Winapi.Windows, Vcl.Graphics,
+  cxDataStorage, cxButtonEdit,
+  cxGraphics, dxCoreGraphics, inLibAtributosPaleta,
   cxCurrencyEdit, inLibFotos, inLibMsgArticulos,
   inLibMsgComun, inLibFormatoMonetario;
+
+function MedirTextoAnchoPedidoCompra(AColumna: TcxGridDBColumn;
+  AEnCabecera: Boolean; const ATexto: string): Integer;
+var
+  Parametros: TcxViewParams;
+  Linea: string;
+begin
+  if AEnCabecera then
+    AColumna.Styles.GetHeaderParams(Parametros)
+  else
+    AColumna.Styles.GetContentParams(nil, Parametros);
+  Result := 0;
+  for Linea in ATexto.Split([#13, #10]) do
+    Result := Max(Result, cxTextWidth(Parametros.Font, Linea));
+end;
+
+procedure AjustarAnchoColumnaTallasPedidoCompra(
+  AVista: TcxGridDBTableView; AColumna: TcxGridDBColumn;
+  AMinimo, AMaximo, AMargen, APpi: Integer);
+var
+  Ancho, AnchoTexto, Registro: Integer;
+begin
+  Ancho := MulDiv(AMinimo, APpi, USER_DEFAULT_SCREEN_DPI);
+  AnchoTexto := MedirTextoAnchoPedidoCompra(AColumna, True,
+    AColumna.Caption) + MulDiv(24, APpi, USER_DEFAULT_SCREEN_DPI);
+  Ancho := Max(Ancho, AnchoTexto);
+  for Registro := 0 to AVista.DataController.RecordCount - 1 do
+  begin
+    AnchoTexto := MedirTextoAnchoPedidoCompra(AColumna, False,
+      AVista.DataController.DisplayTexts[Registro, AColumna.Index]) +
+      MulDiv(AMargen, APpi, USER_DEFAULT_SCREEN_DPI);
+    Ancho := Max(Ancho, AnchoTexto);
+  end;
+  Ancho := Min(Ancho,
+    MulDiv(AMaximo, APpi, USER_DEFAULT_SCREEN_DPI));
+  if AColumna.BestFitMaxWidth > 0 then
+    Ancho := Min(Ancho, AColumna.BestFitMaxWidth);
+  // Solo crece al presentar: no reinicia anchos/perfiles del usuario.
+  // MinWidth queda nativo: cambiarlo antes de ChangeScale puede hacer
+  // que DevExpress escale Width dos veces al subir de DPI.
+  if AColumna.Width < Ancho then
+    AColumna.Width := Ancho;
+end;
+
+procedure AjustarAnchosTallasPedidoCompra(
+  AVista: TcxGridDBTableView; AMaxTallas: Integer);
+var
+  Columna: TcxGridDBColumn;
+  Indice, Ppi, Minimo, Maximo, Margen: Integer;
+begin
+  if Assigned(AVista) then
+  begin
+    Ppi := USER_DEFAULT_SCREEN_DPI;
+    if Assigned(AVista.Site) then
+      Ppi := AVista.Site.CurrentPPI;
+    AVista.BeginUpdate;
+    try
+      for Indice := 0 to AVista.ColumnCount - 1 do
+      begin
+        Columna := AVista.Columns[Indice];
+        Minimo := 0;
+        Maximo := 320;
+        Margen := 24;
+        if (Columna.Tag >= 1) and (Columna.Tag <= AMaxTallas) and
+           (Columna.DataBinding.FieldName = '') then
+        begin
+          Minimo := 60;
+          Maximo := 120;
+        end
+        else if (Columna.Tag >= -5) and (Columna.Tag <= -1) then
+        begin
+          Minimo := 125;
+          Margen := ANCHO_SWATCH_PX;
+        end
+        else if SameText(Columna.DataBinding.FieldName,
+          'CODIGO_ART_PEDCLIN') then
+          Minimo := 160;
+        if (Minimo > 0) and
+           TcxCustomGridTableItemAccess.CanHorzSize(Columna) then
+          AjustarAnchoColumnaTallasPedidoCompra(
+            AVista, Columna, Minimo, Maximo, Margen, Ppi);
+      end;
+    finally
+      AVista.EndUpdate;
+    end;
+  end;
+end;
 
 procedure CrearColumnasTallasDocumento(
   AVista: TcxGridDBTableView; const APrefijoNombre: string;

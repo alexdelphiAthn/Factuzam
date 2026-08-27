@@ -18,6 +18,10 @@
 
     <queries>
 <%queries-child-elements%>
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/pdf" />
+        </intent>
     </queries>
 
     <application
@@ -32,6 +36,15 @@
         android:restoreAnyVersion="%restoreAnyVersion%"
         android:theme="%theme%" >
 <%provider%>
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="%package%.tickets.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/tickets_paths" />
+        </provider>
 <%application-meta-data%>
 <%uses-libraries%>
         <!-- Trigger Google Play services to install the backported photo picker module. -->

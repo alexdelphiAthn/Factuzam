@@ -165,6 +165,7 @@ type
     procedure CancelarEjecucionActiva;
     procedure PrepararBusquedaExterna(
       const ACamposClave, AValoresClave: string);
+    function RestaurarListaTrasBusquedaExterna: Boolean;
     function AplicarRestriccionUsuario(
       const AFiltro: string): Boolean;
     // Abre las queries detalle/lookup propias del Mto. Default no hace
@@ -226,6 +227,10 @@ uses
   UniDataValoresAutomaticosRepositorio;
 
 {$R *.dfm}
+
+resourcestring
+  SErrorRestaurarListaEnEdicion =
+    'Guarde o cancele los cambios antes de volver a la lista.';
 
 type
   TUnidadTrabajoMtoGenUniDAC = class(
@@ -936,6 +941,20 @@ begin
       unqryTablaG.SQL.Text := 'SELECT * FROM (' + sLineBreak +
         sBase + sLineBreak + ') sub_busqueda WHERE ' + sWhere;
     end;
+  end;
+end;
+
+function TdmBase.RestaurarListaTrasBusquedaExterna: Boolean;
+begin
+  Result := False;
+  if Assigned(unqryTablaG) and (FSqlBaseBusquedaExterna <> '') then
+  begin
+    if (unqryTablaG.State in dsEditModes) or CheckOpenDatasets(Self) then
+      raise EDatabaseError.Create(SErrorRestaurarListaEnEdicion);
+    unqryTablaG.Close;
+    unqryTablaG.SQL.Text := FSqlBaseBusquedaExterna;
+    FSqlBaseBusquedaExterna := '';
+    Result := True;
   end;
 end;
 

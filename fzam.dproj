@@ -1610,6 +1610,11 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalFotoArticulo.pas"/>
         <DCCReference Include="src\Modals\inMtoModalFiltroArt.pas"/>
+        <DCCReference Include="src\Lib\inLibPrecargaComprasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibPrecargaMantenimientos.pas"/>
+        <DCCReference Include="src\Lib\inLibPrecargaCompras.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPrecargaCompras.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalFiltroCompras.pas"/>
         <DCCReference Include="src\Forms\inMtoComprasSesiones.pas">
             <Form>frmMtoComprasSesiones</Form>
         </DCCReference>
