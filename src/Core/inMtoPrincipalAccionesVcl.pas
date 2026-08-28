@@ -64,6 +64,7 @@ uses
   inMtoModalCambioArticuloColor,
   inLibCambioArticuloColor,
   UniDataCambioArticuloColorRepositorio,
+  UniDataCambioArticuloColorHistoricoConsulta,
   inMtoModalVerifactuDecl,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
@@ -141,6 +142,7 @@ begin
     AOwner,
     CrearServicioCambioArticuloColor(
       CrearRepositorioCambioArticuloColorUniDAC(AConexion)),
+    CrearConsultaCambioArticuloColorHistoricoUniDAC(AConexion),
     AUsuario);
 end;
 

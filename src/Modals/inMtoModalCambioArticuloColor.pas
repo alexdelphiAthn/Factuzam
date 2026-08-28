@@ -20,7 +20,8 @@ uses
   Vcl.ActnList, Vcl.Controls, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Forms,
   cxButtons, cxContainer, cxControls, cxEdit, cxGraphics, cxGroupBox,
   cxLabel, cxLookAndFeelPainters, cxLookAndFeels, cxTextEdit,
-  inMtoFrmBase, inLibCambioArticuloColorIntf;
+  inMtoFrmBase, inLibCambioArticuloColorIntf,
+  inLibCambioArticuloColorHistoricoConsultaIntf;
 
 type
   TfrmModalCambioArticuloColor = class(TfrmBase)
@@ -40,17 +41,21 @@ type
     btnCambiarColor: TcxButton;
     lblAdvertencia: TcxLabel;
     pnlBotones: TPanel;
+    btnHistorico: TcxButton;
     btnCerrar: TcxButton;
     alAcciones: TActionList;
     actCambiarArticulo: TAction;
     actCambiarColor: TAction;
+    actHistorico: TAction;
     actCerrar: TAction;
     procedure FormCreate(Sender: TObject);
     procedure actCambiarArticuloExecute(Sender: TObject);
     procedure actCambiarColorExecute(Sender: TObject);
+    procedure actHistoricoExecute(Sender: TObject);
     procedure actCerrarExecute(Sender: TObject);
   private
     FServicio: IServicioCambioArticuloColor;
+    FConsultaHistorico: IConsultaCambioArticuloColorHistorico;
     FUsuario: string;
     function ConfirmarCambio(
       const ATipo, AOrigen, ADestino: string): Boolean;
@@ -65,16 +70,21 @@ type
     procedure CambiarArticulo;
     procedure CambiarColor;
     procedure MostrarErrorInesperado(const AMensaje: string);
+    procedure MostrarHistorico;
     procedure MostrarResultado(
       const AResultado: TResultadoCambioArticuloColor);
   public
     class procedure Ejecutar(
       AOwner: TComponent;
       const AServicio: IServicioCambioArticuloColor;
+      const AConsultaHistorico: IConsultaCambioArticuloColorHistorico;
       const AUsuario: string);
   end;
 
 implementation
+
+uses
+  inMtoModalCambioArticuloColorHistorico;
 
 {$R *.dfm}
 
@@ -164,18 +174,23 @@ end;
 class procedure TfrmModalCambioArticuloColor.Ejecutar(
   AOwner: TComponent;
   const AServicio: IServicioCambioArticuloColor;
+  const AConsultaHistorico: IConsultaCambioArticuloColorHistorico;
   const AUsuario: string);
 var
   oFormulario: TfrmModalCambioArticuloColor;
 begin
   if not Assigned(AServicio) then
     raise EArgumentNilException.Create('AServicio');
+  if not Assigned(AConsultaHistorico) then
+    raise EArgumentNilException.Create('AConsultaHistorico');
   oFormulario := TfrmModalCambioArticuloColor.Create(AOwner);
   try
     oFormulario.FServicio := AServicio;
+    oFormulario.FConsultaHistorico := AConsultaHistorico;
     oFormulario.FUsuario := Trim(AUsuario);
     oFormulario.ShowModal;
   finally
+    oFormulario.FConsultaHistorico := nil;
     oFormulario.FServicio := nil;
     FreeAndNil(oFormulario);
   end;
@@ -361,6 +376,13 @@ begin
     0);
 end;
 
+procedure TfrmModalCambioArticuloColor.MostrarHistorico;
+begin
+  TfrmModalHistoricoArtColor.Ejecutar(
+    Self,
+    FConsultaHistorico);
+end;
+
 procedure TfrmModalCambioArticuloColor.MostrarResultado(
   const AResultado: TResultadoCambioArticuloColor);
 begin
@@ -381,6 +403,12 @@ procedure TfrmModalCambioArticuloColor.actCambiarColorExecute(
   Sender: TObject);
 begin
   CambiarColor;
+end;
+
+procedure TfrmModalCambioArticuloColor.actHistoricoExecute(
+  Sender: TObject);
+begin
+  MostrarHistorico;
 end;
 
 procedure TfrmModalCambioArticuloColor.actCerrarExecute(Sender: TObject);

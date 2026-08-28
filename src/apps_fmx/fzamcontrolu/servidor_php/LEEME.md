@@ -114,6 +114,28 @@ cantidad de la variante leída al cambiar los filtros. Se mantiene
 `stock_total` como alias de `cantidad_total` para versiones anteriores de la
 app.
 
+La web muestra una foto ampliable y filtros visibles de selección múltiple
+por color y almacén. El campo aditivo `colores_basicos` es una lista con
+`color`, `codigo`, `nombre` y `hex` por cada valor de color del artículo.
+Se respeta la prioridad artículo > conjunto > atributo global; una fila
+de anulación expresa en el artículo impide heredar el básico.
+Solo se representan básicos de color activos. Sin un HEX válido el cuadrado
+se muestra rayado; no se asigna un tono por aproximación del nombre.
+
+Esta información es opcional: si falta el esquema o el permiso de lectura
+de paleta, no se impide consultar cantidades. Para ver los básicos hacen
+falta permisos SELECT de `fza_atributos_basicos`,
+`fza_articulos_atributos_basicos`, `fza_articulos_conjuntos_asign`,
+`fza_atributos_conjuntos_det` y la columna `ID_ATB_AV` de
+`fza_atributos_valores`. No se instalan tablas ni se conceden permisos
+automáticamente. Se conservan los campos utilizados por la app móvil.
+
+El lanzador de desarrollo `factuzam_web/scripts/controlu_web/Iniciar-Local.ps1`
+permite probar en localhost con el perfil Factuzam guardado en Windows.
+Su configuración ignorada por Git exige variables de proceso, activa
+`CFG_DB_SOLO_LECTURA=true` y `CFG_ACTUALIZAR_ULTIMO_LOGIN=false`.
+Esa configuración no se copia al servidor del cliente.
+
 La contraseña se compara con el MD5 heredado que ya usa Factuzam. No es un
 mecanismo moderno: el endpoint no empeora el formato existente, pero se
 recomienda migrar las contraseñas cuando la aplicación principal lo permita.

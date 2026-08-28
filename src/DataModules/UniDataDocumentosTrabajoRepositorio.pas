@@ -13,7 +13,8 @@ implementation
 
 uses
   System.SysUtils, Data.DB, DBAccess, UniDataPedidosCompraPendientes,
-  inLibDocumentosTrabajoEstados, inLibMsgVentas;
+  inLibDocumentosTrabajoEstados, inLibMsgVentas,
+  UniDataDocumentosTrabajoCargaOrigenSql;
 
 const
   SQL_DESTINOS_COMPARTIR =
@@ -202,11 +203,26 @@ type
     TInterfacedObject,
     ILecturasDocumentosTrabajo,
     IEscrituraDocumentosTrabajo,
-    IMaterializacionDocumentosTrabajo)
+    IMaterializacionDocumentosTrabajo,
+    ICargaOrigenDocumentosTrabajo)
   private
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
     function SiguienteLinea(AIdDocumento: Int64): string;
+    procedure AsignarParametrosOrigen(AConsulta: TUniQuery;
+      const AOrigen: TDocumentoTrabajoOrigen);
+    procedure BloquearDocumentoDestino(AConsulta: TUniQuery;
+      AIdDocumento: Int64; const AOrigen: TDocumentoTrabajoOrigen;
+      const AUsuario: string);
+    procedure BloquearDocumentoOrigen(AConsulta: TUniQuery;
+      const AOrigen: TDocumentoTrabajoOrigen);
+    procedure ValidarSkusDocumentoOrigen(AConsulta: TUniQuery;
+      const AOrigen: TDocumentoTrabajoOrigen);
+    function PrimeraLineaCarga(AConsulta: TUniQuery;
+      AIdDocumento: Int64): Integer;
+    procedure LeerResumenCarga(AConsulta: TUniQuery;
+      AIdDocumento: Int64; const AOrigen: TDocumentoTrabajoOrigen;
+      out AResultado: TResultadoCargaOrigenDocumentoTrabajo);
     procedure MarcarDocumentoEnviado(AConsulta: TUniQuery;
       AIdDocumento: Int64; const AUsuario: string);
   public
@@ -223,6 +239,13 @@ type
     procedure InsertarLinea(AIdDocumento: Int64;
       const ALinea: TDocTrabajoLineaOrigen;
       const AUsuario: string);
+    function ConsultarUltimos(const AEmpresa: string;
+      ALimite: Integer): IConsultaDocumentoTrabajo;
+    function PrevisualizarLineas(
+      const AOrigen: TDocumentoTrabajoOrigen): IConsultaDocumentoTrabajo;
+    function CargarLineas(AIdDocumento: Int64;
+      const AOrigen: TDocumentoTrabajoOrigen;
+      const AUsuario: string): TResultadoCargaOrigenDocumentoTrabajo;
     function SiguienteContador(
       const ASerie, ATipoDocumento, AEmpresa,
       AUsuario: string): string;
@@ -256,6 +279,7 @@ begin
   Result.Lecturas := Repositorio;
   Result.Escritura := Repositorio;
   Result.Materializacion := Repositorio;
+  Result.CargaOrigen := Repositorio;
 end;
 
 constructor TConsultaDocumentoTrabajoUniDAC.Create(AConsulta: TUniQuery);
@@ -288,6 +312,120 @@ function TRepositorioDocumentosTrabajo.NuevaConsulta: TUniQuery;
 begin
   Result := TUniQuery.Create(nil);
   Result.Connection := FConexion;
+end;
+
+procedure TRepositorioDocumentosTrabajo.AsignarParametrosOrigen(
+  AConsulta: TUniQuery; const AOrigen: TDocumentoTrabajoOrigen);
+begin
+  AConsulta.ParamByName('EMPRESA').AsString := Trim(AOrigen.Empresa);
+  AConsulta.ParamByName('SERIE').AsString := Trim(AOrigen.Serie);
+  AConsulta.ParamByName('NUMERO').AsString := Trim(AOrigen.Numero);
+end;
+
+procedure TRepositorioDocumentosTrabajo.BloquearDocumentoDestino(
+  AConsulta: TUniQuery; AIdDocumento: Int64;
+  const AOrigen: TDocumentoTrabajoOrigen; const AUsuario: string);
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text := SqlBloquearDocumentoTrabajoCargaOrigen;
+  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+  AConsulta.Open;
+  if AConsulta.IsEmpty then
+  begin
+    raise ERangeError.Create(SErrorCabeceraDocumentoTrabajoSinGrabar);
+  end;
+  if (not SameText(AConsulta.FieldByName('USUARIO_DTR').AsString,
+                   Trim(AUsuario))) or
+     (not EsDocumentoTrabajoCreado(
+       AConsulta.FieldByName('ESTADO_DTR').AsString)) then
+  begin
+    raise ERangeError.Create(SErrorModificarDocumentoTrabajoNoPermitido);
+  end;
+  if not SameText(Trim(AConsulta.FieldByName('CODIGO_EMP_DTR').AsString),
+                      Trim(AOrigen.Empresa)) then
+  begin
+    raise ERangeError.Create(
+      SErrorEmpresaDocumentoTrabajoOrigenDistinta);
+  end;
+end;
+
+procedure TRepositorioDocumentosTrabajo.BloquearDocumentoOrigen(
+  AConsulta: TUniQuery; const AOrigen: TDocumentoTrabajoOrigen);
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text := SqlBloquearDocumentoOrigen(
+    AOrigen.TipoDocumento);
+  AsignarParametrosOrigen(AConsulta, AOrigen);
+  AConsulta.Open;
+  if AConsulta.IsEmpty then
+  begin
+    raise ERangeError.CreateFmt(
+      SErrorDocumentoOrigenNoEncontrado,
+      [UpperCase(Trim(AOrigen.TipoDocumento)), Trim(AOrigen.Serie),
+       Trim(AOrigen.Numero), Trim(AOrigen.Empresa)]);
+  end;
+  if SameText(Trim(AConsulta.FieldByName('ESTADO').AsString),
+              'CANCELADO') then
+  begin
+    raise ERangeError.CreateFmt(
+      SErrorDocumentoOrigenCancelado,
+      [UpperCase(Trim(AOrigen.TipoDocumento)), Trim(AOrigen.Serie),
+       Trim(AOrigen.Numero)]);
+  end;
+end;
+
+procedure TRepositorioDocumentosTrabajo.ValidarSkusDocumentoOrigen(
+  AConsulta: TUniQuery; const AOrigen: TDocumentoTrabajoOrigen);
+var
+  LineasSinSku: Integer;
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text := SqlContarLineasOrigenSinSku(
+    AOrigen.TipoDocumento);
+  AsignarParametrosOrigen(AConsulta, AOrigen);
+  AConsulta.Open;
+  LineasSinSku := AConsulta.FieldByName('LINEAS_SIN_SKU').AsInteger;
+  if LineasSinSku > 0 then
+  begin
+    raise ERangeError.CreateFmt(
+      SErrorDocumentoOrigenLineasSinSku,
+      [LineasSinSku]);
+  end;
+end;
+
+function TRepositorioDocumentosTrabajo.PrimeraLineaCarga(
+  AConsulta: TUniQuery; AIdDocumento: Int64): Integer;
+begin
+  AConsulta.Close;
+  AConsulta.SQL.Text :=
+    'SELECT COALESCE(MAX(CAST(LINEA_DTL AS UNSIGNED)), 0) + 1 AS LINEA ' +
+    '  FROM fza_documentos_trabajo_lineas ' +
+    ' WHERE ID_DTR_DTL = :ID_DTR';
+  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+  AConsulta.Open;
+  Result := AConsulta.FieldByName('LINEA').AsInteger;
+end;
+
+procedure TRepositorioDocumentosTrabajo.LeerResumenCarga(
+  AConsulta: TUniQuery; AIdDocumento: Int64;
+  const AOrigen: TDocumentoTrabajoOrigen;
+  out AResultado: TResultadoCargaOrigenDocumentoTrabajo);
+begin
+  AResultado.Clear;
+  AConsulta.Close;
+  AConsulta.SQL.Text := SqlResumenCargaOrigenDocumento(
+    AOrigen.TipoDocumento);
+  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+  AConsulta.ParamByName('TIPO_DOCUMENTO').AsString :=
+    UpperCase(Trim(AOrigen.TipoDocumento));
+  AsignarParametrosOrigen(AConsulta, AOrigen);
+  AConsulta.Open;
+  AResultado.LineasEncontradas :=
+    AConsulta.FieldByName('LINEAS_ENCONTRADAS').AsInteger;
+  AResultado.LineasOmitidas :=
+    AConsulta.FieldByName('LINEAS_OMITIDAS').AsInteger;
+  AResultado.TotalUnidades :=
+    AConsulta.FieldByName('TOTAL_UNIDADES').AsFloat;
 end;
 
 procedure TRepositorioDocumentosTrabajo.MarcarDocumentoEnviado(
@@ -511,6 +649,118 @@ begin
     Consulta.ParamByName('USUARIO_ALTA').AsString := AUsuario;
     Consulta.ParamByName('USUARIO_MODIF').AsString := AUsuario;
     Consulta.Execute;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function TRepositorioDocumentosTrabajo.ConsultarUltimos(
+  const AEmpresa: string; ALimite: Integer): IConsultaDocumentoTrabajo;
+var
+  Consulta: TUniQuery;
+  Limite: Integer;
+begin
+  if Trim(AEmpresa) = '' then
+  begin
+    raise EArgumentException.Create(SErrorDocumentoOrigenIncompleto);
+  end;
+  Consulta := NuevaConsulta;
+  try
+    Limite := NormalizarLimiteDocumentosOrigen(ALimite);
+    Consulta.SQL.Text := SqlConsultarUltimosDocumentosOrigen;
+    Consulta.ParamByName('EMPRESA_AV').AsString := Trim(AEmpresa);
+    Consulta.ParamByName('EMPRESA_AB').AsString := Trim(AEmpresa);
+    Consulta.ParamByName('LIMITE_AV').AsInteger := Limite;
+    Consulta.ParamByName('LIMITE_AB').AsInteger := Limite;
+    Consulta.ParamByName('LIMITE_GLOBAL').AsInteger := Limite;
+    Consulta.Open;
+    Result := TConsultaDocumentoTrabajoUniDAC.Create(Consulta);
+  except
+    FreeAndNil(Consulta);
+    raise;
+  end;
+end;
+
+function TRepositorioDocumentosTrabajo.PrevisualizarLineas(
+  const AOrigen: TDocumentoTrabajoOrigen): IConsultaDocumentoTrabajo;
+var
+  Consulta: TUniQuery;
+begin
+  ValidarOrigenDocumentoTrabajo(AOrigen);
+  Consulta := NuevaConsulta;
+  try
+    Consulta.SQL.Text := SqlPrevisualizarLineasDocumentoOrigen(
+      AOrigen.TipoDocumento);
+    AsignarParametrosOrigen(Consulta, AOrigen);
+    Consulta.Open;
+    Result := TConsultaDocumentoTrabajoUniDAC.Create(Consulta);
+  except
+    FreeAndNil(Consulta);
+    raise;
+  end;
+end;
+
+function TRepositorioDocumentosTrabajo.CargarLineas(
+  AIdDocumento: Int64; const AOrigen: TDocumentoTrabajoOrigen;
+  const AUsuario: string): TResultadoCargaOrigenDocumentoTrabajo;
+var
+  Consulta: TUniQuery;
+  LineasEsperadas: Integer;
+  PrimeraLinea: Integer;
+  TransaccionPropia: Boolean;
+begin
+  Result.Clear;
+  ValidarOrigenDocumentoTrabajo(AOrigen);
+  Consulta := NuevaConsulta;
+  try
+    TransaccionPropia := not FConexion.InTransaction;
+    if TransaccionPropia then
+    begin
+      FConexion.StartTransaction;
+    end;
+    try
+      BloquearDocumentoDestino(
+        Consulta, AIdDocumento, AOrigen, AUsuario);
+      BloquearDocumentoOrigen(Consulta, AOrigen);
+      ValidarSkusDocumentoOrigen(Consulta, AOrigen);
+      LeerResumenCarga(Consulta, AIdDocumento, AOrigen, Result);
+      if Result.LineasEncontradas > Result.LineasOmitidas then
+      begin
+        LineasEsperadas :=
+          Result.LineasEncontradas - Result.LineasOmitidas;
+        PrimeraLinea := PrimeraLineaCarga(Consulta, AIdDocumento);
+        Consulta.Close;
+        Consulta.SQL.Text := SqlInsertarLineasDocumentoOrigen(
+          AOrigen.TipoDocumento);
+        Consulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+        Consulta.ParamByName('PRIMERA_LINEA').AsInteger := PrimeraLinea;
+        Consulta.ParamByName('TIPO_DOCUMENTO').AsString :=
+          UpperCase(Trim(AOrigen.TipoDocumento));
+        Consulta.ParamByName('ETIQUETA_ORIGEN').AsString := Copy(
+          Format('%s %s/%s', [UpperCase(Trim(AOrigen.TipoDocumento)),
+            Trim(AOrigen.Serie), Trim(AOrigen.Numero)]), 1, 30);
+        Consulta.ParamByName('USUARIO').AsString := Trim(AUsuario);
+        AsignarParametrosOrigen(Consulta, AOrigen);
+        Consulta.Execute;
+        Result.LineasInsertadas := Consulta.RowsAffected;
+        if Result.LineasInsertadas <> LineasEsperadas then
+        begin
+          raise ERangeError.CreateFmt(
+            SErrorCargaDocumentoOrigenIncompleta,
+            [LineasEsperadas, Result.LineasInsertadas]);
+        end;
+      end;
+      if TransaccionPropia and FConexion.InTransaction then
+      begin
+        FConexion.Commit;
+      end;
+    except
+      if TransaccionPropia and FConexion.InTransaction then
+      begin
+        FConexion.Rollback;
+      end;
+      raise;
+    end;
   finally
     FreeAndNil(Consulta);
   end;

@@ -25,20 +25,25 @@ uses
   dxSpreadSheet, dxSpreadSheetCore, cxGraphics, Vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics,
   dxSpreadSheetStyles, dxHashUtils,
-  inLibDevExcel, inLibHojaCalculoIntf;
+  inLibDevExcel, inLibHojaCalculoIntf,
+  inLibInventariosAplicacionIntf;
 
 type
   TLineaImportada = record
+    Linea: string;
     Sku: string;
     Cantidad: Double;
     PmpNuevo: Double;
+    FechaRecuento: TDateTime;
     TienePmp: Boolean;
+    TieneFechaRecuento: Boolean;
   end;
   TLineasImportadas = TArray<TLineaImportada>;
 
   TCampoIncidenciaImportacionInventario = (
     ciiCantidad,
-    ciiPmpNuevo);
+    ciiPmpNuevo,
+    ciiFechaRecuento);
 
   TIncidenciaImportacionInventario = record
     Fila: Integer;
@@ -60,20 +65,33 @@ procedure ExportarInventarioExcel(
 // datos para impedir una importacion parcial.
 procedure ImportarInventarioDesdeSheet(
   const ALector: ILectorHojaCalculo;
+  out AIdentidad: TIdentidadImportacionInventario;
   out ALineas: TLineasImportadas;
   out ALista: TStringList;
   out AIncidencias: TIncidenciasImportacionInventario;
-  out AMsg: string);
+  out AMsg: string); overload;
+
+procedure ImportarInventarioDesdeSheet(
+  const ALector: ILectorHojaCalculo;
+  out ALineas: TLineasImportadas;
+  out ALista: TStringList;
+  out AIncidencias: TIncidenciasImportacionInventario;
+  out AMsg: string); overload;
 
 implementation
 
 uses
-  System.Math, System.Variants;
+  System.DateUtils,
+  System.Math,
+  System.Variants,
+  inLibInventariosAplicacion;
 
 const
   FMT_EUR = '#,##0.00" '#$20AC'"';
   MAX_FILA_CABECERA_IMPORTACION = 20;
   MAX_COLUMNA_CABECERA_IMPORTACION = 20;
+  CABECERA_FECHA_RECUENTO = 'Fecha y hora recuento';
+  ID_COLUMNA_FECHA_RECUENTO = 'FECHA_RECUENTO_INVLIN';
   COL_LINEA = 0;
   COL_ART   = 1;
   COL_SKU   = 2;
@@ -86,7 +104,8 @@ const
   COL_PMP   = 9;
   COL_PMPN  = 10;
   COL_COSTE = 11;
-  COL_MAX   = 11;
+  COL_FECHA_RECUENTO = 12;
+  COL_MAX   = 12;
 
 // =============================================================================
 //   EXPORTAR
@@ -144,6 +163,11 @@ begin
   W(AHoja, AFila, COL_PMP, 'PMP Actual', True, ssahRight);
   W(AHoja, AFila, COL_PMPN, 'PMP Nuevo', True, ssahRight);
   W(AHoja, AFila, COL_COSTE, 'Dif. Coste', True, ssahRight);
+  W(AHoja, AFila, COL_FECHA_RECUENTO,
+    CABECERA_FECHA_RECUENTO + ' [' +
+      ID_COLUMNA_FECHA_RECUENTO + ']',
+    True,
+    ssahCenter);
   for iColumna := 0 to COL_MAX do
   begin
     if AHoja.Cells[AFila, iColumna] <> nil then
@@ -198,6 +222,18 @@ begin
     ALineas.FieldByName('TOTAL_COSTE_DIFERENCIA_INVLIN').AsFloat;
   W(AHoja, AFila, COL_COSTE, dValor, False, ssahRight);
   AHoja.Cells[AFila, COL_COSTE].Style.DataFormat.FormatCode := FMT_EUR;
+  if (ALineas.FindField('FECHA_RECUENTO_INVLIN') <> nil) and
+     (not ALineas.FieldByName('FECHA_RECUENTO_INVLIN').IsNull) and
+     (Frac(ALineas.FieldByName(
+       'FECHA_RECUENTO_INVLIN').AsDateTime) <> 0) then
+  begin
+    W(AHoja, AFila, COL_FECHA_RECUENTO,
+      ALineas.FieldByName('FECHA_RECUENTO_INVLIN').AsDateTime,
+      False,
+      ssahCenter);
+    AHoja.Cells[AFila, COL_FECHA_RECUENTO].Style.DataFormat.FormatCode :=
+      'dd/mm/yyyy hh:mm:ss';
+  end;
 end;
 
 procedure EscribirLineasInventario(
@@ -278,6 +314,7 @@ begin
   AHoja.Columns[COL_PMP].Size := 80;
   AHoja.Columns[COL_PMPN].Size := 80;
   AHoja.Columns[COL_COSTE].Size := 90;
+  AHoja.Columns[COL_FECHA_RECUENTO].Size := 145;
 end;
 
 procedure ExportarInventarioExcel(
@@ -320,11 +357,21 @@ end;
 
 type
   TColumnasImportacionInventario = record
+    Linea: Integer;
     Sku: Integer;
     Cantidad: Integer;
     PmpNuevo: Integer;
+    FechaRecuento: Integer;
+    FilaCabecera: Integer;
     FilaInicio: Integer;
   end;
+
+  TElementoIdentidadInventarioExcel = (
+    eiieNinguno,
+    eiieEmpresa,
+    eiieAlmacen,
+    eiieSerie,
+    eiieNumero);
 
   TEstadoLineaImportacionInventario = (
     eliVacia,
@@ -371,6 +418,33 @@ begin
     (ATexto = 'PMP');
 end;
 
+function EsCabeceraFechaRecuentoInventario(
+  const ATexto: string): Boolean;
+begin
+  Result := (Pos(ID_COLUMNA_FECHA_RECUENTO, ATexto) > 0) or
+    (ATexto = UpperCase(
+      CABECERA_FECHA_RECUENTO)) or
+    (ATexto = 'FECHA Y HORA RECUENTO') or
+    (ATexto = 'FECHA Y HORA DE RECUENTO') or
+    (ATexto = 'FECHA/HORA RECUENTO') or
+    (ATexto = 'FECHA/HORA DE RECUENTO') or
+    (ATexto = 'FECHA HORA RECUENTO') or
+    (ATexto = 'FECHA RECUENTO') or
+    (ATexto = 'HORA RECUENTO') or
+    (ATexto = 'INSTANTE RECUENTO') or
+    (ATexto = 'FECHA Y HORA') or
+    (ATexto = 'FECHA/HORA') or
+    (ATexto = 'FECHA_RECUENTO_INVLIN') or
+    (ATexto = 'INSTANTE_RECUENTO');
+end;
+
+function EsCabeceraLineaInventario(const ATexto: string): Boolean;
+begin
+  Result := (ATexto = 'LINEA') or (ATexto = 'LÍNEA') or
+    (ATexto = 'LINEA INVENTARIO') or
+    (ATexto = 'LINEA_INVLIN');
+end;
+
 function ColumnasImportacionInventarioEnFila(
   const ALector: ILectorHojaCalculo;
   AFila: Integer): TColumnasImportacionInventario;
@@ -378,20 +452,27 @@ var
   Columna: Integer;
   Cabecera: string;
 begin
+  Result.Linea := -1;
   Result.Sku := -1;
   Result.Cantidad := -1;
   Result.PmpNuevo := -1;
+  Result.FechaRecuento := -1;
+  Result.FilaCabecera := AFila;
   Result.FilaInicio := AFila + 1;
   for Columna := 0 to MAX_COLUMNA_CABECERA_IMPORTACION do
   begin
     Cabecera := UpperCase(
       TextoCeldaImportacionInventario(ALector, AFila, Columna));
-    if EsCabeceraSkuInventario(Cabecera) then
+    if EsCabeceraLineaInventario(Cabecera) then
+      Result.Linea := Columna
+    else if EsCabeceraSkuInventario(Cabecera) then
       Result.Sku := Columna
     else if EsCabeceraCantidadInventario(Cabecera) then
       Result.Cantidad := Columna
     else if EsCabeceraPmpInventario(Cabecera) then
-      Result.PmpNuevo := Columna;
+      Result.PmpNuevo := Columna
+    else if EsCabeceraFechaRecuentoInventario(Cabecera) then
+      Result.FechaRecuento := Columna;
   end;
 end;
 
@@ -403,9 +484,12 @@ var
   Fila: Integer;
   UltimaFilaCabecera: Integer;
 begin
+  Result.Linea := -1;
   Result.Sku := 0;
   Result.Cantidad := 1;
   Result.PmpNuevo := -1;
+  Result.FechaRecuento := -1;
+  Result.FilaCabecera := -1;
   Result.FilaInicio := 0;
   UltimaFilaCabecera := ALector.UltimaFila;
   if UltimaFilaCabecera > MAX_FILA_CABECERA_IMPORTACION then
@@ -420,6 +504,103 @@ begin
       Result := oCandidatas;
     Inc(Fila);
   end;
+end;
+
+function ElementoIdentidadInventarioExcel(
+  const ATexto: string): TElementoIdentidadInventarioExcel;
+var
+  Etiqueta: string;
+begin
+  Etiqueta := UpperCase(Trim(ATexto));
+  Result := eiieNinguno;
+  if Etiqueta = 'EMPRESA:' then
+    Result := eiieEmpresa
+  else if Etiqueta = 'ALMACEN:' then
+    Result := eiieAlmacen
+  else if Etiqueta = 'SERIE:' then
+    Result := eiieSerie
+  else if Etiqueta = 'NUMERO:' then
+    Result := eiieNumero;
+end;
+
+procedure AsignarElementoIdentidadInventarioExcel(
+  var AIdentidad: TIdentidadImportacionInventario;
+  AElemento: TElementoIdentidadInventarioExcel;
+  const AValor: string);
+var
+  ValorAnterior: string;
+  YaAsignado: Boolean;
+begin
+  ValorAnterior := '';
+  YaAsignado := False;
+  case AElemento of
+    eiieEmpresa:
+      begin
+        ValorAnterior := AIdentidad.Clave.Empresa;
+        YaAsignado := AIdentidad.TieneEmpresa;
+        AIdentidad.Clave.Empresa := AValor;
+        AIdentidad.TieneEmpresa := True;
+      end;
+    eiieAlmacen:
+      begin
+        ValorAnterior := AIdentidad.Clave.Almacen;
+        YaAsignado := AIdentidad.TieneAlmacen;
+        AIdentidad.Clave.Almacen := AValor;
+        AIdentidad.TieneAlmacen := True;
+      end;
+    eiieSerie:
+      begin
+        ValorAnterior := AIdentidad.Clave.Serie;
+        YaAsignado := AIdentidad.TieneSerie;
+        AIdentidad.Clave.Serie := AValor;
+        AIdentidad.TieneSerie := True;
+      end;
+    eiieNumero:
+      begin
+        ValorAnterior := AIdentidad.Clave.Numero;
+        YaAsignado := AIdentidad.TieneNumero;
+        AIdentidad.Clave.Numero := AValor;
+        AIdentidad.TieneNumero := True;
+      end;
+  end;
+  if YaAsignado and (not SameText(ValorAnterior, AValor)) then
+    AIdentidad.TieneConflictos := True;
+end;
+
+procedure LeerIdentidadInventarioExcel(
+  const ALector: ILectorHojaCalculo;
+  AFilaCabecera: Integer;
+  out AIdentidad: TIdentidadImportacionInventario);
+var
+  Columna: Integer;
+  Elemento: TElementoIdentidadInventarioExcel;
+  Fila: Integer;
+  UltimaColumna: Integer;
+  UltimaFila: Integer;
+begin
+  AIdentidad := Default(TIdentidadImportacionInventario);
+  UltimaFila := ALector.UltimaFila;
+  if (AFilaCabecera >= 0) and (UltimaFila >= AFilaCabecera) then
+    UltimaFila := AFilaCabecera - 1;
+  if UltimaFila > MAX_FILA_CABECERA_IMPORTACION then
+    UltimaFila := MAX_FILA_CABECERA_IMPORTACION;
+  UltimaColumna := ALector.UltimaColumna;
+  if UltimaColumna > MAX_COLUMNA_CABECERA_IMPORTACION then
+    UltimaColumna := MAX_COLUMNA_CABECERA_IMPORTACION;
+  for Fila := 0 to UltimaFila do
+    for Columna := 0 to UltimaColumna do
+    begin
+      Elemento := ElementoIdentidadInventarioExcel(
+        TextoCeldaImportacionInventario(ALector, Fila, Columna));
+      if Elemento <> eiieNinguno then
+        AsignarElementoIdentidadInventarioExcel(
+          AIdentidad,
+          Elemento,
+          TextoCeldaImportacionInventario(
+            ALector,
+            Fila,
+            Columna + 1));
+    end;
 end;
 
 procedure AgregarIncidenciaImportacionInventario(
@@ -475,6 +656,198 @@ begin
   end;
 end;
 
+function TryStrToFechaHoraIsoInventario(
+  const ATexto: string;
+  out AValor: TDateTime): Boolean;
+var
+  Ano: Integer;
+  Dia: Integer;
+  Hora: Integer;
+  Mes: Integer;
+  Minuto: Integer;
+  Segundo: Integer;
+  Texto: string;
+begin
+  Texto := Trim(StringReplace(ATexto, 'T', ' ', []));
+  Ano := 0;
+  Mes := 0;
+  Dia := 0;
+  Hora := 0;
+  Minuto := 0;
+  Segundo := 0;
+  Result := ((Length(Texto) = 16) or (Length(Texto) = 19)) and
+    (Texto[5] = '-') and (Texto[8] = '-') and
+    (Texto[11] = ' ') and (Texto[14] = ':') and
+    TryStrToInt(Copy(Texto, 1, 4), Ano) and
+    TryStrToInt(Copy(Texto, 6, 2), Mes) and
+    TryStrToInt(Copy(Texto, 9, 2), Dia) and
+    TryStrToInt(Copy(Texto, 12, 2), Hora) and
+    TryStrToInt(Copy(Texto, 15, 2), Minuto);
+  if Result and (Length(Texto) = 19) then
+    Result := (Texto[17] = ':') and
+      TryStrToInt(Copy(Texto, 18, 2), Segundo);
+  if Result then
+    Result := TryEncodeDateTime(
+      Ano, Mes, Dia, Hora, Minuto, Segundo, 0, AValor);
+end;
+
+function TryStrToFechaIsoInventario(
+  const ATexto: string;
+  out AValor: TDateTime): Boolean;
+var
+  Ano: Integer;
+  Dia: Integer;
+  Mes: Integer;
+begin
+  Ano := 0;
+  Mes := 0;
+  Dia := 0;
+  Result := (Length(ATexto) = 10) and
+    (ATexto[5] = '-') and (ATexto[8] = '-') and
+    TryStrToInt(Copy(ATexto, 1, 4), Ano) and
+    TryStrToInt(Copy(ATexto, 6, 2), Mes) and
+    TryStrToInt(Copy(ATexto, 9, 2), Dia);
+  if Result then
+    Result := TryEncodeDate(Ano, Mes, Dia, AValor);
+end;
+
+function FormatoCeldaIncluyeHora(const AFormato: string): Boolean;
+var
+  Caracter: Char;
+  DentroTexto: Boolean;
+  iCaracter: Integer;
+begin
+  Result := False;
+  DentroTexto := False;
+  iCaracter := 1;
+  while (iCaracter <= Length(AFormato)) and (not Result) do
+  begin
+    Caracter := AFormato[iCaracter];
+    if Caracter = '"' then
+    begin
+      if DentroTexto and (iCaracter < Length(AFormato)) and
+         (AFormato[iCaracter + 1] = '"') then
+        Inc(iCaracter)
+      else
+        DentroTexto := not DentroTexto;
+    end
+    else if not DentroTexto then
+    begin
+      if Caracter = '\' then
+        Inc(iCaracter)
+      else if (Caracter = '_') or (Caracter = '*') then
+        Inc(iCaracter)
+      else if Caracter = '[' then
+      begin
+        while (iCaracter < Length(AFormato)) and
+              (AFormato[iCaracter] <> ']') do
+          Inc(iCaracter);
+      end
+      else
+        Result := UpCase(Caracter) = 'H';
+    end;
+    Inc(iCaracter);
+  end;
+end;
+
+function ValorFechaRepresentable(AValor: Double): Boolean;
+begin
+  Result := not IsNan(AValor) and not IsInfinite(AValor) and
+    (AValor > 0) and
+    (AValor <= EncodeDate(9999, 12, 31) +
+      EncodeTime(23, 59, 59, 999));
+end;
+
+function LeerFechaRecuentoImportacionInventario(
+  const ALector: ILectorHojaCalculo;
+  AFila, ACol: Integer;
+  out AValor: TDateTime;
+  out ATieneFecha: Boolean;
+  out ATexto: string): Boolean;
+var
+  FormatoCelda: string;
+  HoraExplicita: Boolean;
+  Numero: Double;
+  TieneHoraFormato: Boolean;
+  Valor: Variant;
+begin
+  AValor := 0;
+  ATexto := '';
+  ATieneFecha := False;
+  Result := True;
+  if ACol >= 0 then
+  begin
+    FormatoCelda := ALector.LeerFormatoCelda(AFila, ACol);
+    TieneHoraFormato := FormatoCeldaIncluyeHora(FormatoCelda);
+    Valor := ALector.LeerCelda(AFila, ACol);
+    if not VarIsNull(Valor) and not VarIsEmpty(Valor) then
+      ATexto := Trim(VarToStr(Valor));
+    ATieneFecha := ATexto <> '';
+    if ATieneFecha then
+    begin
+      if (VarType(Valor) and varTypeMask) = varDate then
+      begin
+        AValor := VarToDateTime(Valor);
+        Result := ValorFechaRepresentable(AValor);
+        if Result then
+        begin
+          ATieneFecha := (Trunc(AValor) > 0) and
+            ((Frac(AValor) <> 0) or TieneHoraFormato);
+          if not ATieneFecha then
+            AValor := 0
+          else
+            Result := FechaHoraRecuentoInventarioValida(AValor, Now);
+        end;
+      end
+      else if VarIsNumeric(Valor) then
+      begin
+        Numero := VarAsType(Valor, varDouble);
+        Result := ValorFechaRepresentable(Numero);
+        if Result then
+        begin
+          ATieneFecha := (Trunc(Numero) > 0) and
+            ((Frac(Numero) <> 0) or TieneHoraFormato);
+          if ATieneFecha then
+          begin
+            AValor := Numero;
+            Result := FechaHoraRecuentoInventarioValida(AValor, Now);
+          end
+          else
+            AValor := 0;
+        end;
+      end
+      else
+      begin
+        Result := TryStrToFechaHoraIsoInventario(ATexto, AValor);
+        HoraExplicita := Result;
+        if not Result then
+        begin
+          Result := TryStrToDateTime(ATexto, AValor);
+          HoraExplicita := Result and (Pos(':', ATexto) > 0);
+        end;
+        if Result and
+           ((Trunc(AValor) <= 0) or (not HoraExplicita)) then
+        begin
+          AValor := 0;
+          ATieneFecha := False;
+        end
+        else if Result then
+          Result := FechaHoraRecuentoInventarioValida(AValor, Now)
+        else if not Result then
+        begin
+          Result := TryStrToFechaIsoInventario(ATexto, AValor) or
+            TryStrToDate(ATexto, AValor);
+          if Result then
+          begin
+            AValor := 0;
+            ATieneFecha := False;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
 function LeerLineaImportacionInventario(
   const ALector: ILectorHojaCalculo;
   const AColumnas: TColumnasImportacionInventario;
@@ -484,12 +857,16 @@ function LeerLineaImportacionInventario(
   out ATextoLista: string): TEstadoLineaImportacionInventario;
 var
   CantidadValida: Boolean;
+  FechaValida: Boolean;
   PmpValido: Boolean;
   TextoCantidad: string;
+  TextoFecha: string;
   TextoPmp: string;
 begin
   ALinea := Default(TLineaImportada);
   ATextoLista := '';
+  ALinea.Linea := TextoCeldaImportacionInventario(
+    ALector, AFila, AColumnas.Linea);
   ALinea.Sku := TextoCeldaImportacionInventario(
     ALector, AFila, AColumnas.Sku);
   Result := eliVacia;
@@ -517,7 +894,21 @@ begin
         ALinea.Sku,
         ciiPmpNuevo,
         TextoPmp);
-    if CantidadValida and PmpValido then
+    FechaValida := LeerFechaRecuentoImportacionInventario(
+      ALector,
+      AFila,
+      AColumnas.FechaRecuento,
+      ALinea.FechaRecuento,
+      ALinea.TieneFechaRecuento,
+      TextoFecha);
+    if not FechaValida then
+      AgregarIncidenciaImportacionInventario(
+        AIncidencias,
+        AFila + 1,
+        ALinea.Sku,
+        ciiFechaRecuento,
+        TextoFecha);
+    if CantidadValida and PmpValido and FechaValida then
     begin
       ATextoLista := ALinea.Sku + '=' + TextoCantidad;
       Result := eliValida;
@@ -537,10 +928,11 @@ end;
 
 procedure ImportarInventarioDesdeSheet(
   const ALector: ILectorHojaCalculo;
+  out AIdentidad: TIdentidadImportacionInventario;
   out ALineas: TLineasImportadas;
   out ALista: TStringList;
   out AIncidencias: TIncidenciasImportacionInventario;
-  out AMsg: string);
+  out AMsg: string); overload;
 var
   Columnas: TColumnasImportacionInventario;
   Estado: TEstadoLineaImportacionInventario;
@@ -555,6 +947,10 @@ begin
   SetLength(AIncidencias, 0);
   AMsg := '';
   Columnas := ColumnasImportacionInventario(ALector);
+  LeerIdentidadInventarioExcel(
+    ALector,
+    Columnas.FilaCabecera,
+    AIdentidad);
   if ALector.UltimaFila < Columnas.FilaInicio then
     AMsg := 'La hoja está vacía o no tiene datos.'
   else
@@ -585,6 +981,24 @@ begin
       AMsg := Format('Leidas %d lineas (%d vacias ignoradas).',
         [LineasLeidas, LineasVacias]);
   end;
+end;
+
+procedure ImportarInventarioDesdeSheet(
+  const ALector: ILectorHojaCalculo;
+  out ALineas: TLineasImportadas;
+  out ALista: TStringList;
+  out AIncidencias: TIncidenciasImportacionInventario;
+  out AMsg: string); overload;
+var
+  Identidad: TIdentidadImportacionInventario;
+begin
+  ImportarInventarioDesdeSheet(
+    ALector,
+    Identidad,
+    ALineas,
+    ALista,
+    AIncidencias,
+    AMsg);
 end;
 
 end.

@@ -58,16 +58,44 @@ type
       const AEntrada: string): TResultadoEntradaInventario;
   end;
 
+  TClaveInventario = record
+    Empresa: string;
+    Almacen: string;
+    Serie: string;
+    Numero: string;
+  end;
+
   // === IMPORTACION DE RECUENTOS (Excel / CSV / app remota) ===
+  TIdentidadImportacionInventario = record
+    Clave: TClaveInventario;
+    TieneEmpresa: Boolean;
+    TieneAlmacen: Boolean;
+    TieneSerie: Boolean;
+    TieneNumero: Boolean;
+    TieneConflictos: Boolean;
+  end;
+
+  TEstadoIdentidadImportacionInventario = (
+    eiiiCorrecta,
+    eiiiIncompleta,
+    eiiiContradictoria,
+    eiiiInventarioDistinto);
+
   TLineaImportacionInventario = record
+    CodigoLinea: string;
     CodigoUnidad: string;
     Cantidad: Double;
     PrecioMedioNuevo: Double;
+    FechaRecuento: TDateTime;
     TienePrecioMedio: Boolean;
+    TieneFechaRecuento: Boolean;
     TextoOriginal: string;
   end;
 
   TLineasImportacionInventario = TArray<TLineaImportacionInventario>;
+
+  TSolicitarFechaRecuentoInventario = reference to function(
+    out AFechaRecuento: TDateTime): Boolean;
 
   TResumenImportacionInventario = record
     Actualizadas: Integer;
@@ -78,10 +106,12 @@ type
   // La implementacion real trabaja sobre el cds del data module.
   IOperacionesImportacionInventario = interface
     ['{0C6E7A2D-3B2F-4A8B-9E45-1D1F53C0B7A2}']
-    function LocalizarUnidad(const ACodigoUnidad: string): Boolean;
+    function LocalizarLinea(
+      const ACodigoLinea, ACodigoUnidad: string): Boolean;
     procedure IniciarEdicionLinea;
     procedure EscribirCantidadFisica(ACantidad: Double);
     procedure EscribirPrecioMedioNuevo(APrecio: Double);
+    procedure EscribirFechaRecuento(AFecha: TDateTime);
     procedure UsarPrecioMedioHistorico;
     procedure ConfirmarLinea;
     procedure ConsolidarCambios;
@@ -89,13 +119,6 @@ type
   end;
 
   // === RECUENTO REMOTO ===
-  TClaveInventario = record
-    Empresa: string;
-    Almacen: string;
-    Serie: string;
-    Numero: string;
-  end;
-
   IRepositorioRecuentoRemotoInventario = interface
     ['{2A4B9C31-7D18-4C0E-8F6A-53B7E0D9C114}']
     procedure MarcarEnviado(

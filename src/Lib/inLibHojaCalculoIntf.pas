@@ -72,8 +72,9 @@ type
   end;
   // Puerto de lectura: ruta de importación (leer celdas por índice, base 0).
   ILectorHojaCalculo = interface
-    ['{C29FE431-5335-4F32-8DA2-9EE7CE5EAAFD}']
+    ['{3AB967F2-9117-45FE-B256-D36FDC2F1ACB}']
     function LeerCelda(AFila, ACol: Integer): Variant;
+    function LeerFormatoCelda(AFila, ACol: Integer): string;
     function UltimaFila: Integer;
     function UltimaColumna: Integer;
   end;

@@ -525,6 +525,10 @@ resourcestring
     'El archivo no existe.';
   SErrorImportacionInventarioSinDatos =
     'No se encontraron datos para importar.';
+  SErrorImportacionInventarioYaIniciada =
+    'Ya hay una importación de inventario en curso.';
+  SErrorAplicarImportacionInventario =
+    'No se pudieron aplicar %d cambios de la importación del inventario.';
   STituloIncidenciasImportacionInventario =
     'Incidencias en la importación del inventario';
   STextoIncidenciasImportacionInventario =
@@ -536,6 +540,44 @@ resourcestring
   SFormatoIncidenciaPmpNuevoImportacionInventario =
     'Fila %d | SKU: "%s" | PMP nuevo: "%s" | Debe ser un número válido ' +
     'mayor o igual que cero.';
+  SFormatoIncidenciaFechaRecuentoImportacionInventario =
+    'Fila %d | SKU: "%s" | Fecha y hora de recuento: "%s" | Debe ser ' +
+    'una fecha y hora válidas.';
+  SFormatoIncidenciaLineaImportacionInventario =
+    'Línea "%s" | SKU: "%s" | No coincide con una línea del inventario ' +
+    'actual.';
+  SIncidenciaIdentidadExcelIncompleta =
+    'Excel | Identidad incompleta | Debe incluir Empresa, Almacén, Serie y ' +
+    'Número con valor. No se admiten archivos antiguos sin esa cabecera.';
+  SIncidenciaIdentidadExcelContradictoria =
+    'Excel | Identidad contradictoria | Hay datos de Empresa, Almacén, ' +
+    'Serie o Número repetidos con valores distintos.';
+  SFormatoIncidenciaInventarioExcelDistinto =
+    'Excel | Inventario distinto | Archivo: Empresa "%s", Almacén "%s", ' +
+    'Serie "%s", Número "%s" | Inventario abierto: Empresa "%s", ' +
+    'Almacén "%s", Serie "%s", Número "%s".';
+  STextoSkusNoCargadosImportacionInventario =
+    'No se pudieron cargar estos SKU:';
+  STituloFechaHoraRecuentoInventario =
+    'Fecha y hora del recuento';
+  STextoFechaHoraRecuentoInventario =
+    'El Excel no incluye la fecha y hora de recuento para todas las ' +
+    'líneas. Indica el instante que se aplicará solo a las líneas sin ' +
+    'ese dato.';
+  SErrorFechaHoraRecuentoInventarioNoIndicada =
+    'Indica una fecha y hora de recuento válidas.';
+  SEtiquetaFechaHoraRecuentoInventario =
+    'Fecha y hora de recuento:';
+  STextoAceptarFechaHoraRecuentoInventario = 'Aceptar';
+  STextoCancelarFechaHoraRecuentoInventario = 'Cancelar';
+  SErrorRecuentoInventarioSinInstanteSku =
+    'El servidor no ha devuelto una fecha y hora válida para el SKU "%s".';
+  SErrorSkuRecuentoInventarioNoExiste =
+    'El SKU "%s" leído por el móvil no existe en Factuzam. No se ha ' +
+    'importado el recuento.';
+  SErrorRespuestaRecuentoInventarioIncoherente =
+    'El servidor ha devuelto lecturas incompletas, con una fecha u hora no ' +
+    'válida, o cantidades que no coinciden. No se ha importado el recuento.';
   SInfoImportacionInventario =
     '%s' + sLineBreak + '%d actualizados, %d nuevos insertados.';
   SErrorEnviarRecuentoInventarioNoAbierto =

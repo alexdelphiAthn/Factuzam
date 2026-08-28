@@ -77,18 +77,28 @@ main { max-width:1184px; margin:0 auto; padding:34px 24px 40px; }
 .vacio p { max-width:420px; margin:0 auto; }
 .icono-codigo { font-size:60px; color:#a0b582; }
 .resultado { overflow:hidden; }
-.resumen-articulo { display:flex; gap:22px; align-items:center; padding:24px; border-bottom:1px solid var(--borde); }
-.datos-articulo { flex:1; min-width:0; overflow-wrap:anywhere; }
-.datos-articulo .ceja { margin-bottom:5px; }
+.resumen-articulo { display:grid; grid-template-columns:minmax(200px,300px) minmax(0,1fr) minmax(0,140px); grid-template-areas:"foto datos cantidad"; gap:24px; align-items:center; padding:18px 24px 12px; border-top:1px solid var(--borde); }
+.datos-articulo { grid-area:datos; min-width:0; overflow-wrap:anywhere; }
+.datos-articulo .ceja { margin-bottom:7px; font-size:clamp(18px,2.3vw,24px); line-height:1.2; letter-spacing:.04em; color:var(--verde); }
 .datos-articulo h2 { font-size:25px; margin-bottom:6px; }
 .datos-articulo p:last-child { margin-bottom:0; }
-.cantidad-resumen { text-align:right; }
+.cantidad-resumen { grid-area:cantidad; min-width:0; overflow-wrap:anywhere; text-align:right; }
 .cantidad-resumen span,.cantidad-resumen small { display:block; color:var(--suave); font-size:12px; }
 .cantidad-resumen strong { font-size:40px; font-variant-numeric:tabular-nums; line-height:1.25; color:var(--estado); }
 .cantidad-resumen small { font-size:10px; max-width:135px; }
-.foto-articulo { position:relative; display:grid; place-items:center; width:92px; height:96px; border:0; border-radius:11px; overflow:hidden; background:#f1f4ed; flex-shrink:0; color:var(--suave); font-size:11px; }
+.foto-articulo { grid-area:foto; justify-self:start; position:relative; display:grid; place-items:center; width:100%; max-width:300px; aspect-ratio:4 / 3; padding:10px; border:1px solid var(--borde); border-radius:13px; overflow:hidden; background:#f8faf5; color:var(--suave); font-size:12px; }
 .foto-articulo:disabled { opacity:1; }
 .foto-articulo img { width:100%; height:100%; object-fit:contain; position:absolute; inset:0; }
+.pie-foto { position:absolute; bottom:0; left:0; right:0; padding:6px 8px; background:#ffffffed; color:var(--verde); font-size:11px; font-weight:650; }
+.filtros-visuales { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 24px; padding:20px 24px; background:#fbfcf8; border-bottom:1px solid var(--borde); }
+.filtro-visible { min-width:0; }
+.titulo-filtro { display:flex; flex-wrap:wrap; gap:8px 16px; align-items:center; justify-content:space-between; margin-bottom:9px; font-size:13px; }
+.seleccion-filtros { display:flex; flex-wrap:wrap; gap:8px; max-height:245px; overflow:auto; padding:3px; margin:-3px; }
+.filtro-chip { display:inline-flex; align-items:center; gap:9px; min-height:44px; max-width:100%; padding:8px 12px; border:1px solid #cbd7ca; border-radius:9px; background:#fff; color:#647469; font-size:13px; text-align:left; overflow-wrap:anywhere; }
+.filtro-chip[aria-pressed=true] { color:var(--tinta); border-color:#668658; background:#eaf1df; box-shadow:inset 0 0 0 1px #668658; }
+.marca-filtro { width:16px; flex-shrink:0; color:var(--verde); font-weight:750; text-align:center; }
+.cuadrado-color { display:inline-block; vertical-align:middle; flex-shrink:0; width:19px; height:19px; border:1px solid #78907180; border-radius:3px; }
+.ayuda-basicos { margin:9px 0 0; font-size:11px; }
 .opciones-tabla { display:flex; flex-wrap:wrap; align-items:center; gap:15px; padding:16px 24px 5px; font-size:13px; }
 .opciones-tabla select { margin-left:7px; min-height:39px; padding:7px 10px; }
 .opciones-tabla .compacta { margin:0; align-items:center; }
@@ -109,6 +119,8 @@ main { max-width:1184px; margin:0 auto; padding:34px 24px 40px; }
 #tabla-stock tfoot td { font-weight:750; color:var(--estado); }
 .desplegar { border:0; padding:0; background:transparent; color:inherit; font-weight:650; text-align:left; min-height:28px; }
 .desplegar span { display:inline-block; width:21px; color:#829770; }
+.desplegar .cuadrado-color { margin-right:8px; }
+#tabla-stock .fila-hija .cuadrado-color { margin-right:7px; width:15px; height:15px; }
 .pie-tabla { padding:16px 24px; margin:0; border-top:1px solid var(--borde); }
 dialog { border:1px solid var(--borde); border-radius:19px; padding:26px; color:var(--tinta); width:min(650px,calc(100vw - 28px)); max-height:calc(100dvh - 35px); box-shadow:0 25px 80px #15372a22; }
 dialog::backdrop { background:#173c32b3; }
@@ -117,7 +129,7 @@ dialog::backdrop { background:#173c32b3; }
 .listas-filtros { display:grid; grid-template-columns:1fr 1fr; gap:18px; }
 fieldset { border:1px solid var(--borde); border-radius:12px; padding:14px; min-width:0; }
 legend { font-weight:650; padding:0 5px; }
-.acciones-filtro { display:flex; gap:10px; }
+.acciones-filtro { display:flex; flex-wrap:wrap; gap:10px; }
 .acciones-filtro button { border:0; background:none; color:var(--verde); padding:4px; font-size:12px; text-decoration:underline; }
 .lista-filtros { max-height:260px; overflow-y:auto; margin-top:10px; }
 .lista-filtros label { display:flex; gap:9px; padding:9px 2px; align-items:flex-start; font-size:13px; overflow-wrap:anywhere; }
@@ -134,7 +146,8 @@ footer { max-width:1184px; padding:20px 24px 30px; margin:auto; border-top:1px s
   main { padding:22px 14px 28px; }.acceso { grid-template-columns:1fr; padding:4px 0; gap:20px; }.presentacion h1 { font-size:42px; }.presentacion h1 br { display:none; }.presentacion h1 br::after { content:' '; }.presentacion .introduccion { font-size:15px; margin-bottom:5px; }.presentacion .muestra,.presentacion>.nota { display:none; }.formulario { padding:22px; }.titulo-pagina>.etiqueta { display:none; }
   .buscador { gap:7px; flex-wrap:wrap; }.buscador input { flex-basis:100%; }.buscador .boton-principal { flex:1; }
   .barra-estados { gap:2px; padding:4px; }.barra-estados button { font-size:12px; padding:9px 5px; }.barra-historial { align-items:flex-start; flex-direction:column; }.barra-historial>div { width:100%; }#actualizar { margin-left:auto; }
-  .resumen-articulo { flex-wrap:wrap; padding:18px; gap:13px; }.datos-articulo { flex-basis:calc(100% - 86px); order:0; }.datos-articulo h2 { font-size:21px; }.foto-articulo { width:70px; height:76px; order:1; }.cantidad-resumen { order:2; display:flex; align-items:baseline; gap:12px; text-align:left; width:100%; }.cantidad-resumen strong { font-size:32px; }.cantidad-resumen small { max-width:none; font-size:10px; }
+  .resumen-articulo { grid-template-columns:minmax(0,1fr) minmax(70px,110px); grid-template-areas:"datos cantidad" "foto foto"; padding:16px 15px 10px; gap:14px; align-items:start; }.datos-articulo h2 { font-size:21px; }.cantidad-resumen strong { font-size:32px; }.cantidad-resumen small { max-width:none; font-size:10px; }
+  .filtros-visuales { grid-template-columns:minmax(0,1fr); padding:17px 15px; gap:20px; }.titulo-filtro { align-items:flex-start; }.filtro-chip { font-size:12px; padding:8px 10px; }.seleccion-filtros { gap:7px; }.pie-foto { font-size:10px; padding:4px; }
   .opciones-tabla { padding:14px 15px 5px; gap:10px; }.opciones-tabla .compacta { order:3; width:100%; font-size:12px; }.resumen-filtros { margin:10px 15px 15px; }#tabla-stock th,#tabla-stock td { padding:12px 12px; min-width:49px; }#tabla-stock th:first-child { min-width:130px; max-width:160px; font-size:13px; }.pie-tabla { padding:14px 16px; }dialog { padding:20px; }.listas-filtros { gap:10px; }fieldset { padding:9px; }.demostracion { align-items:flex-start; font-size:12px; }
 }
 @media(prefers-reduced-motion:no-preference) { button { transition:background-color .15s ease; } }

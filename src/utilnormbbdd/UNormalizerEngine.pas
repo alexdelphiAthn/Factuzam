@@ -273,6 +273,7 @@ begin
   AddSuf('fza_generadorprocesos',               'GP');
   AddSuf('fza_inventarios',                     'INV');
   AddSuf('fza_inventarios_lineas',              'INVLIN');
+  AddSuf('fza_inventarios_recuentos',           'INVREC');
   AddSuf('fza_ivas',                            'IVA');
   AddSuf('fza_ivas_grupos',                     'IVAGRP');
   AddSuf('fza_ivas_tipos',                      'IVATIP');

@@ -1,7 +1,7 @@
 import { ESTADOS, codigoValido, numero, prepararFiltros, crearPivot,
-  HistorialArticulos } from "./controlu-modelo.js?v=20260827-1";
-import { ServicioControlU } from "./controlu-servicio.js?v=20260827-1";
-import { AccesoGuardado } from "./controlu-acceso.js?v=20260827-1";
+  HistorialArticulos } from "./controlu-modelo.js?v=20260827-2";
+import { ServicioControlU } from "./controlu-servicio.js?v=20260827-2";
+import { AccesoGuardado } from "./controlu-acceso.js?v=20260827-2";
 
 class AplicacionControlU {
   #base = new URL("./", location.href);
@@ -27,6 +27,11 @@ class AplicacionControlU {
   elemento(id) { return document.getElementById(id); }
 
   async iniciar() {
+    if (!["http:", "https:"].includes(location.protocol)) {
+      this.#avisar("error-acceso",
+        "Abre Control U desde la dirección HTTP de tu servidor, no desde el archivo index.html.");
+      return;
+    }
     let almacenamiento = null;
     try { almacenamiento = localStorage; } catch {
       // Se puede trabajar en memoria si el navegador bloquea el guardado.
@@ -41,7 +46,7 @@ class AplicacionControlU {
     this.elemento("aviso-http").hidden = location.protocol !== "http:";
     this.#enlazarEventos();
     if (this.#demo) {
-      const { ServicioDemo } = await import("./controlu-demo.js?v=20260827-1");
+      const { ServicioDemo } = await import("./controlu-demo.js?v=20260827-2");
       this.#servicio = new ServicioDemo();
       this.#acceso = { nombre: "Pruebas · Tienda de ejemplo",
         usuario: "Demostración", token: "", vence: Infinity };
@@ -60,6 +65,8 @@ class AplicacionControlU {
           this.#fecha(acceso.vence) + ".");
       }
     }
+    this.elemento("conectar").disabled = false;
+    this.elemento("estado-acceso").textContent = "";
   }
 
   #enlazarEventos() {
@@ -115,6 +122,24 @@ class AplicacionControlU {
     });
     this.elemento("predeterminados").addEventListener("click", () => {
       if (this.#datos) this.#pintarFiltros(prepararFiltros(this.#datos));
+    });
+    this.elemento("filtros-visuales").addEventListener("click", (evento) => {
+      const boton = evento.target.closest("button");
+      const grupo = boton?.dataset.grupo || boton?.dataset.seleccionar;
+      if (!this.#datos || !["colores", "almacenes"].includes(grupo)) return;
+      if (boton.dataset.grupo) {
+        const elegidos = new Set(this.#seleccion[grupo]);
+        const valor = boton.dataset.valor;
+        if (elegidos.has(valor)) elegidos.delete(valor);
+        else elegidos.add(valor);
+        this.#seleccion[grupo] = this.#datos[grupo].filter((v) => elegidos.has(v));
+      } else {
+        const conjunto = boton.dataset.conjunto;
+        this.#seleccion[grupo] = conjunto === "todos" ? [...this.#datos[grupo]] :
+          conjunto === "predeterminados" ? [...this.#datos.predeterminados] : [];
+      }
+      this.#expandidos.clear();
+      this.#pintar();
     });
     this.elemento("formulario-filtros").addEventListener("submit", (evento) => {
       evento.preventDefault();
@@ -190,7 +215,7 @@ class AplicacionControlU {
         usuario, password, controlador.signal);
       if (revision !== this.#revision || this.#suspendida) return;
       const acceso = { ...respuesta, nombre };
-      this.#guardado.olvidar();
+      const borrado = this.#guardado.olvidar();
       const conservado = recordar && this.#guardado.guardar(acceso);
       this.#activarAcceso(acceso);
       this.#guardarPreferencias();
@@ -198,6 +223,10 @@ class AplicacionControlU {
         "El navegador no permite guardar este acceso. Puedes consultar; al cerrar la página tendrás que volver a entrar." :
         conservado ? "Acceso guardado hasta " + this.#fecha(acceso.vence) + "." :
         "El acceso solo se mantiene mientras esta página siga abierta.");
+      if (!borrado && !conservado) {
+        this.#avisar("aviso-sesion",
+          "No se pudo borrar un acceso guardado anterior. Esta sesión funciona en memoria; elimina los datos de este sitio en el navegador para olvidar aquel acceso.");
+      }
       this.elemento("codigo").focus();
     } catch (error) {
       if (revision === this.#revision && !controlador.signal.aborted) {
@@ -366,6 +395,7 @@ class AplicacionControlU {
     const omitidos = datos.colores.length + datos.almacenes.length -
       filtros.colores.length - filtros.almacenes.length;
     this.elemento("contador-filtros").textContent = omitidos ? "(" + omitidos + ")" : "";
+    this.#pintarFiltrosVisibles();
     const encabezado = this.#nodo("tr");
     const th = (texto, ambito = "col") => {
       const celda = this.#nodo("th", texto);
@@ -385,15 +415,19 @@ class AplicacionControlU {
       boton.className = "desplegar";
       const simbolo = this.#nodo("span");
       simbolo.setAttribute("aria-hidden", "true");
-      boton.append(simbolo, document.createTextNode(fila.nombre || "Sin definir"));
+      boton.append(simbolo);
+      if (agrupar === "color") boton.append(this.#cuadradoColor(fila.nombre));
+      boton.append(document.createTextNode(fila.nombre || "Sin definir"));
       titulo.append(boton);
       tr.append(titulo, ...this.#celdas(fila, pivot.tallas));
       cuerpo.append(tr);
       const hijos = fila.hijos.map((hijo) => {
         const detalle = this.#nodo("tr");
         detalle.className = "fila-hija";
-        detalle.append(th(hijo.nombre || "Sin definir", "row"),
-          ...this.#celdas(hijo, pivot.tallas));
+        const tituloHijo = th("", "row");
+        if (agrupar === "almacen") tituloHijo.append(this.#cuadradoColor(hijo.nombre));
+        tituloHijo.append(document.createTextNode(hijo.nombre || "Sin definir"));
+        detalle.append(tituloHijo, ...this.#celdas(hijo, pivot.tallas));
         cuerpo.append(detalle);
         return detalle;
       });
@@ -443,11 +477,80 @@ class AplicacionControlU {
         casilla.type = "checkbox";
         casilla.value = valor;
         casilla.checked = seleccion[grupo].includes(valor);
-        etiqueta.append(casilla, this.#nodo("span", valor || "Sin definir"));
+        etiqueta.append(casilla);
+        if (grupo === "colores") etiqueta.append(this.#cuadradoColor(valor));
+        etiqueta.append(this.#nodo("span", valor || "Sin definir"));
         lista.append(etiqueta);
       }
       this.elemento("filtro-" + grupo).replaceChildren(lista);
     }
+  }
+
+  #pintarFiltrosVisibles() {
+    for (const grupo of ["colores", "almacenes"]) {
+      const lista = this.elemento("seleccion-" + grupo);
+      const valores = this.#datos[grupo];
+      // Mantener los botones existentes conserva el foco al tocar o pulsar.
+      if (lista.children.length !== valores.length ||
+          [...lista.children].some((boton, i) => boton.dataset.valor !== valores[i])) {
+        const botones = valores.map((valor) => {
+          const boton = this.#nodo("button");
+          boton.type = "button";
+          boton.className = "filtro-chip";
+          boton.dataset.grupo = grupo;
+          boton.dataset.valor = valor;
+          const marca = this.#nodo("span");
+          marca.className = "marca-filtro";
+          marca.setAttribute("aria-hidden", "true");
+          boton.append(marca);
+          if (grupo === "colores") {
+            boton.append(this.#cuadradoColor(valor));
+            boton.title = this.#descripcionBasico(valor);
+          }
+          boton.append(this.#nodo("span", valor || "Sin definir"));
+          return boton;
+        });
+        lista.replaceChildren(...botones);
+      }
+      for (const boton of lista.children) {
+        const elegido = this.#seleccion[grupo].includes(boton.dataset.valor);
+        boton.setAttribute("aria-pressed", String(elegido));
+        boton.querySelector(".marca-filtro").textContent = elegido ? "✓" : "·";
+      }
+    }
+  }
+
+  #descripcionBasico(color) {
+    const basico = this.#datos?.basicos.get(color);
+    return color + " · " + (basico?.nombre ? "Básico: " + basico.nombre +
+      (basico.hex ? "" : " (sin tono definido)") : "Sin básico asignado");
+  }
+
+  #cuadradoColor(color) {
+    // Canvas permite el tono validado sin estilos en línea ni relajar la CSP.
+    const cuadro = this.#nodo("canvas");
+    cuadro.className = "cuadrado-color";
+    cuadro.width = 24;
+    cuadro.height = 24;
+    cuadro.setAttribute("aria-hidden", "true");
+    cuadro.title = this.#descripcionBasico(color);
+    const contexto = cuadro.getContext("2d");
+    const hex = this.#datos?.basicos.get(color)?.hex;
+    if (contexto) {
+      contexto.fillStyle = hex || "#F1F4ED";
+      contexto.fillRect(0, 0, 24, 24);
+      if (!hex) {
+        contexto.strokeStyle = "#9BAB99";
+        contexto.lineWidth = 2;
+        for (let x = -24; x < 24; x += 8) {
+          contexto.beginPath();
+          contexto.moveTo(x, 24);
+          contexto.lineTo(x + 24, 0);
+          contexto.stroke();
+        }
+      }
+    }
+    return cuadro;
   }
 
   async #cargarFoto(datos, revision, signal) {
@@ -468,6 +571,7 @@ class AplicacionControlU {
           foto.hidden = false;
           this.elemento("sustituto-foto").hidden = true;
           this.elemento("ampliar-foto").disabled = false;
+          this.elemento("pie-foto").hidden = false;
         }
       };
       foto.onerror = () => {
@@ -493,9 +597,11 @@ class AplicacionControlU {
     foto.alt = "";
     foto.hidden = true;
     this.elemento("imagen-grande").removeAttribute("src");
+    this.elemento("imagen-grande").alt = "Foto del artículo";
     this.elemento("sustituto-foto").hidden = false;
     this.elemento("sustituto-foto").textContent = mensaje;
     this.elemento("ampliar-foto").disabled = true;
+    this.elemento("pie-foto").hidden = true;
     if (this.#fotoUrl) URL.revokeObjectURL(this.#fotoUrl);
     this.#fotoUrl = "";
   }
@@ -509,7 +615,10 @@ class AplicacionControlU {
     for (const id of ["articulo", "descripcion", "unidad", "total-articulo",
       "resumen-filtros", "contador-filtros"]) this.elemento(id).textContent = "";
     for (const id of ["cabecera-stock", "cuerpo-stock", "pie-stock",
-      "filtro-colores", "filtro-almacenes"]) this.elemento(id).replaceChildren();
+      "filtro-colores", "filtro-almacenes", "seleccion-colores",
+      "seleccion-almacenes"]) this.elemento(id).replaceChildren();
+    this.elemento("tabla-stock").querySelector("caption").textContent =
+      "Existencias del artículo por talla";
     this.elemento("estado-consulta").textContent = "Introduce un código para consultar.";
   }
 

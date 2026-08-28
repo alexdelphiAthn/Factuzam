@@ -123,6 +123,8 @@ type
     FDesempaquetando: Boolean;
     FColumnasRecuentoRemoto: Boolean;
     FColumnaContadorLineas: Boolean;
+    FAplicacionLineasDiferida: Boolean;
+    FTransaccionImportacionLineas: Boolean;
     // Flag idempotente: True cuando ATTR1..ATTR5_VALOR ya estan rellenos
     // a partir del SKU para las lineas actualmente cargadas en cdsLineas.
     // Se resetea a False cada vez que CargarLineasInventario reabre cds.
@@ -157,6 +159,13 @@ type
     procedure ReconstruirSkuLinea(
       ADataSet: TDataSet;
       const ACodigoArticulo: string);
+    procedure ValidarSkusRecuentoMovil(ALista: TStringList);
+    procedure CargarSkuDesdeLista(
+      const ASku: string;
+      ACantidad: Currency;
+      AFechaRecuento: TDateTime;
+      AReemplazarCantidad: Boolean;
+      AConsulta: TUniQuery);
     procedure ValidarOCrearSkuLinea(
       ADataSet: TDataSet;
       const ACodigoArticulo: string);
@@ -198,7 +207,14 @@ type
     procedure CargarPorProveedor(const ACodigoProveedor: string);
     procedure CargarTodosArticulosConStock;
     procedure CompletarUnidadesNoLeidas;
-    procedure CargarDesdeListaSkus(ALista: TStringList);
+    procedure IniciarImportacionLineas;
+    procedure ConfirmarImportacionLineas;
+    procedure CancelarImportacionLineas;
+    procedure CargarDesdeListaSkus(
+      ALista: TStringList;
+      AReemplazarCantidad: Boolean = False;
+      AInstantesRecuento: TStrings = nil;
+      AAplicarCambios: Boolean = True);
     function  CargarSkusConMovimientosArticulo(
       const ACodigoArticulo: string): Integer;
     function  SkuExiste(const ASku: string): Boolean;
@@ -251,6 +267,7 @@ uses
                // RegistroLog.RegistrarInformacion para metricas
   UniDataAlmacenesEmpresaRepositorio,
   UniDataConn,
+  inLibInventarioNube,
   inLibPrestaShopColaSenal,
   inLibMsgArticulos;
 
@@ -1110,7 +1127,7 @@ procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
 begin
   // Durante el desempaquetado de atributos in-memory NO debemos enviar
   // cambios a BD: esos campos no existen en fza_inventarios_lineas.
-  if not FDesempaquetando then
+  if not FDesempaquetando and not FAplicacionLineasDiferida then
   begin
     if cdsLineas.ChangeCount > 0 then
       cdsLineas.ApplyUpdates(0);
@@ -1809,17 +1826,174 @@ begin
   end;
 end;
 
-procedure TdmInventarios.CargarDesdeListaSkus(ALista: TStringList);
+procedure ComprobarErroresAplicacionLineas(AErrores: Integer);
+begin
+  if AErrores > 0 then
+    raise EDatabaseError.CreateFmt(
+      SErrorAplicarImportacionInventario,
+      [AErrores]);
+end;
+
+procedure TdmInventarios.ValidarSkusRecuentoMovil(
+  ALista: TStringList);
 var
   i: Integer;
-  Sku, ArticuloPadre: string;
-  CANTIDAD, PMP: Currency;
+  Sku: string;
+begin
+  for i := 0 to ALista.Count - 1 do
+  begin
+    Sku := ObtenerSkuRecuento(ALista, i);
+    if (Sku <> '') and (not SkuExiste(Sku)) then
+      raise Exception.CreateFmt(
+        SErrorSkuRecuentoInventarioNoExiste,
+        [Sku]);
+  end;
+end;
+
+procedure TdmInventarios.IniciarImportacionLineas;
+begin
+  if FAplicacionLineasDiferida then
+    raise EInvalidOpException.Create(
+      SErrorImportacionInventarioYaIniciada);
+  FTransaccionImportacionLineas :=
+    not ConexionPrincipal.InTransaction;
+  if FTransaccionImportacionLineas then
+    ConexionPrincipal.StartTransaction;
+  FAplicacionLineasDiferida := True;
+end;
+
+procedure TdmInventarios.ConfirmarImportacionLineas;
+begin
+  try
+    ComprobarErroresAplicacionLineas(
+      cdsLineas.ApplyUpdates(0));
+    if FTransaccionImportacionLineas and
+       ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Commit;
+  except
+    if FTransaccionImportacionLineas and
+       ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Rollback;
+    FAplicacionLineasDiferida := False;
+    FTransaccionImportacionLineas := False;
+    raise;
+  end;
+  FAplicacionLineasDiferida := False;
+  FTransaccionImportacionLineas := False;
+end;
+
+procedure TdmInventarios.CancelarImportacionLineas;
+begin
+  try
+    if cdsLineas.State in [dsEdit, dsInsert] then
+      cdsLineas.Cancel;
+    cdsLineas.CancelUpdates;
+    if FTransaccionImportacionLineas and
+       ConexionPrincipal.InTransaction then
+      ConexionPrincipal.Rollback;
+  finally
+    FAplicacionLineasDiferida := False;
+    FTransaccionImportacionLineas := False;
+  end;
+end;
+
+procedure TdmInventarios.CargarSkuDesdeLista(
+  const ASku: string;
+  ACantidad: Currency;
+  AFechaRecuento: TDateTime;
+  AReemplazarCantidad: Boolean;
+  AConsulta: TUniQuery);
+var
+  ArticuloPadre: string;
+begin
+  AConsulta.Close;
+  AConsulta.ParamByName('SKU').AsString := ASku;
+  AConsulta.Open;
+  // Ignorar SKUs que no existen en las cargas generales.
+  if not AConsulta.IsEmpty then
+  begin
+    ArticuloPadre := AConsulta.FieldByName(
+      'CODIGO_ART_SKU').AsString;
+    unqryStockActual.Close;
+    unqryStockActual.ParamByName(
+      'ALMACEN').AsString := FCodigoAlmacen;
+    unqryStockActual.ParamByName('SKU').AsString := ASku;
+    unqryStockActual.Open;
+
+    // En cargas generales se suma; el móvil reemplaza el total.
+    if ExisteLineaConSku(ASku) then
+    begin
+      if cdsLineas.Locate('CODIGO_UNIDAD_INVLIN', ASku,
+           [loCaseInsensitive]) then
+      begin
+        cdsLineas.Edit;
+        if AReemplazarCantidad then
+          cdsLineas.FieldByName(
+            'CANTIDAD_FISICA_INVLIN').AsCurrency := ACantidad
+        else
+          cdsLineas.FieldByName(
+            'CANTIDAD_FISICA_INVLIN').AsCurrency :=
+            cdsLineas.FieldByName(
+              'CANTIDAD_FISICA_INVLIN').AsCurrency + ACantidad;
+        if AFechaRecuento > 0 then
+          cdsLineas.FieldByName(
+            'FECHA_RECUENTO_INVLIN').AsDateTime := AFechaRecuento;
+        cdsLineas.Post;
+      end;
+    end
+    else
+    begin
+      cdsLineas.Append;
+      cdsLineas.FieldByName(
+        'CODIGO_ART_INVLIN').AsString := ArticuloPadre;
+      cdsLineas.FieldByName(
+        'CODIGO_UNIDAD_INVLIN').AsString := ASku;
+      cdsLineas.FieldByName(
+        'DESCRIPCION_ARTICULO_INVLIN').AsString :=
+        AConsulta.FieldByName('DESCRIPCION_ART').AsString;
+      cdsLineas.FieldByName(
+        'CANTIDAD_TEORICA_INVLIN').AsCurrency :=
+        unqryStockActual.FieldByName('CANTIDAD_STK').AsCurrency;
+      cdsLineas.FieldByName(
+        'CANTIDAD_FISICA_INVLIN').AsCurrency := ACantidad;
+      cdsLineas.FieldByName(
+        'PRECIO_MEDIO_INVLIN').AsCurrency :=
+        unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
+      cdsLineas.FieldByName(
+        'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
+        unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
+      if AFechaRecuento > 0 then
+        cdsLineas.FieldByName(
+          'FECHA_RECUENTO_INVLIN').AsDateTime := AFechaRecuento
+      else
+        AsegurarFechaRecuentoLinea;
+      cdsLineas.Post;
+    end;
+  end;
+end;
+
+procedure TdmInventarios.CargarDesdeListaSkus(
+  ALista: TStringList;
+  AReemplazarCantidad: Boolean;
+  AInstantesRecuento: TStrings;
+  AAplicarCambios: Boolean);
+var
+  Cantidad: Currency;
+  i: Integer;
+  Sku: string;
+  FechaRecuento: TDateTime;
   qry: TUniQuery;
 begin
   // Cada línea de la lista debe tener: SKU;CANTIDAD_FISICA  (separador ; o tab)
   // O bien solo el SKU (cantidad física = 1)
   if GetEstadoInventario <> 'ABIERTO' then
     raise Exception.Create(SErrorCargarArticulosInventarioNoAbierto);
+
+  if Assigned(AInstantesRecuento) then
+  begin
+    ValidarInstantesRecuentoMovil(ALista, AInstantesRecuento);
+    ValidarSkusRecuentoMovil(ALista);
+  end;
 
   qry := TUniQuery.Create(nil);
   try
@@ -1834,64 +2008,28 @@ begin
     try
       for i := 0 to ALista.Count - 1 do
       begin
-        Sku := Trim(ALista.Names[i]);
-        if Sku = '' then
-          Sku := Trim(ALista[i]);
+        Sku := ObtenerSkuRecuento(ALista, i);
         if Sku <> '' then
         begin
-        CANTIDAD := StrToCurrDef(ALista.ValueFromIndex[i], 1);
+          Cantidad := StrToCurrDef(ALista.ValueFromIndex[i], 1);
+          FechaRecuento := 0;
+          if Assigned(AInstantesRecuento) then
+            if not TryFechaHoraRecuentoNegocio(
+                 AInstantesRecuento.Values[Sku],
+                 FechaRecuento) then
+              FechaRecuento := 0;
 
-        qry.Close;
-        qry.ParamByName('SKU').AsString := Sku;
-        qry.Open;
-        // Ignorar SKUs que no existen.
-        if not qry.IsEmpty then
-        begin
-        ArticuloPadre := qry.FieldByName('CODIGO_ART_SKU').AsString;
-
-        RellenarDatosSku(Sku, PMP, PMP); // PMP en variable temporal
-        // Recargamos PMP correctamente:
-        unqryStockActual.Close;
-        unqryStockActual.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-        unqryStockActual.ParamByName('SKU').AsString     := Sku;
-        unqryStockActual.Open;
-
-        // Si el SKU ya existe en el inventario, sumamos cantidad
-        if ExisteLineaConSku(Sku) then
-        begin
-          if cdsLineas.Locate('CODIGO_UNIDAD_INVLIN',
-                              Sku,
-                              [loCaseInsensitive]) then
-          begin
-            cdsLineas.Edit;
-            cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency :=
-              cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency
-                + CANTIDAD;
-            cdsLineas.Post;
-          end;
-        end
-        else
-        begin
-          cdsLineas.Append;
-          cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString := ArticuloPadre;
-          cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString   := Sku;
-          cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString :=
-            qry.FieldByName('DESCRIPCION_ART').AsString;
-          cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency   :=
-            unqryStockActual.FieldByName('CANTIDAD_STK').AsCurrency;
-          cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency    :=
-            CANTIDAD;
-          cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency       :=
-            unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
-          cdsLineas.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
-            unqryStockActual.FieldByName('PRECIO_MEDIO_STK').AsCurrency;
-          AsegurarFechaRecuentoLinea;
-          cdsLineas.Post;
-        end;
-        end;
+          CargarSkuDesdeLista(
+            Sku,
+            Cantidad,
+            FechaRecuento,
+            AReemplazarCantidad,
+            qry);
         end;
       end;
-      cdsLineas.ApplyUpdates(0);
+      if AAplicarCambios then
+        ComprobarErroresAplicacionLineas(
+          cdsLineas.ApplyUpdates(0));
     finally
       cdsLineas.EnableControls;
     end;

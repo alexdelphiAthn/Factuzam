@@ -21,7 +21,13 @@ uses
   RecuentoModelo, RecuentoApi, RecuentoLocal;
 
 const
-  TAM_LOTE = 300;   // eventos por petición (límite cómodo en hosting compartido)
+  // Eventos por petición (límite cómodo en hosting compartido).
+  TAM_LOTE = 300;
+
+resourcestring
+  SErrorConfirmacionLoteIncompleta =
+    'El servidor no confirmó íntegramente el lote; ' +
+    'la cola local se conserva';
 
 type
   TRecuentoSync = class
@@ -41,6 +47,7 @@ var
   aLote: TArrEvento;
   aUuids: TArray<string>;
   iAceptados, iDuplicados, i: Integer;
+  bLoteConfirmado: Boolean;
   bSeguir: Boolean;
 begin
   Result := True;
@@ -56,7 +63,11 @@ begin
         bSeguir := False
       else
       begin
-        if oApi.SubirEventos(AIdRecuento, aLote, iAceptados, iDuplicados) then
+        bLoteConfirmado := oApi.SubirEventos(
+          AIdRecuento, aLote, iAceptados, iDuplicados);
+        bLoteConfirmado := bLoteConfirmado and
+          (iAceptados + iDuplicados = Length(aLote));
+        if bLoteConfirmado then
         begin
           SetLength(aUuids, Length(aLote));
           for i := 0 to High(aLote) do
@@ -69,6 +80,8 @@ begin
           // Cortamos al primer fallo: la cola se conserva para reintentar.
           Result := False;
           AMensaje := oApi.UltimoError;
+          if AMensaje = '' then
+            AMensaje := SErrorConfirmacionLoteIncompleta;
           bSeguir := False;
         end;
       end;

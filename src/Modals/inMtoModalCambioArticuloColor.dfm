@@ -146,6 +146,14 @@
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 1
+    object btnHistorico: TcxButton
+      Left = 20
+      Top = 10
+      Width = 160
+      Height = 35
+      Action = actHistorico
+      TabOrder = 0
+    end
     object btnCerrar: TcxButton
       Left = 500
       Top = 10
@@ -153,7 +161,7 @@
       Height = 35
       Action = actCerrar
       Cancel = True
-      TabOrder = 0
+      TabOrder = 1
     end
   end
   object alAcciones: TActionList
@@ -168,6 +176,11 @@
       Caption = 'Cambiar color (F10)'
       ShortCut = 121
       OnExecute = actCambiarColorExecute
+    end
+    object actHistorico: TAction
+      Caption = 'Histórico (F8)'
+      ShortCut = 119
+      OnExecute = actHistoricoExecute
     end
     object actCerrar: TAction
       Caption = 'Cerrar (ESC)'

@@ -1,4 +1,4 @@
-import { codigoValido, interpretarStock, ESTADOS } from "./controlu-modelo.js?v=20260827-1";
+import { codigoValido, interpretarStock, ESTADOS } from "./controlu-modelo.js?v=20260827-2";
 
 export class ErrorControlU extends Error {
   constructor(mensaje, estado = 0, codigo = "") {

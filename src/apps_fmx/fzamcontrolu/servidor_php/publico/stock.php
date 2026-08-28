@@ -72,6 +72,10 @@ ejecutar_endpoint(function (): void {
         'stock_unidad_consultada' =>
             $stock['cantidad_unidad_consultada'],
         'colores' => $colores,
+        'colores_basicos' => consultar_colores_basicos_stock(
+            $pdo,
+            $identidad['articulo']
+        ),
         'almacenes' => $almacenes,
         'almacenes_predeterminados' => $almacenesPredeterminados,
         'foto_300_url' => 'foto.php?' . http_build_query(

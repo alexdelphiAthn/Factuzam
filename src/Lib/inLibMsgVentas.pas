@@ -206,6 +206,37 @@ resourcestring
     'Solo el propietario puede cargar articulos en el documento.';
   SErrorDocumentoTrabajoSinGrabarCargar =
     'Grabe el Documento de Trabajo antes de cargar.';
+  STituloCargarOrigenDocumentoTrabajo =
+    'Cargar desde documento';
+  SCaptionTodosTiposOrigenDocumentoTrabajo = 'Todos';
+  SErrorServicioCargaOrigenDocumentoTrabajo =
+    'No está disponible el servicio de carga desde documentos.';
+  SErrorOrigenDocumentoTrabajoNoSeleccionado =
+    'Seleccione un documento de origen.';
+  SInfoDocumentosOrigenDocumentoTrabajoNoEncontrados =
+    'No se encontraron albaranes con esos filtros entre los últimos ' +
+    'documentos mostrados.';
+  SInfoCargaOrigenDocumentoTrabajo =
+    'Se encontraron %d líneas; se añadieron %d y se omitieron %d.' +
+    sLineBreak + 'Unidades añadidas: %.2f.';
+  SErrorTipoDocumentoOrigenNoSoportado =
+    'El tipo de documento origen "%s" no está soportado.';
+  SErrorDocumentoOrigenIncompleto =
+    'Indique empresa, tipo, serie y número del documento origen.';
+  SErrorDocumentoOrigenNoEncontrado =
+    'No existe el documento origen %s %s/%s para la empresa %s.';
+  SErrorDocumentoOrigenCancelado =
+    'No se puede cargar el documento origen %s %s/%s porque está ' +
+    'cancelado.';
+  SErrorDocumentoOrigenLineasSinSku =
+    'No se puede cargar el documento origen porque hay %d líneas de ' +
+    'artículo y cantidad sin un SKU compatible registrado.';
+  SErrorCargaDocumentoOrigenIncompleta =
+    'No se completó la carga del documento origen: se esperaban %d ' +
+    'líneas y se insertaron %d.';
+  SErrorEmpresaDocumentoTrabajoOrigenDistinta =
+    'El documento de trabajo y el documento origen deben ser de la misma ' +
+    'empresa.';
   SErrorDocumentoTrabajoNoSeleccionadoCompartir =
     'Seleccione un Documento de Trabajo antes de compartir.';
   SInfoDocumentoTrabajoCompartido = 'Documento compartido.';

@@ -284,6 +284,121 @@ function consultar_catalogo_almacenes_stock(PDO $pdo): array
     );
 }
 
+function esquema_colores_basicos_stock(PDO $pdo): bool
+{
+    // Metadatos opcionales: un cliente antiguo conserva su consulta de stock.
+    $necesarias = [
+        'fza_atributos_basicos' => [
+            'ID_ATB', 'ID_VA_ATB', 'CODIGO_ATB', 'NOMBRE_ATB', 'HEX_ATB',
+            'ESACTIVO_ATB',
+        ],
+        'fza_atributos_valores' => ['ID_ATB_AV'],
+        'fza_articulos_atributos_basicos' => [
+            'CODIGO_ART_AAB', 'ID_AV_AAB', 'ID_ATB_AAB',
+        ],
+        'fza_articulos_conjuntos_asign' => [
+            'CODIGO_ART_ACA', 'ID_VA_ACA', 'ID_AC_ACA',
+        ],
+        'fza_atributos_conjuntos_det' => [
+            'ID_AC_ACD', 'ID_AV_ACD', 'ID_ATB_ACD',
+        ],
+    ];
+    $consulta = $pdo->query(
+        "SELECT TABLE_NAME, COLUMN_NAME
+           FROM INFORMATION_SCHEMA.COLUMNS
+          WHERE TABLE_SCHEMA = DATABASE()
+            AND TABLE_NAME IN (
+                'fza_atributos_basicos', 'fza_atributos_valores',
+                'fza_articulos_atributos_basicos',
+                'fza_articulos_conjuntos_asign',
+                'fza_atributos_conjuntos_det')"
+    );
+    $disponibles = [];
+    foreach ($consulta->fetchAll() as $fila) {
+        $disponibles[strtolower($fila['TABLE_NAME'])][
+            strtoupper($fila['COLUMN_NAME'])
+        ] = true;
+    }
+    foreach ($necesarias as $tabla => $columnas) {
+        foreach ($columnas as $columna) {
+            if (!isset($disponibles[$tabla][$columna])) {
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+function sql_colores_basicos_stock(): string
+{
+    // Igual precedencia que Control U: articulo > conjunto > valor global.
+    // Una fila AAB con ID nulo anula expresamente el basico heredado.
+    return
+        "SELECT DISTINCT TRIM(AV.AV) AS color,
+                ATB.CODIGO_ATB AS codigo, ATB.NOMBRE_ATB AS nombre,
+                ATB.HEX_ATB AS hex
+           FROM fza_articulos_skus SKU
+           JOIN fza_atributos_sku SA
+             ON SA.CODIGO_UNIDAD_SKU_SA = SKU.CODIGO_UNIDAD_SKU
+           JOIN fza_atributos_valores AV
+             ON AV.ID_AV = SA.ID_AV_SA AND AV.ID_VA_AV = 'CO'
+           LEFT JOIN fza_articulos_atributos_basicos AAB
+             ON AAB.CODIGO_ART_AAB = SKU.CODIGO_ART_SKU
+            AND AAB.ID_AV_AAB = AV.ID_AV
+           LEFT JOIN fza_articulos_conjuntos_asign ACA
+             ON ACA.CODIGO_ART_ACA = SKU.CODIGO_ART_SKU
+            AND ACA.ID_VA_ACA = AV.ID_VA_AV
+           LEFT JOIN fza_atributos_conjuntos_det ACD
+             ON ACD.ID_AC_ACD = ACA.ID_AC_ACA AND ACD.ID_AV_ACD = AV.ID_AV
+           LEFT JOIN fza_atributos_basicos ATB
+             ON ATB.ID_ATB = CASE
+                  WHEN AAB.CODIGO_ART_AAB IS NOT NULL THEN AAB.ID_ATB_AAB
+                  WHEN ACD.ID_ATB_ACD IS NOT NULL THEN ACD.ID_ATB_ACD
+                  ELSE AV.ID_ATB_AV END
+            AND ATB.ID_VA_ATB = 'CO' AND ATB.ESACTIVO_ATB = 'S'
+          WHERE SKU.CODIGO_ART_SKU = :articulo
+            AND NULLIF(TRIM(AV.AV), '') IS NOT NULL
+          ORDER BY color, codigo";
+}
+
+function consultar_colores_basicos_stock(PDO $pdo, string $articulo): array
+{
+    try {
+        if (!esquema_colores_basicos_stock($pdo)) {
+            return [];
+        }
+        $consulta = $pdo->prepare(sql_colores_basicos_stock());
+        $consulta->execute(['articulo' => $articulo]);
+        $filas = $consulta->fetchAll();
+    } catch (PDOException $error) {
+        $numero = (int) ($error->errorInfo[1] ?? 0);
+        if (!in_array($numero, [1054, 1142, 1143, 1146], true)) {
+            throw $error;
+        }
+        // El usuario antiguo del hook puede carecer de permisos de paleta.
+        // Se registra sin exponer SQL, credenciales ni informacion de stock.
+        error_log('[FzamControlU] Paleta opcional no disponible: ' . $numero);
+        return [];
+    }
+    $colores = [];
+    foreach ($filas as $fila) {
+        $color = (string) $fila['color'];
+        $valor = [
+            'color' => $color,
+            'codigo' => $fila['codigo'],
+            'nombre' => $fila['nombre'],
+            'hex' => $fila['hex'],
+        ];
+        if (isset($colores[$color]) && $colores[$color] !== $valor) {
+            // Una asignacion ambigua no se representa con un color inventado.
+            $valor = ['color' => $color, 'codigo' => null,
+                'nombre' => null, 'hex' => null];
+        }
+        $colores[$color] = $valor;
+    }
+    return array_values($colores);
+}
+
 function consultar_almacenes_predeterminados_stock(PDO $pdo): array
 {
     $consulta = $pdo->prepare(sql_almacenes_predeterminados_stock());

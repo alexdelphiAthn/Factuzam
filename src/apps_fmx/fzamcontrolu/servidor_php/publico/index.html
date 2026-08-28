@@ -15,8 +15,8 @@
   <link rel="icon" href="./controlu-192.png">
   <link rel="apple-touch-icon" href="./controlu-192.png">
   <link rel="manifest" href="./controlu.webmanifest">
-  <link rel="stylesheet" href="./controlu.css?v=20260827-1">
-  <script type="module" src="./controlu.js?v=20260827-1"></script>
+  <link rel="stylesheet" href="./controlu.css?v=20260827-3">
+  <script type="module" src="./controlu.js?v=20260827-2"></script>
 </head>
 <body>
   <a class="saltar" href="#contenido">Ir al contenido</a>
@@ -37,7 +37,7 @@
         </div>
         <p class="nota">Misma conexión local. Mismos permisos. Sin modificar tus datos.</p>
       </div>
-      <form id="formulario-acceso" class="tarjeta formulario">
+      <form id="formulario-acceso" class="tarjeta formulario" method="post">
         <p class="ceja">TU INSTALACIÓN</p><h2>Vamos a conectar</h2>
         <p>Entra con tu usuario y contraseña de Factuzam.</p>
         <label for="nombre">Nombre de la instalación</label><input id="nombre" name="nombre" maxlength="80" value="Pruebas" autocomplete="organization" required>
@@ -46,8 +46,8 @@
         <label class="opcion"><input id="recordar" type="checkbox"><span>Recordar acceso en este dispositivo<small>Hasta que caduque el token del servidor. Solo en un dispositivo personal.</small></span></label>
         <p id="aviso-http" class="aviso aviso-local" hidden>Esta conexión HTTP no está cifrada. Úsala solo en una red interna de confianza.</p>
         <p id="error-acceso" class="aviso error" role="alert" hidden></p>
-        <button id="conectar" class="boton-principal" type="submit">Entrar a Control U <span aria-hidden="true">→</span></button>
-        <p id="estado-acceso" class="nota" role="status"></p>
+        <button id="conectar" class="boton-principal" type="submit" disabled>Entrar a Control U <span aria-hidden="true">→</span></button>
+        <p id="estado-acceso" class="nota" role="status">Cargando Control U… Si has abierto un archivo, entra por la dirección HTTP del servidor.</p>
         <a class="enlace-demo" href="./?demo=1">Probar una demostración sin conectar →</a>
         <div class="servidor"><span>Servidor de esta página</span><strong id="servidor-acceso"></strong></div>
       </form>
@@ -62,9 +62,24 @@
       <div class="barra-historial"><p id="estado-consulta" role="status">Introduce un código para consultar.</p><div><button id="anterior" class="boton-icono" aria-label="Artículo anterior" disabled>‹</button><span id="posicion-historial" class="nota"></span><button id="siguiente" class="boton-icono" aria-label="Artículo siguiente" disabled>›</button><button id="actualizar" class="boton-suave" disabled>↻ Actualizar</button></div></div>
       <div id="espera-inicial" class="vacio tarjeta"><span class="icono-codigo" aria-hidden="true">▥</span><h2>¿Qué artículo necesitas?</h2><p>Escribe su referencia o utiliza un lector de códigos de barras.</p></div>
       <article id="resultado" class="tarjeta resultado" data-estado="stock" hidden>
-        <div class="resumen-articulo"><div class="datos-articulo"><p id="articulo" class="ceja"></p><h2 id="descripcion"></h2><p id="unidad" class="nota"></p></div><div class="cantidad-resumen"><span id="titulo-cantidad">Stock</span><strong id="total-articulo">—</strong><small>en almacenes seleccionados</small></div><button id="ampliar-foto" class="foto-articulo" disabled aria-label="Ampliar foto del artículo"><span id="sustituto-foto">Sin foto</span><img id="foto" alt="" hidden></button></div>
+        <section id="filtros-visuales" class="filtros-visuales" aria-label="Filtrar la consulta">
+          <div class="filtro-visible">
+            <div class="titulo-filtro"><strong id="etiqueta-colores">Colores</strong><div class="acciones-filtro"><button type="button" data-seleccionar="colores" data-conjunto="todos">Todos</button><button type="button" data-seleccionar="colores" data-conjunto="ninguno">Ninguno</button></div></div>
+            <div id="seleccion-colores" class="seleccion-filtros" role="group" aria-labelledby="etiqueta-colores"></div>
+            <p class="nota ayuda-basicos">Cada cuadradito muestra el color básico de Factuzam. El cuadrado rayado indica que no hay un tono definido.</p>
+          </div>
+          <div class="filtro-visible">
+            <div class="titulo-filtro"><strong id="etiqueta-almacenes">Almacenes</strong><div class="acciones-filtro"><button type="button" data-seleccionar="almacenes" data-conjunto="predeterminados">Habituales</button><button type="button" data-seleccionar="almacenes" data-conjunto="todos">Todos</button><button type="button" data-seleccionar="almacenes" data-conjunto="ninguno">Ninguno</button></div></div>
+            <div id="seleccion-almacenes" class="seleccion-filtros" role="group" aria-labelledby="etiqueta-almacenes"></div>
+          </div>
+        </section>
         <div class="opciones-tabla"><label>Agrupar por <select id="agrupar"><option value="color">Color</option><option value="almacen">Almacén</option></select></label><label class="opcion compacta"><input id="ocultar-ceros" type="checkbox" checked><span>Ocultar tallas sin cantidad</span></label><button id="abrir-filtros" class="boton-suave">Filtros <span id="contador-filtros"></span></button></div>
         <p id="resumen-filtros" class="nota resumen-filtros"></p>
+        <header id="cabecera-articulo" class="resumen-articulo">
+          <div class="datos-articulo"><p id="articulo" class="ceja"></p><h2 id="descripcion"></h2><p id="unidad" class="nota"></p></div>
+          <div class="cantidad-resumen"><span id="titulo-cantidad">Stock</span><strong id="total-articulo">—</strong><small>en almacenes seleccionados</small></div>
+          <button id="ampliar-foto" class="foto-articulo" disabled aria-label="Ampliar foto del artículo"><span id="sustituto-foto">Sin foto</span><img id="foto" alt="" hidden><span id="pie-foto" class="pie-foto" hidden>Ampliar foto ↗</span></button>
+        </header>
         <div class="tabla-desplazable" tabindex="0" role="region" aria-label="Cantidades por talla, desplazable horizontalmente"><table id="tabla-stock"><caption class="sr-only">Existencias del artículo por talla</caption><thead id="cabecera-stock"></thead><tbody id="cuerpo-stock"></tbody><tfoot id="pie-stock"></tfoot></table></div>
         <p id="sin-cantidades" class="vacio" hidden>No hay cantidades con estos filtros.</p>
         <p class="nota pie-tabla">Pulsa una fila para ver el detalle. Desliza la tabla para consultar más tallas.</p>

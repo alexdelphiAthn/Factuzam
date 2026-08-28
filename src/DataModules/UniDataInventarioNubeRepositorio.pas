@@ -128,12 +128,14 @@ begin
       '   SERIE_INV_INVREC, NUMERO_INV_INVREC, CODIGO_ART_INVREC, ' +
       '   CODIGO_UNIDAD_INVREC, CODIGO_BARRAS_INVREC, ' +
       '   CANTIDAD_INVREC, LOTE_INVREC, FECHA_CADUCIDAD_INVREC, ' +
-      '   INSTANTE_RECUENTO_INVREC, OPERARIO_INVREC, ' +
+      '   INSTANTE_RECUENTO_INVREC, INSTANTE_RECUENTO_UTC_INVREC, ' +
+      '   OPERARIO_INVREC, ' +
       '   DISPOSITIVO_INVREC, ZONA_INVREC, ESANULADO_INVREC, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA) ' +
       'VALUES (:UUID, :EMPRESA, :ALMACEN, :SERIE, :NUMERO, ' +
       '  :ARTICULO, :SKU, :BARRAS, :CANTIDAD, :LOTE, :CADUCIDAD, ' +
-      '  :INSTANTE, :OPERARIO, :DISPOSITIVO, :ZONA, ''N'', ' +
+      '  :INSTANTE, :INSTANTE_UTC, :OPERARIO, :DISPOSITIVO, ' +
+      '  :ZONA, ''N'', ' +
       '  NOW(), :USUARIO) ' +
       'ON DUPLICATE KEY UPDATE ID_INVREC = ID_INVREC';
     oConsulta.ParamByName('UUID').AsString := AEvento.Uuid;
@@ -154,6 +156,11 @@ begin
         AEvento.FechaCaducidad;
     oConsulta.ParamByName('INSTANTE').AsString :=
       AEvento.InstanteRecuento;
+    if Trim(AEvento.InstanteRecuentoUtc) = '' then
+      oConsulta.ParamByName('INSTANTE_UTC').Clear
+    else
+      oConsulta.ParamByName('INSTANTE_UTC').AsString :=
+        AEvento.InstanteRecuentoUtc;
     oConsulta.ParamByName('OPERARIO').AsString := AEvento.Operario;
     oConsulta.ParamByName('DISPOSITIVO').AsString :=
       AEvento.Dispositivo;

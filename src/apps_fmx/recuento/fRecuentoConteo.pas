@@ -18,7 +18,7 @@ unit fRecuentoConteo;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.UITypes,
+  System.SysUtils, System.Classes, System.DateUtils, System.UITypes,
   FMX.Forms, FMX.Controls, FMX.StdCtrls, FMX.Edit, FMX.ListBox, FMX.Layouts,
   FMX.Types, FMX.DialogService,
   RecuentoModelo, RecuentoLocal, RecuentoApi, RecuentoSync;
@@ -181,7 +181,9 @@ begin
     Ev.CodigoUnidad := sSku;
     Ev.CodigoArticulo := sArt;
     Ev.Cantidad := dCant;
-    Ev.InstanteRecuento := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
+    Ev.InstanteRecuento := FormatDateTime(
+      'yyyy-mm-dd"T"hh":"nn":"ss"Z"',
+      TDateTime.NowUTC);
     // TODO: si iIdx>=0 y FCatalogo[iIdx].EsTrazable, pedir lote/caducidad.
     oLocal.Encolar(FIdRecuento, Ev);
     dTotal := oLocal.ContarPorSku(FIdRecuento, sSku);

@@ -84,6 +84,8 @@ uses
   inLibMsgSql in 'src\Lib\inLibMsgSql.pas',
   inLibMsgSqlSeguro in 'src\Lib\inLibMsgSqlSeguro.pas',
   inLibMsgArticulos in 'src\Lib\inLibMsgArticulos.pas',
+  inLibMsgCambioArticuloColor in
+    'src\Lib\inLibMsgCambioArticuloColor.pas',
   inLibMsgFotos in 'src\Lib\inLibMsgFotos.pas',
   inLibMsgVentas in 'src\Lib\inLibMsgVentas.pas',
   inLibMsgCompras in 'src\Lib\inLibMsgCompras.pas',
@@ -242,8 +244,12 @@ uses
     'src\Lib\inLibCambioArticuloColor.pas',
   inLibCambioArticuloColorHistoricoAmbito in
     'src\Lib\inLibCambioArticuloColorHistoricoAmbito.pas',
+  inLibCambioArticuloColorHistoricoConsultaIntf in
+    'src\Lib\inLibCambioArticuloColorHistoricoConsultaIntf.pas',
   UniDataCambioArticuloColorHistorico in
     'src\DataModules\UniDataCambioArticuloColorHistorico.pas',
+  UniDataCambioArticuloColorHistoricoConsulta in
+    'src\DataModules\UniDataCambioArticuloColorHistoricoConsulta.pas',
   UniDataCambioArticuloColorRepositorio in
     'src\DataModules\UniDataCambioArticuloColorRepositorio.pas',
   inMtoFrmBase in 'src\Core\inMtoFrmBase.pas' {frmBase},
@@ -320,6 +326,9 @@ uses
   inMtoModalCambioArticuloColor in
     'src\Modals\inMtoModalCambioArticuloColor.pas'
     {frmModalCambioArticuloColor},
+  inMtoModalCambioArticuloColorHistorico in
+    'src\Modals\inMtoModalCambioArticuloColorHistorico.pas'
+    {frmModalHistoricoArtColor},
   inMtoModalMensajeTexto in
     'src\Modals\inMtoModalMensajeTexto.pas',
   inMtoErroresEnvios in
@@ -1064,6 +1073,9 @@ uses
     'src\Forms\inMtoInventariosEntradaVcl.pas',
   inMtoInventariosImportacionVcl in
     'src\Forms\inMtoInventariosImportacionVcl.pas',
+  inMtoModalFechaHoraRecuento in
+    'src\Modals\inMtoModalFechaHoraRecuento.pas'
+    {frmModalFechaHoraRecuento},
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
   UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule},
@@ -1200,6 +1212,9 @@ uses
   inMtoModalAddBlockInventario in 'src\Modals\inMtoModalAddBlockInventario.pas' {frmModalAddBlockInventario},
   inMtoModalAddBlockTarifa in 'src\Modals\inMtoModalAddBlockTarifa.pas' {frmModalAddBlockTarifa},
   inMtoModalAddBlockDocumentoTrabajo in 'src\Modals\inMtoModalAddBlockDocumentoTrabajo.pas' {frmModalAddBlockDocumentoTrabajo},
+  inMtoModalCargarDocumentoTrabajo in
+    'src\Modals\inMtoModalCargarDocumentoTrabajo.pas'
+    {frmModalCargarDocumentoTrabajo},
   inMtoModalEnviarDestino in 'src\Modals\inMtoModalEnviarDestino.pas' {frmModalEnviarDestino},
   inLibDBStructure in 'src\Lib\inLibDBStructure.pas',
   inLibBackupWorker in 'src\Lib\inLibBackupWorker.pas',
@@ -1388,6 +1403,8 @@ uses
     'src\Lib\inLibDocumentosTrabajoPresentacion.pas',
   UniDataDocumentosTrabajoRepositorio in
     'src\DataModules\UniDataDocumentosTrabajoRepositorio.pas',
+  UniDataDocumentosTrabajoCargaOrigenSql in
+    'src\DataModules\UniDataDocumentosTrabajoCargaOrigenSql.pas',
   inLibImagen in 'src\Lib\inLibImagen.pas',
   inLibFotosNube in 'src\Lib\inLibFotosNube.pas',
   inMtoFotoArticulo in 'src\Forms\inMtoFotoArticulo.pas' {frmFotoArticulo},

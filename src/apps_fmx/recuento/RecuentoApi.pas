@@ -19,9 +19,14 @@ unit RecuentoApi;
 interface
 
 uses
-  System.SysUtils, System.Classes, System.JSON, System.NetEncoding,
-  System.Net.HttpClient, System.Net.URLClient,
+  System.SysUtils, System.Classes, System.JSON,
+  System.NetEncoding, System.Net.HttpClient, System.Net.URLClient,
   RecuentoModelo, RecuentoConfig;
+
+resourcestring
+  SErrorConfirmacionLoteIncompleta =
+    'El servidor no confirmó íntegramente el lote; ' +
+    'la cola local se conserva';
 
 type
   TRecuentoApi = class
@@ -67,6 +72,26 @@ begin
     if (oVal <> nil) and not (oVal is TJSONNull) then
       Result := oVal.Value;
   end;
+end;
+
+function TryLeerEnteroJson(AObj: TJSONObject; const AClave: string;
+  out AValor: Integer): Boolean;
+var
+  iValor: Int64;
+  oValor: TJSONValue;
+begin
+  AValor := 0;
+  oValor := nil;
+  if AObj <> nil then
+    oValor := AObj.GetValue(AClave);
+  Result := False;
+  if oValor is TJSONNumber then
+  begin
+    if TryStrToInt64(oValor.Value, iValor) then
+      Result := (iValor >= 0) and (iValor <= MaxInt);
+  end;
+  if Result then
+    AValor := Integer(iValor);
 end;
 
 function JNum(AObj: TJSONObject; const AClave: string): Double;
@@ -433,11 +458,12 @@ function TRecuentoApi.SubirEventos(AIdRecuento: Int64;
 var
   oReq, oEv: TJSONObject;
   oArr: TJSONArray;
-  i, iStatus: Integer;
+  i, iAceptados, iDuplicados, iStatus: Integer;
   sResp: string;
   oRespJson: TJSONValue;
 begin
   Result := False;
+  FUltimoError := '';
   AAceptados := 0;
   ADuplicados := 0;
   oReq := TJSONObject.Create;
@@ -471,13 +497,24 @@ begin
     try
       if oRespJson is TJSONObject then
       begin
-        AAceptados  := Trunc(JNum(TJSONObject(oRespJson), 'aceptados'));
-        ADuplicados := Trunc(JNum(TJSONObject(oRespJson), 'duplicados'));
-        Result := True;
+        Result := TryLeerEnteroJson(
+          TJSONObject(oRespJson), 'aceptados', iAceptados) and
+          TryLeerEnteroJson(
+            TJSONObject(oRespJson), 'duplicados', iDuplicados) and
+          (iAceptados <= Length(AEventos)) and
+          (iDuplicados <= Length(AEventos)) and
+          (iAceptados + iDuplicados = Length(AEventos));
+        if Result then
+        begin
+          AAceptados := iAceptados;
+          ADuplicados := iDuplicados;
+        end;
       end;
     finally
       FreeAndNil(oRespJson);
     end;
+    if not Result then
+      FUltimoError := SErrorConfirmacionLoteIncompleta;
   end
   else if iStatus <> 0 then
     FUltimoError := MensajeError(sResp, iStatus);

@@ -39,6 +39,7 @@ type
     Lote: string;
     FechaCaducidad: string;
     InstanteRecuento: string;
+    InstanteRecuentoUtc: string;
     Operario: string;
     Dispositivo: string;
     Zona: string;

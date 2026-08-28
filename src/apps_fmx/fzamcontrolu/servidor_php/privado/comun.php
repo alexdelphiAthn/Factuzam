@@ -240,6 +240,9 @@ function conexion_bd(): PDO
             PDO::ATTR_EMULATE_PREPARES => false,
         ]
     );
+    if (defined('CFG_DB_SOLO_LECTURA') && CFG_DB_SOLO_LECTURA === true) {
+        $pdo->exec('SET SESSION TRANSACTION READ ONLY');
+    }
     return $pdo;
 }
 

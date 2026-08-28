@@ -16,6 +16,39 @@ export function codigoValido(valor) {
     [...valor.trim()].length <= 50 && !/[\u0000-\u001f\u007f]/u.test(valor);
 }
 
+export function colorHexadecimal(valor) {
+  if (typeof valor !== "string") return null;
+  const texto = valor.trim();
+  if (/^#[0-9a-f]{6}$/iu.test(texto)) return texto.toUpperCase();
+  if (/^#[0-9a-f]{3}$/iu.test(texto)) {
+    return "#" + [...texto.slice(1)].map((letra) => letra + letra).join("").toUpperCase();
+  }
+  return null;
+}
+
+export function normalizarBasicos(valores, colores) {
+  const porNombre = new Map();
+  for (const fila of Array.isArray(valores) ? valores : []) {
+    if (esObjeto(fila) && typeof fila.color === "string") {
+      const clave = fila.color.toLocaleLowerCase("es");
+      const basico = {
+        codigo: typeof fila.codigo === "string" ? fila.codigo : "",
+        nombre: typeof fila.nombre === "string" ? fila.nombre : "",
+        hex: colorHexadecimal(fila.hex),
+      };
+      const anterior = porNombre.get(clave);
+      // No elegir arbitrariamente entre dos basicos contradictorios.
+      if (porNombre.has(clave) && (anterior === null ||
+          anterior.codigo !== basico.codigo || anterior.hex !== basico.hex ||
+          anterior.nombre !== basico.nombre)) porNombre.set(clave, null);
+      else porNombre.set(clave, basico);
+    }
+  }
+  return new Map(colores.map((color) => [
+    color, porNombre.get(color.toLocaleLowerCase("es")) || null,
+  ]));
+}
+
 // JSON.parse reordena claves numéricas. Conservamos el orden de cada
 // combinación del JSON ya validado, también al filtrar un único color.
 function ordenDelTexto(texto) {
@@ -114,6 +147,7 @@ export function normalizarStock(datos, ordenTallas = [], ordenItems = []) {
       datos.unidad_consultada : "",
     foto: typeof datos.foto_300_url === "string" ? datos.foto_300_url : "",
     colores: [...colores].sort(ordenTexto.compare),
+    basicos: normalizarBasicos(datos.colores_basicos, [...colores]),
     almacenes: [...almacenes].sort(ordenTexto.compare),
     predeterminados: Array.isArray(datos.almacenes_predeterminados) ?
       catalogo(datos.almacenes_predeterminados).filter((a) => almacenes.has(a)) :

@@ -139,15 +139,17 @@
               TabOrder = 4
               OnClick = btnEnviarADTRClick
             end
-            object btnCargarFiltrosDTR: TcxButton
+            object btnCargarDTR: TcxButton
               Left = 463
               Top = 0
               Width = 180
               Height = 32
               Align = alRight
-              Caption = 'Cargar articulos...'
+              Caption = 'Cargar...'
+              DropDownMenu = pmCargarDTR
+              Kind = cxbkDropDownButton
               TabOrder = 1
-              OnClick = btnCargarFiltrosDTRClick
+              OnClick = btnCargarDTRClick
             end
             object btnCompartirDTR: TcxButton
               Left = 643
@@ -427,6 +429,18 @@
     object miEnviarTarifasDTR: TMenuItem
       Caption = 'Sesión de cambio de tarifas'
       OnClick = miEnviarTarifasDTRClick
+    end
+  end
+  object pmCargarDTR: TPopupMenu
+    Left = 144
+    Top = 200
+    object miCargarFiltrosDTR: TMenuItem
+      Caption = 'Por filtros...'
+      OnClick = btnCargarFiltrosDTRClick
+    end
+    object miCargarDocumentoDTR: TMenuItem
+      Caption = 'Desde documento...'
+      OnClick = miCargarDocumentoDTRClick
     end
   end
 end

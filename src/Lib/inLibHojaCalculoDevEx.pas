@@ -89,6 +89,7 @@ type
     procedure Guardar(const ARuta: string);
     // ILectorHojaCalculo
     function LeerCelda(AFila, ACol: Integer): Variant;
+    function LeerFormatoCelda(AFila, ACol: Integer): string;
     function UltimaFila: Integer;
     function UltimaColumna: Integer;
   end;
@@ -372,6 +373,14 @@ begin
   Result := Null;
   if (FTabla <> nil) and (FTabla.Cells[AFila, ACol] <> nil) then
     Result := FTabla.Cells[AFila, ACol].AsVariant;
+end;
+
+function TEscritorHojaCalculoDevEx.LeerFormatoCelda(
+  AFila, ACol: Integer): string;
+begin
+  Result := '';
+  if (FTabla <> nil) and (FTabla.Cells[AFila, ACol] <> nil) then
+    Result := FTabla.Cells[AFila, ACol].Style.DataFormat.FormatCode;
 end;
 
 function TEscritorHojaCalculoDevEx.UltimaFila: Integer;

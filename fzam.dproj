@@ -222,6 +222,7 @@
         <DCCReference Include="src\Lib\inLibMsgSql.pas"/>
         <DCCReference Include="src\Lib\inLibMsgSqlSeguro.pas"/>
         <DCCReference Include="src\Lib\inLibMsgArticulos.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgCambioArticuloColor.pas"/>
         <DCCReference Include="src\Lib\inLibMsgFotos.pas"/>
         <DCCReference Include="src\Lib\inLibMsgVentas.pas"/>
         <DCCReference Include="src\Lib\inLibMsgCompras.pas"/>
@@ -336,7 +337,9 @@
         <DCCReference Include="src\Lib\inLibCambioArticuloColorIntf.pas"/>
         <DCCReference Include="src\Lib\inLibCambioArticuloColor.pas"/>
         <DCCReference Include="src\Lib\inLibCambioArticuloColorHistoricoAmbito.pas"/>
+        <DCCReference Include="src\Lib\inLibCambioArticuloColorHistoricoConsultaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataCambioArticuloColorHistorico.pas"/>
+        <DCCReference Include="src\DataModules\UniDataCambioArticuloColorHistoricoConsulta.pas"/>
         <DCCReference Include="src\DataModules\UniDataCambioArticuloColorRepositorio.pas"/>
         <DCCReference Include="src\Core\inMtoFrmBase.pas">
             <Form>frmBase</Form>
@@ -480,6 +483,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalCambioArticuloColor.pas">
             <Form>frmModalCambioArticuloColor</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCambioArticuloColorHistorico.pas">
+            <Form>frmModalHistoricoArtColor</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalMensajeTexto.pas"/>
         <DCCReference Include="src\Forms\inMtoErroresEnvios.pas">
@@ -1215,6 +1221,9 @@
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoInventariosEntradaVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosImportacionVcl.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalFechaHoraRecuento.pas">
+            <Form>frmModalFechaHoraRecuento</Form>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataInventarios.pas">
             <Form>dmInventarios</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -1446,6 +1455,9 @@
         <DCCReference Include="src\Modals\inMtoModalAddBlockDocumentoTrabajo.pas">
             <Form>frmModalAddBlockDocumentoTrabajo</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalCargarDocumentoTrabajo.pas">
+            <Form>frmModalCargarDocumentoTrabajo</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalEnviarDestino.pas">
             <Form>frmModalEnviarDestino</Form>
         </DCCReference>
@@ -1593,6 +1605,7 @@
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoEstados.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoPresentacion.pas"/>
         <DCCReference Include="src\DataModules\UniDataDocumentosTrabajoRepositorio.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDocumentosTrabajoCargaOrigenSql.pas"/>
         <DCCReference Include="src\Lib\inLibImagen.pas"/>
         <DCCReference Include="src\Lib\inLibFotosNube.pas"/>
         <DCCReference Include="src\Forms\inMtoFotoArticulo.pas">

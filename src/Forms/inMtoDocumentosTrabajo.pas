@@ -51,6 +51,13 @@ type
     tenFacturaVenta,
     tenPedidoCompra
   );
+  TDestinoCargaDocumentoTrabajo = record
+    IdDtr: Int64;
+    Empresa: string;
+    Almacen: string;
+    Titulo: string;
+    procedure Clear;
+  end;
   TfrmMtoDocumentosTrabajo = class(TfrmMtoGen)
     pcAmbitoDTR: TcxPageControl;
     tsAmbitoPropiosDTR: TcxTabSheet;
@@ -69,7 +76,7 @@ type
     pnlAccionesDTR: TPanel;
     lblLineasDTR: TcxLabel;
     btnListadoDTR: TcxButton;
-    btnCargarFiltrosDTR: TcxButton;
+    btnCargarDTR: TcxButton;
     btnCompartirDTR: TcxButton;
     btnImprimirEtiquetasDTR: TcxButton;
     pcDetalleDTR: TcxPageControl;
@@ -109,6 +116,9 @@ type
     miEnviarPeticionTraspasoDTR: TMenuItem;
     miEnviarInventarioDTR: TMenuItem;
     miEnviarTarifasDTR: TMenuItem;
+    pmCargarDTR: TPopupMenu;
+    miCargarFiltrosDTR: TMenuItem;
+    miCargarDocumentoDTR: TMenuItem;
     btnArchivarDTR: TcxButton;
     pnlLateralDTR: TPanel;
     pnlFotoArticuloActivoDTR: TPanel;
@@ -124,7 +134,9 @@ type
     procedure miEnviarInventarioDTRClick(Sender: TObject);
     procedure miEnviarTarifasDTRClick(Sender: TObject);
     procedure btnListadoDTRClick(Sender: TObject);
+    procedure btnCargarDTRClick(Sender: TObject);
     procedure btnCargarFiltrosDTRClick(Sender: TObject);
+    procedure miCargarDocumentoDTRClick(Sender: TObject);
     procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
     procedure btnArchivarDTRClick(Sender: TObject);
@@ -151,6 +163,7 @@ type
     FLookupAtributos: IArticulosAtributosLookup;
     FRepositorioCajasDefecto: IRepositorioCajasDefecto;
     FCargaMasiva: TServiciosCargaMasivaArticulos;
+    FCargaOrigen: ICargaOrigenDocumentosTrabajo;
   private
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;
@@ -176,6 +189,9 @@ type
     function CrearLineasCargaTraspaso: TLineasCargaTraspaso;
     procedure AbrirTraspasoCaja(AModo: TModoVentanaTraspaso);
     procedure MarcarDocumentoActualEnviado;
+    function PrepararCargaDocumentoTrabajo(
+      out ADestino: TDestinoCargaDocumentoTrabajo): Boolean;
+    procedure RefrescarLineasTrasCarga;
     procedure AplicarEstadoAmbito;
     procedure CargarAlmacenesEtiquetasDTR(ALV: TcxListView);
     procedure CrearDataSetEtiquetasDTR(ADmArt: TObject;
@@ -206,6 +222,7 @@ uses
   Vcl.ActnList,
   UniDataArticulos, inLibGenBusq, inMtoModalEtiqArt,
   inMtoModalAddBlockDocumentoTrabajo,
+  inMtoModalCargarDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
   inLibColumnasSku,
   UniDataModoTallas, UniDataColumnasSkuServicios,
@@ -236,6 +253,11 @@ type
       const ACajasDefecto: IRepositorioCajasDefecto); reintroduce;
     procedure CrearTablaPrincipal; override;
   end;
+
+procedure TDestinoCargaDocumentoTrabajo.Clear;
+begin
+  Self := Default(TDestinoCargaDocumentoTrabajo);
+end;
 
 procedure ForceReferenceToClass(C: TClass);
 begin
@@ -282,6 +304,7 @@ begin
   FValidadorArticulos := oContexto.ValidadorArticulos;
   FLookupAtributos := oContexto.LookupAtributos;
   FCargaMasiva := oContexto.CargaMasiva;
+  FCargaOrigen := oContexto.CargaOrigen;
   FComponer := nil;
 end;
 
@@ -321,6 +344,7 @@ begin
   FreeAndNil(FFotoArticuloActivoDTR);
   FCargaMasiva.Consultas := nil;
   FCargaMasiva.Inserciones := nil;
+  FCargaOrigen := nil;
   FLookupAtributos := nil;
   FValidadorArticulos := nil;
   FMaterializacionDocumentosTrabajo := nil;
@@ -608,7 +632,7 @@ begin
   tvCompartidosDTR.OptionsData.Inserting := bEditarExistente;
   tvCompartidosDTR.OptionsData.Deleting := bEditarExistente;
   btnEnviarADTR.Enabled := bPuedeEnviar;
-  btnCargarFiltrosDTR.Enabled := bEditarExistente;
+  btnCargarDTR.Enabled := bEditarExistente;
   btnCompartirDTR.Enabled := bEditarExistente;
   btnArchivarDTR.Enabled := bArchivariable;
   actInsertarRegistro.Enabled :=
@@ -800,61 +824,90 @@ begin
   end;
 end;
 
-procedure TfrmMtoDocumentosTrabajo.btnCargarFiltrosDTRClick(Sender: TObject);
+function TfrmMtoDocumentosTrabajo.PrepararCargaDocumentoTrabajo(
+  out ADestino: TDestinoCargaDocumentoTrabajo): Boolean;
 var
   ds: TDataSet;
-  res: TAddBlockDocumentoTrabajoResult;
-  sAlmacen: string;
-  sTitulo: string;
 begin
-  inherited;
+  ADestino.Clear;
+  Result := False;
   if dmmDocumentosTrabajo <> nil then
   begin
     ds := dmmDocumentosTrabajo.unqryTablaG;
     if (not ds.Active) or ds.IsEmpty then
-    begin
-      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoCargar);
-    end
+      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoCargar)
     else if dmmDocumentosTrabajo.Ambito <> dtaPropios then
-    begin
-      ShowMessage(SErrorCargarDocumentoTrabajoNoPropietario);
-    end
+      ShowMessage(SErrorCargarDocumentoTrabajoNoPropietario)
     else
     begin
       if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
-      begin
         dmmDocumentosTrabajo.unqryLineas.Post;
-      end;
       if ds.State in dsEditModes then
-      begin
         ds.Post;
-      end;
       if ds.FieldByName('ID_DTR').IsNull then
-      begin
-        ShowMessage(SErrorDocumentoTrabajoSinGrabarCargar);
-      end
+        ShowMessage(SErrorDocumentoTrabajoSinGrabarCargar)
       else
       begin
-        sAlmacen := ds.FieldByName('CODIGO_ALM_DTR').AsString;
-        sTitulo := ds.FieldByName('TITULO_DTR').AsString;
-        res := TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
-          Self,
-          ds.FieldByName('ID_DTR').AsLargeInt,
-          sAlmacen,
-          sTitulo,
-          FCargaMasiva);
-        if res.Aceptado then
-        begin
-          pcDetalleDTR.ActivePage := tsLineasDTR;
-          if dmmDocumentosTrabajo.unqryLineas.Active then
-          begin
-            dmmDocumentosTrabajo.unqryLineas.Close;
-          end;
-          dmmDocumentosTrabajo.unqryLineas.Open;
-        end;
+        ADestino.IdDtr := ds.FieldByName('ID_DTR').AsLargeInt;
+        ADestino.Empresa := ds.FieldByName('CODIGO_EMP_DTR').AsString;
+        ADestino.Almacen := ds.FieldByName('CODIGO_ALM_DTR').AsString;
+        ADestino.Titulo := ds.FieldByName('TITULO_DTR').AsString;
+        Result := True;
       end;
     end;
   end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.RefrescarLineasTrasCarga;
+begin
+  pcDetalleDTR.ActivePage := tsLineasDTR;
+  if dmmDocumentosTrabajo.unqryLineas.Active then
+    dmmDocumentosTrabajo.unqryLineas.Close;
+  dmmDocumentosTrabajo.unqryLineas.Open;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnCargarDTRClick(Sender: TObject);
+var
+  pt: TPoint;
+begin
+  inherited;
+  pt := btnCargarDTR.ClientToScreen(Point(0, btnCargarDTR.Height));
+  pmCargarDTR.Popup(pt.X, pt.Y);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnCargarFiltrosDTRClick(Sender: TObject);
+var
+  Destino: TDestinoCargaDocumentoTrabajo;
+  Resultado: TAddBlockDocumentoTrabajoResult;
+begin
+  inherited;
+  if PrepararCargaDocumentoTrabajo(Destino) then
+  begin
+    Resultado := TfrmModalAddBlockDocumentoTrabajo.Ejecutar(
+      Self,
+      Destino.IdDtr,
+      Destino.Almacen,
+      Destino.Titulo,
+      FCargaMasiva);
+    if Resultado.Aceptado then
+      RefrescarLineasTrasCarga;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miCargarDocumentoDTRClick(
+  Sender: TObject);
+var
+  Destino: TDestinoCargaDocumentoTrabajo;
+begin
+  inherited;
+  if PrepararCargaDocumentoTrabajo(Destino) and
+     TfrmModalCargarDocumentoTrabajo.Ejecutar(
+       Self,
+       Destino.IdDtr,
+       Destino.Empresa,
+       IdentidadSesion.Usuario,
+       FCargaOrigen) then
+    RefrescarLineasTrasCarga;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.btnCompartirDTRClick(Sender: TObject);

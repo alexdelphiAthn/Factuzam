@@ -290,6 +290,7 @@ type
     function AsegurarCabeceraPersistidaParaLineas: Boolean;
     procedure AsegurarPrimeraLineaInventario;
     procedure CargarLineasYRefrescar;
+    procedure InicializarImportadorRecuento;
     // Guion comun de las cargas masivas: confirmar, ejecutar y refrescar.
     procedure EjecutarCargaMasiva(const APregunta: string;
                                   const ACarga: TProc);
@@ -344,6 +345,7 @@ uses
   inLibInventariosPresentacionIntf,
   inMtoInventariosEntradaVcl,
   inMtoInventariosPresentacionBusquedas,
+  inMtoModalFechaHoraRecuento,
   inMtoPreviewExcel,
   System.Diagnostics,
   inMtoModalAddBlockInventario,
@@ -485,10 +487,105 @@ begin
   Result := SqlFiltroDocumento(
     ContextoSesion, ParametrosApp, 'INV');
 end;
+
+procedure TfrmMtoInventarios.InicializarImportadorRecuento;
+var
+  MensajesImportacion: TMensajesImportacionInventario;
+begin
+  MensajesImportacion.ErrorInventarioCerrado :=
+    SErrorInventarioDebeEstarAbierto;
+  MensajesImportacion.ErrorArchivoNoExiste :=
+    SErrorArchivoImportacionInventarioNoExiste;
+  MensajesImportacion.ErrorSinDatos := SErrorImportacionInventarioSinDatos;
+  MensajesImportacion.TituloIncidencias :=
+    STituloIncidenciasImportacionInventario;
+  MensajesImportacion.TextoIncidencias :=
+    STextoIncidenciasImportacionInventario;
+  MensajesImportacion.FormatoIncidenciaCantidad :=
+    SFormatoIncidenciaCantidadImportacionInventario;
+  MensajesImportacion.FormatoIncidenciaPmpNuevo :=
+    SFormatoIncidenciaPmpNuevoImportacionInventario;
+  MensajesImportacion.FormatoIncidenciaFechaRecuento :=
+    SFormatoIncidenciaFechaRecuentoImportacionInventario;
+  MensajesImportacion.FormatoIncidenciaLinea :=
+    SFormatoIncidenciaLineaImportacionInventario;
+  MensajesImportacion.IncidenciaIdentidadIncompleta :=
+    SIncidenciaIdentidadExcelIncompleta;
+  MensajesImportacion.IncidenciaIdentidadContradictoria :=
+    SIncidenciaIdentidadExcelContradictoria;
+  MensajesImportacion.FormatoIncidenciaInventarioDistinto :=
+    SFormatoIncidenciaInventarioExcelDistinto;
+  MensajesImportacion.TextoSkusNoCargados :=
+    STextoSkusNoCargadosImportacionInventario;
+  MensajesImportacion.InfoLineasCsv := SInfoLineasCsvInventarioLeidas;
+  MensajesImportacion.InfoResultado := SInfoImportacionInventario;
+  FreeAndNil(FImportadorRecuento);
+  FImportadorRecuento := TImportadorRecuentoInventarioVcl.Create(
+    Self,
+    dlgAbrir,
+    dmmInventarios.cdsLineas,
+    procedure
+    begin
+      dmmInventarios.AsegurarFechaRecuentoLinea;
+    end,
+    function(out AFechaRecuento: TDateTime): Boolean
+    var
+      FechaPropuesta: TDateTime;
+      MensajesFecha: TMensajesFechaHoraRecuento;
+      Resultado: TResultadoFechaHoraRecuento;
+    begin
+      FechaPropuesta := dmmInventarios.FechaRecuentoPorDefecto;
+      if FechaPropuesta <= 0 then
+        FechaPropuesta := Now
+      else if Frac(FechaPropuesta) = 0 then
+        FechaPropuesta := Trunc(FechaPropuesta) + Frac(Now);
+      MensajesFecha.Titulo := STituloFechaHoraRecuentoInventario;
+      MensajesFecha.Explicacion := STextoFechaHoraRecuentoInventario;
+      MensajesFecha.Etiqueta := SEtiquetaFechaHoraRecuentoInventario;
+      MensajesFecha.TextoAceptar :=
+        STextoAceptarFechaHoraRecuentoInventario;
+      MensajesFecha.TextoCancelar :=
+        STextoCancelarFechaHoraRecuentoInventario;
+      MensajesFecha.ErrorNoIndicada :=
+        SErrorFechaHoraRecuentoInventarioNoIndicada;
+      Resultado := TfrmModalFechaHoraRecuento.Ejecutar(
+        Self,
+        FechaPropuesta,
+        MensajesFecha);
+      Result := Resultado.Aceptado;
+      AFechaRecuento := Resultado.FechaHora;
+    end,
+    procedure(const ALista: TStringList)
+    begin
+      dmmInventarios.CargarDesdeListaSkus(
+        ALista,
+        False,
+        nil,
+        False);
+    end,
+    procedure
+    begin
+      dmmInventarios.IniciarImportacionLineas;
+    end,
+    procedure
+    begin
+      dmmInventarios.ConfirmarImportacionLineas;
+    end,
+    procedure
+    begin
+      dmmInventarios.CancelarImportacionLineas;
+    end,
+    procedure
+    begin
+      pcDetail.ActivePage := tsDetalle;
+      CargarLineasYRefrescar;
+    end,
+    MensajesImportacion);
+end;
+
 procedure TfrmMtoInventarios.CrearTablaPrincipal;
 var
   emp: string;
-  MensajesImportacion: TMensajesImportacionInventario;
 begin
   FDependencias.Validar;
   dmmInventarios := nil;
@@ -531,40 +628,7 @@ begin
   InicializarEntradaInventarioVcl(
     Self,
     FDependencias.Articulos.ResolucionValidacion);
-  MensajesImportacion.ErrorInventarioCerrado :=
-    SErrorInventarioDebeEstarAbierto;
-  MensajesImportacion.ErrorArchivoNoExiste :=
-    SErrorArchivoImportacionInventarioNoExiste;
-  MensajesImportacion.ErrorSinDatos := SErrorImportacionInventarioSinDatos;
-  MensajesImportacion.TituloIncidencias :=
-    STituloIncidenciasImportacionInventario;
-  MensajesImportacion.TextoIncidencias :=
-    STextoIncidenciasImportacionInventario;
-  MensajesImportacion.FormatoIncidenciaCantidad :=
-    SFormatoIncidenciaCantidadImportacionInventario;
-  MensajesImportacion.FormatoIncidenciaPmpNuevo :=
-    SFormatoIncidenciaPmpNuevoImportacionInventario;
-  MensajesImportacion.InfoLineasCsv := SInfoLineasCsvInventarioLeidas;
-  MensajesImportacion.InfoResultado := SInfoImportacionInventario;
-  FreeAndNil(FImportadorRecuento);
-  FImportadorRecuento := TImportadorRecuentoInventarioVcl.Create(
-    Self,
-    dlgAbrir,
-    dmmInventarios.cdsLineas,
-    procedure
-    begin
-      dmmInventarios.AsegurarFechaRecuentoLinea;
-    end,
-    procedure(const ALista: TStringList)
-    begin
-      dmmInventarios.CargarDesdeListaSkus(ALista);
-    end,
-    procedure
-    begin
-      pcDetail.ActivePage := tsDetalle;
-      CargarLineasYRefrescar;
-    end,
-    MensajesImportacion);
+  InicializarImportadorRecuento;
 end;
 procedure TfrmMtoInventarios.FormCreate(Sender: TObject);
 var
@@ -1944,7 +2008,9 @@ end;
 
 procedure TfrmMtoInventarios.btnCargarExcelClick(Sender: TObject);
 begin
-  FImportadorRecuento.Ejecutar(PuedeEditar);
+  FImportadorRecuento.Ejecutar(
+    PuedeEditar,
+    ClaveInventarioActual);
 end;
 
 // ============================================================================
@@ -2004,6 +2070,7 @@ var
   Clave: TClaveInventario;
   sMsg: string;
   idRec: Int64;
+  Instantes: TStringList;
   Lista: TStringList;
   iNumEv: Integer;
   bSeguir: Boolean;
@@ -2034,15 +2101,30 @@ begin
   begin
     Clave := ClaveInventarioActual;
     Screen.Cursor := crHourGlass;
+    Instantes := TStringList.Create;
     Lista := TStringList.Create;
     try
       if RecogerRecuento(ParametrosApp, FDependencias.InventarioNube,
            Clave.Empresa, Clave.Almacen, Clave.Serie, Clave.Numero,
-           IdentidadSesion.Usuario, idRec, Lista, iNumEv, sMsg) then
+           IdentidadSesion.Usuario, idRec, Lista, iNumEv, sMsg,
+           Instantes) then
       begin
         // Volcamos el agregado SKU=CANTIDAD a las fisicas, como el Excel.
         if Lista.Count > 0 then
-          dmmInventarios.CargarDesdeListaSkus(Lista);
+        begin
+          dmmInventarios.IniciarImportacionLineas;
+          try
+            dmmInventarios.CargarDesdeListaSkus(
+              Lista,
+              True,
+              Instantes,
+              False);
+            dmmInventarios.ConfirmarImportacionLineas;
+          except
+            dmmInventarios.CancelarImportacionLineas;
+            raise;
+          end;
+        end;
         FDependencias.RecuentoRemoto.MarcarRecogido(Clave);
         dmmInventarios.CargarLineasInventario;
         // Igual que en la carga masiva: forzamos el refresco del grid
@@ -2057,6 +2139,7 @@ begin
         ShowMessage(Format(SErrorRecogerRecuentoInventario, [sMsg]));
     finally
       FreeAndNil(Lista);
+      FreeAndNil(Instantes);
       Screen.Cursor := crDefault;
     end;
   end;

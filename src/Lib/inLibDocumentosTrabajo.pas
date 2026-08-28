@@ -22,10 +22,32 @@ uses
   inLibContextoSesionIntf, inLibParametrosIntf,
   inLibArticulosResolverIntf, inLibGenBusq;
 
+const
+  TIPO_DOCUMENTO_ORIGEN_ALBARAN_VENTA = 'AV';
+  TIPO_DOCUMENTO_ORIGEN_ALBARAN_COMPRA = 'AB';
+  LIMITE_DOCUMENTOS_ORIGEN_DEFECTO = 100;
+  LIMITE_DOCUMENTOS_ORIGEN_MAXIMO = 1000;
+
 type
   TResolverDocTrabajoArtSku = procedure(out ACodArt, ACodSku: string) of object;
 
   TNombresAtributosDocumentoTrabajo = TArray<string>;
+
+  TDocumentoTrabajoOrigen = record
+    Empresa: string;
+    TipoDocumento: string;
+    Serie: string;
+    Numero: string;
+    procedure Clear;
+  end;
+
+  TResultadoCargaOrigenDocumentoTrabajo = record
+    LineasEncontradas: Integer;
+    LineasInsertadas: Integer;
+    LineasOmitidas: Integer;
+    TotalUnidades: Double;
+    procedure Clear;
+  end;
 
   TDocTrabajoLineaOrigen = record
     CodigoArticulo: string;
@@ -44,6 +66,17 @@ type
   IConsultaDocumentoTrabajo = interface
     ['{73E0E3AF-F935-4853-802A-39ACF5326677}']
     function DataSet: TDataSet;
+  end;
+
+  ICargaOrigenDocumentosTrabajo = interface
+    ['{D69E07FD-C7F0-4BB7-925D-81A3760D3DC1}']
+    function ConsultarUltimos(const AEmpresa: string;
+      ALimite: Integer): IConsultaDocumentoTrabajo;
+    function PrevisualizarLineas(
+      const AOrigen: TDocumentoTrabajoOrigen): IConsultaDocumentoTrabajo;
+    function CargarLineas(AIdDocumento: Int64;
+      const AOrigen: TDocumentoTrabajoOrigen;
+      const AUsuario: string): TResultadoCargaOrigenDocumentoTrabajo;
   end;
 
   ILecturasDocumentosTrabajo = interface
@@ -95,6 +128,7 @@ type
     Lecturas: ILecturasDocumentosTrabajo;
     Escritura: IEscrituraDocumentosTrabajo;
     Materializacion: IMaterializacionDocumentosTrabajo;
+    CargaOrigen: ICargaOrigenDocumentosTrabajo;
   end;
   TAccionDocumentoTrabajo = (
     adtCancelar,
@@ -153,6 +187,22 @@ uses
 resourcestring
   STituloBusquedaDocumentosTrabajoAbiertos =
     'Documentos de Trabajo abiertos';
+
+procedure TDocumentoTrabajoOrigen.Clear;
+begin
+  Empresa := '';
+  TipoDocumento := '';
+  Serie := '';
+  Numero := '';
+end;
+
+procedure TResultadoCargaOrigenDocumentoTrabajo.Clear;
+begin
+  LineasEncontradas := 0;
+  LineasInsertadas := 0;
+  LineasOmitidas := 0;
+  TotalUnidades := 0;
+end;
 
 procedure TDocTrabajoLineaOrigen.Clear;
 begin

@@ -1,4 +1,4 @@
-import { normalizarStock, ESTADOS } from "./controlu-modelo.js?v=20260827-1";
+import { normalizarStock, ESTADOS } from "./controlu-modelo.js?v=20260827-2";
 
 export class ServicioDemo {
   establecerAcceso() {}
@@ -35,6 +35,12 @@ export class ServicioDemo {
     return normalizarStock({
       articulo, descripcion: segundo ? "Abrigo de paño" : "Sandalia de tiras",
       estado, unidad_consultada: unidad, colores, almacenes: alms,
+      colores_basicos: colores.map((color) => ({
+        color, codigo: color, nombre: color, hex: {
+          Plata: "#C0C0C0", Marino: "#192F50", Cuero: "#A56F40",
+          Camel: "#C19A6B", Negro: "#000000",
+        }[color],
+      })),
       almacenes_predeterminados: alms.slice(0, 2), detalle,
       cantidad_unidad_consultada_por_almacen: unidad ? detalle[colorUnidad][tallaUnidad] : {},
     }, tallas);

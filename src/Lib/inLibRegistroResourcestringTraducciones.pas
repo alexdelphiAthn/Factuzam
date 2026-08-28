@@ -14,6 +14,7 @@ implementation
 
 uses
   inLibMsgArticulos,
+  inLibMsgCambioArticuloColor,
   inLibMsgCaja,
   inLibMsgCompras,
   inLibMsgComun,
@@ -1337,6 +1338,18 @@ begin
       SErrorImportacionInventarioSinDatos);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SErrorImportacionInventarioYaIniciada',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorImportacionInventarioYaIniciada);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorAplicarImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorAplicarImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'STituloIncidenciasImportacionInventario',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -1359,6 +1372,86 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       SFormatoIncidenciaPmpNuevoImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SFormatoIncidenciaFechaRecuentoImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SFormatoIncidenciaFechaRecuentoImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SFormatoIncidenciaLineaImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SFormatoIncidenciaLineaImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SIncidenciaIdentidadExcelIncompleta',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SIncidenciaIdentidadExcelIncompleta);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SIncidenciaIdentidadExcelContradictoria',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SIncidenciaIdentidadExcelContradictoria);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SFormatoIncidenciaInventarioExcelDistinto',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SFormatoIncidenciaInventarioExcelDistinto);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STextoSkusNoCargadosImportacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STextoSkusNoCargadosImportacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.STituloFechaHoraRecuentoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.STituloFechaHoraRecuentoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.STextoFechaHoraRecuentoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.STextoFechaHoraRecuentoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorFechaHoraRecuentoInventarioNoIndicada',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorFechaHoraRecuentoInventarioNoIndicada);
+  ARegistrar(
+    'inLibMsgArticulos.SEtiquetaFechaHoraRecuentoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.SEtiquetaFechaHoraRecuentoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STextoAceptarFechaHoraRecuentoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STextoAceptarFechaHoraRecuentoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STextoCancelarFechaHoraRecuentoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STextoCancelarFechaHoraRecuentoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.SErrorRecuentoInventarioSinInstanteSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.SErrorRecuentoInventarioSinInstanteSku);
+  ARegistrar(
+    'inLibMsgArticulos.SErrorSkuRecuentoInventarioNoExiste',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.SErrorSkuRecuentoInventarioNoExiste);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorRespuestaRecuentoInventarioIncoherente',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorRespuestaRecuentoInventarioIncoherente);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SInfoImportacionInventario',
@@ -2325,6 +2418,64 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       SCaptionCargandoMovimientosProgreso);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionHistoricoCambioArticuloColorVacio',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.
+      SCaptionHistoricoCambioArticuloColorVacio);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionUltimosCambiosArticuloColor',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.
+      SCaptionUltimosCambiosArticuloColor);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionUltimoCambioArticuloColor',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.
+      SCaptionUltimoCambioArticuloColor);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionHistoricoCambioArticulo',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionHistoricoCambioArticulo);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionHistoricoFusionArticulo',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionHistoricoFusionArticulo);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionHistoricoCambioColor',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionHistoricoCambioColor);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionHistoricoFusionColor',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionHistoricoFusionColor);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.SCaptionHistoricoReversion',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionHistoricoReversion);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionEstadoHistoricoAplicado',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionEstadoHistoricoAplicado);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionEstadoHistoricoRevertido',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.SCaptionEstadoHistoricoRevertido);
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SCaptionHistoricoCambioArticuloColorDesconocido',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.
+      SCaptionHistoricoCambioArticuloColorDesconocido);
   ARegistrar(
     'inLibMsgCaja.' +
     'SErrorParametrosCajaSinContratoEdicion',
@@ -11481,6 +11632,84 @@ begin
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
       SErrorDocumentoTrabajoSinGrabarCargar);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'STituloCargarOrigenDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      STituloCargarOrigenDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionTodosTiposOrigenDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionTodosTiposOrigenDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorServicioCargaOrigenDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorServicioCargaOrigenDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorOrigenDocumentoTrabajoNoSeleccionado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorOrigenDocumentoTrabajoNoSeleccionado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoDocumentosOrigenDocumentoTrabajoNoEncontrados',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoDocumentosOrigenDocumentoTrabajoNoEncontrados);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoCargaOrigenDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoCargaOrigenDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorTipoDocumentoOrigenNoSoportado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorTipoDocumentoOrigenNoSoportado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorDocumentoOrigenIncompleto',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorDocumentoOrigenIncompleto);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorDocumentoOrigenNoEncontrado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorDocumentoOrigenNoEncontrado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorDocumentoOrigenCancelado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorDocumentoOrigenCancelado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorDocumentoOrigenLineasSinSku',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorDocumentoOrigenLineasSinSku);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorCargaDocumentoOrigenIncompleta',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorCargaDocumentoOrigenIncompleta);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorEmpresaDocumentoTrabajoOrigenDistinta',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorEmpresaDocumentoTrabajoOrigenDistinta);
   ARegistrar(
     'inLibMsgVentas.' +
     'SErrorDocumentoTrabajoNoSeleccionadoCompartir',

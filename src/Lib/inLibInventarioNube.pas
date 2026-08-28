@@ -24,6 +24,26 @@ function InventarioNubeConfigurado(
   const AParametrosApp: IParametrosAplicacion;
   out AMensaje: string): Boolean;
 
+function TryFechaHoraRecuentoMovil(
+  const ATexto: string;
+  out AFechaHora: TDateTime): Boolean;
+
+function TryFechaHoraRecuentoNegocio(
+  const ATexto: string;
+  out AFechaHora: TDateTime): Boolean;
+
+function ObtenerSkuRecuento(
+  ALista: TStrings;
+  AIndice: Integer): string;
+
+procedure ValidarInstantesRecuentoMovil(
+  ALista: TStrings;
+  AInstantesRecuento: TStrings);
+
+function EsInstanteRecuentoPosterior(
+  const AInstanteLocalNuevo, AInstanteUtcNuevo: string;
+  const AInstanteLocalActual, AInstanteUtcActual: string): Boolean;
+
 function EnviarInventario(
   const AParametrosApp: IParametrosAplicacion;
   const APersistencia: IInventarioNubePersistencia;
@@ -38,7 +58,8 @@ function RecogerRecuento(
   AIdRecuento: Int64;
   AAgregado: TStringList;
   out ANumEventos: Integer;
-  out AMensaje: string): Boolean;
+  out AMensaje: string;
+  AInstantes: TStringList = nil): Boolean;
 
 function AplicarRespuestaRecuento(
   const ARespuesta: string;
@@ -46,13 +67,16 @@ function AplicarRespuestaRecuento(
   const AClave: TClaveInventarioNube;
   const AUsuario: string;
   AAgregado: TStrings;
-  out ANumEventos: Integer): Boolean;
+  out ANumEventos: Integer;
+  AInstantes: TStrings = nil): Boolean;
 
 implementation
 
 uses
+  System.DateUtils,
   System.Generics.Collections,
   System.JSON,
+  System.Math,
   System.Net.HttpClient,
   System.SysUtils,
   inLibFactuzamApi,
@@ -332,34 +356,327 @@ begin
   Result.Zona := AJson.GetValue<string>('zona', '');
 end;
 
-procedure AplicarEventos(
+function TryFechaHoraFija(
+  const ATexto: string;
+  out AFechaHora: TDateTime): Boolean;
+var
+  Ano: Integer;
+  Dia: Integer;
+  Hora: Integer;
+  Mes: Integer;
+  Minuto: Integer;
+  Segundo: Integer;
+begin
+  AFechaHora := 0;
+  Ano := 0;
+  Mes := 0;
+  Dia := 0;
+  Hora := 0;
+  Minuto := 0;
+  Segundo := 0;
+  Result := (Length(ATexto) = 19) and
+    (ATexto[5] = '-') and (ATexto[8] = '-') and
+    (ATexto[11] = ' ') and (ATexto[14] = ':') and
+    (ATexto[17] = ':') and
+    TryStrToInt(Copy(ATexto, 1, 4), Ano) and
+    TryStrToInt(Copy(ATexto, 6, 2), Mes) and
+    TryStrToInt(Copy(ATexto, 9, 2), Dia) and
+    TryStrToInt(Copy(ATexto, 12, 2), Hora) and
+    TryStrToInt(Copy(ATexto, 15, 2), Minuto) and
+    TryStrToInt(Copy(ATexto, 18, 2), Segundo);
+  if Result then
+    Result := TryEncodeDateTime(
+      Ano, Mes, Dia, Hora, Minuto, Segundo, 0, AFechaHora);
+  if not Result then
+    AFechaHora := 0;
+end;
+
+function TryFechaHoraUtc(
+  const ATexto: string;
+  out AFechaHoraUtc: TDateTime): Boolean;
+var
+  Texto: string;
+begin
+  Texto := Trim(ATexto);
+  Result := (Length(Texto) = 20) and
+    (Texto[11] = 'T') and (Texto[20] = 'Z');
+  if Result then
+  begin
+    Texto := Copy(Texto, 1, 10) + ' ' + Copy(Texto, 12, 8);
+    Result := TryFechaHoraFija(Texto, AFechaHoraUtc);
+  end;
+  if Result then
+    Result := (AFechaHoraUtc >= EncodeDate(2000, 1, 1)) and
+      (AFechaHoraUtc <= TDateTime.NowUTC + EncodeTime(0, 5, 0, 0));
+  if not Result then
+    AFechaHoraUtc := 0;
+end;
+
+function TryFechaHoraRecuentoMovil(
+  const ATexto: string;
+  out AFechaHora: TDateTime): Boolean;
+var
+  EsUtc: Boolean;
+  FechaUtc: TDateTime;
+  Texto: string;
+begin
+  Texto := Trim(ATexto);
+  EsUtc := (Length(Texto) = 20) and
+    (Texto[11] = 'T') and (Texto[20] = 'Z');
+  if EsUtc then
+  begin
+    Result := TryFechaHoraUtc(Texto, FechaUtc);
+    if Result then
+      AFechaHora := TTimeZone.Local.ToLocalTime(FechaUtc);
+  end
+  else
+  begin
+    Texto := StringReplace(Texto, 'T', ' ', []);
+    Result := TryFechaHoraFija(Texto, AFechaHora);
+    if Result then
+      Result := (AFechaHora >= EncodeDate(2000, 1, 1)) and
+        (AFechaHora <= Now + EncodeTime(0, 5, 0, 0));
+  end;
+  if not Result then
+    AFechaHora := 0;
+end;
+
+function TryFechaHoraRecuentoNegocio(
+  const ATexto: string;
+  out AFechaHora: TDateTime): Boolean;
+var
+  Texto: string;
+begin
+  Texto := StringReplace(Trim(ATexto), 'T', ' ', []);
+  Result := TryFechaHoraFija(Texto, AFechaHora);
+  if Result then
+    Result := AFechaHora >= EncodeDate(2000, 1, 1);
+  if not Result then
+    AFechaHora := 0;
+end;
+
+function ObtenerSkuRecuento(
+  ALista: TStrings;
+  AIndice: Integer): string;
+begin
+  Result := Trim(ALista.Names[AIndice]);
+  if Result = '' then
+    Result := Trim(ALista[AIndice]);
+end;
+
+procedure ValidarInstantesRecuentoMovil(
+  ALista: TStrings;
+  AInstantesRecuento: TStrings);
+var
+  FechaRecuento: TDateTime;
+  i: Integer;
+  Sku: string;
+begin
+  for i := 0 to ALista.Count - 1 do
+  begin
+    Sku := ObtenerSkuRecuento(ALista, i);
+    if not TryFechaHoraRecuentoNegocio(
+         AInstantesRecuento.Values[Sku],
+         FechaRecuento) then
+      FechaRecuento := 0;
+    if (Sku <> '') and (FechaRecuento <= 0) then
+      raise EConvertError.CreateFmt(
+        SErrorRecuentoInventarioSinInstanteSku,
+        [Sku]);
+  end;
+end;
+
+function LeerDesfaseRecuento(
+  AJson: TJSONObject;
+  out ADesfaseMinutos: Integer): Boolean;
+var
+  Numero: Double;
+  Valor: TJSONValue;
+begin
+  ADesfaseMinutos := 0;
+  Valor := AJson.GetValue('desfase_recuento_minutos');
+  Result := Valor is TJSONNumber;
+  if Result then
+  begin
+    Numero := TJSONNumber(Valor).AsDouble;
+    ADesfaseMinutos := Trunc(Numero);
+    Result := SameValue(Numero, ADesfaseMinutos) and
+      (ADesfaseMinutos >= -840) and (ADesfaseMinutos <= 840);
+  end;
+end;
+
+function FechaHoraEvento(const ATexto: string): TDateTime;
+begin
+  if not TryFechaHoraRecuentoNegocio(ATexto, Result) then
+    Result := 0;
+end;
+
+function NormalizarInstanteEvento(
+  AJson: TJSONObject;
+  var AEvento: TEventoInventarioNube): Boolean;
+var
+  DesfaseMinutos: Integer;
+  FechaLocal: TDateTime;
+  FechaUtc: TDateTime;
+  Texto: string;
+begin
+  Texto := Trim(AEvento.InstanteRecuento);
+  Result := (Length(Texto) = 20) and
+    (Texto[11] = 'T') and (Texto[20] = 'Z');
+  if Result then
+  begin
+    Result := LeerDesfaseRecuento(AJson, DesfaseMinutos) and
+      TryFechaHoraUtc(Texto, FechaUtc);
+    if Result then
+    begin
+      FechaLocal := IncMinute(FechaUtc, DesfaseMinutos);
+      AEvento.InstanteRecuento := FormatDateTime(
+        'yyyy-mm-dd hh":"nn":"ss', FechaLocal);
+      AEvento.InstanteRecuentoUtc := FormatDateTime(
+        'yyyy-mm-dd hh":"nn":"ss', FechaUtc);
+    end;
+  end
+  else
+  begin
+    Result := TryFechaHoraRecuentoNegocio(Texto, FechaLocal);
+    if Result then
+    begin
+      AEvento.InstanteRecuento := FormatDateTime(
+        'yyyy-mm-dd hh":"nn":"ss', FechaLocal);
+      AEvento.InstanteRecuentoUtc := '';
+    end;
+  end;
+end;
+
+type
+  TOrdenInstanteEvento = record
+    FechaLocal: TDateTime;
+    FechaUtc: TDateTime;
+    TieneUtc: Boolean;
+  end;
+
+function OrdenInstanteEvento(
+  const AEvento: TEventoInventarioNube): TOrdenInstanteEvento;
+begin
+  Result := Default(TOrdenInstanteEvento);
+  TryFechaHoraFija(AEvento.InstanteRecuento, Result.FechaLocal);
+  Result.TieneUtc := TryFechaHoraFija(
+    AEvento.InstanteRecuentoUtc,
+    Result.FechaUtc);
+end;
+
+function EsInstantePosterior(
+  const ANuevo, AActual: TOrdenInstanteEvento): Boolean;
+begin
+  if ANuevo.TieneUtc and AActual.TieneUtc then
+    Result := ANuevo.FechaUtc > AActual.FechaUtc
+  else
+    Result := ANuevo.FechaLocal > AActual.FechaLocal;
+end;
+
+function EsInstanteRecuentoPosterior(
+  const AInstanteLocalNuevo, AInstanteUtcNuevo: string;
+  const AInstanteLocalActual, AInstanteUtcActual: string): Boolean;
+var
+  Actual: TOrdenInstanteEvento;
+  Nuevo: TOrdenInstanteEvento;
+begin
+  Actual := Default(TOrdenInstanteEvento);
+  Nuevo := Default(TOrdenInstanteEvento);
+  TryFechaHoraFija(AInstanteLocalNuevo, Nuevo.FechaLocal);
+  TryFechaHoraFija(AInstanteLocalActual, Actual.FechaLocal);
+  Nuevo.TieneUtc := TryFechaHoraFija(
+    AInstanteUtcNuevo,
+    Nuevo.FechaUtc);
+  Actual.TieneUtc := TryFechaHoraFija(
+    AInstanteUtcActual,
+    Actual.FechaUtc);
+  Result := EsInstantePosterior(Nuevo, Actual);
+end;
+
+procedure RegistrarUltimoInstante(
+  const AEvento: TEventoInventarioNube;
+  AInstantes: TStrings;
+  AOrdenes: TDictionary<string, TOrdenInstanteEvento>);
+var
+  Actual: TOrdenInstanteEvento;
+  Nuevo: TOrdenInstanteEvento;
+  Sku: string;
+begin
+  Sku := Trim(AEvento.CodigoUnidad);
+  if Assigned(AInstantes) and (Sku <> '') then
+  begin
+    Nuevo := OrdenInstanteEvento(AEvento);
+    if (not AOrdenes.TryGetValue(Sku, Actual)) or
+       EsInstantePosterior(Nuevo, Actual) then
+    begin
+      AInstantes.Values[Sku] := AEvento.InstanteRecuento;
+      AOrdenes.AddOrSetValue(Sku, Nuevo);
+    end;
+  end;
+end;
+
+type
+  TEventosInventarioNube = TArray<TEventoInventarioNube>;
+
+function LeerEventosRespuesta(
   ARaiz: TJSONObject;
+  out AEventos: TEventosInventarioNube): Boolean;
+var
+  EventosJson: TJSONArray;
+  Evento: TEventoInventarioNube;
+  iEvento: Integer;
+  iResultado: Integer;
+begin
+  SetLength(AEventos, 0);
+  Result := ARaiz.GetValue('eventos') is TJSONArray;
+  if Result then
+  begin
+    EventosJson := ARaiz.GetValue('eventos') as TJSONArray;
+    iEvento := 0;
+    while Result and (iEvento < EventosJson.Count) do
+    begin
+      Result := EventosJson.Items[iEvento] is TJSONObject;
+      if Result then
+      begin
+        Evento := LeerEvento(TJSONObject(EventosJson.Items[iEvento]));
+        Result := (Trim(Evento.Uuid) <> '') and
+          (Trim(Evento.CodigoUnidad) <> '') and
+          NormalizarInstanteEvento(
+            TJSONObject(EventosJson.Items[iEvento]),
+            Evento);
+      end;
+      if Result then
+      begin
+        iResultado := Length(AEventos);
+        SetLength(AEventos, iResultado + 1);
+        AEventos[iResultado] := Evento;
+      end;
+      Inc(iEvento);
+    end;
+  end;
+  if not Result then
+    SetLength(AEventos, 0);
+end;
+
+procedure AplicarEventos(
+  const AEventos: TEventosInventarioNube;
   const APersistencia: IInventarioNubePersistencia;
   const AClave: TClaveInventarioNube;
   const AUsuario: string;
   out ANumEventos: Integer);
 var
-  oEventos: TJSONArray;
-  oEvento: TEventoInventarioNube;
   iEvento: Integer;
 begin
   ANumEventos := 0;
-  if ARaiz.GetValue('eventos') is TJSONArray then
+  for iEvento := 0 to High(AEventos) do
   begin
-    oEventos := ARaiz.GetValue('eventos') as TJSONArray;
-    for iEvento := 0 to oEventos.Count - 1 do
+    if APersistencia.GuardarEventoSiNuevo(
+         AClave,
+         AEventos[iEvento],
+         AUsuario) then
     begin
-      if oEventos.Items[iEvento] is TJSONObject then
-      begin
-        oEvento := LeerEvento(TJSONObject(oEventos.Items[iEvento]));
-        if APersistencia.GuardarEventoSiNuevo(
-             AClave,
-             oEvento,
-             AUsuario) then
-        begin
-          Inc(ANumEventos);
-        end;
-      end;
+      Inc(ANumEventos);
     end;
   end;
 end;
@@ -392,14 +709,80 @@ begin
   end;
 end;
 
+procedure RegistrarCantidadEvento(
+  const AEvento: TEventoInventarioNube;
+  ACantidades: TStrings);
+var
+  Cantidad: Double;
+  Sku: string;
+begin
+  Sku := Trim(AEvento.CodigoUnidad);
+  if Sku <> '' then
+  begin
+    Cantidad := StrToFloatDef(ACantidades.Values[Sku], 0);
+    Cantidad := Cantidad + AEvento.Cantidad;
+    ACantidades.Values[Sku] := FloatToStr(Cantidad);
+  end;
+end;
+
+function RespuestaRecuentoCoherente(
+  const AEventos: TEventosInventarioNube;
+  AAgregado, AInstantes: TStrings): Boolean;
+var
+  CantidadesEventos: TStringList;
+  CantidadAgregada: Double;
+  CantidadEventos: Double;
+  iEvento: Integer;
+  iLinea: Integer;
+  Sku: string;
+begin
+  CantidadesEventos := TStringList.Create;
+  try
+    for iEvento := 0 to High(AEventos) do
+      RegistrarCantidadEvento(AEventos[iEvento], CantidadesEventos);
+    Result := True;
+    iLinea := 0;
+    while Result and (iLinea < AAgregado.Count) do
+    begin
+      Sku := Trim(AAgregado.Names[iLinea]);
+      CantidadAgregada := StrToFloatDef(
+        AAgregado.ValueFromIndex[iLinea],
+        0);
+      CantidadEventos := StrToFloatDef(
+        CantidadesEventos.Values[Sku],
+        0);
+      Result := (Sku <> '') and
+        (CantidadesEventos.IndexOfName(Sku) >= 0) and
+        SameValue(CantidadAgregada, CantidadEventos, 0.000001) and
+        (FechaHoraEvento(AInstantes.Values[Sku]) > 0);
+      Inc(iLinea);
+    end;
+    iLinea := 0;
+    while Result and (iLinea < CantidadesEventos.Count) do
+    begin
+      Sku := CantidadesEventos.Names[iLinea];
+      Result := AAgregado.IndexOfName(Sku) >= 0;
+      Inc(iLinea);
+    end;
+  finally
+    FreeAndNil(CantidadesEventos);
+  end;
+end;
+
 function AplicarRespuestaRecuento(
   const ARespuesta: string;
   const APersistencia: IInventarioNubePersistencia;
   const AClave: TClaveInventarioNube;
   const AUsuario: string;
   AAgregado: TStrings;
-  out ANumEventos: Integer): Boolean;
+  out ANumEventos: Integer;
+  AInstantes: TStrings): Boolean;
 var
+  AgregadoTemporal: TStringList;
+  Eventos: TEventosInventarioNube;
+  InstantesTemporales: TStringList;
+  OrdenesTemporales: TDictionary<string, TOrdenInstanteEvento>;
+  iEvento: Integer;
   oRespuestaJson: TJSONValue;
   oRaiz: TJSONObject;
 begin
@@ -408,23 +791,51 @@ begin
   ANumEventos := 0;
   if Assigned(AAgregado) then
     AAgregado.Clear;
+  if Assigned(AInstantes) then
+    AInstantes.Clear;
   Result := False;
+  AgregadoTemporal := TStringList.Create;
+  InstantesTemporales := TStringList.Create;
+  OrdenesTemporales :=
+    TDictionary<string, TOrdenInstanteEvento>.Create;
   oRespuestaJson := TJSONObject.ParseJSONValue(ARespuesta);
   try
     if oRespuestaJson is TJSONObject then
     begin
       oRaiz := TJSONObject(oRespuestaJson);
-      AplicarEventos(
-        oRaiz,
-        APersistencia,
-        AClave,
-        AUsuario,
-        ANumEventos);
-      AplicarAgregado(oRaiz, AAgregado);
-      Result := True;
+      Result := LeerEventosRespuesta(oRaiz, Eventos);
+      if Result then
+      begin
+        AplicarAgregado(oRaiz, AgregadoTemporal);
+        for iEvento := 0 to High(Eventos) do
+          RegistrarUltimoInstante(
+            Eventos[iEvento],
+            InstantesTemporales,
+            OrdenesTemporales);
+        Result := RespuestaRecuentoCoherente(
+          Eventos,
+          AgregadoTemporal,
+          InstantesTemporales);
+      end;
+      if Result then
+      begin
+        AplicarEventos(
+          Eventos,
+          APersistencia,
+          AClave,
+          AUsuario,
+          ANumEventos);
+        if Assigned(AAgregado) then
+          AAgregado.Assign(AgregadoTemporal);
+        if Assigned(AInstantes) then
+          AInstantes.Assign(InstantesTemporales);
+      end;
     end;
   finally
     FreeAndNil(oRespuestaJson);
+    FreeAndNil(OrdenesTemporales);
+    FreeAndNil(InstantesTemporales);
+    FreeAndNil(AgregadoTemporal);
   end;
 end;
 
@@ -435,9 +846,12 @@ function RecogerRecuento(
   AIdRecuento: Int64;
   AAgregado: TStringList;
   out ANumEventos: Integer;
-  out AMensaje: string): Boolean;
+  out AMensaje: string;
+  AInstantes: TStringList): Boolean;
 var
+  iLinea: Integer;
   oClave: TClaveInventarioNube;
+  sSku: string;
   sRespuesta: string;
   iEstado: Integer;
 begin
@@ -446,6 +860,8 @@ begin
   AMensaje := '';
   if Assigned(AAgregado) then
     AAgregado.Clear;
+  if Assigned(AInstantes) then
+    AInstantes.Clear;
   if not Assigned(APersistencia) then
     raise EArgumentNilException.Create('APersistencia');
   if InventarioNubeConfigurado(AParametrosApp, AMensaje) then
@@ -465,7 +881,25 @@ begin
         oClave,
         AUsuario,
         AAgregado,
-        ANumEventos);
+        ANumEventos,
+        AInstantes);
+      if (not Result) and (AMensaje = '') then
+        AMensaje := SErrorRespuestaRecuentoInventarioIncoherente;
+      iLinea := 0;
+      while Result and Assigned(AInstantes) and
+            Assigned(AAgregado) and (iLinea < AAgregado.Count) do
+      begin
+        sSku := Trim(AAgregado.Names[iLinea]);
+        if (sSku <> '') and
+           (FechaHoraEvento(AInstantes.Values[sSku]) <= 0) then
+        begin
+          Result := False;
+          AMensaje := Format(
+            SErrorRecuentoInventarioSinInstanteSku,
+            [sSku]);
+        end;
+        Inc(iLinea);
+      end;
     end
     else if iEstado <> 0 then
       AMensaje := MensajeError(sRespuesta, iEstado);

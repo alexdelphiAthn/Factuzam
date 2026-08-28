@@ -92,6 +92,7 @@ type
     Lecturas: ILecturasDocumentosTrabajo;
     Materializacion: IMaterializacionDocumentosTrabajo;
     CargaMasiva: TServiciosCargaMasivaArticulos;
+    CargaOrigen: ICargaOrigenDocumentosTrabajo;
     procedure Validar;
   end;
 
@@ -455,6 +456,7 @@ begin
   oRepositorios := CrearRepositoriosDocumentosTrabajo(AConexion);
   AContexto.Lecturas := oRepositorios.Lecturas;
   AContexto.Materializacion := oRepositorios.Materializacion;
+  AContexto.CargaOrigen := oRepositorios.CargaOrigen;
   AContexto.CargaMasiva :=
     AArticulos.CrearServicioCargaMasivaArticulos;
   AContexto.Validar;
@@ -557,6 +559,8 @@ begin
     raise EArgumentNilException.Create('Lecturas');
   if not Assigned(Materializacion) then
     raise EArgumentNilException.Create('Materializacion');
+  if not Assigned(CargaOrigen) then
+    raise EArgumentNilException.Create('CargaOrigen');
   if not Assigned(CargaMasiva.Consultas) or
      not Assigned(CargaMasiva.Inserciones) then
   begin
