@@ -109,14 +109,22 @@ resourcestring
   SCaptionSeleccioneOrdenMovimientosVentas =
     'Seleccione un criterio de ordenación:';
   SHintOrdenDetalleMovimientosVentas =
-    'Ordena cada agrupación por su subtotal y el detalle del último nivel.';
-  SOrdenUnidadesVentaMovimientosVentas = 'Unidades vendidas';
-  SOrdenImporteVentaMovimientosVentas = 'Importe vendido';
-  SOrdenImporteCosteMovimientosVentas = 'Importe de coste';
+    'Ordena cada agrupación por su subtotal y el detalle del último nivel. ' +
+    '% vendido es venta sobre compra; % Vtas es sobre la agrupación.';
+  SOrdenArticuloDescripcionMovimientosVentas = 'Artículo / descripción';
+  SOrdenUnidadesEntradaMovimientosVentas = 'Unidades entrada';
+  SOrdenImporteEntradaMovimientosVentas = 'Importe entrada';
+  SOrdenUnidadesVentaMovimientosVentas = 'Unidades venta';
+  SOrdenImporteVentaMovimientosVentas = 'Importe venta';
+  SOrdenImporteCosteMovimientosVentas = 'Importe coste';
   SOrdenBeneficioMovimientosVentas = 'Beneficio';
   SOrdenPorcentajeBeneficioMovimientosVentas = '% beneficio';
-  SOrdenImporteVentaComprasMovimientosVentas =
-    'Importe venta - compras';
+  SOrdenVentaEntradaMovimientosVentas = 'Venta - entrada';
+  SOrdenPorcentajeVentaEntradaMovimientosVentas = 'Venta / entrada';
+  SOrdenMargen1MovimientosVentas = 'Margen 1';
+  SOrdenMargen2MovimientosVentas = 'Margen 2';
+  SOrdenPorcentajeVendidoMovimientosVentas = '% vendido';
+  SOrdenPorcentajeVentasMovimientosVentas = '% Vtas';
   SOrdenAscendenteMovimientosVentas = 'Ascendente';
   SOrdenDescendenteMovimientosVentas = 'Descendente';
 
@@ -203,10 +211,16 @@ begin
   FclbOrden := CrearTabChecklist(STituloOrdenacionMovimientosVentas,
     SCaptionSeleccioneOrdenMovimientosVentas);
   FclbOrden.Align := alNone;
-  FclbOrden.SetBounds(16, 40, 360, 190);
+  FclbOrden.SetBounds(16, 40, 360, 330);
   FclbOrden.EditValueFormat := cvfIndices;
   FclbOrden.IntegralHeight := False;
   FclbOrden.AllowGrayed := False;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenArticuloDescripcionMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenUnidadesEntradaMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenImporteEntradaMovimientosVentas;
   oItem := FclbOrden.Items.Add;
   oItem.Text := SOrdenUnidadesVentaMovimientosVentas;
   oItem := FclbOrden.Items.Add;
@@ -218,8 +232,18 @@ begin
   oItem := FclbOrden.Items.Add;
   oItem.Text := SOrdenPorcentajeBeneficioMovimientosVentas;
   oItem := FclbOrden.Items.Add;
-  oItem.Text := SOrdenImporteVentaComprasMovimientosVentas;
+  oItem.Text := SOrdenVentaEntradaMovimientosVentas;
   oItem.Checked := True;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenPorcentajeVentaEntradaMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenMargen1MovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenMargen2MovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenPorcentajeVendidoMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenPorcentajeVentasMovimientosVentas;
   FclbOrden.OnClickCheck := OrdenClickCheck;
   FclbOrden.Hint := SHintOrdenDetalleMovimientosVentas;
   FclbOrden.ShowHint := True;

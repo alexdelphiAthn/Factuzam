@@ -68,6 +68,12 @@ function TRepositorioInformeMovimientosVentasArticuloUniDAC.CodigoOrden(
   AOrden: TOrdenMovVentasArt): string;
 begin
   case AOrden of
+    omvaArticuloDescripcion:
+      Result := 'AD';
+    omvaUnidadesEntrada:
+      Result := 'UE';
+    omvaImporteEntrada:
+      Result := 'IE';
     omvaUnidadesVenta:
       Result := 'UV';
     omvaImporteVenta:
@@ -78,8 +84,18 @@ begin
       Result := 'IB';
     omvaPorcentajeBeneficio:
       Result := 'PB';
-    omvaImporteVentaCompras:
+    omvaVentaEntrada:
       Result := 'VC';
+    omvaPorcentajeVentaEntrada:
+      Result := 'VE';
+    omvaMargen1:
+      Result := 'M1';
+    omvaMargen2:
+      Result := 'M2';
+    omvaPorcentajeVendido:
+      Result := 'VD';
+    omvaPorcentajeVentas:
+      Result := 'PV';
   else
     Result := '';
   end;

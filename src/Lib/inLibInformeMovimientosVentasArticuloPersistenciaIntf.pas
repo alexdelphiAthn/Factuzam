@@ -7,12 +7,20 @@ uses
 
 type
   TOrdenMovVentasArt = (
+    omvaArticuloDescripcion,
+    omvaUnidadesEntrada,
+    omvaImporteEntrada,
     omvaUnidadesVenta,
     omvaImporteVenta,
     omvaImporteCoste,
     omvaBeneficio,
     omvaPorcentajeBeneficio,
-    omvaImporteVentaCompras
+    omvaVentaEntrada,
+    omvaPorcentajeVentaEntrada,
+    omvaMargen1,
+    omvaMargen2,
+    omvaPorcentajeVendido,
+    omvaPorcentajeVentas
   );
 
   TCriteriosInformeMovimientosVentasArticulo = record
