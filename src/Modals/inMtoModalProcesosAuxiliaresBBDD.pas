@@ -217,7 +217,8 @@ resourcestring
   SCaptionMetadatosSqlObjetoProcesosAuxiliaresBBDD =
     '&Metadatos SQL - %s';
   SCaptionResultadoProcesosAuxiliaresBBDD = '&Resultado';
-  SCaptionResultadoObjetoProcesosAuxiliaresBBDD = '&Resultado - %s';
+  SCaptionResultadoObjetoProcesosAuxiliaresBBDD =
+    '&Resultado - %s (máximo 1000 filas)';
   SCaptionExportarExcelProcesosAuxiliaresBBDD = 'Exportar a E&xcel';
   SCaptionPlanEjecucionProcesosAuxiliaresBBDD = '&Plan de ejecución';
   SCaptionPlanEjecucionObjetoProcesosAuxiliaresBBDD =

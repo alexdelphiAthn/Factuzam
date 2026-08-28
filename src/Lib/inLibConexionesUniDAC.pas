@@ -100,6 +100,7 @@ begin
   try
     CopiarManejadorErrorConexionPrincipal(Result);
     FFabrica.Conectar(Result);
+    Result.AfterConnect := FConexionPrincipal.AfterConnect;
   except
     FreeAndNil(Result);
     raise;

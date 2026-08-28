@@ -331,7 +331,8 @@ procedure TRepositorioGeneradorProcesosUniDAC.CargarContenido(
 begin
   FContenido.Close;
   FContenido.ReadOnly := EsTablaFacturacionProtegida(ANombre);
-  FContenido.SQL.Text := 'SELECT * FROM ' + IdentificadorSeguro(ANombre);
+  FContenido.SQL.Text := 'SELECT * FROM ' +
+    IdentificadorSeguro(ANombre) + ' LIMIT 1000';
   FContenido.Open;
 end;
 

@@ -276,7 +276,8 @@ begin
   sNombreSeguro := IdentificadorSeguro(ANombre);
   PrepararContenidoLectura;
   FContenido.ReadOnly := EsTablaFacturacionProtegida(sNombreSeguro);
-  FContenido.SQL.Text := 'SELECT * FROM ' + sNombreSeguro;
+  FContenido.SQL.Text :=
+    'SELECT * FROM ' + sNombreSeguro + ' LIMIT 1000';
   try
     FNombreContenido := sNombreSeguro;
     FContenido.Open;

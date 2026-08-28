@@ -195,7 +195,7 @@ begin
     AConexion,
     'ConnectionTimeout',
     IntToStr(APerfil.TimeoutConexionSeg));
-  AConexion.Options.LocalFailover := False;
+  AConexion.Options.LocalFailover := True;
   AConexion.Options.DisconnectedMode := True;
 end;
 
