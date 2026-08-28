@@ -6,7 +6,7 @@ MariaDB/MySQL.
 
 ## Instalador completo para Windows
 
-El paquete `FzamControlU-Servidor-2026.08.27.1-x64.exe` incluye Apache,
+El paquete `FzamControlU-Servidor-2026.08.28.2-x64.exe` incluye Apache,
 PHP x64 Thread Safe, PDO MySQL, Visual C++ y esta API. Se genera con
 `C:\DISCO_DURO\proyectos\factuzam_web\scripts\instalador_fzamcontrolu\Crear-Instalador.ps1`
 y se entrega en
@@ -15,6 +15,8 @@ y se entrega en
 El asistente ofrece puerto HTTP **80 por defecto**, editable, y un botón
 para comprobar MariaDB. Comprueba conexión, columnas y permisos con consultas
 de solo lectura; no instala MariaDB, crea usuarios ni ejecuta migraciones.
+También compara en el registro de Windows el runtime Visual C++ x64 instalado
+con la versión mínima del paquete y solo marca su instalación cuando hace falta.
 
 Utiliza una carpeta propia (`C:\FactuzamControlU`) y el servicio
 `FzamControlUApache`, sin modificar el Apache/PHP existente. Solo publica
