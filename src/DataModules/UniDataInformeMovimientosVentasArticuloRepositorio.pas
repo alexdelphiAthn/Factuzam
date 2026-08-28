@@ -31,6 +31,7 @@ type
     IRepositorioInformeMovimientosVentasArticulo)
   private
     FConexion: TUniConnection;
+    function CodigoOrden(AOrden: TOrdenMovVentasArt): string;
   public
     constructor Create(AConexion: TUniConnection);
     function Preparar(
@@ -63,6 +64,27 @@ begin
   FConexion := AConexion;
 end;
 
+function TRepositorioInformeMovimientosVentasArticuloUniDAC.CodigoOrden(
+  AOrden: TOrdenMovVentasArt): string;
+begin
+  case AOrden of
+    omvaUnidadesVenta:
+      Result := 'UV';
+    omvaImporteVenta:
+      Result := 'IV';
+    omvaImporteCoste:
+      Result := 'IC';
+    omvaBeneficio:
+      Result := 'IB';
+    omvaPorcentajeBeneficio:
+      Result := 'PB';
+    omvaImporteVentaCompras:
+      Result := 'VC';
+  else
+    Result := '';
+  end;
+end;
+
 function TRepositorioInformeMovimientosVentasArticuloUniDAC.Preparar(
   const ACriterios: TCriteriosInformeMovimientosVentasArticulo
 ): IResultadoInformeMovimientosVentasArticulo;
@@ -75,7 +97,8 @@ begin
     oConsulta.SQL.Text :=
       'CALL PRC_GET_MOV_VENTAS_ART(' +
       ':pDESDE, :pHASTA, :pINICMP, :pALM, :pFAM, :pPRV, :pTMP, :pART, ' +
-      ':pN1, :pN2, :pN3, :pNFAM, :pSOLOVEN)';
+      ':pN1, :pN2, :pN3, :pNFAM, :pSOLOVEN, :pCONIMP, :pORDEN, ' +
+      ':pORDENDESC)';
     oConsulta.ParamByName('pDESDE').AsDateTime := ACriterios.FechaDesde;
     oConsulta.ParamByName('pHASTA').AsDateTime := ACriterios.FechaHasta;
     if ACriterios.UsarInicioCompras then
@@ -96,6 +119,19 @@ begin
       oConsulta.ParamByName('pSOLOVEN').AsString := 'S'
     else
       oConsulta.ParamByName('pSOLOVEN').AsString := 'N';
+    if ACriterios.ConImpuestos then
+      oConsulta.ParamByName('pCONIMP').AsString := 'S'
+    else
+      oConsulta.ParamByName('pCONIMP').AsString := 'N';
+    if ACriterios.UsarOrden then
+      oConsulta.ParamByName('pORDEN').AsString :=
+        CodigoOrden(ACriterios.Orden)
+    else
+      oConsulta.ParamByName('pORDEN').AsString := '';
+    if ACriterios.OrdenDescendente then
+      oConsulta.ParamByName('pORDENDESC').AsString := 'S'
+    else
+      oConsulta.ParamByName('pORDENDESC').AsString := 'N';
     oConsulta.Open;
     Result :=
       TResultadoInformeMovimientosVentasArticuloUniDAC.Create(oConsulta);

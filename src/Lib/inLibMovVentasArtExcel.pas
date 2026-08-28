@@ -86,6 +86,7 @@ type
     FGrupoEtiquetas: array[1..N_NIVELES] of string;
     FGrupoUsado: array[1..N_NIVELES] of Boolean;
     FGrupoAcumulado: array[1..N_NIVELES] of TAcum;
+    FGrupoVentasPadre: array[1..N_NIVELES] of Double;
     FTotalAcumulado: TAcum;
     procedure EscribirValor(AColumna: Integer; const AValor: Variant;
       ANegrita: Boolean = False;
@@ -94,9 +95,11 @@ type
     procedure EscribirNumero(AColumna: Integer; AValor: Double;
       const AFormato: string; AOcultarCero: Boolean);
     function CampoTexto(const ANombre: string): string;
+    function CampoNumero(const ANombre: string): Double;
     procedure EscribirCabeceraColumnas;
     procedure EscribirTotales(const AAcumulado: TAcum;
-      const AEtiqueta: string; AColorFondo: Cardinal);
+      const AEtiqueta: string; AColorFondo: Cardinal;
+      AVentasUnidadesPadre: Double);
     procedure AbrirGrupo(ANivel: Integer);
     procedure EmitirResumenGrupo(ANivel: Integer);
     procedure DetectarAgrupaciones;
@@ -173,12 +176,23 @@ begin
     Result := '';
 end;
 
+function TExportadorMovVentasArt.CampoNumero(
+  const ANombre: string): Double;
+var
+  oCampo: TField;
+begin
+  Result := 0;
+  oCampo := FDatos.FindField(ANombre);
+  if oCampo <> nil then
+    Result := oCampo.AsFloat;
+end;
+
 procedure TExportadorMovVentasArt.EscribirCabeceraColumnas;
 const
   TITULOS: array[0..COL_MAX] of string = (
     'Artículo', 'Uni.Ent.', 'Imp.Ent.', 'Uds Vta', 'Imp Venta',
     'Imp Coste', 'Beneficio', '% Bnf', 'Venta-Ent', 'VentEnt%',
-    'Margen 1', 'Margen 2', '% V.dto', '% Vlast');
+    'Margen 1', 'Margen 2', '% Vdo', '% Vtas');
 var
   iColumna: Integer;
 begin
@@ -198,7 +212,7 @@ end;
 
 procedure TExportadorMovVentasArt.EscribirTotales(
   const AAcumulado: TAcum; const AEtiqueta: string;
-  AColorFondo: Cardinal);
+  AColorFondo: Cardinal; AVentasUnidadesPadre: Double);
 var
   iColumna: Integer;
 begin
@@ -209,26 +223,26 @@ begin
   EscribirNumero(COL_IMPVTA, AAcumulado.ImpVta, FMT_EUR_HZ, False);
   EscribirNumero(COL_IMPCOS, AAcumulado.ImpCos, FMT_EUR_HZ, False);
   EscribirNumero(COL_BENEF, AAcumulado.Benef, FMT_EUR_HZ, False);
-  if AAcumulado.ImpCos <> 0 then
+  if AAcumulado.ImpVta <> 0 then
     EscribirNumero(COL_PCTBNF,
-      AAcumulado.Benef / AAcumulado.ImpCos * 100, FMT_PCT, False);
+      AAcumulado.Benef / AAcumulado.ImpVta * 100, FMT_PCT, False);
   EscribirNumero(COL_VTAENT, AAcumulado.VtaEnt, FMT_EUR_HZ, False);
   if AAcumulado.ImpEnt <> 0 then
-    EscribirNumero(COL_VENTENT,
-      AAcumulado.VtaEnt / AAcumulado.ImpEnt * 100, FMT_PCT, False);
-  if AAcumulado.ImpVta <> 0 then
   begin
-    EscribirNumero(COL_MARG1,
-      AAcumulado.Benef / AAcumulado.ImpVta * 100, FMT_PCT, False);
+    EscribirNumero(COL_VENTENT,
+      AAcumulado.ImpVta / AAcumulado.ImpEnt * 100, FMT_PCT, False);
     EscribirNumero(COL_MARG2,
-      AAcumulado.VtaEnt / AAcumulado.ImpVta * 100, FMT_PCT, False);
+      AAcumulado.VtaEnt / AAcumulado.ImpEnt * 100, FMT_PCT, False);
   end;
+  if AAcumulado.ImpCos <> 0 then
+    EscribirNumero(COL_MARG1,
+      AAcumulado.Benef / AAcumulado.ImpCos * 100, FMT_PCT, False);
   if AAcumulado.UniEnt <> 0 then
     EscribirNumero(COL_PCTVDTO,
       AAcumulado.UdsVta / AAcumulado.UniEnt * 100, FMT_PCT, False);
-  if AAcumulado.ImpEnt <> 0 then
+  if AVentasUnidadesPadre <> 0 then
     EscribirNumero(COL_PCTVLAST,
-      AAcumulado.ImpVta / AAcumulado.ImpEnt * 100, FMT_PCT, False);
+      AAcumulado.UdsVta / AVentasUnidadesPadre * 100, FMT_PCT, False);
   for iColumna := 0 to COL_MAX do
   begin
     if FEscritor.CeldaExiste(FFila, iColumna) then
@@ -243,6 +257,9 @@ begin
 end;
 
 procedure TExportadorMovVentasArt.AbrirGrupo(ANivel: Integer);
+const
+  CAMPOS_VENTAS_PADRE: array[1..N_NIVELES] of string = (
+    'UDS_VENTA_GLOBAL', 'UDS_VENTA_G1', 'UDS_VENTA_G2');
 var
   iColumna: Integer;
 begin
@@ -265,6 +282,8 @@ begin
     EscribirCabeceraColumnas;
     Inc(FFila);
   end;
+  FGrupoVentasPadre[ANivel] :=
+    CampoNumero(CAMPOS_VENTAS_PADRE[ANivel]);
   FGrupoAcumulado[ANivel].Reset;
 end;
 
@@ -272,7 +291,8 @@ procedure TExportadorMovVentasArt.EmitirResumenGrupo(ANivel: Integer);
 begin
   if FGrupoUsado[ANivel] then
     EscribirTotales(FGrupoAcumulado[ANivel],
-      'TOTAL ' + FGrupoEtiquetas[ANivel], CL_GRUPO_T);
+      'TOTAL ' + FGrupoEtiquetas[ANivel], CL_GRUPO_T,
+      FGrupoVentasPadre[ANivel]);
   FGrupoAcumulado[ANivel].Reset;
 end;
 
@@ -386,7 +406,8 @@ begin
         for iNivel := N_NIVELES downto 1 do
           EmitirResumenGrupo(iNivel);
       end;
-      EscribirTotales(FTotalAcumulado, 'TOTAL GENERAL', CL_GRUPO_H);
+      EscribirTotales(FTotalAcumulado, 'TOTAL GENERAL', CL_GRUPO_H,
+        FTotalAcumulado.UdsVta);
       FFormateador.BordeCelda(
         FFila - 1, COL_ART, lbInferior, ebFino);
     finally
@@ -415,6 +436,7 @@ begin
     FGrupoEtiquetas[iNivel] := '';
     FGrupoUsado[iNivel] := False;
     FGrupoAcumulado[iNivel].Reset;
+    FGrupoVentasPadre[iNivel] := 0;
   end;
   FTotalAcumulado.Reset;
   FEscritor.IniciarLote;

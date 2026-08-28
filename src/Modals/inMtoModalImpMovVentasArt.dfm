@@ -320,7 +320,7 @@
           Frame.Typ = [ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '% V.dto')
+            '% Vdo')
           ParentFont = False
         end
         object MemoHPctVlast: TfrxMemoView
@@ -337,7 +337,7 @@
           Frame.Typ = [ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            '% Vlast')
+            '% Vtas')
           ParentFont = False
         end
       end
@@ -923,10 +923,9 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_COSTE">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3VtaEnt: TfrxMemoView
@@ -966,10 +965,9 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
-              's."VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
-              'Data1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3Marg1: TfrxMemoView
@@ -989,10 +987,9 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_COSTE">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3Marg2: TfrxMemoView
@@ -1012,10 +1009,9 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."VENTA_ENT">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoGF3PctVdto: TfrxMemoView
@@ -1058,10 +1054,9 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
-              's."IMP_VENTA">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
-              'Data1)*100,0)]')
+            '[IIF(MAX(<MovVentas."UDS_VENTA_G2">,MasterData1)<>0,' +
+            'SUM(<MovVentas."UDS_VENTA">,MasterData1)/' +
+            'MAX(<MovVentas."UDS_VENTA_G2">,MasterData1)*100,0)]')
           ParentFont = False
         end
       end
@@ -1188,10 +1183,9 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_COSTE">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoGF2Marg2: TfrxMemoView
@@ -1211,10 +1205,156 @@
           Frame.Typ = [ftTop]
           HAlign = haRight
           Memo.UTF8W = (
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."VENTA_ENT">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF2UniEnt: TfrxMemoView
+          AllowVectorExport = True
+          Left = 280.000000000000000000
+          Top = 1.000000000000000000
+          Width = 50.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF2UdsVta: TfrxMemoView
+          AllowVectorExport = True
+          Left = 394.000000000000000000
+          Top = 1.000000000000000000
+          Width = 48.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<MovVentas."UDS_VENTA">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF2ImpCos: TfrxMemoView
+          AllowVectorExport = True
+          Left = 506.000000000000000000
+          Top = 1.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<MovVentas."IMP_COSTE">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF2PctBnf: TfrxMemoView
+          AllowVectorExport = True
+          Left = 634.000000000000000000
+          Top = 1.000000000000000000
+          Width = 44.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF2VentEnt: TfrxMemoView
+          AllowVectorExport = True
+          Left = 742.000000000000000000
+          Top = 1.000000000000000000
+          Width = 52.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF2PctVdto: TfrxMemoView
+          AllowVectorExport = True
+          Left = 898.000000000000000000
+          Top = 1.000000000000000000
+          Width = 52.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
             
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+              '[IIF(SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."UDS_VENTA">,MasterData1)/SUM(<MovVentas."UNI_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF2PctVlast: TfrxMemoView
+          AllowVectorExport = True
+          Left = 950.000000000000000000
+          Top = 1.000000000000000000
+          Width = 56.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[IIF(MAX(<MovVentas."UDS_VENTA_G1">,MasterData1)<>0,' +
+            'SUM(<MovVentas."UDS_VENTA">,MasterData1)/' +
+            'MAX(<MovVentas."UDS_VENTA_G1">,MasterData1)*100,0)]')
           ParentFont = False
         end
       end
@@ -1340,10 +1480,9 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_COSTE">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoGF1Marg2: TfrxMemoView
@@ -1363,10 +1502,156 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."VENTA_ENT">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF1UniEnt: TfrxMemoView
+          AllowVectorExport = True
+          Left = 280.000000000000000000
+          Top = 2.000000000000000000
+          Width = 50.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF1UdsVta: TfrxMemoView
+          AllowVectorExport = True
+          Left = 394.000000000000000000
+          Top = 2.000000000000000000
+          Width = 48.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.FormatStr = '%g'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<MovVentas."UDS_VENTA">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF1ImpCos: TfrxMemoView
+          AllowVectorExport = True
+          Left = 506.000000000000000000
+          Top = 2.000000000000000000
+          Width = 64.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.2m'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[SUM(<MovVentas."IMP_COSTE">,MasterData1)]')
+          ParentFont = False
+        end
+        object MemoGF1PctBnf: TfrxMemoView
+          AllowVectorExport = True
+          Left = 634.000000000000000000
+          Top = 2.000000000000000000
+          Width = 44.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF1VentEnt: TfrxMemoView
+          AllowVectorExport = True
+          Left = 742.000000000000000000
+          Top = 2.000000000000000000
+          Width = 52.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF1PctVdto: TfrxMemoView
+          AllowVectorExport = True
+          Left = 898.000000000000000000
+          Top = 2.000000000000000000
+          Width = 52.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
             
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+              '[IIF(SUM(<MovVentas."UNI_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
+              's."UDS_VENTA">,MasterData1)/SUM(<MovVentas."UNI_ENT_TOT">,Master' +
+              'Data1)*100,0)]')
+          ParentFont = False
+        end
+        object MemoGF1PctVlast: TfrxMemoView
+          AllowVectorExport = True
+          Left = 950.000000000000000000
+          Top = 2.000000000000000000
+          Width = 56.000000000000000000
+          Height = 16.000000000000000000
+          DisplayFormat.DecimalSeparator = ','
+          DisplayFormat.FormatStr = '%2.1f'
+          DisplayFormat.Kind = fkNumeric
+          Font.Charset = DEFAULT_CHARSET
+          Font.Color = clBlack
+          Font.Height = -9
+          Font.Name = 'Arial'
+          Font.Style = [fsBold]
+          Frame.Typ = [ftTop, ftBottom]
+          HAlign = haRight
+          Memo.UTF8W = (
+            '[IIF(MAX(<MovVentas."UDS_VENTA_GLOBAL">,MasterData1)<>0,' +
+            'SUM(<MovVentas."UDS_VENTA">,MasterData1)/' +
+            'MAX(<MovVentas."UDS_VENTA_GLOBAL">,MasterData1)*100,0)]')
           ParentFont = False
         end
       end
@@ -1530,10 +1815,9 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_COSTE">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoRSVtaEnt: TfrxMemoView
@@ -1573,10 +1857,9 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
-              's."VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
-              'Data1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."IMP_VENTA">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoRSMarg1: TfrxMemoView
@@ -1596,10 +1879,9 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"BENEFICIO">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_COSTE">,MasterData1)<>0,' +
+            'SUM(<MovVentas."BENEFICIO">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_COSTE">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoRSMarg2: TfrxMemoView
@@ -1619,10 +1901,9 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_VENTA">,MasterData1)<>0,SUM(<MovVentas.' +
-              '"VENTA_ENT">,MasterData1)/SUM(<MovVentas."IMP_VENTA">,MasterData' +
-              '1)*100,0)]')
+            '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,' +
+            'SUM(<MovVentas."VENTA_ENT">,MasterData1)/' +
+            'SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)*100,0)]')
           ParentFont = False
         end
         object MemoRSPctVdto: TfrxMemoView
@@ -1665,10 +1946,7 @@
           Frame.Typ = [ftTop, ftBottom]
           HAlign = haRight
           Memo.UTF8W = (
-            
-              '[IIF(SUM(<MovVentas."IMP_ENT_TOT">,MasterData1)<>0,SUM(<MovVenta' +
-              's."IMP_VENTA">,MasterData1)/SUM(<MovVentas."IMP_ENT_TOT">,Master' +
-              'Data1)*100,0)]')
+            '[IIF(SUM(<MovVentas."UDS_VENTA">,MasterData1)<>0,100,0)]')
           ParentFont = False
         end
       end

@@ -38,7 +38,8 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.Generics.Collections, Vcl.Graphics, Vcl.Controls,
+  System.Classes, System.Types, System.Generics.Collections, Vcl.Graphics,
+  Vcl.Controls,
   Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls,
   inMtoModalGenImp, inLibInformeMultiFiltroPersistenciaIntf,
   cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
@@ -127,7 +128,8 @@ type
     procedure MarcarRamaFam(ANode: TcxTreeListNode; AValor: Boolean);
     procedure AlternarNodoFam(ANode: TcxTreeListNode);
     procedure FiltrarArbolFam(const ATexto: string);
-    procedure FamiliasDblClick(Sender: TObject);
+    procedure FamiliasMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure FamiliasKeyDown(Sender: TObject; var Key: Word;
                               Shift: TShiftState);
     procedure FamiliasSearchChange(Sender: TObject);
@@ -737,8 +739,8 @@ const
   cFamCodigo  = 2;
 
 // Crea la pestaña "Familias" con un TcxTreeList no ligado (nombre + checkbox
-// "Incluir" + código) y un buscador. El árbol y el checkbox se editan por
-// código (doble clic / barra espaciadora), igual que en inMtoPermisosArbol.
+// "Incluir" + código) y un buscador. Un clic o la barra espaciadora alterna
+// la familia enfocada y propaga la selección a sus subfamilias.
 procedure TfrmPrintMultiFiltro.CrearTabFamiliasArbol;
 var
   ts    : TcxTabSheet;
@@ -798,8 +800,8 @@ begin
   FcolFamCodigo.Caption.Text       := SCaptionCodigoFiltroInforme;
   FcolFamCodigo.Width              := 120;
   FcolFamCodigo.Options.Editing    := False;
-  FtlFamilias.OnDblClick := FamiliasDblClick;
-  FtlFamilias.OnKeyDown  := FamiliasKeyDown;
+  FtlFamilias.OnMouseDown := FamiliasMouseDown;
+  FtlFamilias.OnKeyDown := FamiliasKeyDown;
 end;
 
 // Carga las familias activas y construye el árbol respetando la jerarquía
@@ -976,10 +978,17 @@ begin
   end;
 end;
 
-procedure TfrmPrintMultiFiltro.FamiliasDblClick(Sender: TObject);
+procedure TfrmPrintMultiFiltro.FamiliasMouseDown(Sender: TObject;
+  Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
 begin
   if FtlFamilias <> nil then
-    AlternarNodoFam(FtlFamilias.FocusedNode);
+  begin
+    FtlFamilias.HitTest.Recalculate(Point(X, Y));
+    if (Button = mbLeft) and (not (ssDouble in Shift)) and
+       FtlFamilias.HitTest.HitAtNode and
+       (not FtlFamilias.HitTest.HitAtButton) then
+      AlternarNodoFam(FtlFamilias.HitTest.HitNode);
+  end;
 end;
 
 procedure TfrmPrintMultiFiltro.FamiliasKeyDown(Sender: TObject; var Key: Word;

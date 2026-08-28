@@ -448,7 +448,7 @@ resourcestring
     '1 = familia raíz; 2, 3... niveles intermedios.';
   SCaptionTabFamilias = 'Familias';
   SCaptionDobleClicMarcaFamilia =
-    'Doble clic o barra espaciadora marca/desmarca. Marcar una ' +
+    'Un clic o barra espaciadora marca/desmarca. Marcar una ' +
     'familia incluye sus subfamilias. Sin marcar = todas.';
   SHintBuscarFamilia = 'Escriba para buscar una familia';
   SCaptionExportarExcel = 'Exportar Excel';

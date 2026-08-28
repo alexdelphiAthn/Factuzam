@@ -54,13 +54,22 @@ type
     // fecha de primera compra a partir de la cual
     FdteIniCompras: TcxDateEdit;
     FchkSoloVentas: TcxCheckBox;   // 'solo artículos con ventas' en el periodo
+    FchkConImpuestos: TcxCheckBox;
+    FclbOrden: TcxCheckListBox;
+    FrgSentidoOrden: TcxRadioGroup;
     // Crea el control de "Inicio compras" sobre la pestaña de fechas.
     procedure CrearControlesPropios;
+    procedure CrearControlesOrdenacion;
     procedure chkIniComprasChange(Sender: TObject);
+    procedure OrdenClickCheck(Sender: TObject; AIndex: Integer;
+      APrevState, ANewState: TcxCheckBoxState);
+    function OrdenSeleccionado(out AOrden: TOrdenMovVentasArt): Boolean;
     // Exportación a Excel propia (sustituye al export FastReport del base).
     procedure ExportarExcelMovVentas(Sender: TObject);
     // Handler de OnBeforePrint: fotos + ocultar bandas de grupo inactivas.
     procedure ReportBeforePrint(Component: TfrxReportComponent);
+    procedure CompletarSubtotales;
+    procedure ActualizarFormulasPorcentajes;
     // Adapta el detalle a procedimientos nuevos o antiguos sin campo color.
     procedure ConfigurarDetalleArticuloColor;
     // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
@@ -93,6 +102,22 @@ resourcestring
   SCaptionColorAgrupacionMovimientosVentas = 'Color';
   SNombreArchivoMovimientosVentasArticulos =
     'Movimientos_ventas_articulos';
+  SCaptionConImpuestosMovimientosVentas = 'Precios con impuestos';
+  STituloOrdenacionMovimientosVentas = 'Ordenación';
+  SCaptionSentidoOrdenMovimientosVentas = ' Dirección ';
+  SCaptionPeriodoOrdenMovimientosVentas =
+    'Los criterios usan las ventas del periodo seleccionado.';
+  SHintOrdenDetalleMovimientosVentas =
+    'Ordena cada agrupación por su subtotal y el detalle del último nivel.';
+  SOrdenUnidadesVentaMovimientosVentas = 'Unidades vendidas';
+  SOrdenImporteVentaMovimientosVentas = 'Importe vendido';
+  SOrdenImporteCosteMovimientosVentas = 'Importe de coste';
+  SOrdenBeneficioMovimientosVentas = 'Beneficio';
+  SOrdenPorcentajeBeneficioMovimientosVentas = '% beneficio';
+  SOrdenImporteVentaComprasMovimientosVentas =
+    'Importe venta - compras';
+  SOrdenAscendenteMovimientosVentas = 'Ascendente';
+  SOrdenDescendenteMovimientosVentas = 'Descendente';
 
 { TfrmPrintMovVentasArt }
 
@@ -149,7 +174,15 @@ begin
     FchkSoloVentas.Top     := 72;
     FchkSoloVentas.Width   := 210;
     FchkSoloVentas.Caption := SCaptionSoloArticulosConVentas;
+    FchkConImpuestos := TcxCheckBox.Create(Self);
+    FchkConImpuestos.Parent := TabFechas;
+    FchkConImpuestos.Left := 460;
+    FchkConImpuestos.Top := 16;
+    FchkConImpuestos.Width := 210;
+    FchkConImpuestos.Caption := SCaptionConImpuestosMovimientosVentas;
+    FchkConImpuestos.Checked := True;
   end;
+  CrearControlesOrdenacion;
   // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada/color.
   // + spin de nivel de familia (igual que el balance de almacén).
   CrearTabAgrupacion(STituloAgrupacionesMovimientosVentasArticulo,
@@ -161,11 +194,86 @@ begin
      SCaptionColorAgrupacionMovimientosVentas], True);
 end;
 
+procedure TfrmPrintMovVentasArt.CrearControlesOrdenacion;
+var
+  lblPeriodo: TcxLabel;
+  oItem: TcxCheckListBoxItem;
+begin
+  FclbOrden := CrearTabChecklist(STituloOrdenacionMovimientosVentas);
+  FclbOrden.Align := alNone;
+  FclbOrden.SetBounds(16, 40, 360, 190);
+  FclbOrden.EditValueFormat := cvfIndices;
+  FclbOrden.IntegralHeight := False;
+  FclbOrden.AllowGrayed := False;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenUnidadesVentaMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenImporteVentaMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenImporteCosteMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenBeneficioMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenPorcentajeBeneficioMovimientosVentas;
+  oItem := FclbOrden.Items.Add;
+  oItem.Text := SOrdenImporteVentaComprasMovimientosVentas;
+  oItem.Checked := True;
+  FclbOrden.OnClickCheck := OrdenClickCheck;
+  FclbOrden.Hint := SHintOrdenDetalleMovimientosVentas;
+  FclbOrden.ShowHint := True;
+  FrgSentidoOrden := TcxRadioGroup.Create(Self);
+  FrgSentidoOrden.Parent := FclbOrden.Parent;
+  FrgSentidoOrden.SetBounds(410, 40, 210, 90);
+  FrgSentidoOrden.Caption := SCaptionSentidoOrdenMovimientosVentas;
+  FrgSentidoOrden.Properties.Items.Add.Caption :=
+    SOrdenDescendenteMovimientosVentas;
+  FrgSentidoOrden.Properties.Items.Add.Caption :=
+    SOrdenAscendenteMovimientosVentas;
+  FrgSentidoOrden.ItemIndex := 0;
+  FrgSentidoOrden.Hint := SHintOrdenDetalleMovimientosVentas;
+  FrgSentidoOrden.ShowHint := True;
+  lblPeriodo := TcxLabel.Create(Self);
+  lblPeriodo.Parent := FclbOrden.Parent;
+  lblPeriodo.SetBounds(410, 142, 330, 44);
+  lblPeriodo.AutoSize := False;
+  lblPeriodo.Properties.WordWrap := True;
+  lblPeriodo.Transparent := True;
+  lblPeriodo.Caption := SCaptionPeriodoOrdenMovimientosVentas;
+end;
+
+procedure TfrmPrintMovVentasArt.OrdenClickCheck(Sender: TObject;
+  AIndex: Integer; APrevState, ANewState: TcxCheckBoxState);
+var
+  iOrden: Integer;
+begin
+  if (FclbOrden <> nil) and (ANewState = cbsChecked) then
+    for iOrden := 0 to FclbOrden.Items.Count - 1 do
+      if iOrden <> AIndex then
+        FclbOrden.Items[iOrden].State := cbsUnchecked;
+end;
+
 procedure TfrmPrintMovVentasArt.chkIniComprasChange(Sender: TObject);
 begin
   if FdteIniCompras <> nil then
     FdteIniCompras.Enabled := (FchkIniCompras <> nil)
       and (FchkIniCompras.Checked);
+end;
+
+function TfrmPrintMovVentasArt.OrdenSeleccionado(
+  out AOrden: TOrdenMovVentasArt): Boolean;
+var
+  iOrden: Integer;
+begin
+  Result := False;
+  AOrden := Low(TOrdenMovVentasArt);
+  if FclbOrden <> nil then
+    for iOrden := Ord(Low(TOrdenMovVentasArt)) to
+      Ord(High(TOrdenMovVentasArt)) do
+      if (not Result) and FclbOrden.Items[iOrden].Checked then
+      begin
+        AOrden := TOrdenMovVentasArt(iOrden);
+        Result := True;
+      end;
 end;
 
 procedure TfrmPrintMovVentasArt.preparar_consulta;
@@ -199,6 +307,11 @@ begin
   criterios.NivelFamilia := NivelFamilia;
   criterios.SoloVentas := (FchkSoloVentas <> nil) and
     FchkSoloVentas.Checked;
+  criterios.ConImpuestos := (FchkConImpuestos <> nil) and
+    FchkConImpuestos.Checked;
+  criterios.UsarOrden := OrdenSeleccionado(criterios.Orden);
+  criterios.OrdenDescendente := (FrgSentidoOrden <> nil) and
+    (FrgSentidoOrden.ItemIndex = 0);
   if FRepositorioMovimientos = nil then
     FRepositorioMovimientos :=
       CrearRepositorioInformeMovimientosVentasArticuloUniDAC(
@@ -216,11 +329,107 @@ begin
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsMovVentas);
   ConfigurarDetalleArticuloColor;
+  CompletarSubtotales;
+  ActualizarFormulasPorcentajes;
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
   // las fotos y oculta las bandas de grupo de los niveles inactivos.
   frxrprt1.OnBeforePrint := ReportBeforePrint;
   // Precarga de fotos a nivel artículo en UNA consulta (evita el N+1).
   PrecargarFotosArticulos;
+end;
+
+procedure TfrmPrintMovVentasArt.CompletarSubtotales;
+const
+  Sufijos: array[0..6] of string = (
+    'UniEnt', 'UdsVta', 'ImpCos', 'PctBnf', 'VentEnt',
+    'PctVdto', 'PctVlast');
+var
+  iNivel: Integer;
+  iSufijo: Integer;
+  oDestino: TfrxComponent;
+  oOrigen: TfrxComponent;
+  oPie: TfrxComponent;
+  sNombreDestino: string;
+  sPrefijoOrigen: string;
+begin
+  for iNivel := 1 to 2 do
+  begin
+    if iNivel = 1 then
+      sPrefijoOrigen := 'MemoRS'
+    else
+      sPrefijoOrigen := 'MemoGF3';
+    oPie := frxrprt1.FindObject(Format('GroupFooterG%d', [iNivel]));
+    if oPie <> nil then
+      for iSufijo := Low(Sufijos) to High(Sufijos) do
+      begin
+        sNombreDestino := Format(
+          'MemoGF%d%s', [iNivel, Sufijos[iSufijo]]);
+        oDestino := frxrprt1.FindObject(sNombreDestino);
+        oOrigen := frxrprt1.FindObject(sPrefijoOrigen + Sufijos[iSufijo]);
+        if (oDestino = nil) and (oOrigen is TfrxMemoView) then
+        begin
+          oDestino := TfrxMemoView.Create(oPie);
+          oDestino.Assign(oOrigen);
+          oDestino.Parent := oPie;
+          oDestino.Name := sNombreDestino;
+        end;
+      end;
+  end;
+end;
+
+procedure TfrmPrintMovVentasArt.ActualizarFormulasPorcentajes;
+const
+  DenominadorVentas: array[1..3] of string = (
+    'UDS_VENTA_GLOBAL', 'UDS_VENTA_G1', 'UDS_VENTA_G2');
+var
+  iNivel: Integer;
+  sPrefijo: string;
+  function Suma(const ACampo: string): string;
+  begin
+    Result := Format('SUM(<MovVentas."%s">,MasterData1)', [ACampo]);
+  end;
+  function Maximo(const ACampo: string): string;
+  begin
+    Result := Format('MAX(<MovVentas."%s">,MasterData1)', [ACampo]);
+  end;
+  function Porcentaje(const ANumerador, ADenominador: string): string;
+  begin
+    Result := Format('[IIF(%s<>0,%s/%s*100,0)]',
+      [ADenominador, ANumerador, ADenominador]);
+  end;
+  procedure PonerFormula(const ANombre, AFormula: string);
+  var
+    oComponente: TfrxComponent;
+  begin
+    oComponente := frxrprt1.FindObject(ANombre);
+    if oComponente is TfrxMemoView then
+      TfrxMemoView(oComponente).Memo.Text := AFormula;
+  end;
+  procedure PonerFormulas(const APrefijo: string);
+  begin
+    PonerFormula(APrefijo + 'PctBnf',
+      Porcentaje(Suma('BENEFICIO'), Suma('IMP_VENTA')));
+    PonerFormula(APrefijo + 'VentEnt',
+      Porcentaje(Suma('IMP_VENTA'), Suma('IMP_ENT_TOT')));
+    PonerFormula(APrefijo + 'Marg1',
+      Porcentaje(Suma('BENEFICIO'), Suma('IMP_COSTE')));
+    PonerFormula(APrefijo + 'Marg2',
+      Porcentaje(Suma('VENTA_ENT'), Suma('IMP_ENT_TOT')));
+  end;
+begin
+  for iNivel := 1 to 3 do
+  begin
+    sPrefijo := Format('MemoGF%d', [iNivel]);
+    PonerFormulas(sPrefijo);
+    PonerFormula(sPrefijo + 'PctVlast',
+      Porcentaje(Suma('UDS_VENTA'),
+        Maximo(DenominadorVentas[iNivel])));
+  end;
+  PonerFormulas('MemoRS');
+  PonerFormula('MemoRSPctVlast',
+    Format('[IIF(%s<>0,100,0)]', [Suma('UDS_VENTA')]));
+  PonerFormula('MemoHPctVdto', '% Vdo');
+  PonerFormula('MemoHPctVlast', '% Vtas');
 end;
 
 procedure TfrmPrintMovVentasArt.ConfigurarDetalleArticuloColor;

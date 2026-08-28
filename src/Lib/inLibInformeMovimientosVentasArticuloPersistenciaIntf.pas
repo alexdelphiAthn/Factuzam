@@ -6,6 +6,15 @@ uses
   Data.DB;
 
 type
+  TOrdenMovVentasArt = (
+    omvaUnidadesVenta,
+    omvaImporteVenta,
+    omvaImporteCoste,
+    omvaBeneficio,
+    omvaPorcentajeBeneficio,
+    omvaImporteVentaCompras
+  );
+
   TCriteriosInformeMovimientosVentasArticulo = record
     FechaDesde: TDateTime;
     FechaHasta: TDateTime;
@@ -21,6 +30,10 @@ type
     Nivel3: string;
     NivelFamilia: Integer;
     SoloVentas: Boolean;
+    ConImpuestos: Boolean;
+    UsarOrden: Boolean;
+    Orden: TOrdenMovVentasArt;
+    OrdenDescendente: Boolean;
   end;
 
   IResultadoInformeMovimientosVentasArticulo = interface
