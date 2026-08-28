@@ -143,7 +143,8 @@ type
     procedure DoShow; override;
     // Helpers para checklists "planos" SIN buscador (p. ej. la pestaña de
     // bandas del balance, pequeña): se crea uno y se lee su selección.
-    function  CrearTabChecklist(const ACaption: string): TcxCheckListBox;
+    function CrearTabChecklist(const ACaption: string;
+      const AAyuda: string = ''): TcxCheckListBox;
     function  SeleccionadosCSV(AClb: TcxCheckListBox): string;
     // Pestaña de agrupaciones: dimensiones (código + etiqueta) que se pueden
     // marcar y reordenar. AConNivelFamilia añade un spin de nivel de familia.
@@ -335,8 +336,8 @@ end;
 // Checklist "plano" sin buscador (para descendientes). Mantiene la etiqueta
 // de ayuda y el cvfStatesString, pero no lleva fuente/marcados ni OnClickCheck:
 // SeleccionadosCSV lee directamente el State de cada ítem.
-function TfrmPrintMultiFiltro.CrearTabChecklist(
-  const ACaption: string): TcxCheckListBox;
+function TfrmPrintMultiFiltro.CrearTabChecklist(const ACaption: string;
+  const AAyuda: string): TcxCheckListBox;
 var
   ts : TcxTabSheet;
   lbl: TcxLabel;
@@ -348,7 +349,10 @@ begin
   lbl.Parent      := ts;
   lbl.Align       := alTop;
   lbl.Transparent := True;
-  lbl.Caption := SCaptionMarqueValoresIncluir;
+  if AAyuda <> '' then
+    lbl.Caption := AAyuda
+  else
+    lbl.Caption := SCaptionMarqueValoresIncluir;
   Result := TcxCheckListBox.Create(Self);
   Result.Parent := ts;
   Result.Align  := alClient;

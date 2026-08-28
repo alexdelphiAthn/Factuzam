@@ -12,16 +12,15 @@
 {    Modal de impresión del "Movimientos de ventas por artículos y fechas"     }
 {    (ranking de ventas, FastReport). Una fila por artículo/color cuando hay   }
 {    color (o por artículo/color+almacén si se agrupa por almacén), con las    }
-{    (entradas) y venta del periodo y dos márgenes: Margen 1 (sobre lo         }
-{    vendido) y Margen 2 (contando todo lo comprado como gasto). Mantiene la   }
-{    foto del artículo. Se apoya en el SP PRC_GET_MOV_VENTAS_ART (ver          }
+{    entradas y venta del periodo, margen 1 sobre el coste vendido y margen 2  }
+{    sobre el importe de entradas. Mantiene la foto del artículo. Se apoya en  }
+{    el SP PRC_GET_MOV_VENTAS_ART (ver                                         }
 {    DESARROLLOS EN CURSO/movimientos_ventas_articulos.sql).                   }
 {                                                                              }
 {    Hereda de TfrmPrintMultiFiltro: reutiliza las pestañas de filtros         }
 {    múltiples (almacenes / familias / proveedores / temporadas / artículos /  }
-{    fechas) y la de agrupaciones. Solo añade la fecha extra "Inicio compras"  }
-{    (filtra los artículos por su primera compra), la plantilla del informe y  }
-{    la consulta.                                                              }
+{    fechas) y la de agrupaciones. Añade "Inicio compras", la selección de     }
+{    impuestos y la ordenación, además de la plantilla y la consulta.          }
 {******************************************************************************}
 unit inMtoModalImpMovVentasArt;
 
@@ -107,6 +106,8 @@ resourcestring
   SCaptionSentidoOrdenMovimientosVentas = ' Dirección ';
   SCaptionPeriodoOrdenMovimientosVentas =
     'Los criterios usan las ventas del periodo seleccionado.';
+  SCaptionSeleccioneOrdenMovimientosVentas =
+    'Seleccione un criterio de ordenación:';
   SHintOrdenDetalleMovimientosVentas =
     'Ordena cada agrupación por su subtotal y el detalle del último nivel.';
   SOrdenUnidadesVentaMovimientosVentas = 'Unidades vendidas';
@@ -199,7 +200,8 @@ var
   lblPeriodo: TcxLabel;
   oItem: TcxCheckListBoxItem;
 begin
-  FclbOrden := CrearTabChecklist(STituloOrdenacionMovimientosVentas);
+  FclbOrden := CrearTabChecklist(STituloOrdenacionMovimientosVentas,
+    SCaptionSeleccioneOrdenMovimientosVentas);
   FclbOrden.Align := alNone;
   FclbOrden.SetBounds(16, 40, 360, 190);
   FclbOrden.EditValueFormat := cvfIndices;
