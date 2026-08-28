@@ -25,6 +25,8 @@
             object cxGrdDBTabPrinIMPORTE_NOMINAL_VL: TcxGridDBColumn
               Caption = 'Importe Nominal'
               DataBinding.FieldName = 'IMPORTE_NOMINAL_VL'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 130
             end
             object cxGrdDBTabPrinFECHA_EMISION_VL: TcxGridDBColumn
@@ -85,6 +87,8 @@
             object cxGrdDBTabPrinIMPORTE_REDIMIDO_VL: TcxGridDBColumn
               Caption = 'Importe Redimido'
               DataBinding.FieldName = 'IMPORTE_REDIMIDO_VL'
+              PropertiesClassName = 'TcxCurrencyEditProperties'
+              Properties.DisplayFormat = '#,##0.00 '#8364
               Width = 130
             end
             object cxGrdDBTabPrinCODIGO_EMPRESA_RED_VL: TcxGridDBColumn

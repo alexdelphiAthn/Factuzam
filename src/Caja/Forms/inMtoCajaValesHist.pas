@@ -28,8 +28,9 @@ uses
   cxButtons, cxDBNavigator, Vcl.Buttons, dxBevel, cxLabel, cxTextEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, Vcl.ExtCtrls, UniDataCajaValesHist,
-  cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
-  cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
+  cxCheckBox, cxCurrencyEdit, cxSpinEdit, cxBlobEdit,
+  dxScrollbarAnnotations, dxCore, cxRadioGroup, Vcl.AppEvnts,
+  JvComponentBase, JvEnterTab,
   dxShellDialogs;
 
 type

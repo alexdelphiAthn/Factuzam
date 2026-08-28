@@ -54,29 +54,29 @@
       Top = 52
       Properties.DropDownListStyle = lsFixedList
       TabOrder = 2
-      Width = 112
+      Width = 220
     end
     object lblSerie: TcxLabel
-      Left = 220
+      Left = 328
       Top = 54
       Caption = 'Serie'
       Transparent = True
     end
     object txtSerie: TcxTextEdit
-      Left = 260
+      Left = 368
       Top = 52
       Properties.CharCase = ecUpperCase
       TabOrder = 3
       Width = 112
     end
     object lblNumero: TcxLabel
-      Left = 396
+      Left = 504
       Top = 54
       Caption = 'N'#250'mero'
       Transparent = True
     end
     object txtNumero: TcxTextEdit
-      Left = 466
+      Left = 574
       Top = 52
       TabOrder = 4
       Width = 150
@@ -104,7 +104,7 @@
       Left = 0
       Top = 0
       Align = alTop
-      Caption = #218'ltimos albaranes de venta y compra'
+      Caption = #218'ltimos documentos'
       Properties.Alignment.Vert = taVCenter
       Transparent = True
       Height = 28
@@ -126,9 +126,9 @@
         OptionsSelection.CellSelect = False
         OptionsView.GroupByBox = False
         object colTipoDocumento: TcxGridDBColumn
-          Caption = 'Tipo'
-          DataBinding.FieldName = 'TIPO_DOCUMENTO'
-          Width = 54
+          Caption = 'Documento'
+          DataBinding.FieldName = 'TIPO_DESCRIPCION'
+          Width = 170
         end
         object colFechaDocumento: TcxGridDBColumn
           Caption = 'Fecha'

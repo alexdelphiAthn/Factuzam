@@ -146,6 +146,129 @@ const
     'ATTR5_VALOR_DTL, ATTR5_NOMBRE_DTL, NUM_ATRIBUTOS_DTL, 0, ' +
     'NOW(), NOW(), :USU, :USU FROM fza_documentos_trabajo_lineas ' +
     'WHERE ID_DTR_DTL = :ID';
+  SQL_CREAR_ALBARAN_COMPRA =
+    'INSERT INTO fza_albaranes_compra (NUMERO_ALBC, SERIE_ALBC, ' +
+    'FECHA_ALBC, INSTANTE_MOVIMIENTO_ALBC, ESTADO_ALBC, ' +
+    'CODIGO_EMP_ALBC, RAZON_SOCIAL_EMPRESA_ALBC, NIF_EMPRESA_ALBC, ' +
+    'MOVIL_EMPRESA_ALBC, EMAIL_EMPRESA_ALBC, ' +
+    'DIRECCION1_EMPRESA_ALBC, DIRECCION2_EMPRESA_ALBC, ' +
+    'POBLACION_EMPRESA_ALBC, PROVINCIA_EMPRESA_ALBC, ' +
+    'CODIGO_PAI_EMPRESA_ALBC, NOMBRE_PAI_EMPRESA_ALBC, ' +
+    'CODIGO_POSTAL_EMPRESA_ALBC, CODIGO_PRV_ALBC, CODIGO_ALM_ALBC, ' +
+    'ESIVA_RECARGO_COMPRAS_ALBC, ' +
+    'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC, CONTADOR_LINEAS_ALBC, ' +
+    'COMENTARIOS_ALBC, ESPIVOTE_HORIZONTAL_ALBC, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'SELECT :NUMERO, :SERIE, CURDATE(), NOW(), ''ABIERTO'', ' +
+    'E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, E.MOVIL_EMP, ' +
+    'E.EMAIL_EMP, E.DIRECCION1_EMP, E.DIRECCION2_EMP, ' +
+    'E.POBLACION_EMP, E.PROVINCIA_EMP, E.CODIGO_PAI_EMP, ' +
+    'E.NOMBRE_PAI_EMP, E.CODIGO_POSTAL_EMP, ''0'', :ALM, ' +
+    'COALESCE(E.ESIVA_RECARGO_COMPRAS_EMP, ''N''), ''N'', ' +
+    'LPAD(COALESCE((SELECT MAX(CAST(LINEA_DTL AS UNSIGNED)) * 10 ' +
+    'FROM fza_documentos_trabajo_lineas ' +
+    'WHERE ID_DTR_DTL = :ID), 0), 8, ''0''), ' +
+    'CONCAT(''Desde doc. trabajo '', :ID), ''N'', ' +
+    'NOW(), NOW(), :USU, :USU FROM fza_empresas E ' +
+    'WHERE E.CODIGO_EMP_EMP = :EMP';
+  SQL_CREAR_LINEAS_ALBARAN_COMPRA =
+    'INSERT INTO fza_albaranes_compra_lineas (' +
+    'NUMERO_ALBC_ALBCLIN, SERIE_ALBC_ALBCLIN, LINEA_ALBCLIN, ' +
+    'CODIGO_ART_ALBCLIN, CODIGO_UNIDAD_ALBCLIN, ' +
+    'ID_AC_PIVOT_ALBCLIN, CODIGO_FAM_ALBCLIN, NOMBRE_FAM_ALBCLIN, ' +
+    'DESCRIPCION_ARTICULO_ALBCLIN, ' +
+    'TIPO_CANTIDAD_ARTICULO_ALBCLIN, CANTIDAD_ALBCLIN, ' +
+    'TOTAL_UNIDADES_ALBCLIN, TIPO_IVA_ARTICULO_ALBCLIN, ' +
+    'PORCENTAJE_IVA_ALBCLIN, PRECIO_COMPRA_SIVA_ARTICULO_ALBCLIN, ' +
+    'PRECIO_COMPRA_CIVA_ARTICULO_ALBCLIN, TOTAL_ALBCLIN, ' +
+    'CODIGO_ALMACEN_ALBCLIN, LOTE_ALBCLIN, ' +
+    'FECHA_CADUCIDAD_ALBCLIN, DESCRIPCION_VARIACION_ALBCLIN, ' +
+    'ESFACTURADA_ALBCLIN, ATTR1_VALOR_ALBCLIN, ' +
+    'ATTR1_NOMBRE_ALBCLIN, ATTR2_VALOR_ALBCLIN, ' +
+    'ATTR2_NOMBRE_ALBCLIN, ATTR3_VALOR_ALBCLIN, ' +
+    'ATTR3_NOMBRE_ALBCLIN, ATTR4_VALOR_ALBCLIN, ' +
+    'ATTR4_NOMBRE_ALBCLIN, ATTR5_VALOR_ALBCLIN, ' +
+    'ATTR5_NOMBRE_ALBCLIN, NUM_ATRIBUTOS_ALBCLIN, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'SELECT :NUMERO, :SERIE, ' +
+    'LPAD(CAST(L.LINEA_DTL AS UNSIGNED) * 10, 4, ''0''), ' +
+    'L.CODIGO_ART_DTL, L.CODIGO_UNIDAD_DTL, L.ID_AC_PIVOT_DTL, ' +
+    'A.CODIGO_FAM_ART, F.DESCRIPCION_FAM, ' +
+    'LEFT(L.DESCRIPCION_ARTICULO_DTL, 100), ''Uds'', ' +
+    'L.CANTIDAD_DTL, L.CANTIDAD_DTL, ''N'', 0, 0, 0, 0, :ALM, ' +
+    'L.LOTE_DTL, L.FECHA_CADUCIDAD_DTL, L.DESCRIPCION_UNIDAD_DTL, ' +
+    '''N'', L.ATTR1_VALOR_DTL, L.ATTR1_NOMBRE_DTL, ' +
+    'L.ATTR2_VALOR_DTL, L.ATTR2_NOMBRE_DTL, ' +
+    'L.ATTR3_VALOR_DTL, L.ATTR3_NOMBRE_DTL, ' +
+    'L.ATTR4_VALOR_DTL, L.ATTR4_NOMBRE_DTL, ' +
+    'L.ATTR5_VALOR_DTL, L.ATTR5_NOMBRE_DTL, L.NUM_ATRIBUTOS_DTL, ' +
+    'NOW(), NOW(), :USU, :USU ' +
+    'FROM fza_documentos_trabajo_lineas L ' +
+    'LEFT JOIN fza_articulos A ON A.CODIGO_ART_ART = L.CODIGO_ART_DTL ' +
+    'LEFT JOIN fza_articulos_familias F ' +
+    'ON F.CODIGO_FAM_FAM = A.CODIGO_FAM_ART ' +
+    'WHERE L.ID_DTR_DTL = :ID';
+  SQL_CREAR_DEVOLUCION_COMPRA =
+    'INSERT INTO fza_devoluciones_compra (NUMERO_DEVC, SERIE_DEVC, ' +
+    'FECHA_DEVC, INSTANTE_MOVIMIENTO_DEVC, ESTADO_DEVC, ' +
+    'CODIGO_EMP_DEVC, RAZON_SOCIAL_EMPRESA_DEVC, NIF_EMPRESA_DEVC, ' +
+    'MOVIL_EMPRESA_DEVC, EMAIL_EMPRESA_DEVC, ' +
+    'DIRECCION1_EMPRESA_DEVC, DIRECCION2_EMPRESA_DEVC, ' +
+    'POBLACION_EMPRESA_DEVC, PROVINCIA_EMPRESA_DEVC, ' +
+    'CODIGO_PAI_EMPRESA_DEVC, NOMBRE_PAI_EMPRESA_DEVC, ' +
+    'CODIGO_POSTAL_EMPRESA_DEVC, CODIGO_PRV_DEVC, CODIGO_ALM_DEVC, ' +
+    'ESIVA_RECARGO_COMPRAS_DEVC, ' +
+    'ESIVA_EXENTO_INTRACOMUNITARIO_DEVC, CONTADOR_LINEAS_DEVC, ' +
+    'COMENTARIOS_DEVC, ESPIVOTE_HORIZONTAL_DEVC, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'SELECT :NUMERO, :SERIE, CURDATE(), NOW(), ''ABIERTO'', ' +
+    'E.CODIGO_EMP_EMP, E.RAZON_SOCIAL_EMP, E.NIF_EMP, E.MOVIL_EMP, ' +
+    'E.EMAIL_EMP, E.DIRECCION1_EMP, E.DIRECCION2_EMP, ' +
+    'E.POBLACION_EMP, E.PROVINCIA_EMP, E.CODIGO_PAI_EMP, ' +
+    'E.NOMBRE_PAI_EMP, E.CODIGO_POSTAL_EMP, ''0'', :ALM, ' +
+    'COALESCE(E.ESIVA_RECARGO_COMPRAS_EMP, ''N''), ''N'', ' +
+    'LPAD(COALESCE((SELECT MAX(CAST(LINEA_DTL AS UNSIGNED)) * 10 ' +
+    'FROM fza_documentos_trabajo_lineas ' +
+    'WHERE ID_DTR_DTL = :ID), 0), 8, ''0''), ' +
+    'CONCAT(''Desde doc. trabajo '', :ID), ''N'', ' +
+    'NOW(), NOW(), :USU, :USU FROM fza_empresas E ' +
+    'WHERE E.CODIGO_EMP_EMP = :EMP';
+  SQL_CREAR_LINEAS_DEVOLUCION_COMPRA =
+    'INSERT INTO fza_devoluciones_compra_lineas (' +
+    'NUMERO_DEVC_DEVCLIN, SERIE_DEVC_DEVCLIN, LINEA_DEVCLIN, ' +
+    'CODIGO_ART_DEVCLIN, CODIGO_UNIDAD_DEVCLIN, ' +
+    'ID_AC_PIVOT_DEVCLIN, CODIGO_FAM_DEVCLIN, NOMBRE_FAM_DEVCLIN, ' +
+    'DESCRIPCION_ARTICULO_DEVCLIN, ' +
+    'TIPO_CANTIDAD_ARTICULO_DEVCLIN, CANTIDAD_DEVCLIN, ' +
+    'TOTAL_UNIDADES_DEVCLIN, TIPO_IVA_ARTICULO_DEVCLIN, ' +
+    'PORCENTAJE_IVA_DEVCLIN, PRECIO_COMPRA_SIVA_ARTICULO_DEVCLIN, ' +
+    'PRECIO_COMPRA_CIVA_ARTICULO_DEVCLIN, TOTAL_DEVCLIN, ' +
+    'CODIGO_ALMACEN_DEVCLIN, LOTE_DEVCLIN, FECHA_CADUCIDAD_DEVCLIN, ' +
+    'DESCRIPCION_VARIACION_DEVCLIN, ESFACTURADA_DEVCLIN, ' +
+    'ATTR1_VALOR_DEVCLIN, ATTR1_NOMBRE_DEVCLIN, ' +
+    'ATTR2_VALOR_DEVCLIN, ATTR2_NOMBRE_DEVCLIN, ' +
+    'ATTR3_VALOR_DEVCLIN, ATTR3_NOMBRE_DEVCLIN, ' +
+    'ATTR4_VALOR_DEVCLIN, ATTR4_NOMBRE_DEVCLIN, ' +
+    'ATTR5_VALOR_DEVCLIN, ATTR5_NOMBRE_DEVCLIN, ' +
+    'NUM_ATRIBUTOS_DEVCLIN, INSTANTE_ALTA, INSTANTE_MODIF, ' +
+    'USUARIO_ALTA, USUARIO_MODIF) SELECT :NUMERO, :SERIE, ' +
+    'LPAD(CAST(L.LINEA_DTL AS UNSIGNED) * 10, 4, ''0''), ' +
+    'L.CODIGO_ART_DTL, L.CODIGO_UNIDAD_DTL, L.ID_AC_PIVOT_DTL, ' +
+    'A.CODIGO_FAM_ART, F.DESCRIPCION_FAM, ' +
+    'LEFT(L.DESCRIPCION_ARTICULO_DTL, 100), ''Uds'', ' +
+    'L.CANTIDAD_DTL, L.CANTIDAD_DTL, ''N'', 0, 0, 0, 0, :ALM, ' +
+    'L.LOTE_DTL, L.FECHA_CADUCIDAD_DTL, L.DESCRIPCION_UNIDAD_DTL, ' +
+    '''N'', L.ATTR1_VALOR_DTL, L.ATTR1_NOMBRE_DTL, ' +
+    'L.ATTR2_VALOR_DTL, L.ATTR2_NOMBRE_DTL, ' +
+    'L.ATTR3_VALOR_DTL, L.ATTR3_NOMBRE_DTL, ' +
+    'L.ATTR4_VALOR_DTL, L.ATTR4_NOMBRE_DTL, ' +
+    'L.ATTR5_VALOR_DTL, L.ATTR5_NOMBRE_DTL, L.NUM_ATRIBUTOS_DTL, ' +
+    'NOW(), NOW(), :USU, :USU ' +
+    'FROM fza_documentos_trabajo_lineas L ' +
+    'LEFT JOIN fza_articulos A ON A.CODIGO_ART_ART = L.CODIGO_ART_DTL ' +
+    'LEFT JOIN fza_articulos_familias F ' +
+    'ON F.CODIGO_FAM_FAM = A.CODIGO_FAM_ART ' +
+    'WHERE L.ID_DTR_DTL = :ID';
   SQL_CREAR_INVENTARIO =
     'INSERT INTO fza_inventarios (CODIGO_EMP_INV, CODIGO_ALM_INV, ' +
     'SERIE_INV, NUMERO_INV, TIPO_DOC_INV, FECHA_INV, ESTADO_INV, ' +
@@ -209,6 +332,8 @@ type
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
     function SiguienteLinea(AIdDocumento: Int64): string;
+    procedure AsignarParametrosConsultaUltimos(AConsulta: TUniQuery;
+      const AEmpresa, ATipoDocumento: string; ALimite: Integer);
     procedure AsignarParametrosOrigen(AConsulta: TUniQuery;
       const AOrigen: TDocumentoTrabajoOrigen);
     procedure BloquearDocumentoDestino(AConsulta: TUniQuery;
@@ -239,7 +364,8 @@ type
     procedure InsertarLinea(AIdDocumento: Int64;
       const ALinea: TDocTrabajoLineaOrigen;
       const AUsuario: string);
-    function ConsultarUltimos(const AEmpresa: string;
+    function ConsultarUltimos(const AEmpresa,
+      ATipoDocumento: string;
       ALimite: Integer): IConsultaDocumentoTrabajo;
     function PrevisualizarLineas(
       const AOrigen: TDocumentoTrabajoOrigen): IConsultaDocumentoTrabajo;
@@ -258,6 +384,14 @@ type
       const AEmpresa, AAlmacen, ASerie, ANumero,
       AUsuario: string): Integer;
     function CrearPedidoCompra(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearAlbaranCompra(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearDevolucionCompra(
       AIdDocumento: Int64;
       const AEmpresa, AAlmacen, ASerie, ANumero,
       AUsuario: string): Integer;
@@ -314,6 +448,28 @@ begin
   Result.Connection := FConexion;
 end;
 
+procedure TRepositorioDocumentosTrabajo.AsignarParametrosConsultaUltimos(
+  AConsulta: TUniQuery; const AEmpresa, ATipoDocumento: string;
+  ALimite: Integer);
+const
+  SUFIJOS_TIPO: array[0..12] of string = (
+    'AV', 'AB', 'PE', 'PC', 'FC', 'FP',
+    'DC', 'VE', 'TR', 'TS', 'SE', 'IN', 'TARC');
+var
+  i: Integer;
+begin
+  for i := Low(SUFIJOS_TIPO) to High(SUFIJOS_TIPO) do
+  begin
+    AConsulta.ParamByName(
+      'EMPRESA_' + SUFIJOS_TIPO[i]).AsString := Trim(AEmpresa);
+    AConsulta.ParamByName(
+      'LIMITE_' + SUFIJOS_TIPO[i]).AsInteger := ALimite;
+  end;
+  AConsulta.ParamByName('TIPO_FILTRO').AsString :=
+    UpperCase(Trim(ATipoDocumento));
+  AConsulta.ParamByName('LIMITE_GLOBAL').AsInteger := ALimite;
+end;
+
 procedure TRepositorioDocumentosTrabajo.AsignarParametrosOrigen(
   AConsulta: TUniQuery; const AOrigen: TDocumentoTrabajoOrigen);
 begin
@@ -361,16 +517,19 @@ begin
   begin
     raise ERangeError.CreateFmt(
       SErrorDocumentoOrigenNoEncontrado,
-      [UpperCase(Trim(AOrigen.TipoDocumento)), Trim(AOrigen.Serie),
-       Trim(AOrigen.Numero), Trim(AOrigen.Empresa)]);
+      [UpperCase(Trim(AOrigen.TipoDocumento)),
+       AOrigen.SerieParaMostrar,
+       AOrigen.NumeroParaMostrar,
+       Trim(AOrigen.Empresa)]);
   end;
   if SameText(Trim(AConsulta.FieldByName('ESTADO').AsString),
               'CANCELADO') then
   begin
     raise ERangeError.CreateFmt(
       SErrorDocumentoOrigenCancelado,
-      [UpperCase(Trim(AOrigen.TipoDocumento)), Trim(AOrigen.Serie),
-       Trim(AOrigen.Numero)]);
+      [UpperCase(Trim(AOrigen.TipoDocumento)),
+       AOrigen.SerieParaMostrar,
+       AOrigen.NumeroParaMostrar]);
   end;
 end;
 
@@ -655,24 +814,34 @@ begin
 end;
 
 function TRepositorioDocumentosTrabajo.ConsultarUltimos(
-  const AEmpresa: string; ALimite: Integer): IConsultaDocumentoTrabajo;
+  const AEmpresa, ATipoDocumento: string;
+  ALimite: Integer): IConsultaDocumentoTrabajo;
 var
   Consulta: TUniQuery;
   Limite: Integer;
+  TipoDocumento: string;
 begin
   if Trim(AEmpresa) = '' then
   begin
     raise EArgumentException.Create(SErrorDocumentoOrigenIncompleto);
   end;
+  TipoDocumento := UpperCase(Trim(ATipoDocumento));
+  if (TipoDocumento <> '') and
+     (not EsTipoDocumentoOrigenSoportado(TipoDocumento)) then
+  begin
+    raise EArgumentException.CreateFmt(
+      SErrorTipoDocumentoOrigenNoSoportado,
+      [ATipoDocumento]);
+  end;
   Consulta := NuevaConsulta;
   try
     Limite := NormalizarLimiteDocumentosOrigen(ALimite);
     Consulta.SQL.Text := SqlConsultarUltimosDocumentosOrigen;
-    Consulta.ParamByName('EMPRESA_AV').AsString := Trim(AEmpresa);
-    Consulta.ParamByName('EMPRESA_AB').AsString := Trim(AEmpresa);
-    Consulta.ParamByName('LIMITE_AV').AsInteger := Limite;
-    Consulta.ParamByName('LIMITE_AB').AsInteger := Limite;
-    Consulta.ParamByName('LIMITE_GLOBAL').AsInteger := Limite;
+    AsignarParametrosConsultaUltimos(
+      Consulta,
+      AEmpresa,
+      TipoDocumento,
+      Limite);
     Consulta.Open;
     Result := TConsultaDocumentoTrabajoUniDAC.Create(Consulta);
   except
@@ -738,7 +907,8 @@ begin
           UpperCase(Trim(AOrigen.TipoDocumento));
         Consulta.ParamByName('ETIQUETA_ORIGEN').AsString := Copy(
           Format('%s %s/%s', [UpperCase(Trim(AOrigen.TipoDocumento)),
-            Trim(AOrigen.Serie), Trim(AOrigen.Numero)]), 1, 30);
+            AOrigen.SerieParaMostrar,
+            AOrigen.NumeroParaMostrar]), 1, 30);
         Consulta.ParamByName('USUARIO').AsString := Trim(AUsuario);
         AsignarParametrosOrigen(Consulta, AOrigen);
         Consulta.Execute;
@@ -939,6 +1109,112 @@ begin
         ASerie,
         ANumero,
         AUsuario);
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Commit;
+    except
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function TRepositorioDocumentosTrabajo.CrearAlbaranCompra(
+  AIdDocumento: Int64;
+  const AEmpresa, AAlmacen, ASerie, ANumero,
+  AUsuario: string): Integer;
+var
+  Consulta: TUniQuery;
+  TransaccionPropia: Boolean;
+begin
+  Consulta := NuevaConsulta;
+  try
+    TransaccionPropia := not FConexion.InTransaction;
+    if TransaccionPropia then
+      FConexion.StartTransaction;
+    try
+      Consulta.SQL.Text := SQL_CREAR_ALBARAN_COMPRA;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('EMP').AsString := AEmpresa;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      if Consulta.RowsAffected <> 1 then
+        raise Exception.CreateFmt(
+          SErrorEmpresaDocumentoTrabajoNoExiste,
+          [AEmpresa]);
+      Consulta.SQL.Text := SQL_CREAR_LINEAS_ALBARAN_COMPRA;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Result := Consulta.RowsAffected;
+      if Result <= 0 then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
+      // El DTR no contiene proveedor ni costes. El mantenimiento generará
+      // la entrada AC cuando se complete y guarde el albarán de compra.
+      MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Commit;
+    except
+      if TransaccionPropia and FConexion.InTransaction then
+        FConexion.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function TRepositorioDocumentosTrabajo.CrearDevolucionCompra(
+  AIdDocumento: Int64;
+  const AEmpresa, AAlmacen, ASerie, ANumero,
+  AUsuario: string): Integer;
+var
+  Consulta: TUniQuery;
+  TransaccionPropia: Boolean;
+begin
+  Consulta := NuevaConsulta;
+  try
+    TransaccionPropia := not FConexion.InTransaction;
+    if TransaccionPropia then
+      FConexion.StartTransaction;
+    try
+      Consulta.SQL.Text := SQL_CREAR_DEVOLUCION_COMPRA;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('EMP').AsString := AEmpresa;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      if Consulta.RowsAffected <> 1 then
+        raise Exception.CreateFmt(
+          SErrorEmpresaDocumentoTrabajoNoExiste,
+          [AEmpresa]);
+      Consulta.SQL.Text := SQL_CREAR_LINEAS_DEVOLUCION_COMPRA;
+      Consulta.ParamByName('NUMERO').AsString := ANumero;
+      Consulta.ParamByName('SERIE').AsString := ASerie;
+      Consulta.ParamByName('ALM').AsString := AAlmacen;
+      Consulta.ParamByName('ID').AsLargeInt := AIdDocumento;
+      Consulta.ParamByName('USU').AsString := AUsuario;
+      Consulta.Execute;
+      Result := Consulta.RowsAffected;
+      if Result <= 0 then
+      begin
+        raise ERangeError.Create(SErrorDocumentoTrabajoSinLineasEnviar);
+      end;
+      // El DTR no contiene proveedor ni costes. El mantenimiento generará
+      // la salida DC cuando se complete y guarde la devolución.
       MarcarDocumentoEnviado(Consulta, AIdDocumento, AUsuario);
       if TransaccionPropia and FConexion.InTransaction then
         FConexion.Commit;

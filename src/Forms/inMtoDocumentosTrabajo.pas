@@ -49,7 +49,9 @@ const
 type
   TTipoEnvioNumeradoDocumentoTrabajo = (
     tenFacturaVenta,
-    tenPedidoCompra
+    tenPedidoCompra,
+    tenAlbaranCompra,
+    tenDevolucionCompra
   );
   TDestinoCargaDocumentoTrabajo = record
     IdDtr: Int64;
@@ -112,6 +114,8 @@ type
     miEnviarFacturaVentaDTR: TMenuItem;
     miEnviarTpvDTR: TMenuItem;
     miEnviarPedidoCompraDTR: TMenuItem;
+    miEnviarAlbaranCompraDTR: TMenuItem;
+    miEnviarDevolucionCompraDTR: TMenuItem;
     miEnviarTraspasoCajaDTR: TMenuItem;
     miEnviarPeticionTraspasoDTR: TMenuItem;
     miEnviarInventarioDTR: TMenuItem;
@@ -129,6 +133,8 @@ type
     procedure miEnviarFacturaVentaDTRClick(Sender: TObject);
     procedure miEnviarTpvDTRClick(Sender: TObject);
     procedure miEnviarPedidoCompraDTRClick(Sender: TObject);
+    procedure miEnviarAlbaranCompraDTRClick(Sender: TObject);
+    procedure miEnviarDevolucionCompraDTRClick(Sender: TObject);
     procedure miEnviarTraspasoCajaDTRClick(Sender: TObject);
     procedure miEnviarPeticionTraspasoDTRClick(Sender: TObject);
     procedure miEnviarInventarioDTRClick(Sender: TObject);
@@ -1116,6 +1122,20 @@ begin
       AMensajeError := SErrorContadorPedidoCompraDocumentoTrabajo;
       AMensajeCreado := SInfoPedidoCompraDocumentoTrabajoCreado;
     end;
+    tenAlbaranCompra:
+    begin
+      ATitulo := STituloEnviarAlbaranCompraDocumentoTrabajo;
+      ATipoContador := 'AB';
+      AMensajeError := SErrorContadorAlbaranCompraDocumentoTrabajo;
+      AMensajeCreado := SInfoAlbaranCompraDocumentoTrabajoCreado;
+    end;
+    tenDevolucionCompra:
+    begin
+      ATitulo := STituloEnviarDevolucionCompraDocumentoTrabajo;
+      ATipoContador := 'DC';
+      AMensajeError := SErrorContadorDevolucionCompraDocumentoTrabajo;
+      AMensajeCreado := SInfoDevolucionCompraDocumentoTrabajoCreada;
+    end;
   end;
 end;
 
@@ -1190,6 +1210,16 @@ begin
           tenPedidoCompra:
             iLineas :=
               FMaterializacionDocumentosTrabajo.CrearPedidoCompra(
+              idDtr, sEmp, sAlm, sSerie, sNumero,
+              IdentidadSesion.Usuario);
+          tenAlbaranCompra:
+            iLineas :=
+              FMaterializacionDocumentosTrabajo.CrearAlbaranCompra(
+              idDtr, sEmp, sAlm, sSerie, sNumero,
+              IdentidadSesion.Usuario);
+          tenDevolucionCompra:
+            iLineas :=
+              FMaterializacionDocumentosTrabajo.CrearDevolucionCompra(
               idDtr, sEmp, sAlm, sSerie, sNumero,
               IdentidadSesion.Usuario);
         end;
@@ -1428,6 +1458,18 @@ procedure TfrmMtoDocumentosTrabajo.miEnviarPedidoCompraDTRClick(
   Sender: TObject);
 begin
   EnviarDocumentoNumerado(tenPedidoCompra);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarAlbaranCompraDTRClick(
+  Sender: TObject);
+begin
+  EnviarDocumentoNumerado(tenAlbaranCompra);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEnviarDevolucionCompraDTRClick(
+  Sender: TObject);
+begin
+  EnviarDocumentoNumerado(tenDevolucionCompra);
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarTraspasoCajaDTRClick(

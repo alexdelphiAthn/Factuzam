@@ -11646,6 +11646,84 @@ begin
       SCaptionTodosTiposOrigenDocumentoTrabajo);
   ARegistrar(
     'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenAlbaranVentaDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenAlbaranVentaDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenAlbaranCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenAlbaranCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenPedidoVentaDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenPedidoVentaDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenPedidoCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenPedidoCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenFacturaVentaDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenFacturaVentaDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenFacturaCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenFacturaCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenDevolucionCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenDevolucionCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenVentaTpvDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenVentaTpvDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenTraspasoDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenTraspasoDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenPeticionTraspasoDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenPeticionTraspasoDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenSesionCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenSesionCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenInventarioDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenInventarioDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenSesionTarifasDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenSesionTarifasDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
     'SErrorServicioCargaOrigenDocumentoTrabajo',
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
@@ -11806,6 +11884,42 @@ begin
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
       SInfoPedidoCompraDocumentoTrabajoCreado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'STituloEnviarAlbaranCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      STituloEnviarAlbaranCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorContadorAlbaranCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorContadorAlbaranCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoAlbaranCompraDocumentoTrabajoCreado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoAlbaranCompraDocumentoTrabajoCreado);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'STituloEnviarDevolucionCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      STituloEnviarDevolucionCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorContadorDevolucionCompraDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorContadorDevolucionCompraDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoDevolucionCompraDocumentoTrabajoCreada',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoDevolucionCompraDocumentoTrabajoCreada);
   ARegistrar(
     'inLibMsgVentas.' +
     'SErrorEmpresaDocumentoTrabajoNoExiste',

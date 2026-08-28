@@ -414,6 +414,14 @@
       Caption = 'Pedido de compra...'
       OnClick = miEnviarPedidoCompraDTRClick
     end
+    object miEnviarAlbaranCompraDTR: TMenuItem
+      Caption = 'Albarán de compra...'
+      OnClick = miEnviarAlbaranCompraDTRClick
+    end
+    object miEnviarDevolucionCompraDTR: TMenuItem
+      Caption = 'Devolución a proveedor...'
+      OnClick = miEnviarDevolucionCompraDTRClick
+    end
     object miEnviarTraspasoCajaDTR: TMenuItem
       Caption = 'Traspaso de caja...'
       OnClick = miEnviarTraspasoCajaDTRClick

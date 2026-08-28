@@ -9,8 +9,8 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Selecciona un albarán de venta o compra y carga sus líneas en un          }
-{    Documento de Trabajo.                                                     }
+{    Selecciona un documento de origen y carga sus líneas en un Documento de   }
+{    Trabajo.                                                                  }
 {******************************************************************************}
 unit inMtoModalCargarDocumentoTrabajo;
 
@@ -102,6 +102,7 @@ type
     procedure FiltrarDocumento(DataSet: TDataSet; var Accept: Boolean);
     procedure LiberarDocumentos;
     procedure LiberarLineas;
+    function TipoDocumentoSeleccionado: string;
   public
     class function Ejecutar(AOwner: TComponent; AIdDtr: Int64;
       const AEmpresa, AUsuario: string;
@@ -138,6 +139,9 @@ begin
 end;
 
 procedure TfrmModalCargarDocumentoTrabajo.FormCreate(Sender: TObject);
+var
+  Tipos: TTiposDocumentoTrabajoOrigen;
+  I: Integer;
 begin
   inherited;
   Caption := STituloCargarOrigenDocumentoTrabajo;
@@ -150,10 +154,9 @@ begin
   cbbTipo.Properties.Items.Clear;
   cbbTipo.Properties.Items.Add(
     SCaptionTodosTiposOrigenDocumentoTrabajo);
-  cbbTipo.Properties.Items.Add(
-    TIPO_DOCUMENTO_ORIGEN_ALBARAN_VENTA);
-  cbbTipo.Properties.Items.Add(
-    TIPO_DOCUMENTO_ORIGEN_ALBARAN_COMPRA);
+  Tipos := TiposDocumentoTrabajoOrigen;
+  for I := Low(Tipos) to High(Tipos) do
+    cbbTipo.Properties.Items.Add(Tipos[I].Descripcion);
   cbbTipo.ItemIndex := 0;
   btnCargar.Enabled := False;
 end;
@@ -213,6 +216,7 @@ begin
     LiberarDocumentos;
     FConsultaDocumentos := FCargaOrigen.ConsultarUltimos(
       FEmpresa,
+      TipoDocumentoSeleccionado,
       CantidadSeleccionada);
     FConsultaDocumentos.DataSet.OnFilterRecord := FiltrarDocumento;
     dsDocumentos.DataSet := FConsultaDocumentos.DataSet;
@@ -239,14 +243,22 @@ end;
 
 procedure TfrmModalCargarDocumentoTrabajo.FiltrarDocumento(
   DataSet: TDataSet; var Accept: Boolean);
-var
-  sTipo: string;
 begin
-  sTipo := Trim(cbbTipo.Text);
-  Accept := ((cbbTipo.ItemIndex = 0) or
-    SameText(DataSet.FieldByName('TIPO_DOCUMENTO').AsString, sTipo)) and
+  Accept :=
     CoincideFiltro(DataSet.FieldByName('SERIE').AsString, txtSerie.Text) and
     CoincideFiltro(DataSet.FieldByName('NUMERO').AsString, txtNumero.Text);
+end;
+
+function TfrmModalCargarDocumentoTrabajo.TipoDocumentoSeleccionado: string;
+var
+  Tipos: TTiposDocumentoTrabajoOrigen;
+  Indice: Integer;
+begin
+  Result := '';
+  Tipos := TiposDocumentoTrabajoOrigen;
+  Indice := cbbTipo.ItemIndex - 1;
+  if (Indice >= Low(Tipos)) and (Indice <= High(Tipos)) then
+    Result := Tipos[Indice].Codigo;
 end;
 
 function TfrmModalCargarDocumentoTrabajo.CrearOrigenSeleccionado(
@@ -262,8 +274,10 @@ begin
     AOrigen.Empresa := FEmpresa;
     AOrigen.TipoDocumento :=
       Datos.FieldByName('TIPO_DOCUMENTO').AsString;
-    AOrigen.Serie := Datos.FieldByName('SERIE').AsString;
-    AOrigen.Numero := Datos.FieldByName('NUMERO').AsString;
+    AOrigen.Serie := Datos.FieldByName('SERIE_ORIGEN').AsString;
+    AOrigen.Numero := Datos.FieldByName('NUMERO_ORIGEN').AsString;
+    AOrigen.SerieVisible := Datos.FieldByName('SERIE').AsString;
+    AOrigen.NumeroVisible := Datos.FieldByName('NUMERO').AsString;
   end;
 end;
 

@@ -25,10 +25,28 @@ uses
 const
   TIPO_DOCUMENTO_ORIGEN_ALBARAN_VENTA = 'AV';
   TIPO_DOCUMENTO_ORIGEN_ALBARAN_COMPRA = 'AB';
+  TIPO_DOCUMENTO_ORIGEN_PEDIDO_VENTA = 'PE';
+  TIPO_DOCUMENTO_ORIGEN_PEDIDO_COMPRA = 'PC';
+  TIPO_DOCUMENTO_ORIGEN_FACTURA_VENTA = 'FC';
+  TIPO_DOCUMENTO_ORIGEN_FACTURA_COMPRA = 'FP';
+  TIPO_DOCUMENTO_ORIGEN_DEVOLUCION_COMPRA = 'DC';
+  TIPO_DOCUMENTO_ORIGEN_VENTA_TPV = 'VE';
+  TIPO_DOCUMENTO_ORIGEN_TRASPASO = 'TR';
+  TIPO_DOCUMENTO_ORIGEN_PETICION_TRASPASO = 'TS';
+  TIPO_DOCUMENTO_ORIGEN_SESION_COMPRA = 'SE';
+  TIPO_DOCUMENTO_ORIGEN_INVENTARIO = 'IN';
+  TIPO_DOCUMENTO_ORIGEN_SESION_TARIFAS = 'TARC';
   LIMITE_DOCUMENTOS_ORIGEN_DEFECTO = 100;
   LIMITE_DOCUMENTOS_ORIGEN_MAXIMO = 1000;
 
 type
+  TTipoDocumentoTrabajoOrigen = record
+    Codigo: string;
+    Descripcion: string;
+  end;
+
+  TTiposDocumentoTrabajoOrigen = TArray<TTipoDocumentoTrabajoOrigen>;
+
   TResolverDocTrabajoArtSku = procedure(out ACodArt, ACodSku: string) of object;
 
   TNombresAtributosDocumentoTrabajo = TArray<string>;
@@ -38,6 +56,10 @@ type
     TipoDocumento: string;
     Serie: string;
     Numero: string;
+    SerieVisible: string;
+    NumeroVisible: string;
+    function SerieParaMostrar: string;
+    function NumeroParaMostrar: string;
     procedure Clear;
   end;
 
@@ -70,7 +92,8 @@ type
 
   ICargaOrigenDocumentosTrabajo = interface
     ['{D69E07FD-C7F0-4BB7-925D-81A3760D3DC1}']
-    function ConsultarUltimos(const AEmpresa: string;
+    function ConsultarUltimos(
+      const AEmpresa, ATipoDocumento: string;
       ALimite: Integer): IConsultaDocumentoTrabajo;
     function PrevisualizarLineas(
       const AOrigen: TDocumentoTrabajoOrigen): IConsultaDocumentoTrabajo;
@@ -116,6 +139,14 @@ type
       AIdDocumento: Int64;
       const AEmpresa, AAlmacen, ASerie, ANumero,
       AUsuario: string): Integer;
+    function CrearAlbaranCompra(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
+    function CrearDevolucionCompra(
+      AIdDocumento: Int64;
+      const AEmpresa, AAlmacen, ASerie, ANumero,
+      AUsuario: string): Integer;
     function CrearInventario(
       AIdDocumento: Int64;
       const AEmpresa, AAlmacen, ASerie, ANumero,
@@ -144,6 +175,11 @@ type
     procedure InformarUnidadAgregada;
   end;
 
+function TiposDocumentoTrabajoOrigen: TTiposDocumentoTrabajoOrigen;
+function EsTipoDocumentoOrigenSoportado(
+  const ATipoDocumento: string): Boolean;
+function DescripcionTipoDocumentoOrigen(
+  const ATipoDocumento: string): string;
 function AgregarUnidadADocumentoTrabajo(AOwner: TComponent;
                                         AConexion: TUniConnection;
                                         const ARepositorios:
@@ -188,12 +224,110 @@ resourcestring
   STituloBusquedaDocumentosTrabajoAbiertos =
     'Documentos de Trabajo abiertos';
 
+procedure AsignarTipoDocumentoOrigen(
+  var ATipo: TTipoDocumentoTrabajoOrigen;
+  const ACodigo, ADescripcion: string);
+begin
+  ATipo.Codigo := ACodigo;
+  ATipo.Descripcion := ADescripcion;
+end;
+
+function TiposDocumentoTrabajoOrigen: TTiposDocumentoTrabajoOrigen;
+begin
+  SetLength(Result, 13);
+  AsignarTipoDocumentoOrigen(Result[0],
+    TIPO_DOCUMENTO_ORIGEN_ALBARAN_VENTA,
+    SDescripcionTipoOrigenAlbaranVentaDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[1],
+    TIPO_DOCUMENTO_ORIGEN_ALBARAN_COMPRA,
+    SDescripcionTipoOrigenAlbaranCompraDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[2],
+    TIPO_DOCUMENTO_ORIGEN_PEDIDO_VENTA,
+    SDescripcionTipoOrigenPedidoVentaDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[3],
+    TIPO_DOCUMENTO_ORIGEN_PEDIDO_COMPRA,
+    SDescripcionTipoOrigenPedidoCompraDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[4],
+    TIPO_DOCUMENTO_ORIGEN_FACTURA_VENTA,
+    SDescripcionTipoOrigenFacturaVentaDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[5],
+    TIPO_DOCUMENTO_ORIGEN_FACTURA_COMPRA,
+    SDescripcionTipoOrigenFacturaCompraDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[6],
+    TIPO_DOCUMENTO_ORIGEN_DEVOLUCION_COMPRA,
+    SDescripcionTipoOrigenDevolucionCompraDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[7],
+    TIPO_DOCUMENTO_ORIGEN_VENTA_TPV,
+    SDescripcionTipoOrigenVentaTpvDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[8],
+    TIPO_DOCUMENTO_ORIGEN_TRASPASO,
+    SDescripcionTipoOrigenTraspasoDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[9],
+    TIPO_DOCUMENTO_ORIGEN_PETICION_TRASPASO,
+    SDescripcionTipoOrigenPeticionTraspasoDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[10],
+    TIPO_DOCUMENTO_ORIGEN_SESION_COMPRA,
+    SDescripcionTipoOrigenSesionCompraDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[11],
+    TIPO_DOCUMENTO_ORIGEN_INVENTARIO,
+    SDescripcionTipoOrigenInventarioDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[12],
+    TIPO_DOCUMENTO_ORIGEN_SESION_TARIFAS,
+    SDescripcionTipoOrigenSesionTarifasDocumentoTrabajo);
+end;
+
+function EsTipoDocumentoOrigenSoportado(
+  const ATipoDocumento: string): Boolean;
+var
+  Tipos: TTiposDocumentoTrabajoOrigen;
+  I: Integer;
+begin
+  Result := False;
+  Tipos := TiposDocumentoTrabajoOrigen;
+  for I := Low(Tipos) to High(Tipos) do
+  begin
+    if SameText(Tipos[I].Codigo, Trim(ATipoDocumento)) then
+      Result := True;
+  end;
+end;
+
+function DescripcionTipoDocumentoOrigen(
+  const ATipoDocumento: string): string;
+var
+  Tipos: TTiposDocumentoTrabajoOrigen;
+  I: Integer;
+begin
+  Result := '';
+  Tipos := TiposDocumentoTrabajoOrigen;
+  for I := Low(Tipos) to High(Tipos) do
+  begin
+    if SameText(Tipos[I].Codigo, Trim(ATipoDocumento)) then
+      Result := Tipos[I].Descripcion;
+  end;
+end;
+
+function TDocumentoTrabajoOrigen.SerieParaMostrar: string;
+begin
+  Result := Trim(SerieVisible);
+  if Result = '' then
+    Result := Trim(Serie);
+end;
+
+function TDocumentoTrabajoOrigen.NumeroParaMostrar: string;
+begin
+  Result := Trim(NumeroVisible);
+  if Result = '' then
+    Result := Trim(Numero);
+end;
+
 procedure TDocumentoTrabajoOrigen.Clear;
 begin
   Empresa := '';
   TipoDocumento := '';
   Serie := '';
   Numero := '';
+  SerieVisible := '';
+  NumeroVisible := '';
 end;
 
 procedure TResultadoCargaOrigenDocumentoTrabajo.Clear;

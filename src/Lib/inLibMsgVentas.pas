@@ -209,12 +209,38 @@ resourcestring
   STituloCargarOrigenDocumentoTrabajo =
     'Cargar desde documento';
   SCaptionTodosTiposOrigenDocumentoTrabajo = 'Todos';
+  SDescripcionTipoOrigenAlbaranVentaDocumentoTrabajo =
+    'Albarán de venta';
+  SDescripcionTipoOrigenAlbaranCompraDocumentoTrabajo =
+    'Albarán de compra';
+  SDescripcionTipoOrigenPedidoVentaDocumentoTrabajo =
+    'Pedido de venta';
+  SDescripcionTipoOrigenPedidoCompraDocumentoTrabajo =
+    'Pedido de compra';
+  SDescripcionTipoOrigenFacturaVentaDocumentoTrabajo =
+    'Factura de venta';
+  SDescripcionTipoOrigenFacturaCompraDocumentoTrabajo =
+    'Factura de compra';
+  SDescripcionTipoOrigenDevolucionCompraDocumentoTrabajo =
+    'Devolución a proveedor';
+  SDescripcionTipoOrigenVentaTpvDocumentoTrabajo =
+    'Venta TPV';
+  SDescripcionTipoOrigenTraspasoDocumentoTrabajo =
+    'Traspaso';
+  SDescripcionTipoOrigenPeticionTraspasoDocumentoTrabajo =
+    'Petición de traspaso';
+  SDescripcionTipoOrigenSesionCompraDocumentoTrabajo =
+    'Sesión de compra';
+  SDescripcionTipoOrigenInventarioDocumentoTrabajo =
+    'Inventario';
+  SDescripcionTipoOrigenSesionTarifasDocumentoTrabajo =
+    'Sesión de cambio de tarifas';
   SErrorServicioCargaOrigenDocumentoTrabajo =
     'No está disponible el servicio de carga desde documentos.';
   SErrorOrigenDocumentoTrabajoNoSeleccionado =
     'Seleccione un documento de origen.';
   SInfoDocumentosOrigenDocumentoTrabajoNoEncontrados =
-    'No se encontraron albaranes con esos filtros entre los últimos ' +
+    'No se encontraron documentos con esos filtros entre los últimos ' +
     'documentos mostrados.';
   SInfoCargaOrigenDocumentoTrabajo =
     'Se encontraron %d líneas; se añadieron %d y se omitieron %d.' +
@@ -274,6 +300,25 @@ resourcestring
   SInfoPedidoCompraDocumentoTrabajoCreado =
     'Pedido de compra %s/%s creado ABIERTO con %d líneas.' + sLineBreak +
     'Asigna proveedor, precios y condiciones de compra.';
+  STituloEnviarAlbaranCompraDocumentoTrabajo =
+    'Enviar a albarán de compra';
+  SErrorContadorAlbaranCompraDocumentoTrabajo =
+    'El contador de albaranes de compra no ha devuelto número para la ' +
+    'serie %s.';
+  SInfoAlbaranCompraDocumentoTrabajoCreado =
+    'Albarán de compra %s/%s creado ABIERTO con %d líneas.' + sLineBreak +
+    'Aún no se ha generado la entrada de stock.' + sLineBreak +
+    'Asigna proveedor, precios y condiciones antes de guardar el albarán.';
+  STituloEnviarDevolucionCompraDocumentoTrabajo =
+    'Enviar a devolución a proveedor';
+  SErrorContadorDevolucionCompraDocumentoTrabajo =
+    'El contador de devoluciones a proveedor no ha devuelto número para ' +
+    'la serie %s.';
+  SInfoDevolucionCompraDocumentoTrabajoCreada =
+    'Devolución a proveedor %s/%s creada ABIERTA con %d líneas.' +
+    sLineBreak +
+    'Aún no se ha generado la salida de stock.' + sLineBreak +
+    'Asigna proveedor, precios y condiciones antes de guardar la devolución.';
   SErrorEmpresaDocumentoTrabajoNoExiste =
     'No existe la empresa %s del Documento de Trabajo.';
   SErrorVentaTpvNoAbiertaDocumentoTrabajo =
