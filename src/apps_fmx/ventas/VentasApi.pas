@@ -99,6 +99,20 @@ begin
   end;
 end;
 
+function JStrAlguno(AObj: TJSONObject;
+  const AClaves: array of string): string;
+var
+  iClave: Integer;
+begin
+  Result := '';
+  iClave := 0;
+  while (Result = '') and (iClave <= High(AClaves)) do
+  begin
+    Result := JStr(AObj, AClaves[iClave]);
+    Inc(iClave);
+  end;
+end;
+
 { El servidor guarda y devuelve los instantes en UTC. La hora que se pinta
   es la local del teléfono, que es la del negocio salvo que se consulte
   desde otro huso. }
@@ -154,6 +168,8 @@ begin
   if Result.Hora = '' then
     Result.Hora := JStr(AObj, 'hora');
   Result.Empresa := JStr(AObj, 'empresa');
+  Result.CodigoAlmacen := JStr(AObj, 'codigo_almacen');
+  Result.Almacen := JStr(AObj, 'almacen');
   Result.Serie := JStr(AObj, 'serie');
   Result.Numero := JStr(AObj, 'numero');
   Result.Linea := JStr(AObj, 'linea');
@@ -165,6 +181,9 @@ begin
   Result.CodigoFamilia := JStr(AObj, 'codigo_familia');
   Result.Familia := JStr(AObj, 'familia');
   Result.Temporada := JStr(AObj, 'temporada');
+  Result.CodigoTemporada := JStr(AObj, 'codigo_temporada');
+  if Result.CodigoTemporada = '' then
+    Result.CodigoTemporada := Result.Temporada;
   Result.CodigoProveedor := JStr(AObj, 'codigo_proveedor');
   Result.Proveedor := JStr(AObj, 'proveedor');
   Result.Cantidad := JNum(AObj, 'cantidad');
@@ -179,6 +198,134 @@ begin
   Result.TotalCoste := JNum(AObj, 'total_coste');
   Result.Anulada := JBool(AObj, 'anulada');
   Result.FotoRuta := JStr(AObj, 'foto_ruta');
+end;
+
+function LeerOpciones(AValor: TJSONValue): TArrOpcionVenta;
+var
+  iOpcion: Integer;
+  oArray: TJSONArray;
+  oOpcion: TJSONObject;
+begin
+  SetLength(Result, 0);
+  if AValor is TJSONArray then
+  begin
+    oArray := TJSONArray(AValor);
+    SetLength(Result, oArray.Count);
+    for iOpcion := 0 to oArray.Count - 1 do
+    begin
+      oOpcion := JObj(oArray.Items[iOpcion]);
+      Result[iOpcion].Codigo := JStr(oOpcion, 'codigo');
+      Result[iOpcion].Nombre := JStr(oOpcion, 'nombre');
+    end;
+  end;
+end;
+
+function NombreCampo(const ACampo: string): string;
+begin
+  Result := StringReplace(LowerCase(ACampo), '_', ' ', [rfReplaceAll]);
+  if Result <> '' then
+    Result[1] := UpCase(Result[1]);
+end;
+
+function LeerDetalle(AObj: TJSONObject): TDetalleCierreVenta;
+var
+  oPar: TJSONPair;
+  sLinea: string;
+  sValor: string;
+begin
+  Result := Default(TDetalleCierreVenta);
+  Result.Titulo := JStrAlguno(AObj,
+    ['FORMA_PAGO', 'FAMILIA', 'PROVEEDOR', 'TEMPORADA',
+     'EMPLEADO', 'SERIE', 'DESCRIPCION', 'NOMBRE',
+     'DESCRIPCION_FP_ARQR', 'CODIGO_FP_CFP_ARQR',
+     'CODIGO_FORMA_PAGO', 'CODIGO_FAMILIA',
+     'CODIGO_PROVEEDOR', 'CODIGO_EMPLEADO']);
+  if Result.Titulo = '' then
+    Result.Titulo := 'Detalle';
+  if Assigned(AObj) then
+  begin
+    for oPar in AObj do
+    begin
+      if not (oPar.JsonValue is TJSONNull) then
+      begin
+        sValor := oPar.JsonValue.Value;
+        if Trim(sValor) <> '' then
+        begin
+          sLinea := NombreCampo(oPar.JsonString.Value) + ': ' + sValor;
+          if Result.Detalle <> '' then
+            Result.Detalle := Result.Detalle + '  ·  ';
+          Result.Detalle := Result.Detalle + sLinea;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function LeerDetalles(AValor: TJSONValue): TArrDetalleCierreVenta;
+var
+  iDetalle: Integer;
+  oArray: TJSONArray;
+begin
+  SetLength(Result, 0);
+  if AValor is TJSONArray then
+  begin
+    oArray := TJSONArray(AValor);
+    SetLength(Result, oArray.Count);
+    for iDetalle := 0 to oArray.Count - 1 do
+      Result[iDetalle] := LeerDetalle(JObj(oArray.Items[iDetalle]));
+  end;
+end;
+
+function LeerCierre(AObj: TJSONObject): TCierreVenta;
+var
+  oResumen: TJSONObject;
+begin
+  Result := Default(TCierreVenta);
+  if Assigned(AObj) then
+  begin
+    Result.Codigo := JStr(AObj, 'codigo');
+    Result.Empresa := JStr(AObj, 'empresa');
+    Result.CodigoAlmacen := JStr(AObj, 'codigo_almacen');
+    Result.Almacen := JStr(AObj, 'almacen');
+    Result.Caja := JStr(AObj, 'caja');
+    Result.Fecha := JStr(AObj, 'fecha');
+    Result.InstanteCierre := JStr(AObj, 'instante_cierre');
+    Result.Hora := HoraLocal(Result.InstanteCierre);
+    oResumen := JObj(AObj.GetValue('resumen'));
+    Result.Resumen.TotalVentas := JNum(oResumen, 'total_ventas');
+    Result.Resumen.TotalRecuento := JNum(oResumen, 'total_recuento');
+    Result.Resumen.DiferenciaTotal := JNum(oResumen, 'diferencia_total');
+    Result.Resumen.EfectivoCaja := JNum(oResumen, 'efectivo_caja');
+    Result.Resumen.EfectivoDejado := JNum(oResumen, 'efectivo_dejado');
+    Result.Recuento := LeerDetalles(AObj.GetValue('recuento'));
+    Result.ResumenTemporadas :=
+      LeerDetalles(AObj.GetValue('resumen_temporadas'));
+    Result.ResumenFamilias :=
+      LeerDetalles(AObj.GetValue('resumen_familias'));
+    Result.ResumenProveedores :=
+      LeerDetalles(AObj.GetValue('resumen_proveedores'));
+    Result.ResumenFormasPago :=
+      LeerDetalles(AObj.GetValue('resumen_formas_pago'));
+    Result.ResumenEmpleados :=
+      LeerDetalles(AObj.GetValue('resumen_empleados'));
+    Result.ResumenSeries :=
+      LeerDetalles(AObj.GetValue('resumen_series'));
+  end;
+end;
+
+procedure LeerOpcionesRespuesta(AObj: TJSONObject;
+  out AOpciones: TOpcionesVentas);
+begin
+  AOpciones := Default(TOpcionesVentas);
+  if Assigned(AObj) then
+  begin
+    AOpciones.EsMultialmacen := JBool(AObj, 'es_multialmacen');
+    AOpciones.Empresas := LeerOpciones(AObj.GetValue('empresas'));
+    AOpciones.Almacenes := LeerOpciones(AObj.GetValue('almacenes'));
+    AOpciones.Temporadas := LeerOpciones(AObj.GetValue('temporadas'));
+    AOpciones.Familias := LeerOpciones(AObj.GetValue('familias'));
+    AOpciones.Proveedores := LeerOpciones(AObj.GetValue('proveedores'));
+  end;
 end;
 
 // ============================================================================
@@ -248,6 +395,7 @@ begin
   begin
     sConsulta := 'fecha=' + TNetEncoding.URL.Encode(AFiltro.Fecha) +
       ParametroUrl('empresa', AFiltro.Empresa) +
+      ParametroUrl('almacen', AFiltro.Almacen) +
       ParametroUrl('familia', AFiltro.Familia) +
       ParametroUrl('proveedor', AFiltro.Proveedor) +
       ParametroUrl('temporada', AFiltro.Temporada) +
@@ -280,6 +428,9 @@ begin
               ARespuesta.Devueltas := JEnt(oDatos, 'devueltas');
               ARespuesta.Totales :=
                 LeerTotales(JObj(oDatos.GetValue('totales')));
+              LeerOpcionesRespuesta(
+                JObj(oDatos.GetValue('opciones')),
+                ARespuesta.Opciones);
               if oDatos.GetValue('lineas') is TJSONArray then
               begin
                 oArray := oDatos.GetValue('lineas') as TJSONArray;
@@ -287,6 +438,14 @@ begin
                 for iElemento := 0 to oArray.Count - 1 do
                   ARespuesta.Lineas[iElemento] :=
                     LeerLinea(JObj(oArray.Items[iElemento]));
+              end;
+              if oDatos.GetValue('cierres') is TJSONArray then
+              begin
+                oArray := oDatos.GetValue('cierres') as TJSONArray;
+                SetLength(ARespuesta.Cierres, oArray.Count);
+                for iElemento := 0 to oArray.Count - 1 do
+                  ARespuesta.Cierres[iElemento] :=
+                    LeerCierre(JObj(oArray.Items[iElemento]));
               end;
               if oDatos.GetValue('totales_dia') is TJSONArray then
               begin

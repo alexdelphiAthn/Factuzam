@@ -119,7 +119,8 @@ type
     function CrearRepositorioModalArqueo(
       AConexion: TUniConnection = nil): IRepositorioModalArqueo;
     function CrearPersistenciaArqueoCaja(
-      AConexion: TUniConnection = nil): IArqueoPersistencia;
+      AConexion: TUniConnection = nil;
+      AEnviarVentasWs: Boolean = False): IArqueoPersistencia;
     function CrearRepositorioArqueoCaja(
       AConexion: TUniConnection = nil): IRepositorioArqueoCaja;
     function CrearRepositorioArqueoTicket(
@@ -273,7 +274,8 @@ type
     function CrearRepositorioModalArqueo(
       AConexion: TUniConnection = nil): IRepositorioModalArqueo;
     function CrearPersistenciaArqueoCaja(
-      AConexion: TUniConnection = nil): IArqueoPersistencia;
+      AConexion: TUniConnection = nil;
+      AEnviarVentasWs: Boolean = False): IArqueoPersistencia;
     function CrearRepositorioArqueoCaja(
       AConexion: TUniConnection = nil): IRepositorioArqueoCaja;
     function CrearRepositorioArqueoTicket(
@@ -533,9 +535,12 @@ begin
 end;
 
 function TComposicionArqueosCajaPantalla.CrearPersistenciaArqueoCaja(
-  AConexion: TUniConnection): IArqueoPersistencia;
+  AConexion: TUniConnection;
+  AEnviarVentasWs: Boolean): IArqueoPersistencia;
 begin
-  Result := FCaja.CrearPersistenciaArqueoCaja(AConexion);
+  Result := FCaja.CrearPersistenciaArqueoCaja(
+    AConexion,
+    AEnviarVentasWs);
 end;
 
 function TComposicionArqueosCajaPantalla.CrearRepositorioArqueoCaja(

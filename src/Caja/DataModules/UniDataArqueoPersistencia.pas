@@ -19,10 +19,13 @@ interface
 
 uses
   Uni,
-  inLibArqueoPersistencia;
+  inLibArqueoPersistencia,
+  inLibVentasWsColaIntf;
 
 function CrearPersistenciaArqueo(
-  AConexion: TUniConnection): IArqueoPersistencia;
+  AConexion: TUniConnection;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola = nil;
+  AEnviarVentasWs: Boolean = False): IArqueoPersistencia;
 
 implementation
 
@@ -172,8 +175,13 @@ type
     IArqueoPersistencia)
   private
     FConexion: TUniConnection;
+    FEnviarVentasWs: Boolean;
+    FRepositorioVentasWs: IRepositorioVentasWsCola;
   public
-    constructor Create(AConexion: TUniConnection);
+    constructor Create(
+      AConexion: TUniConnection;
+      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      AEnviarVentasWs: Boolean);
     procedure GrabarArqueo(
       const AArqueo: TArqueoCaja;
       const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
@@ -185,6 +193,8 @@ type
   TGrabacionArqueo = class
   private
     FConexion: TUniConnection;
+    FEnviarVentasWs: Boolean;
+    FRepositorioVentasWs: IRepositorioVentasWsCola;
     FArqueo: TArqueoCaja;
     FLineasRecuento: TArray<TArqueoRecuentoLinea>;
     FTotalRecuento: Currency;
@@ -207,8 +217,12 @@ type
     procedure InsertarLineasRecuento;
     procedure MarcarOperaciones;
     procedure InsertarRetirada;
+    procedure EncolarCierre;
   public
-    constructor Create(AConexion: TUniConnection;
+    constructor Create(
+      AConexion: TUniConnection;
+      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      AEnviarVentasWs: Boolean;
       const AArqueo: TArqueoCaja;
       const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
       ATotalRecuento, ADiferenciaTotal, AEfectivoDejado,
@@ -217,6 +231,22 @@ type
       ACodigoEmpleado, AUsuario: string);
     procedure Ejecutar;
   end;
+
+resourcestring
+  SErrorEncolarCierreVentasWs =
+    'No se pudo encolar el cierre de caja %s para su publicación web.';
+  SErrorRepositorioVentasWsNoAsignado =
+    'La publicación web está activa, pero no se asignó su repositorio.';
+
+function NuevoUuid: string;
+var
+  Guid: TGUID;
+  sGuid: string;
+begin
+  CreateGUID(Guid);
+  sGuid := GUIDToString(Guid);
+  Result := Copy(sGuid, 2, 36);
+end;
 
 { --------------------------------------------------------------------------- }
 {   Genera CODIGO_ARQ: YYYYMMDD-NN global del día                             }
@@ -254,7 +284,10 @@ end;
 { --------------------------------------------------------------------------- }
 {   Graba cabecera + detalle del recuento en una transacción                  }
 { --------------------------------------------------------------------------- }
-constructor TGrabacionArqueo.Create(AConexion: TUniConnection;
+constructor TGrabacionArqueo.Create(
+  AConexion: TUniConnection;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  AEnviarVentasWs: Boolean;
   const AArqueo: TArqueoCaja;
   const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
   ATotalRecuento, ADiferenciaTotal, AEfectivoDejado,
@@ -264,6 +297,8 @@ constructor TGrabacionArqueo.Create(AConexion: TUniConnection;
 begin
   inherited Create;
   FConexion := AConexion;
+  FRepositorioVentasWs := ARepositorioVentasWs;
+  FEnviarVentasWs := AEnviarVentasWs;
   FArqueo := AArqueo;
   FLineasRecuento := ALineasRecuento;
   FTotalRecuento := ATotalRecuento;
@@ -275,6 +310,26 @@ begin
   FObservaciones := AObservaciones;
   FCodigoEmpleado := ACodigoEmpleado;
   FUsuario := AUsuario;
+end;
+
+procedure TGrabacionArqueo.EncolarCierre;
+var
+  iIdCola: Int64;
+begin
+  if FEnviarVentasWs and Assigned(FRepositorioVentasWs) then
+  begin
+    iIdCola := FRepositorioVentasWs.EncolarEvento(
+      NuevoUuid,
+      'CIERRE_CAJA',
+      FArqueo.Empresa,
+      'CIERRE',
+      FCodigoArqueo,
+      FUsuario);
+    if iIdCola = 0 then
+      raise Exception.CreateFmt(
+        SErrorEncolarCierreVentasWs,
+        [FCodigoArqueo]);
+  end;
 end;
 
 function TGrabacionArqueo.CrearConsulta(const ASql: string): TUniQuery;
@@ -543,6 +598,7 @@ begin
     InsertarLineasRecuento;
     MarcarOperaciones;
     InsertarRetirada;
+    EncolarCierre;
     FConexion.Commit;
   except
     FConexion.Rollback;
@@ -551,10 +607,17 @@ begin
 end;
 
 constructor TPersistenciaArqueoUniDAC.Create(
-  AConexion: TUniConnection);
+  AConexion: TUniConnection;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  AEnviarVentasWs: Boolean);
 begin
+  if AEnviarVentasWs and not Assigned(ARepositorioVentasWs) then
+    raise EArgumentException.Create(
+      SErrorRepositorioVentasWsNoAsignado);
   inherited Create;
   FConexion := AConexion;
+  FRepositorioVentasWs := ARepositorioVentasWs;
+  FEnviarVentasWs := AEnviarVentasWs;
 end;
 
 procedure TPersistenciaArqueoUniDAC.GrabarArqueo(
@@ -568,7 +631,8 @@ var
   oGrabacion: TGrabacionArqueo;
 begin
   oGrabacion := TGrabacionArqueo.Create(
-    FConexion, AArqueo, ALineasRecuento, ATotalRecuento,
+    FConexion, FRepositorioVentasWs, FEnviarVentasWs,
+    AArqueo, ALineasRecuento, ATotalRecuento,
     ADiferenciaTotal, AEfectivoDejado, AImporteRetirada,
     AConceptoRetirada, ADesgloseBilletes, AObservaciones,
     ACodigoEmpleado, AUsuario);
@@ -580,9 +644,14 @@ begin
 end;
 
 function CrearPersistenciaArqueo(
-  AConexion: TUniConnection): IArqueoPersistencia;
+  AConexion: TUniConnection;
+  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  AEnviarVentasWs: Boolean): IArqueoPersistencia;
 begin
-  Result := TPersistenciaArqueoUniDAC.Create(AConexion);
+  Result := TPersistenciaArqueoUniDAC.Create(
+    AConexion,
+    ARepositorioVentasWs,
+    AEnviarVentasWs);
 end;
 
 end.

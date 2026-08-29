@@ -247,6 +247,8 @@
         <DCCReference Include="VentasVisor.pas"/>
         <DCCReference Include="fVentasListado.pas"/>
         <DCCReference Include="fVentasFicha.pas"/>
+        <DCCReference Include="fVentasCierre.pas"/>
+        <DCCReference Include="fVentasFiltros.pas"/>
         <DCCReference Include="fVentasConfig.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

@@ -61,6 +61,7 @@ type
     PorcIva:             Double;
     TotalSIva:           Currency;
     TotalCIva:           Currency;
+    CosteUnitario:       Currency;
     Vendedor:            string;
     // campos de depósito
     VieneDeDeposito:     string;   // 'S', 'A', ''
@@ -129,6 +130,7 @@ type
                         const ATipoArticulo: string;
                         const ATipoCantidad: string;   // 'Uds', 'Kg'...
                         ACantidad:           Double;
+                        ACosteUnitario:      Currency;
                         // — tarifa y precios —
                         const ATarifa:       string;
                         AEsImpIncl:          string;   // 'S'/'N'
@@ -357,10 +359,10 @@ type
       const ALinea: TDatosLineaFactura);
     function RegistrarOperacionVenta(
       const ALinea: TDatosLineaFactura): string;
-    procedure RegistrarMovimientoVenta(
+    function RegistrarMovimientoVenta(
       const ALinea: TDatosLineaFactura;
       const ANumeroMovimiento, AEmpresaMovimiento,
-        AAlmacenOrigen, ATipoMovimiento: string);
+        AAlmacenOrigen, ATipoMovimiento: string): Currency;
     procedure ProcesarVenta(
       const ALinea: TDatosLineaFactura);
     procedure ProcesarLineas;
@@ -492,6 +494,8 @@ begin
     Result.PorcIva             := FieldByName('PORCENTAJE_IVA_FACLIN').AsFloat;
     Result.TotalSIva := FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency;
     Result.TotalCIva           := FieldByName('TOTAL_FACLIN').AsCurrency;
+    Result.CosteUnitario       :=
+      FieldByName('PRECIO_ULT_COMPRA_FACLIN').AsCurrency;
     Result.Vendedor := FieldByName('CODIGO_VENDEDOR_FACLIN').AsString;
     Result.VieneDeDeposito     := FieldByName('VIENE_DE_DEPOSITO').AsString;
     Result.AccionDeposito      := FieldByName('ACCION_DEPOSITO').AsString;
@@ -1459,7 +1463,7 @@ begin
       FQuery, FSerieGenerada, FNumeroFactura,
       ALinea.Linea, 'ANTICIPO', 'ANTICIPO',
       ALinea.Descripcion, '', '', '', 'SERVICIO', 'Uds',
-      1, '', 'S', dPrecioBase, 0, 0, dPrecioBase, AImporte,
+      1, 0, '', 'S', dPrecioBase, 0, 0, dPrecioBase, AImporte,
       ALinea.TipoIva, ALinea.PorcIva, dPrecioBase, AImporte,
       ALinea.Vendedor, FEmpresa, FAlmacen, FCaja,
       FNumeroOperacion, '', FUsuario);
@@ -1475,7 +1479,8 @@ begin
       ALinea.Articulo, ALinea.Sku, ALinea.Descripcion,
       ALinea.DescripcionVariacion, ALinea.Familia,
       ALinea.NombreFamilia, ALinea.TipoArticulo,
-      ALinea.TipoCantidad, ALinea.Cantidad, ALinea.Tarifa,
+      ALinea.TipoCantidad, ALinea.Cantidad, ALinea.CosteUnitario,
+      ALinea.Tarifa,
       ALinea.EsImpIncl, ALinea.PrecioSalida, ALinea.PorcDto,
       ALinea.PrecioDto, ALinea.PrecioSIva, ALinea.PrecioCIva,
       ALinea.TipoIva, ALinea.PorcIva, ALinea.TotalSIva,
@@ -1570,13 +1575,16 @@ begin
   end;
 end;
 
-procedure TGrabacionFacturaCaja.RegistrarMovimientoVenta(
+function TGrabacionFacturaCaja.RegistrarMovimientoVenta(
   const ALinea: TDatosLineaFactura;
   const ANumeroMovimiento, AEmpresaMovimiento,
-    AAlmacenOrigen, ATipoMovimiento: string);
+    AAlmacenOrigen, ATipoMovimiento: string): Currency;
 var
   Solicitud: TSolicitudMovimientoAlmacenCaja;
 begin
+  Result := ObtenerCosteMedioSkuAlmacen(
+    ALinea.Sku,
+    AAlmacenOrigen);
   Solicitud := Default(TSolicitudMovimientoAlmacenCaja);
   Solicitud.Movimiento.Numero := ANumeroMovimiento;
   Solicitud.Movimiento.TipoDocumento := 'VE';
@@ -1589,6 +1597,7 @@ begin
   Solicitud.Movimiento.Articulo := ALinea.Articulo;
   Solicitud.Movimiento.TipoMovimiento := ATipoMovimiento;
   Solicitud.Movimiento.Cantidad := ALinea.Cantidad;
+  Solicitud.Movimiento.CosteUnitario := Result;
   Solicitud.Movimiento.Usuario := FUsuario;
   Solicitud.Movimiento.Fecha := FFechaOperacion;
   Solicitud.CajaDocumento := FCaja;
@@ -1601,11 +1610,13 @@ end;
 procedure TGrabacionFacturaCaja.ProcesarVenta(
   const ALinea: TDatosLineaFactura);
 var
+  LineaFactura: TDatosLineaFactura;
   sAlmacenOrigen: string;
   sEmpresaMovimiento: string;
   sTipoMovimiento: string;
   sNumeroMovimiento: string;
 begin
+  LineaFactura := ALinea;
   if (ALinea.TipoArticulo = 'ESTANDAR') and
      FGenerarMovimientos then
     sNumeroMovimiento := ObtenerSiguienteContador(
@@ -1629,25 +1640,29 @@ begin
     sAlmacenOrigen := FAlmacenOrigenDevolucion;
     if Trim(FEmpresaOrigenDevolucion) <> '' then
       sEmpresaMovimiento := FEmpresaOrigenDevolucion;
-    RegistrarLineaTraspasoDevolucion(ALinea);
+    RegistrarLineaTraspasoDevolucion(LineaFactura);
   end;
+  if (LineaFactura.TipoArticulo = 'ESTANDAR') and
+     FGenerarMovimientos then
+    LineaFactura.CosteUnitario := RegistrarMovimientoVenta(
+      LineaFactura, sNumeroMovimiento, sEmpresaMovimiento,
+      sAlmacenOrigen, sTipoMovimiento);
   if FRequiereFactura and (Abs(ALinea.TotalCIva) > 0.001) then
     FDataModule.InsertarLineaFactura(
-      FQuery, FSerieGenerada, FNumeroFactura, ALinea.Linea,
-      ALinea.Articulo, ALinea.Sku, ALinea.Descripcion,
-      ALinea.DescripcionVariacion, ALinea.Familia,
-      ALinea.NombreFamilia, ALinea.TipoArticulo,
-      ALinea.TipoCantidad, ALinea.Cantidad, ALinea.Tarifa,
-      ALinea.EsImpIncl, ALinea.PrecioSalida, ALinea.PorcDto,
-      ALinea.PrecioDto, ALinea.PrecioSIva, ALinea.PrecioCIva,
-      ALinea.TipoIva, ALinea.PorcIva, ALinea.TotalSIva,
-      ALinea.TotalCIva, ALinea.Vendedor, FEmpresa, FAlmacen,
+      FQuery, FSerieGenerada, FNumeroFactura, LineaFactura.Linea,
+      LineaFactura.Articulo, LineaFactura.Sku,
+      LineaFactura.Descripcion, LineaFactura.DescripcionVariacion,
+      LineaFactura.Familia, LineaFactura.NombreFamilia,
+      LineaFactura.TipoArticulo, LineaFactura.TipoCantidad,
+      LineaFactura.Cantidad, LineaFactura.CosteUnitario,
+      LineaFactura.Tarifa, LineaFactura.EsImpIncl,
+      LineaFactura.PrecioSalida, LineaFactura.PorcDto,
+      LineaFactura.PrecioDto, LineaFactura.PrecioSIva,
+      LineaFactura.PrecioCIva, LineaFactura.TipoIva,
+      LineaFactura.PorcIva, LineaFactura.TotalSIva,
+      LineaFactura.TotalCIva, LineaFactura.Vendedor,
+      FEmpresa, FAlmacen,
       FCaja, FNumeroOperacion, sNumeroMovimiento, FUsuario);
-  if (ALinea.TipoArticulo = 'ESTANDAR') and
-     FGenerarMovimientos then
-    RegistrarMovimientoVenta(
-      ALinea, sNumeroMovimiento, sEmpresaMovimiento,
-      sAlmacenOrigen, sTipoMovimiento);
 end;
 
 procedure TGrabacionFacturaCaja.ProcesarLineas;
@@ -2971,6 +2986,7 @@ procedure TdmCajaOpe.InsertarLineaFactura(
             const ATipoArticulo: string;   // 'ESTANDAR', 'SERVICIO', 'KIT'
             const ATipoCantidad: string;   // 'Uds', 'Kg'...
             ACantidad:           Double;
+            ACosteUnitario:      Currency;
             // — tarifa y precios —
             const ATarifa:       string;
             AEsImpIncl:          string;   // 'S'/'N'
@@ -3001,6 +3017,7 @@ begin
     '  CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN,' +
     '  DESCRIPCION_ARTICULO_FACLIN, ' + //DESCRIPCION_VARIACION_FACLIN,' +
     '  CODIGO_FAM_FACLIN, NOMBRE_FAM_FACLIN,' +
+    '  PRECIO_ULT_COMPRA_FACLIN,' +
     '  TIPO_ARTICULO_FACLIN, TIPO_CANTIDAD_ARTICULO_FACLIN,' +
     '  CANTIDAD_FACLIN,' +
     '  CODIGO_TAR_FACLIN, ESIMP_INCL_TARIFA_FACLIN,' +
@@ -3021,6 +3038,7 @@ begin
     '  NULLIF(:ART,   ''''), NULLIF(:SKU,    ''''),' +
     '  NULLIF(:DESC,  ''''),' + //NULLIF(:DESCVAR,''''),' +
     '  NULLIF(:FAM,   ''''), NULLIF(:NOMFAM, ''''),' +
+    '  :PRECOSTE,' +
     '  :TIPOART, :TIPOCANT,' +
     '  :CANT,' +
     '  NULLIF(:TARIFA,    ''''), :ESIMPINCL,' +
@@ -3045,6 +3063,7 @@ begin
 //  QryTrx.ParamByName('DESCVAR').AsString  := ADescVariacion;
   QryTrx.ParamByName('FAM').AsString      := AFamilia;
   QryTrx.ParamByName('NOMFAM').AsString   := ANombreFamilia;
+  QryTrx.ParamByName('PRECOSTE').AsCurrency := ACosteUnitario;
   QryTrx.ParamByName('TIPOART').AsString  := ATipoArticulo;
   QryTrx.ParamByName('TIPOCANT').AsString := ATipoCantidad;
   QryTrx.ParamByName('CANT').AsFloat      := ACantidad;

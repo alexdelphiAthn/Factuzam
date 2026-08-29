@@ -26,6 +26,8 @@ uses
   VentasVisor in 'VentasVisor.pas',
   fVentasListado in 'fVentasListado.pas',
   fVentasFicha in 'fVentasFicha.pas',
+  fVentasCierre in 'fVentasCierre.pas',
+  fVentasFiltros in 'fVentasFiltros.pas',
   fVentasConfig in 'fVentasConfig.pas';
 
 {$R *.res}

@@ -32,6 +32,7 @@ type
     Articulo: string;
     CodigoFamilia: string;
     CodigoProveedor: string;
+    CodigoTemporada: string;
     Color: string;
     Descripcion: string;
     Empresa: string;
@@ -41,6 +42,8 @@ type
     Hora: string;
     Linea: string;
     Numero: string;
+    Almacen: string;
+    CodigoAlmacen: string;
     Proveedor: string;
     Serie: string;
     Sku: string;
@@ -67,18 +70,73 @@ type
 
   TArrTotalesVenta = TArray<TTotalesVenta>;
 
+  TOpcionVenta = record
+    Codigo: string;
+    Nombre: string;
+  end;
+
+  TArrOpcionVenta = TArray<TOpcionVenta>;
+
+  TOpcionesVentas = record
+    EsMultialmacen: Boolean;
+    Almacenes: TArrOpcionVenta;
+    Empresas: TArrOpcionVenta;
+    Familias: TArrOpcionVenta;
+    Proveedores: TArrOpcionVenta;
+    Temporadas: TArrOpcionVenta;
+  end;
+
+  TResumenCierreVenta = record
+    DiferenciaTotal: Double;
+    EfectivoCaja: Double;
+    EfectivoDejado: Double;
+    TotalRecuento: Double;
+    TotalVentas: Double;
+  end;
+
+  TDetalleCierreVenta = record
+    Detalle: string;
+    Titulo: string;
+  end;
+
+  TArrDetalleCierreVenta = TArray<TDetalleCierreVenta>;
+
+  TCierreVenta = record
+    Resumen: TResumenCierreVenta;
+    Recuento: TArrDetalleCierreVenta;
+    ResumenEmpleados: TArrDetalleCierreVenta;
+    ResumenFamilias: TArrDetalleCierreVenta;
+    ResumenFormasPago: TArrDetalleCierreVenta;
+    ResumenProveedores: TArrDetalleCierreVenta;
+    ResumenSeries: TArrDetalleCierreVenta;
+    ResumenTemporadas: TArrDetalleCierreVenta;
+    Almacen: string;
+    Caja: string;
+    Codigo: string;
+    CodigoAlmacen: string;
+    Empresa: string;
+    Fecha: string;
+    Hora: string;
+    InstanteCierre: string;
+  end;
+
+  TArrCierreVenta = TArray<TCierreVenta>;
+
   TRespuestaLineas = record
     Devueltas: Integer;
     TotalLineas: Integer;
     Desde: string;
     Hasta: string;
+    Cierres: TArrCierreVenta;
     Lineas: TArrLineaVenta;
+    Opciones: TOpcionesVentas;
     Totales: TTotalesVenta;
     TotalesDia: TArrTotalesVenta;
   end;
 
   TFiltroLineas = record
     Limite: Integer;
+    Almacen: string;
     Empresa: string;
     Familia: string;
     Fecha: string;

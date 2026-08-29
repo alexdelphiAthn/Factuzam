@@ -34,6 +34,9 @@ type
     function Encolar(
       const AIdEvento, ATipoEvento, ASerie, ANumero,
         AUsuario: string): Int64;
+    function EncolarEvento(
+      const AIdEvento, ATipoEvento, AEmpresa, ASerie,
+        ANumero, AUsuario: string): Int64;
     function ActualizarPdfVentaPendiente(
       AEsFactura: Boolean;
       const ASerie, ANumero, ARutaPdf, AUsuario: string): Boolean;

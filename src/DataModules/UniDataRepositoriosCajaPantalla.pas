@@ -44,7 +44,8 @@ type
     function CrearRepositorioModalArqueo(
       AConexion: TUniConnection = nil): IRepositorioModalArqueo;
     function CrearPersistenciaArqueoCaja(
-      AConexion: TUniConnection = nil): IArqueoPersistencia;
+      AConexion: TUniConnection = nil;
+      AEnviarVentasWs: Boolean = False): IArqueoPersistencia;
     function CrearRepositorioInformesCaja(
       AConexion: TUniConnection = nil): IRepositorioInformesCaja;
   end;
@@ -70,7 +71,8 @@ type
     function CrearRepositorioModalArqueo(
       AConexion: TUniConnection = nil): IRepositorioModalArqueo;
     function CrearPersistenciaArqueoCaja(
-      AConexion: TUniConnection = nil): IArqueoPersistencia;
+      AConexion: TUniConnection = nil;
+      AEnviarVentasWs: Boolean = False): IArqueoPersistencia;
     function CrearRepositorioInformesCaja(
       AConexion: TUniConnection = nil): IRepositorioInformesCaja;
   end;
@@ -82,7 +84,8 @@ uses
   UniDataFaseCobroRepositorio, UniDataCajaOperacionesHistRepositorio,
   UniDataCajaPagosHistRepositorio, UniDataCajaConsultasRepositorio,
   UniDataTraspasoOpeRepositorio, UniDataModalArqueoRepositorio,
-  UniDataArqueoPersistencia, UniDataInformesCajaRepositorio;
+  UniDataArqueoPersistencia, UniDataInformesCajaRepositorio,
+  UniDataVentasWsCola, inLibVentasWsColaIntf;
 
 function TRepositoriosCajaPantallaUniDAC.CrearRepositorioCajasDefecto(
   AConexion: TUniConnection): IRepositorioCajasDefecto;
@@ -141,9 +144,21 @@ begin
 end;
 
 function TRepositoriosCajaPantallaUniDAC.CrearPersistenciaArqueoCaja(
-  AConexion: TUniConnection): IArqueoPersistencia;
+  AConexion: TUniConnection;
+  AEnviarVentasWs: Boolean): IArqueoPersistencia;
+var
+  ConexionArqueo: TUniConnection;
+  RepositorioVentasWs: IRepositorioVentasWsCola;
 begin
-  Result := CrearPersistenciaArqueo(Conexion(AConexion));
+  ConexionArqueo := Conexion(AConexion);
+  RepositorioVentasWs := nil;
+  if AEnviarVentasWs then
+    RepositorioVentasWs :=
+      CrearRepositorioVentasWsColaUniDAC(ConexionArqueo);
+  Result := CrearPersistenciaArqueo(
+    ConexionArqueo,
+    RepositorioVentasWs,
+    AEnviarVentasWs);
 end;
 
 function TRepositoriosCajaPantallaUniDAC.CrearRepositorioInformesCaja(

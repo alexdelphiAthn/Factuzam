@@ -42,6 +42,9 @@ type
     function Encolar(
       const AIdEvento, ATipoEvento, ASerie, ANumero,
         AUsuario: string): Int64;
+    function EncolarEvento(
+      const AIdEvento, ATipoEvento, AEmpresa, ASerie,
+        ANumero, AUsuario: string): Int64;
     function ActualizarPdfVentaPendiente(
       AEsFactura: Boolean;
       const ASerie, ANumero, ARutaPdf, AUsuario: string): Boolean;
@@ -127,6 +130,7 @@ var
   sEmpresa: string;
 begin
   Result := 0;
+  sEmpresa := '';
   Qry := NuevaConsulta;
   try
     Qry.SQL.Text :=
@@ -136,29 +140,42 @@ begin
     Qry.ParamByName('NUMERO').AsString := ANumero;
     Qry.Open;
     if not Qry.IsEmpty then
-    begin
       sEmpresa := Qry.FieldByName('CODIGO_EMP_FAC').AsString;
-      Qry.Close;
-      Qry.SQL.Text :=
-        ' INSERT INTO fza_ventas_ws_cola ' +
-        ' (ID_EVENTO_VWSC, CODIGO_EMP_VWSC, SERIE_FAC_VWSC, ' +
-        '  NUMERO_FAC_VWSC, TIPO_EVENTO_VWSC, ' +
-        '  VERSION_CONTRATO_VWSC, ESTADO_VWSC, ' +
-        '  CONTADOR_INTENTOS_VWSC, INSTANTE_ALTA, USUARIO_ALTA) ' +
-        ' VALUES (:EVENTO, :EMPRESA, :SERIE, :NUMERO, :TIPO, 1, ' +
-        '         ''PENDIENTE'', 0, NOW(), :USUARIO)';
-      Qry.ParamByName('EVENTO').AsString := AIdEvento;
-      Qry.ParamByName('EMPRESA').AsString := sEmpresa;
-      Qry.ParamByName('SERIE').AsString := ASerie;
-      Qry.ParamByName('NUMERO').AsString := ANumero;
-      Qry.ParamByName('TIPO').AsString := ATipoEvento;
-      Qry.ParamByName('USUARIO').AsString := AUsuario;
-      Qry.Execute;
-      Qry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
-      Qry.Open;
-      Result := Qry.FieldByName('ID').AsLargeInt;
-      Qry.Close;
-    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+  if sEmpresa <> '' then
+    Result := EncolarEvento(
+      AIdEvento, ATipoEvento, sEmpresa, ASerie, ANumero, AUsuario);
+end;
+
+function TRepositorioVentasWsColaUniDAC.EncolarEvento(
+  const AIdEvento, ATipoEvento, AEmpresa, ASerie,
+    ANumero, AUsuario: string): Int64;
+var
+  Qry: TUniQuery;
+begin
+  Qry := NuevaConsulta;
+  try
+    Qry.SQL.Text :=
+      ' INSERT INTO fza_ventas_ws_cola ' +
+      ' (ID_EVENTO_VWSC, CODIGO_EMP_VWSC, SERIE_FAC_VWSC, ' +
+      '  NUMERO_FAC_VWSC, TIPO_EVENTO_VWSC, ' +
+      '  VERSION_CONTRATO_VWSC, ESTADO_VWSC, ' +
+      '  CONTADOR_INTENTOS_VWSC, INSTANTE_ALTA, USUARIO_ALTA) ' +
+      ' VALUES (:EVENTO, :EMPRESA, :SERIE, :NUMERO, :TIPO, 1, ' +
+      '         ''PENDIENTE'', 0, NOW(), :USUARIO)';
+    Qry.ParamByName('EVENTO').AsString := AIdEvento;
+    Qry.ParamByName('EMPRESA').AsString := AEmpresa;
+    Qry.ParamByName('SERIE').AsString := ASerie;
+    Qry.ParamByName('NUMERO').AsString := ANumero;
+    Qry.ParamByName('TIPO').AsString := ATipoEvento;
+    Qry.ParamByName('USUARIO').AsString := AUsuario;
+    Qry.Execute;
+    Qry.SQL.Text := 'SELECT LAST_INSERT_ID() AS ID';
+    Qry.Open;
+    Result := Qry.FieldByName('ID').AsLargeInt;
+    Qry.Close;
   finally
     FreeAndNil(Qry);
   end;

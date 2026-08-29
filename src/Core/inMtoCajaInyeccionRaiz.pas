@@ -306,7 +306,12 @@ begin
   Dependencias.Arqueo.Modal :=
     Caja.Arqueos.CrearRepositorioModalArqueo;
   Dependencias.Arqueo.Persistencia :=
-    Caja.Arqueos.CrearPersistenciaArqueoCaja;
+    Caja.Arqueos.CrearPersistenciaArqueoCaja(
+      nil,
+      Assigned(FComposicion.ParametrosCaja) and
+      FComposicion.ParametrosCaja.GetBool(
+        'vgerEnviarVentasWS',
+        False));
   Dependencias.Arqueo.Arqueo :=
     Caja.Arqueos.CrearRepositorioArqueoCaja;
   Dependencias.Arqueo.Ticket :=
