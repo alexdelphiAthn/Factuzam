@@ -321,8 +321,7 @@ type
       AEsAdministrador: Boolean
     ): TModoProteccionCopia;
     function SolicitarDestinoCopia(
-      out ARutaFichero: string;
-      out AContrasena: string
+      out ARutaFichero: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
     function ConsultarDecisionCierrePrestaShop:
@@ -775,15 +774,13 @@ begin
 end;
 
 function TfrmMtoPrincipal.SolicitarDestinoCopia(
-  out ARutaFichero: string;
-  out AContrasena: string): Boolean;
+  out ARutaFichero: string): Boolean;
 var
   bEsAdministrador: Boolean;
   Modo: TModoProteccionCopia;
   sExtension: string;
 begin
   ARutaFichero := '';
-  AContrasena := '';
   bEsAdministrador := FCoordinadorOperaciones.ModoCreacionCopia =
     mpcTextoPlano;
   Modo := FCoordinadorOperaciones.ModoCreacionCopia;
@@ -806,27 +803,19 @@ begin
     ARutaFichero := ChangeFileExt(
       saveDialog.FileName,
       sExtension);
-    if Modo = mpcCifrada then
-      Result := SolicitarNuevaContrasenaCopia(
-        Self,
-        AContrasena);
   end;
 end;
 
 procedure TfrmMtoPrincipal.CopiasdeSeguridad1Click(Sender: TObject);
 var
-  sContrasena: string;
   sRutaFichero: string;
 begin
-  if SolicitarDestinoCopia(
-       sRutaFichero,
-       sContrasena) then
+  if SolicitarDestinoCopia(sRutaFichero) then
   begin
     FCoordinadorOperaciones.IniciarCopia(
       sRutaFichero,
-      sContrasena);
+      '');
   end;
-  sContrasena := '';
 end;
 
 // validar iban online https://www.iban.com
@@ -1039,17 +1028,13 @@ end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScript: Boolean;
 var
-  sContrasena: string;
   sRutaFichero: string;
 begin
-  Result := SolicitarDestinoCopia(
-    sRutaFichero,
-    sContrasena);
+  Result := SolicitarDestinoCopia(sRutaFichero);
   if Result then
     Result := FCoordinadorOperaciones.CrearCopia(
       sRutaFichero,
-      sContrasena);
-  sContrasena := '';
+      '');
 end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScriptSoporte: Boolean;

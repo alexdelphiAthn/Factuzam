@@ -296,7 +296,7 @@ begin
     ARutaFichero);
   sContrasenaCopia := '';
   if Modo = mpcCifrada then
-    sContrasenaCopia := AContrasena;
+    sContrasenaCopia := FConexion.Password;
   IniciarCopiaConexion(
     FConexion,
     ARutaFichero,
@@ -366,7 +366,7 @@ begin
     ARutaFichero);
   sContrasenaCopia := '';
   if Modo = mpcCifrada then
-    sContrasenaCopia := AContrasena;
+    sContrasenaCopia := FConexion.Password;
   Result := CrearCopiaConexion(
     FConexion,
     ARutaFichero,

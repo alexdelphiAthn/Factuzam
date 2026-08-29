@@ -199,7 +199,6 @@ uses  inLibWin,
       Core_Helpers,
       inLibDBStructure,
       inMtoModalScriptLog,
-      inMtoModalContrasenaCopia,
       inMtoModalGenPass,
       inLibCopiasSeguridad,
       inLibRestauracionCopiasConexion,
@@ -1242,60 +1241,52 @@ procedure TfrmLogon.btnCopiaSeguridadClick(Sender: TObject);
 var
   iButtonSel: Integer;
   oWorker: TThread;
-  sContrasenaCopia: string;
 begin
-  if TfrmModalContrasenaCopia.SolicitarNueva(
-       Self,
-       sContrasenaCopia) then
+  ConectarPerfilFormulario(
+    edtNomBD.Text,
+    True);
+  iButtonSel := 0;
+  ConfigurarDialogoCopiaProtegida;
+  if saveDialog.Execute then
   begin
-    ConectarPerfilFormulario(
-      edtNomBD.Text,
-      True);
-    iButtonSel := 0;
-    ConfigurarDialogoCopiaProtegida;
-    if saveDialog.Execute then
+    saveDialog.FileName := ChangeFileExt(
+      saveDialog.FileName,
+      '.crypt');
+    if FileExists(savedialog.FileName) then
     begin
-      saveDialog.FileName := ChangeFileExt(
-        saveDialog.FileName,
-        '.crypt');
-      if FileExists(savedialog.FileName) then
-      begin
-        iButtonSel := MessageDlg(SPreguntaReemplazarFichero,
-                                 mtCustom, [mbYes, mbNo], 0);
-      end;
-      if ((iButtonSel = mrYes) or
-          (not FileExists(saveDialog.FileName))) then
-      begin
-        ConfirmarConfiguracionConexionVerificada;
-        MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
-        oWorker := CrearWorkerCopiaProtegidaConexion(
-          FConexionLogon,
-          saveDialog.FileName,
-          sContrasenaCopia,
-          WorkerProgreso,
-          BackupFinalizar);
-        FCancelaOperacionSolicitada := False;
-        FWorkerOperacion := oWorker;
-        try
-          oWorker.Start;
-        except
-          FWorkerOperacion := nil;
-          FreeAndNil(oWorker);
-          DescartarConfiguracionConexionPendiente;
-          raise;
-        end;
-      end;
-      if (iButtonSel <> mrYes) and
-         FileExists(saveDialog.FileName) then
-        DescartarConfiguracionConexionPendiente;
-    end
-    else
-    begin
-      DescartarConfiguracionConexionPendiente;
-      RegistroLog.RegistrarError('La copia se canceló');
-      ShowMessage(SCopiaSeguridadCancelada);
+      iButtonSel := MessageDlg(SPreguntaReemplazarFichero,
+                               mtCustom, [mbYes, mbNo], 0);
     end;
-    sContrasenaCopia := '';
+    if ((iButtonSel = mrYes) or
+        (not FileExists(saveDialog.FileName))) then
+    begin
+      ConfirmarConfiguracionConexionVerificada;
+      MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
+      oWorker := CrearWorkerCopiaProtegidaConexion(
+        FConexionLogon,
+        saveDialog.FileName,
+        FConexionLogon.Password,
+        WorkerProgreso,
+        BackupFinalizar);
+      FCancelaOperacionSolicitada := False;
+      FWorkerOperacion := oWorker;
+      try
+        oWorker.Start;
+      except
+        FWorkerOperacion := nil;
+        FreeAndNil(oWorker);
+        DescartarConfiguracionConexionPendiente;
+        raise;
+      end;
+    end
+    else if FileExists(saveDialog.FileName) then
+      DescartarConfiguracionConexionPendiente;
+  end
+  else
+  begin
+    DescartarConfiguracionConexionPendiente;
+    RegistroLog.RegistrarError('La copia se canceló');
+    ShowMessage(SCopiaSeguridadCancelada);
   end;
 end;
 
