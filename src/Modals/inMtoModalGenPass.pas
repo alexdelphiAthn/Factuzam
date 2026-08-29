@@ -41,6 +41,7 @@ type
     procedure FormCreate(Sender: TObject);
   private
     { Private declarations }
+    procedure AjustarControles;
   public
     sFicha:string;
     class function SolicitarNueva(
@@ -55,6 +56,43 @@ implementation
 
 uses
   inLibMsgConfiguracion;
+
+procedure TfrmModalGenPass.AjustarControles;
+var
+  iAnchoBotones: Integer;
+  iAnchoEtiqueta: Integer;
+  iMargen: Integer;
+  iSeparacion: Integer;
+  iSeparacionBotones: Integer;
+begin
+  iMargen := MulDiv(24, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iSeparacion := MulDiv(12, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iAnchoEtiqueta := lbl1.Width;
+  if lbl2.Width > iAnchoEtiqueta then
+    iAnchoEtiqueta := lbl2.Width;
+  if lbl3.Width > iAnchoEtiqueta then
+    iAnchoEtiqueta := lbl3.Width;
+
+  iSeparacionBotones := btnGuardar.Left -
+    (btnCancelar.Left + btnCancelar.Width);
+  if iSeparacionBotones < iSeparacion then
+    iSeparacionBotones := iSeparacion;
+  iAnchoBotones := btnCancelar.Width + iSeparacionBotones +
+    btnGuardar.Width;
+
+  edtUsuario.Left := iMargen + iAnchoEtiqueta + iSeparacion;
+  edtPassword.Left := edtUsuario.Left;
+  edtPasswordCon.Left := edtUsuario.Left;
+  lbl1.Left := edtUsuario.Left - iSeparacion - lbl1.Width;
+  lbl2.Left := edtUsuario.Left - iSeparacion - lbl2.Width;
+  lbl3.Left := edtUsuario.Left - iSeparacion - lbl3.Width;
+  ClientWidth := edtUsuario.Left + edtUsuario.Width + iMargen;
+  if ClientWidth < iAnchoBotones + (2 * iMargen) then
+    ClientWidth := iAnchoBotones + (2 * iMargen);
+  btnCancelar.Left := (ClientWidth - iAnchoBotones) div 2;
+  btnGuardar.Left := btnCancelar.Left + btnCancelar.Width +
+    iSeparacionBotones;
+end;
 
 procedure TfrmModalGenPass.btnCancelarClick(Sender: TObject);
 begin
@@ -116,6 +154,7 @@ begin
       SCaptionRepetirNuevaContrasenaUsuario;
     oFormulario.btnGuardar.Caption :=
       SCaptionContinuarNuevaContrasena;
+    oFormulario.AjustarControles;
     Result := oFormulario.ShowModal = mrOk;
     if Result then
       AContrasena := oFormulario.edtPassword.Text;

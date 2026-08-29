@@ -140,6 +140,7 @@ type
     function SeleccionarTipoRectificativa(
       const ASerie, ANumero: string;
       out ATipoRectificativa: TTipoRectificativaCaja): Boolean;
+    procedure ActivarOperacionCaja(AFormularioCaja: TCustomForm);
     procedure RecargarMaestro;
     procedure GuardarLayout;
     procedure RestaurarLayout;
@@ -529,6 +530,19 @@ begin
   Result := (Trim(ASerie) <> '') and (Trim(ANumero) <> '');
 end;
 
+procedure TfrmConsultaOpe.ActivarOperacionCaja(
+  AFormularioCaja: TCustomForm);
+begin
+  if AFormularioCaja.WindowState = wsMinimized then
+    AFormularioCaja.WindowState := wsNormal;
+  AFormularioCaja.Show;
+  // Buscar operaciones puede ser un popup de esta misma operacion. Mientras
+  // siga visible, Windows impide que su ventana propietaria quede por encima.
+  Hide;
+  AFormularioCaja.BringToFront;
+  Close;
+end;
+
 procedure TfrmConsultaOpe.btnAnularVerifactuClick(Sender: TObject);
 var
   Factura: TFacturaConsultaOperacion;
@@ -637,10 +651,7 @@ begin
       sNumero,
       FEmpresa,
       FAlmacen);
-    oFormularioCaja.Show;
-    oFormularioCaja.BringToFront;
-    if oFormularioCaja.WindowState = wsMinimized then
-      oFormularioCaja.WindowState := wsNormal;
+    ActivarOperacionCaja(oFormularioCaja);
   end;
 end;
 
@@ -693,10 +704,7 @@ begin
       oFormularioCaja := oOperacionCaja.FormularioCaja;
       oOperacionCaja.CargarRectificacion(
         sSerie, sNumero, TipoRectificativa, TratamientoMovimientos);
-      oFormularioCaja.Show;
-      oFormularioCaja.BringToFront;
-      if oFormularioCaja.WindowState = wsMinimized then
-        oFormularioCaja.WindowState := wsNormal;
+      ActivarOperacionCaja(oFormularioCaja);
     end;
   end;
 end;

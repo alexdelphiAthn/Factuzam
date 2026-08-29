@@ -185,8 +185,9 @@ begin
     FchkSoloVentas.Caption := SCaptionSoloArticulosConVentas;
     FchkConImpuestos := TcxCheckBox.Create(Self);
     FchkConImpuestos.Parent := TabFechas;
-    FchkConImpuestos.Left := 460;
-    FchkConImpuestos.Top := 16;
+    FchkConImpuestos.Left := FchkSoloVentas.Left;
+    FchkConImpuestos.Top :=
+      FchkSoloVentas.Top + FchkSoloVentas.Height + 8;
     FchkConImpuestos.Width := 210;
     FchkConImpuestos.Caption := SCaptionConImpuestosMovimientosVentas;
     FchkConImpuestos.Checked := True;
