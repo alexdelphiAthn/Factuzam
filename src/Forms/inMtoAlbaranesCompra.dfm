@@ -521,6 +521,7 @@
             TabOrder = 0
             Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
+            OnChange = pcAlbaranChange
             ClientRectBottom = 367
             ClientRectLeft = 4
             ClientRectRight = 933

@@ -174,34 +174,42 @@ begin
     '       GROUP_CONCAT(DISTINCT NULLIF(o.CONCEPTO_GASTO_INGRESO_OPCAJA,'''') '
       +
     '                    SEPARATOR '' | '')          AS CONCEPTOS, '      +
-    '       COALESCE(MAX(f.TOTAL_LIQUIDO_FAC), '                          +
-    '                SUM(o.IMPORTE_TOTAL_OPCAJA))    AS IMPORTE_TOTAL, '  +
-    '       COALESCE(MAX(f.SERIE_FAC), MAX(o.SERIE_FAC_OPCAJA)) '       +
-    '                                                AS SERIE_FAC, '     +
-    '       COALESCE(MAX(f.NUMERO_FAC), MAX(o.NUMERO_FAC_OPCAJA)) '      +
-    '                                                AS NUMERO_FAC, '     +
-    '       MAX(COALESCE(f.CODIGO_CLI_FAC, o.CODIGO_CLI_OPCAJA)) ' +
-    '                                                AS CLIENTE, '        +
+    '       COALESCE('                                                +
+    '         MAX(COALESCE(fd.TOTAL_LIQUIDO_FAC, '                   +
+    '                      fo.TOTAL_LIQUIDO_FAC)), '                  +
+    '         SUM(o.IMPORTE_TOTAL_OPCAJA)) AS IMPORTE_TOTAL, '        +
+    '       COALESCE('                                                +
+    '         MAX(COALESCE(fd.SERIE_FAC, fo.SERIE_FAC)), '           +
+    '         MAX(o.SERIE_FAC_OPCAJA)) AS SERIE_FAC, '                +
+    '       COALESCE('                                                +
+    '         MAX(COALESCE(fd.NUMERO_FAC, fo.NUMERO_FAC)), '         +
+    '         MAX(o.NUMERO_FAC_OPCAJA)) AS NUMERO_FAC, '              +
+    '       MAX(COALESCE(fd.CODIGO_CLI_FAC, '                         +
+    '                    fo.CODIGO_CLI_FAC, '                         +
+    '                    o.CODIGO_CLI_OPCAJA)) AS CLIENTE, '          +
     '       MAX(cli.RAZON_SOCIAL_CLI)             AS RAZON_SOCIAL_CLI,'+
     '       MAX(o.USUARIO_ALTA)                       AS EMPLEADO '        +
     '  FROM fza_caja_operaciones o '                                      +
-    '  LEFT JOIN fza_facturas f '                                         +
-    '    ON f.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA '                     +
-    '   AND ( '                                                            +
-    '        (TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) <> '''' '         +
-    '         AND TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) <> '''' '     +
-    '         AND f.SERIE_FAC = o.SERIE_FAC_OPCAJA '                      +
-    '         AND f.NUMERO_FAC = o.NUMERO_FAC_OPCAJA) '                   +
-    '        OR '                                                          +
-    '        ((TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) = '''' '          +
-    '          OR TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) = '''') '     +
-    '         AND f.CODIGO_ALM_FAC = o.CODIGO_ALM_OPCAJA '                +
-    '         AND f.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA '              +
-    '         AND f.NUMERO_OPERACION_FAC = o.NUMERO_OPERACION_OPCAJA) '   +
-    '       ) '                                                            +
+    // Las rutas son excluyentes para que MariaDB use sus indices.
+    '  LEFT JOIN fza_facturas fd '                                    +
+    '    ON TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) <> '''' '       +
+    '   AND TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) <> '''' '      +
+    '   AND fd.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA '                +
+    '   AND fd.SERIE_FAC = o.SERIE_FAC_OPCAJA '                      +
+    '   AND fd.NUMERO_FAC = o.NUMERO_FAC_OPCAJA '                    +
+    '  LEFT JOIN fza_facturas fo '                                   +
+    '    ON (TRIM(COALESCE(o.SERIE_FAC_OPCAJA, '''')) = '''' '       +
+    '        OR TRIM(COALESCE(o.NUMERO_FAC_OPCAJA, '''')) = '''') '  +
+    '   AND fo.CODIGO_EMP_FAC = o.CODIGO_EMP_OPCAJA '                +
+    '   AND fo.CODIGO_ALM_FAC = o.CODIGO_ALM_OPCAJA '                +
+    '   AND fo.CODIGO_CAJA_FAC = o.CODIGO_CAJA_OPCAJA '              +
+    '   AND fo.NUMERO_OPERACION_FAC = '                              +
+    '       o.NUMERO_OPERACION_OPCAJA '                              +
     '  LEFT JOIN fza_clientes cli '                                       +
-    '    ON cli.CODIGO_CLI_CLI = COALESCE(f.CODIGO_CLI_FAC, '     +
-    '                                     o.CODIGO_CLI_OPCAJA) '      +
+    '    ON cli.CODIGO_CLI_CLI = '                                   +
+    '       COALESCE(fd.CODIGO_CLI_FAC, '                            +
+    '                fo.CODIGO_CLI_FAC, '                            +
+    '                o.CODIGO_CLI_OPCAJA) '                          +
     ' WHERE o.FECHA_OP_DIA_OPCAJA = :PFECHA '                             +
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
@@ -212,7 +220,8 @@ begin
       'o.NUMERO_FAC_OPCAJA') +
     '   AND ( :PTXT = '''' '                                              +
     '         OR o.NUMERO_OPERACION_OPCAJA LIKE CONCAT(''%'', :PTXT, ''%'') ' +
-    '         OR f.NUMERO_FAC           LIKE CONCAT(''%'', :PTXT, ''%'') ' +
+    '         OR COALESCE(fd.NUMERO_FAC, fo.NUMERO_FAC) '             +
+    '            LIKE CONCAT(''%'', :PTXT, ''%'') '                   +
     '         OR cli.RAZON_SOCIAL_CLI LIKE CONCAT(''%'', :PTXT, ''%'') ' +
     '         OR o.CONCEPTO_GASTO_INGRESO_OPCAJA LIKE CONCAT(''%'', :PTXT, ' +
     '''%'') ' +

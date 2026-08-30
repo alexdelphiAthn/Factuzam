@@ -144,11 +144,13 @@ type
     splSplitterFicha: TcxSplitter;
     curTOTAL_EUROS_DIFERENCIA_INV: TcxDBCurrencyEdit;
     btnIraArticulo: TcxButton;
+    btnRevalorizarPmp: TcxButton;
     pnlBotonesAccion: TPanel;
     btnExportarExcel: TcxButton;
     btnIraArticuloMov: TcxButton;
     ActionList1: TActionList;
     actIraArticulo: TAction;
+    actRevalorizarPmp: TAction;
     chkVerColumnasAtributos: TcxCheckBox;
     btnEnviarRecuento: TcxButton;
     btnRecogerRecuento: TcxButton;
@@ -221,6 +223,7 @@ type
     procedure btnIraArticuloClick(Sender: TObject);
     procedure btnIraArticuloMovClick(Sender: TObject);
     procedure actIraArticuloExecute(Sender: TObject);
+    procedure actRevalorizarPmpExecute(Sender: TObject);
     procedure chkVerColumnasAtributosPropertiesChange(Sender: TObject);
 
   private
@@ -294,6 +297,7 @@ type
     // Guion comun de las cargas masivas: confirmar, ejecutar y refrescar.
     procedure EjecutarCargaMasiva(const APregunta: string;
                                   const ACarga: TProc);
+    procedure EjecutarRevalorizacionPmp;
     // === CONTRATO DE ENTRADA: construccion y enganches ===
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostInventario;
@@ -343,9 +347,11 @@ uses
   inLibInventariosAplicacion,
   inLibInventariosPresentacion,
   inLibInventariosPresentacionIntf,
+  inLibInventariosRevalorizacion,
   inMtoInventariosEntradaVcl,
   inMtoInventariosPresentacionBusquedas,
   inMtoModalFechaHoraRecuento,
+  inMtoModalRevalorizacionInventario,
   inMtoPreviewExcel,
   System.Diagnostics,
   inMtoModalAddBlockInventario,
@@ -646,6 +652,8 @@ begin
   FGestorColumnas := TGestorColumnasAtributosInventario.Create(
     tvLineas, ColumnasSku, tvLineasARTICULO, tvLineasUNIDAD);
   inherited;
+  actRevalorizarPmp.Caption := SCaptionRevalorizarPmpInventario;
+  actRevalorizarPmp.Hint := SHintRevalorizarPmpInventario;
   FProcesandoAtributo := False;
   FInicializandoCombo := False;
   FRefrescandoLookupsCabecera := False;
@@ -888,6 +896,8 @@ procedure TfrmMtoInventarios.ActualizarEstadoUI;
 begin
   // Con el inventario APLICADO o CANCELADO el grid es solo lectura.
   HabilitarEdicionLineas(PuedeEditar);
+  actRevalorizarPmp.Enabled :=
+    PuedeEditar and (pcDetail.ActivePage = tsDetalle);
 end;
 procedure TfrmMtoInventarios.HabilitarEdicionLineas(Habilitado: Boolean);
 begin
@@ -1149,6 +1159,65 @@ begin
     ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
       tvMovs.DataController.DataSet,
       'CODIGO_ART_MOV');
+end;
+
+procedure TfrmMtoInventarios.actRevalorizarPmpExecute(Sender: TObject);
+begin
+  inherited;
+  EjecutarRevalorizacionPmp;
+end;
+
+procedure TfrmMtoInventarios.EjecutarRevalorizacionPmp;
+var
+  Identificacion: string;
+  Lineas: TLineasBaseRevalorizacionInventario;
+  Resultado: TResultadoRevalorizacionInventario;
+begin
+  if not PuedeEditar then
+    ShowMessage(SErrorInventarioNoAbiertoEditar)
+  else if (dmmInventarios = nil) or
+          (not dmmInventarios.cdsLineas.Active) or
+          dmmInventarios.cdsLineas.IsEmpty then
+    ShowMessage(SErrorLineasInventarioNoAbiertas)
+  else
+  begin
+    try
+      Screen.Cursor := crHourGlass;
+      try
+        Lineas := dmmInventarios.PrepararLineasRevalorizacion;
+      finally
+        Screen.Cursor := crDefault;
+      end;
+      Identificacion := Format(
+        SFormatoIdentificacionRevalorizacionInventario,
+        [dmmInventarios.CodigoEmpresa,
+         dmmInventarios.CodigoAlmacen,
+         dmmInventarios.Serie,
+         dmmInventarios.Numero]);
+      Resultado := TfrmModalRevalorizacionInventario.Ejecutar(
+        Self,
+        Lineas,
+        Identificacion);
+      if Resultado.Aceptado then
+      begin
+        Screen.Cursor := crHourGlass;
+        try
+          dmmInventarios.AplicarRevalorizacion(Resultado.Simulacion);
+          CargarLineasYRefrescar;
+          ShowMessage(Format(
+            SInfoRevalorizacionInventarioPreparada,
+            [Resultado.Simulacion.Resumen.NumeroLineas]));
+        finally
+          Screen.Cursor := crDefault;
+        end;
+      end;
+    except
+      on E: Exception do
+        ShowMessage(Format(
+          SErrorAplicarRevalorizacionInventario,
+          [E.Message]));
+    end;
+  end;
 end;
 
 procedure TfrmMtoInventarios.ActualizarColumnasDinamicas(

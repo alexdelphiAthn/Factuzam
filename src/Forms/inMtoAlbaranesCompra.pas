@@ -169,6 +169,7 @@ type
 
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
+    procedure pcAlbaranChange(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
     procedure btnAnadirLineaClick(Sender: TObject);
@@ -632,6 +633,13 @@ begin
   pcAlbaran.ActivePage := tsLineasAlbaran;
 end;
 
+procedure TfrmMtoAlbaranesCompra.pcAlbaranChange(Sender: TObject);
+begin
+  if Assigned(dmmAlbaranesCompra) then
+    dmmAlbaranesCompra.EstablecerMovimientosProveedorVisible(
+      pcAlbaran.ActivePage = tsProveedor);
+end;
+
 procedure TfrmMtoAlbaranesCompra.CrearTablaPrincipal;
 begin
   InicializarDocumento(
@@ -664,6 +672,7 @@ end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
 begin
+  pcAlbaran.OnChange := nil;
   FAplicacionArticuloCompra := nil;
   FValidadorArticulos := nil;
   FLookupAtributos := nil;
@@ -995,6 +1004,9 @@ begin
     dmmAlbaranesCompra.RefrescarAlmacenes(
       dmmAlbaranesCompra.unqryTablaG.FieldByName(
         'CODIGO_EMP_ALBC').AsString);
+  if (Field = nil) and Assigned(dmmAlbaranesCompra) then
+    dmmAlbaranesCompra.EstablecerMovimientosProveedorVisible(
+      pcAlbaran.ActivePage = tsProveedor);
   if Assigned(dmmAlbaranesCompra) then
     ActualizarModoEntradaAlNavegarDocumento(
       Field, dmmAlbaranesCompra.unqryAlbaranesCompraLineas,

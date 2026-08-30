@@ -18,6 +18,9 @@ interface
 uses
   System.SysUtils;
 
+const
+  MAXIMO_BYTES_SQL_EN_CADENA = 400 * 1024 * 1024;
+
 type
   ECifradoCopia = class(Exception);
 
@@ -31,6 +34,10 @@ function CifrarCopiaSeguridadComprimida(
 function EmpaquetarCopiaSeguridadZip(
   const ADatos: TBytes
 ): TBytes;
+procedure EmpaquetarCopiaSeguridadZipDesdeFichero(
+  const ARutaScript, ARutaZip: string);
+procedure CifrarCopiaSeguridadComprimidaDesdeFichero(
+  const ARutaScript, ARutaDestino, AContrasena: string);
 function DesempaquetarCopiaSeguridadZip(
   const ADatos: TBytes
 ): TBytes;
@@ -44,6 +51,7 @@ uses
   Winapi.Windows,
   System.Classes,
   System.Hash,
+  System.IOUtils,
   System.NetEncoding,
   System.StrUtils,
   System.Zip,
@@ -95,6 +103,12 @@ resourcestring
     'Debe indicar la contraseña de la copia.';
   SErrorAbrirCopiaCifradaHistorica =
     'No se pudo abrir la copia cifrada histórica.';
+  SErrorSqlCadenaTamanoMaximo =
+    'El SQL supera el límite de 400 MiB para una sola cadena.';
+  SErrorFicheroSqlCopiaNoExiste =
+    'No existe el fichero SQL que se va a proteger.';
+  SErrorEscribirCopiaCifradaIncompleta =
+    'No se pudo escribir completa la copia cifrada.';
 
 const
   CABECERA_CIFRADO = 'FZAM_COPIA_CIFRADA_V2';
@@ -110,6 +124,8 @@ const
   PROVEEDOR_RSA_AES = 24;
   VERIFICAR_CONTEXTO = $F0000000;
   MAXIMO_DATOS_DESCOMPRIMIDOS = 1024 * 1024 * 1024;
+  LONGITUD_BLOQUE_HMAC = 64;
+  TAMANO_BLOQUE_FLUJO = 1024 * 1024;
 
 type
   TFormatoCifradoCopia = (
@@ -389,6 +405,399 @@ begin
   end;
 end;
 
+procedure ComprobarTamanoSqlEnCadena(const ADatos: string);
+var
+  iTamano: UInt64;
+begin
+  iTamano := UInt64(TEncoding.UTF8.GetByteCount(ADatos));
+  if iTamano > UInt64(MAXIMO_BYTES_SQL_EN_CADENA) then
+  begin
+    raise ECifradoCopia.Create(SErrorSqlCadenaTamanoMaximo);
+  end;
+end;
+
+function ObtenerTamanoFicheroSql(const ARutaScript: string): Int64;
+var
+  oScript: TFileStream;
+begin
+  if not FileExists(ARutaScript) then
+  begin
+    raise ECifradoCopia.Create(SErrorFicheroSqlCopiaNoExiste);
+  end;
+  oScript := TFileStream.Create(
+    ARutaScript,
+    fmOpenRead or fmShareDenyWrite);
+  try
+    Result := oScript.Size;
+  finally
+    FreeAndNil(oScript);
+  end;
+  if Result = 0 then
+  begin
+    raise ECifradoCopia.Create(SErrorScriptComprimirVacio);
+  end;
+  if UInt64(Result) > UInt64(MAXIMO_DATOS_DESCOMPRIMIDOS) then
+  begin
+    raise ECifradoCopia.Create(
+      SErrorCopiaDescomprimidaTamanoMaximo);
+  end;
+end;
+
+function CrearRutaTemporalJuntoA(
+  const ARutaReferencia, APrefijo: string): string;
+var
+  sDirectorio: string;
+begin
+  sDirectorio := ExtractFilePath(ARutaReferencia);
+  if sDirectorio = '' then
+    sDirectorio := GetCurrentDir;
+  Result := TPath.Combine(
+    sDirectorio,
+    APrefijo + TGUID.NewGuid.ToString + '.tmp');
+end;
+
+procedure EliminarFicheroTemporal(const ARutaFichero: string);
+begin
+  if (ARutaFichero <> '') and FileExists(ARutaFichero) then
+  begin
+    System.SysUtils.DeleteFile(ARutaFichero);
+  end;
+end;
+
+procedure PublicarFicheroTemporal(
+  const ARutaTemporal, ARutaDestino: string);
+var
+  oTemporal: TFileStream;
+begin
+  oTemporal := TFileStream.Create(
+    ARutaTemporal,
+    fmOpenReadWrite or fmShareDenyWrite);
+  try
+    if not FlushFileBuffers(oTemporal.Handle) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(oTemporal);
+  end;
+  if not MoveFileEx(
+    PChar(ARutaTemporal),
+    PChar(ARutaDestino),
+    MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH) then
+  begin
+    RaiseLastOSError;
+  end;
+end;
+
+procedure EmpaquetarCopiaSeguridadZipDesdeFichero(
+  const ARutaScript, ARutaZip: string);
+var
+  aMarcaUtf8: array[0..2] of Byte;
+  oScript: TFileStream;
+  oZip: TZipFile;
+begin
+  ObtenerTamanoFicheroSql(ARutaScript);
+  oScript := TFileStream.Create(
+    ARutaScript,
+    fmOpenRead or fmShareDenyWrite);
+  try
+    oZip := TZipFile.Create;
+    try
+      if oScript.Size >= Length(aMarcaUtf8) then
+      begin
+        oScript.ReadBuffer(aMarcaUtf8[0], Length(aMarcaUtf8));
+        if (aMarcaUtf8[0] <> $EF) or
+           (aMarcaUtf8[1] <> $BB) or
+           (aMarcaUtf8[2] <> $BF) then
+        begin
+          oScript.Position := 0;
+        end;
+      end;
+      if oScript.Position = oScript.Size then
+      begin
+        raise ECifradoCopia.Create(SErrorScriptComprimirVacio);
+      end;
+      oZip.Open(ARutaZip, zmWrite);
+      try
+        oZip.Add(
+          oScript,
+          NOMBRE_ENTRADA_ZIP,
+          zcDeflate);
+      finally
+        oZip.Close;
+      end;
+    finally
+      FreeAndNil(oZip);
+    end;
+  finally
+    FreeAndNil(oScript);
+  end;
+end;
+
+procedure CifrarAESFlujo(
+  const AOrigen, ADestino: TStream;
+  const AClave, AVector: TBytes);
+var
+  aCifrado: TBytes;
+  aPlano: TBytes;
+  bUltimoBloque: Boolean;
+  iIndice: Integer;
+  iLeidos: Integer;
+  iRelleno: Integer;
+  iRestante: Int64;
+  iTamanoCifrado: Integer;
+  oCifrador: TDCP_rijndael;
+begin
+  SetLength(aPlano, TAMANO_BLOQUE_FLUJO + LONGITUD_BLOQUE_AES);
+  SetLength(aCifrado, Length(aPlano));
+  oCifrador := TDCP_rijndael.Create(nil);
+  try
+    oCifrador.CipherMode := cmCBC;
+    oCifrador.Init(
+      AClave[0],
+      256,
+      @AVector[0]);
+    AOrigen.Position := 0;
+    bUltimoBloque := False;
+    while not bUltimoBloque do
+    begin
+      iRestante := AOrigen.Size - AOrigen.Position;
+      bUltimoBloque := iRestante <= TAMANO_BLOQUE_FLUJO;
+      if bUltimoBloque then
+        iLeidos := Integer(iRestante)
+      else
+        iLeidos := TAMANO_BLOQUE_FLUJO;
+      if iLeidos > 0 then
+        AOrigen.ReadBuffer(aPlano[0], iLeidos);
+      iTamanoCifrado := iLeidos;
+      if bUltimoBloque then
+      begin
+        iRelleno := LONGITUD_BLOQUE_AES -
+          (iLeidos mod LONGITUD_BLOQUE_AES);
+        iTamanoCifrado := iLeidos + iRelleno;
+        for iIndice := iLeidos to iTamanoCifrado - 1 do
+          aPlano[iIndice] := Byte(iRelleno);
+      end;
+      oCifrador.Encrypt(
+        aPlano[0],
+        aCifrado[0],
+        iTamanoCifrado);
+      ADestino.WriteBuffer(aCifrado[0], iTamanoCifrado);
+    end;
+  finally
+    FreeAndNil(oCifrador);
+  end;
+end;
+
+function NormalizarClaveHmac(const AClave: TBytes): TBytes;
+var
+  oHash: THashSHA2;
+begin
+  if Length(AClave) > LONGITUD_BLOQUE_HMAC then
+  begin
+    oHash := THashSHA2.Create;
+    oHash.Update(AClave, Length(AClave));
+    Result := oHash.HashAsBytes;
+  end
+  else
+    Result := Copy(AClave, 0, Length(AClave));
+  SetLength(Result, LONGITUD_BLOQUE_HMAC);
+end;
+
+function CrearHmacSha256Fichero(
+  const AClave, APrefijo: TBytes;
+  const ARutaFichero: string): TBytes;
+var
+  aBloque: TBytes;
+  aClaveBloque: TBytes;
+  aResumenInterior: TBytes;
+  iIndice: Integer;
+  iLeer: Integer;
+  iLeidos: Integer;
+  iRestante: Int64;
+  oExterior: THashSHA2;
+  oFichero: TFileStream;
+  oInterior: THashSHA2;
+begin
+  aClaveBloque := NormalizarClaveHmac(AClave);
+  SetLength(aBloque, TAMANO_BLOQUE_FLUJO);
+  for iIndice := 0 to LONGITUD_BLOQUE_HMAC - 1 do
+    aClaveBloque[iIndice] := aClaveBloque[iIndice] xor $36;
+  oInterior := THashSHA2.Create;
+  oInterior.Update(aClaveBloque, Length(aClaveBloque));
+  if Length(APrefijo) > 0 then
+    oInterior.Update(APrefijo, Length(APrefijo));
+  oFichero := TFileStream.Create(
+    ARutaFichero,
+    fmOpenRead or fmShareDenyWrite);
+  try
+    while oFichero.Position < oFichero.Size do
+    begin
+      iRestante := oFichero.Size - oFichero.Position;
+      if iRestante > Length(aBloque) then
+        iLeer := Length(aBloque)
+      else
+        iLeer := Integer(iRestante);
+      oFichero.ReadBuffer(aBloque[0], iLeer);
+      iLeidos := iLeer;
+      oInterior.Update(aBloque[0], iLeidos);
+    end;
+  finally
+    FreeAndNil(oFichero);
+  end;
+  aResumenInterior := oInterior.HashAsBytes;
+  aClaveBloque := NormalizarClaveHmac(AClave);
+  for iIndice := 0 to LONGITUD_BLOQUE_HMAC - 1 do
+    aClaveBloque[iIndice] := aClaveBloque[iIndice] xor $5C;
+  oExterior := THashSHA2.Create;
+  oExterior.Update(aClaveBloque, Length(aClaveBloque));
+  oExterior.Update(
+    aResumenInterior,
+    Length(aResumenInterior));
+  Result := oExterior.HashAsBytes;
+end;
+
+procedure EscribirLineaAscii(
+  const ADestino: TStream;
+  const ATexto: string);
+var
+  aLinea: TBytes;
+begin
+  aLinea := TEncoding.ASCII.GetBytes(ATexto + sLineBreak);
+  if Length(aLinea) > 0 then
+    ADestino.WriteBuffer(aLinea[0], Length(aLinea));
+end;
+
+procedure EscribirSobreCifradoDesdeFichero(
+  const ARutaCifrado, ARutaDestino: string;
+  const ASal, AVector, AMac: TBytes);
+var
+  iEsperado: Int64;
+  iInicio: Int64;
+  oBase64: TBase64Encoding;
+  oCifrado: TFileStream;
+  oDestino: TFileStream;
+begin
+  oCifrado := TFileStream.Create(
+    ARutaCifrado,
+    fmOpenRead or fmShareDenyWrite);
+  try
+    oDestino := TFileStream.Create(ARutaDestino, fmCreate);
+    try
+      EscribirLineaAscii(oDestino, CABECERA_CIFRADO_ZIP);
+      EscribirLineaAscii(oDestino, IntToStr(ITERACIONES_PBKDF2));
+      EscribirLineaAscii(oDestino, CodificarBase64(ASal));
+      EscribirLineaAscii(oDestino, CodificarBase64(AVector));
+      EscribirLineaAscii(oDestino, CodificarBase64(AMac));
+      oBase64 := TBase64Encoding.Create(0);
+      try
+        iInicio := oDestino.Position;
+        oBase64.Encode(oCifrado, oDestino);
+        iEsperado := ((oCifrado.Size + 2) div 3) * 4;
+        if oDestino.Position - iInicio <> iEsperado then
+        begin
+          raise ECifradoCopia.Create(
+            SErrorEscribirCopiaCifradaIncompleta);
+        end;
+      finally
+        FreeAndNil(oBase64);
+      end;
+    finally
+      FreeAndNil(oDestino);
+    end;
+  finally
+    FreeAndNil(oCifrado);
+  end;
+end;
+
+procedure CifrarCopiaSeguridadComprimidaDesdeFichero(
+  const ARutaScript, ARutaDestino, AContrasena: string);
+var
+  aClaveCifrado: TBytes;
+  aClaveMac: TBytes;
+  aClaves: TBytes;
+  aMac: TBytes;
+  aPrefijo: TBytes;
+  aSal: TBytes;
+  aVector: TBytes;
+  oCifrado: TFileStream;
+  oZip: TFileStream;
+  sRutaCifrado: string;
+  sRutaDestinoCompleta: string;
+  sRutaSobre: string;
+  sRutaZip: string;
+begin
+  if Trim(AContrasena) = '' then
+  begin
+    raise ECifradoCopia.Create(SErrorContrasenaCopiaVacia);
+  end;
+  sRutaDestinoCompleta := ExpandFileName(ARutaDestino);
+  sRutaZip := CrearRutaTemporalJuntoA(
+    sRutaDestinoCompleta,
+    'fzam_zip_');
+  sRutaCifrado := CrearRutaTemporalJuntoA(
+    sRutaDestinoCompleta,
+    'fzam_cifrado_');
+  sRutaSobre := CrearRutaTemporalJuntoA(
+    sRutaDestinoCompleta,
+    'fzam_sobre_');
+  try
+    EmpaquetarCopiaSeguridadZipDesdeFichero(
+      ARutaScript,
+      sRutaZip);
+    aSal := GenerarBytesAleatorios(LONGITUD_SAL);
+    aVector := GenerarBytesAleatorios(LONGITUD_VECTOR);
+    aClaves := DerivarClavePBKDF2(
+      AContrasena,
+      aSal,
+      ITERACIONES_PBKDF2,
+      LONGITUD_CLAVES);
+    aClaveCifrado := Copy(aClaves, 0, LONGITUD_CLAVE);
+    aClaveMac := Copy(
+      aClaves,
+      LONGITUD_CLAVE,
+      LONGITUD_CLAVE);
+    oZip := TFileStream.Create(
+      sRutaZip,
+      fmOpenRead or fmShareDenyWrite);
+    try
+      oCifrado := TFileStream.Create(sRutaCifrado, fmCreate);
+      try
+        CifrarAESFlujo(
+          oZip,
+          oCifrado,
+          aClaveCifrado,
+          aVector);
+      finally
+        FreeAndNil(oCifrado);
+      end;
+    finally
+      FreeAndNil(oZip);
+    end;
+    aPrefijo := CrearDatosAutenticados(
+      ITERACIONES_PBKDF2,
+      aSal,
+      aVector,
+      nil,
+      CABECERA_CIFRADO_ZIP);
+    aMac := CrearHmacSha256Fichero(
+      aClaveMac,
+      aPrefijo,
+      sRutaCifrado);
+    EscribirSobreCifradoDesdeFichero(
+      sRutaCifrado,
+      sRutaSobre,
+      aSal,
+      aVector,
+      aMac);
+    PublicarFicheroTemporal(
+      sRutaSobre,
+      sRutaDestinoCompleta);
+  finally
+    EliminarFicheroTemporal(sRutaSobre);
+    EliminarFicheroTemporal(sRutaCifrado);
+    EliminarFicheroTemporal(sRutaZip);
+  end;
+end;
+
 function EmpaquetarCopiaSeguridadZip(
   const ADatos: TBytes): TBytes;
 var
@@ -585,6 +994,7 @@ begin
   begin
     raise ECifradoCopia.Create(SErrorContrasenaCopiaVacia);
   end;
+  ComprobarTamanoSqlEnCadena(ADatos);
   aSal := GenerarBytesAleatorios(LONGITUD_SAL);
   aVector := GenerarBytesAleatorios(LONGITUD_VECTOR);
   aClaves := DerivarClavePBKDF2(

@@ -596,6 +596,65 @@ resourcestring
     'Recuento recogido: %d lecturas, %d SKUs. Revisa las físicas y APLICA ' +
     'cuando quieras.';
   SErrorRecogerRecuentoInventario = 'No se pudo recoger: %s';
+  SCaptionRevalorizarPmpInventario = 'Valorar';
+  SHintRevalorizarPmpInventario =
+    'Simula y prepara una apreciación o depreciación porcentual del PMP. ' +
+    'Atajo: Ctrl+Mayús+R.';
+  STituloRevalorizacionInventario =
+    'Apreciación/depreciación del inventario';
+  STextoRevalorizacionInventario =
+    'Selecciona las líneas y simula el cambio antes de prepararlo. Se usa ' +
+    'el PMP guardado en el inventario y se comprueba de nuevo contra el ' +
+    'Kardex al confirmar. La vista previa no aplica la valoración; las ' +
+    'existencias solo cambiarán al pulsar Regularizar.';
+  SFormatoIdentificacionRevalorizacionInventario =
+    'Inventario %s / %s / %s / %s';
+  SCaptionOperacionRevalorizacionInventario = 'Operación';
+  SCaptionApreciarInventario = 'Apreciar';
+  SCaptionDepreciarInventario = 'Depreciar';
+  SCaptionPorcentajeRevalorizacionInventario = 'Porcentaje:';
+  SCaptionSimularRevalorizacionInventario = 'Simular';
+  SCaptionSeleccionarTodoRevalorizacionInventario =
+    'Seleccionar visibles';
+  SCaptionSeleccionarNingunoRevalorizacionInventario =
+    'Quitar toda la selección';
+  SCaptionPrepararPmpRevalorizacionInventario = 'Preparar PMP simulados';
+  SInfoSimulacionPendienteRevalorizacionInventario =
+    'Pulsa Simular para actualizar la vista previa.';
+  SCaptionColAplicarRevalorizacionInventario = 'Aplicar';
+  SCaptionColLineaRevalorizacionInventario = 'Línea';
+  SCaptionColCantidadTeoricaRevalorizacionInventario = 'Uds. anteriores';
+  SCaptionColCantidadFisicaRevalorizacionInventario = 'Uds. finales';
+  SCaptionColPmpAnteriorRevalorizacionInventario = 'PMP anterior';
+  SCaptionColPmpSimuladoRevalorizacionInventario = 'PMP simulado';
+  SCaptionColValorAnteriorRevalorizacionInventario = 'Valor anterior';
+  SCaptionColValorSimuladoRevalorizacionInventario = 'Valor simulado';
+  SCaptionColDiferenciaRevalorizacionInventario = 'Diferencia';
+  SFormatoLineasRevalorizacionInventario = 'Líneas seleccionadas: %d';
+  SCaptionTotalAnteriorRevalorizacionInventario = 'Total anterior:';
+  SCaptionTotalSimuladoRevalorizacionInventario = 'Total simulado:';
+  SCaptionTotalDiferenciaRevalorizacionInventario = 'Diferencia total:';
+  SAvisoDiferenciasUnidadesRevalorizacionInventario =
+    '%d líneas también tienen diferencias entre unidades anteriores y ' +
+    'finales; la diferencia económica incluye ambos efectos.';
+  SAvisoPmpCorregidosRevalorizacionInventario =
+    '%d líneas ya tenían un PMP corregido manualmente; se sustituirá por ' +
+    'el PMP de esta simulación.';
+  SErrorPorcentajeRevalorizacionInventario =
+    'Indica un porcentaje mayor que cero. En una depreciación no puede ' +
+    'superar el 100 %.';
+  SErrorSeleccionRevalorizacionInventario =
+    'Selecciona al menos una línea para realizar la simulación.';
+  SErrorLineaRevalorizacionInventarioNoEncontrada =
+    'La línea %s ya no existe en el inventario.';
+  SErrorDatosRevalorizacionInventarioCambiados =
+    'Los datos de la línea %s han cambiado desde la simulación. Vuelve a ' +
+    'pulsar Valorar para calcularla con las cifras actuales.';
+  SErrorAplicarRevalorizacionInventario =
+    'No se pudo preparar la apreciación/depreciación:' + sLineBreak + '%s';
+  SInfoRevalorizacionInventarioPreparada =
+    'Se han preparado %d PMP nuevos con las cifras comprobadas. Revisa el ' +
+    'resultado y pulsa Regularizar para trasladarlos al Kardex.';
   SAvisoLimiteRegistrosMovimientosAlmacen =
     'La selección cargaría %s registros, demasiados para mostrarlos de una ' +
     'vez.' + sLineBreak +

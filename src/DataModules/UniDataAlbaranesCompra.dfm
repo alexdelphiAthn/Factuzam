@@ -60,30 +60,35 @@
   object unqryMovimientosProveedor: TUniQuery
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT NUMERO_MOV, FECHA_MOV, LINEA_MOV, '
-      '       CODIGO_ALM_MOV, NOMBRE_ALMACEN_ORIGEN, '
-      '       CODIGO_ART_MOV, CODIGO_UNIDAD_MOV, '
-      '       DESCRIPCION_ARTICULO_MOV, '
-      '       TIPO_MOV, CANTIDAD_MOV, '
-      '       PRECIO_MEDIO_MOV, TOTAL_COSTE_MOV '
-      '  FROM vi_movimientos '
-      ' WHERE TIPO_DOC_MOV   = '#39'AC'#39' '
-      '   AND NUMERO_DOC_MOV = :NUMERO_ALBC '
-      '   AND SERIE_DOC_MOV  = :SERIE_ALBC '
-      ' ORDER BY LINEA_MOV')
+      'SELECT M.NUMERO_MOV, M.FECHA_MOV, M.LINEA_MOV, '
+      '       M.CODIGO_ALM_MOV, '
+      '       A.NOMBRE_ALM_ALM AS NOMBRE_ALMACEN_ORIGEN, '
+      '       M.CODIGO_ART_MOV, M.CODIGO_UNIDAD_MOV, '
+      '       M.DESCRIPCION_ARTICULO_MOV, '
+      '       M.TIPO_MOV, M.CANTIDAD_MOV, '
+      '       M.PRECIO_MEDIO_MOV, M.TOTAL_COSTE_MOV '
+      '  FROM fza_movimientos_almacen M '
+      '  LEFT JOIN fza_almacenes A '
+      '    ON A.CODIGO_ALM_ALM = M.CODIGO_ALM_MOV '
+      ' WHERE M.SERIE_DOC_MOV = :SERIE_ALBC '
+      '   AND M.NUMERO_DOC_MOV = :NUMERO_ALBC '
+      '   AND M.TIPO_DOC_MOV = '#39'AC'#39' '
+      ' ORDER BY M.LINEA_MOV')
     MasterFields = 'NUMERO_ALBC;SERIE_ALBC'
     ReadOnly = True
     Left = 520
     Top = 136
     ParamData = <
       item
-        DataType = ftUnknown
+        DataType = ftString
         Name = 'NUMERO_ALBC'
+        ParamType = ptInput
         Value = nil
       end
       item
-        DataType = ftUnknown
+        DataType = ftString
         Name = 'SERIE_ALBC'
+        ParamType = ptInput
         Value = nil
       end>
   end

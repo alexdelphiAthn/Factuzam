@@ -112,6 +112,7 @@ type
     procedure DesempaquetarAtributosLineas;
     function BuscarEmpresa(const ACodigo: string): Boolean;
     procedure RefrescarAlmacenes(const ACodigoEmpresa: string);
+    procedure EstablecerMovimientosProveedorVisible(AVisible: Boolean);
     // Abre unqryCabAlbcPrint y unqryLinAlbcPrint con los parametros
     // del albaran a imprimir. Mismo nombre/firma que en sesiones.
     procedure PrepararPrint(const ASerie, ANumero: string);
@@ -402,11 +403,37 @@ begin
     unqryAlbaranesCompraLineas, TAG, 'unqryAlbaranesCompraLineas',
     RegistroLog);
   AbrirConsultaConTiempo(
-    unqryMovimientosProveedor, TAG, 'unqryMovimientosProveedor',
-    RegistroLog);
-  AbrirConsultaConTiempo(
     unqryFormasPago, TAG, 'unqryFormasPago', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmAlbaranesCompra.EstablecerMovimientosProveedorVisible(
+  AVisible: Boolean);
+const
+  TAG = 'AlbaranesCompra.MovimientosProveedor';
+var
+  bDocumentoValido: Boolean;
+begin
+  bDocumentoValido := False;
+  if AVisible then
+  begin
+    if unqryTablaG.Active then
+    begin
+      if not unqryTablaG.IsEmpty then
+        bDocumentoValido :=
+          (Trim(unqryTablaG.FieldByName('SERIE_ALBC').AsString) <> '') and
+          (Trim(unqryTablaG.FieldByName('NUMERO_ALBC').AsString) <> '');
+    end;
+  end;
+  if bDocumentoValido then
+  begin
+    if not unqryMovimientosProveedor.Active then
+      AbrirConsultaConTiempo(
+        unqryMovimientosProveedor, TAG, 'unqryMovimientosProveedor',
+        RegistroLog);
+  end
+  else if unqryMovimientosProveedor.Active then
+    unqryMovimientosProveedor.Close;
 end;
 
 procedure TdmAlbaranesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);

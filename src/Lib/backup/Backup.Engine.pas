@@ -747,6 +747,7 @@ begin
   
   FWriter.AddCommand('');
   FWriter.AddComment('Backup completado: ' + DateTimeToStr(Now));
+  FWriter.AddComment('FZAM_FIN_COPIA_SEGURIDAD');
 end;
 
 procedure TDBBackupEngine.BackupTables;

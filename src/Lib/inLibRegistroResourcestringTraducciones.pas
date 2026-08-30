@@ -33,6 +33,16 @@ uses
 
 {$WARN SYMBOL_DEPRECATED OFF}
 
+procedure RegistrarTextoArticulo(
+  const ARegistrar: TRegistrarResourcestringTraduccion;
+  const ANombre: string; ARecurso: PResStringRec);
+begin
+  ARegistrar(
+    'inLibMsgArticulos.' + ANombre,
+    'src/Lib/inLibMsgArticulos.pas',
+    ARecurso);
+end;
+
 procedure RegistrarTextoFoto(
   const ARegistrar: TRegistrarResourcestringTraduccion;
   const ANombre: string; ARecurso: PResStringRec);
@@ -1506,6 +1516,146 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       SErrorRecogerRecuentoInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionRevalorizarPmpInventario',
+    @inLibMsgArticulos.SCaptionRevalorizarPmpInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SHintRevalorizarPmpInventario',
+    @inLibMsgArticulos.SHintRevalorizarPmpInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'STituloRevalorizacionInventario',
+    @inLibMsgArticulos.STituloRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'STextoRevalorizacionInventario',
+    @inLibMsgArticulos.STextoRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SFormatoIdentificacionRevalorizacionInventario',
+    @inLibMsgArticulos.SFormatoIdentificacionRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionOperacionRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionOperacionRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionApreciarInventario',
+    @inLibMsgArticulos.SCaptionApreciarInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionDepreciarInventario',
+    @inLibMsgArticulos.SCaptionDepreciarInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionPorcentajeRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionPorcentajeRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionSimularRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionSimularRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionSeleccionarTodoRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionSeleccionarTodoRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionSeleccionarNingunoRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionSeleccionarNingunoRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionPrepararPmpRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionPrepararPmpRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SInfoSimulacionPendienteRevalorizacionInventario',
+    @inLibMsgArticulos.SInfoSimulacionPendienteRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColAplicarRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColAplicarRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColLineaRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColLineaRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColCantidadTeoricaRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColCantidadTeoricaRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColCantidadFisicaRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColCantidadFisicaRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColPmpAnteriorRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColPmpAnteriorRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColPmpSimuladoRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColPmpSimuladoRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColValorAnteriorRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColValorAnteriorRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColValorSimuladoRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColValorSimuladoRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionColDiferenciaRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionColDiferenciaRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SFormatoLineasRevalorizacionInventario',
+    @inLibMsgArticulos.SFormatoLineasRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionTotalAnteriorRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionTotalAnteriorRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionTotalSimuladoRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionTotalSimuladoRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionTotalDiferenciaRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionTotalDiferenciaRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SAvisoDiferenciasUnidadesRevalorizacionInventario',
+    @inLibMsgArticulos.SAvisoDiferenciasUnidadesRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SAvisoPmpCorregidosRevalorizacionInventario',
+    @inLibMsgArticulos.SAvisoPmpCorregidosRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SErrorPorcentajeRevalorizacionInventario',
+    @inLibMsgArticulos.SErrorPorcentajeRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SErrorSeleccionRevalorizacionInventario',
+    @inLibMsgArticulos.SErrorSeleccionRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SErrorLineaRevalorizacionInventarioNoEncontrada',
+    @inLibMsgArticulos.SErrorLineaRevalorizacionInventarioNoEncontrada);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SErrorDatosRevalorizacionInventarioCambiados',
+    @inLibMsgArticulos.SErrorDatosRevalorizacionInventarioCambiados);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SErrorAplicarRevalorizacionInventario',
+    @inLibMsgArticulos.SErrorAplicarRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SInfoRevalorizacionInventarioPreparada',
+    @inLibMsgArticulos.SInfoRevalorizacionInventarioPreparada);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SAvisoLimiteRegistrosMovimientosAlmacen',

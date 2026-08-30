@@ -130,13 +130,24 @@ function CrearCopiaSeguridadBD(
   out AError: string;
   const AFabricaPersistencia:
     IFabricaPersistenciaBackup = nil): TResultadoCopiaSeguridad;
+function EsScriptCopiaSeguridadCompleto(
+  const ARutaScript: string): Boolean;
 
 implementation
 
 uses
-  Core_Interfaces, ScriptWriters, System.IOUtils, System.StrUtils,
+  Winapi.Windows,
+  Core_Interfaces, ScriptWriters, System.IOUtils,
   inLibCifradoCopias,
   inLibMsgConfiguracion;
+
+resourcestring
+  SErrorScriptCopiaIncompleto =
+    'No se guardó la copia porque el SQL generado está incompleto.';
+
+const
+  MARCADOR_FINAL_COPIA = '-- FZAM_FIN_COPIA_SEGURIDAD';
+  TAMANO_COLA_VALIDACION = 64 * 1024;
 
 function CrearConfiguracionConexion(
   const AHost: string;
@@ -178,83 +189,135 @@ begin
 end;
 
 function CrearRutaScriptBackup(
-  const ARutaFichero: string;
-  AModo: TModoProteccionCopia): string;
+  const ARutaFichero: string): string;
 var
   sDirectorio: string;
 begin
-  if AModo = mpcTextoPlano then
-    Result := ARutaFichero
-  else
-  begin
-    sDirectorio := ExtractFilePath(ARutaFichero);
-    if sDirectorio = '' then
-      sDirectorio := GetCurrentDir;
-    Result := TPath.Combine(
-      sDirectorio,
-      'fzam_sql_' + TGUID.NewGuid.ToString + '.tmp');
-  end;
+  sDirectorio := ExtractFilePath(ARutaFichero);
+  if sDirectorio = '' then
+    sDirectorio := GetCurrentDir;
+  Result := TPath.Combine(
+    sDirectorio,
+    'fzam_sql_' + TGUID.NewGuid.ToString + '.tmp');
 end;
 
-function ObtenerContenidoCopia(
-  const ARutaScript: string): string;
-begin
-  Result := TFile.ReadAllText(
-    ARutaScript,
-    TEncoding.UTF8);
-  Result := StringReplace(
-    Result,
-    'DEFINER=`root`@`localhost`',
-    '',
-    [rfReplaceAll, rfIgnoreCase]);
-end;
-
-procedure GuardarBytesCopia(
-  const ARutaFichero: string;
-  const ADatos: TBytes);
+function CrearRutaSalidaTemporal(
+  const ARutaFichero: string): string;
 var
-  oFichero: TFileStream;
+  sDirectorio: string;
 begin
-  oFichero := TFileStream.Create(ARutaFichero, fmCreate);
-  try
-    if Length(ADatos) > 0 then
-      oFichero.WriteBuffer(ADatos[0], Length(ADatos));
-  finally
-    FreeAndNil(oFichero);
+  sDirectorio := ExtractFilePath(ARutaFichero);
+  if sDirectorio = '' then
+    sDirectorio := GetCurrentDir;
+  Result := TPath.Combine(
+    sDirectorio,
+    'fzam_salida_' + TGUID.NewGuid.ToString + '.tmp');
+end;
+
+function EsScriptCopiaSeguridadCompleto(
+  const ARutaScript: string): Boolean;
+var
+  aCola: TBytes;
+  iIndice: Integer;
+  iLeer: Integer;
+  oLineas: TStringList;
+  oScript: TFileStream;
+  sUltimaLinea: string;
+begin
+  Result := False;
+  if FileExists(ARutaScript) then
+  begin
+    oScript := TFileStream.Create(
+      ARutaScript,
+      fmOpenRead or fmShareDenyWrite);
+    try
+      if oScript.Size > 0 then
+      begin
+        iLeer := TAMANO_COLA_VALIDACION;
+        if oScript.Size < iLeer then
+          iLeer := Integer(oScript.Size);
+        SetLength(aCola, iLeer);
+        oScript.Position := oScript.Size - iLeer;
+        oScript.ReadBuffer(aCola[0], iLeer);
+        oLineas := TStringList.Create;
+        try
+          oLineas.Text := TEncoding.UTF8.GetString(aCola);
+          iIndice := oLineas.Count - 1;
+          while (iIndice >= 0) and
+                (Trim(oLineas[iIndice]) = '') do
+          begin
+            Dec(iIndice);
+          end;
+          if iIndice >= 0 then
+          begin
+            sUltimaLinea := Trim(oLineas[iIndice]);
+            Result := SameText(
+              MARCADOR_FINAL_COPIA,
+              sUltimaLinea);
+          end;
+        finally
+          FreeAndNil(oLineas);
+        end;
+      end;
+    finally
+      FreeAndNil(oScript);
+    end;
   end;
 end;
 
-procedure GuardarTextoCopia(
-  const ARutaFichero, AContenido: string);
+procedure PublicarFicheroTemporal(
+  const ARutaTemporal, ARutaDestino: string);
+var
+  oTemporal: TFileStream;
 begin
-  GuardarBytesCopia(
-    ARutaFichero,
-    TEncoding.UTF8.GetBytes(AContenido));
+  oTemporal := TFileStream.Create(
+    ARutaTemporal,
+    fmOpenReadWrite or fmShareDenyWrite);
+  try
+    if not FlushFileBuffers(oTemporal.Handle) then
+      RaiseLastOSError;
+  finally
+    FreeAndNil(oTemporal);
+  end;
+  if not MoveFileEx(
+    PChar(ARutaTemporal),
+    PChar(ARutaDestino),
+    MOVEFILE_REPLACE_EXISTING or MOVEFILE_WRITE_THROUGH) then
+  begin
+    RaiseLastOSError;
+  end;
 end;
 
 procedure GuardarCopiaGenerada(
   const ARutaScript, ARutaFichero, APassEncriptar: string;
   AModo: TModoProteccionCopia);
 var
-  aZip: TBytes;
-  sContenido: string;
+  sRutaTemporal: string;
 begin
-  if AModo <> mpcTextoPlano then
+  sRutaTemporal := '';
+  if AModo = mpcTextoPlano then
+    PublicarFicheroTemporal(ARutaScript, ARutaFichero)
+  else
   begin
-    sContenido := ObtenerContenidoCopia(ARutaScript);
-    case AModo of
-      mpcZip:
-      begin
-        aZip := EmpaquetarCopiaSeguridadZip(
-          TEncoding.UTF8.GetBytes(sContenido));
-        GuardarBytesCopia(ARutaFichero, aZip);
+    sRutaTemporal := CrearRutaSalidaTemporal(ARutaFichero);
+    try
+      case AModo of
+        mpcZip:
+          EmpaquetarCopiaSeguridadZipDesdeFichero(
+            ARutaScript,
+            sRutaTemporal);
+        mpcCifrada:
+          CifrarCopiaSeguridadComprimidaDesdeFichero(
+            ARutaScript,
+            sRutaTemporal,
+            APassEncriptar);
       end;
-      mpcCifrada:
-        GuardarTextoCopia(
-          ARutaFichero,
-          CifrarCopiaSeguridadComprimida(
-            sContenido,
-            APassEncriptar));
+      PublicarFicheroTemporal(sRutaTemporal, ARutaFichero);
+    finally
+      if FileExists(sRutaTemporal) then
+      begin
+        System.SysUtils.DeleteFile(sRutaTemporal);
+      end;
     end;
   end;
 end;
@@ -290,20 +353,20 @@ var
   oFiltrosDatos: TStringList;
   oIncluirTablas: TStringList;
   oWriter: IScriptWriter;
+  sRutaDestino: string;
   sRutaScript: string;
 begin
   oEngine := nil;
   oIncluirTablas := nil;
   oExcluirTablas := nil;
   oFiltrosDatos := nil;
+  sRutaDestino := ExpandFileName(ARutaFichero);
   sRutaScript := '';
   try
     oIncluirTablas := TStringList.Create;
     oExcluirTablas := TStringList.Create;
     oFiltrosDatos := TStringList.Create;
-    sRutaScript := CrearRutaScriptBackup(
-      ARutaFichero,
-      AModo);
+    sRutaScript := CrearRutaScriptBackup(sRutaDestino);
     oFiltrosDatos.Values['fza_traducciones'] :=
       APersistencia.ObtenerFiltroTraducciones;
     oWriter := TScriptWriter.Create(sRutaScript);
@@ -320,10 +383,14 @@ begin
       oEngine.GenerateBackup;
       FreeAndNil(oEngine);
       oWriter := nil;
+      if not EsScriptCopiaSeguridadCompleto(sRutaScript) then
+      begin
+        raise Exception.Create(SErrorScriptCopiaIncompleto);
+      end;
       NotificarGuardadoCopia(AModo, AOnProgreso);
       GuardarCopiaGenerada(
         sRutaScript,
-        ARutaFichero,
+        sRutaDestino,
         APassEncriptar,
         AModo);
     finally
@@ -331,8 +398,7 @@ begin
     end;
   finally
     oWriter := nil;
-    if (AModo <> mpcTextoPlano) and
-       FileExists(sRutaScript) then
+    if FileExists(sRutaScript) then
     begin
       System.SysUtils.DeleteFile(sRutaScript);
     end;

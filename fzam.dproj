@@ -1224,6 +1224,9 @@
         <DCCReference Include="src\Modals\inMtoModalFechaHoraRecuento.pas">
             <Form>frmModalFechaHoraRecuento</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalRevalorizacionInventario.pas">
+            <Form>frmModalRevalorizacionInventario</Form>
+        </DCCReference>
         <DCCReference Include="src\DataModules\UniDataInventarios.pas">
             <Form>dmInventarios</Form>
             <DesignClass>TDataModule</DesignClass>
@@ -1683,6 +1686,7 @@
         <DCCReference Include="src\Lib\inLibFacturasPresentadorListado.pas"/>
         <DCCReference Include="src\Lib\inLibInventariosPresentacion.pas"/>
         <DCCReference Include="src\Lib\inLibInventariosPresentacionIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibInventariosRevalorizacion.pas"/>
         <DCCReference Include="src\Lib\inLibStockConsultaPresentacionCoincidencias.pas"/>
         <DCCReference Include="src\Lib\inLibStockConsultaPresentacionEstados.pas"/>
         <DCCReference Include="src\Lib\inLibStockConsultaPresentacionFotos.pas"/>

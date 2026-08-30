@@ -1076,6 +1076,9 @@ uses
   inMtoModalFechaHoraRecuento in
     'src\Modals\inMtoModalFechaHoraRecuento.pas'
     {frmModalFechaHoraRecuento},
+  inMtoModalRevalorizacionInventario in
+    'src\Modals\inMtoModalRevalorizacionInventario.pas'
+    {frmModalRevalorizacionInventario},
   UniDataInventarios in 'src\DataModules\UniDataInventarios.pas' {dmInventarios: TDataModule},
   inMtoAtributosConjuntos in 'src\Forms\inMtoAtributosConjuntos.pas' {frmMtoAtributosConjuntos},
   UniDataAtributosConjuntos in 'src\DataModules\UniDataAtributosConjuntos.pas' {dmAtributosConjuntos: TDataModule},
@@ -1508,6 +1511,8 @@ uses
   inLibInventariosPresentacion in 'src\Lib\inLibInventariosPresentacion.pas',
   inLibInventariosPresentacionIntf in
     'src\Lib\inLibInventariosPresentacionIntf.pas',
+  inLibInventariosRevalorizacion in
+    'src\Lib\inLibInventariosRevalorizacion.pas',
   inLibStockConsultaPresentacionCoincidencias in
     'src\Lib\inLibStockConsultaPresentacionCoincidencias.pas',
   inLibStockConsultaPresentacionEstados in

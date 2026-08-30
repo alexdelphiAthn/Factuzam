@@ -21,7 +21,8 @@ uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, Winapi.Windows, Data.DB, MemDS, DBAccess,
   Uni, Datasnap.DBClient, Datasnap.Provider,
-  UniDataGen, Vcl.Controls, System.UITypes;
+  UniDataGen, Vcl.Controls, System.UITypes,
+  inLibInventariosRevalorizacion;
 
 type
   // Cabecera (heredado de TdmBase)
@@ -140,6 +141,7 @@ type
     // cabecera, cargas masivas...) y si alguna se salta el form, los
     // ATTR in-memory quedaban en blanco hasta reconstruir a mano.
     FDesempaquetarAlCargar: Boolean;
+    procedure BloquearInventarioParaRevalorizacion;
     function ObtenerSeriePorDefecto(const AEmpresa,
                                           ATipoDoc: string): string;
     function ExisteColumnaInventarios(const ACampo: string): Boolean;
@@ -225,6 +227,10 @@ type
     function GetEstadoInventario: string;
     procedure AbrirDetalles; override;
     procedure RecalcularTeorico;
+    function PrepararLineasRevalorizacion:
+      TLineasBaseRevalorizacionInventario;
+    procedure AplicarRevalorizacion(
+      const ASimulacion: TSimulacionRevalorizacionInventario);
     // Camino sincrono original. Tiene instrumentacion [PERF:Aplicar] y
     // bloquea la UI hasta terminar. Util para llamadas batch o pruebas.
     procedure AplicarInventario;
@@ -262,6 +268,7 @@ implementation
 
 uses
   System.Diagnostics,   // TStopwatch para instrumentacion de rendimiento
+  System.Generics.Collections,
   System.StrUtils,      // IfThen(Boolean, string, string) para snapshot
   inLibUser,            // Usuario logueado
                // RegistroLog.RegistrarInformacion para metricas
@@ -1189,6 +1196,272 @@ begin
   Result := '';
   if unqryTablaG.Active and not unqryTablaG.IsEmpty then
     Result := unqryTablaG.FieldByName('ESTADO_INV').AsString;
+end;
+
+function LineaCoincideConSimulacion(
+  ADataSet: TDataSet;
+  const ALinea: TLineaBaseRevalorizacionInventario): Boolean;
+begin
+  Result :=
+    (ADataSet.FieldByName('CODIGO_ART_INVLIN').AsString =
+      ALinea.CodigoArticulo) and
+    (ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString =
+      ALinea.CodigoUnidad) and
+    (ADataSet.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency =
+      ALinea.CantidadTeorica) and
+    (ADataSet.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency =
+      ALinea.CantidadFisica) and
+    (ADataSet.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency =
+      ALinea.PrecioMedioActual) and
+    (ADataSet.FieldByName('PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency =
+      ALinea.PrecioMedioNuevoAnterior) and
+    (SameText(
+      ADataSet.FieldByName(
+        'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString,
+      'S') = ALinea.EsPrecioMedioCorregido);
+end;
+
+procedure IndexarLineasRevalorizacion(
+  const ASimulacion: TSimulacionRevalorizacionInventario;
+  AIndice: TDictionary<string, Integer>);
+var
+  iLinea: Integer;
+  NumeroLinea: string;
+begin
+  for iLinea := 0 to High(ASimulacion.Lineas) do
+  begin
+    NumeroLinea := ASimulacion.Lineas[iLinea].Base.Linea;
+    if AIndice.ContainsKey(NumeroLinea) then
+      raise Exception.CreateFmt(
+        SErrorDatosRevalorizacionInventarioCambiados,
+        [NumeroLinea]);
+    AIndice.Add(NumeroLinea, iLinea);
+  end;
+end;
+
+procedure ValidarLineasRevalorizacion(
+  ADataSet: TDataSet;
+  const ASimulacion: TSimulacionRevalorizacionInventario;
+  AIndice: TDictionary<string, Integer>);
+var
+  Encontradas: TArray<Boolean>;
+  iLinea: Integer;
+  NumeroLinea: string;
+begin
+  SetLength(Encontradas, Length(ASimulacion.Lineas));
+  ADataSet.First;
+  while not ADataSet.Eof do
+  begin
+    NumeroLinea := ADataSet.FieldByName('LINEA_INVLIN').AsString;
+    if AIndice.TryGetValue(NumeroLinea, iLinea) then
+    begin
+      if not LineaCoincideConSimulacion(
+           ADataSet,
+           ASimulacion.Lineas[iLinea].Base) then
+        raise Exception.CreateFmt(
+          SErrorDatosRevalorizacionInventarioCambiados,
+          [NumeroLinea]);
+      Encontradas[iLinea] := True;
+    end;
+    ADataSet.Next;
+  end;
+  for iLinea := 0 to High(ASimulacion.Lineas) do
+  begin
+    if not Encontradas[iLinea] then
+      raise Exception.CreateFmt(
+        SErrorLineaRevalorizacionInventarioNoEncontrada,
+        [ASimulacion.Lineas[iLinea].Base.Linea]);
+  end;
+end;
+
+procedure GrabarLineasRevalorizacion(
+  ADataSet: TDataSet;
+  const ASimulacion: TSimulacionRevalorizacionInventario;
+  AIndice: TDictionary<string, Integer>;
+  const AUsuario: string);
+var
+  iLinea: Integer;
+begin
+  ADataSet.First;
+  while not ADataSet.Eof do
+  begin
+    if AIndice.TryGetValue(
+         ADataSet.FieldByName('LINEA_INVLIN').AsString,
+         iLinea) then
+    begin
+      ADataSet.Edit;
+      ADataSet.FieldByName(
+        'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency :=
+        ASimulacion.Lineas[iLinea].PrecioMedioNuevo;
+      ADataSet.FieldByName(
+        'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString := 'S';
+      ADataSet.FieldByName(
+        'TOTAL_COSTE_DIFERENCIA_INVLIN').AsCurrency :=
+        ASimulacion.Lineas[iLinea].DiferenciaValor;
+      ADataSet.FieldByName('USUARIO_MODIF').AsString := AUsuario;
+      ADataSet.Post;
+    end;
+    ADataSet.Next;
+  end;
+end;
+
+procedure TdmInventarios.BloquearInventarioParaRevalorizacion;
+var
+  oConsulta: TUniQuery;
+  sEstado: string;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := ConexionPrincipal;
+    oConsulta.SQL.Text :=
+      'SELECT ESTADO_INV ' +
+      '  FROM fza_inventarios ' +
+      ' WHERE CODIGO_EMP_INV = :EMPRESA ' +
+      '   AND CODIGO_ALM_INV = :ALMACEN ' +
+      '   AND SERIE_INV = :SERIE ' +
+      '   AND NUMERO_INV = :NUMERO ' +
+      ' FOR UPDATE';
+    oConsulta.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    oConsulta.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+    oConsulta.ParamByName('SERIE').AsString := FSerie;
+    oConsulta.ParamByName('NUMERO').AsString := FNumero;
+    oConsulta.Open;
+    if oConsulta.IsEmpty then
+      raise Exception.Create(SErrorInventarioNoAbiertoEditar);
+    sEstado := oConsulta.FieldByName('ESTADO_INV').AsString;
+    if sEstado <> 'ABIERTO' then
+      raise Exception.Create(SErrorInventarioNoAbiertoEditar);
+
+    oConsulta.Close;
+    oConsulta.SQL.Text :=
+      'SELECT LINEA_INVLIN ' +
+      '  FROM fza_inventarios_lineas ' +
+      ' WHERE CODIGO_EMP_INVLIN = :EMPRESA ' +
+      '   AND CODIGO_ALM_INVLIN = :ALMACEN ' +
+      '   AND SERIE_INV_INVLIN = :SERIE ' +
+      '   AND NUMERO_INV_INVLIN = :NUMERO ' +
+      ' FOR UPDATE';
+    oConsulta.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    oConsulta.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+    oConsulta.ParamByName('SERIE').AsString := FSerie;
+    oConsulta.ParamByName('NUMERO').AsString := FNumero;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+      oConsulta.Next;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TdmInventarios.PrepararLineasRevalorizacion:
+  TLineasBaseRevalorizacionInventario;
+var
+  iLinea: Integer;
+  Marcador: TBookmark;
+begin
+  SetLength(Result, 0);
+  if GetEstadoInventario <> 'ABIERTO' then
+    raise Exception.Create(SErrorInventarioNoAbiertoEditar);
+  if not cdsLineas.Active then
+    raise Exception.Create(SErrorLineasInventarioNoAbiertas);
+  if cdsLineas.IsEmpty then
+    raise Exception.Create(SErrorLineasInventarioNoAbiertas);
+
+  Marcador := cdsLineas.GetBookmark;
+  cdsLineas.DisableControls;
+  try
+    SetLength(Result, cdsLineas.RecordCount);
+    iLinea := 0;
+    cdsLineas.First;
+    while not cdsLineas.Eof do
+    begin
+      Result[iLinea].Linea :=
+        cdsLineas.FieldByName('LINEA_INVLIN').AsString;
+      Result[iLinea].CodigoArticulo :=
+        cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
+      Result[iLinea].CodigoUnidad :=
+        cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
+      Result[iLinea].Descripcion :=
+        cdsLineas.FieldByName('DESCRIPCION_ARTICULO_INVLIN').AsString;
+      Result[iLinea].CantidadTeorica :=
+        cdsLineas.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency;
+      Result[iLinea].CantidadFisica :=
+        cdsLineas.FieldByName('CANTIDAD_FISICA_INVLIN').AsCurrency;
+      Result[iLinea].PrecioMedioActual :=
+        cdsLineas.FieldByName('PRECIO_MEDIO_INVLIN').AsCurrency;
+      Result[iLinea].PrecioMedioNuevoAnterior :=
+        cdsLineas.FieldByName(
+          'PRECIO_MEDIO_NUEVO_INVLIN').AsCurrency;
+      Result[iLinea].EsPrecioMedioCorregido := SameText(
+        cdsLineas.FieldByName(
+          'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString,
+        'S');
+      Inc(iLinea);
+      cdsLineas.Next;
+    end;
+    SetLength(Result, iLinea);
+  finally
+    if cdsLineas.BookmarkValid(Marcador) then
+      cdsLineas.GotoBookmark(Marcador);
+    cdsLineas.FreeBookmark(Marcador);
+    cdsLineas.EnableControls;
+  end;
+end;
+
+procedure TdmInventarios.AplicarRevalorizacion(
+  const ASimulacion: TSimulacionRevalorizacionInventario);
+var
+  AplicacionIniciada: Boolean;
+  IndiceLineas: TDictionary<string, Integer>;
+  Marcador: TBookmark;
+begin
+  if unqryTablaG.Active and not unqryTablaG.IsEmpty then
+    unqryTablaG.Refresh;
+  if GetEstadoInventario <> 'ABIERTO' then
+    raise Exception.Create(SErrorInventarioNoAbiertoEditar);
+  if Length(ASimulacion.Lineas) = 0 then
+    raise Exception.Create(SErrorSeleccionRevalorizacionInventario);
+
+  // Repetir el refresco cierra la ventana de cambios mientras estuvo abierto
+  // el modal. Si varió el Kardex, la comparación posterior pide simular otra
+  // vez en lugar de aplicar un objetivo calculado con una base obsoleta.
+  RecalcularTeorico;
+  IndiceLineas := TDictionary<string, Integer>.Create;
+  try
+    IndexarLineasRevalorizacion(ASimulacion, IndiceLineas);
+    AplicacionIniciada := False;
+    try
+      IniciarImportacionLineas;
+      AplicacionIniciada := True;
+      BloquearInventarioParaRevalorizacion;
+      CargarLineasInventario;
+      if (not cdsLineas.Active) or cdsLineas.IsEmpty then
+        raise Exception.CreateFmt(
+          SErrorLineaRevalorizacionInventarioNoEncontrada,
+          [ASimulacion.Lineas[0].Base.Linea]);
+      Marcador := cdsLineas.GetBookmark;
+      cdsLineas.DisableControls;
+      try
+        ValidarLineasRevalorizacion(
+          cdsLineas, ASimulacion, IndiceLineas);
+        GrabarLineasRevalorizacion(
+          cdsLineas, ASimulacion, IndiceLineas, FUsuario);
+        ConfirmarImportacionLineas;
+        AplicacionIniciada := False;
+      finally
+        if cdsLineas.BookmarkValid(Marcador) then
+          cdsLineas.GotoBookmark(Marcador);
+        cdsLineas.FreeBookmark(Marcador);
+        cdsLineas.EnableControls;
+      end;
+    except
+      if AplicacionIniciada then
+        CancelarImportacionLineas;
+      raise;
+    end;
+  finally
+    FreeAndNil(IndiceLineas);
+  end;
 end;
 
 procedure TdmInventarios.RecalcularTeorico;

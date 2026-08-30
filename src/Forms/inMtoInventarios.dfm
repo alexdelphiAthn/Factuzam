@@ -353,6 +353,16 @@
                   TabOrder = 5
                   OnClick = btnIraArticuloClick
                 end
+                object btnRevalorizarPmp: TcxButton
+                  Left = 807
+                  Top = 11
+                  Width = 130
+                  Height = 30
+                  Action = actRevalorizarPmp
+                  ParentShowHint = False
+                  ShowHint = True
+                  TabOrder = 6
+                end
                 object chkVerColumnasAtributos: TcxCheckBox
                   Left = 24
                   Top = 47
@@ -365,7 +375,7 @@
                   ParentShowHint = False
                   Properties.OnChange = chkVerColumnasAtributosPropertiesChange
                   ShowHint = True
-                  TabOrder = 6
+                  TabOrder = 7
                 end
               end
               object cxgrdLineas: TcxGrid
@@ -987,6 +997,11 @@
       Caption = 'actIraArticulo'
       ShortCut = 16449
       OnExecute = actIraArticuloExecute
+    end
+    object actRevalorizarPmp: TAction
+      Caption = ''
+      ShortCut = 24658
+      OnExecute = actRevalorizarPmpExecute
     end
   end
 end
