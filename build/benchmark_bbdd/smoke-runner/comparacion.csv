@@ -1,8 +1,0 @@
-"Metrica","MariaDB_us_operacion","PostgreSQL_us_operacion","Ganador","Factor"
-"actualizacion_stock","61,98","71,51","MariaDB","1,154"
-"agregado_ventas","591","769","MariaDB","1,301"
-"busqueda_pk","95,96","172,89","MariaDB","1,802"
-"carga_articulos","65,279","70,905","MariaDB","1,086"
-"carga_movimientos","58,309","101,547","MariaDB","1,742"
-"conexion","534,9","45939,3","MariaDB","85,884"
-"listado_filtrado","193,7","223,7","MariaDB","1,155"

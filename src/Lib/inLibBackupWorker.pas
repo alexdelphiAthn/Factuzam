@@ -149,6 +149,34 @@ const
   MARCADOR_FINAL_COPIA = '-- FZAM_FIN_COPIA_SEGURIDAD';
   TAMANO_COLA_VALIDACION = 64 * 1024;
 
+type
+  TFlujoScriptTemporal = class(TFileStream)
+  private
+    FRutaFichero: string;
+  public
+    constructor Create(const ARutaFichero: string);
+    destructor Destroy; override;
+  end;
+
+constructor TFlujoScriptTemporal.Create(
+  const ARutaFichero: string);
+begin
+  inherited Create(
+    ARutaFichero,
+    fmOpenRead or fmShareDenyWrite);
+  FRutaFichero := ARutaFichero;
+end;
+
+destructor TFlujoScriptTemporal.Destroy;
+var
+  sRutaFichero: string;
+begin
+  sRutaFichero := FRutaFichero;
+  inherited Destroy;
+  if FileExists(sRutaFichero) then
+    System.SysUtils.DeleteFile(sRutaFichero);
+end;
+
 function CrearConfiguracionConexion(
   const AHost: string;
   APort: Integer;
@@ -212,6 +240,13 @@ begin
   Result := TPath.Combine(
     sDirectorio,
     'fzam_salida_' + TGUID.NewGuid.ToString + '.tmp');
+end;
+
+function CrearRutaScriptRestauracionTemporal: string;
+begin
+  Result := TPath.Combine(
+    TPath.GetTempPath,
+    'fzam_restauracion_' + TGUID.NewGuid.ToString + '.tmp');
 end;
 
 function EsScriptCopiaSeguridadCompleto(
@@ -594,29 +629,8 @@ end;
 
 function TRestoreWorker.CrearFlujoRestauracion: TStream;
 var
-  aDatos: TBytes;
-  sContenido: string;
-  stTexto: TStringList;
+  sRutaScript: string;
 begin
-  sContenido := '';
-  if FModo = mpcCifrada then
-  begin
-    stTexto := TStringList.Create;
-    try
-      stTexto.LoadFromFile(FRutaFichero);
-      sContenido := DescifrarCopiaSeguridad(
-        stTexto.Text,
-        FPassDesencriptar);
-    finally
-      FreeAndNil(stTexto);
-    end;
-  end
-  else if FModo = mpcZip then
-  begin
-    aDatos := TFile.ReadAllBytes(FRutaFichero);
-    aDatos := DesempaquetarCopiaSeguridadZip(aDatos);
-    sContenido := TEncoding.UTF8.GetString(aDatos);
-  end;
   if FModo = mpcTextoPlano then
   begin
     Result := TFileStream.Create(
@@ -625,11 +639,32 @@ begin
   end
   else
   begin
-    if Trim(sContenido) = '' then
-    begin
-      raise Exception.Create(SErrorDesencriptarCopia);
+    sRutaScript := CrearRutaScriptRestauracionTemporal;
+    try
+      if FModo = mpcCifrada then
+      begin
+        DescifrarCopiaSeguridadDesdeFichero(
+          FRutaFichero,
+          sRutaScript,
+          FPassDesencriptar);
+      end
+      else if FModo = mpcZip then
+      begin
+        DesempaquetarCopiaSeguridadZipDesdeFichero(
+          FRutaFichero,
+          sRutaScript);
+      end;
+      if (not FileExists(sRutaScript)) or
+         (TFile.GetSize(sRutaScript) = 0) then
+      begin
+        raise Exception.Create(SErrorDesencriptarCopia);
+      end;
+      Result := TFlujoScriptTemporal.Create(sRutaScript);
+    except
+      if FileExists(sRutaScript) then
+        System.SysUtils.DeleteFile(sRutaScript);
+      raise;
     end;
-    Result := TStringStream.Create(sContenido, TEncoding.UTF8);
   end;
 end;
 
