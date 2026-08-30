@@ -19,14 +19,15 @@ interface
 
 uses
   Windows, Messages, SysUtils, Variants, Classes, Graphics, Controls, Forms,
-  Dialogs, cxLookAndFeelPainters, StdCtrls, ComCtrls, cxButtons, rtti,
+  Dialogs, cxLookAndFeelPainters, StdCtrls, cxButtons, rtti,
   UniDataConn, ImgList, Buttons, cxControls, cxContainer,
   Vcl.ExtCtrls, Uni, cxGraphics, cxLookAndFeels, Vcl.Menus, cxEdit, cxCheckBox,
   cxTextEdit, dxSkinsCore, inMtoFrmBase, cxClasses, cxLocalization, cxMemo,
   System.UITypes, dxShellDialogs, dxSkinBlue,
   dxCore, cxStyles, dxSkinsForm, dxSkinOffice2007Blue, cxGeometry,
-  cxLabel, JvComponentBase, JvEnterTab, JvExControls, JvAnimatedImage,
-  JvGIFCtrl, dxSkinBasic, dxSkinBlack, dxSkinBlueprint, dxSkinCaramel,
+  cxLabel, cxProgressBar, JvComponentBase, JvEnterTab, JvExControls,
+  JvAnimatedImage, JvGIFCtrl, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
+  dxSkinCaramel,
   dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide, dxSkinDevExpressDarkStyle,
   dxSkinDevExpressStyle, dxSkinFoggy, dxSkinGlassOceans, dxSkinHighContrast,
   dxSkiniMaginary, dxSkinLilian, dxSkinLiquidSky, dxSkinLondonLiquidSky,
@@ -99,8 +100,11 @@ type
     procedure GetIniValues;
   private
     FProgressPanel: TPanel;
-    FProgressBar: TProgressBar;
+    FProgressBar: TcxProgressBar;
     FProgressLabel: TcxLabel;
+    FProgressDetailLabel: TcxLabel;
+    FAlturaClienteSinProgreso: Integer;
+    FAlturaPanelBBDDSinProgreso: Integer;
     FWorkerOperacion: TThread;
     FCerrarAplicacion: Boolean;
     FEnOperacionLarga: Boolean;
@@ -146,8 +150,10 @@ type
     procedure MostrarBarraProgreso(const ATextoInicial: string = '');
     procedure OcultarBarraProgreso;
     function PorcentajeProgreso(AValor, ATotal: Integer): Integer;
-    function TextoProgreso(const AEtapa: string;
-                           AValor, ATotal: Integer): string;
+    function TextoEtapaProgreso(const AEtapa: string): string;
+    function TextoDetalleProgreso(
+      APaso, ATotal, AFilaGlobal,
+      AFilasGlobalTotal: Integer): string;
     procedure SolicitarCancelarOperacionEnCurso;
     procedure WorkerProgreso(const AEtapa: string;
                               APaso, ATotal: Integer;
@@ -976,48 +982,84 @@ end;
 
 procedure TfrmLogon.RecolocarBarraProgreso;
 var
-  iTopBotones: Integer;
+  iAltoBarra: Integer;
+  iAltoDetalle: Integer;
+  iAltoNecesario: Integer;
+  iAltoTitulo: Integer;
   iAncho: Integer;
+  iMargen: Integer;
+  iSeparacion: Integer;
+  iTopBotones: Integer;
 begin
   if FProgressPanel <> nil then
   begin
+    iMargen := MulDiv(
+      8, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+    iSeparacion := MulDiv(
+      4, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+    iAltoTitulo := MulDiv(
+      24, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+    iAltoDetalle := MulDiv(
+      42, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+    iAltoBarra := MulDiv(
+      28, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
     iTopBotones := btnRecover.Top + btnRecover.Height;
     if btnCopiaSeguridad.Top + btnCopiaSeguridad.Height > iTopBotones then
       iTopBotones := btnCopiaSeguridad.Top + btnCopiaSeguridad.Height;
-    iAncho := (btnRecover.Left + btnRecover.Width) - btnCopiaSeguridad.Left;
+    iAncho := btnRecover.Left + btnRecover.Width -
+      btnCopiaSeguridad.Left;
     FProgressPanel.Left := btnCopiaSeguridad.Left;
-    FProgressPanel.Top := iTopBotones + 12;
+    FProgressPanel.Top := iTopBotones + iMargen;
     FProgressPanel.Width := iAncho;
-    FProgressPanel.Height := 48;
-    if FProgressPanel.Top + FProgressPanel.Height >
-       pnlBBDD.ClientHeight - 8 then
-    begin
-      FProgressPanel.Top := pnlBBDD.ClientHeight -
-                            FProgressPanel.Height - 8;
-    end;
     if FProgressLabel <> nil then
     begin
       FProgressLabel.Left := 0;
       FProgressLabel.Top := 0;
       FProgressLabel.Width := FProgressPanel.Width;
-      FProgressLabel.Height := 22;
+      FProgressLabel.Height := iAltoTitulo;
+    end;
+    if FProgressDetailLabel <> nil then
+    begin
+      FProgressDetailLabel.Left := 0;
+      FProgressDetailLabel.Top := iAltoTitulo + iSeparacion;
+      FProgressDetailLabel.Width := FProgressPanel.Width;
+      FProgressDetailLabel.Height := iAltoDetalle;
     end;
     if FProgressBar <> nil then
     begin
       FProgressBar.Left := 0;
-      FProgressBar.Top := 25;
+      FProgressBar.Top := iAltoTitulo + iAltoDetalle +
+        (iSeparacion * 2);
       FProgressBar.Width := FProgressPanel.Width;
-      FProgressBar.Height := 18;
+      FProgressBar.Height := iAltoBarra;
     end;
+    FProgressPanel.Height := iAltoTitulo + iAltoDetalle +
+      iAltoBarra + (iSeparacion * 2);
+    iAltoNecesario := FProgressPanel.Top +
+      FProgressPanel.Height + iMargen;
+    if pnlBBDD.ClientHeight < iAltoNecesario then
+    begin
+      pnlBBDD.Height := pnlBBDD.Height +
+        iAltoNecesario - pnlBBDD.ClientHeight;
+    end;
+    iAltoNecesario := pnlBBDD.Top + pnlBBDD.Height;
+    if ClientHeight < iAltoNecesario then
+      ClientHeight := iAltoNecesario;
   end;
 end;
 
 procedure TfrmLogon.MostrarBarraProgreso(const ATextoInicial: string);
 begin
+  if not FEnOperacionLarga then
+  begin
+    FAlturaClienteSinProgreso := ClientHeight;
+    FAlturaPanelBBDDSinProgreso := pnlBBDD.Height;
+  end;
   BloquearPantallaOperacion;
   if FProgressPanel = nil then
   begin
     FProgressPanel := TPanel.Create(Self);
+    FProgressPanel.Visible := False;
     FProgressPanel.Parent := pnlBBDD;
     FProgressPanel.BevelOuter := bvNone;
     FProgressPanel.ParentBackground := False;
@@ -1025,12 +1067,12 @@ begin
   end;
   if FProgressBar = nil then
   begin
-    FProgressBar := TProgressBar.Create(Self);
+    FProgressBar := TcxProgressBar.Create(Self);
     FProgressBar.Parent := FProgressPanel;
-    FProgressBar.Min := 0;
-    FProgressBar.Max := 100;
+    FProgressBar.Properties.Max := 100;
+    FProgressBar.Properties.ShowTextStyle := cxtsText;
     FProgressBar.Position := 0;
-    FProgressBar.Smooth := True;
+    FProgressBar.TabStop := False;
   end;
   if FProgressLabel = nil then
   begin
@@ -1040,11 +1082,24 @@ begin
     FProgressLabel.Caption := '';
     FProgressLabel.Transparent := False;
     FProgressLabel.Style.Color := pnlBBDD.Color;
+    FProgressLabel.Style.Font.Style := [fsBold];
     FProgressLabel.ShowHint := True;
+  end;
+  if FProgressDetailLabel = nil then
+  begin
+    FProgressDetailLabel := TcxLabel.Create(Self);
+    FProgressDetailLabel.Parent := FProgressPanel;
+    FProgressDetailLabel.AutoSize := False;
+    FProgressDetailLabel.Caption := '';
+    FProgressDetailLabel.Properties.WordWrap := True;
+    FProgressDetailLabel.Transparent := False;
+    FProgressDetailLabel.Style.Color := pnlBBDD.Color;
+    FProgressDetailLabel.ShowHint := True;
   end;
   RecolocarBarraProgreso;
   FProgressPanel.Visible := True;
   FProgressLabel.Visible := True;
+  FProgressDetailLabel.Visible := True;
   FProgressBar.Visible := True;
   FProgressBar.Position := 0;
   if ATextoInicial = '' then
@@ -1052,9 +1107,12 @@ begin
   else
     FProgressLabel.Caption := ATextoInicial;
   FProgressLabel.Hint := FProgressLabel.Caption;
+  FProgressDetailLabel.Caption := '';
+  FProgressDetailLabel.Hint := '';
   FProgressPanel.BringToFront;
   FProgressBar.Update;
   FProgressLabel.Update;
+  FProgressDetailLabel.Update;
 end;
 
 procedure TfrmLogon.OcultarBarraProgreso;
@@ -1063,8 +1121,16 @@ begin
     FProgressBar.Visible := False;
   if FProgressLabel <> nil then
     FProgressLabel.Visible := False;
+  if FProgressDetailLabel <> nil then
+    FProgressDetailLabel.Visible := False;
   if FProgressPanel <> nil then
     FProgressPanel.Visible := False;
+  if FAlturaPanelBBDDSinProgreso > 0 then
+    pnlBBDD.Height := FAlturaPanelBBDDSinProgreso;
+  if FAlturaClienteSinProgreso > 0 then
+    ClientHeight := FAlturaClienteSinProgreso;
+  FAlturaPanelBBDDSinProgreso := 0;
+  FAlturaClienteSinProgreso := 0;
   DesbloquearPantallaOperacion;
 end;
 
@@ -1081,8 +1147,7 @@ begin
   end;
 end;
 
-function TfrmLogon.TextoProgreso(const AEtapa: string;
-                                 AValor, ATotal: Integer): string;
+function TfrmLogon.TextoEtapaProgreso(const AEtapa: string): string;
 var
   sEtapa: string;
 begin
@@ -1090,13 +1155,37 @@ begin
   sEtapa := StringReplace(sEtapa, ' (KB)', '', [rfReplaceAll, rfIgnoreCase]);
   if sEtapa = '' then
     sEtapa := 'Procesando';
-  if Length(sEtapa) > 34 then
-    sEtapa := Copy(sEtapa, 1, 31) + '...';
+  Result := sEtapa;
+end;
+
+function TfrmLogon.TextoDetalleProgreso(
+  APaso, ATotal, AFilaGlobal,
+  AFilasGlobalTotal: Integer): string;
+var
+  sTotal: string;
+begin
+  Result := '';
   if ATotal > 0 then
-    Result := Format('%s: %d%%', [sEtapa,
-                                  PorcentajeProgreso(AValor, ATotal)])
-  else
-    Result := sEtapa;
+  begin
+    Result := Format(
+      '%s / %s (%d%%)',
+      [FormatFloat('#,##0', APaso),
+       FormatFloat('#,##0', ATotal),
+       PorcentajeProgreso(APaso, ATotal)]);
+  end;
+  if (AFilasGlobalTotal > 0) and
+     ((AFilaGlobal <> APaso) or
+      (AFilasGlobalTotal <> ATotal)) then
+  begin
+    sTotal := Format(
+      'Total: %s / %s (%d%%)',
+      [FormatFloat('#,##0', AFilaGlobal),
+       FormatFloat('#,##0', AFilasGlobalTotal),
+       PorcentajeProgreso(AFilaGlobal, AFilasGlobalTotal)]);
+    if Result <> '' then
+      Result := Result + sLineBreak;
+    Result := Result + sTotal;
+  end;
 end;
 
 procedure TfrmLogon.SolicitarCancelarOperacionEnCurso;
@@ -1116,6 +1205,12 @@ begin
         FProgressLabel.Caption := SCaptionCancelandoOperacion;
         FProgressLabel.Hint := FProgressLabel.Caption;
         FProgressLabel.Update;
+      end;
+      if FProgressDetailLabel <> nil then
+      begin
+        FProgressDetailLabel.Caption := '';
+        FProgressDetailLabel.Hint := '';
+        FProgressDetailLabel.Update;
       end;
     end;
   end;
@@ -1138,12 +1233,19 @@ begin
       iValor := AFilaGlobal;
       iTotal := AFilasGlobalTotal;
     end;
-    FProgressBar.Max := 100;
+    FProgressBar.Properties.Max := 100;
     FProgressBar.Position := PorcentajeProgreso(iValor, iTotal);
-    FProgressLabel.Caption := TextoProgreso(AEtapa, iValor, iTotal);
+    FProgressLabel.Caption := TextoEtapaProgreso(AEtapa);
     FProgressLabel.Hint := FProgressLabel.Caption;
+    FProgressDetailLabel.Caption := TextoDetalleProgreso(
+      APaso,
+      ATotal,
+      AFilaGlobal,
+      AFilasGlobalTotal);
+    FProgressDetailLabel.Hint := FProgressDetailLabel.Caption;
     FProgressBar.Update;
     FProgressLabel.Update;
+    FProgressDetailLabel.Update;
   end;
 end;
 
