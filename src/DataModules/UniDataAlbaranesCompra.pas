@@ -69,6 +69,7 @@ type
     fxdsLinAlbcSku:             TfrxDBDataset;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
+    procedure unqryTablaGAfterOpen(DataSet: TDataSet);
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
@@ -436,6 +437,17 @@ begin
     unqryMovimientosProveedor.Close;
 end;
 
+procedure TdmAlbaranesCompra.unqryTablaGAfterOpen(DataSet: TDataSet);
+var
+  oCampoInstante: TField;
+begin
+  // El instante procede de la segunda tabla del JOIN porque algunas vistas
+  // antiguas no lo exponen. Los DML explicitos si lo guardan en la tabla base.
+  oCampoInstante := DataSet.FindField('INSTANTE_MOVIMIENTO_ALBC');
+  if oCampoInstante <> nil then
+    oCampoInstante.ReadOnly := False;
+end;
+
 procedure TdmAlbaranesCompra.unqryTablaGAfterInsert(DataSet: TDataSet);
 var
   sSerie: string;
@@ -462,6 +474,13 @@ begin
         FieldByName('SERIE_ALBC').AsString := sSerie
       else
         FieldByName('SERIE_ALBC').AsString := 'C1';
+    end;
+    // UniDAC no recarga el detalle mientras el maestro esta en dsInsert.
+    // Reabrirlo con numero 0 evita mostrar las lineas del albaran anterior.
+    if unqryAlbaranesCompraLineas.Active then
+    begin
+      unqryAlbaranesCompraLineas.Close;
+      unqryAlbaranesCompraLineas.Open;
     end;
     FieldByName('INSTANTE_MOVIMIENTO_ALBC').AsDateTime := Now;
     FieldByName('FECHA_ALBC').AsDateTime :=

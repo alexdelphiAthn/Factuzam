@@ -16,6 +16,7 @@
       '    ON A.NUMERO_ALBC = V.NUMERO_ALBC'
       '   AND A.SERIE_ALBC = V.SERIE_ALBC'
       ' ORDER BY A.INSTANTE_MOVIMIENTO_ALBC DESC, V.NUMERO_ALBC DESC')
+    AfterOpen = unqryTablaGAfterOpen
     AfterInsert = unqryTablaGAfterInsert
     BeforePost = unqryTablaGBeforePost
     AfterPost = unqryTablaGAfterPost

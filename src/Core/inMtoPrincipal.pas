@@ -1226,7 +1226,7 @@ begin
   // general. La protección de una fila PrestaShop activa se aplica después.
   else if (FReiniciando) then
     CanClose := True
-  else if (pcPrincipal.PageCount = 0) then
+  else
   begin
     if MessageDlg(SPreguntaSalirAplicacion,
                   mtConfirmation, [mbYes, mbNo], 0) = mrNo then
