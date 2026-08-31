@@ -98,6 +98,11 @@ var
   sContrasena: string;
   sContrasenaCopia: string;
 begin
+  if not Assigned(AContexto.CasoUso) then
+  begin
+    raise EInvalidOpException.Create(
+      'El servicio de restauración no está disponible.');
+  end;
   sContrasena := InputBox(SGetPassBBDD, '', '');
   AContexto.EstablecerContrasena(sContrasena);
   ConfigurarDialogo(AContexto.Dialogo);

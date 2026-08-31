@@ -25,6 +25,9 @@ type
     abstract;
     function GenerateIndexDefinition(const TableName: string;
       const Idx: TIndexInfo): string; virtual; abstract;
+    function GenerarIndicesSecundarios(
+      const ANombreTabla: string;
+      const AIndices: TArray<TIndexInfo>): string; virtual; abstract;
     function NormalizeType(const AType: string): string; virtual; abstract;
     function TriggersAreEqual(const Trg1, Trg2: TTriggerInfo): Boolean; virtual;
     abstract;

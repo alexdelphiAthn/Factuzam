@@ -76,12 +76,15 @@ type
 
   // Generación SQL de creación de objetos (específico de cada motor)
   IGeneradorSqlCreacion = interface
-    ['{5E27EE75-17BA-430B-99DF-92FF501A948D}']
+    ['{CBED7ECF-C409-4C43-8541-FF47119B415C}']
     function GenerateCreateTableSQL(const Table: TTableInfo;
                                     const Indexes: TArray<TIndexInfo>):
                                     string;
     function GenerateIndexDefinition(const TableName: string;
                                      const Idx: TIndexInfo): string;
+    function GenerarIndicesSecundarios(
+      const ANombreTabla: string;
+      const AIndices: TArray<TIndexInfo>): string;
     function GenerateCreateViewSQL(const Body: string): string;
     function GenerateCreateTriggerSQL(const Body: string): string;
     function GenerateCreateProcedureSQL(const Body: string): string;

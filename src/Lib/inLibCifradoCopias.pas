@@ -23,6 +23,14 @@ const
 
 type
   ECifradoCopia = class(Exception);
+  TEtapaAperturaCopia = (
+    eacVerificandoIntegridad,
+    eacIntegridadVerificada,
+    eacDescifrando,
+    eacValidandoContenido
+  );
+  TEtapaAperturaCopiaEvent = procedure(
+    AEtapa: TEtapaAperturaCopia) of object;
 
 function EsFormatoCifradoActual(const ADatos: string): Boolean;
 function CifrarCopiaSeguridad(
@@ -41,7 +49,8 @@ procedure CifrarCopiaSeguridadComprimidaDesdeFichero(
 procedure DesempaquetarCopiaSeguridadZipDesdeFichero(
   const ARutaZip, ARutaScript: string);
 procedure DescifrarCopiaSeguridadDesdeFichero(
-  const ARutaCopia, ARutaScript, AContrasena: string);
+  const ARutaCopia, ARutaScript, AContrasena: string;
+  AOnEtapa: TEtapaAperturaCopiaEvent = nil);
 function DesempaquetarCopiaSeguridadZip(
   const ADatos: TBytes
 ): TBytes;
@@ -1674,8 +1683,17 @@ begin
   GuardarTextoUtf8EnFichero(sContenido, ARutaScript);
 end;
 
+procedure NotificarEtapaAperturaCopia(
+  AOnEtapa: TEtapaAperturaCopiaEvent;
+  AEtapa: TEtapaAperturaCopia);
+begin
+  if Assigned(AOnEtapa) then
+    AOnEtapa(AEtapa);
+end;
+
 procedure DescifrarCopiaSeguridadDesdeFichero(
-  const ARutaCopia, ARutaScript, AContrasena: string);
+  const ARutaCopia, ARutaScript, AContrasena: string;
+  AOnEtapa: TEtapaAperturaCopiaEvent);
 var
   aClaveCifrado: TBytes;
   Formato: TFormatoCifradoCopia;
@@ -1711,16 +1729,25 @@ begin
     if Formato = fccDesconocido then
     begin
       FreeAndNil(oCopia);
+      NotificarEtapaAperturaCopia(
+        AOnEtapa,
+        eacDescifrando);
       DescifrarCopiaHistoricaDesdeFichero(
         ARutaCopia,
         sRutaScript,
         AContrasena);
+      NotificarEtapaAperturaCopia(
+        AOnEtapa,
+        eacValidandoContenido);
       sRutaPublicar := sRutaScript;
     end
     else
     begin
       Sobre := LeerSobreCifradoDesdeFichero(oCopia, Formato);
       ValidarDimensionesSobre(Sobre);
+      NotificarEtapaAperturaCopia(
+        AOnEtapa,
+        eacVerificandoIntegridad);
       DecodificarBase64DesdeFichero(oCopia, sRutaCifrado);
       FreeAndNil(oCopia);
       aClaveCifrado := ObtenerClaveCifradoFicheroValidada(
@@ -1728,11 +1755,20 @@ begin
         AContrasena,
         Formato,
         sRutaCifrado);
+      NotificarEtapaAperturaCopia(
+        AOnEtapa,
+        eacIntegridadVerificada);
+      NotificarEtapaAperturaCopia(
+        AOnEtapa,
+        eacDescifrando);
       DescifrarAESDesdeFicheros(
         sRutaCifrado,
         sRutaPlano,
         aClaveCifrado,
         Sobre.Vector);
+      NotificarEtapaAperturaCopia(
+        AOnEtapa,
+        eacValidandoContenido);
       case Formato of
         fccV2:
           sRutaPublicar := sRutaPlano;

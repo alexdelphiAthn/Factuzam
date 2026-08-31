@@ -19,6 +19,7 @@ uses
   System.Classes, System.SysUtils,
   Backup.Engine, Backup.Types,
   inLibBackupPersistenciaIntf,
+  inLibCifradoCopias,
   inLibCopiasSeguridadIntf;
 
 type
@@ -92,6 +93,8 @@ type
     FOnFinalizar: TWorkerFinalizarEvent;
     FFabricaPersistencia: IFabricaPersistenciaBackup;
     function CrearFlujoRestauracion: TStream;
+    procedure ActualizarEtapaAperturaCopia(
+      AEtapa: TEtapaAperturaCopia);
     procedure EjecutarSQLStreaming(
       const APersistencia: IPersistenciaRestauracionBackup);
     procedure ActualizarProgresoSQL(
@@ -138,12 +141,19 @@ implementation
 uses
   Winapi.Windows,
   Core_Interfaces, ScriptWriters, System.IOUtils,
-  inLibCifradoCopias,
   inLibMsgConfiguracion;
 
 resourcestring
   SErrorScriptCopiaIncompleto =
     'No se guardó la copia porque el SQL generado está incompleto.';
+  SProgresoVerificandoIntegridad =
+    'Verificando integridad de la copia';
+  SProgresoIntegridadVerificada =
+    'Integridad verificada';
+  SProgresoDescifrandoCopia =
+    'Descifrando la copia';
+  SProgresoValidandoContenido =
+    'Validando el contenido de la copia';
 
 const
   MARCADOR_FINAL_COPIA = '-- FZAM_FIN_COPIA_SEGURIDAD';
@@ -646,7 +656,8 @@ begin
         DescifrarCopiaSeguridadDesdeFichero(
           FRutaFichero,
           sRutaScript,
-          FPassDesencriptar);
+          FPassDesencriptar,
+          ActualizarEtapaAperturaCopia);
       end
       else if FModo = mpcZip then
       begin
@@ -666,6 +677,24 @@ begin
       raise;
     end;
   end;
+end;
+
+procedure TRestoreWorker.ActualizarEtapaAperturaCopia(
+  AEtapa: TEtapaAperturaCopia);
+begin
+  case AEtapa of
+    eacVerificandoIntegridad:
+      FProgresoEtapa := SProgresoVerificandoIntegridad;
+    eacIntegridadVerificada:
+      FProgresoEtapa := SProgresoIntegridadVerificada;
+    eacDescifrando:
+      FProgresoEtapa := SProgresoDescifrandoCopia;
+    eacValidandoContenido:
+      FProgresoEtapa := SProgresoValidandoContenido;
+  end;
+  FPosicion := 0;
+  FTotal := 0;
+  Synchronize(SyncProgreso);
 end;
 
 procedure TRestoreWorker.ActualizarProgresoSQL(

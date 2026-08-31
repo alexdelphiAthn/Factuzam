@@ -376,6 +376,7 @@ uses inLibWin,
   inLibMsgComun,
   inLibMsgConfiguracion,
   inLibCopiasSeguridadReglas,
+  inLibConexionPerfilIni,
   inLibDir,
   inMtoCajaMenu,
   inLibGenerarTicketCaja,
@@ -1121,15 +1122,20 @@ end;
 procedure TfrmMtoPrincipal.RelanzarLoginSiPendiente;
 var
   iResultado: HINST;
+  sNombreIni: string;
+  sParametros: string;
 begin
   if FRelanzarLoginPendiente then
   begin
     FRelanzarLoginPendiente := False;
+    sNombreIni := ExtractFileName(
+      RutaPerfilConexionAplicacion(GetUserFolder));
+    sParametros := '"' + sNombreIni + '" /relogin';
     iResultado := ShellExecute(
       0,
       'open',
       PChar(Application.ExeName),
-      PChar('/relogin'),
+      PChar(sParametros),
       nil,
       SW_SHOWNORMAL);
     if NativeInt(iResultado) <= 32 then

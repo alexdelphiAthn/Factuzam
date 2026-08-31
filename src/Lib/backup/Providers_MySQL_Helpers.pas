@@ -5,11 +5,19 @@ uses Core_Helpers, Core_Interfaces, Backup.Types, System.SysUtils,
   System.StrUtils, System.Classes, Data.DB, Uni;
 type
   TMySQLHelpers = class(TDBHelpers)
+  private
+    function GenerarColumnasIndice(
+      const AIndice: TIndexInfo): string;
+    function GenerarClausulaIndiceSecundario(
+      const AIndice: TIndexInfo): string;
   public
     function QuoteIdentifier(const Identifier: string): string; override;
     function GenerateColumnDefinition(const Col: TColumnInfo): string; override;
     function GenerateIndexDefinition(const TableName: string;
                                      const Idx: TIndexInfo): string; override;
+    function GenerarIndicesSecundarios(
+      const ANombreTabla: string;
+      const AIndices: TArray<TIndexInfo>): string; override;
     function NormalizeType(const AType: string): string; override;
     function TriggersAreEqual(const Trg1, Trg2: TTriggerInfo): Boolean;
     override;
@@ -373,21 +381,51 @@ begin
   Result:= 'DROP PROCEDURE IF EXISTS ' + QuoteIdentifier(Proc) + ';';
 end;
 
-function TMySQLHelpers.GenerateIndexDefinition(const TableName: string;
-                                               const Idx: TIndexInfo): string;
+function TMySQLHelpers.GenerarColumnasIndice(
+  const AIndice: TIndexInfo): string;
 var
   i: Integer;
-  ColNames: string;
 begin
-  // Construir la lista de columnas: `col1`, `col2`...
-  ColNames := '';
-  for i := 0 to High(Idx.Columns) do
+  Result := '';
+  for i := 0 to High(AIndice.Columns) do
   begin
     if i > 0 then
-      ColNames := ColNames + ', ';
-    ColNames := ColNames + QuoteIdentifier(Idx.Columns[i].ColumnName);
+      Result := Result + ', ';
+    Result := Result +
+      QuoteIdentifier(AIndice.Columns[i].ColumnName);
   end;
-  // Lógica principal
+end;
+
+function TMySQLHelpers.GenerarClausulaIndiceSecundario(
+  const AIndice: TIndexInfo): string;
+var
+  sColumnas: string;
+begin
+  Result := '';
+  if not AIndice.IsPrimary then
+  begin
+    sColumnas := GenerarColumnasIndice(AIndice);
+    if AIndice.IsUnique then
+    begin
+      Result :=
+        'ADD UNIQUE INDEX ' + QuoteIdentifier(AIndice.IndexName) +
+        ' (' + sColumnas + ')';
+    end
+    else
+    begin
+      Result :=
+        'ADD INDEX ' + QuoteIdentifier(AIndice.IndexName) +
+        ' (' + sColumnas + ')';
+    end;
+  end;
+end;
+
+function TMySQLHelpers.GenerateIndexDefinition(const TableName: string;
+  const Idx: TIndexInfo): string;
+var
+  ColNames: string;
+begin
+  ColNames := GenerarColumnasIndice(Idx);
   if Idx.IsPrimary then
   begin
     Result :=
@@ -405,20 +443,39 @@ begin
       'ALTER TABLE ' + QuoteIdentifier(TableName) +
       ' ADD PRIMARY KEY (' + ColNames + ');';
   end
-  else if Idx.IsUnique then
-  begin
-    // Aplicamos la misma lógica para índices únicos
-    Result := 'ALTER TABLE ' + QuoteIdentifier(TableName) +
-              ' ADD UNIQUE INDEX ' + QuoteIdentifier(Idx.IndexName) +
-              ' (' + ColNames + ');';
-  end
   else
   begin
-    // Índices normales (no requieren unicidad)
     Result := 'ALTER TABLE ' + QuoteIdentifier(TableName) +
-              ' ADD INDEX ' + QuoteIdentifier(Idx.IndexName) +
-              ' (' + ColNames + ');';
+      ' ' + GenerarClausulaIndiceSecundario(Idx) + ';';
   end;
+end;
+
+function TMySQLHelpers.GenerarIndicesSecundarios(
+  const ANombreTabla: string;
+  const AIndices: TArray<TIndexInfo>): string;
+var
+  iIndice: Integer;
+  sClausula: string;
+begin
+  Result := '';
+  for iIndice := Low(AIndices) to High(AIndices) do
+  begin
+    sClausula := GenerarClausulaIndiceSecundario(AIndices[iIndice]);
+    if sClausula <> '' then
+    begin
+      if Result = '' then
+      begin
+        Result := 'ALTER TABLE ' + QuoteIdentifier(ANombreTabla) +
+          ' ' + sClausula;
+      end
+      else
+      begin
+        Result := Result + ',' + sLineBreak + '  ' + sClausula;
+      end;
+    end;
+  end;
+  if Result <> '' then
+    Result := Result + ';';
 end;
 
 function TMySQLHelpers.GenerateModifyColumnSQL(const TableName: string;

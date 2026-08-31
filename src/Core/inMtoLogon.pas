@@ -105,6 +105,7 @@ type
     FProgressDetailLabel: TcxLabel;
     FAlturaClienteSinProgreso: Integer;
     FAlturaPanelBBDDSinProgreso: Integer;
+    FPpiSinProgreso: Integer;
     FWorkerOperacion: TThread;
     FCerrarAplicacion: Boolean;
     FEnOperacionLarga: Boolean;
@@ -249,6 +250,8 @@ end;
 resourcestring
   SNombreArchivoCopiaSeguridadLogon =
     'copiaseguridad%s';
+  SCaptionProcesandoProgresoLogon = 'Procesando';
+  SFormatoProgresoTotalLogon = 'Total: %s / %s (%d%%)';
   SEncabezadoRestauracionCopiaSeguridadLogon =
     '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --';
   SMensajeLicenciaEstablecida = 'Licencia establecida.';
@@ -391,6 +394,10 @@ begin
     FRepositorioLogon,
     FConexionLogon);
   FAplicacionLogon := CrearAplicacionLogon(FRepositorioLogon);
+  FCasoUsoRestauracion := CrearCasoUsoRestauracionConexion(
+    CrearRepositorioRestauracionConexionUniDAC(
+      FConexionLogon,
+      FFabricaConexiones));
   // Tamano compacto del login (panel BBDD oculto) calculado desde las
   // coordenadas ya escaladas de los controles, para que los botones no se
   // recorten con escalado DPI (el .dfm no trae PixelsPerInch y el tamano
@@ -989,12 +996,12 @@ var
   iAncho: Integer;
   iMargen: Integer;
   iSeparacion: Integer;
-  iTopBotones: Integer;
+  iTopAcciones: Integer;
 begin
   if FProgressPanel <> nil then
   begin
     iMargen := MulDiv(
-      8, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+      4, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
     iSeparacion := MulDiv(
       4, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
     iAltoTitulo := MulDiv(
@@ -1002,14 +1009,18 @@ begin
     iAltoDetalle := MulDiv(
       42, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
     iAltoBarra := MulDiv(
-      28, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
-    iTopBotones := btnRecover.Top + btnRecover.Height;
-    if btnCopiaSeguridad.Top + btnCopiaSeguridad.Height > iTopBotones then
-      iTopBotones := btnCopiaSeguridad.Top + btnCopiaSeguridad.Height;
+      22, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+    iTopAcciones := btnTest.Top;
+    if btnSubirScript.Top < iTopAcciones then
+      iTopAcciones := btnSubirScript.Top;
+    if btnCopiaSeguridad.Top < iTopAcciones then
+      iTopAcciones := btnCopiaSeguridad.Top;
+    if btnRecover.Top < iTopAcciones then
+      iTopAcciones := btnRecover.Top;
     iAncho := btnRecover.Left + btnRecover.Width -
       btnCopiaSeguridad.Left;
     FProgressPanel.Left := btnCopiaSeguridad.Left;
-    FProgressPanel.Top := iTopBotones + iMargen;
+    FProgressPanel.Top := iTopAcciones;
     FProgressPanel.Width := iAncho;
     if FProgressLabel <> nil then
     begin
@@ -1044,7 +1055,10 @@ begin
     end;
     iAltoNecesario := pnlBBDD.Top + pnlBBDD.Height;
     if ClientHeight < iAltoNecesario then
+    begin
       ClientHeight := iAltoNecesario;
+      MakeFullyVisible(Monitor);
+    end;
   end;
 end;
 
@@ -1054,8 +1068,13 @@ begin
   begin
     FAlturaClienteSinProgreso := ClientHeight;
     FAlturaPanelBBDDSinProgreso := pnlBBDD.Height;
+    FPpiSinProgreso := CurrentPPI;
   end;
   BloquearPantallaOperacion;
+  btnTest.Visible := False;
+  btnSubirScript.Visible := False;
+  btnCopiaSeguridad.Visible := False;
+  btnRecover.Visible := False;
   if FProgressPanel = nil then
   begin
     FProgressPanel := TPanel.Create(Self);
@@ -1070,7 +1089,7 @@ begin
     FProgressBar := TcxProgressBar.Create(Self);
     FProgressBar.Parent := FProgressPanel;
     FProgressBar.Properties.Max := 100;
-    FProgressBar.Properties.ShowTextStyle := cxtsText;
+    FProgressBar.Properties.ShowTextStyle := cxtsPercent;
     FProgressBar.Position := 0;
     FProgressBar.TabStop := False;
   end;
@@ -1080,7 +1099,8 @@ begin
     FProgressLabel.Parent := FProgressPanel;
     FProgressLabel.AutoSize := False;
     FProgressLabel.Caption := '';
-    FProgressLabel.Transparent := False;
+    FProgressLabel.Properties.ShowEndEllipsis := True;
+    FProgressLabel.Transparent := True;
     FProgressLabel.Style.Color := pnlBBDD.Color;
     FProgressLabel.Style.Font.Style := [fsBold];
     FProgressLabel.ShowHint := True;
@@ -1092,7 +1112,7 @@ begin
     FProgressDetailLabel.AutoSize := False;
     FProgressDetailLabel.Caption := '';
     FProgressDetailLabel.Properties.WordWrap := True;
-    FProgressDetailLabel.Transparent := False;
+    FProgressDetailLabel.Transparent := True;
     FProgressDetailLabel.Style.Color := pnlBBDD.Color;
     FProgressDetailLabel.ShowHint := True;
   end;
@@ -1125,12 +1145,29 @@ begin
     FProgressDetailLabel.Visible := False;
   if FProgressPanel <> nil then
     FProgressPanel.Visible := False;
-  if FAlturaPanelBBDDSinProgreso > 0 then
-    pnlBBDD.Height := FAlturaPanelBBDDSinProgreso;
-  if FAlturaClienteSinProgreso > 0 then
-    ClientHeight := FAlturaClienteSinProgreso;
+  btnTest.Visible := True;
+  btnSubirScript.Visible := True;
+  btnCopiaSeguridad.Visible := True;
+  btnRecover.Visible := True;
+  if (FAlturaPanelBBDDSinProgreso > 0) and
+     (FPpiSinProgreso > 0) then
+  begin
+    pnlBBDD.Height := MulDiv(
+      FAlturaPanelBBDDSinProgreso,
+      CurrentPPI,
+      FPpiSinProgreso);
+  end;
+  if (FAlturaClienteSinProgreso > 0) and
+     (FPpiSinProgreso > 0) then
+  begin
+    ClientHeight := MulDiv(
+      FAlturaClienteSinProgreso,
+      CurrentPPI,
+      FPpiSinProgreso);
+  end;
   FAlturaPanelBBDDSinProgreso := 0;
   FAlturaClienteSinProgreso := 0;
+  FPpiSinProgreso := 0;
   DesbloquearPantallaOperacion;
 end;
 
@@ -1154,7 +1191,7 @@ begin
   sEtapa := Trim(AEtapa);
   sEtapa := StringReplace(sEtapa, ' (KB)', '', [rfReplaceAll, rfIgnoreCase]);
   if sEtapa = '' then
-    sEtapa := 'Procesando';
+    sEtapa := SCaptionProcesandoProgresoLogon;
   Result := sEtapa;
 end;
 
@@ -1178,7 +1215,7 @@ begin
       (AFilasGlobalTotal <> ATotal)) then
   begin
     sTotal := Format(
-      'Total: %s / %s (%d%%)',
+      SFormatoProgresoTotalLogon,
       [FormatFloat('#,##0', AFilaGlobal),
        FormatFloat('#,##0', AFilasGlobalTotal),
        PorcentajeProgreso(AFilaGlobal, AFilasGlobalTotal)]);
@@ -1254,12 +1291,12 @@ procedure TfrmLogon.BackupFinalizar(
   const AError: string; ALogBuffer: TStringList);
 begin
   FWorkerOperacion := nil;
+  FCancelaOperacionSolicitada := False;
+  OcultarBarraProgreso;
   FCasoUsoRestauracion := CrearCasoUsoRestauracionConexion(
     CrearRepositorioRestauracionConexionUniDAC(
       FConexionLogon,
       FFabricaConexiones));
-  FCancelaOperacionSolicitada := False;
-  OcultarBarraProgreso;
   if AResultado = rcsCancelada then
     ShowMessage(SOperacionCancelada)
   else if AResultado = rcsCompletada then
@@ -1363,20 +1400,24 @@ begin
         (not FileExists(saveDialog.FileName))) then
     begin
       ConfirmarConfiguracionConexionVerificada;
-      MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
-      oWorker := CrearWorkerCopiaProtegidaConexion(
-        FConexionLogon,
-        saveDialog.FileName,
-        FConexionLogon.Password,
-        WorkerProgreso,
-        BackupFinalizar);
-      FCancelaOperacionSolicitada := False;
-      FWorkerOperacion := oWorker;
+      oWorker := nil;
       try
+        MostrarBarraProgreso(SCaptionPreparandoCopiaSeguridad);
+        oWorker := CrearWorkerCopiaProtegidaConexion(
+          FConexionLogon,
+          saveDialog.FileName,
+          FConexionLogon.Password,
+          WorkerProgreso,
+          BackupFinalizar);
+        FCancelaOperacionSolicitada := False;
+        FWorkerOperacion := oWorker;
         oWorker.Start;
       except
         FWorkerOperacion := nil;
+        FCancelaOperacionSolicitada := False;
         FreeAndNil(oWorker);
+        if FEnOperacionLarga then
+          OcultarBarraProgreso;
         DescartarConfiguracionConexionPendiente;
         raise;
       end;
@@ -1394,8 +1435,16 @@ end;
 
 procedure TfrmLogon.btnRecoverClick(Sender: TObject);
 begin
-  TCoordinadorLogonRestauracionVcl.Ejecutar(
-    CrearContextoLogonRestauracionVcl(Self));
+  try
+    TCoordinadorLogonRestauracionVcl.Ejecutar(
+      CrearContextoLogonRestauracionVcl(Self));
+  except
+    FWorkerOperacion := nil;
+    FCancelaOperacionSolicitada := False;
+    if FEnOperacionLarga then
+      OcultarBarraProgreso;
+    raise;
+  end;
 end;
 
 procedure TfrmLogon.btnTestClick(Sender: TObject);

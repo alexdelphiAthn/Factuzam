@@ -54,8 +54,23 @@ type
     FTotal: Integer;
     FUltimaPosicionNotificada: Int64;
     FPrimerError: string;
+    FIndicesDiferidos: TStringList;
+    FEsCopiaFactuzam: Boolean;
+    FCopiaFactuzamConMarcadores: Boolean;
+    FFinCopiaFactuzamDetectado: Boolean;
+    FCabeceraLegacyDetectada: Boolean;
+    FBaseDatosLegacyDetectada: Boolean;
+    FHayDatosParaIndicesDiferidos: Boolean;
+    FDatosDesdeDefinicionTabla: Boolean;
+    FSavepointsActivos: TStringList;
+    FTransaccionConSavepoints: Boolean;
+    FBytesDatosSinConfirmar: Int64;
+    FBytesEntreConfirmaciones: Int64;
+    FLineasLeidas: Integer;
     procedure ComprobarCancelacion;
     procedure Inicializar(AFlujo: TStream);
+    procedure DetectarCabeceraCopiaFactuzam(const ALinea: string);
+    procedure DetectarFinCopiaFactuzam(const ALinea: string);
     procedure NotificarProgreso(AForzar: Boolean = False);
     procedure ProcesarLectura(ALector: TStreamReader);
     procedure ProcesarLinea(const ALinea: string);
@@ -66,6 +81,11 @@ type
     function ProcesarContenidoNormal(
       const ALinea: string; var AIndice: Integer): Boolean;
     procedure EjecutarSentenciaActual;
+    procedure EjecutarEnPersistencia(
+      const ASentencia: string;
+      AContabilizar: Boolean = True);
+    procedure ConfirmarDatosPendientes(AForzar: Boolean);
+    procedure EjecutarIndicesDiferidos;
     procedure NormalizarColaciones;
     function EsLineaIgnorable(const ALinea: string): Boolean;
     function EsDirectivaDelimitador(
@@ -75,12 +95,35 @@ type
     function CoincideDelimitador(
       const ALinea: string; AIndice: Integer): Boolean;
     function EsCreacionVista(const ASentencia: string): Boolean;
+    function EsInsercionDatos(const ASentencia: string): Boolean;
+    function EsCreacionIndiceSecundario(
+      const ASentencia: string): Boolean;
+    function EsActivacionIndices(const ASentencia: string): Boolean;
+    function EsControlIndicesVersionado(
+      const ASentencia: string): Boolean;
+    function EsInicioDefinicionTabla(
+      const ASentencia: string): Boolean;
+    function EsConfirmacionTransaccion(
+      const ASentencia: string): Boolean;
+    function EsReversionTransaccion(
+      const ASentencia: string): Boolean;
+    function EsReversionParcial(
+      const ASentencia: string): Boolean;
+    function EsCreacionSavepoint(
+      const ASentencia: string): Boolean;
+    function EsLiberacionSavepoint(
+      const ASentencia: string): Boolean;
+    function ExtraerNombreSavepoint(
+      const ASentencia, APrefijo: string): string;
+    function ExtraerNombreReversionParcial(
+      const ASentencia: string): string;
   public
     constructor Create(
       const APersistencia: IPersistenciaRestauracionBackup;
       AComprobarCancelacion: TComprobarCancelacionBackupEvent;
       AOnProgreso: TProgresoRestauracionBackupEvent;
-      ALog: TStrings);
+      ALog: TStrings;
+      ABytesEntreConfirmaciones: Int64 = 64 * 1024 * 1024);
     procedure Ejecutar(AFlujo: TStream);
     property SentenciasEjecutadas: Integer read FSentenciasEjecutadas;
     property Errores: Integer read FErrores;
@@ -136,6 +179,108 @@ uses
 
 const
   BYTES_ENTRE_PROGRESO_RESTAURACION = 4 * 1024 * 1024;
+  CABECERA_COPIA_FACTUZAM = '-- Backup generado:';
+  CABECERA_BASE_DATOS_FACTUZAM = '-- Base de datos:';
+  IDENTIFICADOR_COPIA_FACTUZAM = '-- FZAM_COPIA_SEGURIDAD_SQL';
+  IDENTIFICADOR_FIN_COPIA_FACTUZAM = '-- FZAM_FIN_COPIA_SEGURIDAD';
+  LINEAS_MAXIMAS_CABECERA_COPIA = 16;
+  CONFIRMACION_TRANSACCION_SEGURA =
+    'COMMIT AND NO CHAIN NO RELEASE';
+  REVERSION_TRANSACCION_SEGURA =
+    'ROLLBACK AND NO CHAIN NO RELEASE';
+
+function AgruparCreacionesIndices(
+  const AIndices: TStrings;
+  out ASentencia: string): Boolean;
+var
+  iIndice: Integer;
+  iPosicion: Integer;
+  iPosicionUnico: Integer;
+  sActual: string;
+  sClausulas: string;
+  sPrefijo: string;
+  sPrefijoActual: string;
+begin
+  ASentencia := '';
+  Result := Assigned(AIndices) and (AIndices.Count > 0);
+  iIndice := 0;
+  sClausulas := '';
+  sPrefijo := '';
+  while Result and (iIndice < AIndices.Count) do
+  begin
+    sActual := Trim(AIndices[iIndice]);
+    if EndsText(';', sActual) then
+      Delete(sActual, Length(sActual), 1);
+    iPosicion := Pos(' ADD INDEX ', sActual);
+    iPosicionUnico := Pos(' ADD UNIQUE INDEX ', sActual);
+    if (iPosicion = 0) or
+       ((iPosicionUnico > 0) and
+        (iPosicionUnico < iPosicion)) then
+    begin
+      iPosicion := iPosicionUnico;
+    end;
+    Result := (iPosicion > 0) and
+      StartsText('ALTER TABLE ', sActual);
+    if Result then
+    begin
+      sPrefijoActual := Trim(Copy(sActual, 1, iPosicion - 1));
+      if sPrefijo = '' then
+        sPrefijo := sPrefijoActual
+      else
+        Result := SameText(sPrefijo, sPrefijoActual);
+    end;
+    if Result then
+    begin
+      if sClausulas <> '' then
+        sClausulas := sClausulas + ',' + sLineBreak + '  ';
+      sClausulas := sClausulas +
+        Trim(Copy(sActual, iPosicion + 1, MaxInt));
+    end;
+    Inc(iIndice);
+  end;
+  if Result then
+    ASentencia := sPrefijo + ' ' + sClausulas;
+end;
+
+function QuitarComentariosInicialesNoEjecutables(
+  const ASentencia: string): string;
+var
+  bHayComentario: Boolean;
+  iFinComentario: Integer;
+begin
+  Result := TrimLeft(ASentencia);
+  bHayComentario :=
+    StartsText('/*', Result) and
+    not StartsText('/*!', Result) and
+    not StartsText('/*M!', Result);
+  while bHayComentario do
+  begin
+    iFinComentario := Pos('*/', Result);
+    if iFinComentario > 0 then
+    begin
+      Result := TrimLeft(
+        Copy(Result, iFinComentario + 2, MaxInt));
+      bHayComentario :=
+        StartsText('/*', Result) and
+        not StartsText('/*!', Result) and
+        not StartsText('/*M!', Result);
+    end
+    else
+    begin
+      bHayComentario := False;
+    end;
+  end;
+end;
+
+function EsComentarioEjecutableInicial(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := TrimLeft(ASentencia);
+  Result := StartsText('/*!', sInicio) or
+    StartsText('/*M!', sInicio);
+end;
 
 function TotalProgresoRestauracion(ATotalBytes: Int64): Integer;
 var
@@ -178,7 +323,8 @@ constructor TEjecutorRestauracionSQL.Create(
   const APersistencia: IPersistenciaRestauracionBackup;
   AComprobarCancelacion: TComprobarCancelacionBackupEvent;
   AOnProgreso: TProgresoRestauracionBackupEvent;
-  ALog: TStrings);
+  ALog: TStrings;
+  ABytesEntreConfirmaciones: Int64);
 begin
   inherited Create;
   if not Assigned(APersistencia) then
@@ -189,6 +335,12 @@ begin
   FComprobarCancelacion := AComprobarCancelacion;
   FOnProgreso := AOnProgreso;
   FLog := ALog;
+  if ABytesEntreConfirmaciones <= 0 then
+  begin
+    raise EArgumentOutOfRangeException.Create(
+      'ABytesEntreConfirmaciones');
+  end;
+  FBytesEntreConfirmaciones := ABytesEntreConfirmaciones;
 end;
 
 procedure TEjecutorRestauracionSQL.ComprobarCancelacion;
@@ -212,6 +364,16 @@ begin
   FErrores := 0;
   FPrimerError := '';
   FUltimaPosicionNotificada := 0;
+  FEsCopiaFactuzam := False;
+  FCopiaFactuzamConMarcadores := False;
+  FFinCopiaFactuzamDetectado := False;
+  FCabeceraLegacyDetectada := False;
+  FBaseDatosLegacyDetectada := False;
+  FHayDatosParaIndicesDiferidos := False;
+  FDatosDesdeDefinicionTabla := False;
+  FTransaccionConSavepoints := False;
+  FBytesDatosSinConfirmar := 0;
+  FLineasLeidas := 0;
   FTotal := TotalProgresoRestauracion(FFlujo.Size);
   FPosicion := 0;
   if Assigned(FLog) then
@@ -219,6 +381,39 @@ begin
     FLog.Add(
       ' -- El DDL de MariaDB puede confirmar cambios de forma implícita;');
     FLog.Add(' -- la restauración no promete rollback transaccional.');
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.DetectarCabeceraCopiaFactuzam(
+  const ALinea: string);
+var
+  sLinea: string;
+begin
+  if not FEsCopiaFactuzam and
+     (FLineasLeidas <= LINEAS_MAXIMAS_CABECERA_COPIA) and
+     (FSentenciasEjecutadas = 0) and
+     Assigned(FSentencia) and
+     (FSentencia.Length = 0) and
+     not FEnCadena and
+     not FEnComentarioBloque and
+     not FTieneContenidoEjecutable then
+  begin
+    sLinea := Trim(ALinea);
+    if SameText(IDENTIFICADOR_COPIA_FACTUZAM, sLinea) then
+    begin
+      FEsCopiaFactuzam := True;
+      FCopiaFactuzamConMarcadores := True;
+    end
+    else
+    begin
+      if StartsText(CABECERA_COPIA_FACTUZAM, sLinea) then
+        FCabeceraLegacyDetectada := True;
+      if StartsText(CABECERA_BASE_DATOS_FACTUZAM, sLinea) then
+        FBaseDatosLegacyDetectada := True;
+      FEsCopiaFactuzam :=
+        FCabeceraLegacyDetectada and
+        FBaseDatosLegacyDetectada;
+    end;
   end;
 end;
 
@@ -339,6 +534,161 @@ begin
   Result :=
     (Pos('CREATE ', sSentencia) > 0) and
     (Pos(' VIEW ', sSentencia) > 0);
+end;
+
+function TEjecutorRestauracionSQL.EsInsercionDatos(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := Trim(Copy(ASentencia, 1, 32));
+  Result := StartsText('INSERT INTO ', sInicio);
+end;
+
+function TEjecutorRestauracionSQL.EsCreacionIndiceSecundario(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 512)));
+  sInicio := StringReplace(sInicio, #13, ' ', [rfReplaceAll]);
+  sInicio := StringReplace(sInicio, #10, ' ', [rfReplaceAll]);
+  Result := StartsText('ALTER TABLE ', sInicio) and
+    ((Pos(' ADD INDEX ', sInicio) > 0) or
+     (Pos(' ADD UNIQUE INDEX ', sInicio) > 0));
+end;
+
+function TEjecutorRestauracionSQL.EsActivacionIndices(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 512)));
+  Result := StartsText('/*!40000 ALTER TABLE ', sInicio) and
+    (Pos(' ENABLE KEYS */', sInicio) > 0);
+end;
+
+function TEjecutorRestauracionSQL.EsInicioDefinicionTabla(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := Trim(Copy(ASentencia, 1, 64));
+  Result := StartsText('DROP TABLE ', sInicio) or
+    StartsText('CREATE TABLE ', sInicio);
+end;
+
+function TEjecutorRestauracionSQL.EsConfirmacionTransaccion(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 64)));
+  Result := SameText('COMMIT', sInicio) or
+    StartsText('COMMIT ', sInicio);
+end;
+
+function TEjecutorRestauracionSQL.EsReversionTransaccion(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 64)));
+  sInicio := StringReplace(sInicio, #13, ' ', [rfReplaceAll]);
+  sInicio := StringReplace(sInicio, #10, ' ', [rfReplaceAll]);
+  sInicio := StringReplace(sInicio, #9, ' ', [rfReplaceAll]);
+  Result :=
+    (SameText('ROLLBACK', sInicio) or
+     StartsText('ROLLBACK ', sInicio)) and
+    not EsReversionParcial(ASentencia);
+end;
+
+function TEjecutorRestauracionSQL.EsReversionParcial(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 128)));
+  sInicio := StringReplace(sInicio, #13, ' ', [rfReplaceAll]);
+  sInicio := StringReplace(sInicio, #10, ' ', [rfReplaceAll]);
+  sInicio := StringReplace(sInicio, #9, ' ', [rfReplaceAll]);
+  Result := StartsText('ROLLBACK ', sInicio) and
+    (Pos(' TO ', ' ' + sInicio + ' ') > 0);
+end;
+
+function TEjecutorRestauracionSQL.EsControlIndicesVersionado(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 512)));
+  Result := StartsText('/*!40000 ALTER TABLE ', sInicio) and
+    ((Pos(' ENABLE KEYS */', sInicio) > 0) or
+     (Pos(' DISABLE KEYS */', sInicio) > 0));
+end;
+
+function TEjecutorRestauracionSQL.EsCreacionSavepoint(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 64)));
+  Result := StartsText('SAVEPOINT ', sInicio);
+end;
+
+function TEjecutorRestauracionSQL.EsLiberacionSavepoint(
+  const ASentencia: string): Boolean;
+var
+  sInicio: string;
+begin
+  sInicio := UpperCase(Trim(Copy(ASentencia, 1, 64)));
+  Result := StartsText('RELEASE SAVEPOINT ', sInicio);
+end;
+
+function TEjecutorRestauracionSQL.ExtraerNombreSavepoint(
+  const ASentencia, APrefijo: string): string;
+begin
+  Result := Trim(Copy(ASentencia, Length(APrefijo) + 1, MaxInt));
+end;
+
+function TEjecutorRestauracionSQL.ExtraerNombreReversionParcial(
+  const ASentencia: string): string;
+var
+  iPosicion: Integer;
+  sNormalizada: string;
+begin
+  Result := '';
+  sNormalizada := UpperCase(ASentencia);
+  sNormalizada := StringReplace(
+    sNormalizada, #13, ' ', [rfReplaceAll]);
+  sNormalizada := StringReplace(
+    sNormalizada, #10, ' ', [rfReplaceAll]);
+  sNormalizada := StringReplace(
+    sNormalizada, #9, ' ', [rfReplaceAll]);
+  iPosicion := Pos(' TO ', sNormalizada);
+  if iPosicion > 0 then
+  begin
+    Result := Trim(Copy(ASentencia, iPosicion + 4, MaxInt));
+    if StartsText('SAVEPOINT ', Result) then
+    begin
+      Result := Trim(Copy(Result, Length('SAVEPOINT') + 1, MaxInt));
+    end;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.DetectarFinCopiaFactuzam(
+  const ALinea: string);
+begin
+  if FCopiaFactuzamConMarcadores and
+     Assigned(FSentencia) and
+     (FSentencia.Length = 0) and
+     not FEnCadena and
+     not FEnComentarioBloque and
+     not FTieneContenidoEjecutable and
+     SameText(IDENTIFICADOR_FIN_COPIA_FACTUZAM, Trim(ALinea)) then
+  begin
+    FFinCopiaFactuzamDetectado := True;
+  end;
 end;
 
 procedure TEjecutorRestauracionSQL.ProcesarComentarioBloque(
@@ -498,57 +848,262 @@ begin
   end;
 end;
 
-procedure TEjecutorRestauracionSQL.EjecutarSentenciaActual;
+procedure TEjecutorRestauracionSQL.EjecutarEnPersistencia(
+  const ASentencia: string;
+  AContabilizar: Boolean);
 var
   oReloj: TStopwatch;
   sResumen: string;
+begin
+  ComprobarCancelacion;
+  if AContabilizar then
+    Inc(FSentenciasEjecutadas);
+  oReloj := TStopwatch.StartNew;
+  try
+    if EsCreacionVista(ASentencia) then
+      NormalizarColaciones;
+    FPersistencia.EjecutarSentencia(ASentencia);
+    if AContabilizar and Assigned(FLog) and
+       ((FSentenciasEjecutadas mod 250) = 0) then
+    begin
+      FLog.Add(Format(
+        ' -- [OK] Sentencias ejecutadas: %d | progreso %d / %d',
+        [FSentenciasEjecutadas, FPosicion, FTotal]));
+    end;
+  except
+    on E: Exception do
+    begin
+      Inc(FErrores);
+      if FPrimerError = '' then
+        FPrimerError := E.Message;
+      sResumen := ASentencia;
+      if Length(sResumen) > 4000 then
+      begin
+        sResumen := Copy(sResumen, 1, 4000) + sLineBreak + '...';
+      end;
+      if Assigned(FLog) then
+      begin
+        FLog.Add(Format(
+          ' -- [ERROR] Sentencia %d: %s | Tiempo: %d ms',
+          [FSentenciasEjecutadas, E.Message,
+           oReloj.ElapsedMilliseconds]));
+        FLog.Add(sResumen);
+        FLog.Add('--------------------------------------------------');
+      end;
+      raise;
+    end;
+  end;
+  ComprobarCancelacion;
+end;
+
+procedure TEjecutorRestauracionSQL.ConfirmarDatosPendientes(
+  AForzar: Boolean);
+begin
+  if FEsCopiaFactuzam and
+     not FTransaccionConSavepoints and
+     (not Assigned(FSavepointsActivos) or
+      (FSavepointsActivos.Count = 0)) and
+     (FBytesDatosSinConfirmar > 0) and
+     (AForzar or
+      (FBytesDatosSinConfirmar >= FBytesEntreConfirmaciones)) then
+  begin
+    EjecutarEnPersistencia(CONFIRMACION_TRANSACCION_SEGURA, False);
+    FBytesDatosSinConfirmar := 0;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.EjecutarIndicesDiferidos;
+var
+  iIndice: Integer;
+  sIndicesAgrupados: string;
+begin
+  if Assigned(FIndicesDiferidos) and
+     (FIndicesDiferidos.Count > 0) and
+     not FTransaccionConSavepoints and
+     (not Assigned(FSavepointsActivos) or
+      (FSavepointsActivos.Count = 0)) then
+  begin
+    ConfirmarDatosPendientes(True);
+    if AgruparCreacionesIndices(
+         FIndicesDiferidos,
+         sIndicesAgrupados) then
+    begin
+      EjecutarEnPersistencia(sIndicesAgrupados);
+    end
+    else
+    begin
+      for iIndice := 0 to FIndicesDiferidos.Count - 1 do
+      begin
+        EjecutarEnPersistencia(FIndicesDiferidos[iIndice]);
+      end;
+    end;
+    if Assigned(FLog) then
+    begin
+      FLog.Add(Format(
+        ' -- Índices secundarios creados tras cargar datos: %d',
+        [FIndicesDiferidos.Count]));
+    end;
+    FIndicesDiferidos.Clear;
+    FHayDatosParaIndicesDiferidos := False;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.EjecutarSentenciaActual;
+var
+  bActivacionIndices: Boolean;
+  bConfirmacion: Boolean;
+  bControlIndicesVersionado: Boolean;
+  bCreacionSavepoint: Boolean;
+  bCreacionIndice: Boolean;
+  bInicioTabla: Boolean;
+  bInsercionDatos: Boolean;
+  bReversion: Boolean;
+  bReversionParcial: Boolean;
+  bLiberacionSavepoint: Boolean;
+  iSavepoint: Integer;
+  sNombreSavepoint: string;
   sSentencia: string;
+  sSentenciaClasificada: string;
 begin
   sSentencia := Trim(FSentencia.ToString);
   FSentencia.Clear;
+  if FFinCopiaFactuzamDetectado and
+     FTieneContenidoEjecutable then
+  begin
+    raise EInvalidOperation.Create(
+      'La copia SQL contiene datos después de su marcador final');
+  end;
   if FTieneContenidoEjecutable and (sSentencia <> '') then
   begin
-    ComprobarCancelacion;
-    Inc(FSentenciasEjecutadas);
-    oReloj := TStopwatch.StartNew;
-    try
-      if EsCreacionVista(sSentencia) then
+    sSentenciaClasificada :=
+      QuitarComentariosInicialesNoEjecutables(sSentencia);
+    bInsercionDatos := EsInsercionDatos(sSentenciaClasificada);
+    bCreacionIndice :=
+      EsCreacionIndiceSecundario(sSentenciaClasificada);
+    bActivacionIndices :=
+      EsActivacionIndices(sSentenciaClasificada);
+    bControlIndicesVersionado :=
+      EsControlIndicesVersionado(sSentenciaClasificada);
+    bInicioTabla := EsInicioDefinicionTabla(sSentenciaClasificada);
+    bConfirmacion :=
+      EsConfirmacionTransaccion(sSentenciaClasificada);
+    bReversion := EsReversionTransaccion(sSentenciaClasificada);
+    bReversionParcial := EsReversionParcial(sSentenciaClasificada);
+    bCreacionSavepoint := EsCreacionSavepoint(sSentenciaClasificada);
+    bLiberacionSavepoint :=
+      EsLiberacionSavepoint(sSentenciaClasificada);
+    if FEsCopiaFactuzam and
+       EsComentarioEjecutableInicial(sSentenciaClasificada) and
+       not bControlIndicesVersionado then
+    begin
+      raise EInvalidOperation.Create(
+        'La copia SQL contiene un comentario ejecutable no admitido');
+    end;
+    if FEsCopiaFactuzam and bCreacionIndice and
+       not FDatosDesdeDefinicionTabla then
+    begin
+      FIndicesDiferidos.Add(sSentencia);
+    end
+    else
+    begin
+      if FEsCopiaFactuzam and not bInsercionDatos then
       begin
-        NormalizarColaciones;
+        if not bConfirmacion and
+           not bReversion and
+           not bReversionParcial and
+           not bCreacionSavepoint and
+           not bLiberacionSavepoint then
+          ConfirmarDatosPendientes(True);
+        if Assigned(FIndicesDiferidos) and
+           (FIndicesDiferidos.Count > 0) and
+           (bInicioTabla or
+             (FHayDatosParaIndicesDiferidos and
+              not bActivacionIndices and
+              not bConfirmacion and
+              not bReversion and
+              not bReversionParcial and
+              not bCreacionSavepoint and
+              not bLiberacionSavepoint and
+              (not Assigned(FSavepointsActivos) or
+               (FSavepointsActivos.Count = 0)))) then
+        begin
+          EjecutarIndicesDiferidos;
+        end;
       end;
-      FPersistencia.EjecutarSentencia(sSentencia);
-      if Assigned(FLog) and ((FSentenciasEjecutadas mod 250) = 0) then
+      if FEsCopiaFactuzam and bConfirmacion and
+         (SameText('COMMIT', Trim(sSentenciaClasificada)) or
+          SameText('COMMIT WORK', Trim(sSentenciaClasificada))) then
       begin
-        FLog.Add(Format(
-          ' -- [OK] Sentencias ejecutadas: %d | progreso %d / %d',
-          [FSentenciasEjecutadas, FPosicion, FTotal]));
+        sSentencia := CONFIRMACION_TRANSACCION_SEGURA;
       end;
-    except
-      on E: Exception do
+      if FEsCopiaFactuzam and bReversion and
+         (SameText('ROLLBACK', Trim(sSentenciaClasificada)) or
+          SameText('ROLLBACK WORK', Trim(sSentenciaClasificada))) then
       begin
-        Inc(FErrores);
-        if FPrimerError = '' then
+        sSentencia := REVERSION_TRANSACCION_SEGURA;
+      end;
+      EjecutarEnPersistencia(sSentencia);
+      if bConfirmacion or bReversion then
+      begin
+        FBytesDatosSinConfirmar := 0;
+        FTransaccionConSavepoints := False;
+        if Assigned(FSavepointsActivos) then
+          FSavepointsActivos.Clear;
+      end;
+      if bCreacionSavepoint and Assigned(FSavepointsActivos) then
+      begin
+        sNombreSavepoint := ExtraerNombreSavepoint(
+          sSentenciaClasificada,
+          'SAVEPOINT');
+        iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
+        if iSavepoint >= 0 then
+          FSavepointsActivos.Delete(iSavepoint);
+        FSavepointsActivos.Add(sNombreSavepoint);
+        FTransaccionConSavepoints := True;
+      end;
+      if bLiberacionSavepoint and Assigned(FSavepointsActivos) then
+      begin
+        sNombreSavepoint := ExtraerNombreSavepoint(
+          sSentenciaClasificada,
+          'RELEASE SAVEPOINT');
+        iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
+        if iSavepoint >= 0 then
+          FSavepointsActivos.Delete(iSavepoint);
+      end;
+      if bReversionParcial and Assigned(FSavepointsActivos) then
+      begin
+        sNombreSavepoint :=
+          ExtraerNombreReversionParcial(sSentenciaClasificada);
+        iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
+        if iSavepoint >= 0 then
         begin
-          FPrimerError := E.Message;
+          while FSavepointsActivos.Count > iSavepoint + 1 do
+            FSavepointsActivos.Delete(FSavepointsActivos.Count - 1);
         end;
-        sResumen := sSentencia;
-        if Length(sResumen) > 4000 then
+      end;
+      if bInicioTabla then
+        FDatosDesdeDefinicionTabla := False;
+      if FEsCopiaFactuzam and bInsercionDatos then
+      begin
+        FDatosDesdeDefinicionTabla := True;
+        if Assigned(FIndicesDiferidos) and
+           (FIndicesDiferidos.Count > 0) then
         begin
-          sResumen := Copy(sResumen, 1, 4000) + sLineBreak + '...';
+          FHayDatosParaIndicesDiferidos := True;
         end;
-        if Assigned(FLog) then
-        begin
-          FLog.Add(Format(
-            ' -- [ERROR] Sentencia %d: %s | Tiempo: %d ms',
-            [FSentenciasEjecutadas, E.Message,
-             oReloj.ElapsedMilliseconds]));
-          FLog.Add(sResumen);
-          FLog.Add('--------------------------------------------------');
-        end;
-        raise;
+        Inc(
+          FBytesDatosSinConfirmar,
+          TEncoding.UTF8.GetByteCount(sSentencia));
+        ConfirmarDatosPendientes(False);
+      end;
+      if FEsCopiaFactuzam and
+         (bActivacionIndices or bConfirmacion or bReversion) and
+         Assigned(FIndicesDiferidos) and
+         (FIndicesDiferidos.Count > 0) then
+      begin
+        EjecutarIndicesDiferidos;
       end;
     end;
-    ComprobarCancelacion;
   end;
   FTieneContenidoEjecutable := False;
 end;
@@ -563,6 +1118,9 @@ begin
   begin
     ComprobarCancelacion;
     sLinea := ALector.ReadLine;
+    Inc(FLineasLeidas);
+    DetectarCabeceraCopiaFactuzam(sLinea);
+    DetectarFinCopiaFactuzam(sLinea);
     if (FSentencia.Length = 0) and
        (not FEnCadena) and
        (not FEnComentarioBloque) and
@@ -590,14 +1148,38 @@ begin
   ComprobarCancelacion;
   FPersistencia.PrepararDestino;
   Inicializar(AFlujo);
-  FSentencia := TStringBuilder.Create;
+  FIndicesDiferidos := nil;
+  FSavepointsActivos := nil;
+  FSentencia := nil;
   try
+    FIndicesDiferidos := TStringList.Create;
+    FSavepointsActivos := TStringList.Create;
+    FSentencia := TStringBuilder.Create;
     oLector := TStreamReader.Create(AFlujo, TEncoding.UTF8, True);
     try
       NotificarProgreso(True);
       ProcesarLectura(oLector);
       ComprobarCancelacion;
       EjecutarSentenciaActual;
+      if FCopiaFactuzamConMarcadores and
+         not FFinCopiaFactuzamDetectado then
+      begin
+        raise EInvalidOperation.Create(
+          'La copia SQL está incompleta: falta el marcador final');
+      end;
+      if FEsCopiaFactuzam and
+         (FSavepointsActivos.Count > 0) then
+      begin
+        raise EInvalidOperation.Create(
+          'La copia SQL termina con savepoints activos');
+      end;
+      if FEsCopiaFactuzam and
+         FTransaccionConSavepoints then
+      begin
+        raise EInvalidOperation.Create(
+          'La copia SQL no cierra la transacción con savepoints');
+      end;
+      EjecutarIndicesDiferidos;
       FPersistencia.ValidarEstructura;
       FPosicion := FTotal;
       NotificarProgreso(True);
@@ -612,6 +1194,8 @@ begin
     end;
   finally
     FreeAndNil(FSentencia);
+    FreeAndNil(FSavepointsActivos);
+    FreeAndNil(FIndicesDiferidos);
   end;
 end;
 
@@ -697,6 +1281,7 @@ begin
   FFilasProcesadas := 0;
   if FOptions.WithData then
     ContarFilasTotal;
+  FWriter.AddComment('FZAM_COPIA_SEGURIDAD_SQL');
   FWriter.AddComment('========================================');
   FWriter.AddComment('Backup generado: ' + DateTimeToStr(Now));
   FWriter.AddComment('Base de datos: ' + FLecturas.Esquema.GetDatabaseName);
@@ -714,7 +1299,10 @@ begin
   // Deshabilitar checks para importar más rápido
   FWriter.AddCommand('SET FOREIGN_KEY_CHECKS=0;');
   FWriter.AddCommand('SET SQL_MODE="NO_AUTO_VALUE_ON_ZERO";');
-  FWriter.AddCommand('SET AUTOCOMMIT=0;');
+  if FOptions.UseTransactions then
+    FWriter.AddCommand('SET AUTOCOMMIT=0;')
+  else
+    FWriter.AddCommand('SET AUTOCOMMIT=1;');
   FWriter.AddCommand('');
   
   // Backup de tablas (estructura y datos)
@@ -742,12 +1330,12 @@ begin
   
   if FOptions.UseTransactions then
   begin
-    FWriter.AddCommand('COMMIT;');
+    FWriter.AddCommand(CONFIRMACION_TRANSACCION_SEGURA + ';');
   end;
   
   FWriter.AddCommand('');
   FWriter.AddComment('Backup completado: ' + DateTimeToStr(Now));
-  FWriter.AddComment('FZAM_FIN_COPIA_SEGURIDAD');
+  FWriter.AddComment(IDENTIFICADOR_FIN_COPIA_FACTUZAM);
 end;
 
 procedure TDBBackupEngine.BackupTables;
@@ -780,7 +1368,7 @@ procedure TDBBackupEngine.BackupTable(const TableName: string);
 var
   TableInfo: TTableInfo;
   Indexes: TArray<TIndexInfo>;
-  Idx: TIndexInfo;
+  sIndicesSecundarios: string;
 begin
   FWriter.AddComment('');
   FWriter.AddComment('Tabla: ' + TableName);
@@ -795,23 +1383,28 @@ begin
   
   // Obtener estructura
   TableInfo := FLecturas.Esquema.GetTableStructure(TableName);
-  Indexes := FLecturas.Esquema.GetTableIndexes(TableName);
   try
+    Indexes := FLecturas.Esquema.GetTableIndexes(TableName);
     // Crear tabla
     FWriter.AddCommand(FCreacion.GenerateCreateTableSQL(TableInfo, Indexes));
     
-    // Crear índices secundarios (los que no son PK)
-    for Idx in Indexes do
-    begin
-      if not Idx.IsPrimary then
-        FWriter.AddCommand(FCreacion.GenerateIndexDefinition(TableName, Idx));
-    end;
-    
-    FWriter.AddCommand('');
-    
     // Volcar datos si está habilitado
     if FOptions.WithData then
+    begin
       BackupTableData(TableName);
+      if FOptions.UseTransactions then
+        FWriter.AddCommand(CONFIRMACION_TRANSACCION_SEGURA + ';');
+    end;
+
+    // En InnoDB, cargar primero evita mantener cada árbol secundario fila
+    // a fila cuando la tabla deja de caber en el buffer pool.
+    sIndicesSecundarios := FCreacion.GenerarIndicesSecundarios(
+      TableName,
+      Indexes);
+    if sIndicesSecundarios <> '' then
+      FWriter.AddCommand(sIndicesSecundarios);
+
+    FWriter.AddCommand('');
 
   finally
     TableInfo.Free;
