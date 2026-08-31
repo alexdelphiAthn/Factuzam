@@ -22,12 +22,19 @@ uses
   System.StrUtils, Data.DB, Vcl.Controls, Vcl.ExtCtrls, Vcl.Graphics,
   cxGraphics, cxEdit, cxTextEdit, cxDropDownEdit, cxCurrencyEdit,
   cxDataStorage, cxGrid, cxGridCustomTableView, cxGridTableView,
-  cxGridDBTableView,
+  cxGridDBTableView, cxNavigator,
   inLibColumnasSkuIntf, inLibGridTallasInline,
   inLibModoTallasIntf, inLibModoTallasBuscador,
   inLibDistribuidorTallas;
 
 type
+  TEstadoNavegadorModoTallas = record
+    AlClickOriginal : TcxNavigatorButtonClickEvent;
+    BotonesVisibles: array[0..NavigatorButtonCount - 1] of Boolean;
+    VisibleOriginal: Boolean;
+    AnadirOriginal : Boolean;
+    Instalado      : Boolean;
+  end;
   TPresentacionModoTallas = class
   private
     FConfig: TConfigColumnasSku;
@@ -55,6 +62,7 @@ type
     FOnResolverEntrada: TEntradaElegidaTallas;
     FOnEntrarEdicion: TNotifyEvent;
     FOnSalirEdicion: TNotifyEvent;
+    FNavegador: TEstadoNavegadorModoTallas;
     // Guardia de reentrada del modal distribuidor (OnEditing puede
     // dispararse varias veces mientras el modal se abre).
     FDistribAbierto: Boolean;
@@ -64,6 +72,11 @@ type
     procedure CrearColumnasTalla;
     procedure CrearColumnasOcultas;
     procedure EngancharEventosVista;
+    procedure InstalarNavegador;
+    procedure RestaurarNavegador;
+    procedure NavegadorButtonClick(Sender: TObject;
+      AButtonIndex: Integer; var ADone: Boolean);
+    function EsAltaVaciaPendiente: Boolean;
     procedure EditorSalir(Sender: TObject);
     procedure VistaInitEdit(Sender: TcxCustomGridTableView;
       AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
@@ -171,6 +184,7 @@ end;
 
 destructor TPresentacionModoTallas.Destroy;
 begin
+  RestaurarNavegador;
   FreeAndNil(FBuscador);
   FreeAndNil(FTimerRecarga);
   FreeAndNil(FTimerCarga);
@@ -296,6 +310,97 @@ begin
   FConfig.View.OptionsView.ColumnAutoWidth := False;
 end;
 
+procedure TPresentacionModoTallas.InstalarNavegador;
+var
+  i: Integer;
+begin
+  if (FConfig.View <> nil) and (not FNavegador.Instalado) then
+  begin
+    FNavegador.AlClickOriginal :=
+      FConfig.View.Navigator.Buttons.OnButtonClick;
+    FNavegador.VisibleOriginal := FConfig.View.Navigator.Visible;
+    FNavegador.AnadirOriginal :=
+      FConfig.View.OptionsData.Appending;
+    for i := 0 to NavigatorButtonCount - 1 do
+      FNavegador.BotonesVisibles[i] :=
+        FConfig.View.Navigator.Buttons[i].Visible;
+    FConfig.View.Navigator.Visible := True;
+    FConfig.View.OptionsData.Appending := True;
+    FConfig.View.Navigator.Buttons.First.Visible := True;
+    FConfig.View.Navigator.Buttons.Prior.Visible := True;
+    FConfig.View.Navigator.Buttons.Next.Visible := True;
+    FConfig.View.Navigator.Buttons.Last.Visible := True;
+    FConfig.View.Navigator.Buttons.Insert.Visible := False;
+    FConfig.View.Navigator.Buttons.Append.Visible := True;
+    FConfig.View.Navigator.Buttons.Delete.Visible := True;
+    FConfig.View.Navigator.Buttons.PriorPage.Visible := False;
+    FConfig.View.Navigator.Buttons.NextPage.Visible := False;
+    FConfig.View.Navigator.Buttons.Edit.Visible := False;
+    FConfig.View.Navigator.Buttons.Post.Visible := False;
+    FConfig.View.Navigator.Buttons.Cancel.Visible := False;
+    FConfig.View.Navigator.Buttons.Refresh.Visible := False;
+    FConfig.View.Navigator.Buttons.SaveBookmark.Visible := False;
+    FConfig.View.Navigator.Buttons.GotoBookmark.Visible := False;
+    FConfig.View.Navigator.Buttons.Filter.Visible := False;
+    FConfig.View.Navigator.Buttons.OnButtonClick :=
+      NavegadorButtonClick;
+    FNavegador.Instalado := True;
+  end;
+end;
+
+procedure TPresentacionModoTallas.RestaurarNavegador;
+var
+  i: Integer;
+begin
+  if (FConfig.View <> nil) and FNavegador.Instalado then
+  begin
+    FConfig.View.Navigator.Buttons.OnButtonClick :=
+      FNavegador.AlClickOriginal;
+    FConfig.View.Navigator.Visible := FNavegador.VisibleOriginal;
+    FConfig.View.OptionsData.Appending := FNavegador.AnadirOriginal;
+    for i := 0 to NavigatorButtonCount - 1 do
+      FConfig.View.Navigator.Buttons[i].Visible :=
+        FNavegador.BotonesVisibles[i];
+    FNavegador.Instalado := False;
+  end;
+end;
+
+function TPresentacionModoTallas.EsAltaVaciaPendiente: Boolean;
+var
+  oDataSet: TDataSet;
+  oCampo: TField;
+begin
+  Result := False;
+  oDataSet := FConfig.Cds;
+  if (oDataSet <> nil) and oDataSet.Active and
+     (oDataSet.State = dsInsert) then
+  begin
+    Result := True;
+    oCampo := oDataSet.FindField(FConfig.Campos.CodigoArt);
+    if (oCampo <> nil) and (Trim(oCampo.AsString) <> '') then
+      Result := False;
+    oCampo := oDataSet.FindField(FConfig.Campos.CodigoUnidad);
+    if (oCampo <> nil) and (Trim(oCampo.AsString) <> '') then
+      Result := False;
+  end;
+end;
+
+procedure TPresentacionModoTallas.NavegadorButtonClick(
+  Sender: TObject; AButtonIndex: Integer; var ADone: Boolean);
+begin
+  if (AButtonIndex in [NBDI_INSERT, NBDI_APPEND]) and
+     EsAltaVaciaPendiente then
+  begin
+    // Al entrar por primera vez el host ya ha creado la linea 0000.
+    // Reutilizarla evita que el navegador intente postearla vacia y
+    // que el BeforePost aborte la primera pulsacion de '+'.
+    ADone := True;
+    MostrarEditor;
+  end
+  else if Assigned(FNavegador.AlClickOriginal) then
+    FNavegador.AlClickOriginal(Sender, AButtonIndex, ADone);
+end;
+
 procedure TPresentacionModoTallas.Construir;
 begin
   // El desplegable de busqueda debe existir antes que su columna.
@@ -311,6 +416,7 @@ begin
     FConfig.View.EndUpdate;
   end;
   EngancharEventosVista;
+  InstalarNavegador;
 end;
 
 procedure TPresentacionModoTallas.CrearGestor;

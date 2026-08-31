@@ -194,8 +194,6 @@ type
     procedure FormDestroy(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
-    procedure btnAnadirLineaClick(Sender: TObject);
-    procedure btnBorrarLineaClick(Sender: TObject);
     procedure btnTallasHorizontalClick(Sender: TObject);
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
@@ -1667,6 +1665,7 @@ end;
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
 begin
   inherited;
+  ConfigurarEdicionExcelLineasDocumento(tvLineasPedido);
   EntrarGridLineasDocumento(
     Self, FColsModoConstruido,
     FColsModoConstruido and
@@ -1674,7 +1673,7 @@ begin
     Assigned(dmmPedidosCompra) and
     dmmPedidosCompra.HayLineasSinPivotar,
     FModoEntrada, AsegurarPrimeraLineaPedidoCompra,
-    ConstruirModoEntrada);
+    ConstruirModoEntrada, False);
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
@@ -1709,21 +1708,6 @@ begin
     lblContextoTalla.Caption := '';
     lblContextoTalla.Visible := False;
   end;
-end;
-
-procedure TfrmMtoPedidosCompra.btnAnadirLineaClick(Sender: TObject);
-begin
-  inherited;
-  AsegurarCabeceraPersistidaParaLineas;
-  dmmPedidosCompra.unqryPedidosCompraLineas.Append;
-end;
-
-procedure TfrmMtoPedidosCompra.btnBorrarLineaClick(Sender: TObject);
-begin
-  inherited;
-  if MessageDlg(SPreguntaEliminarLineaPedidoCompra,
-                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    dmmPedidosCompra.unqryPedidosCompraLineas.Delete;
 end;
 
 // Recoge las cantidades "A recibir" tecleadas en modo vertical (no

@@ -459,70 +459,25 @@
           AlignSplitter = salTop
           Control = pnlTopFicha
         end
-        object pnlBotonesAcciones: TPanel
+        object pnlBodyFicha: TPanel
           Left = 0
           Top = 208
           Width = 937
-          Height = 38
-          Align = alTop
-          BevelOuter = bvNone
-          TabOrder = 1
-          object btnAnadirLinea: TcxButton
-            Left = 8
-            Top = 6
-            Width = 110
-            Height = 26
-            Caption = 'A'#241'adir l'#237'nea'
-            TabOrder = 0
-            OnClick = btnAnadirLineaClick
-          end
-          object btnBorrarLinea: TcxButton
-            Left = 124
-            Top = 6
-            Width = 110
-            Height = 26
-            Caption = 'Borrar l'#237'nea'
-            TabOrder = 1
-            OnClick = btnBorrarLineaClick
-          end
-          object btnTallasHorizontal: TcxButton
-            Left = 256
-            Top = 6
-            Width = 170
-            Height = 26
-            Caption = 'Tallas en horizontal'
-            TabOrder = 2
-            OnClick = btnTallasHorizontalClick
-          end
-          object btnAtributosColumna: TcxButton
-            Left = 432
-            Top = 6
-            Width = 180
-            Height = 26
-            Caption = 'Atributo por columna'
-            TabOrder = 3
-            OnClick = btnAtributosColumnaClick
-          end
-        end
-        object pnlBodyFicha: TPanel
-          Left = 0
-          Top = 246
-          Width = 937
-          Height = 371
+          Height = 409
           Align = alClient
           BevelOuter = bvNone
-          TabOrder = 2
+          TabOrder = 1
           object pcAlbaran: TcxPageControl
             Left = 0
             Top = 0
             Width = 937
-            Height = 371
+            Height = 409
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsTotales
             Properties.CustomButtons.Buttons = <>
             OnChange = pcAlbaranChange
-            ClientRectBottom = 367
+            ClientRectBottom = 405
             ClientRectLeft = 4
             ClientRectRight = 933
             ClientRectTop = 28
@@ -532,12 +487,25 @@
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 339
+                Height = 377
                 Align = alClient
                 TabOrder = 0
                 OnEnter = cxgrdLineasAlbaranEnter
                 OnExit = cxgrdLineasAlbaranExit
                 object tvLineasAlbaran: TcxGridDBTableView
+                  Navigator.Buttons.PriorPage.Visible = False
+                  Navigator.Buttons.NextPage.Visible = False
+                  Navigator.Buttons.Insert.Visible = False
+                  Navigator.Buttons.Append.Visible = True
+                  Navigator.Buttons.Edit.Visible = False
+                  Navigator.Buttons.Post.Visible = False
+                  Navigator.Buttons.Cancel.Visible = False
+                  Navigator.Buttons.Refresh.Visible = False
+                  Navigator.Buttons.SaveBookmark.Visible = False
+                  Navigator.Buttons.GotoBookmark.Visible = False
+                  Navigator.Buttons.Filter.Visible = False
+                  Navigator.Buttons.ConfirmDelete = True
+                  Navigator.Visible = True
                   OnCustomDrawCell = tvLineasAlbaranCustomDrawCell
                   OnEditing = tvLineasAlbaranEditing
                   OnFocusedRecordChanged = tvLineasAlbaranFocusedRecordChanged
@@ -617,7 +585,7 @@
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 339
+                Height = 377
                 Align = alClient
                 TabOrder = 0
                 object tvMovimientosProveedor: TcxGridDBTableView
@@ -695,7 +663,7 @@
                 Left = 0
                 Top = 0
                 Width = 929
-                Height = 339
+                Height = 377
                 VertScrollBar.Position = 32
                 Align = alClient
                 BorderStyle = bsNone
@@ -1261,7 +1229,7 @@
                 DataBinding.DataField = 'OBSERVACIONES_ALBC'
                 DataBinding.DataSource = dsTablaG
                 TabOrder = 0
-                Height = 339
+                Height = 377
                 Width = 929
               end
             end

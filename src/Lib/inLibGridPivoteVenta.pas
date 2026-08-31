@@ -108,14 +108,16 @@ function CrearModoEntradaGridPivoteVenta(
 implementation
 
 uses
-  Winapi.Windows, System.SysUtils, System.Variants, System.UITypes,
+  Winapi.Windows, System.StrUtils, System.SysUtils, System.Variants,
+  System.UITypes,
   Vcl.Dialogs,
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
   inLibLogIntf,
-  inLibAtributosPaleta, inLibGridPivoteVentaPresentacion,
-  inLibGridPivoteVentaVista, inLibMsgArticulos,
-  inLibMsgVentas, inLibPivoteVentaModelo;
+  inLibGridPivoteVentaPresentacion, inLibGridPivoteVentaVista,
+  inLibMsgArticulos,
+  inLibLineaSku, inLibModoTallasModelo, inLibMsgVentas,
+  inLibPivoteVentaModelo;
 
 type
   TRegistroPivoteVenta = class
@@ -150,8 +152,12 @@ type
     function CdsLineas: TDataSet;
     function CampoTexto(ADs: TDataSet; const ACampo: string): string;
     function CampoFloat(ADs: TDataSet; const ACampo: string): Double;
+    procedure PonerTexto(ADs: TDataSet; const ACampo,
+                         AValor: string);
     procedure PonerFloat(ADs: TDataSet; const ACampo: string;
                          AValor: Double);
+    procedure PrepararLineaSku(ADs: TDataSet;
+                               const AArticulo, ASku: string);
     // Sincroniza el flag de guardado con la presentacion para que los
     // validadores inplace no reentren durante una escritura.
     procedure PonerGuardando(AGuardando: Boolean);
@@ -171,10 +177,9 @@ type
     // Borra las lineas SKU reales del grupo ALineaBase (sin recargar
     // el pivote). Devuelve el numero de lineas borradas.
     function BorrarLineasGrupo(ALineaBase: Integer): Integer;
-    // Pide color/talla con la paleta de swatches (mismo selector que
-    // el modo SKU vertical) y compone el SKU completo ART/COLOR/TALLA.
-    // Devuelve '' si el usuario cancela.
-    function ElegirSkuConPaleta(const ACodArt: string): string;
+    // Compone un SKU semilla para abrir el grupo horizontal. La talla
+    // se toma en silencio; los atributos no pivotados pueden pedir valor.
+    function ElegirSkuHorizontal(const ACodArt: string): string;
     // Callbacks tipados de la presentacion.
     procedure AlRecargar(Sender: TObject);
     procedure AlEditarCantidad(AClave: Int64; AValor: Double;
@@ -328,6 +333,19 @@ begin
   end;
 end;
 
+procedure TGridPivoteVenta.PonerTexto(ADs: TDataSet;
+  const ACampo, AValor: string);
+var
+  oCampo: TField;
+begin
+  if (ADs <> nil) and (ACampo <> '') then
+  begin
+    oCampo := ADs.FindField(ACampo);
+    if (oCampo <> nil) and (not oCampo.ReadOnly) then
+      oCampo.AsString := AValor;
+  end;
+end;
+
 procedure TGridPivoteVenta.PonerFloat(ADs: TDataSet;
   const ACampo: string; AValor: Double);
 var
@@ -338,6 +356,35 @@ begin
     oCampo := ADs.FindField(ACampo);
     if (oCampo <> nil) and (not oCampo.ReadOnly) then
       oCampo.AsFloat := AValor;
+  end;
+end;
+
+procedure TGridPivoteVenta.PrepararLineaSku(ADs: TDataSet;
+  const AArticulo, ASku: string);
+var
+  sArticulo, sSku: string;
+  iSeparador: Integer;
+begin
+  if (ADs <> nil) and (ADs.State in dsEditModes) then
+  begin
+    sArticulo := Trim(AArticulo);
+    sSku := Trim(ASku);
+    if sArticulo = '' then
+      sArticulo := CampoTexto(ADs, FConfig.Campos.CodigoArt);
+    if sArticulo = '' then
+      sArticulo := CampoTexto(ADs, FCfg.FieldArt);
+    if sArticulo = '' then
+    begin
+      iSeparador := Pos('/', sSku);
+      if iSeparador > 1 then
+        sArticulo := Copy(sSku, 1, iSeparador - 1)
+      else
+        sArticulo := sSku;
+    end;
+    SincronizarCamposLineaSku(ADs, FConfig.Campos,
+      sArticulo, sSku, FConfig.LookupAtributos);
+    PonerTexto(ADs, FCfg.FieldArt, sArticulo);
+    PonerTexto(ADs, FCfg.FieldSku, sSku);
   end;
 end;
 
@@ -410,6 +457,11 @@ var
 begin
   FModelo.IniciarCarga;
   oDs := CdsLineas;
+  // El pivote usa un borrador visual propio. Una inserción real vacía
+  // heredada del host impediría recorrer las líneas ya existentes y
+  // haría que la vista publicase únicamente la línea 0000.
+  if FPresentacion.EsInsercionVacia(oDs) then
+    oDs.Cancel;
   if (oDs <> nil) and oDs.Active and (not oDs.IsEmpty) and
      (not FPresentacion.EsInsercionVacia(oDs)) then
   begin
@@ -589,6 +641,7 @@ begin
           FCfg.OnCrearLineaSku(sSku);
         if not (oDs.State in dsEditModes) then
           oDs.Edit;
+        PrepararLineaSku(oDs, '', sSku);
         PonerFloat(oDs, FCfg.FieldCantidadPedida, ACantidad);
         PonerFloat(oDs, FCfg.FieldCantidadEntregada, 0);
         PonerFloat(oDs, FCfg.FieldCantidadAAlbaranar, 0);
@@ -857,21 +910,94 @@ begin
   FPresentacion.RefrescarSite;
 end;
 
-function TGridPivoteVenta.ElegirSkuConPaleta(
+function EsAtributoColor(
+  const AAtributo: TArticuloAtributo): Boolean;
+begin
+  Result := ContainsText(AAtributo.NombreAtributo, 'COLOR') or
+    SameText(AAtributo.IdAtributo, 'CO') or
+    StartsText('COL', AAtributo.IdAtributo);
+end;
+
+function IdValorSeleccionado(
+  const AValores: TArray<TArticuloAtributoValor>;
+  const AValor: string): Integer;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 0 to High(AValores) do
+    if SameText(AValores[i].Valor, AValor) then
+      Result := AValores[i].IdValor;
+end;
+
+function SeleccionarValorHorizontal(
+  const ASelector: IPresentacionAtributosSku;
+  const AAtributo: TArticuloAtributo;
+  const AValores: TArray<TArticuloAtributoValor>;
+  AEsTalla, AEsColor: Boolean;
+  const AAnclaje: TAnclajeSelectorAtributo;
+  out AValor: string): Boolean;
+var
+  aValoresTexto: TArray<string>;
+  i: Integer;
+  oSelectorAnclado: ISelectorValorAtributoAnclado;
+begin
+  Result := Length(AValores) > 0;
+  AValor := '';
+  if Result then
+  begin
+    if AEsTalla or (Length(AValores) = 1) then
+      AValor := AValores[0].Valor
+    else
+    begin
+      SetLength(aValoresTexto, Length(AValores));
+      for i := 0 to High(AValores) do
+        aValoresTexto[i] := AValores[i].Valor;
+      if AEsColor and AAnclaje.Valido and
+         Supports(ASelector, ISelectorValorAtributoAnclado,
+           oSelectorAnclado) then
+        Result := oSelectorAnclado.SeleccionarEn(
+          AAtributo.NombreAtributo, aValoresTexto,
+          AAnclaje, AValor)
+      else
+        Result := Assigned(ASelector) and ASelector.Seleccionar(
+          AAtributo.NombreAtributo, aValoresTexto, AValor);
+    end;
+  end;
+end;
+
+function BuscarSkuSemillaCompatible(
+  const ARepositorio: IRepositorioEdicionPivoteVenta;
+  const AArticulo: string;
+  const ATallas: TArray<TArticuloAtributoValor>;
+  AColorAv: Integer): string;
+var
+  i: Integer;
+begin
+  Result := '';
+  i := 0;
+  while (i < Length(ATallas)) and (Result = '') do
+  begin
+    Result := ARepositorio.BuscarSkuActivoPorAtributos(
+      AArticulo, ATallas[i].IdValor, AColorAv);
+    Inc(i);
+  end;
+end;
+
+function TGridPivoteVenta.ElegirSkuHorizontal(
   const ACodArt: string): string;
 var
   oLookup: IArticulosAtributosLookup;
   aAtribs: TArray<TArticuloAtributo>;
   aAvs: TArray<TArticuloAtributoValor>;
-  aAvsStr: TArray<string>;
-  oMapa: TDictionary<string, string>;
-  sIdVa, sAvNuevo: string;
-  i, j: Integer;
-  bCancelado: Boolean;
+  aTallas: TArray<TArticuloAtributoValor>;
+  oAnclajeColor: TAnclajeSelectorAtributo;
+  sAvNuevo: string;
+  i, iColorAv, j: Integer;
+  bCancelado, bEsColor, bEsTalla, bSoloColorTalla: Boolean;
 begin
-  // Mismo flujo que TModoEntradaSku.ElegirSkuConPaleta (modo
-  // vertical): un selector por atributo (Color, Talla, ...); si el
-  // articulo solo referencia un AV en sus SKUs, se fija sin preguntar.
+  // La talla es la dimensión de las columnas: se resuelve en silencio
+  // una variante real compatible y nunca se pregunta en este modo.
   Result := '';
   oLookup := FConfig.LookupAtributos;
   if not Assigned(oLookup) then
@@ -884,37 +1010,45 @@ begin
     begin
       Result := ACodArt;
       bCancelado := False;
+      bSoloColorTalla := True;
+      iColorAv := 0;
+      aTallas := nil;
+      oAnclajeColor := Default(TAnclajeSelectorAtributo);
+      FPresentacion.ObtenerAnclajeColor(oAnclajeColor);
       i := 0;
       while (i < Length(aAtribs)) and (not bCancelado) do
       begin
         // Solo AVs presentes en SKUs del articulo (no el conjunto).
         aAvs := oLookup.ObtenerAvsEnSkus(ACodArt, i + 1);
-        if Length(aAvs) = 0 then
-          bCancelado := True
-        else if Length(aAvs) = 1 then
-          Result := Result + '/' + aAvs[0].Valor
-        else
+        bEsTalla := TModeloTallas.EsAtributoTalla(aAtribs[i]);
+        bEsColor := EsAtributoColor(aAtribs[i]);
+        bSoloColorTalla := bSoloColorTalla and
+          (bEsTalla or bEsColor);
+        if bEsTalla then
         begin
-          SetLength(aAvsStr, Length(aAvs));
+          SetLength(aTallas, Length(aAvs));
           for j := 0 to High(aAvs) do
-            aAvsStr[j] := aAvs[j].Valor;
-          sIdVa := '';
-          oMapa := ObtenerMapaAtributosGlobal(FCfg.Conexion);
-          if oMapa <> nil then
-            oMapa.TryGetValue(
-              UpperCase(Trim(aAtribs[i].NombreAtributo)), sIdVa);
-          // Paleta de swatches auto-centrada (-1,-1), como caja e
-          // inventarios.
-          if SeleccionarAvConPaleta(FCfg.Conexion, sIdVa, aAvsStr,
-                                    '', sAvNuevo, -1, -1, 160) then
-            Result := Result + '/' + sAvNuevo
-          else
-            bCancelado := True;
+            aTallas[j] := aAvs[j];
+        end;
+        // Los atributos no pivotados, como el color, siguen definiendo
+        // el grupo horizontal y pueden necesitar selección.
+        bCancelado := not SeleccionarValorHorizontal(
+          FConfig.Servicios.Paleta, aAtribs[i], aAvs,
+          bEsTalla, bEsColor, oAnclajeColor, sAvNuevo);
+        if not bCancelado then
+        begin
+          Result := Result + '/' + sAvNuevo;
+          if bEsColor then
+            iColorAv := IdValorSeleccionado(aAvs, sAvNuevo);
         end;
         Inc(i);
       end;
       if bCancelado then
-        Result := '';
+        Result := ''
+      else if bSoloColorTalla and (FRepositorio <> nil) and
+              (Length(aTallas) > 0) then
+        Result := BuscarSkuSemillaCompatible(
+          FRepositorio, ACodArt, aTallas, iColorAv);
     end;
   finally
     oLookup := nil;
@@ -929,7 +1063,7 @@ var
   oDs: TDataSet;
   sSku, sLinea: string;
   rPrecio: Double;
-  bPrecio, bLineaVacia, bSeguir: Boolean;
+  bPrecio, bLineaVacia, bSeguir, bSemillaHorizontal: Boolean;
 begin
   Result := False;
   FEstado.EntradaCancelada := False;
@@ -946,16 +1080,19 @@ begin
     if oRes.Encontrado then
     begin
       bSeguir := True;
+      bSemillaHorizontal := False;
       sSku := oRes.CodigoSku;
       if (sSku = '') and oRes.RequiereSku then
       begin
-        // Coincidio el articulo padre y tiene variaciones: pedir
-        // COLOR (y talla) con la paleta y componer el SKU completo.
-        // Antes se seguia con el codigo pelado y la linea nacia sin
-        // color.
-        sSku := ElegirSkuConPaleta(oRes.CodigoArticulo);
+        // El artículo padre abre un grupo: la talla se resuelve en
+        // silencio porque el usuario la introduce en sus columnas.
+        FPresentacion.MostrarArticuloProvisional(
+          oRes.CodigoArticulo);
+        sSku := ElegirSkuHorizontal(oRes.CodigoArticulo);
+        bSemillaHorizontal := sSku <> '';
         if sSku = '' then
         begin
+          FPresentacion.MostrarArticuloProvisional('');
           FEstado.EntradaCancelada := True;
           bSeguir := False;
         end;
@@ -976,11 +1113,14 @@ begin
         if LocalizarLineaSku(sSku, rPrecio, bPrecio, sLinea) then
         begin
           oDs.Filtered := False;
-          if not (oDs.State in dsEditModes) then
-            oDs.Edit;
-          PonerFloat(oDs, FCfg.FieldCantidadPedida,
-            CampoFloat(oDs, FCfg.FieldCantidadPedida) + 1);
-          oDs.Post;
+          if not bSemillaHorizontal then
+          begin
+            if not (oDs.State in dsEditModes) then
+              oDs.Edit;
+            PonerFloat(oDs, FCfg.FieldCantidadPedida,
+              CampoFloat(oDs, FCfg.FieldCantidadPedida) + 1);
+            oDs.Post;
+          end;
         end
         else
         begin
@@ -995,9 +1135,21 @@ begin
               oDs.Append;
             FCfg.OnCrearLineaSku(sSku);
             if oDs.State in dsEditModes then
+            begin
+              PrepararLineaSku(oDs, oRes.CodigoArticulo, sSku);
+              if bSemillaHorizontal then
+              begin
+                // La fila enlazada sostiene el grupo hasta que se edita
+                // una talla; totales y movimientos ignoran cantidades cero.
+                PonerFloat(oDs, FCfg.FieldCantidadPedida, 0);
+                PonerFloat(oDs, FCfg.FieldCantidadEntregada, 0);
+                PonerFloat(oDs, FCfg.FieldCantidadAAlbaranar, 0);
+              end;
               oDs.Post;
+            end;
           end;
         end;
+        FPresentacion.FinalizarAlta;
         RecargarYPublicar;
         Result := True;
       end;
@@ -1025,7 +1177,10 @@ function TGridPivoteVenta.AlResolverEntradaEditor(
 begin
   Result := ResolverEntrada(AEntrada);
   ACancelada := FEstado.EntradaCancelada;
-  ATextoLinea := CampoTexto(CdsLineas, FCfg.FieldArt);
+  if ACancelada then
+    ATextoLinea := ''
+  else
+    ATextoLinea := CampoTexto(CdsLineas, FCfg.FieldArt);
 end;
 
 function TGridPivoteVenta.AlBuscarArticulo: Boolean;

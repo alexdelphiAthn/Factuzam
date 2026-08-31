@@ -36,6 +36,7 @@ type
     TInterfacedObject,
     IFabricaBusquedaTallas,
     IPresentacionAtributosSku,
+    ISelectorValorAtributoAnclado,
     IFabricaPersistenciaTallas,
     IFabricaModoEntradaDesglose)
   private
@@ -49,6 +50,11 @@ type
       const ACodigoArticulo, ATexto: string): Boolean;
     function Seleccionar(const ANombreAtributo: string;
       const AValores: TArray<string>; out AValor: string): Boolean;
+    function SeleccionarEn(
+      const ANombreAtributo: string;
+      const AValores: TArray<string>;
+      const AAnclaje: TAnclajeSelectorAtributo;
+      out AValor: string): Boolean;
     function CrearPersistencia(
       const AConfig: TConfigPersistenciaTallas):
       TServiciosPersistenciaModoTallas;
@@ -88,7 +94,20 @@ function TServiciosColumnasSkuUniDAC.Seleccionar(
   const ANombreAtributo: string; const AValores: TArray<string>;
   out AValor: string): Boolean;
 var
+  oAnclaje: TAnclajeSelectorAtributo;
+begin
+  oAnclaje := Default(TAnclajeSelectorAtributo);
+  Result := SeleccionarEn(
+    ANombreAtributo, AValores, oAnclaje, AValor);
+end;
+
+function TServiciosColumnasSkuUniDAC.SeleccionarEn(
+  const ANombreAtributo: string; const AValores: TArray<string>;
+  const AAnclaje: TAnclajeSelectorAtributo;
+  out AValor: string): Boolean;
+var
   Mapa: TDictionary<string, string>;
+  iAncho, iArriba, iIzquierda: Integer;
   sIdVariacion: string;
 begin
   sIdVariacion := '';
@@ -97,15 +116,24 @@ begin
     Mapa.TryGetValue(
       UpperCase(Trim(ANombreAtributo)),
       sIdVariacion);
+  iIzquierda := -1;
+  iArriba := -1;
+  iAncho := 160;
+  if AAnclaje.Valido then
+  begin
+    iIzquierda := AAnclaje.IzquierdaPantalla;
+    iArriba := AAnclaje.ArribaPantalla;
+    iAncho := AAnclaje.Ancho;
+  end;
   Result := SeleccionarAvConPaleta(
     FConexion,
     sIdVariacion,
     AValores,
     '',
     AValor,
-    -1,
-    -1,
-    160);
+    iIzquierda,
+    iArriba,
+    iAncho);
 end;
 
 function TServiciosColumnasSkuUniDAC.CrearPersistencia(

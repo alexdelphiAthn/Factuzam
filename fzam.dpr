@@ -611,6 +611,7 @@ uses
     'src\Caja\Lib\inLibTraspasoSolicitudesExcel.pas',
   inLibGridArticulos in 'src\Lib\inLibGridArticulos.pas',
   inLibColumnasSkuIntf in 'src\Lib\inLibColumnasSkuIntf.pas',
+  inLibLineaSku in 'src\Lib\inLibLineaSku.pas',
   inLibColumnasSku in 'src\Lib\inLibColumnasSku.pas',
   inLibColumnasSkuModoSku in 'src\Lib\inLibColumnasSkuModoSku.pas',
   inLibColumnasSkuModoDesglose in 'src\Lib\inLibColumnasSkuModoDesglose.pas',

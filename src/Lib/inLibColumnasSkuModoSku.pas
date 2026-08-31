@@ -16,10 +16,9 @@
 {      - Busqueda incremental por CODIGO_UNIDAD_SKU: ExtLookupComboBox en      }
 {        runtime + consulta en servidor (top-100 por prefijo) + debounce,      }
 {        mismo patron que inLibGridArticulos.CrearLookupBusqueda.              }
-{      - Si la entrada resuelve a un padre con variaciones, pide color y       }
-{        talla con la paleta de swatches (inLibAtributosPaleta), el mismo      }
-{        desarrollo que usan caja e inventarios, y compone el SKU              }
-{        ART/COLOR/TALLA.                                                      }
+{      - Si la entrada resuelve a un padre con variaciones, avisa de que       }
+{        debe indicarse un SKU completo. La paleta de atributos pertenece      }
+{        exclusivamente al modo detallado.                                    }
 {      - Swatch de color en la celda del SKU via PintarCeldaSwatchSiAplica     }
 {        (prueba con el ultimo segmento tras '/').                             }
 {******************************************************************************}
@@ -34,15 +33,15 @@ uses
   cxTextEdit,
   cxDropDownEdit, cxEditRepositoryItems, cxDBExtLookupComboBox, cxGrid,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView,
+  cxNavigator,
   inLibColumnasSkuIntf, inLibArticulosValidadorIntf,
-  inLibArticulosAtributosIntf, inLibModoTallasIntf;
+  inLibModoTallasIntf;
 
 type
   TModoEntradaSku = class(TInterfacedObject, IModoEntradaGrid)
   private
     FConfig: TConfigColumnasSku;
     FColSku: TcxGridDBColumn;
-    FLookup: IArticulosAtributosLookup;
     FOnResuelto: TSkuResueltoEvent;
     FOnEntrarEdicion: TNotifyEvent;
     FOnSalirEdicion: TNotifyEvent;
@@ -119,9 +118,6 @@ type
     function ValorRecord(ARecord: TcxCustomGridRecord;
                          const ACampo: string): string;
     function SkuTextoRecord(ARecord: TcxCustomGridRecord): string;
-    // Pide color/talla con la paleta de swatches y compone ART/VAL1/VAL2.
-    // Devuelve '' si el usuario cancela o no hay valores.
-    function ElegirSkuConPaleta(const ACodArt: string): string;
     procedure DispararResolucion(const AEntrada: string);
     function LimpiarEntrada(const AEntrada: string): string;
     procedure PonerCampo(const ANombre, AValor: string);
@@ -153,9 +149,6 @@ begin
   inherited Create;
   FConfig := AConfig;
   FAlmacenStock := AConfig.AlmacenStock;
-  FLookup := AConfig.LookupAtributos;
-  if not Assigned(FLookup) then
-    raise Exception.Create(SErrorLookupAtributosNoInyectado);
   if not Assigned(AConfig.Servicios.Busqueda) then
     raise EArgumentNilException.Create('Servicios.Busqueda');
   if not Assigned(AConfig.Servicios.Paleta) then
@@ -189,7 +182,6 @@ begin
   FreeAndNil(FBusqRepo);
   FreeAndNil(FBusqDs);
   FBusqueda := nil;
-  FLookup := nil;
   inherited;
 end;
 
@@ -269,6 +261,23 @@ begin
   FConfig.View.OptionsView.ColumnAutoWidth := True;
   FConfig.View.OptionsView.NoDataToDisplayInfoText :=
     SCaptionSinArticulos;
+  FConfig.View.Navigator.Visible := True;
+  FConfig.View.Navigator.Buttons.First.Visible := True;
+  FConfig.View.Navigator.Buttons.Prior.Visible := True;
+  FConfig.View.Navigator.Buttons.Next.Visible := True;
+  FConfig.View.Navigator.Buttons.Last.Visible := True;
+  FConfig.View.Navigator.Buttons.Insert.Visible := False;
+  FConfig.View.Navigator.Buttons.Append.Visible := True;
+  FConfig.View.Navigator.Buttons.Delete.Visible := True;
+  FConfig.View.Navigator.Buttons.PriorPage.Visible := False;
+  FConfig.View.Navigator.Buttons.NextPage.Visible := False;
+  FConfig.View.Navigator.Buttons.Edit.Visible := False;
+  FConfig.View.Navigator.Buttons.Post.Visible := False;
+  FConfig.View.Navigator.Buttons.Cancel.Visible := False;
+  FConfig.View.Navigator.Buttons.Refresh.Visible := False;
+  FConfig.View.Navigator.Buttons.SaveBookmark.Visible := False;
+  FConfig.View.Navigator.Buttons.GotoBookmark.Visible := False;
+  FConfig.View.Navigator.Buttons.Filter.Visible := False;
 end;
 
 procedure TModoEntradaSku.CrearLookupBusqueda;
@@ -789,53 +798,6 @@ begin
   PonerCampo(FConfig.Campos.Descripcion, ADescripcion);
 end;
 
-function TModoEntradaSku.ElegirSkuConPaleta(const ACodArt: string): string;
-var
-  Atribs: TArray<TArticuloAtributo>;
-  Avs: TArray<TArticuloAtributoValor>;
-  AvsStr: TArray<string>;
-  sAvNuevo: string;
-  i, j: Integer;
-  bCancelado: Boolean;
-begin
-  Result := '';
-  Atribs := FLookup.ObtenerAtributos(ACodArt);
-  if Length(Atribs) = 0 then
-    ShowMessage(Format(SAvisoArticuloSinAtributos, [ACodArt]))
-  else
-  begin
-    Result := ACodArt;
-    bCancelado := False;
-    i := 0;
-    while (i < Length(Atribs)) and (not bCancelado) do
-    begin
-      // Solo AVs presentes en SKUs del articulo (no todo el conjunto).
-      Avs := FLookup.ObtenerAvsEnSkus(ACodArt, i + 1);
-      if Length(Avs) = 0 then
-        bCancelado := True
-      else if Length(Avs) = 1 then
-        // Valor unico: se fija solo, como AutoCompletarAtributosUnicos.
-        Result := Result + '/' + Avs[0].Valor
-      else
-      begin
-        SetLength(AvsStr, Length(Avs));
-        for j := 0 to High(Avs) do
-          AvsStr[j] := Avs[j].Valor;
-        // Paleta de swatches (desarrollo ya hecho, mismo selector que
-        // caja/inventarios). Auto-centrada (-1,-1).
-        if FConfig.Servicios.Paleta.Seleccionar(
-             Atribs[i].NombreAtributo, AvsStr, sAvNuevo) then
-          Result := Result + '/' + sAvNuevo
-        else
-          bCancelado := True;
-      end;
-      Inc(i);
-    end;
-    if bCancelado then
-      Result := '';
-  end;
-end;
-
 function TModoEntradaSku.ResolverEntrada(const AEntrada: string): Boolean;
 var
   Val: IArticulosValidador;
@@ -858,9 +820,16 @@ begin
     begin
       sSku := R.CodigoSku;
       if R.RequiereSku then
-        // Coincidio el padre y tiene variaciones: pedir color/talla con
-        // la paleta y componer el SKU completo.
-        sSku := ElegirSkuConPaleta(R.CodigoArticulo)
+      begin
+        // El modo SKU solo acepta una unidad completa; los selectores de
+        // talla y color pertenecen al modo detallado.
+        sSku := '';
+        if R.Mensaje <> '' then
+          ShowMessage(R.Mensaje)
+        else
+          ShowMessage(Format(SAvisoArticuloRequiereSku,
+            [R.CodigoArticulo]));
+      end
       else if sSku = '' then
         // Articulo sin SKUs: la unidad es el propio codigo de articulo.
         sSku := R.CodigoArticulo;

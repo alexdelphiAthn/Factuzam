@@ -65,7 +65,6 @@ type
     splSplitterFicha:    TcxSplitter;
     pcCab:               TcxPageControl;
     tsCabecera:          TcxTabSheet;
-    pnlBotonesAcciones:  TPanel;
     pnlBodyFicha:        TPanel;
     pcAlbaran:           TcxPageControl;
     tsLineasAlbaran:     TcxTabSheet;
@@ -148,10 +147,6 @@ type
     memObservaciones: TcxDBMemo;
 
     // Botones de accion
-    btnAnadirLinea:       TcxButton;
-    btnBorrarLinea:       TcxButton;
-    btnTallasHorizontal:  TcxButton;
-    btnAtributosColumna:  TcxButton;
     btnImprimirH: TcxButton;
     btnImprimirV: TcxButton;
     btnPegatinas: TcxButton;
@@ -172,10 +167,6 @@ type
     procedure pcAlbaranChange(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
     procedure btnGrabarClick(Sender: TObject);
-    procedure btnAnadirLineaClick(Sender: TObject);
-    procedure btnBorrarLineaClick(Sender: TObject);
-    procedure btnTallasHorizontalClick(Sender: TObject);
-    procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnImprimirHClick(Sender: TObject);
     procedure btnImprimirVClick(Sender: TObject);
     procedure btnPegatinasClick(Sender: TObject);
@@ -236,11 +227,6 @@ type
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
   private
-    // Guarda contra reentrada del toggle desde dsTablaGDataChangeHook
-    // disparado por el Edit/Post de PersistirPreferenciaPivote (entre
-    // el Edit y el set, la cabecera tiene el ESPIVOTE viejo y el hook
-    // veria discrepancia con Activo).
-    FInToggleClick   : Boolean;
     FAfterPostLineasOriginal: TDataSetNotifyEvent;
     FAfterOpenLineasOriginal: TDataSetNotifyEvent;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
@@ -284,12 +270,10 @@ type
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaAlbaranCompra;
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
-    function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
     procedure colLineaAlbcCODIGO_UNIDADPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure colLinAlbcColorPivotButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
-    procedure PersistirPreferenciaPivote;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostAlbaranCompra;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
@@ -477,22 +461,6 @@ begin
       nil);
 end;
 
-function TfrmMtoAlbaranesCompra.PuedeActivarTallasHorizontal(
-  var AMensaje: string): Boolean;
-begin
-  AMensaje := '';
-  Result := True;
-  if Assigned(dmmAlbaranesCompra) and Assigned(FPivote) then
-    Result := PuedeActivarTallasHorizontalCompra(
-      dmmAlbaranesCompra.unqryTablaG,
-      dmmAlbaranesCompra.unqryAlbaranesCompraLineas,
-      CrearValidacionDocumentoLecturas(
-        dmmAlbaranesCompra.unqryTablaG.Connection),
-      ConfiguracionTallasDocumento,
-      AsegurarCabeceraPersistidaParaLineas,
-      FPivote.ValidarPivotePosible, AMensaje);
-end;
-
 procedure TfrmMtoAlbaranesCompra.AplicarArticuloAlbaranCompra(
   const ACodigoArt: string);
 var
@@ -622,8 +590,6 @@ begin
   // preferencia ESPIVOTE de la cabecera se ignora).
   FModoEntradaSel := mcsTallasHorPed;
   FColsModoConstruido := False;
-  btnTallasHorizontal.Visible := False;
-  btnAtributosColumna.Visible := False;
   ActualizarCaptionModoLineas;
   // Primera construccion al abrir la pantalla: sin ella, hasta entrar
   // en el grid se veian las columnas del dfm (ningun modo).
@@ -783,45 +749,6 @@ begin
       'CODIGO_ART_ALBCLIN', FAtribColumns);
 end;
 
-procedure TfrmMtoAlbaranesCompra.btnTallasHorizontalClick(Sender: TObject);
-var
-  sMensaje: string;
-begin
-  inherited;
-  if (dmmAlbaranesCompra <> nil) and (FPivote <> nil) and
-     not FInToggleClick then
-  begin
-    FInToggleClick := True;
-    try
-      if not FPivote.Activo then
-      begin
-        if PuedeActivarTallasHorizontal(sMensaje) then
-        begin
-          FPivote.Activar;
-          if Sender <> nil then
-            PersistirPreferenciaPivote;
-        end
-        else if Sender <> nil then
-          MessageDlg(sMensaje, mtWarning, [mbOk], 0);
-      end
-      else
-      begin
-        FPivote.Desactivar;
-        if Sender <> nil then
-          PersistirPreferenciaPivote;
-      end;
-    finally
-      FInToggleClick := False;
-    end;
-  end;
-end;
-
-procedure TfrmMtoAlbaranesCompra.PersistirPreferenciaPivote;
-begin
-  PersistirPreferenciaPivoteDocumento(
-    dsTablaG.DataSet, 'ESPIVOTE_HORIZONTAL_ALBC', FPivote.Activo);
-end;
-
 procedure TfrmMtoAlbaranesCompra.btnImprimirHClick(Sender: TObject);
 var
   form    : TfrmPrintAlbCompra;
@@ -944,13 +871,6 @@ begin
     end;
     end;
   end;
-end;
-
-procedure TfrmMtoAlbaranesCompra.btnAtributosColumnaClick(Sender: TObject);
-begin
-  inherited;
-  FMostrarAtributos := not FMostrarAtributos;
-  RefrescarVisibilidadAtributos;
 end;
 
 procedure TfrmMtoAlbaranesCompra.btnNuevoClick(Sender: TObject);
@@ -1096,9 +1016,10 @@ end;
 procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranEnter(Sender: TObject);
 begin
   inherited;
+  ConfigurarEdicionExcelLineasDocumento(tvLineasAlbaran);
   EntrarGridLineasDocumento(
     Self, FColsModoConstruido, False, FModoEntrada,
-    AsegurarPrimeraLineaAlbaranCompra, ConstruirModoEntrada);
+    AsegurarPrimeraLineaAlbaranCompra, ConstruirModoEntrada, False);
 end;
 
 procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranExit(Sender: TObject);
@@ -1638,21 +1559,6 @@ begin
       dmmAlbaranesCompra.unqryTablaG,
       'SERIE_FAC_ALBC', 'NUMERO_FAC_ALBC',
       SAvisoAlbaranCompraSinFactura);
-end;
-
-procedure TfrmMtoAlbaranesCompra.btnAnadirLineaClick(Sender: TObject);
-begin
-  inherited;
-  AsegurarCabeceraPersistidaParaLineas;
-  dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Append;
-end;
-
-procedure TfrmMtoAlbaranesCompra.btnBorrarLineaClick(Sender: TObject);
-begin
-  inherited;
-  if MessageDlg(SPreguntaEliminarLineaAlbaranCompra,
-                mtConfirmation, [mbYes, mbNo], 0) = mrYes then
-    dmmAlbaranesCompra.unqryAlbaranesCompraLineas.Delete;
 end;
 
 initialization

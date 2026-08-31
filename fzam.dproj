@@ -815,6 +815,7 @@
         <DCCReference Include="src\Caja\Lib\inLibTraspasoSolicitudesExcel.pas"/>
         <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSkuIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibLineaSku.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSku.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSkuModoSku.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSkuModoDesglose.pas"/>

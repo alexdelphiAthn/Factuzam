@@ -303,14 +303,14 @@ begin
   FView.OptionsView.ColumnAutoWidth := True;
   FView.OptionsView.NoDataToDisplayInfoText :=
     SCaptionSinArticulos;
-  // dbNavigator pequeno embebido: navegar + insertar + borrar (el resto
-  // oculto). Insertar/borrar lineas tambien desde aqui.
+  // Navegador pequeño embebido: navegar + añadir al final + borrar.
   FView.Navigator.Visible := True;
   FView.Navigator.Buttons.First.Visible := True;
   FView.Navigator.Buttons.Prior.Visible := True;
   FView.Navigator.Buttons.Next.Visible := True;
   FView.Navigator.Buttons.Last.Visible := True;
-  FView.Navigator.Buttons.Insert.Visible := True;
+  FView.Navigator.Buttons.Insert.Visible := False;
+  FView.Navigator.Buttons.Append.Visible := True;
   FView.Navigator.Buttons.Delete.Visible := True;
   FView.Navigator.Buttons.PriorPage.Visible := False;
   FView.Navigator.Buttons.NextPage.Visible := False;

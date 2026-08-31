@@ -36,12 +36,26 @@ uses
 type
   IModoEntradaGrid = interface;
   IFabricaModoEntradaDesglose = interface;
+  TAnclajeSelectorAtributo = record
+    IzquierdaPantalla: Integer;
+    ArribaPantalla: Integer;
+    Ancho: Integer;
+    Valido: Boolean;
+  end;
   IPresentacionAtributosSku = interface(ISelectorValorAtributo)
     ['{86869E2F-9B9F-4F90-B9D4-E3C48DF48E34}']
     function PintarCeldaArticulo(
       ACanvas: TcxCanvas;
       AViewInfo: TcxGridTableDataCellViewInfo;
       const ACodigoArticulo, ATexto: string): Boolean;
+  end;
+  ISelectorValorAtributoAnclado = interface
+    ['{B7D0DFA8-6E9B-4E79-8CB2-98A8CC653734}']
+    function SeleccionarEn(
+      const ANombreAtributo: string;
+      const AValores: TArray<string>;
+      const AAnclaje: TAnclajeSelectorAtributo;
+      out AValor: string): Boolean;
   end;
   TServiciosColumnasSku = record
     Busqueda: IFabricaBusquedaTallas;

@@ -28,6 +28,8 @@ function ObtenerClavePrimariaPorMetadatos(const ATabla: string;
 function ObtenerClavePrimaria(ADataSet: TDataSet): string; overload;
 function ObtenerClavePrimaria(ADataSet: TDataSet;
   const ARepositorio: IRepositorioMetadatosDatasets): string; overload;
+function AsignarCampoTextoSiEditable(ADataSet: TDataSet;
+  const ACampo, AValor: string): Boolean;
 procedure GrabarDatasets(AModulo: TDataModule);
 procedure CancelarDatasets(AModulo: TDataModule);
 function CheckOpenDatasets(AModulo: TDataModule): Boolean;
@@ -235,6 +237,24 @@ begin
         Result := ObtenerClavePrimariaPorMetadatos(
           sTabla, ARepositorio);
       end;
+    end;
+  end;
+end;
+
+function AsignarCampoTextoSiEditable(ADataSet: TDataSet;
+  const ACampo, AValor: string): Boolean;
+var
+  oCampo: TField;
+begin
+  Result := False;
+  if Assigned(ADataSet) and
+     (ADataSet.State in [dsEdit, dsInsert]) then
+  begin
+    oCampo := ADataSet.FindField(ACampo);
+    if Assigned(oCampo) then
+    begin
+      oCampo.AsString := AValor;
+      Result := True;
     end;
   end;
 end;

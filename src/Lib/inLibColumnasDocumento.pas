@@ -109,10 +109,13 @@ procedure ActualizarFocoLineaDocumento(
   AGestorTallas: TGestorGridTallas;
   APivote: TGridPivoteCompra; AMostrarAtributos: Boolean;
   ACargarAtributos: TAccionDocumento);
+procedure ConfigurarEdicionExcelLineasDocumento(
+  AVista: TcxGridDBTableView);
 procedure EntrarGridLineasDocumento(
   AFormulario: TForm; AConstruido, AReconstruir: Boolean;
   var AModoEntrada: IModoEntradaGrid;
-  AAsegurarLinea, AConstruir: TAccionDocumento);
+  AAsegurarLinea, AConstruir: TAccionDocumento;
+  AMostrarEditorEntrada: Boolean = True);
 function CambiarModoEntradaDocumento(
   var AModo: TModoColumnasSku; ANuevoModo: TModoColumnasSku;
   AConstruir: TAccionDocumento): Boolean;
@@ -525,10 +528,27 @@ begin
     ACargarAtributos;
 end;
 
+procedure ConfigurarEdicionExcelLineasDocumento(
+  AVista: TcxGridDBTableView);
+begin
+  if AVista <> nil then
+  begin
+    AVista.OptionsBehavior.AlwaysShowEditor := True;
+    AVista.OptionsBehavior.ImmediateEditor := True;
+    AVista.OptionsBehavior.IncSearch := False;
+    AVista.OptionsBehavior.IncSearchItem := nil;
+    AVista.OptionsBehavior.FocusCellOnCycle := True;
+    AVista.OptionsBehavior.FocusCellOnTab := True;
+    AVista.OptionsBehavior.GoToNextCellOnEnter := True;
+    AVista.OptionsSelection.CellSelect := True;
+  end;
+end;
+
 procedure EntrarGridLineasDocumento(
   AFormulario: TForm; AConstruido, AReconstruir: Boolean;
   var AModoEntrada: IModoEntradaGrid;
-  AAsegurarLinea, AConstruir: TAccionDocumento);
+  AAsegurarLinea, AConstruir: TAccionDocumento;
+  AMostrarEditorEntrada: Boolean);
 begin
   inLibGridTallasInline.ActivarEnterComoTab(
     AFormulario, False);
@@ -541,7 +561,7 @@ begin
     if Assigned(AAsegurarLinea) then
       AAsegurarLinea;
   end;
-  if Assigned(AModoEntrada) then
+  if AMostrarEditorEntrada and Assigned(AModoEntrada) then
     AModoEntrada.MostrarEditor;
 end;
 

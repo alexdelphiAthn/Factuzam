@@ -143,7 +143,7 @@ implementation
 
 uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
-  inLibContadorLineas,
+  inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
   UniDataAperturaConsultas,
@@ -814,13 +814,10 @@ begin
         iNuevaLinea := StrToIntDef(
           unqryTablaG.FieldByName('CONTADOR_LINEAS_FACC').AsString, 0) + 10;
       end;
-      if unqryTablaG.FindField('CONTADOR_LINEAS_FACC') <> nil then
-      begin
-        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-          unqryTablaG.Edit;
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_FACC').AsString :=
-          Format('%.8d', [iNuevaLinea]);
-      end;
+      AsignarCampoTextoSiEditable(
+        unqryTablaG,
+        'CONTADOR_LINEAS_FACC',
+        Format('%.8d', [iNuevaLinea]));
       DataSet.FieldByName('LINEA_FACCLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;

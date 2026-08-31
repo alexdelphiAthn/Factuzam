@@ -129,7 +129,7 @@ uses
   UniDataAperturaConsultas,
   inLibDevolucionesCompraMovimientos,
   UniDataDevolucionesCompraMovimientos,
-  inLibContadorLineas,
+  inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
   inLibComprasImpuestos, UniDataImpuestosRepositorio,
   inLibData, UniDataAlmacenesEmpresaRepositorio,
@@ -557,13 +557,10 @@ begin
         iNuevaLinea := StrToIntDef(
           unqryTablaG.FieldByName('CONTADOR_LINEAS_DEVC').AsString, 0) + 10;
       end;
-      if unqryTablaG.FindField('CONTADOR_LINEAS_DEVC') <> nil then
-      begin
-        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-          unqryTablaG.Edit;
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_DEVC').AsString :=
-          Format('%.8d', [iNuevaLinea]);
-      end;
+      AsignarCampoTextoSiEditable(
+        unqryTablaG,
+        'CONTADOR_LINEAS_DEVC',
+        Format('%.8d', [iNuevaLinea]));
       DataSet.FieldByName('LINEA_DEVCLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;

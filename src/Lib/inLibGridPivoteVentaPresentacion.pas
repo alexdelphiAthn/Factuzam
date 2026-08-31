@@ -20,12 +20,15 @@ unit inLibGridPivoteVentaPresentacion;
 interface
 
 uses
-  Winapi.Windows, System.SysUtils, System.Classes, System.Variants,
+  Winapi.Windows, System.SysUtils, System.Classes, System.Types,
+  System.Variants,
   System.UITypes, Data.DB, Uni,
   Vcl.Controls, Vcl.Graphics, Vcl.ExtCtrls,
   cxGraphics, cxEdit, cxTextEdit, cxButtonEdit, cxCurrencyEdit,
+  cxNavigator,
   cxDataStorage, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView,
+  inLibColumnasSkuIntf,
   inLibPivoteVentaCalculo, inLibPivoteVentaIntf,
   inLibPivoteVentaModelo, inLibGridPivoteVentaVista;
 
@@ -71,6 +74,14 @@ type
     FilteredOrig  : Boolean;
     Instalados    : Boolean;
   end;
+  TEstadoNavegadorPivote = record
+    AlClickOriginal   : TcxNavigatorButtonClickEvent;
+    BotonesVisibles  : array[0..NavigatorButtonCount - 1] of Boolean;
+    VisibleOriginal  : Boolean;
+    ConfirmarOriginal: Boolean;
+    AnadirOriginal   : Boolean;
+    Instalado        : Boolean;
+  end;
   TPresentacionPivoteVenta = class
   private
     FCfg                : TConfigPresentacionPivoteVenta;
@@ -83,6 +94,7 @@ type
     FColumnasTallas     : TArray<TcxGridDBColumn>;
     FVista              : TVistaPivoteVenta;
     FEventosDs          : TEventosDataSetPivote;
+    FNavegador           : TEstadoNavegadorPivote;
     FActualizandoGrid   : Boolean;
     FRecargaSuspendida  : Boolean;
     FEdicionSuspendida  : Boolean;
@@ -95,6 +107,10 @@ type
     procedure TimerRecargaTimer(Sender: TObject);
     procedure InstalarEventosDataSet;
     procedure RestaurarEventosDataSet;
+    procedure InstalarNavegador;
+    procedure RestaurarNavegador;
+    procedure NavegadorButtonClick(Sender: TObject;
+      AButtonIndex: Integer; var ADone: Boolean);
     procedure CdsAfterPost(DataSet: TDataSet);
     procedure CdsAfterScroll(DataSet: TDataSet);
     procedure CrearColumnas;
@@ -174,6 +190,10 @@ type
     // Enfoca la columna de artículo y abre su editor; devuelve si el
     // editor quedó realmente en edición.
     function EnfocarEditorArticulo: Boolean;
+    procedure FinalizarAlta;
+    procedure MostrarArticuloProvisional(const AArticulo: string);
+    function ObtenerAnclajeColor(
+      out AAnclaje: TAnclajeSelectorAtributo): Boolean;
     // Línea base del grupo con foco (0 si no hay grupo bajo el foco).
     function LineaBaseFocada: Integer;
     function EsInsercionVacia(ADs: TDataSet): Boolean;
@@ -231,6 +251,7 @@ destructor TPresentacionPivoteVenta.Destroy;
 begin
   // Mismo orden que Desmontar: primero los eventos del dataset, luego
   // la vista (el cambio de DataSource dispara First/AfterScroll).
+  RestaurarNavegador;
   RestaurarEventosDataSet;
   FreeAndNil(FVista);
   FreeAndNil(FTimerRecarga);
@@ -260,6 +281,7 @@ begin
   FCfg.View.OnEditKeyDown := ViewEditKeyDown;
   FCfg.View.OnFocusedRecordChanged := ViewFocusedRecordChanged;
   FCfg.View.OnCustomDrawCell := CustomDrawCell;
+  InstalarNavegador;
   InstalarEventosDataSet;
   ArmarRecarga;
 end;
@@ -274,6 +296,7 @@ begin
     FCfg.View.OnFocusedRecordChanged := nil;
     FCfg.View.OnCustomDrawCell := nil;
   end;
+  RestaurarNavegador;
   // Eventos del dataset ANTES de restaurar la vista: el cambio de
   // DataSource recarga el grid (First -> AfterScroll) y con
   // CdsAfterScroll aún enganchado se leía un grid a medio cargar
@@ -330,6 +353,84 @@ begin
     oDs.AfterScroll := FEventosDs.AfterScrollOrig;
     FEventosDs.Instalados := False;
     oDs.Filtered := FEventosDs.FilteredOrig;
+  end;
+end;
+
+procedure TPresentacionPivoteVenta.InstalarNavegador;
+var
+  i: Integer;
+begin
+  if (FCfg.View <> nil) and (not FNavegador.Instalado) then
+  begin
+    FNavegador.AlClickOriginal :=
+      FCfg.View.Navigator.Buttons.OnButtonClick;
+    FNavegador.VisibleOriginal := FCfg.View.Navigator.Visible;
+    FNavegador.ConfirmarOriginal :=
+      FCfg.View.Navigator.Buttons.ConfirmDelete;
+    FNavegador.AnadirOriginal := FCfg.View.OptionsData.Appending;
+    for i := 0 to NavigatorButtonCount - 1 do
+      FNavegador.BotonesVisibles[i] :=
+        FCfg.View.Navigator.Buttons[i].Visible;
+    FCfg.View.Navigator.Visible := True;
+    FCfg.View.Navigator.Buttons.ConfirmDelete := False;
+    FCfg.View.OptionsData.Appending := True;
+    FCfg.View.Navigator.Buttons.First.Visible := True;
+    FCfg.View.Navigator.Buttons.Prior.Visible := True;
+    FCfg.View.Navigator.Buttons.Next.Visible := True;
+    FCfg.View.Navigator.Buttons.Last.Visible := True;
+    FCfg.View.Navigator.Buttons.Insert.Visible := False;
+    FCfg.View.Navigator.Buttons.Append.Visible := True;
+    FCfg.View.Navigator.Buttons.Delete.Visible := True;
+    FCfg.View.Navigator.Buttons.PriorPage.Visible := False;
+    FCfg.View.Navigator.Buttons.NextPage.Visible := False;
+    FCfg.View.Navigator.Buttons.Edit.Visible := False;
+    FCfg.View.Navigator.Buttons.Post.Visible := False;
+    FCfg.View.Navigator.Buttons.Cancel.Visible := False;
+    FCfg.View.Navigator.Buttons.Refresh.Visible := False;
+    FCfg.View.Navigator.Buttons.SaveBookmark.Visible := False;
+    FCfg.View.Navigator.Buttons.GotoBookmark.Visible := False;
+    FCfg.View.Navigator.Buttons.Filter.Visible := False;
+    FCfg.View.Navigator.Buttons.OnButtonClick :=
+      NavegadorButtonClick;
+    FNavegador.Instalado := True;
+  end;
+end;
+
+procedure TPresentacionPivoteVenta.RestaurarNavegador;
+var
+  i: Integer;
+begin
+  if (FCfg.View <> nil) and FNavegador.Instalado then
+  begin
+    FCfg.View.Navigator.Buttons.OnButtonClick :=
+      FNavegador.AlClickOriginal;
+    FCfg.View.Navigator.Visible := FNavegador.VisibleOriginal;
+    FCfg.View.Navigator.Buttons.ConfirmDelete :=
+      FNavegador.ConfirmarOriginal;
+    FCfg.View.OptionsData.Appending := FNavegador.AnadirOriginal;
+    for i := 0 to NavigatorButtonCount - 1 do
+      FCfg.View.Navigator.Buttons[i].Visible :=
+        FNavegador.BotonesVisibles[i];
+    FNavegador.Instalado := False;
+  end;
+end;
+
+procedure TPresentacionPivoteVenta.NavegadorButtonClick(
+  Sender: TObject; AButtonIndex: Integer; var ADone: Boolean);
+var
+  oDs: TDataSet;
+begin
+  if Assigned(FNavegador.AlClickOriginal) then
+    FNavegador.AlClickOriginal(Sender, AButtonIndex, ADone);
+  if (not ADone) and
+     (AButtonIndex in [NBDI_INSERT, NBDI_APPEND]) then
+  begin
+    ADone := True;
+    oDs := CdsLineas;
+    if FVista.EsInsercionVacia(oDs) then
+      oDs.Cancel;
+    FVista.IniciarAlta;
+    EnfocarEditorArticulo;
   end;
 end;
 
@@ -705,6 +806,8 @@ begin
 end;
 
 procedure TPresentacionPivoteVenta.PublicarTodo;
+var
+  iRegistro: Integer;
 begin
   FVista.Reconstruir;
   AplicarVisibilidadTipoCantidad;
@@ -728,33 +831,110 @@ begin
     FCfg.View.DataController.FocusedRecordIndex := 0;
     FCfg.View.Controller.TopRecordIndex := 0;
   end;
+  if FVista.AltaPendiente and
+     BuscarRecordPorLineaVista(0, iRegistro) then
+    FCfg.View.DataController.FocusedRecordIndex := iRegistro;
   ActualizarCaptionsLineaActiva;
   AjustarAnchosIniciales;
 end;
 
 function TPresentacionPivoteVenta.EnfocarEditorArticulo: Boolean;
+var
+  iRegistro: Integer;
+  bEditorVisible: Boolean;
 begin
   Result := False;
   if (FCfg.View <> nil) and (FColArticulo <> nil) then
   begin
-    if (FCfg.View.DataController <> nil) and
-       (FCfg.View.DataController.RecordCount > 0) then
+    if BuscarRecordPorLineaVista(0, iRegistro) then
+      FCfg.View.DataController.FocusedRecordIndex := iRegistro
+    else if (FCfg.View.DataController.FocusedRecordIndex < 0) and
+            (FCfg.View.DataController.RecordCount > 0) then
       FCfg.View.DataController.FocusedRecordIndex := 0;
-    if Assigned(FCfg.View.Site) and FCfg.View.Site.CanFocus then
+    bEditorVisible := Assigned(FCfg.View.Site) and
+      FCfg.View.Site.HandleAllocated and
+      IsWindowVisible(FCfg.View.Site.Handle);
+    if bEditorVisible and FCfg.View.Site.CanFocus then
       FCfg.View.Site.SetFocus;
     FColArticulo.Focused := True;
     FCfg.View.Controller.FocusedItem := FColArticulo;
-    try
-      FCfg.View.Controller.EditingController.ShowEdit;
-    except
-      on E: EInvalidOperation do
-        // Ruido del editor inplace; queda constancia en el log.
-        FCall.AlLogWarning(
-          'PivotePresentacion.EnfocarEditorArticulo: ShowEdit ' +
-          'ignorado: ' + E.Message);
+    if bEditorVisible then
+    begin
+      try
+        FCfg.View.Controller.EditingController.ShowEdit;
+      except
+        on E: EInvalidOperation do
+          // Ruido del editor inplace; queda constancia en el log.
+          FCall.AlLogWarning(
+            'PivotePresentacion.EnfocarEditorArticulo: ShowEdit ' +
+            'ignorado: ' + E.Message);
+      end;
     end;
     Result := FCfg.View.Controller.EditingController.IsEditing;
   end;
+end;
+
+procedure TPresentacionPivoteVenta.FinalizarAlta;
+begin
+  FVista.FinalizarAlta;
+end;
+
+procedure TPresentacionPivoteVenta.MostrarArticuloProvisional(
+  const AArticulo: string);
+var
+  oEditor: TcxCustomEdit;
+begin
+  if (FCfg.View <> nil) and
+     FCfg.View.Controller.EditingController.IsEditing then
+  begin
+    oEditor := FCfg.View.Controller.EditingController.Edit;
+    if oEditor <> nil then
+    begin
+      oEditor.EditValue := AArticulo;
+      oEditor.Repaint;
+    end;
+  end;
+end;
+
+function TPresentacionPivoteVenta.ObtenerAnclajeColor(
+  out AAnclaje: TAnclajeSelectorAtributo): Boolean;
+var
+  oCelda: TcxGridTableDataCellViewInfo;
+  oEditor: TcxCustomEdit;
+  oPunto: TPoint;
+begin
+  AAnclaje := Default(TAnclajeSelectorAtributo);
+  Result := False;
+  if (FCfg.View <> nil) and (FColColor <> nil) and
+     Assigned(FCfg.View.Site) and FCfg.View.Site.HandleAllocated then
+  begin
+    oCelda := FColColor.FocusedCellViewInfo;
+    if oCelda <> nil then
+    begin
+      oPunto := FCfg.View.Site.ClientToScreen(
+        Point(oCelda.Bounds.Left, oCelda.Bounds.Bottom));
+      AAnclaje.IzquierdaPantalla := oPunto.X;
+      AAnclaje.ArribaPantalla := oPunto.Y;
+      AAnclaje.Ancho := oCelda.Bounds.Right - oCelda.Bounds.Left;
+      Result := AAnclaje.Ancho > 0;
+    end;
+    if (not Result) and
+       FCfg.View.Controller.EditingController.IsEditing then
+    begin
+      oEditor := FCfg.View.Controller.EditingController.Edit;
+      if (oEditor <> nil) and oEditor.HasParent and
+         oEditor.HandleAllocated then
+      begin
+        oPunto := oEditor.ClientToScreen(
+          Point(oEditor.Width, oEditor.Height));
+        AAnclaje.IzquierdaPantalla := oPunto.X;
+        AAnclaje.ArribaPantalla := oPunto.Y;
+        AAnclaje.Ancho := FColColor.Width;
+        Result := AAnclaje.Ancho > 0;
+      end;
+    end;
+  end;
+  AAnclaje.Valido := Result;
 end;
 
 function TPresentacionPivoteVenta.EsInsercionVacia(
@@ -1281,8 +1461,8 @@ begin
                  sTextoLinea, bCancelada);
       if Error and bCancelada then
       begin
-        // Paleta de color/talla cancelada por el usuario: descartar
-        // la entrada sin rotular "no encontrado".
+        // Selector de un atributo no pivotado cancelado por el usuario:
+        // descartar la entrada sin rotular "no encontrado".
         Error := False;
         DisplayValue := sTextoLinea;
       end

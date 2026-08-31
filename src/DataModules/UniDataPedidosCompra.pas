@@ -73,6 +73,7 @@ type
     // a FinalizarReorganizacionLineas para no regenerarlos por linea.
     FReorganizandoLineas: Integer;
     FReorganizacionPendiente: Boolean;
+    procedure CancelarLineaVaciaDiferida;
     procedure AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     // Construye el SQLInsert contra fza_pedidos_compra: la vista
@@ -153,7 +154,7 @@ implementation
 
 uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
-  inLibContadorLineas,
+  inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
   ComCtrls, cxListView,
@@ -379,6 +380,7 @@ end;
 
 procedure TdmPedidosCompra.DataModuleDestroy(Sender: TObject);
 begin
+  TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
   if Assigned(unqryPedidosCompraLineas) and
      unqryPedidosCompraLineas.Active then
     unqryPedidosCompraLineas.Close;
@@ -387,6 +389,26 @@ begin
   if Assigned(unqryAlmacenesPedc) and unqryAlmacenesPedc.Active then
     unqryAlmacenesPedc.Close;
   inherited;
+end;
+
+procedure TdmPedidosCompra.CancelarLineaVaciaDiferida;
+var
+  oArticulo, oSku: TField;
+begin
+  if not (csDestroying in ComponentState) and
+     Assigned(unqryPedidosCompraLineas) and
+     unqryPedidosCompraLineas.Active and
+     (unqryPedidosCompraLineas.State in dsEditModes) then
+  begin
+    oArticulo := unqryPedidosCompraLineas.FindField(
+      'CODIGO_ART_PEDCLIN');
+    oSku := unqryPedidosCompraLineas.FindField(
+      'CODIGO_UNIDAD_PEDCLIN');
+    if (oArticulo <> nil) and (oSku <> nil) and
+       (Trim(oArticulo.AsString) = '') and
+       (Trim(oSku.AsString) = '') then
+      unqryPedidosCompraLineas.Cancel;
+  end;
 end;
 
 procedure TdmPedidosCompra.OpenTables;
@@ -768,13 +790,8 @@ begin
      (Trim(unqryPedidosCompraLineas.FieldByName(
              'CODIGO_UNIDAD_PEDCLIN').AsString) = '') then
   begin
-    TThread.ForceQueue(nil,
-      procedure
-      begin
-        if unqryPedidosCompraLineas.Active and
-           (unqryPedidosCompraLineas.State in [dsEdit, dsInsert]) then
-          unqryPedidosCompraLineas.Cancel;
-      end);
+    TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
+    TThread.ForceQueue(nil, CancelarLineaVaciaDiferida);
     Abort;
   end;
   AsignarNumeroLineaPedidoCompra(DataSet);
@@ -856,13 +873,10 @@ begin
         iNuevaLinea := StrToIntDef(
           unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString, 0) + 10;
       end;
-      if unqryTablaG.FindField('CONTADOR_LINEAS_PEDC') <> nil then
-      begin
-        if not (unqryTablaG.State in [dsEdit, dsInsert]) then
-          unqryTablaG.Edit;
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_PEDC').AsString :=
-          Format('%.8d', [iNuevaLinea]);
-      end;
+      AsignarCampoTextoSiEditable(
+        unqryTablaG,
+        'CONTADOR_LINEAS_PEDC',
+        Format('%.8d', [iNuevaLinea]));
       DataSet.FieldByName('LINEA_PEDCLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;

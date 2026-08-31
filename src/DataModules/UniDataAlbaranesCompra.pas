@@ -88,6 +88,7 @@ type
     // FinalizarReorganizacionLineas para no regenerarlos por linea.
     FReorganizandoLineas: Integer;
     FReorganizacionPendiente: Boolean;
+    procedure CancelarLineaVaciaDiferida;
     procedure AsignarNumeroLineaAlbaranCompra(DataSet: TDataSet);
     procedure ConfigurarSqlCabecera;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
@@ -143,7 +144,7 @@ implementation
 
 uses
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
-  inLibContadorLineas,
+  inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
   System.Diagnostics, System.UITypes,
   UniDataAperturaConsultas,
@@ -347,6 +348,7 @@ end;
 
 procedure TdmAlbaranesCompra.DataModuleDestroy(Sender: TObject);
 begin
+  TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
   if Assigned(unqryAlbaranesCompraLineas) and
      unqryAlbaranesCompraLineas.Active then
     unqryAlbaranesCompraLineas.Close;
@@ -406,6 +408,26 @@ begin
   AbrirConsultaConTiempo(
     unqryFormasPago, TAG, 'unqryFormasPago', RegistroLog);
   RegistroLog.RegistrarRendimiento(TAG, 'TOTAL', sw.ElapsedMilliseconds);
+end;
+
+procedure TdmAlbaranesCompra.CancelarLineaVaciaDiferida;
+var
+  oArticulo, oSku: TField;
+begin
+  if not (csDestroying in ComponentState) and
+     Assigned(unqryAlbaranesCompraLineas) and
+     unqryAlbaranesCompraLineas.Active and
+     (unqryAlbaranesCompraLineas.State in dsEditModes) then
+  begin
+    oArticulo := unqryAlbaranesCompraLineas.FindField(
+      'CODIGO_ART_ALBCLIN');
+    oSku := unqryAlbaranesCompraLineas.FindField(
+      'CODIGO_UNIDAD_ALBCLIN');
+    if (oArticulo <> nil) and (oSku <> nil) and
+       (Trim(oArticulo.AsString) = '') and
+       (Trim(oSku.AsString) = '') then
+      unqryAlbaranesCompraLineas.Cancel;
+  end;
 end;
 
 procedure TdmAlbaranesCompra.EstablecerMovimientosProveedorVisible(
@@ -812,13 +834,8 @@ begin
      (Trim(unqryAlbaranesCompraLineas.FieldByName(
              'CODIGO_UNIDAD_ALBCLIN').AsString) = '') then
   begin
-    TThread.ForceQueue(nil,
-      procedure
-      begin
-        if unqryAlbaranesCompraLineas.Active and
-           (unqryAlbaranesCompraLineas.State in [dsEdit, dsInsert]) then
-          unqryAlbaranesCompraLineas.Cancel;
-      end);
+    TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
+    TThread.ForceQueue(nil, CancelarLineaVaciaDiferida);
     Abort;
   end;
   AsignarNumeroLineaAlbaranCompra(DataSet);
@@ -906,10 +923,10 @@ begin
         iNuevaLinea := StrToIntDef(
           unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString, 0) + 10;
       end;
-      if (unqryTablaG.FindField('CONTADOR_LINEAS_ALBC') <> nil) and
-         (unqryTablaG.State in [dsEdit, dsInsert]) then
-        unqryTablaG.FieldByName('CONTADOR_LINEAS_ALBC').AsString :=
-          Format('%.8d', [iNuevaLinea]);
+      AsignarCampoTextoSiEditable(
+        unqryTablaG,
+        'CONTADOR_LINEAS_ALBC',
+        Format('%.8d', [iNuevaLinea]));
       DataSet.FieldByName('LINEA_ALBCLIN').AsString :=
         Format('%.4d', [iNuevaLinea]);
     end;

@@ -53,12 +53,14 @@ type
     FCdsVista      : TClientDataSet;
     FDsVista       : TDataSource;
     FDataSourceOrig: TDataSource;
+    FBorradorAlta  : Boolean;
     // True mientras el View del host apunta a FDsVista. Sin este flag,
     // el destructor tocaba View.DataController con el grid YA
     // destruido (AV en GetProvider al cerrar el Mto, 08/07/26).
     FVistaDesviada : Boolean;
     function CdsLineas: TDataSet;
     procedure VistaBeforeDelete(DataSet: TDataSet);
+    procedure AnadirFilaVacia;
     procedure CopiarLineaVista(AOrigen: TDataSet;
                                ALineaVista: Integer);
   public
@@ -70,6 +72,9 @@ type
     procedure Preparar;
     procedure Restaurar;
     procedure Reconstruir;
+    procedure IniciarAlta;
+    procedure FinalizarAlta;
+    function AltaPendiente: Boolean;
     function EsInsercionVacia(ADs: TDataSet): Boolean;
     function FilasVista: Integer;
   end;
@@ -143,7 +148,9 @@ begin
   if DataSet.FindField(CAMPO_LINEA_VISTA_PIVOTE) <> nil then
     iLineaBase := FModelo.ObtenerLineaBase(
       DataSet.FieldByName(CAMPO_LINEA_VISTA_PIVOTE).AsInteger);
-  if (iLineaBase > 0) and Assigned(FAlBorrarGrupo) then
+  if iLineaBase = 0 then
+    FBorradorAlta := False
+  else if Assigned(FAlBorrarGrupo) then
   begin
     if MessageDlg(SPreguntaEliminarLineaTallasVenta,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
@@ -152,8 +159,22 @@ begin
          Assigned(FAlRecargar) then
         FAlRecargar();
     end;
+    Abort;
   end;
-  Abort;
+end;
+
+procedure TVistaPivoteVenta.AnadirFilaVacia;
+begin
+  if (FCdsVista <> nil) and FCdsVista.Active then
+  begin
+    FCdsVista.Append;
+    if FCdsVista.FindField(CAMPO_LINEA_VISTA_PIVOTE) <> nil then
+      FCdsVista.FieldByName(
+        CAMPO_LINEA_VISTA_PIVOTE).AsInteger := 0;
+    if FCdsVista.FindField(FCfg.FieldLinea) <> nil then
+      FCdsVista.FieldByName(FCfg.FieldLinea).AsString := '0000';
+    FCdsVista.Post;
+  end;
 end;
 
 function TVistaPivoteVenta.EsInsercionVacia(ADs: TDataSet): Boolean;
@@ -307,15 +328,7 @@ begin
     try
       FCdsVista.EmptyDataSet;
       if EsInsercionVacia(oDs) or oDs.IsEmpty then
-      begin
-        FCdsVista.Append;
-        if FCdsVista.FindField(CAMPO_LINEA_VISTA_PIVOTE) <> nil then
-          FCdsVista.FieldByName(
-            CAMPO_LINEA_VISTA_PIVOTE).AsInteger := 0;
-        if FCdsVista.FindField(FCfg.FieldLinea) <> nil then
-          FCdsVista.FieldByName(FCfg.FieldLinea).AsString := '0000';
-        FCdsVista.Post;
-      end
+        AnadirFilaVacia
       else
       begin
         oDs.DisableControls;
@@ -344,6 +357,8 @@ begin
           end;
           if FCdsVista.IsEmpty and (not oDs.IsEmpty) then
             CopiarLineaVista(oDs, 0);
+          if FBorradorAlta then
+            AnadirFilaVacia;
           if (oBm <> nil) and oDs.BookmarkValid(oBm) then
             oDs.GotoBookmark(oBm);
         finally
@@ -357,6 +372,29 @@ begin
       FCdsVista.EnableControls;
     end;
   end;
+end;
+
+procedure TVistaPivoteVenta.IniciarAlta;
+begin
+  FBorradorAlta := True;
+  if (FCdsVista <> nil) and FCdsVista.Active then
+  begin
+    if FCdsVista.State in dsEditModes then
+      FCdsVista.Post;
+    if not FCdsVista.Locate(
+      CAMPO_LINEA_VISTA_PIVOTE, 0, []) then
+      AnadirFilaVacia;
+  end;
+end;
+
+procedure TVistaPivoteVenta.FinalizarAlta;
+begin
+  FBorradorAlta := False;
+end;
+
+function TVistaPivoteVenta.AltaPendiente: Boolean;
+begin
+  Result := FBorradorAlta;
 end;
 
 end.
