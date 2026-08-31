@@ -362,6 +362,7 @@ type
 implementation
 
 uses inLibWin,
+  cxGrid,
   inLibDevExp,
   inLibGlobalVar,
   inLibExcepcionesAplicacion,
@@ -1287,6 +1288,16 @@ end;
 procedure TfrmMtoPrincipal.AppMessage(var Msg: TMsg; var Handled: Boolean);
 var
   oControlActivo: TWinControl;
+
+  function EstaContenidoEnGrid(AControl: TControl): Boolean;
+  begin
+    Result := False;
+    while Assigned(AControl) and (not Result) do
+    begin
+      Result := AControl is TcxCustomGrid;
+      AControl := AControl.Parent;
+    end;
+  end;
 begin
   oControlActivo := Screen.ActiveControl;
   // Solo pulsaciones de tecla y descartando la autorrepeticion (bit 30).
@@ -1328,7 +1339,8 @@ begin
             (GetKeyState(VK_SHIFT) >= 0) and
             Assigned(oControlActivo) and
             ((oControlActivo is TcxCustomTextEdit) or
-             (oControlActivo is TCustomEdit)) then
+             (oControlActivo is TCustomEdit)) and
+            not EstaContenidoEnGrid(oControlActivo) then
     begin
       if oControlActivo is TcxCustomTextEdit then
         TcxCustomTextEdit(oControlActivo).SelectAll

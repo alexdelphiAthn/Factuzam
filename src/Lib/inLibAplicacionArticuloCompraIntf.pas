@@ -145,7 +145,9 @@ begin
       begin
         Result.SufijoCabecera := 'PEDC';
         Result.SufijoLinea := 'PEDCLIN';
-        Result.GestionarPivoteAntiguo := True;
+        // Pedidos usa el modo horizontal comun. No debe reactivar el
+        // TGridPivoteCompra retirado al resolver un articulo.
+        Result.GestionarPivoteAntiguo := False;
       end;
     tdacFactura:
       begin

@@ -305,6 +305,7 @@ type
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
                                 var ErrorText: TCaption;
                                 var Error: Boolean);
+    function PuedeIntroducirArticuloPedidoCompra: Boolean;
     function BuscarArticuloPedidoCompra: string;
     function BuscarSkuPedidoCompra(const ACodigoArt: string): string;
     function ArticuloLineaActivaPedidoCompra: string;
@@ -481,18 +482,29 @@ var
   sPrv: string;
 begin
   Result := '';
-  if Assigned(dmmPedidosCompra) then
+  if PuedeIntroducirArticuloPedidoCompra then
   begin
     sPrv := Trim(dmmPedidosCompra.unqryTablaG.
                    FieldByName('CODIGO_PRV_PEDC').AsString);
-    if (sPrv = '') or (sPrv = '0') then
-      MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra,
-                 mtInformation, [mbOk], 0)
-    else
-      Result := BuscarArticuloProveedorCompra(
-        FBusquedasArticulos, BusquedaVisual, sPrv,
-        STituloBuscarArticulosPedidoCompra, 'frmMtoDevcArtSearch', Self);
+    Result := BuscarArticuloProveedorCompra(
+      FBusquedasArticulos, BusquedaVisual, sPrv,
+      STituloBuscarArticulosPedidoCompra, 'frmMtoDevcArtSearch', Self);
   end;
+end;
+
+function TfrmMtoPedidosCompra.PuedeIntroducirArticuloPedidoCompra: Boolean;
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmPedidosCompra) and
+     dmmPedidosCompra.unqryTablaG.Active then
+    sPrv := Trim(dmmPedidosCompra.unqryTablaG.
+      FieldByName('CODIGO_PRV_PEDC').AsString);
+  Result := (sPrv <> '') and (sPrv <> '0');
+  if not Result then
+    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra,
+      mtInformation, [mbOk], 0);
 end;
 
 function TfrmMtoPedidosCompra.ArticuloLineaActivaPedidoCompra: string;
@@ -560,7 +572,8 @@ var
   bPivoteActivo: Boolean;
 begin
   if (Trim(ACodigoArt) <> '') and Assigned(dmmPedidosCompra) and
-     (FAplicacionArticuloCompra <> nil) then
+     (FAplicacionArticuloCompra <> nil) and
+     PuedeIntroducirArticuloPedidoCompra then
   begin
     AsegurarCabeceraPersistidaParaLineas;
     bPivoteActivo := Assigned(FPivote) and FPivote.Activo;
@@ -723,12 +736,10 @@ begin
   RefrescarVisibilidadTallas;
   RefrescarVisibilidadAtributos;
   RefrescarCantidadAAlbaranar;
-  // Contrato de entrada ColumnSKUcxGrid: Tallas horizontal inline
-  // (celdas) por defecto; si su construccion falla, ConstruirModoEntrada
-  // degrada a SKU. F1 cicla los modos. El pivote de compras antiguo
-  // queda RETIRADO de esta pantalla: se ocultan sus botones y nunca se
-  // activa (la preferencia ESPIVOTE de la cabecera se ignora).
-  FModoEntradaSel := mcsTallasInline;
+  // Pedidos entra directamente en el pivote horizontal por articulo padre.
+  // El inline usaba un selector por SKU durante el alta y producia un flujo
+  // distinto al reabrir el documento. El pivote antiguo queda retirado.
+  FModoEntradaSel := mcsTallasHorPed;
   FColsModoConstruido := False;
   btnTallasHorizontal.Visible := False;
   // "Expandir recibidos" se conserva: ahora salta directamente al
@@ -1055,7 +1066,7 @@ begin
   ProcesarTeclaCambioModoDocumento(
     Key, Shift, (pcPedido.ActivePage = tsLineasPedido) and
     (dmmPedidosCompra <> nil), FModoEntradaSel,
-    [mcsAuto, mcsSku, mcsTallasInline, mcsTallasHorPed],
+    [mcsAuto, mcsSku, mcsTallasHorPed],
     ConstruirModoEntrada);
   inherited;
 end;
@@ -1846,6 +1857,9 @@ begin
   // Registrar para que pedido se construye: el hook de DataChange solo
   // reconstruye el modo bandas cuando esta clave cambia.
   FPedidoModoActual := PedidoClaveActual;
+  // Sanea documentos afectados por borrados inline antiguos antes de que
+  // cualquier desmontaje compare las unidades de lineas y celdas.
+  dmmPedidosCompra.LimpiarCeldasHuerfanasPedidoCompraActual;
   // Expansion/consolidacion en bloque (una linea por SKU): totales y
   // pendientes de recibir se recalculan UNA vez al finalizar en vez de
   // por cada post de linea (segundos de cascada al entrar al modo).
@@ -1889,6 +1903,9 @@ begin
     CfgPV.Repositorios :=
       CrearRepositorioPivoteVenta(
         CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
+    CfgPV.OnPuedeResolverEntrada :=
+      PuedeIntroducirArticuloPedidoCompra;
+    CfgPV.OnElegirArticulo := BuscarArticuloPedidoCompra;
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);

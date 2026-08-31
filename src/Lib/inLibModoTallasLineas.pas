@@ -397,8 +397,11 @@ procedure TEscrituraLineasTallas.AltaLineaResuelta(
 var
   i: Integer;
 begin
-  FCds.Edit;
+  // ResolverEntrada cancela primero la fila vacia del navegador. Esta
+  // rama es un alta real: Edit en EOF modificaba la ultima linea.
+  FCds.Append;
   PonerCampo(FCampos.CodigoArt, ADatos.Articulo);
+  PonerCampo(FCampos.CodigoUnidad, ADatos.CodigoSku);
   PonerCampo(FCampos.Descripcion, ADatos.Descripcion);
   PonerCampo(FCampos.Almacen, ADatos.Almacen);
   for i := 1 to 5 do
@@ -406,6 +409,8 @@ begin
     PonerCampo(FCampos.AttrValor[i], ADatos.Valores[i]);
     PonerCampo(FCampos.AttrNombre[i], ADatos.Nombres[i]);
   end;
+  PonerCampo(FCampos.NumAtributos,
+    IntToStr(ContarAtributos(ADatos.Nombres, ADatos.OrdenTalla)));
   if FCds.FindField(FCampos.ConjuntoPivot) <> nil then
     FCds.FieldByName(FCampos.ConjuntoPivot).AsInteger :=
       ADatos.ConjuntoTalla;
@@ -646,6 +651,9 @@ begin
     FEscritura.PonerCampo(FCampos.AttrValor[i], ADatos.Valores[i]);
     FEscritura.PonerCampo(FCampos.AttrNombre[i], ADatos.Nombres[i]);
   end;
+  FEscritura.PonerCampo(FCampos.NumAtributos,
+    IntToStr(FEscritura.ContarAtributos(ADatos.Nombres,
+      ADatos.OrdenTalla)));
   if FCds.FindField(FCampos.ConjuntoPivot) <> nil then
     FCds.FieldByName(FCampos.ConjuntoPivot).AsInteger :=
       ADatos.ConjuntoTalla;

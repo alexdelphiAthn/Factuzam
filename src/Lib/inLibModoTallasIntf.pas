@@ -85,16 +85,19 @@ type
     Valores: TValoresAttrTallas;
     Nombres: TValoresAttrTallas;
     ConjuntoTalla: Integer;
+    OrdenTalla: Integer;
     PonerCantidadCero: Boolean;
   end;
   // Alta o consolidacion de la linea que resuelve una entrada.
   TAltaLineaTallas = record
     Articulo: string;
+    CodigoSku: string;
     Descripcion: string;
     Almacen: string;
     Valores: TValoresAttrTallas;
     Nombres: TValoresAttrTallas;
     ConjuntoTalla: Integer;
+    OrdenTalla: Integer;
     Precio: Double;
     TienePrecio: Boolean;
   end;

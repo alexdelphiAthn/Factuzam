@@ -87,8 +87,10 @@ end;
 
 procedure TModoEntradaDesglose.Desmontar;
 begin
-  // Sin estado externo que convertir: las lineas del cds YA llevan su
-  // SKU y su cantidad.
+  // Las lineas del cds ya llevan su SKU y cantidad. Solo hay que soltar
+  // eventos y editores antes de que el host destruya las columnas.
+  if Assigned(FGrid) then
+    FGrid.Desmontar;
 end;
 
 procedure TModoEntradaDesglose.MostrarEditor;

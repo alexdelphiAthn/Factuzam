@@ -25,6 +25,7 @@ procedure EscribirStockLineaInventario(
   ALineas: TDataSet;
   const ACodigoUnidad: string;
   ACantidadTeorica, APrecioMedio: Currency);
+procedure AsegurarIdPivoteLineaInventario(ALineas: TDataSet);
 
 implementation
 
@@ -54,6 +55,15 @@ begin
     APrecioMedio;
   ALineas.FieldByName(
     'ESPRECIO_MEDIO_CORREGIDO_INVLIN').AsString := 'N';
+end;
+
+procedure AsegurarIdPivoteLineaInventario(ALineas: TDataSet);
+var
+  CampoIdPivote: TField;
+begin
+  CampoIdPivote := ALineas.FindField('ID_AC_PIVOT_INVLIN');
+  if (CampoIdPivote <> nil) and CampoIdPivote.IsNull then
+    CampoIdPivote.AsInteger := 0;
 end;
 
 end.

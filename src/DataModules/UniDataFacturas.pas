@@ -1455,12 +1455,31 @@ begin
 end;
 
 procedure TdmFacturas.unqryLinFacAfterInsert(DataSet: TDataSet);
+var
+  i: Integer;
+  oCampo: TField;
+  procedure InicializarTexto(const ANombreCampo: string);
+  begin
+    oCampo := unqryLinFac.FindField(ANombreCampo);
+    if Assigned(oCampo) and oCampo.IsNull then
+      oCampo.AsString := '';
+  end;
 begin
   inherited;
   AplicarValoresPorDefecto(
     ConexionPrincipal,
     unqryLinFac,
     'fza_facturas_lineas');
+  // Los modos comunes sincronizan estos campos al resolver el SKU. Esta
+  // defensa cubre altas clasicas o programaticas que no pasan por ellos.
+  oCampo := unqryLinFac.FindField('NUM_ATRIBUTOS_FACLIN');
+  if Assigned(oCampo) and oCampo.IsNull then
+    oCampo.AsInteger := 0;
+  for i := 1 to 5 do
+  begin
+    InicializarTexto('ATTR' + IntToStr(i) + '_VALOR_FACLIN');
+    InicializarTexto('ATTR' + IntToStr(i) + '_NOMBRE_FACLIN');
+  end;
   // Limpiar nro de línea para que BeforePost llame al SP de contador
   unqryLinFac.FindField(fnrolin).AsString := '0';
   unqryLinFac.FindField(fporiva).AsCurrency := GetTipoIVA(

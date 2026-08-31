@@ -41,6 +41,16 @@ uses
   inLibModoTallasIntf, inLibGridArticulosPersistenciaIntf,
   inLibGridArticulosBusqueda;
 
+function MaximoAtributosVisiblesGrid(
+  AVista: TcxGridDBTableView;
+  AColumnaNumeroAtributos: TcxGridDBColumn;
+  AMinimoAtributos: Integer = 0): Integer;
+procedure SincronizarVisibilidadAtributosGrid(
+  AVista: TcxGridDBTableView;
+  AColumnaNumeroAtributos: TcxGridDBColumn;
+  const AColumnasAtributo: array of TcxGridDBColumn;
+  AMinimoAtributos: Integer = 0);
+
 type
   // Nombres de los campos del cds que usa la controladora. Cada host los
   // rellena con los suyos (en traspaso: CODIGO_ART, CODIGO_UNIDAD, ...).
@@ -69,6 +79,7 @@ type
     FCds: TDataSet;
     FCampos: TCamposGridArt;
     FColArticulo: TcxGridDBColumn;
+    FColNumeroAtributos: TcxGridDBColumn;
     FColAtributo: array[1..5] of TcxGridDBColumn;
     FValidador: IArticulosValidador;
     FLookup: IArticulosAtributosLookup;
@@ -85,6 +96,7 @@ type
     // apertura fuera del OnEnter: el editor in-place del cxGrid aun no ha
     // terminado de parentar y ClientToScreen lanzaria EInvalidOperation.
     FTimerPopup: TTimer;
+    FTimerVisibilidad: TTimer;
     FOrdenPopupPend: Integer;
     // True mientras AbrirPaletaOrden esta mostrando el editor/paleta, para que
     // el OnEnter del editor (AtributoEnter) no reprograme otra apertura.
@@ -97,6 +109,13 @@ type
     // atributos, no mueve stock) en vez de descartarse. Lo activan las
     // facturas de venta mayor; caja y traspasos lo dejan a False.
     FAceptarNoCatalogo: Boolean;
+    FAfterOpenOriginal: TDataSetNotifyEvent;
+    FAfterPostOriginal: TDataSetNotifyEvent;
+    FAfterScrollOriginal: TDataSetNotifyEvent;
+    FAfterDeleteOriginal: TDataSetNotifyEvent;
+    FAfterCancelOriginal: TDataSetNotifyEvent;
+    FAfterRefreshOriginal: TDataSetNotifyEvent;
+    FEventosDataSetInstalados: Boolean;
     // OnExit de los editores in-place: reenvia a FOnSalirEdicion.
     procedure EditorSalir(Sender: TObject);
     // Restaura el EnterAsTab al SALIR de las columnas de la
@@ -113,7 +132,20 @@ type
     function AcumularLineaExistente(const ACodArt, ASku,
                                     ADesc: string): Boolean;
     procedure CrearColumnaArticulo;
+    procedure CrearColumnaNumeroAtributos;
     procedure CrearColumnasAtributo;
+    procedure RefrescarVisibilidadAtributos(
+      AMinimoAtributos: Integer = 0);
+    procedure ArmarRefrescoVisibilidad;
+    procedure TimerVisibilidadTimer(Sender: TObject);
+    procedure InstalarEventosDataSet;
+    procedure RestaurarEventosDataSet;
+    procedure DataSetAfterOpen(DataSet: TDataSet);
+    procedure DataSetAfterPost(DataSet: TDataSet);
+    procedure DataSetAfterScroll(DataSet: TDataSet);
+    procedure DataSetAfterDelete(DataSet: TDataSet);
+    procedure DataSetAfterCancel(DataSet: TDataSet);
+    procedure DataSetAfterRefresh(DataSet: TDataSet);
     procedure ViewInitEdit(Sender: TcxCustomGridTableView;
                            AItem: TcxCustomGridTableItem; AEdit: TcxCustomEdit);
     procedure AtributoCustomDrawCell(Sender: TcxCustomGridTableView;
@@ -158,6 +190,9 @@ type
     // Crea la columna de articulo + las 5 columnas de atributo y engancha el
     // OnInitEdit del View. El host anade sus columnas DESPUES sobre el View.
     procedure Construir;
+    // Desengancha eventos y temporizadores antes de que el host destruya las
+    // columnas con ClearItems. Es idempotente y el modo no se reutiliza.
+    procedure Desmontar;
     // Deja el editor de la celda de articulo ABIERTO, listo para teclear o
     // escanear. Imprescindible para el lector: si la celda no esta ya en
     // edicion, la primera tecla abre el editor y las siguientes (muy rapidas)
@@ -195,6 +230,70 @@ type
   // sin depender de que cada clase cx lo re-publique.
   THackWinCtrl = class(TWinControl);
 
+function MetodosIguales(const AEventoUno,
+  AEventoDos: TMethod): Boolean;
+begin
+  Result := (AEventoUno.Code = AEventoDos.Code) and
+            (AEventoUno.Data = AEventoDos.Data);
+end;
+
+function EventosDataSetIguales(const AEventoUno,
+  AEventoDos: TDataSetNotifyEvent): Boolean;
+begin
+  Result := MetodosIguales(
+    TMethod(AEventoUno), TMethod(AEventoDos));
+end;
+
+function MaximoAtributosVisiblesGrid(
+  AVista: TcxGridDBTableView;
+  AColumnaNumeroAtributos: TcxGridDBColumn;
+  AMinimoAtributos: Integer): Integer;
+var
+  iAtributos: Integer;
+  iRegistro: Integer;
+begin
+  Result := AMinimoAtributos;
+  if Result < 0 then
+    Result := 0;
+  if Assigned(AVista) and Assigned(AColumnaNumeroAtributos) then
+  begin
+    for iRegistro := 0 to AVista.DataController.RecordCount - 1 do
+    begin
+      if TryStrToInt(Trim(VarToStr(
+           AVista.DataController.Values[iRegistro,
+             AColumnaNumeroAtributos.Index])), iAtributos) and
+         (iAtributos > Result) then
+        Result := iAtributos;
+    end;
+  end;
+end;
+
+procedure SincronizarVisibilidadAtributosGrid(
+  AVista: TcxGridDBTableView;
+  AColumnaNumeroAtributos: TcxGridDBColumn;
+  const AColumnasAtributo: array of TcxGridDBColumn;
+  AMinimoAtributos: Integer);
+var
+  iColumna: Integer;
+  iMaximo: Integer;
+begin
+  if Assigned(AVista) then
+  begin
+    iMaximo := MaximoAtributosVisiblesGrid(
+      AVista, AColumnaNumeroAtributos, AMinimoAtributos);
+    AVista.BeginUpdate;
+    try
+      for iColumna := Low(AColumnasAtributo) to
+        High(AColumnasAtributo) do
+        if Assigned(AColumnasAtributo[iColumna]) then
+          AColumnasAtributo[iColumna].Visible :=
+            iColumna - Low(AColumnasAtributo) + 1 <= iMaximo;
+    finally
+      AVista.EndUpdate;
+    end;
+  end;
+end;
+
 constructor TGridArticulosLineas.Create(
   AConn: TUniConnection; AView: TcxGridDBTableView;
   ACds: TDataSet;
@@ -225,6 +324,10 @@ begin
   FTimerPopup.Enabled := False;
   FTimerPopup.Interval := 1;
   FTimerPopup.OnTimer := TimerPopupTimer;
+  FTimerVisibilidad := TTimer.Create(nil);
+  FTimerVisibilidad.Enabled := False;
+  FTimerVisibilidad.Interval := 1;
+  FTimerVisibilidad.OnTimer := TimerVisibilidadTimer;
   FBusqueda := TBusquedaGridArticulos.Create(
     FView, FCds, FCampos.CodigoArt, ABusquedaVisual,
     ABusquedaSkus, AConsultaArticulos, FRegistroLog,
@@ -240,7 +343,8 @@ end;
 
 destructor TGridArticulosLineas.Destroy;
 begin
-  FreeAndNil(FBusqueda);
+  Desmontar;
+  FreeAndNil(FTimerVisibilidad);
   FreeAndNil(FTimerPopup);
   FValidador := nil;
   FLookup := nil;
@@ -272,16 +376,222 @@ begin
     FOnSalirEdicion(Sender);
 end;
 
+procedure TGridArticulosLineas.ArmarRefrescoVisibilidad;
+begin
+  if Assigned(FTimerVisibilidad) then
+  begin
+    FTimerVisibilidad.Enabled := False;
+    FTimerVisibilidad.Enabled := True;
+  end;
+end;
+
+procedure TGridArticulosLineas.TimerVisibilidadTimer(Sender: TObject);
+begin
+  FTimerVisibilidad.Enabled := False;
+  RefrescarVisibilidadAtributos;
+end;
+
+procedure TGridArticulosLineas.DataSetAfterOpen(DataSet: TDataSet);
+begin
+  if Assigned(FAfterOpenOriginal) then
+    FAfterOpenOriginal(DataSet);
+  ArmarRefrescoVisibilidad;
+end;
+
+procedure TGridArticulosLineas.DataSetAfterPost(DataSet: TDataSet);
+begin
+  if Assigned(FAfterPostOriginal) then
+    FAfterPostOriginal(DataSet);
+  ArmarRefrescoVisibilidad;
+end;
+
+procedure TGridArticulosLineas.DataSetAfterScroll(DataSet: TDataSet);
+begin
+  if Assigned(FAfterScrollOriginal) then
+    FAfterScrollOriginal(DataSet);
+  ArmarRefrescoVisibilidad;
+end;
+
+procedure TGridArticulosLineas.DataSetAfterDelete(DataSet: TDataSet);
+begin
+  if Assigned(FAfterDeleteOriginal) then
+    FAfterDeleteOriginal(DataSet);
+  ArmarRefrescoVisibilidad;
+end;
+
+procedure TGridArticulosLineas.DataSetAfterCancel(DataSet: TDataSet);
+begin
+  if Assigned(FAfterCancelOriginal) then
+    FAfterCancelOriginal(DataSet);
+  ArmarRefrescoVisibilidad;
+end;
+
+procedure TGridArticulosLineas.DataSetAfterRefresh(DataSet: TDataSet);
+begin
+  if Assigned(FAfterRefreshOriginal) then
+    FAfterRefreshOriginal(DataSet);
+  ArmarRefrescoVisibilidad;
+end;
+
+procedure TGridArticulosLineas.InstalarEventosDataSet;
+begin
+  if Assigned(FCds) and not FEventosDataSetInstalados then
+  begin
+    FAfterOpenOriginal := FCds.AfterOpen;
+    FAfterPostOriginal := FCds.AfterPost;
+    FAfterScrollOriginal := FCds.AfterScroll;
+    FAfterDeleteOriginal := FCds.AfterDelete;
+    FAfterCancelOriginal := FCds.AfterCancel;
+    FAfterRefreshOriginal := FCds.AfterRefresh;
+    FCds.AfterOpen := DataSetAfterOpen;
+    FCds.AfterPost := DataSetAfterPost;
+    FCds.AfterScroll := DataSetAfterScroll;
+    FCds.AfterDelete := DataSetAfterDelete;
+    FCds.AfterCancel := DataSetAfterCancel;
+    FCds.AfterRefresh := DataSetAfterRefresh;
+    FEventosDataSetInstalados := True;
+  end;
+end;
+
+procedure TGridArticulosLineas.RestaurarEventosDataSet;
+var
+  oEvento: TDataSetNotifyEvent;
+begin
+  if Assigned(FCds) and FEventosDataSetInstalados then
+  begin
+    oEvento := DataSetAfterOpen;
+    if EventosDataSetIguales(FCds.AfterOpen, oEvento) then
+      FCds.AfterOpen := FAfterOpenOriginal;
+    oEvento := DataSetAfterPost;
+    if EventosDataSetIguales(FCds.AfterPost, oEvento) then
+      FCds.AfterPost := FAfterPostOriginal;
+    oEvento := DataSetAfterScroll;
+    if EventosDataSetIguales(FCds.AfterScroll, oEvento) then
+      FCds.AfterScroll := FAfterScrollOriginal;
+    oEvento := DataSetAfterDelete;
+    if EventosDataSetIguales(FCds.AfterDelete, oEvento) then
+      FCds.AfterDelete := FAfterDeleteOriginal;
+    oEvento := DataSetAfterCancel;
+    if EventosDataSetIguales(FCds.AfterCancel, oEvento) then
+      FCds.AfterCancel := FAfterCancelOriginal;
+    oEvento := DataSetAfterRefresh;
+    if EventosDataSetIguales(FCds.AfterRefresh, oEvento) then
+      FCds.AfterRefresh := FAfterRefreshOriginal;
+    FAfterOpenOriginal := nil;
+    FAfterPostOriginal := nil;
+    FAfterScrollOriginal := nil;
+    FAfterDeleteOriginal := nil;
+    FAfterCancelOriginal := nil;
+    FAfterRefreshOriginal := nil;
+    FEventosDataSetInstalados := False;
+  end;
+end;
+
+procedure TGridArticulosLineas.Desmontar;
+var
+  iAtributo: Integer;
+  oEditKeyDown: TcxGridEditKeyEvent;
+  oFocusedItemChanged: TcxGridFocusedItemChangedEvent;
+  oGetProperties: TcxGridGetPropertiesEvent;
+  oInitEdit: TcxGridInitEditEvent;
+begin
+  if Assigned(FTimerPopup) then
+    FTimerPopup.Enabled := False;
+  if Assigned(FTimerVisibilidad) then
+    FTimerVisibilidad.Enabled := False;
+  FOrdenPopupPend := 0;
+  if Assigned(FView) then
+  begin
+    if Assigned(FView.Controller.EditingController) and
+       FView.Controller.EditingController.IsEditing then
+    begin
+      try
+        FView.Controller.EditingController.HideEdit(False);
+      except
+        on E: Exception do
+          if Assigned(FRegistroLog) then
+            FRegistroLog.RegistrarAviso(
+              'GridArticulos.Desmontar: HideEdit ignorado: ' +
+              E.Message);
+      end;
+    end;
+    oInitEdit := ViewInitEdit;
+    if MetodosIguales(
+         TMethod(FView.OnInitEdit), TMethod(oInitEdit)) then
+      FView.OnInitEdit := nil;
+    oFocusedItemChanged := ViewFocusedItemChanged;
+    if MetodosIguales(TMethod(FView.OnFocusedItemChanged),
+         TMethod(oFocusedItemChanged)) then
+      FView.OnFocusedItemChanged := nil;
+    if Assigned(FBusqueda) then
+    begin
+      oEditKeyDown := FBusqueda.ViewEditKeyDown;
+      if MetodosIguales(TMethod(FView.OnEditKeyDown),
+           TMethod(oEditKeyDown)) then
+        FView.OnEditKeyDown := nil;
+    end;
+  end;
+  if Assigned(FColArticulo) then
+  begin
+    if Assigned(FBusqueda) then
+    begin
+      oGetProperties := FBusqueda.ArticuloGetProperties;
+      if MetodosIguales(TMethod(FColArticulo.OnGetProperties),
+           TMethod(oGetProperties)) then
+        FColArticulo.OnGetProperties := nil;
+    end;
+    if FColArticulo.Properties is TcxButtonEditProperties then
+    begin
+      TcxButtonEditProperties(
+        FColArticulo.Properties).OnButtonClick := nil;
+      TcxButtonEditProperties(
+        FColArticulo.Properties).OnValidate := nil;
+    end;
+  end;
+  for iAtributo := Low(FColAtributo) to High(FColAtributo) do
+  begin
+    if Assigned(FColAtributo[iAtributo]) then
+    begin
+      FColAtributo[iAtributo].OnCustomDrawCell := nil;
+      if FColAtributo[iAtributo].Properties is
+         TcxButtonEditProperties then
+        TcxButtonEditProperties(
+          FColAtributo[iAtributo].Properties).OnButtonClick := nil;
+    end;
+  end;
+  RestaurarEventosDataSet;
+  FreeAndNil(FBusqueda);
+  FColArticulo := nil;
+  FColNumeroAtributos := nil;
+  for iAtributo := Low(FColAtributo) to High(FColAtributo) do
+    FColAtributo[iAtributo] := nil;
+  FCds := nil;
+  FView := nil;
+  FOnResuelto := nil;
+  FOnEntrarEdicion := nil;
+  FOnSalirEdicion := nil;
+end;
+
+procedure TGridArticulosLineas.RefrescarVisibilidadAtributos(
+  AMinimoAtributos: Integer);
+begin
+  SincronizarVisibilidadAtributosGrid(
+    FView, FColNumeroAtributos, FColAtributo, AMinimoAtributos);
+end;
+
 procedure TGridArticulosLineas.Construir;
 begin
   FView.BeginUpdate;
   try
     FView.ClearItems;
     CrearColumnaArticulo;
+    CrearColumnaNumeroAtributos;
     CrearColumnasAtributo;
   finally
     FView.EndUpdate;
   end;
+  RefrescarVisibilidadAtributos;
+  InstalarEventosDataSet;
   // Al entrar en una celda de atributo vacia, abre la paleta (listbox de
   // swatches) automaticamente, como la caja. Se engancha en OnInitEdit.
   FView.OnInitEdit := ViewInitEdit;
@@ -484,6 +794,16 @@ begin
   AvanzarTrasResolver;
 end;
 
+procedure TGridArticulosLineas.CrearColumnaNumeroAtributos;
+begin
+  FColNumeroAtributos := FView.CreateColumn;
+  FColNumeroAtributos.Name := 'colNumeroAtributosDyn';
+  FColNumeroAtributos.DataBinding.FieldName := FCampos.NumAtributos;
+  FColNumeroAtributos.Visible := False;
+  FColNumeroAtributos.VisibleForCustomization := False;
+  FColNumeroAtributos.Options.Editing := False;
+end;
+
 procedure TGridArticulosLineas.CrearColumnasAtributo;
 var
   i: Integer;
@@ -564,9 +884,9 @@ begin
   end;
 end;
 
-// Muestra/oculta las columnas de atributo segun la variacion del articulo y
-// fija NUM_ATRIBUTOS + los nombres. Los valores del desplegable se cargan por
-// fila en ViewInitEdit.
+// Actualiza la variacion de la linea y sincroniza la visibilidad con el
+// maximo de atributos usado por TODO el documento. Una linea simple no puede
+// ocultar las columnas que necesitan otras lineas.
 procedure TGridArticulosLineas.ActualizarColumnasAtributo(
   const ACodArt: string);
 var
@@ -587,7 +907,6 @@ begin
         if i <= Length(Atribs) then
         begin
           Col.Caption := Atribs[i - 1].NombreAtributo;
-          Col.Visible := True;
           Col.Options.Editing := True;
           if CdsEditando then
             FCds.FieldByName(FCampos.AttrNombre[i]).AsString :=
@@ -595,7 +914,6 @@ begin
         end
         else
         begin
-          Col.Visible := False;
           if CdsEditando then
           begin
             FCds.FieldByName(FCampos.AttrNombre[i]).AsString := '';
@@ -607,6 +925,7 @@ begin
   finally
     FView.EndUpdate;
   end;
+  RefrescarVisibilidadAtributos(Length(Atribs));
 end;
 
 // Si algun atributo (talla/color) tiene un unico valor en los SKUs del

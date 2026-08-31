@@ -77,6 +77,7 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    procedure CancelarLineaVaciaDiferida;
     procedure AsignarNumeroLineaDevolucionCompra(DataSet: TDataSet);
     function CampoVistaCabeceraPrintExiste(const ACampo: string): Boolean;
     function HayLineasMovimiento(const ASerie, ANumero: string): Boolean;
@@ -182,6 +183,7 @@ end;
 
 procedure TdmDevolucionesCompra.DataModuleDestroy(Sender: TObject);
 begin
+  TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
   if Assigned(unqryDevolucionesCompraLineas) and
      unqryDevolucionesCompraLineas.Active then
     unqryDevolucionesCompraLineas.Close;
@@ -189,6 +191,26 @@ begin
      unqryMovimientosProveedor.Active then
     unqryMovimientosProveedor.Close;
   inherited;
+end;
+
+procedure TdmDevolucionesCompra.CancelarLineaVaciaDiferida;
+var
+  oArticulo, oSku: TField;
+begin
+  if not (csDestroying in ComponentState) and
+     Assigned(unqryDevolucionesCompraLineas) and
+     unqryDevolucionesCompraLineas.Active and
+     (unqryDevolucionesCompraLineas.State in dsEditModes) then
+  begin
+    oArticulo := unqryDevolucionesCompraLineas.FindField(
+      'CODIGO_ART_DEVCLIN');
+    oSku := unqryDevolucionesCompraLineas.FindField(
+      'CODIGO_UNIDAD_DEVCLIN');
+    if (oArticulo <> nil) and (oSku <> nil) and
+       (Trim(oArticulo.AsString) = '') and
+       (Trim(oSku.AsString) = '') then
+      unqryDevolucionesCompraLineas.Cancel;
+  end;
 end;
 
 procedure TdmDevolucionesCompra.OpenTables;
@@ -295,7 +317,17 @@ begin
 end;
 
 procedure TdmDevolucionesCompra.unqryTablaGBeforePost(DataSet: TDataSet);
+var
+  oContador: TField;
 begin
+  // El repositorio de numeracion es el unico escritor del contador.
+  // Excluirlo del DML automatico impide que un Post de cabecera lo rebaje.
+  oContador := DataSet.FindField('CONTADOR_LINEAS_DEVC');
+  if oContador <> nil then
+  begin
+    oContador.Required := False;
+    oContador.ProviderFlags := [];
+  end;
   inherited;
   SincronizarInstanteMovimientoDocumento(
     DataSet, 'FECHA_DEVC', 'INSTANTE_MOVIMIENTO_DEVC');
@@ -460,13 +492,8 @@ begin
      (Trim(unqryDevolucionesCompraLineas.FieldByName(
              'CODIGO_UNIDAD_DEVCLIN').AsString) = '') then
   begin
-    TThread.ForceQueue(nil,
-      procedure
-      begin
-        if unqryDevolucionesCompraLineas.Active and
-           (unqryDevolucionesCompraLineas.State in [dsEdit, dsInsert]) then
-          unqryDevolucionesCompraLineas.Cancel;
-      end);
+    TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
+    TThread.ForceQueue(nil, CancelarLineaVaciaDiferida);
     Abort;
   end;
   AsignarNumeroLineaDevolucionCompra(DataSet);

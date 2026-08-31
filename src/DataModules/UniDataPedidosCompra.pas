@@ -75,6 +75,7 @@ type
     FReorganizacionPendiente: Boolean;
     procedure CancelarLineaVaciaDiferida;
     procedure AsignarNumeroLineaPedidoCompra(DataSet: TDataSet);
+    procedure RefrescarResumenPedidoCompra;
     procedure ConfigurarSqlCabecera;
     // Construye el SQLInsert contra fza_pedidos_compra: la vista
     // vi_pedidos_compra tiene columnas calculadas y no es insertable
@@ -116,6 +117,9 @@ type
     procedure IniciarReorganizacionLineas;
     procedure FinalizarReorganizacionLineas;
     function EnReorganizacionLineas: Boolean;
+    // Retira restos de la antigua entrada inline. Una celda sin su linea
+    // maestra hacia fallar la invariante al cambiar de modo (6 -> 0 uds.).
+    procedure LimpiarCeldasHuerfanasPedidoCompraActual;
     // True si el pedido enfocado tiene lineas con SKU sin celdas de
     // pivote: necesitan la primera fusion del modo tallas inline.
     function HayLineasSinPivotar: Boolean;
@@ -325,7 +329,6 @@ begin
     '       TOTAL_RETENCION_PEDC = :TOTAL_RETENCION_PEDC, ' + sLineBreak +
     '       TOTAL_LIQUIDO_PEDC = :TOTAL_LIQUIDO_PEDC, ' + sLineBreak +
     '       FORMA_PAGO_PEDC = :FORMA_PAGO_PEDC, ' + sLineBreak +
-    '       CONTADOR_LINEAS_PEDC = :CONTADOR_LINEAS_PEDC, ' + sLineBreak +
     '       COMENTARIOS_PEDC = :COMENTARIOS_PEDC, ' + sLineBreak +
     '       OBSERVACIONES_PEDC = :OBSERVACIONES_PEDC, ' + sLineBreak +
     '       ESPIVOTE_HORIZONTAL_PEDC = :ESPIVOTE_HORIZONTAL_PEDC, ' +
@@ -728,6 +731,9 @@ end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
                                                        DataSet: TDataSet);
+var
+  i: Integer;
+  oCampo: TField;
   function FieldByName(const ANombre: string): TField;
   begin
     Result := unqryPedidosCompraLineas.FieldByName(ANombre);
@@ -735,6 +741,12 @@ procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterInsert(
   function FindField(const ANombre: string): TField;
   begin
     Result := unqryPedidosCompraLineas.FindField(ANombre);
+  end;
+  procedure InicializarTexto(const ANombreCampo: string);
+  begin
+    oCampo := FindField(ANombreCampo);
+    if Assigned(oCampo) and oCampo.IsNull then
+      oCampo.AsString := '';
   end;
 begin
   inherited;
@@ -756,6 +768,17 @@ begin
     if FindField('CODIGO_ALMACEN_PEDCLIN') <> nil then
       FieldByName('CODIGO_ALMACEN_PEDCLIN').AsString :=
         unqryTablaG.FieldByName('CODIGO_ALM_PEDC').AsString;
+    // La base de datos tiene defaults, pero UniDAC comprueba Required
+    // antes de enviarlos. Inicializarlos evita el Post incompleto al elegir
+    // articulo/color desde el grid horizontal.
+    oCampo := FindField('NUM_ATRIBUTOS_PEDCLIN');
+    if Assigned(oCampo) and oCampo.IsNull then
+      oCampo.AsInteger := 0;
+    for i := 1 to 5 do
+    begin
+      InicializarTexto('ATTR' + IntToStr(i) + '_VALOR_PEDCLIN');
+      InicializarTexto('ATTR' + IntToStr(i) + '_NOMBRE_PEDCLIN');
+    end;
     FieldByName('USUARIO_ALTA').AsString    := IdentidadSesion.Usuario;
     FieldByName('INSTANTE_ALTA').AsDateTime := Now;
   FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
@@ -910,11 +933,14 @@ begin
             sSerie, sNumero, IdentidadSesion.Usuario);
     end;
   end;
+  if FReorganizandoLineas = 0 then
+    RefrescarResumenPedidoCompra;
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasBeforeDelete(
                                                        DataSet: TDataSet);
 var
+  oQry: TUniQuery;
   sSerie, sNumero, sLinea: string;
 begin
   inherited;
@@ -928,9 +954,29 @@ begin
   sLinea := unqryPedidosCompraLineas.FieldByName(
     'LINEA_PEDCLIN').AsString;
   if (sSerie <> '') and (sNumero <> '') then
+  begin
+    // No existe FK con borrado en cascada. Si quedan PEDCCEL huerfanas,
+    // el desmontaje cuenta sus unidades pero no puede reconstruirlas.
+    oQry := TUniQuery.Create(nil);
+    try
+      oQry.Connection := ConexionPrincipal;
+      oQry.SQL.Text :=
+        'DELETE FROM fza_pedidos_compra_celdas ' +
+        ' WHERE SERIE_PEDC_PEDCCEL = :s ' +
+        '   AND NUMERO_PEDC_PEDCCEL = :n ' +
+        '   AND CAST(LINEA_PEDC_PEDCCEL AS UNSIGNED) = ' +
+        '       CAST(:l AS UNSIGNED)';
+      oQry.ParamByName('s').AsString := sSerie;
+      oQry.ParamByName('n').AsString := sNumero;
+      oQry.ParamByName('l').AsString := sLinea;
+      oQry.ExecSQL;
+    finally
+      FreeAndNil(oQry);
+    end;
     CrearPendientesPedidoCompraUniDAC(
       ConexionPrincipal).BorrarPdteRecibirDesdePedido(
         sSerie, sNumero, sLinea);
+  end;
 end;
 
 procedure TdmPedidosCompra.unqryPedidosCompraLineasAfterDelete(
@@ -944,6 +990,53 @@ begin
     FReorganizacionPendiente := True
   else
     SincronizarPdteRecibir;
+  if FReorganizandoLineas = 0 then
+    RefrescarResumenPedidoCompra;
+end;
+
+procedure TdmPedidosCompra.RefrescarResumenPedidoCompra;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) and
+     (unqryTablaG.State = dsBrowse) and
+     (unqryTablaG.SQLRefresh.Count > 0) then
+    unqryTablaG.RefreshRecord;
+end;
+
+procedure TdmPedidosCompra.LimpiarCeldasHuerfanasPedidoCompraActual;
+var
+  oQry: TUniQuery;
+  sNumero: string;
+  sSerie: string;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) and
+     (unqryTablaG.State = dsBrowse) then
+  begin
+    sSerie := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
+    sNumero := Trim(unqryTablaG.FieldByName('NUMERO_PEDC').AsString);
+    if (sSerie <> '') and (sNumero <> '') then
+    begin
+      oQry := TUniQuery.Create(nil);
+      try
+        oQry.Connection := ConexionPrincipal;
+        oQry.SQL.Text :=
+          'DELETE C ' +
+          '  FROM fza_pedidos_compra_celdas C ' +
+          '  LEFT JOIN fza_pedidos_compra_lineas L ' +
+          '    ON L.SERIE_PEDC_PEDCLIN = C.SERIE_PEDC_PEDCCEL ' +
+          '   AND L.NUMERO_PEDC_PEDCLIN = C.NUMERO_PEDC_PEDCCEL ' +
+          '   AND CAST(L.LINEA_PEDCLIN AS UNSIGNED) = ' +
+          '       CAST(C.LINEA_PEDC_PEDCCEL AS UNSIGNED) ' +
+          ' WHERE C.SERIE_PEDC_PEDCCEL = :s ' +
+          '   AND C.NUMERO_PEDC_PEDCCEL = :n ' +
+          '   AND L.LINEA_PEDCLIN IS NULL';
+        oQry.ParamByName('s').AsString := sSerie;
+        oQry.ParamByName('n').AsString := sNumero;
+        oQry.ExecSQL;
+      finally
+        FreeAndNil(oQry);
+      end;
+    end;
+  end;
 end;
 
 function TdmPedidosCompra.ObtenerAlmacenesSql(
@@ -1519,6 +1612,7 @@ begin
               sSerie, sNumero, IdentidadSesion.Usuario);
       end;
     end;
+    RefrescarResumenPedidoCompra;
   end;
 end;
 

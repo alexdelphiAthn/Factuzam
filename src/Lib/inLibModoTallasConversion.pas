@@ -159,6 +159,7 @@ begin
   Escritura.Valores := AAtributos.Valores;
   Escritura.Nombres := AAtributos.Nombres;
   Escritura.ConjuntoTalla := AAtributos.ConjuntoTalla;
+  Escritura.OrdenTalla := AAtributos.OrdenTalla;
   // Maestra YA convertida (tiene celdas): su CANTIDAD es el total que
   // mantiene el refresco de totales; volver a volcarla DUPLICABA las
   // celdas en cada reentrada al modo.

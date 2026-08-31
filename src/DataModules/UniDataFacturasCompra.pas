@@ -82,6 +82,7 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    procedure CancelarLineaVaciaDiferida;
     procedure AsignarNumeroLineaFacturaCompra(DataSet: TDataSet);
     function ObtenerSkusFacturaCsv(const ASerie, ANumero: string): string;
   public
@@ -197,6 +198,7 @@ end;
 
 procedure TdmFacturasCompra.DataModuleDestroy(Sender: TObject);
 begin
+  TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
   if Assigned(unqryFacturasCompraLineas) and
      unqryFacturasCompraLineas.Active then
     unqryFacturasCompraLineas.Close;
@@ -205,6 +207,26 @@ begin
   if Assigned(unqryAlmacenesFacc) and unqryAlmacenesFacc.Active then
     unqryAlmacenesFacc.Close;
   inherited;
+end;
+
+procedure TdmFacturasCompra.CancelarLineaVaciaDiferida;
+var
+  oArticulo, oSku: TField;
+begin
+  if not (csDestroying in ComponentState) and
+     Assigned(unqryFacturasCompraLineas) and
+     unqryFacturasCompraLineas.Active and
+     (unqryFacturasCompraLineas.State in dsEditModes) then
+  begin
+    oArticulo := unqryFacturasCompraLineas.FindField(
+      'CODIGO_ART_FACCLIN');
+    oSku := unqryFacturasCompraLineas.FindField(
+      'CODIGO_UNIDAD_FACCLIN');
+    if (oArticulo <> nil) and (oSku <> nil) and
+       (Trim(oArticulo.AsString) = '') and
+       (Trim(oSku.AsString) = '') then
+      unqryFacturasCompraLineas.Cancel;
+  end;
 end;
 
 procedure TdmFacturasCompra.OpenTables;
@@ -493,9 +515,18 @@ end;
 procedure TdmFacturasCompra.unqryTablaGBeforePost(DataSet: TDataSet);
 var
   fEstado: TField;
+  oContador: TField;
   sEstadoNuevo, sEstadoAnterior: string;
   qChk: TUniQuery;
 begin
+  // El repositorio de numeracion es el unico escritor del contador.
+  // Excluirlo del DML automatico impide que un Post de cabecera lo rebaje.
+  oContador := DataSet.FindField('CONTADOR_LINEAS_FACC');
+  if oContador <> nil then
+  begin
+    oContador.Required := False;
+    oContador.ProviderFlags := [];
+  end;
   inherited;
   if (DataSet.FindField('ESPIVOTE_HORIZONTAL_FACC') <> nil) and
      (Trim(DataSet.FieldByName('ESPIVOTE_HORIZONTAL_FACC').AsString) = '')
@@ -720,13 +751,8 @@ begin
      (Trim(unqryFacturasCompraLineas.FieldByName(
              'CODIGO_UNIDAD_FACCLIN').AsString) = '') then
   begin
-    TThread.ForceQueue(nil,
-      procedure
-      begin
-        if unqryFacturasCompraLineas.Active and
-           (unqryFacturasCompraLineas.State in [dsEdit, dsInsert]) then
-          unqryFacturasCompraLineas.Cancel;
-      end);
+    TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
+    TThread.ForceQueue(nil, CancelarLineaVaciaDiferida);
     Abort;
   end;
   AsignarNumeroLineaFacturaCompra(DataSet);

@@ -26,7 +26,7 @@ implementation
 
 uses
   System.SysUtils, inLibArticulosResolverIntf,
-  inLibArticulosValidadorIntf;
+  inLibArticulosValidadorIntf, inLibMsgArticulos;
 
 type
   TAplicacionArticuloCompra = class(
@@ -36,6 +36,10 @@ type
     FRepositorio: IRepositorioLecturasArticuloCompra;
     FPuerto: IPuertoLineaArticuloCompra;
     FAplicando: Boolean;
+    FUltimaClaveAvisoProveedor: string;
+    function AvisoProveedorDistinto(
+      const ACodigoArticulo,
+      ACodigoProveedor: string): string;
     function CrearLinea(
       const AEntrada: TEntradaAplicacionArticuloCompra;
       const AConfiguracion: TConfiguracionCamposArticuloCompra;
@@ -75,6 +79,41 @@ begin
   inherited Create;
   FRepositorio := ARepositorio;
   FPuerto := APuerto;
+end;
+
+function TAplicacionArticuloCompra.AvisoProveedorDistinto(
+  const ACodigoArticulo, ACodigoProveedor: string): string;
+var
+  oProveedorDocumento: TArticuloCoste;
+  oProveedorOrigen: TArticuloCoste;
+  sClave: string;
+begin
+  Result := '';
+  if (Trim(ACodigoArticulo) <> '') and
+     (Trim(ACodigoProveedor) <> '') and
+     (Trim(ACodigoProveedor) <> '0') then
+  begin
+    oProveedorDocumento := FRepositorio.ResolverUltimoCoste(
+      ACodigoArticulo, ACodigoProveedor);
+    if not oProveedorDocumento.Encontrado then
+    begin
+      oProveedorOrigen := FRepositorio.ResolverUltimoCoste(
+        ACodigoArticulo, '');
+      if oProveedorOrigen.Encontrado and
+         (Trim(oProveedorOrigen.CodigoProveedor) <> '') and
+         not SameText(oProveedorOrigen.CodigoProveedor,
+           ACodigoProveedor) then
+      begin
+        sClave := UpperCase(Trim(ACodigoArticulo)) + '|' +
+          UpperCase(Trim(ACodigoProveedor));
+        if sClave <> FUltimaClaveAvisoProveedor then
+        begin
+          FUltimaClaveAvisoProveedor := sClave;
+          Result := SAvisoArticuloCreadoOtroProveedor;
+        end;
+      end;
+    end;
+  end;
 end;
 
 function TAplicacionArticuloCompra.CrearLinea(
@@ -160,58 +199,67 @@ begin
   sEntrada := Trim(AEntrada.CodigoIntroducido);
   if (sEntrada <> '') and (not FAplicando) then
   begin
-    FAplicando := True;
-    try
-      oConfiguracion := ConfiguracionCamposArticuloCompra(ATipoDocumento);
-      if FPuerto.PrepararLinea(oConfiguracion, rCantidadActual) then
-      begin
-        oResolucion := FRepositorio.ResolverEntrada(sEntrada);
-        if oResolucion.Encontrado then
+    if (Trim(AEntrada.CodigoProveedor) = '') or
+       (Trim(AEntrada.CodigoProveedor) = '0') then
+      Result.Mensaje := SErrorProveedorNoSeleccionadoBuscarArticulos
+    else
+    begin
+      FAplicando := True;
+      try
+        oConfiguracion := ConfiguracionCamposArticuloCompra(ATipoDocumento);
+        if FPuerto.PrepararLinea(oConfiguracion, rCantidadActual) then
         begin
-          oDatos := FRepositorio.ResolverDatos(
-            oResolucion.CodigoArticulo,
-            oResolucion.CodigoSku,
-            AEntrada.Fecha,
-            AEntrada.CodigoAlmacen,
-            AEntrada.CodigoProveedor);
-          if oDatos.Encontrado then
+          oResolucion := FRepositorio.ResolverEntrada(sEntrada);
+          if oResolucion.Encontrado then
           begin
-            if oDatos.RequiereSku then
-              oDatos.UltimoCoste := FRepositorio.ResolverUltimoCoste(
+            oDatos := FRepositorio.ResolverDatos(
+              oResolucion.CodigoArticulo,
+              oResolucion.CodigoSku,
+              AEntrada.Fecha,
+              AEntrada.CodigoAlmacen,
+              AEntrada.CodigoProveedor);
+            if oDatos.Encontrado then
+            begin
+              if oDatos.RequiereSku then
+                oDatos.UltimoCoste := FRepositorio.ResolverUltimoCoste(
+                  oDatos.CodigoArticulo,
+                  AEntrada.CodigoProveedor);
+              iIdConjuntoPivote := FRepositorio.BuscarConjuntoPivote(
+                oDatos.CodigoArticulo);
+              sModeloProveedor := FRepositorio.BuscarModeloProveedor(
                 oDatos.CodigoArticulo,
                 AEntrada.CodigoProveedor);
-            iIdConjuntoPivote := FRepositorio.BuscarConjuntoPivote(
-              oDatos.CodigoArticulo);
-            sModeloProveedor := FRepositorio.BuscarModeloProveedor(
-              oDatos.CodigoArticulo,
-              AEntrada.CodigoProveedor);
-            if sModeloProveedor = '' then
-              sModeloProveedor := oDatos.UltimoCoste.RefProveedor;
-            oLinea := CrearLinea(
-              AEntrada,
-              oConfiguracion,
-              oDatos,
-              iIdConjuntoPivote,
-              sModeloProveedor,
-              rCantidadActual);
-            FPuerto.AplicarLinea(oConfiguracion, oLinea);
-            Result.Aplicado := True;
-            Result.RequiereSku :=
-              oDatos.RequiereSku and (oDatos.CodigoSku = '');
-            Result.IdConjuntoPivote := iIdConjuntoPivote;
-            Result.AccionPivote := ResolverAccionPivote(
-              AEntrada,
-              oConfiguracion,
-              iIdConjuntoPivote);
+              if sModeloProveedor = '' then
+                sModeloProveedor := oDatos.UltimoCoste.RefProveedor;
+              oLinea := CrearLinea(
+                AEntrada,
+                oConfiguracion,
+                oDatos,
+                iIdConjuntoPivote,
+                sModeloProveedor,
+                rCantidadActual);
+              FPuerto.AplicarLinea(oConfiguracion, oLinea);
+              Result.Aplicado := True;
+              Result.RequiereSku :=
+                oDatos.RequiereSku and (oDatos.CodigoSku = '');
+              Result.Mensaje := AvisoProveedorDistinto(
+                oDatos.CodigoArticulo,
+                AEntrada.CodigoProveedor);
+              Result.IdConjuntoPivote := iIdConjuntoPivote;
+              Result.AccionPivote := ResolverAccionPivote(
+                AEntrada,
+                oConfiguracion,
+                iIdConjuntoPivote);
+            end
+            else
+              Result.Mensaje := oDatos.Mensaje;
           end
           else
-            Result.Mensaje := oDatos.Mensaje;
-        end
-        else
-          Result.Mensaje := oResolucion.Mensaje;
+            Result.Mensaje := oResolucion.Mensaje;
+        end;
+      finally
+        FAplicando := False;
       end;
-    finally
-      FAplicando := False;
     end;
   end;
 end;

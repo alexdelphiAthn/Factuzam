@@ -286,6 +286,8 @@ resourcestring
     '¿Grabar de todas formas?';
   SErrorProveedorNoSeleccionadoBuscarArticulos =
     'Selecciona un proveedor antes de buscar artículos.';
+  SAvisoArticuloCreadoOtroProveedor =
+    'Este artículo se creó con otro proveedor';
   SErrorArticuloNoSeleccionadoElegirColor =
     'Selecciona un artículo antes de elegir color.';
   SErrorArticuloSinColoresBasicosActivos =

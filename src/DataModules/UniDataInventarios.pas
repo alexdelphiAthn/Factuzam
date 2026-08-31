@@ -276,6 +276,7 @@ uses
   UniDataConn,
   inLibInventarioNube,
   inLibPrestaShopColaSenal,
+  inLibInventariosEntradaDataSet,
   inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -784,17 +785,8 @@ begin
 end;
 
 function TdmInventarios.FechaRecuentoPorDefecto: TDateTime;
-var
-  CampoFecha: TField;
 begin
   Result := Now;
-  if (unqryTablaG <> nil) and unqryTablaG.Active and
-     (not unqryTablaG.IsEmpty) then
-  begin
-    CampoFecha := unqryTablaG.FindField('FECHA_INV');
-    if (CampoFecha <> nil) and (not CampoFecha.IsNull) then
-      Result := CampoFecha.AsDateTime;
-  end;
 end;
 
 procedure TdmInventarios.AsegurarFechaRecuentoLinea;
@@ -941,6 +933,7 @@ begin
   DataSet.FieldByName('SERIE_INV_INVLIN').AsString  := FSerie;
   DataSet.FieldByName('NUMERO_INV_INVLIN').AsString := FNumero;
   DataSet.FieldByName('LINEA_INVLIN').AsString      := GenerarSiguienteLinea;
+  AsegurarIdPivoteLineaInventario(DataSet);
   DataSet.FieldByName('CODIGO_ART_INVLIN').AsString    := '';
   DataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString := '';
   DataSet.FieldByName('CANTIDAD_TEORICA_INVLIN').AsCurrency    := 0;
@@ -1116,6 +1109,7 @@ begin
   if not FDesempaquetando then
   begin
     DesactivarRequeridosLinea(DataSet);
+    AsegurarIdPivoteLineaInventario(DataSet);
     RegistrarSnapshotLinea(DataSet);
     AsegurarFechaRecuentoLinea;
     ValidarClavesLinea(DataSet);

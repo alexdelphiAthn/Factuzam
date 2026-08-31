@@ -137,7 +137,7 @@ type
 implementation
 
 uses
-  inLibMsgArticulos;
+  inLibLineaSku, inLibMsgArticulos;
 
 type
   // Acceso a OnEnter/OnExit (protegidos en TWinControl) de los editores
@@ -793,8 +793,10 @@ procedure TModoEntradaSku.EscribirLinea(const ACodArt, ASku,
 begin
   if not (FConfig.Cds.State in [dsEdit, dsInsert]) then
     FConfig.Cds.Edit;
-  PonerCampo(FConfig.Campos.CodigoUnidad, ASku);
-  PonerCampo(FConfig.Campos.CodigoArt, ACodArt);
+  // Articulo, SKU y atributos requeridos forman una sola escritura.
+  // El Post del host puede ejecutarse en cuanto se cierre el editor.
+  SincronizarCamposLineaSku(FConfig.Cds, FConfig.Campos,
+    ACodArt, ASku, FConfig.LookupAtributos);
   PonerCampo(FConfig.Campos.Descripcion, ADescripcion);
 end;
 
@@ -881,6 +883,8 @@ begin
                  [loCaseInsensitive]) then
     begin
       ds.Edit;
+      SincronizarCamposLineaSku(ds, FConfig.Campos,
+        ACodArt, ASku, FConfig.LookupAtributos);
       ds.FieldByName(FConfig.Campos.Cantidad).AsFloat :=
         ds.FieldByName(FConfig.Campos.Cantidad).AsFloat + 1;
       ds.Post;

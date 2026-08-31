@@ -230,7 +230,7 @@ uses
   inMtoModalAddBlockDocumentoTrabajo,
   inMtoModalCargarDocumentoTrabajo,
   // Factoria del contrato + IdentidadSesion.Usuario para el gestor de tallas.
-  inLibColumnasSku,
+  inLibColumnasSku, inLibColumnasDocumento,
   UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino, inMtoModalCajDef,
@@ -544,32 +544,11 @@ begin
 end;
 
 procedure TfrmMtoDocumentosTrabajo.MostrarColumnasAtributoGlobalesDTR;
-var
-  Nombres: TNombresAtributosDocumentoTrabajo;
-  Nombre: string;
-  i, iOrden: Integer;
-  Col: TcxGridColumn;
 begin
-  // Nombres globales de atributos para ver Color/Talla desde el
-  // principio (mismo helper que inventarios / banco de pruebas).
-  Nombres := FLecturasDocumentosTrabajo.ListarNombresAtributos;
-  iOrden := 1;
-  for Nombre in Nombres do
-  begin
-    if iOrden <= 5 then
-    begin
-      for i := 0 to tvLineasDTR.ColumnCount - 1 do
-      begin
-        Col := tvLineasDTR.Columns[i];
-        if Col.Tag = iOrden then
-        begin
-          Col.Caption := Nombre;
-          Col.Visible := True;
-        end;
-      end;
-      Inc(iOrden);
-    end;
-  end;
+  // Los nombres globales solo rotulan las dimensiones que el controlador
+  // haya hecho visibles al revisar todas las lineas del documento.
+  AplicarNombresAtributosGlobalesDocumento(
+    tvLineasDTR, FLecturasDocumentosTrabajo.ListarNombresAtributos);
 end;
 
 procedure TfrmMtoDocumentosTrabajo.ModoEntradaResuelto(const ACodArt,
@@ -1037,6 +1016,14 @@ begin
     begin
       if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
         dmmDocumentosTrabajo.unqryLineas.Post;
+      // Las tallas horizontales conservan una linea maestra provisional.
+      // Antes de materializar otro documento se expanden sus celdas para
+      // que el destino reciba las SKU completas, incluida la talla.
+      if FModoEntradaSel = mcsTallasInline then
+      begin
+        FModoEntradaSel := mcsSku;
+        ConstruirModoEntrada;
+      end;
       if ds.State in dsEditModes then
         ds.Post;
       if ds.FieldByName('ID_DTR').IsNull then

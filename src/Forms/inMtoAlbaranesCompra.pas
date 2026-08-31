@@ -258,6 +258,7 @@ type
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
                                 var ErrorText: TCaption;
                                 var Error: Boolean);
+    function PuedeIntroducirArticuloAlbaranCompra: Boolean;
     function BuscarArticuloAlbaranCompra: string;
     function BuscarSkuAlbaranCompra(const ACodigoArt: string): string;
     function BuscarEmpresaAlbaranCompra(out ACodigo: string): Boolean;
@@ -399,18 +400,30 @@ var
   sPrv: string;
 begin
   Result := '';
-  if Assigned(dmmAlbaranesCompra) then
+  if PuedeIntroducirArticuloAlbaranCompra then
   begin
     sPrv := Trim(dmmAlbaranesCompra.unqryTablaG.
                    FieldByName('CODIGO_PRV_ALBC').AsString);
-    if (sPrv = '') or (sPrv = '0') then
-      MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulos,
-                 mtInformation, [mbOk], 0)
-    else
-      Result := BuscarArticuloProveedorCompra(
-        FBusquedasArticulos, BusquedaVisual, sPrv,
-        STituloBuscarArticulosAlbaranCompra, 'frmMtoDevcArtSearch', Self);
+    Result := BuscarArticuloProveedorCompra(
+      FBusquedasArticulos, BusquedaVisual, sPrv,
+      STituloBuscarArticulosAlbaranCompra, 'frmMtoDevcArtSearch', Self);
   end;
+end;
+
+function TfrmMtoAlbaranesCompra.PuedeIntroducirArticuloAlbaranCompra:
+  Boolean;
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmAlbaranesCompra) and
+     dmmAlbaranesCompra.unqryTablaG.Active then
+    sPrv := Trim(dmmAlbaranesCompra.unqryTablaG.
+      FieldByName('CODIGO_PRV_ALBC').AsString);
+  Result := (sPrv <> '') and (sPrv <> '0');
+  if not Result then
+    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulos,
+      mtInformation, [mbOk], 0);
 end;
 
 function TfrmMtoAlbaranesCompra.ArticuloLineaActivaAlbaranCompra: string;
@@ -469,7 +482,8 @@ var
   bPivoteActivo: Boolean;
 begin
   if (Trim(ACodigoArt) <> '') and Assigned(dmmAlbaranesCompra) and
-     (FAplicacionArticuloCompra <> nil) then
+     (FAplicacionArticuloCompra <> nil) and
+     PuedeIntroducirArticuloAlbaranCompra then
   begin
     AsegurarCabeceraPersistidaParaLineas;
     bPivoteActivo := Assigned(FPivote) and FPivote.Activo;
@@ -1098,6 +1112,9 @@ begin
     CfgPV.Repositorios :=
       CrearRepositorioPivoteVenta(
         CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
+    CfgPV.OnPuedeResolverEntrada :=
+      PuedeIntroducirArticuloAlbaranCompra;
+    CfgPV.OnElegirArticulo := BuscarArticuloAlbaranCompra;
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);

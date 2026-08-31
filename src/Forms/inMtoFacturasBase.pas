@@ -1074,6 +1074,7 @@ begin
     AFormulario.dmmFacturas.unqryLinFac,
     AFormulario.FDependenciasInyeccion.Lineas.Articulos.Validador,
     AFormulario.FDependenciasInyeccion.Lineas.Articulos.Resolver,
+    AFormulario.FDependenciasInyeccion.Lineas.Articulos.Atributos,
     AFormulario.FDependenciasInyeccion.Lineas.Lecturas);
   FreeAndNil(AFormulario.FPresentadorLineas);
   AFormulario.FPresentadorLineas := TPresentadorLineasFacturaVcl.Create(

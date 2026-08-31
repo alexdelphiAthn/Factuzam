@@ -369,11 +369,19 @@ function TModoEntradaTallas.DatosAlta(
 begin
   Result := Default(TAltaLineaTallas);
   Result.Articulo := AResolucion.CodigoArticulo;
+  Result.CodigoSku := AResolucion.CodigoSku;
   Result.Descripcion := AResolucion.DescripcionArticulo;
   Result.Almacen := AAlmacen;
   Result.Valores := AAtributos.Valores;
   Result.Nombres := AAtributos.Nombres;
   Result.ConjuntoTalla := AAtributos.ConjuntoTalla;
+  Result.OrdenTalla := AAtributos.OrdenTalla;
+  // La linea maestra horizontal necesita una identidad no vacia antes
+  // del Post. Si se eligio el articulo padre, se conserva el prefijo
+  // articulo/atributos; la talla concreta se completara al des-pivotar.
+  if Result.CodigoSku = '' then
+    Result.CodigoSku := TModeloTallas.ComponerSkuLinea(
+      Result.Articulo, Result.Valores, Result.OrdenTalla, '');
   // Precio del documento (su tarifa, su fecha): la consolidacion del
   // escaneo NO fusiona en una linea de precio distinto.
   if Assigned(FConfig.ObtenerPrecioSku) then

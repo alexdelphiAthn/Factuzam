@@ -878,10 +878,7 @@ begin
       begin
         oColumna := AVista.Columns[iColumna];
         if oColumna.Tag = iOrden then
-        begin
           oColumna.Caption := ANombres[iNombre];
-          oColumna.Visible := True;
-        end;
       end;
       Inc(iNombre);
       Inc(iOrden);

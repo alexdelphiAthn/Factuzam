@@ -249,6 +249,7 @@ type
     procedure TallaValidateHook(Sender: TObject; var DisplayValue: Variant;
                                 var ErrorText: TCaption;
                                 var Error: Boolean);
+    function PuedeIntroducirArticuloFacturaCompra: Boolean;
     function BuscarArticuloFacturaCompra: string;
     function BuscarSkuFacturaCompra(const ACodigoArt: string): string;
     function BuscarProveedorFacturaCompra(out ACodigo: string): Boolean;
@@ -426,18 +427,30 @@ var
   sPrv: string;
 begin
   Result := '';
-  if Assigned(dmmFacturasCompra) then
+  if PuedeIntroducirArticuloFacturaCompra then
   begin
     sPrv := Trim(dmmFacturasCompra.unqryTablaG.
                    FieldByName('CODIGO_PRV_FACC').AsString);
-    if (sPrv = '') or (sPrv = '0') then
-      MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra,
-                 mtInformation, [mbOk], 0)
-    else
-      Result := BuscarArticuloProveedorCompra(
-        FBusquedasArticulos, BusquedaVisual, sPrv,
-        STituloBuscarArticulosFacturaCompra, 'frmMtoFaccArtSearch', Self);
+    Result := BuscarArticuloProveedorCompra(
+      FBusquedasArticulos, BusquedaVisual, sPrv,
+      STituloBuscarArticulosFacturaCompra, 'frmMtoFaccArtSearch', Self);
   end;
+end;
+
+function TfrmMtoFacturasCompra.PuedeIntroducirArticuloFacturaCompra:
+  Boolean;
+var
+  sPrv: string;
+begin
+  sPrv := '';
+  if Assigned(dmmFacturasCompra) and
+     dmmFacturasCompra.unqryTablaG.Active then
+    sPrv := Trim(dmmFacturasCompra.unqryTablaG.
+      FieldByName('CODIGO_PRV_FACC').AsString);
+  Result := (sPrv <> '') and (sPrv <> '0');
+  if not Result then
+    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra,
+      mtInformation, [mbOk], 0);
 end;
 
 function TfrmMtoFacturasCompra.ArticuloLineaActivaFacturaCompra: string;
@@ -1005,6 +1018,9 @@ begin
     CfgPV.Repositorios :=
       CrearRepositorioPivoteVenta(
         CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
+    CfgPV.OnPuedeResolverEntrada :=
+      PuedeIntroducirArticuloFacturaCompra;
+    CfgPV.OnElegirArticulo := BuscarArticuloFacturaCompra;
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -1173,7 +1189,8 @@ var
   bPivoteActivo: Boolean;
 begin
   if (Trim(ACodigoArt) <> '') and Assigned(dmmFacturasCompra) and
-     (FAplicacionArticuloCompra <> nil) then
+     (FAplicacionArticuloCompra <> nil) and
+     PuedeIntroducirArticuloFacturaCompra then
   begin
     AsegurarCabeceraPersistidaParaLineas;
     bPivoteActivo := Assigned(FPivote) and FPivote.Activo;

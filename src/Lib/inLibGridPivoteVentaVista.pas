@@ -317,13 +317,20 @@ procedure TVistaPivoteVenta.Reconstruir;
 var
   oDs: TDataSet;
   oBm: TBookmark;
-  iLineaVista, iLineaBase: Integer;
-  bFiltrado, bAnadida: Boolean;
+  iLineaVista, iLineaBase, iLineaActiva: Integer;
+  bFiltrado, bAnadida, bLineaActiva: Boolean;
 begin
   oDs := CdsLineas;
   if (oDs <> nil) and oDs.Active and (FCdsVista <> nil) and
      FCdsVista.Active then
   begin
+    bLineaActiva := (not FCdsVista.IsEmpty) and
+      (FCdsVista.FindField(CAMPO_LINEA_VISTA_PIVOTE) <> nil);
+    if bLineaActiva then
+      iLineaActiva := FCdsVista.FieldByName(
+        CAMPO_LINEA_VISTA_PIVOTE).AsInteger
+    else
+      iLineaActiva := 0;
     FCdsVista.DisableControls;
     try
       FCdsVista.EmptyDataSet;
@@ -368,6 +375,9 @@ begin
             oDs.FreeBookmark(oBm);
         end;
       end;
+      if bLineaActiva and (not FCdsVista.IsEmpty) then
+        FCdsVista.Locate(
+          CAMPO_LINEA_VISTA_PIVOTE, iLineaActiva, []);
     finally
       FCdsVista.EnableControls;
     end;

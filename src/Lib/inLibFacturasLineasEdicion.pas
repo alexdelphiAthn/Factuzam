@@ -17,8 +17,8 @@ interface
 
 uses
   System.Generics.Collections, Data.DB, Uni,
-  inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
-  inLibFacturasLecturasIntf;
+  inLibArticulosAtributosIntf, inLibArticulosResolverIntf,
+  inLibArticulosValidadorIntf, inLibFacturasLecturasIntf;
 
 type
   TResultadoEdicionLineaFactura = record
@@ -35,6 +35,7 @@ type
     FCacheMostrarSku: TDictionary<string, Boolean>;
     FConexion: TUniConnection;
     FLineas: TDataSet;
+    FLookupAtributos: IArticulosAtributosLookup;
     FResolver: IArticulosResolver;
     FRepositorioLecturas: IRepositorioLecturasFactura;
     FValidador: IArticulosValidador;
@@ -51,6 +52,8 @@ type
       const ADatos: TArticuloDatos;
       const APrecio: TArticuloPrecio);
     function FechaFactura: TDateTime;
+    procedure SincronizarSku(
+      const ACodigoArticulo, ACodigoSku: string);
     function TarifaFactura: string;
   public
     constructor Create(
@@ -58,6 +61,7 @@ type
       ACabecera, ALineas: TDataSet;
       const AValidador: IArticulosValidador;
       const AResolver: IArticulosResolver;
+      const ALookupAtributos: IArticulosAtributosLookup;
       const ARepositorioLecturas: IRepositorioLecturasFactura);
     destructor Destroy; override;
     function AplicarDesdeEditor(
@@ -78,13 +82,14 @@ implementation
 
 uses
   System.SysUtils, System.StrUtils, inLibFacturas,
-  inLibImpuestosComun;
+  inLibColumnasSkuIntf, inLibImpuestosComun, inLibLineaSku;
 
 constructor TEditorLineasFactura.Create(
   AConexion: TUniConnection;
   ACabecera, ALineas: TDataSet;
   const AValidador: IArticulosValidador;
   const AResolver: IArticulosResolver;
+  const ALookupAtributos: IArticulosAtributosLookup;
   const ARepositorioLecturas: IRepositorioLecturasFactura);
 begin
   inherited Create;
@@ -93,17 +98,44 @@ begin
   FLineas := ALineas;
   FValidador := AValidador;
   FResolver := AResolver;
+  FLookupAtributos := ALookupAtributos;
   FRepositorioLecturas := ARepositorioLecturas;
   FCacheMostrarSku := TDictionary<string, Boolean>.Create;
 end;
 
 destructor TEditorLineasFactura.Destroy;
 begin
+  FLookupAtributos := nil;
   FResolver := nil;
   FRepositorioLecturas := nil;
   FValidador := nil;
   FCacheMostrarSku.Free;
   inherited;
+end;
+
+procedure TEditorLineasFactura.SincronizarSku(
+  const ACodigoArticulo, ACodigoSku: string);
+var
+  Campos: TCamposColumnasSku;
+  i: Integer;
+begin
+  Campos := Default(TCamposColumnasSku);
+  Campos.CodigoArt := 'CODIGO_ART_FACLIN';
+  Campos.CodigoUnidad := 'CODIGO_UNIDAD_FACLIN';
+  Campos.NumAtributos := 'NUM_ATRIBUTOS_FACLIN';
+  for i := 1 to 5 do
+  begin
+    Campos.AttrValor[i] := 'ATTR' + IntToStr(i) +
+      '_VALOR_FACLIN';
+    Campos.AttrNombre[i] := 'ATTR' + IntToStr(i) +
+      '_NOMBRE_FACLIN';
+  end;
+  SincronizarCamposLineaSku(
+    FLineas,
+    Campos,
+    ACodigoArticulo,
+    ACodigoSku,
+    FLookupAtributos);
 end;
 
 function TEditorLineasFactura.FechaFactura: TDateTime;
@@ -178,11 +210,7 @@ begin
   FCacheMostrarSku.AddOrSetValue(
     ADatos.CodigoArticulo,
     ADatos.EsVariacion or ADatos.RequiereSku);
-  FLineas.FieldByName('CODIGO_ART_FACLIN').AsString :=
-    ADatos.CodigoArticulo;
-  if FLineas.FindField('CODIGO_UNIDAD_FACLIN') <> nil then
-    FLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
-      ADatos.CodigoSku;
+  SincronizarSku(ADatos.CodigoArticulo, ADatos.CodigoSku);
   if FLineas.FindField('DESCRIPCION_VARIACION_FACLIN') <> nil then
     FLineas.FieldByName('DESCRIPCION_VARIACION_FACLIN').AsString :=
       ADatos.DescripcionSku;
@@ -342,9 +370,7 @@ begin
     begin
       FAplicando := True;
       try
-        FLineas.FieldByName('CODIGO_ART_FACLIN').AsString := Codigo;
-        if FLineas.FindField('CODIGO_UNIDAD_FACLIN') <> nil then
-          FLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString := '';
+        SincronizarSku(Codigo, '');
         if FLineas.FindField('DESCRIPCION_VARIACION_FACLIN') <> nil then
           FLineas.FieldByName(
             'DESCRIPCION_VARIACION_FACLIN').AsString := '';

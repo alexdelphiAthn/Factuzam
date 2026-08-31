@@ -84,6 +84,7 @@ type
     FConjuntoVirtualIds : TDictionary<string, Integer>;
     FProxConjuntoVirtual: Integer;
     FPosConjuntos       : TDictionary<Integer, TValoresTallaPivoteVenta>;
+    FHayColor           : Boolean;
     FHayTipoCantidadEspecial: Boolean;
     FGruposSinConjunto  : TList<Integer>;
     procedure RegistrarBandasGrupo(ALineaRepr: Integer);
@@ -157,6 +158,7 @@ type
     function LineasRealesDeGrupo(ALineaBase: Integer): TArray<string>;
     function GruposSinConjunto: TArray<Integer>;
     property BandaUnica: Boolean read FBandaUnica;
+    property HayColor: Boolean read FHayColor;
     property HayTipoCantidadEspecial: Boolean
       read FHayTipoCantidadEspecial;
     property LineasVista: TList<Integer> read FLineasVista;
@@ -215,6 +217,7 @@ begin
   FGrupos.Clear;
   FCeldas.Clear;
   FGruposSinConjunto.Clear;
+  FHayColor := False;
   FHayTipoCantidadEspecial := False;
 end;
 
@@ -260,6 +263,10 @@ begin
       sTipoCantidad := 'Uds';
     if not EsTipoCantidadPredeterminadoPivote(sTipoCantidad) then
       FHayTipoCantidadEspecial := True;
+    if (ADatos.Info.ColorAv > 0) or
+       (Trim(ADatos.Info.ColorTexto) <> '') or
+       (Trim(ADatos.Info.ColorCodigo) <> '') then
+      FHayColor := True;
     sClave := ClaveGrupoPivoteVenta(ADatos.Articulo,
       ADatos.Info.ColorAv, ADatos.Precio, ADatos.Info.TallaAv,
       ADatos.LineaTexto);

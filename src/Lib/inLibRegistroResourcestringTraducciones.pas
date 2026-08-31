@@ -796,6 +796,12 @@ begin
       SErrorProveedorNoSeleccionadoBuscarArticulos);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SAvisoArticuloCreadoOtroProveedor',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SAvisoArticuloCreadoOtroProveedor);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SErrorArticuloNoSeleccionadoElegirColor',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.

@@ -69,6 +69,7 @@ type
   // Eventos originales del dataset del host, para restaurarlos.
   TEventosDataSetPivote = record
     OnFilterOrig  : TFilterRecordEvent;
+    AfterOpenOrig : TDataSetNotifyEvent;
     AfterPostOrig : TDataSetNotifyEvent;
     AfterScrollOrig: TDataSetNotifyEvent;
     FilteredOrig  : Boolean;
@@ -79,7 +80,11 @@ type
     BotonesVisibles  : array[0..NavigatorButtonCount - 1] of Boolean;
     VisibleOriginal  : Boolean;
     ConfirmarOriginal: Boolean;
+    ConfirmarGridOriginal: Boolean;
     AnadirOriginal   : Boolean;
+    CicloCeldaOriginal: Boolean;
+    TabCeldaOriginal : Boolean;
+    EnterCeldaOriginal: Boolean;
     Instalado        : Boolean;
   end;
   TPresentacionPivoteVenta = class
@@ -111,6 +116,7 @@ type
     procedure RestaurarNavegador;
     procedure NavegadorButtonClick(Sender: TObject;
       AButtonIndex: Integer; var ADone: Boolean);
+    procedure CdsAfterOpen(DataSet: TDataSet);
     procedure CdsAfterPost(DataSet: TDataSet);
     procedure CdsAfterScroll(DataSet: TDataSet);
     procedure CrearColumnas;
@@ -122,6 +128,8 @@ type
     procedure AjustarAnchoDibujo(AColumna: TcxGridColumn;
       AMargen: Integer; ANegrita: Boolean);
     procedure AjustarAnchosIniciales;
+    procedure AplicarVisibilidadColor(
+      AMostrarProvisional: Boolean = False);
     procedure AplicarVisibilidadTallas;
     procedure AplicarVisibilidadTipoCantidad;
     procedure ColocarBloqueColumnas;
@@ -192,6 +200,7 @@ type
     function EnfocarEditorArticulo: Boolean;
     procedure FinalizarAlta;
     procedure MostrarArticuloProvisional(const AArticulo: string);
+    procedure MostrarColorProvisional(AVisible: Boolean);
     function ObtenerAnclajeColor(
       out AAnclaje: TAnclajeSelectorAtributo): Boolean;
     // Línea base del grupo con foco (0 si no hay grupo bajo el foco).
@@ -208,6 +217,13 @@ implementation
 
 uses
   inLibAtributosPaleta, inLibMsgArticulos, inLibDevExp;
+
+function EventosDataSetPivoteIguales(const AEventoUno,
+  AEventoDos: TDataSetNotifyEvent): Boolean;
+begin
+  Result := (TMethod(AEventoUno).Code = TMethod(AEventoDos).Code) and
+            (TMethod(AEventoUno).Data = TMethod(AEventoDos).Data);
+end;
 
 const
   ANCHO_COLUMNA_TALLA_TRES_CANT = 62;
@@ -330,8 +346,10 @@ begin
   begin
     FEventosDs.OnFilterOrig := oDs.OnFilterRecord;
     FEventosDs.FilteredOrig := oDs.Filtered;
+    FEventosDs.AfterOpenOrig := oDs.AfterOpen;
     FEventosDs.AfterPostOrig := oDs.AfterPost;
     FEventosDs.AfterScrollOrig := oDs.AfterScroll;
+    oDs.AfterOpen := CdsAfterOpen;
     oDs.AfterPost := CdsAfterPost;
     oDs.AfterScroll := CdsAfterScroll;
     FEventosDs.Instalados := True;
@@ -341,6 +359,7 @@ end;
 procedure TPresentacionPivoteVenta.RestaurarEventosDataSet;
 var
   oDs: TDataSet;
+  oEvento: TDataSetNotifyEvent;
 begin
   oDs := CdsLineas;
   if (oDs <> nil) and FEventosDs.Instalados then
@@ -348,9 +367,15 @@ begin
     // Primero desenganchar los hooks y LUEGO restaurar Filtered: el
     // cambio de filtro refresca el dataset y dispara AfterScroll, que
     // no debe caer ya en los handlers del pivote.
-    oDs.OnFilterRecord := FEventosDs.OnFilterOrig;
-    oDs.AfterPost := FEventosDs.AfterPostOrig;
-    oDs.AfterScroll := FEventosDs.AfterScrollOrig;
+    oEvento := CdsAfterOpen;
+    if EventosDataSetPivoteIguales(oDs.AfterOpen, oEvento) then
+      oDs.AfterOpen := FEventosDs.AfterOpenOrig;
+    oEvento := CdsAfterPost;
+    if EventosDataSetPivoteIguales(oDs.AfterPost, oEvento) then
+      oDs.AfterPost := FEventosDs.AfterPostOrig;
+    oEvento := CdsAfterScroll;
+    if EventosDataSetPivoteIguales(oDs.AfterScroll, oEvento) then
+      oDs.AfterScroll := FEventosDs.AfterScrollOrig;
     FEventosDs.Instalados := False;
     oDs.Filtered := FEventosDs.FilteredOrig;
   end;
@@ -367,13 +392,27 @@ begin
     FNavegador.VisibleOriginal := FCfg.View.Navigator.Visible;
     FNavegador.ConfirmarOriginal :=
       FCfg.View.Navigator.Buttons.ConfirmDelete;
+    // El grid tiene otra confirmacion de borrado independiente de la
+    // del navegador. VistaBeforeDelete ya confirma los grupos reales.
+    FNavegador.ConfirmarGridOriginal :=
+      FCfg.View.OptionsData.DeletingConfirmation;
     FNavegador.AnadirOriginal := FCfg.View.OptionsData.Appending;
+    FNavegador.CicloCeldaOriginal :=
+      FCfg.View.OptionsBehavior.FocusCellOnCycle;
+    FNavegador.TabCeldaOriginal :=
+      FCfg.View.OptionsBehavior.FocusCellOnTab;
+    FNavegador.EnterCeldaOriginal :=
+      FCfg.View.OptionsBehavior.GoToNextCellOnEnter;
     for i := 0 to NavigatorButtonCount - 1 do
       FNavegador.BotonesVisibles[i] :=
         FCfg.View.Navigator.Buttons[i].Visible;
     FCfg.View.Navigator.Visible := True;
     FCfg.View.Navigator.Buttons.ConfirmDelete := False;
+    FCfg.View.OptionsData.DeletingConfirmation := False;
     FCfg.View.OptionsData.Appending := True;
+    FCfg.View.OptionsBehavior.FocusCellOnCycle := True;
+    FCfg.View.OptionsBehavior.FocusCellOnTab := True;
+    FCfg.View.OptionsBehavior.GoToNextCellOnEnter := True;
     FCfg.View.Navigator.Buttons.First.Visible := True;
     FCfg.View.Navigator.Buttons.Prior.Visible := True;
     FCfg.View.Navigator.Buttons.Next.Visible := True;
@@ -407,7 +446,15 @@ begin
     FCfg.View.Navigator.Visible := FNavegador.VisibleOriginal;
     FCfg.View.Navigator.Buttons.ConfirmDelete :=
       FNavegador.ConfirmarOriginal;
+    FCfg.View.OptionsData.DeletingConfirmation :=
+      FNavegador.ConfirmarGridOriginal;
     FCfg.View.OptionsData.Appending := FNavegador.AnadirOriginal;
+    FCfg.View.OptionsBehavior.FocusCellOnCycle :=
+      FNavegador.CicloCeldaOriginal;
+    FCfg.View.OptionsBehavior.FocusCellOnTab :=
+      FNavegador.TabCeldaOriginal;
+    FCfg.View.OptionsBehavior.GoToNextCellOnEnter :=
+      FNavegador.EnterCeldaOriginal;
     for i := 0 to NavigatorButtonCount - 1 do
       FCfg.View.Navigator.Buttons[i].Visible :=
         FNavegador.BotonesVisibles[i];
@@ -432,6 +479,14 @@ begin
     FVista.IniciarAlta;
     EnfocarEditorArticulo;
   end;
+end;
+
+procedure TPresentacionPivoteVenta.CdsAfterOpen(DataSet: TDataSet);
+begin
+  if Assigned(FEventosDs.AfterOpenOrig) then
+    FEventosDs.AfterOpenOrig(DataSet);
+  if not FRecargaSuspendida then
+    ArmarRecarga;
 end;
 
 procedure TPresentacionPivoteVenta.CdsAfterPost(DataSet: TDataSet);
@@ -611,6 +666,16 @@ begin
       FColTipoCantidad.Visible := True;
     FColTipoCantidad.VisibleForCustomization :=
       FColTipoCantidad.Visible;
+  end;
+end;
+
+procedure TPresentacionPivoteVenta.AplicarVisibilidadColor(
+  AMostrarProvisional: Boolean);
+begin
+  if FColColor <> nil then
+  begin
+    FColColor.Visible := FModelo.HayColor or AMostrarProvisional;
+    FColColor.VisibleForCustomization := FColColor.Visible;
   end;
 end;
 
@@ -810,6 +875,7 @@ var
   iRegistro: Integer;
 begin
   FVista.Reconstruir;
+  AplicarVisibilidadColor;
   AplicarVisibilidadTipoCantidad;
   AplicarVisibilidadTallas;
   ColocarBloqueColumnas;
@@ -894,6 +960,12 @@ begin
       oEditor.Repaint;
     end;
   end;
+end;
+
+procedure TPresentacionPivoteVenta.MostrarColorProvisional(
+  AVisible: Boolean);
+begin
+  AplicarVisibilidadColor(AVisible);
 end;
 
 function TPresentacionPivoteVenta.ObtenerAnclajeColor(

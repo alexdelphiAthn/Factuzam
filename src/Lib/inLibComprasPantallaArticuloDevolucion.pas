@@ -30,7 +30,7 @@ function CrearAplicacionArticuloDevolucionCompra(
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibMsgArticulos;
 
 type
   TAplicacionArticuloDevolucionCompra = class(
@@ -40,6 +40,10 @@ type
     FValidador: IArticulosValidador;
     FResolver: IArticulosResolver;
     FDatos: IRepositorioDatosDevolucionCompra;
+    FUltimaClaveAvisoProveedor: string;
+    function AvisoProveedorDistinto(
+      const ACodigoArticulo,
+      ACodigoProveedor: string): string;
     function ResolverEntrada(
       const ACodigo: string): TArtResolucionEntrada;
     function CargarDatos(
@@ -86,6 +90,41 @@ begin
   FValidador := AValidador;
   FResolver := AResolver;
   FDatos := ADatos;
+end;
+
+function TAplicacionArticuloDevolucionCompra.AvisoProveedorDistinto(
+  const ACodigoArticulo, ACodigoProveedor: string): string;
+var
+  oProveedorDocumento: TArticuloCoste;
+  oProveedorOrigen: TArticuloCoste;
+  sClave: string;
+begin
+  Result := '';
+  if (Trim(ACodigoArticulo) <> '') and
+     (Trim(ACodigoProveedor) <> '') and
+     (Trim(ACodigoProveedor) <> '0') then
+  begin
+    oProveedorDocumento := FResolver.ResolverUltimoCoste(
+      ACodigoArticulo, ACodigoProveedor, '');
+    if not oProveedorDocumento.Encontrado then
+    begin
+      oProveedorOrigen := FResolver.ResolverUltimoCoste(
+        ACodigoArticulo, '', '');
+      if oProveedorOrigen.Encontrado and
+         (Trim(oProveedorOrigen.CodigoProveedor) <> '') and
+         not SameText(oProveedorOrigen.CodigoProveedor,
+           ACodigoProveedor) then
+      begin
+        sClave := UpperCase(Trim(ACodigoArticulo)) + '|' +
+          UpperCase(Trim(ACodigoProveedor));
+        if sClave <> FUltimaClaveAvisoProveedor then
+        begin
+          FUltimaClaveAvisoProveedor := sClave;
+          Result := SAvisoArticuloCreadoOtroProveedor;
+        end;
+      end;
+    end;
+  end;
 end;
 
 function TAplicacionArticuloDevolucionCompra.ResolverEntrada(
@@ -182,29 +221,38 @@ begin
   sCodigo := Trim(AEntrada.CodigoIntroducido);
   if sCodigo <> '' then
   begin
-    oResolucion := ResolverEntrada(sCodigo);
-    if oResolucion.Encontrado then
+    if (Trim(AEntrada.CodigoProveedor) = '') or
+       (Trim(AEntrada.CodigoProveedor) = '0') then
+      Result.Mensaje := SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion
+    else
     begin
-      oDatosArticulo := CargarDatos(AEntrada, oResolucion);
-      if oDatosArticulo.Encontrado then
+      oResolucion := ResolverEntrada(sCodigo);
+      if oResolucion.Encontrado then
       begin
-        iIdConjuntoPivote := FDatos.ResolverConjuntoPivotArticulo(
-          oDatosArticulo.CodigoArticulo);
-        Result.Linea := CrearLinea(
-          AEntrada,
-          oDatosArticulo,
-          iIdConjuntoPivote);
-        Result.Aplicado := True;
-        Result.RequiereSku := oDatosArticulo.RequiereSku and
-          (oDatosArticulo.CodigoSku = '');
-        Result.PrepararColor := oDatosArticulo.RequiereSku and
-          (iIdConjuntoPivote > 0);
+        oDatosArticulo := CargarDatos(AEntrada, oResolucion);
+        if oDatosArticulo.Encontrado then
+        begin
+          iIdConjuntoPivote := FDatos.ResolverConjuntoPivotArticulo(
+            oDatosArticulo.CodigoArticulo);
+          Result.Linea := CrearLinea(
+            AEntrada,
+            oDatosArticulo,
+            iIdConjuntoPivote);
+          Result.Aplicado := True;
+          Result.RequiereSku := oDatosArticulo.RequiereSku and
+            (oDatosArticulo.CodigoSku = '');
+          Result.PrepararColor := oDatosArticulo.RequiereSku and
+            (iIdConjuntoPivote > 0);
+          Result.Mensaje := AvisoProveedorDistinto(
+            oDatosArticulo.CodigoArticulo,
+            AEntrada.CodigoProveedor);
+        end
+        else
+          Result.Mensaje := oDatosArticulo.Mensaje;
       end
       else
-        Result.Mensaje := oDatosArticulo.Mensaje;
-    end
-    else
-      Result.Mensaje := oResolucion.Mensaje;
+        Result.Mensaje := oResolucion.Mensaje;
+    end;
   end;
 end;
 

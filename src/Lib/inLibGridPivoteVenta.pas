@@ -38,6 +38,8 @@ const
 type
   TCrearLineaPivoteVentaEvent = procedure(
     const ACodigoSku: string) of object;
+  TPuedeResolverEntradaPivoteVentaEvent = function: Boolean of object;
+  TElegirArticuloPivoteVentaEvent = function: string of object;
   TBandaPivoteVentaEvent = procedure(
     ABanda: TBandaPivoteVenta) of object;
 
@@ -98,6 +100,8 @@ type
     // Puerto de persistencia del pivote (V2). Lo compone el formulario
     // consumidor con CrearRepositorioPivoteVenta (UniDataPivoteVenta).
     Repositorios          : TRepositoriosPivoteVenta;
+    OnPuedeResolverEntrada: TPuedeResolverEntradaPivoteVentaEvent;
+    OnElegirArticulo      : TElegirArticuloPivoteVentaEvent;
     OnCrearLineaSku       : TCrearLineaPivoteVentaEvent;
     OnBandaCambiada       : TBandaPivoteVentaEvent;
   end;
@@ -149,6 +153,7 @@ type
     FOnEntrarEdicion  : TNotifyEvent;
     FOnSalirEdicion   : TNotifyEvent;
     FEstado           : TEstadoGridPivoteVenta;
+    function PuedeResolverEntrada: Boolean;
     function CdsLineas: TDataSet;
     function CampoTexto(ADs: TDataSet; const ACampo: string): string;
     function CampoFloat(ADs: TDataSet; const ACampo: string): Double;
@@ -294,6 +299,13 @@ begin
   FreeAndNil(FModelo);
   FreeAndNil(FRegistroEventos);
   inherited;
+end;
+
+function TGridPivoteVenta.PuedeResolverEntrada: Boolean;
+begin
+  Result := True;
+  if Assigned(FCfg.OnPuedeResolverEntrada) then
+    Result := FCfg.OnPuedeResolverEntrada;
 end;
 
 function TGridPivoteVenta.CdsLineas: TDataSet;
@@ -637,11 +649,13 @@ begin
       oDs.Filtered := False;
       oDs.Append;
       try
+        // El callback del documento puede hacer Post. La identidad SKU y
+        // sus campos obligatorios deben existir antes de cederle el control.
+        PrepararLineaSku(oDs, '', sSku);
         if Assigned(FCfg.OnCrearLineaSku) then
           FCfg.OnCrearLineaSku(sSku);
         if not (oDs.State in dsEditModes) then
           oDs.Edit;
-        PrepararLineaSku(oDs, '', sSku);
         PonerFloat(oDs, FCfg.FieldCantidadPedida, ACantidad);
         PonerFloat(oDs, FCfg.FieldCantidadEntregada, 0);
         PonerFloat(oDs, FCfg.FieldCantidadAAlbaranar, 0);
@@ -994,7 +1008,8 @@ var
   oAnclajeColor: TAnclajeSelectorAtributo;
   sAvNuevo: string;
   i, iColorAv, j: Integer;
-  bCancelado, bEsColor, bEsTalla, bSoloColorTalla: Boolean;
+  bCancelado, bEsColor, bEsTalla, bSoloColorTalla,
+    bTieneColor: Boolean;
 begin
   // La talla es la dimensión de las columnas: se resuelve en silencio
   // una variante real compatible y nunca se pregunta en este modo.
@@ -1004,6 +1019,11 @@ begin
     raise Exception.Create(SErrorLookupAtributosNoInyectado);
   try
     aAtribs := oLookup.ObtenerAtributos(ACodArt);
+    bTieneColor := False;
+    for i := 0 to High(aAtribs) do
+      if EsAtributoColor(aAtribs[i]) then
+        bTieneColor := True;
+    FPresentacion.MostrarColorProvisional(bTieneColor);
     if Length(aAtribs) = 0 then
       ShowMessage(Format(SAvisoArticuloSinAtributos, [ACodArt]))
     else
@@ -1051,6 +1071,7 @@ begin
           FRepositorio, ACodArt, aTallas, iColorAv);
     end;
   finally
+    FPresentacion.MostrarColorProvisional(False);
     oLookup := nil;
   end;
 end;
@@ -1067,7 +1088,9 @@ var
 begin
   Result := False;
   FEstado.EntradaCancelada := False;
-  if Trim(AEntrada) <> '' then
+  if not PuedeResolverEntrada then
+    FEstado.EntradaCancelada := True
+  else if Trim(AEntrada) <> '' then
   begin
     oValidador := FConfig.ValidadorArticulos;
     if not Assigned(oValidador) then
@@ -1133,10 +1156,12 @@ begin
               (CampoTexto(oDs, FCfg.FieldSku) = '');
             if not bLineaVacia then
               oDs.Append;
+            // Algunos hosts completan y publican la linea dentro del
+            // callback; los campos requeridos deben preceder a ese Post.
+            PrepararLineaSku(oDs, oRes.CodigoArticulo, sSku);
             FCfg.OnCrearLineaSku(sSku);
             if oDs.State in dsEditModes then
             begin
-              PrepararLineaSku(oDs, oRes.CodigoArticulo, sSku);
               if bSemillaHorizontal then
               begin
                 // La fila enlazada sostiene el grupo hasta que se edita
@@ -1168,7 +1193,8 @@ end;
 procedure TGridPivoteVenta.AlEditarCantidad(AClave: Int64;
   AValor: Double; ABanda: TBandaPivoteVenta);
 begin
-  PersistirCantidadCelda(AClave, AValor, ABanda);
+  if PuedeResolverEntrada then
+    PersistirCantidadCelda(AClave, AValor, ABanda);
 end;
 
 function TGridPivoteVenta.AlResolverEntradaEditor(
@@ -1188,10 +1214,17 @@ var
   sArticulo: string;
 begin
   Result := False;
-  if (FRepositorio <> nil) and
-     FRepositorio.ElegirArticuloDesdeBusqueda(FConfig.AlmacenStock,
-                                              sArticulo) then
-    Result := ResolverEntrada(sArticulo);
+  sArticulo := '';
+  if PuedeResolverEntrada then
+  begin
+    if Assigned(FCfg.OnElegirArticulo) then
+      sArticulo := FCfg.OnElegirArticulo
+    else if FRepositorio <> nil then
+      FRepositorio.ElegirArticuloDesdeBusqueda(
+        FConfig.AlmacenStock, sArticulo);
+    if sArticulo <> '' then
+      Result := ResolverEntrada(sArticulo);
+  end;
 end;
 
 function TGridPivoteVenta.AlBorrarGrupo(ALineaBase: Integer): Integer;

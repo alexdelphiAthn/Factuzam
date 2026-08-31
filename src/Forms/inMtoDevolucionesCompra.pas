@@ -262,6 +262,7 @@ type
     // persiste en BBDD.
     procedure ActualizarLabelPrendas;
     procedure unqryLineasAfterPostHook(DataSet: TDataSet);
+    function PuedeIntroducirArticuloDevolucion: Boolean;
     function BuscarArticuloDevolucion: string;
     function BuscarSkuDevolucion(const ACodigoArt: string): string;
     function ArticuloLineaActivaDevolucion: string;
@@ -1665,6 +1666,9 @@ begin
     CfgPV.Repositorios :=
       CrearRepositorioPivoteVenta(
         CfgPV.Conexion, CfgPV.Usuario, BusquedaVisual);
+    CfgPV.OnPuedeResolverEntrada :=
+      PuedeIntroducirArticuloDevolucion;
+    CfgPV.OnElegirArticulo := BuscarArticuloDevolucion;
     CfgPV.OnCrearLineaSku := PivoteVentaCrearLineaSku;
     CfgPV.OnBandaCambiada := PivoteVentaBandaCambiada;
     FModoEntrada := CrearModoEntradaGridPivoteVenta(Cfg, CfgPV);
@@ -1769,16 +1773,28 @@ var
   sPrv: string;
 begin
   Result := '';
-  sPrv := ValorTextoDataSetCompra(
-    dsTablaG.DataSet, 'CODIGO_PRV_DEVC');
-  if (sPrv = '') or (sPrv = '0') then
-    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion,
-               mtInformation, [mbOk], 0)
-  else
+  if PuedeIntroducirArticuloDevolucion then
+  begin
+    sPrv := ValorTextoDataSetCompra(
+      dsTablaG.DataSet, 'CODIGO_PRV_DEVC');
     Result := BuscarArticuloProveedorCompra(
       FBusquedasArticulos, BusquedaVisual, sPrv,
       STituloBuscarArticulosDevolucionCompra,
       'frmMtoDevcArtSearch', Self);
+  end;
+end;
+
+function TfrmMtoDevolucionesCompra.PuedeIntroducirArticuloDevolucion:
+  Boolean;
+var
+  sPrv: string;
+begin
+  sPrv := ValorTextoDataSetCompra(
+    dsTablaG.DataSet, 'CODIGO_PRV_DEVC');
+  Result := (sPrv <> '') and (sPrv <> '0');
+  if not Result then
+    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion,
+      mtInformation, [mbOk], 0);
 end;
 
 function TfrmMtoDevolucionesCompra.ArticuloLineaActivaDevolucion: string;
@@ -1844,7 +1860,8 @@ var
 begin
   if (Trim(ACodigoArt) <> '') and
      Assigned(dmmDevolucionesCompra) and
-     (not FAplicandoArticulo) then
+     (not FAplicandoArticulo) and
+     PuedeIntroducirArticuloDevolucion then
   begin
     AsegurarCabeceraPersistidaParaLineas;
     oLineas := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
@@ -1858,10 +1875,10 @@ begin
           dsTablaG.DataSet,
           oLineas);
         oResultado := FAplicacionArticulo.Ejecutar(oEntrada);
-        if oResultado.Aplicado then
-          PresentarResultadoArticuloDevolucion(oResultado, oLineas)
-        else if oResultado.Mensaje <> '' then
+        if oResultado.Mensaje <> '' then
           MessageDlg(oResultado.Mensaje, mtWarning, [mbOk], 0);
+        if oResultado.Aplicado then
+          PresentarResultadoArticuloDevolucion(oResultado, oLineas);
       finally
         FAplicandoArticulo := False;
       end;

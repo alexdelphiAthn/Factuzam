@@ -156,7 +156,7 @@ uses
   inLibData, UniDataAlmacenesEmpresaRepositorio,
   inLibArticulosValidadorIntf,
   UniDataArticulosValidadorRepositorio,
-  inLibMsgCompras, inLibMsgVentas,
+  inLibMsgArticulos, inLibMsgCompras, inLibMsgVentas,
   inLibDocumento, inLibDocumentoIntf;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -283,7 +283,8 @@ begin
     '  AND SERIE_ALBC = :Old_SERIE_ALBC';
   sSet := '';
   for i := Low(CAMPOS_ALBC) to High(CAMPOS_ALBC) do
-    AgregarCampoUpdate(CAMPOS_ALBC[i]);
+    if not SameText(CAMPOS_ALBC[i], 'CONTADOR_LINEAS_ALBC') then
+      AgregarCampoUpdate(CAMPOS_ALBC[i]);
   unqryTablaG.SQLUpdate.Text :=
     'UPDATE fza_albaranes_compra ' + sLineBreak +
     '   SET ' + sLineBreak +
@@ -836,6 +837,19 @@ begin
   begin
     TThread.RemoveQueuedEvents(CancelarLineaVaciaDiferida);
     TThread.ForceQueue(nil, CancelarLineaVaciaDiferida);
+    Abort;
+  end;
+  if ((Trim(unqryAlbaranesCompraLineas.FieldByName(
+              'CODIGO_ART_ALBCLIN').AsString) <> '') or
+      (Trim(unqryAlbaranesCompraLineas.FieldByName(
+              'CODIGO_UNIDAD_ALBCLIN').AsString) <> '')) and
+     ((Trim(unqryTablaG.FieldByName(
+              'CODIGO_PRV_ALBC').AsString) = '') or
+      (Trim(unqryTablaG.FieldByName(
+              'CODIGO_PRV_ALBC').AsString) = '0')) then
+  begin
+    NotificarAdvertencia(
+      SErrorProveedorNoSeleccionadoBuscarArticulos);
     Abort;
   end;
   AsignarNumeroLineaAlbaranCompra(DataSet);
