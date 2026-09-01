@@ -540,6 +540,8 @@ resourcestring
   STituloRenombrarColumnas = 'Renombrar columnas';
   SCaptionCargandoDatosEspere = 'Cargando datos, espera por favor...';
   STituloSeleccionarColumnas = 'Seleccionar columnas a incorporar';
+  SErrorRestaurarListaEnEdicion =
+    'Guarde o cancele los cambios antes de volver a la lista.';
 implementation
 
 end.

@@ -410,6 +410,10 @@ resourcestring
     'rectificativa fiscal.';
   SCaptionDevolucionTicketDe =
     '  —  DEVOLUCIÓN de %s\%s (Tienda %s)';
+  SErrorEncolarCierreVentasWs =
+    'No se pudo encolar el cierre de caja %s para su publicación web.';
+  SErrorRepositorioVentasWsNoAsignado =
+    'La publicación web está activa, pero no se asignó su repositorio.';
 implementation
 
 end.

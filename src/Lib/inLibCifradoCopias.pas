@@ -71,7 +71,8 @@ uses
   System.ZLib,
   DCPcrypt2,
   DCPrijndael,
-  inLibCifrado;
+  inLibCifrado,
+  inLibMsgConfiguracion;
 
 resourcestring
   SErrorInicializarGeneradorCriptografico =
@@ -116,14 +117,6 @@ resourcestring
     'Debe indicar la contraseña de la copia.';
   SErrorAbrirCopiaCifradaHistorica =
     'No se pudo abrir la copia cifrada histórica.';
-  SErrorSqlCadenaTamanoMaximo =
-    'El SQL supera el límite de 400 MiB para una sola cadena.';
-  SErrorFicheroSqlCopiaNoExiste =
-    'No existe el fichero SQL que se va a proteger.';
-  SErrorEscribirCopiaCifradaIncompleta =
-    'No se pudo escribir completa la copia cifrada.';
-  SErrorExtraerScriptCopiaIncompleto =
-    'No se pudo extraer completo el script de la copia.';
 
 const
   CABECERA_CIFRADO = 'FZAM_COPIA_CIFRADA_V2';

@@ -101,32 +101,6 @@ resourcestring
   SCaptionColorAgrupacionMovimientosVentas = 'Color';
   SNombreArchivoMovimientosVentasArticulos =
     'Movimientos_ventas_articulos';
-  SCaptionConImpuestosMovimientosVentas = 'Precios con impuestos';
-  STituloOrdenacionMovimientosVentas = 'Ordenación';
-  SCaptionSentidoOrdenMovimientosVentas = ' Dirección ';
-  SCaptionPeriodoOrdenMovimientosVentas =
-    'Los criterios usan las ventas del periodo seleccionado.';
-  SCaptionSeleccioneOrdenMovimientosVentas =
-    'Seleccione un criterio de ordenación:';
-  SHintOrdenDetalleMovimientosVentas =
-    'Ordena cada agrupación por su subtotal y el detalle del último nivel. ' +
-    '% vendido es venta sobre compra; % Vtas es sobre la agrupación.';
-  SOrdenArticuloDescripcionMovimientosVentas = 'Artículo / descripción';
-  SOrdenUnidadesEntradaMovimientosVentas = 'Unidades entrada';
-  SOrdenImporteEntradaMovimientosVentas = 'Importe entrada';
-  SOrdenUnidadesVentaMovimientosVentas = 'Unidades venta';
-  SOrdenImporteVentaMovimientosVentas = 'Importe venta';
-  SOrdenImporteCosteMovimientosVentas = 'Importe coste';
-  SOrdenBeneficioMovimientosVentas = 'Beneficio';
-  SOrdenPorcentajeBeneficioMovimientosVentas = '% beneficio';
-  SOrdenVentaEntradaMovimientosVentas = 'Venta - entrada';
-  SOrdenPorcentajeVentaEntradaMovimientosVentas = 'Venta / entrada';
-  SOrdenMargen1MovimientosVentas = 'Margen 1';
-  SOrdenMargen2MovimientosVentas = 'Margen 2';
-  SOrdenPorcentajeVendidoMovimientosVentas = '% vendido';
-  SOrdenPorcentajeVentasMovimientosVentas = '% Vtas';
-  SOrdenAscendenteMovimientosVentas = 'Ascendente';
-  SOrdenDescendenteMovimientosVentas = 'Descendente';
 
 { TfrmPrintMovVentasArt }
 

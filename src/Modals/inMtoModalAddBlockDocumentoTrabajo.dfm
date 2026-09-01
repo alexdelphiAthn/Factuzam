@@ -47,10 +47,10 @@
       ExplicitTop = 30
     end
     inherited btnPrevisualizar: TcxButton
-      Left = 928
-      Width = 122
-      ExplicitLeft = 928
-      ExplicitWidth = 122
+      Left = 916
+      Width = 134
+      ExplicitLeft = 916
+      ExplicitWidth = 134
     end
   end
   inherited pcFiltros: TcxPageControl
@@ -150,34 +150,42 @@
         inherited btnMarcarTodosAlm: TcxButton
           Left = 660
           Top = 37
+          Width = 140
           ExplicitLeft = 660
           ExplicitTop = 37
+          ExplicitWidth = 140
         end
         inherited btnDesmarcarTodosAlm: TcxButton
-          Left = 800
+          Left = 812
           Top = 37
-          Width = 144
-          ExplicitLeft = 800
+          Width = 160
+          ExplicitLeft = 812
           ExplicitTop = 37
-          ExplicitWidth = 144
+          ExplicitWidth = 160
         end
         inherited lblSelAlmacenes: TcxLabel
-          Left = 958
+          Left = 984
           Top = 37
-          ExplicitLeft = 958
+          ExplicitLeft = 984
           ExplicitTop = 37
         end
         inherited lblReservaStockOrigen: TcxLabel
           Visible = True
         end
         inherited spnReservaStockOrigen: TcxSpinEdit
+          Left = 340
           Visible = True
+          ExplicitLeft = 340
         end
         inherited lblMaximoServirPorSku: TcxLabel
+          Left = 460
           Visible = True
+          ExplicitLeft = 460
         end
         inherited spnMaximoServirPorSku: TcxSpinEdit
+          Left = 740
           Visible = True
+          ExplicitLeft = 740
         end
       end
       inherited chkLstAlmacenes: TcxCheckListBox
@@ -210,5 +218,17 @@
   end
   inherited pnlBotonera: TPanel
     StyleElements = [seFont, seClient, seBorder]
+    inherited btnAceptar: TcxButton
+      Left = 892
+      Width = 132
+      ExplicitLeft = 892
+      ExplicitWidth = 132
+    end
+    inherited btnCancelar: TcxButton
+      Left = 1036
+      Width = 132
+      ExplicitLeft = 1036
+      ExplicitWidth = 132
+    end
   end
 end

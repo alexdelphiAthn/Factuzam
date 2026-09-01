@@ -45,7 +45,8 @@ uses
   Data.DB,
   DBAccess,
   inLibDocumento,
-  inLibFiltroUsuario;
+  inLibFiltroUsuario,
+  inLibMsgCompras;
 
 const
   ftotal = 'TOTAL_PRECARGA';
@@ -64,20 +65,6 @@ const
     '\A\) M_GUIA LEFT JOIN [A-Za-z_0-9]+ EXT_GUIA ON ' +
     'EXT_GUIA\.[A-Za-z_0-9]+ = M_GUIA\.[A-Za-z_0-9]+' +
     '(?: AND EXT_GUIA\.[A-Za-z_0-9]+ = M_GUIA\.[A-Za-z_0-9]+)*';
-
-resourcestring
-  SErrorDocumentoPrecargaNoAdmitido =
-    'La precarga por series solo admite pedidos y albaranes de compra.';
-  SErrorSqlPrecargaNoAdmitido =
-    'El SQL del perfil no permite identificar de forma segura la ' +
-    'cabecera de compra. No se ha cambiado la consulta.';
-  SErrorPrecargaDuranteEdicion =
-    'Guarde o cancele el documento antes de cambiar la precarga.';
-  SErrorConsultaAuxiliarActiva =
-    'La consulta auxiliar de precarga debe estar cerrada.';
-  SErrorSqlPrecargaModificado =
-    'La consulta ha cambiado fuera de la precarga. No se ha sustituido ' +
-    'el SQL del perfil.';
 
 type
   TMetadatosPrecargaCompra = record

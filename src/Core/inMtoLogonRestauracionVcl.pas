@@ -101,7 +101,7 @@ begin
   if not Assigned(AContexto.CasoUso) then
   begin
     raise EInvalidOpException.Create(
-      'El servicio de restauración no está disponible.');
+      SErrorServicioRestauracionNoDisponible);
   end;
   sContrasena := InputBox(SGetPassBBDD, '', '');
   AContexto.EstablecerContrasena(sContrasena);

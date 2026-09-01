@@ -600,6 +600,65 @@ resourcestring
   SCaptionCrearAlbaranDesdePedidoCompra =
     'Crear albarán desde pedido %s';
   SCaptionCodigoExistente = 'Código existente: %s';
+  SErrorPreferenciaPrecargaNoValida =
+    'La preferencia de precarga no es válida. Revise el perfil guardado.';
+  SCaptionFiltrosPrecargaCompras = 'Filtros de carga...';
+  SCaptionGuardarPrecargaCompras = 'Guardar precarga...';
+  SDescripcionGuardarPrecargaCompras =
+    'Series de precarga de la primera lista de compras';
+  SInfoPrecargaComprasGuardada = 'Preferencia de precarga guardada.';
+  SInfoPrecargaComprasPendiente =
+    'Carga pendiente: seleccione las series que desea consultar.';
+  SInfoPrecargaComprasTodas = 'Precarga: todas las series.';
+  SInfoPrecargaComprasPerfil =
+    'Consulta establecida en el perfil, sin precarga automática.';
+  SErrorPrecargaComprasPerfilVacio =
+    'La precarga guardada está incompleta. Revise el perfil de la pantalla.';
+  SInfoPrecargaComprasSerie = 'Serie precargada: %s';
+  SInfoPrecargaComprasVarias = 'Precarga: %d series seleccionadas.';
+  SErrorPrecargaComprasEnEdicion =
+    'Guarde o cancele los cambios del documento antes de cambiar ' +
+    'las series de precarga.';
+  STituloPrecargaCompras = '%s - seleccionar series';
+  SExplicacionPrecargaCompras =
+    'Elija las series que desea cargar en %s. La lista muestra primero ' +
+    'las series con documentos más recientes.';
+  SOrdenSeriesCompras = 'Series por fecha del último documento';
+  SMarcarAnyoCompras = 'Marcar series del año:';
+  SSeleccionManualCompras = 'Selección manual';
+  SSeriesSinAnyoCompras = 'Sin año reconocible';
+  STodasSeriesCompras = '&Todas las series (sin filtro)';
+  SSerieConFechaCompras = '%s    |    Último documento: %s';
+  SSerieSinCodigoCompras = '(Sin código de serie)';
+  SFechaNoDisponibleCompras = 'sin fecha';
+  SResultadoPendienteCompras =
+    'Se comprobará la cantidad antes de cargar los documentos.';
+  SBotonCalcularCompras = '&Calcular';
+  SBotonNingunaCompras = '&Ninguna';
+  SBotonCargarCompras = 'Ca&rgar';
+  SBotonCancelarCompras = '&Cancelar';
+  SSeleccionVaciaCompras =
+    'Marque al menos una serie o seleccione «Todas las series». ' +
+    'Una lista sin marcas no carga todos los documentos.';
+  SCantidadDocumentosCompras = 'Documentos que se cargarán: %s.';
+  SCantidadExcesivaCompras = 'Se cargarán más de %s documentos.';
+  SPreguntaCargaExcesivaCompras =
+    'La selección supera %s documentos y la carga puede tardar. ' +
+    '¿Desea cargar los documentos de la selección actual?';
+  SRepositorioComprasObligatorio =
+    'La selección de series requiere un repositorio de precarga.';
+  SErrorDocumentoPrecargaNoAdmitido =
+    'La precarga por series solo admite pedidos y albaranes de compra.';
+  SErrorSqlPrecargaNoAdmitido =
+    'El SQL del perfil no permite identificar de forma segura la ' +
+    'cabecera de compra. No se ha cambiado la consulta.';
+  SErrorPrecargaDuranteEdicion =
+    'Guarde o cancele el documento antes de cambiar la precarga.';
+  SErrorConsultaAuxiliarActiva =
+    'La consulta auxiliar de precarga debe estar cerrada.';
+  SErrorSqlPrecargaModificado =
+    'La consulta ha cambiado fuera de la precarga. No se ha sustituido ' +
+    'el SQL del perfil.';
 implementation
 
 end.

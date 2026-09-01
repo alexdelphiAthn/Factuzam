@@ -262,7 +262,8 @@ begin
     Formulario := TfrmMtoTraspasoSolicitudesHist.Create(
       FOwnerRaiz,
       FComposicion.Permisos,
-      CrearDependenciasInforme(Caja));
+      CrearDependenciasInforme(Caja),
+      Caja.Tickets.CrearRepositorioTraspasoTicket);
     Mantenimiento := Formulario as IMantenimientoEmbebido;
     Formulario.Hide;
     Gestor.EmbedForm(

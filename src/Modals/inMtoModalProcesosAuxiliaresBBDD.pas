@@ -193,7 +193,7 @@ implementation
 uses
   System.Generics.Collections, System.StrUtils, System.UITypes,
   Vcl.Clipbrd, Vcl.Dialogs,
-  inLibDevExp, inLibMsgComun,
+  inLibDevExp, inLibMsgComun, inLibMsgConfiguracion,
   inLibPlanEjecucionMariaDB, inLibProteccionDatosFacturacion,
   ts.Editor.CodeFormatters,
   UniDataMetadatosBBDDRepositorio;
@@ -217,8 +217,6 @@ resourcestring
   SCaptionMetadatosSqlObjetoProcesosAuxiliaresBBDD =
     '&Metadatos SQL - %s';
   SCaptionResultadoProcesosAuxiliaresBBDD = '&Resultado';
-  SCaptionResultadoObjetoProcesosAuxiliaresBBDD =
-    '&Resultado - %s (máximo 1000 filas)';
   SCaptionExportarExcelProcesosAuxiliaresBBDD = 'Exportar a E&xcel';
   SCaptionPlanEjecucionProcesosAuxiliaresBBDD = '&Plan de ejecución';
   SCaptionPlanEjecucionObjetoProcesosAuxiliaresBBDD =

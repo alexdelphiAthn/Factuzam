@@ -32,7 +32,7 @@ implementation
 uses
   System.SysUtils, System.Classes, System.Generics.Collections,
   System.DateUtils, Data.DB, DBAccess,
-  inLibArqueo;
+  inLibArqueo, inLibMsgCaja;
 
 const
   SQL_INSERTAR_ARQUEO =
@@ -231,12 +231,6 @@ type
       ACodigoEmpleado, AUsuario: string);
     procedure Ejecutar;
   end;
-
-resourcestring
-  SErrorEncolarCierreVentasWs =
-    'No se pudo encolar el cierre de caja %s para su publicación web.';
-  SErrorRepositorioVentasWsNoAsignado =
-    'La publicación web está activa, pero no se asignó su repositorio.';
 
 function NuevoUuid: string;
 var

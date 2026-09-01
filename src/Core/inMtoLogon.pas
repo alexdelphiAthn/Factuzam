@@ -197,6 +197,7 @@ uses  inLibWin,
       inLibMsgComun,
       inLibMsgConfiguracion,
       inLibMsgConexion,
+      inLibMsgLogon,
       inLibDir,
 
       Backup.Engine,
@@ -250,8 +251,6 @@ end;
 resourcestring
   SNombreArchivoCopiaSeguridadLogon =
     'copiaseguridad%s';
-  SCaptionProcesandoProgresoLogon = 'Procesando';
-  SFormatoProgresoTotalLogon = 'Total: %s / %s (%d%%)';
   SEncabezadoRestauracionCopiaSeguridadLogon =
     '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --';
   SMensajeLicenciaEstablecida = 'Licencia establecida.';

@@ -33,6 +33,8 @@ resourcestring
   SAvisoNuevoEquipoDemoYaPreparado =
     'La contraseña inicial de la demo ya había sido cambiada. Continúe con ' +
     'el inicio de sesión.';
+  SCaptionProcesandoProgresoLogon = 'Procesando';
+  SFormatoProgresoTotalLogon = 'Total: %s / %s (%d%%)';
 
 implementation
 

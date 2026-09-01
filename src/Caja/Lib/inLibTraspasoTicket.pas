@@ -43,7 +43,9 @@ type
                                       const ARepositorio:
                                       IRepositorioTraspasoTicket;
                                       const ANumero, ASerie: string;
-                                      const ANombreImpresora: string = 'DEBUG');
+                                      const ANombreImpresora:
+                                      string = 'DEBUG';
+                                      ADuplicado: Boolean = False);
     // Imprime/previsualiza el ticket de un traspaso ya ejecutado (F12 con
     // ticket). Recorre las lineas en memoria (ALineas: campos CODIGO_UNIDAD y
     // CANTIDAD) y por cada SKU calcula el stock en origen y en destino.
@@ -104,7 +106,8 @@ class procedure TTraspasoTicket.ImprimirSolicitud(
                                      const ARepositorio:
                                      IRepositorioTraspasoTicket;
                                      const ANumero, ASerie: string;
-                                     const ANombreImpresora: string);
+                                     const ANombreImpresora: string;
+                                     ADuplicado: Boolean);
 var
   Ticket: TTicketTermico;
   Cabecera: TSolicitudTraspasoTicket;
@@ -134,6 +137,12 @@ begin
         Ticket.EscribirLinea(STicketSolicitudTraspaso);
         Ticket.EscribirLinea(ASerie + '/' + ANumero);
         Ticket.Negrita(False);
+        if ADuplicado then
+        begin
+          Ticket.Negrita(True);
+          Ticket.EscribirLinea(STicketDuplicado);
+          Ticket.Negrita(False);
+        end;
         Ticket.SaltarLineas(1);
         Ticket.Alinear(alIzquierda);
         Ticket.TextoColumnas(STicketOrigen, Cabecera.Origen);
@@ -177,8 +186,12 @@ begin
         Ticket.CortarPapel;
         // Vista previa (DEBUG) o impresion real
         ComandosESC := Ticket.ObtenerComandos;
-        RutaPDF := GetUserFolderTickets + 'SolTraspaso_' + ASerie + '_' +
-                   ANumero + '.pdf';
+        if ADuplicado then
+          RutaPDF := GetUserFolderTickets + 'SolTraspaso_Duplicado_' +
+            ASerie + '_' + ANumero + '.pdf'
+        else
+          RutaPDF := GetUserFolderTickets + 'SolTraspaso_' + ASerie + '_' +
+            ANumero + '.pdf';
         ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
                                      sImpresora);
       finally

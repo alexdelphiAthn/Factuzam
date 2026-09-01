@@ -464,6 +464,35 @@ resourcestring
     'Todos los archivos (*.*)|*.*';
   SCaptionFiltroArchivosTexto =
     'Archivos de texto (*.txt)|*.txt|Todos los archivos (*.*)|*.*';
+  SErrorScriptCopiaIncompleto =
+    'No se guardó la copia porque el SQL generado está incompleto.';
+  SProgresoVerificandoIntegridad =
+    'Verificando integridad de la copia';
+  SProgresoIntegridadVerificada = 'Integridad verificada';
+  SProgresoDescifrandoCopia = 'Descifrando la copia';
+  SProgresoValidandoContenido = 'Validando el contenido de la copia';
+  SErrorSqlCadenaTamanoMaximo =
+    'El SQL supera el límite de 400 MiB para una sola cadena.';
+  SErrorFicheroSqlCopiaNoExiste =
+    'No existe el fichero SQL que se va a proteger.';
+  SErrorEscribirCopiaCifradaIncompleta =
+    'No se pudo escribir completa la copia cifrada.';
+  SErrorExtraerScriptCopiaIncompleto =
+    'No se pudo extraer completo el script de la copia.';
+  SCaptionResultadoObjetoProcesosAuxiliaresBBDD =
+    '&Resultado - %s (máximo 1000 filas)';
+  SErrorServicioRestauracionNoDisponible =
+    'El servicio de restauración no está disponible.';
+  SErrorCopiaSqlDatosTrasMarcadorFinal =
+    'La copia SQL contiene datos después de su marcador final';
+  SErrorCopiaSqlComentarioEjecutableNoAdmitido =
+    'La copia SQL contiene un comentario ejecutable no admitido';
+  SErrorCopiaSqlMarcadorFinalAusente =
+    'La copia SQL está incompleta: falta el marcador final';
+  SErrorCopiaSqlSavepointsActivos =
+    'La copia SQL termina con savepoints activos';
+  SErrorCopiaSqlTransaccionSavepointsSinCerrar =
+    'La copia SQL no cierra la transacción con savepoints';
 implementation
 
 end.

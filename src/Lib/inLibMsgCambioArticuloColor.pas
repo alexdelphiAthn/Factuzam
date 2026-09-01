@@ -30,6 +30,8 @@ resourcestring
   SCaptionEstadoHistoricoAplicado = 'Aplicado';
   SCaptionEstadoHistoricoRevertido = 'Revertido';
   SCaptionHistoricoCambioArticuloColorDesconocido = 'Desconocido';
+  SErrorTipoOperacionHistoricoDesconocido =
+    'Tipo de operación histórico desconocido: %s.';
 
 implementation
 

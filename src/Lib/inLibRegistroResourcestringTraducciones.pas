@@ -134,6 +134,499 @@ procedure EnumerarResourcestringsTraduccion(
   const ARegistrar: TRegistrarResourcestringTraduccion);
 begin
   EnumerarResourcestringsFotos(ARegistrar);
+  // Recursos centralizados en inLibMsgConfiguracion
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorScriptCopiaIncompleto',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorScriptCopiaIncompleto);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SProgresoVerificandoIntegridad',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SProgresoVerificandoIntegridad);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SProgresoIntegridadVerificada',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SProgresoIntegridadVerificada);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SProgresoDescifrandoCopia',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SProgresoDescifrandoCopia);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SProgresoValidandoContenido',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SProgresoValidandoContenido);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorSqlCadenaTamanoMaximo',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorSqlCadenaTamanoMaximo);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorFicheroSqlCopiaNoExiste',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorFicheroSqlCopiaNoExiste);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorEscribirCopiaCifradaIncompleta',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorEscribirCopiaCifradaIncompleta);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorExtraerScriptCopiaIncompleto',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorExtraerScriptCopiaIncompleto);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SCaptionResultadoObjetoProcesosAuxiliaresBBDD',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SCaptionResultadoObjetoProcesosAuxiliaresBBDD);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorServicioRestauracionNoDisponible',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorServicioRestauracionNoDisponible);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorCopiaSqlDatosTrasMarcadorFinal',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorCopiaSqlDatosTrasMarcadorFinal);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorCopiaSqlComentarioEjecutableNoAdmitido',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorCopiaSqlComentarioEjecutableNoAdmitido);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorCopiaSqlMarcadorFinalAusente',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorCopiaSqlMarcadorFinalAusente);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorCopiaSqlSavepointsActivos',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorCopiaSqlSavepointsActivos);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorCopiaSqlTransaccionSavepointsSinCerrar',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorCopiaSqlTransaccionSavepointsSinCerrar);
+  // Recursos centralizados en inLibMsgCompras
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorPreferenciaPrecargaNoValida',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorPreferenciaPrecargaNoValida);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SCaptionFiltrosPrecargaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SCaptionFiltrosPrecargaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SCaptionGuardarPrecargaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SCaptionGuardarPrecargaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SDescripcionGuardarPrecargaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SDescripcionGuardarPrecargaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoPrecargaComprasGuardada',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoPrecargaComprasGuardada);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoPrecargaComprasPendiente',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoPrecargaComprasPendiente);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoPrecargaComprasTodas',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoPrecargaComprasTodas);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoPrecargaComprasPerfil',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoPrecargaComprasPerfil);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorPrecargaComprasPerfilVacio',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorPrecargaComprasPerfilVacio);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoPrecargaComprasSerie',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoPrecargaComprasSerie);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SInfoPrecargaComprasVarias',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SInfoPrecargaComprasVarias);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorPrecargaComprasEnEdicion',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorPrecargaComprasEnEdicion);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'STituloPrecargaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      STituloPrecargaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SExplicacionPrecargaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SExplicacionPrecargaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SOrdenSeriesCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SOrdenSeriesCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SMarcarAnyoCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SMarcarAnyoCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SSeleccionManualCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SSeleccionManualCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SSeriesSinAnyoCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SSeriesSinAnyoCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'STodasSeriesCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      STodasSeriesCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SSerieConFechaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SSerieConFechaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SSerieSinCodigoCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SSerieSinCodigoCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SFechaNoDisponibleCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SFechaNoDisponibleCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SResultadoPendienteCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SResultadoPendienteCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SBotonCalcularCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SBotonCalcularCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SBotonNingunaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SBotonNingunaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SBotonCargarCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SBotonCargarCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SBotonCancelarCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SBotonCancelarCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SSeleccionVaciaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SSeleccionVaciaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SCantidadDocumentosCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SCantidadDocumentosCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SCantidadExcesivaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SCantidadExcesivaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SPreguntaCargaExcesivaCompras',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SPreguntaCargaExcesivaCompras);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SRepositorioComprasObligatorio',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SRepositorioComprasObligatorio);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorDocumentoPrecargaNoAdmitido',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorDocumentoPrecargaNoAdmitido);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorSqlPrecargaNoAdmitido',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorSqlPrecargaNoAdmitido);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorPrecargaDuranteEdicion',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorPrecargaDuranteEdicion);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorConsultaAuxiliarActiva',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorConsultaAuxiliarActiva);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorSqlPrecargaModificado',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorSqlPrecargaModificado);
+  // Recursos centralizados en inLibMsgLogon
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SCaptionProcesandoProgresoLogon',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SCaptionProcesandoProgresoLogon);
+  ARegistrar(
+    'inLibMsgLogon.' +
+    'SFormatoProgresoTotalLogon',
+    'src/Lib/inLibMsgLogon.pas',
+    @inLibMsgLogon.
+      SFormatoProgresoTotalLogon);
+  // Recursos centralizados en inLibMsgVentas
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionConImpuestosMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionConImpuestosMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'STituloOrdenacionMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      STituloOrdenacionMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionSentidoOrdenMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionSentidoOrdenMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionPeriodoOrdenMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionPeriodoOrdenMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionSeleccioneOrdenMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionSeleccioneOrdenMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SHintOrdenDetalleMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SHintOrdenDetalleMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenArticuloDescripcionMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenArticuloDescripcionMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenUnidadesEntradaMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenUnidadesEntradaMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenImporteEntradaMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenImporteEntradaMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenUnidadesVentaMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenUnidadesVentaMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenImporteVentaMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenImporteVentaMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenImporteCosteMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenImporteCosteMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenBeneficioMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenBeneficioMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenPorcentajeBeneficioMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenPorcentajeBeneficioMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenVentaEntradaMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenVentaEntradaMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenPorcentajeVentaEntradaMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenPorcentajeVentaEntradaMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenMargen1MovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenMargen1MovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenMargen2MovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenMargen2MovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenPorcentajeVendidoMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenPorcentajeVendidoMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenPorcentajeVentasMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenPorcentajeVentasMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenAscendenteMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenAscendenteMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SOrdenDescendenteMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SOrdenDescendenteMovimientosVentas);
+  // Recursos centralizados en inLibMsgCaja
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorEncolarCierreVentasWs',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorEncolarCierreVentasWs);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorRepositorioVentasWsNoAsignado',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorRepositorioVentasWsNoAsignado);
+  // Recursos centralizados en inLibMsgCambioArticuloColor
+  ARegistrar(
+    'inLibMsgCambioArticuloColor.' +
+    'SErrorTipoOperacionHistoricoDesconocido',
+    'src/Lib/inLibMsgCambioArticuloColor.pas',
+    @inLibMsgCambioArticuloColor.
+      SErrorTipoOperacionHistoricoDesconocido);
+  // Recursos centralizados en inLibMsgComun
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SErrorRestaurarListaEnEdicion',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SErrorRestaurarListaEnEdicion);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SErrorLineaAlbaranSinArticulo',

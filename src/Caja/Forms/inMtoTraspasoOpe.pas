@@ -26,9 +26,10 @@ uses
   cxControls,
   cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit, cxMaskEdit,
-  cxButtonEdit, cxSpinEdit, cxDropDownEdit, cxButtons, cxClasses, cxGridLevel,
-  cxGridCustomTableView, cxGridCustomView, cxGridTableView, cxGridDBTableView,
-  cxGrid, cxSplitter, Vcl.Imaging.PngImage, System.Generics.Collections,
+  cxButtonEdit, cxSpinEdit, cxCurrencyEdit, cxDropDownEdit, cxButtons,
+  cxClasses, cxGridLevel, cxGridCustomTableView, cxGridCustomView,
+  cxGridTableView, cxGridDBTableView, cxGrid, cxSplitter,
+  Vcl.Imaging.PngImage, System.Generics.Collections,
   Data.DB, Datasnap.DBClient, UniDataTraspaso,
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidadorIntf,
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
@@ -46,6 +47,7 @@ type
     btnModoTraspaso: TcxButton;
     btnModoSolicitar: TcxButton;
     btnModoAtender: TcxButton;
+    btnMisPeticiones: TcxButton;
     pnlTop: TPanel;
     lblOrigen: TcxLabel;
     txtOrigen: TcxTextEdit;
@@ -86,6 +88,7 @@ type
     procedure txtEmpleadoExit(Sender: TObject);
     procedure txtEmpleadoButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure cboDestinoPropertiesChange(Sender: TObject);
+    procedure btnMisPeticionesClick(Sender: TObject);
   private
     FDatos: TdmTraspaso;
     FGridCtrl: TGridArticulosLineas;
@@ -148,7 +151,15 @@ type
       ADialogo: TForm): TPanel;
     function CrearRejillaSolicitudes(
       ADialogo: TForm): TcxGrid;
+    function CrearRejillaDatos(
+      ADialogo: TForm;
+      AParent: TWinControl;
+      ADatos: TDataSet;
+      out AFuente: TDataSource;
+      out AVista: TcxGridDBTableView): TcxGrid;
     procedure TitularColumnasSolicitudes(
+      AVista: TcxGridDBTableView);
+    procedure TitularColumnasLineasSolicitud(
       AVista: TcxGridDBTableView);
     procedure CrearBotonesSolicitudes(
       ADialogo: TForm;
@@ -164,6 +175,15 @@ type
       const ANumero, ASerie: string;
       AResultadoModal: Integer);
     procedure ModalImprimirClick(Sender: TObject);
+    procedure ConfigurarModalMisPeticiones(
+      ADialogo: TForm;
+      const ATitulo: string);
+    procedure CrearBotonesMisPeticiones(
+      ADialogo: TForm;
+      APanel: TPanel);
+    procedure MostrarModalMisPeticiones(const ATitulo: string);
+    procedure ModalReimprimirClick(Sender: TObject);
+    procedure ImprimirSolicitudModal(ADuplicado: Boolean);
     procedure CerrarSolicitudCargada;
     procedure DenegarSolicitudCargada;
     procedure AbrirHistoricoSolicitudes(
@@ -231,6 +251,22 @@ uses
 resourcestring
   STituloMisPeticionesTraspaso =
     'Mis peticiones';
+  SInfoSinPeticionesTraspaso =
+    'No hay peticiones realizadas para este almacén.';
+  SCaptionArticulosPeticionTraspaso =
+    'Artículos de la petición';
+  SCaptionPeticionesRealizadasTraspaso =
+    'Peticiones realizadas';
+  SCaptionAlmacenSolicitadoTraspaso =
+    'Solicitado a (almacén)';
+  SCaptionLineasPendientesTraspaso =
+    'Líneas pendientes';
+  SCaptionLineaPeticionTraspaso =
+    'Línea';
+  SCaptionServidasPeticionTraspaso =
+    'Servidas';
+  SCaptionNoServidasPeticionTraspaso =
+    'No servidas';
   STituloBusquedaEmpleadoTraspaso =
     'Buscar empleado';
 
@@ -1203,6 +1239,11 @@ begin
   AplicarModo(TModoTraspaso((Sender as TComponent).Tag));
 end;
 
+procedure TfrmMtoOpeTraspaso.btnMisPeticionesClick(Sender: TObject);
+begin
+  AbrirMisPeticiones;
+end;
+
 procedure TfrmMtoOpeTraspaso.CargarCombo;
 begin
   cboDestino.Properties.Items.Clear;
@@ -1323,6 +1364,19 @@ begin
   ADialogo.OnKeyDown := ModalSolicitudesKeyDown;
 end;
 
+procedure TfrmMtoOpeTraspaso.ConfigurarModalMisPeticiones(
+  ADialogo: TForm;
+  const ATitulo: string);
+begin
+  ADialogo.Caption := ATitulo;
+  ADialogo.Font.Assign(Font);
+  ADialogo.Position := poOwnerFormCenter;
+  ADialogo.BorderStyle := bsDialog;
+  ADialogo.ClientWidth := 900;
+  ADialogo.ClientHeight := 560;
+  ADialogo.KeyPreview := True;
+end;
+
 function TfrmMtoOpeTraspaso.CrearPanelBotonesSolicitudes(
   ADialogo: TForm): TPanel;
 begin
@@ -1339,22 +1393,38 @@ var
   oFuente: TDataSource;
   oVista: TcxGridDBTableView;
 begin
-  Result := TcxGrid.Create(ADialogo);
-  Result.Parent := ADialogo;
-  Result.Align := alClient;
-  oVista := Result.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
-  Result.Levels.Add.GridView := oVista;
-  oFuente := TDataSource.Create(ADialogo);
-  oFuente.DataSet := FQModalSolic;
-  oVista.DataController.DataSource := oFuente;
-  oVista.OptionsData.Editing := False;
-  oVista.OptionsData.Inserting := False;
-  oVista.OptionsData.Deleting := False;
-  oVista.OptionsSelection.CellSelect := False;
-  oVista.OptionsView.GroupByBox := False;
-  oVista.OptionsView.ColumnAutoWidth := True;
-  oVista.DataController.CreateAllItems;
+  Result := CrearRejillaDatos(
+    ADialogo,
+    ADialogo,
+    FQModalSolic,
+    oFuente,
+    oVista);
   TitularColumnasSolicitudes(oVista);
+end;
+
+function TfrmMtoOpeTraspaso.CrearRejillaDatos(
+  ADialogo: TForm;
+  AParent: TWinControl;
+  ADatos: TDataSet;
+  out AFuente: TDataSource;
+  out AVista: TcxGridDBTableView): TcxGrid;
+begin
+  Result := TcxGrid.Create(ADialogo);
+  Result.Parent := AParent;
+  Result.Align := alClient;
+  AVista :=
+    Result.CreateView(TcxGridDBTableView) as TcxGridDBTableView;
+  Result.Levels.Add.GridView := AVista;
+  AFuente := TDataSource.Create(ADialogo);
+  AFuente.DataSet := ADatos;
+  AVista.DataController.DataSource := AFuente;
+  AVista.OptionsData.Editing := False;
+  AVista.OptionsData.Inserting := False;
+  AVista.OptionsData.Deleting := False;
+  AVista.OptionsSelection.CellSelect := False;
+  AVista.OptionsView.GroupByBox := False;
+  AVista.OptionsView.ColumnAutoWidth := True;
+  AVista.DataController.CreateAllItems;
 end;
 
 procedure TfrmMtoOpeTraspaso.TitularColumnasSolicitudes(
@@ -1367,9 +1437,15 @@ begin
   begin
     sCampo := AVista.Columns[iColumna].DataBinding.FieldName;
     if SameText(sCampo, 'NUMERO_TRSOL') then
-      AVista.Columns[iColumna].Caption := SCaptionColNumeroSolicitud
+    begin
+      AVista.Columns[iColumna].Caption := SCaptionColNumeroSolicitud;
+      AVista.Columns[iColumna].Width := 90;
+    end
     else if SameText(sCampo, 'SERIE_TRSOL') then
-      AVista.Columns[iColumna].Caption := SCaptionColSerieSolicitud
+    begin
+      AVista.Columns[iColumna].Caption := SCaptionColSerieSolicitud;
+      AVista.Columns[iColumna].Width := 60;
+    end
     else if SameText(sCampo, 'FECHA_TRSOL') then
     begin
       AVista.Columns[iColumna].Caption := SCaptionColFechaSolicitud;
@@ -1381,10 +1457,90 @@ begin
     end
     else if SameText(sCampo, 'CODIGO_ALM_DESTINO_TRSOL') then
       AVista.Columns[iColumna].Caption := SCaptionColPideAlmacen
+    else if SameText(sCampo, 'CODIGO_ALM_ORIGEN_TRSOL') then
+      AVista.Columns[iColumna].Caption :=
+        SCaptionAlmacenSolicitadoTraspaso
     else if SameText(sCampo, 'ESTADO_TRSOL') then
       AVista.Columns[iColumna].Caption := SCaptionColEstadoSolicitud
     else if SameText(sCampo, 'LINEAS_PEND_TRSOL') then
-      AVista.Columns[iColumna].Caption := SCaptionColLineasSolicitud;
+      AVista.Columns[iColumna].Caption :=
+        SCaptionLineasPendientesTraspaso;
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.TitularColumnasLineasSolicitud(
+  AVista: TcxGridDBTableView);
+var
+  iColumna: Integer;
+  sCampo: string;
+begin
+  for iColumna := 0 to AVista.ColumnCount - 1 do
+  begin
+    sCampo := AVista.Columns[iColumna].DataBinding.FieldName;
+    if SameText(sCampo, 'NUMERO_TRSOL_TRSOLLIN') or
+       SameText(sCampo, 'SERIE_TRSOL_TRSOLLIN') or
+       SameText(sCampo, 'ESATENDIDA_TRSOLLIN') then
+      AVista.Columns[iColumna].Visible := False
+    else if SameText(sCampo, 'LINEA_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption :=
+        SCaptionLineaPeticionTraspaso;
+      AVista.Columns[iColumna].Width := 50;
+    end
+    else if SameText(sCampo, 'CODIGO_ART_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption := SCaptionColArticulo;
+      AVista.Columns[iColumna].Width := 100;
+    end
+    else if SameText(sCampo, 'CODIGO_UNIDAD_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption := SCaptionColSku;
+      AVista.Columns[iColumna].Width := 145;
+    end
+    else if SameText(sCampo, 'DESCRIPCION_ART') then
+    begin
+      AVista.Columns[iColumna].Caption :=
+        SCaptionColDescripcionTraspaso;
+      AVista.Columns[iColumna].Width := 220;
+    end
+    else if SameText(sCampo, 'CANTIDAD_PEDIDA_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption := SCaptionColPedidasTraspaso;
+      AVista.Columns[iColumna].PropertiesClass :=
+        TcxCurrencyEditProperties;
+      TcxCurrencyEditProperties(
+        AVista.Columns[iColumna].Properties).DisplayFormat :=
+          '#,##0.###';
+      AVista.Columns[iColumna].Width := 75;
+    end
+    else if SameText(sCampo, 'CANTIDAD_SERVIDA_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption :=
+        SCaptionServidasPeticionTraspaso;
+      AVista.Columns[iColumna].PropertiesClass :=
+        TcxCurrencyEditProperties;
+      TcxCurrencyEditProperties(
+        AVista.Columns[iColumna].Properties).DisplayFormat :=
+          '#,##0.###';
+      AVista.Columns[iColumna].Width := 75;
+    end
+    else if SameText(sCampo, 'CANTIDAD_PENDIENTE_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption :=
+        SCaptionNoServidasPeticionTraspaso;
+      AVista.Columns[iColumna].PropertiesClass :=
+        TcxCurrencyEditProperties;
+      TcxCurrencyEditProperties(
+        AVista.Columns[iColumna].Properties).DisplayFormat :=
+          '#,##0.###';
+      AVista.Columns[iColumna].Width := 85;
+    end
+    else if SameText(sCampo, 'MOTIVO_RECHAZO_TRSOLLIN') then
+    begin
+      AVista.Columns[iColumna].Caption :=
+        SCaptionColMotivoRechazoTraspaso;
+      AVista.Columns[iColumna].Width := 190;
+    end;
   end;
 end;
 
@@ -1416,6 +1572,27 @@ begin
   oSalir := TButton.Create(ADialogo);
   oSalir.Parent := APanel;
   oSalir.SetBounds(606, 12, 140, 36);
+  oSalir.Caption := 'ESC ' + Trim(
+    StringReplace(SCaptionSalir, '&', '', [rfReplaceAll]));
+  oSalir.Cancel := True;
+  oSalir.ModalResult := mrCancel;
+end;
+
+procedure TfrmMtoOpeTraspaso.CrearBotonesMisPeticiones(
+  ADialogo: TForm;
+  APanel: TPanel);
+var
+  oReimprimir: TButton;
+  oSalir: TButton;
+begin
+  oReimprimir := TButton.Create(ADialogo);
+  oReimprimir.Parent := APanel;
+  oReimprimir.SetBounds(14, 12, 160, 36);
+  oReimprimir.Caption := 'Reimprimir';
+  oReimprimir.OnClick := ModalReimprimirClick;
+  oSalir := TButton.Create(ADialogo);
+  oSalir.Parent := APanel;
+  oSalir.SetBounds(746, 12, 140, 36);
   oSalir.Caption := 'ESC ' + Trim(
     StringReplace(SCaptionSalir, '&', '', [rfReplaceAll]));
   oSalir.Cancel := True;
@@ -1468,6 +1645,86 @@ begin
     Result := oDialogo.ShowModal;
     ANumero := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
     ASerie := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
+  finally
+    FreeAndNil(oDialogo);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.MostrarModalMisPeticiones(
+  const ATitulo: string);
+var
+  oDialogo: TForm;
+  oPanelBotones: TPanel;
+  oPanelMaestro: TPanel;
+  oPanelDetalle: TPanel;
+  oTituloMaestro: TPanel;
+  oTituloDetalle: TPanel;
+  oRejillaMaestro: TcxGrid;
+  oRejillaDetalle: TcxGrid;
+  oFuenteMaestro: TDataSource;
+  oFuenteDetalle: TDataSource;
+  oVistaMaestro: TcxGridDBTableView;
+  oVistaDetalle: TcxGridDBTableView;
+  DatosLineas: TDataSet;
+begin
+  DatosLineas := nil;
+  oDialogo := TForm.CreateNew(Self);
+  try
+    ConfigurarModalMisPeticiones(oDialogo, ATitulo);
+    oPanelBotones := CrearPanelBotonesSolicitudes(oDialogo);
+    oPanelMaestro := TPanel.Create(oDialogo);
+    oPanelMaestro.Parent := oDialogo;
+    oPanelMaestro.Align := alTop;
+    oPanelMaestro.Height := 220;
+    oPanelMaestro.BevelOuter := bvNone;
+    oTituloMaestro := TPanel.Create(oDialogo);
+    oTituloMaestro.Parent := oPanelMaestro;
+    oTituloMaestro.Align := alTop;
+    oTituloMaestro.Height := 28;
+    oTituloMaestro.BevelOuter := bvNone;
+    oTituloMaestro.Caption :=
+      SCaptionPeticionesRealizadasTraspaso;
+    oTituloMaestro.Font.Style :=
+      oTituloMaestro.Font.Style + [fsBold];
+    oRejillaMaestro := CrearRejillaDatos(
+      oDialogo,
+      oPanelMaestro,
+      FQModalSolic,
+      oFuenteMaestro,
+      oVistaMaestro);
+    TitularColumnasSolicitudes(oVistaMaestro);
+    DatosLineas :=
+      FDatos.QueryLineasSolicitud(oFuenteMaestro);
+    try
+      if not DatosLineas.Active then
+        DatosLineas.Open;
+      oPanelDetalle := TPanel.Create(oDialogo);
+      oPanelDetalle.Parent := oDialogo;
+      oPanelDetalle.Align := alClient;
+      oPanelDetalle.BevelOuter := bvNone;
+      oTituloDetalle := TPanel.Create(oDialogo);
+      oTituloDetalle.Parent := oPanelDetalle;
+      oTituloDetalle.Align := alTop;
+      oTituloDetalle.Height := 28;
+      oTituloDetalle.BevelOuter := bvNone;
+      oTituloDetalle.Caption :=
+        SCaptionArticulosPeticionTraspaso;
+      oTituloDetalle.Font.Style :=
+        oTituloDetalle.Font.Style + [fsBold];
+      oRejillaDetalle := CrearRejillaDatos(
+        oDialogo,
+        oPanelDetalle,
+        DatosLineas,
+        oFuenteDetalle,
+        oVistaDetalle);
+      oRejillaDetalle.TabOrder := 0;
+      TitularColumnasLineasSolicitud(oVistaDetalle);
+      CrearBotonesMisPeticiones(oDialogo, oPanelBotones);
+      oDialogo.ActiveControl := oRejillaMaestro;
+      oDialogo.ShowModal;
+    finally
+      FreeAndNil(DatosLineas);
+    end;
   finally
     FreeAndNil(oDialogo);
   end;
@@ -1546,22 +1803,43 @@ begin
 end;
 
 procedure TfrmMtoOpeTraspaso.ModalImprimirClick(Sender: TObject);
+begin
+  ImprimirSolicitudModal(False);
+end;
+
+procedure TfrmMtoOpeTraspaso.ModalReimprimirClick(Sender: TObject);
+begin
+  ImprimirSolicitudModal(True);
+end;
+
+procedure TfrmMtoOpeTraspaso.ImprimirSolicitudModal(
+  ADuplicado: Boolean);
 var
   sNum, sSer: string;
 begin
-  // Imprime el ticket de la solicitud seleccionada en el modal, sin cerrarlo.
   if Assigned(FQModalSolic) and FQModalSolic.Active and
-     (not FQModalSolic.IsEmpty) then
+     (not FQModalSolic.IsEmpty) and
+     Assigned(FRepositorioTraspasoTicket) then
   begin
-    sNum := FQModalSolic.FieldByName('NUMERO_TRSOL').AsString;
-    sSer := FQModalSolic.FieldByName('SERIE_TRSOL').AsString;
-    if sNum <> '' then
-      TTraspasoTicket.ImprimirSolicitud(
-        PreviewTicket,
-        FRepositorioTraspasoTicket,
-        sNum,
-        sSer,
-        ParametrosCaja.ImpresoraCaja);
+    sNum := Trim(
+      FQModalSolic.FieldByName('NUMERO_TRSOL').AsString);
+    sSer := Trim(
+      FQModalSolic.FieldByName('SERIE_TRSOL').AsString);
+    if (sNum <> '') and (sSer <> '') then
+    begin
+      Screen.Cursor := crHourGlass;
+      try
+        TTraspasoTicket.ImprimirSolicitud(
+          PreviewTicket,
+          FRepositorioTraspasoTicket,
+          sNum,
+          sSer,
+          ParametrosCaja.ImpresoraCaja,
+          ADuplicado);
+      finally
+        Screen.Cursor := crDefault;
+      end;
+    end;
   end;
 end;
 
@@ -1658,19 +1936,18 @@ end;
 
 procedure TfrmMtoOpeTraspaso.AbrirHistoricoSolicitudes(
   const AAlmacen, ATitulo: string);
-var
-  Datos: TDataSet;
 begin
-  // Histórico de las peticiones hechas desde el almacén indicado. El mismo
-  // flujo sirve al acceso rápido Mayus+F7 y a la entrada directa del menú TPV.
-  Datos := FDatos.QueryMisPeticiones(AAlmacen);
+  // Histórico maestro/detalle de las peticiones hechas desde el almacén.
+  FQModalSolic := FDatos.QueryMisPeticiones(AAlmacen);
   try
-    BusquedaVisual.EjecutarBusquedaDataSet(
-      ATitulo,
-      Datos,
-      'frmMtoSolicitudesSearch');
+    if not FQModalSolic.Active then
+      FQModalSolic.Open;
+    if FQModalSolic.IsEmpty then
+      ShowMessage(SInfoSinPeticionesTraspaso)
+    else
+      MostrarModalMisPeticiones(ATitulo);
   finally
-    FreeAndNil(Datos);
+    FreeAndNil(FQModalSolic);
   end;
 end;
 

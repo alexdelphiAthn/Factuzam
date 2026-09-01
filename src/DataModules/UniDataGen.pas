@@ -228,10 +228,6 @@ uses
 
 {$R *.dfm}
 
-resourcestring
-  SErrorRestaurarListaEnEdicion =
-    'Guarde o cancele los cambios antes de volver a la lista.';
-
 type
   TUnidadTrabajoMtoGenUniDAC = class(
     TInterfacedObject,

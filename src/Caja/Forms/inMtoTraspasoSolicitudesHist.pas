@@ -53,7 +53,8 @@ uses
   Vcl.AppEvnts, Vcl.ActnList,
   JvComponentBase, JvEnterTab,
   inMtoGen, inLibPermisosIntf, inLibFotos, inLibRegistroPantallas,
-  inLibCajaPantallaInyeccion, UniDataTraspasoSolicitudesHist;
+  inLibCajaPantallaInyeccion, inLibTraspasoTicketIntf,
+  UniDataTraspasoSolicitudesHist;
 
 type
   TfrmMtoTraspasoSolicitudesHist = class(TfrmMtoGen)
@@ -170,19 +171,26 @@ type
     tvMovimientosTOTAL_COSTE_MOV: TcxGridDBColumn;
     lvMovimientosTraspaso: TcxGridLevel;
     btnListadoSolicitudes: TcxButton;
+    btnImprimirDuplicadoSolicitud: TcxButton;
+    alSolicitudesTraspasoHist: TActionList;
+    actImprimirDuplicadoSolicitud: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnListadoSolicitudesClick(Sender: TObject);
+    procedure actImprimirDuplicadoSolicitudExecute(Sender: TObject);
+    procedure actImprimirDuplicadoSolicitudUpdate(Sender: TObject);
   private
     dmmTraspasoSolicitudesHist: TdmTraspasoSolicitudesHist;
     FFotoArticulo: TFotoEmbebida;
     FDependenciasInforme: TDependenciasInformeCaja;
+    FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
     FPuedeModificar: Boolean;
     FAnteriorCambioTraspasos: TDataChangeEvent;
     procedure AsegurarDataModule;
     procedure ConfigurarEdicion;
     procedure ConfigurarFuentesDetalle;
     function DependenciasInformeDisponibles: Boolean;
+    function PuedeImprimirDuplicadoSolicitud: Boolean;
     procedure ActualizarVisibilidadTraspaso;
     procedure TraspasosDataChange(Sender: TObject; Field: TField);
     procedure EditarSolicitudExecute(Sender: TObject);
@@ -193,7 +201,9 @@ type
     constructor Create(
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion;
-      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      const ADependencias: TDependenciasInformeCaja;
+      const ARepositorioTraspasoTicket:
+        IRepositorioTraspasoTicket); reintroduce;
       overload;
     procedure CrearTablaPrincipal; override;
   end;
@@ -201,18 +211,59 @@ type
 implementation
 
 uses
-  inMtoModalImpTraspasoSolicitudes;
+  inMtoModalImpTraspasoSolicitudes, inLibTraspasoTicket;
 
 {$R *.dfm}
 
 constructor TfrmMtoTraspasoSolicitudesHist.Create(
   AOwner: TComponent;
   const APermisos: IPermisosAplicacion;
-  const ADependencias: TDependenciasInformeCaja);
+  const ADependencias: TDependenciasInformeCaja;
+  const ARepositorioTraspasoTicket: IRepositorioTraspasoTicket);
 begin
   ADependencias.Validar;
+  ValidarDependenciaCaja(
+    ARepositorioTraspasoTicket,
+    'ticket de solicitudes de traspaso');
   FDependenciasInforme := ADependencias;
+  FRepositorioTraspasoTicket := ARepositorioTraspasoTicket;
   inherited Create(AOwner, APermisos);
+end;
+
+procedure TfrmMtoTraspasoSolicitudesHist.
+  actImprimirDuplicadoSolicitudExecute(Sender: TObject);
+var
+  Datos: TDataSet;
+  sNumero: string;
+  sSerie: string;
+begin
+  if PuedeImprimirDuplicadoSolicitud then
+  begin
+    Datos := dsTablaG.DataSet;
+    sNumero := Trim(Datos.FieldByName('NUMERO_TRSOL').AsString);
+    sSerie := Trim(Datos.FieldByName('SERIE_TRSOL').AsString);
+    if (sNumero <> '') and (sSerie <> '') then
+    begin
+      Screen.Cursor := crHourGlass;
+      try
+        TTraspasoTicket.ImprimirSolicitud(
+          PreviewTicket,
+          FRepositorioTraspasoTicket,
+          sNumero,
+          sSerie,
+          ParametrosCaja.ImpresoraCaja,
+          True);
+      finally
+        Screen.Cursor := crDefault;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoTraspasoSolicitudesHist.
+  actImprimirDuplicadoSolicitudUpdate(Sender: TObject);
+begin
+  TAction(Sender).Enabled := PuedeImprimirDuplicadoSolicitud;
 end;
 
 procedure TfrmMtoTraspasoSolicitudesHist.AsegurarDataModule;
@@ -286,6 +337,14 @@ begin
     Assigned(FDependenciasInforme.CajasDefecto);
 end;
 
+function TfrmMtoTraspasoSolicitudesHist.
+  PuedeImprimirDuplicadoSolicitud: Boolean;
+begin
+  Result := PuedeImprimir and Assigned(FRepositorioTraspasoTicket) and
+    Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
+    not dsTablaG.DataSet.IsEmpty and (dsTablaG.State = dsBrowse);
+end;
+
 procedure TfrmMtoTraspasoSolicitudesHist.CrearTablaPrincipal;
 begin
   inherited;
@@ -300,6 +359,7 @@ end;
 procedure TfrmMtoTraspasoSolicitudesHist.FormCreate(Sender: TObject);
 begin
   inherited;
+  actImprimirDuplicadoSolicitud.Visible := PuedeImprimir;
   btnListadoSolicitudes.Visible :=
     (PuedeImprimir or PuedeExportar) and
     DependenciasInformeDisponibles;
@@ -340,6 +400,7 @@ begin
       FAnteriorCambioTraspasos;
   end;
   FreeAndNil(FFotoArticulo);
+  FRepositorioTraspasoTicket := nil;
   inherited;
 end;
 

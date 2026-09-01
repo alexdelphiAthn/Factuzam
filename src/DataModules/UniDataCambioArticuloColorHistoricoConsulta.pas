@@ -26,7 +26,8 @@ implementation
 
 uses
   System.SysUtils,
-  Data.DB;
+  Data.DB,
+  inLibMsgCambioArticuloColor;
 
 const
   fidach = 'ID_ACH';
@@ -51,10 +52,6 @@ const
   TipoFusionColor = 'FUSION_COLOR';
   TipoReversion = 'REVERSION';
   MaximoCambiosConsulta = 1000;
-
-resourcestring
-  SErrorTipoOperacionHistoricoDesconocido =
-    'Tipo de operación histórico desconocido: %s.';
 
 type
   TConsultaCambioArticuloColorHistoricoUniDAC = class(

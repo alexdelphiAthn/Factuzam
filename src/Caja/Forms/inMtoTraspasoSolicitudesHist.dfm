@@ -799,4 +799,24 @@
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    object btnImprimirDuplicadoSolicitud: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 48
+      Action = actImprimirDuplicadoSolicitud
+      TabOrder = 2
+      WordWrap = True
+    end
+  end
+  object alSolicitudesTraspasoHist: TActionList
+    Left = 744
+    Top = 448
+    object actImprimirDuplicadoSolicitud: TAction
+      Caption = 'Imprimir duplicado'
+      OnExecute = actImprimirDuplicadoSolicitudExecute
+      OnUpdate = actImprimirDuplicadoSolicitudUpdate
+    end
+  end
 end

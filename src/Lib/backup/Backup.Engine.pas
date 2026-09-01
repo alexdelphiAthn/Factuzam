@@ -175,7 +175,8 @@ implementation
 
 uses
   UniDataBackupRepositorio,
-  Backup.LecturaDatos;
+  Backup.LecturaDatos,
+  inLibMsgConfiguracion;
 
 const
   BYTES_ENTRE_PROGRESO_RESTAURACION = 4 * 1024 * 1024;
@@ -971,7 +972,7 @@ begin
      FTieneContenidoEjecutable then
   begin
     raise EInvalidOperation.Create(
-      'La copia SQL contiene datos después de su marcador final');
+      SErrorCopiaSqlDatosTrasMarcadorFinal);
   end;
   if FTieneContenidoEjecutable and (sSentencia <> '') then
   begin
@@ -997,7 +998,7 @@ begin
        not bControlIndicesVersionado then
     begin
       raise EInvalidOperation.Create(
-        'La copia SQL contiene un comentario ejecutable no admitido');
+        SErrorCopiaSqlComentarioEjecutableNoAdmitido);
     end;
     if FEsCopiaFactuzam and bCreacionIndice and
        not FDatosDesdeDefinicionTabla then
@@ -1165,19 +1166,19 @@ begin
          not FFinCopiaFactuzamDetectado then
       begin
         raise EInvalidOperation.Create(
-          'La copia SQL está incompleta: falta el marcador final');
+          SErrorCopiaSqlMarcadorFinalAusente);
       end;
       if FEsCopiaFactuzam and
          (FSavepointsActivos.Count > 0) then
       begin
         raise EInvalidOperation.Create(
-          'La copia SQL termina con savepoints activos');
+          SErrorCopiaSqlSavepointsActivos);
       end;
       if FEsCopiaFactuzam and
          FTransaccionConSavepoints then
       begin
         raise EInvalidOperation.Create(
-          'La copia SQL no cierra la transacción con savepoints');
+          SErrorCopiaSqlTransaccionSavepointsSinCerrar);
       end;
       EjecutarIndicesDiferidos;
       FPersistencia.ValidarEstructura;

@@ -347,6 +347,20 @@ end;
 
 destructor TfrmMtoDocumentosTrabajo.Destroy;
 begin
+  // El modo se libera antes del inherited porque su desmontaje necesita
+  // que el grid y el dataset de lineas sigan vivos.
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      on E: Exception do
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarAviso(
+            'DocumentosTrabajo.Destroy: Desmontar fallo: ' + E.Message);
+    end;
+    FModoEntrada := nil;
+  end;
   FreeAndNil(FFotoArticuloActivoDTR);
   FCargaMasiva.Consultas := nil;
   FCargaMasiva.Inserciones := nil;

@@ -105,25 +105,6 @@ uses
 const
   CLAVE_PRECARGA_COMPRAS = 'oPrecargaSeriesPrimeraLista';
 
-resourcestring
-  SCaptionFiltrosPrecargaCompras = 'Filtros de carga...';
-  SCaptionGuardarPrecargaCompras = 'Guardar precarga...';
-  SDescripcionGuardarPrecargaCompras =
-    'Series de precarga de la primera lista de compras';
-  SInfoPrecargaComprasGuardada = 'Preferencia de precarga guardada.';
-  SInfoPrecargaComprasPendiente =
-    'Carga pendiente: seleccione las series que desea consultar.';
-  SInfoPrecargaComprasTodas = 'Precarga: todas las series.';
-  SInfoPrecargaComprasPerfil =
-    'Consulta establecida en el perfil, sin precarga automática.';
-  SErrorPrecargaComprasPerfilVacio =
-    'La precarga guardada está incompleta. Revise el perfil de la pantalla.';
-  SInfoPrecargaComprasSerie = 'Serie precargada: %s';
-  SInfoPrecargaComprasVarias = 'Precarga: %d series seleccionadas.';
-  SErrorPrecargaComprasEnEdicion =
-    'Guarde o cancele los cambios del documento antes de cambiar ' +
-    'las series de precarga.';
-
 {$R *.dfm}
 
 destructor TfrmMtoDocumento.Destroy;

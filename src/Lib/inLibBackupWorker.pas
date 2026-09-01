@@ -143,18 +143,6 @@ uses
   Core_Interfaces, ScriptWriters, System.IOUtils,
   inLibMsgConfiguracion;
 
-resourcestring
-  SErrorScriptCopiaIncompleto =
-    'No se guardó la copia porque el SQL generado está incompleto.';
-  SProgresoVerificandoIntegridad =
-    'Verificando integridad de la copia';
-  SProgresoIntegridadVerificada =
-    'Integridad verificada';
-  SProgresoDescifrandoCopia =
-    'Descifrando la copia';
-  SProgresoValidandoContenido =
-    'Validando el contenido de la copia';
-
 const
   MARCADOR_FINAL_COPIA = '-- FZAM_FIN_COPIA_SEGURIDAD';
   TAMANO_COLA_VALIDACION = 64 * 1024;

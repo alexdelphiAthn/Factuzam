@@ -37,11 +37,8 @@ function SerializarSeleccionPrecarga(
 implementation
 
 uses
-  System.SysUtils, System.JSON, System.Generics.Collections;
-
-resourcestring
-  SErrorPreferenciaPrecargaNoValida =
-    'La preferencia de precarga no es válida. Revise el perfil guardado.';
+  System.SysUtils, System.JSON, System.Generics.Collections,
+  inLibMsgCompras;
 
 function DebeComprobarPrecargaInicial(
   ARol: TRolAperturaMantenimiento;

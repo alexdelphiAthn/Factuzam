@@ -49,6 +49,15 @@
       TabOrder = 2
       OnClick = btnModoClick
     end
+    object btnMisPeticiones: TcxButton
+      Left = 656
+      Top = 6
+      Width = 224
+      Height = 28
+      Caption = 'Mis peticiones'
+      TabOrder = 3
+      OnClick = btnMisPeticionesClick
+    end
   end
   object pnlTop: TPanel [1]
     Left = 0

@@ -80,37 +80,7 @@ uses
   System.Generics.Collections,
   Vcl.Forms, Vcl.Graphics, Vcl.Dialogs,
   cxButtons, cxLookAndFeelPainters,
-  inLibLogIntf, inLibPrecargaMantenimientos;
-
-resourcestring
-  STituloPrecargaCompras = '%s - seleccionar series';
-  SExplicacionPrecargaCompras =
-    'Elija las series que desea cargar en %s. La lista muestra primero ' +
-    'las series con documentos más recientes.';
-  SOrdenSeriesCompras = 'Series por fecha del último documento';
-  SMarcarAnyoCompras = 'Marcar series del año:';
-  SSeleccionManualCompras = 'Selección manual';
-  SSeriesSinAnyoCompras = 'Sin año reconocible';
-  STodasSeriesCompras = '&Todas las series (sin filtro)';
-  SSerieConFechaCompras = '%s    |    Último documento: %s';
-  SSerieSinCodigoCompras = '(Sin código de serie)';
-  SFechaNoDisponibleCompras = 'sin fecha';
-  SResultadoPendienteCompras =
-    'Se comprobará la cantidad antes de cargar los documentos.';
-  SBotonCalcularCompras = '&Calcular';
-  SBotonNingunaCompras = '&Ninguna';
-  SBotonCargarCompras = 'Ca&rgar';
-  SBotonCancelarCompras = '&Cancelar';
-  SSeleccionVaciaCompras =
-    'Marque al menos una serie o seleccione «Todas las series». ' +
-    'Una lista sin marcas no carga todos los documentos.';
-  SCantidadDocumentosCompras = 'Documentos que se cargarán: %s.';
-  SCantidadExcesivaCompras = 'Se cargarán más de %s documentos.';
-  SPreguntaCargaExcesivaCompras =
-    'La selección supera %s documentos y la carga puede tardar. ' +
-    '¿Desea cargar los documentos de la selección actual?';
-  SRepositorioComprasObligatorio =
-    'La selección de series requiere un repositorio de precarga.';
+  inLibLogIntf, inLibMsgCompras, inLibPrecargaMantenimientos;
 
 constructor TfrmModalFiltroCompras.Create(AOwner: TComponent);
 var

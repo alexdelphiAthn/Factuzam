@@ -156,6 +156,10 @@ type
     // Historico de MIS peticiones (yo soy el destino que pide), todos los
     // estados, para saber si se han servido/denegado. El llamante lo libera.
     function QueryMisPeticiones(const APropio: string): TDataSet;
+    // Detalle maestro/detalle de los articulos de una solicitud. El llamante
+    // libera el dataset devuelto.
+    function QueryLineasSolicitud(
+      AMaestro: TDataSource): TDataSet;
     // Carga una solicitud pendiente en cabecera/líneas para servirla.
     function CargarSolicitud(const ANumero, ASerie: string): Boolean;
     // Cierra (estado CERRADA) la solicitud cargada aunque queden lineas sin
@@ -1246,12 +1250,62 @@ begin
     '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
     '         WHERE L.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
     '           AND L.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
-    '           AND L.ESATENDIDA_TRSOLLIN = ''N'') AS LINEAS_PEND_TRSOL' +
+    '           AND COALESCE(L.ESATENDIDA_TRSOLLIN, ''N'') <> ''S''' +
+    '           AND NULLIF(TRIM(' +
+    '               L.MOTIVO_RECHAZO_TRSOLLIN), '''') IS NULL)' +
+    '         AS LINEAS_PEND_TRSOL' +
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_DESTINO_TRSOL = :PROPIO' +
     ' ORDER BY S.FECHA_TRSOL DESC, S.NUMERO_TRSOL DESC';
   oConsulta.ParamByName('PROPIO').AsString := APropio;
   Result := oConsulta;
+end;
+
+function TdmTraspaso.QueryLineasSolicitud(
+  AMaestro: TDataSource): TDataSet;
+var
+  oConsulta: TUniQuery;
+begin
+  if not Assigned(AMaestro) then
+    raise EArgumentNilException.Create('AMaestro');
+  if not Assigned(AMaestro.DataSet) then
+    raise EArgumentNilException.Create('AMaestro.DataSet');
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text :=
+      'SELECT L.NUMERO_TRSOL_TRSOLLIN,' +
+      '       L.SERIE_TRSOL_TRSOLLIN,' +
+      '       L.LINEA_TRSOLLIN,' +
+      '       L.CODIGO_ART_TRSOLLIN,' +
+      '       L.CODIGO_UNIDAD_TRSOLLIN,' +
+      '       COALESCE(NULLIF(TRIM(' +
+      '         L.DESCRIPCION_ARTICULO_TRSOLLIN), ''''),' +
+      '         A.DESCRIPCION_ART, '''') AS DESCRIPCION_ART,' +
+      '       L.CANTIDAD_PEDIDA_TRSOLLIN,' +
+      '       L.CANTIDAD_SERVIDA_TRSOLLIN,' +
+      '       GREATEST(' +
+      '         COALESCE(L.CANTIDAD_PEDIDA_TRSOLLIN, 0) -' +
+      '         COALESCE(L.CANTIDAD_SERVIDA_TRSOLLIN, 0), 0)' +
+      '         AS CANTIDAD_PENDIENTE_TRSOLLIN,' +
+      '       L.ESATENDIDA_TRSOLLIN,' +
+      '       L.MOTIVO_RECHAZO_TRSOLLIN' +
+      '  FROM fza_traspasos_solicitudes_lineas L' +
+      '  LEFT JOIN fza_articulos A' +
+      '    ON A.CODIGO_ART_ART = L.CODIGO_ART_TRSOLLIN' +
+      ' WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUMERO_TRSOL' +
+      '   AND L.SERIE_TRSOL_TRSOLLIN = :SERIE_TRSOL' +
+      ' ORDER BY L.LINEA_TRSOLLIN';
+    oConsulta.MasterFields := 'NUMERO_TRSOL;SERIE_TRSOL';
+    oConsulta.DetailFields :=
+      'NUMERO_TRSOL_TRSOLLIN;SERIE_TRSOL_TRSOLLIN';
+    oConsulta.MasterSource := AMaestro;
+    oConsulta.ReadOnly := True;
+    Result := oConsulta;
+  except
+    FreeAndNil(oConsulta);
+    raise;
+  end;
 end;
 
 function TdmTraspaso.CerrarSolicitud: Boolean;
