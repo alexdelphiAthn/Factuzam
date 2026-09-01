@@ -199,8 +199,30 @@ const
     ' GROUP BY v.CODIGO_ARTICULO, v.SKU, ' +
     '          v.CODIGO_PROVEEDOR, v.NOMBRE_PROVEEDOR, ' +
     '          sd.STOCK, so.STOCK ' +
-    ' ORDER BY v.CODIGO_PROVEEDOR, v.NOMBRE_PROVEEDOR, ' +
-    '          DESCRIPCION, v.SKU';
+    ' ORDER BY CASE WHEN v.CODIGO_PROVEEDOR = '''' ' +
+    '               THEN 1 ELSE 0 END, ' +
+    '          v.CODIGO_PROVEEDOR, v.CODIGO_ARTICULO, ' +
+    '          COALESCE(( ' +
+    'SELECT MIN(COALESCE(aab.ORDEN_AAB, acd.ORDEN_ACD, ' +
+    '                    av.ORDEN_AV)) ' +
+    '  FROM fza_articulos_skus sk ' +
+    '  JOIN fza_atributos_sku sa ' +
+    '    ON sa.CODIGO_UNIDAD_SKU_SA = sk.CODIGO_UNIDAD_SKU ' +
+    '  JOIN fza_atributos_valores av ' +
+    '    ON av.ID_AV = sa.ID_AV_SA ' +
+    '   AND av.ID_VA_AV = ''TAL'' ' +
+    '  LEFT JOIN fza_articulos_atributos_basicos aab ' +
+    '    ON aab.CODIGO_ART_AAB = sk.CODIGO_ART_SKU ' +
+    '   AND aab.ID_AV_AAB = av.ID_AV ' +
+    '  LEFT JOIN fza_articulos_conjuntos_asign aca ' +
+    '    ON aca.CODIGO_ART_ACA = sk.CODIGO_ART_SKU ' +
+    '   AND aca.ID_VA_ACA = av.ID_VA_AV ' +
+    '  LEFT JOIN fza_atributos_conjuntos_det acd ' +
+    '    ON acd.ID_AC_ACD = aca.ID_AC_ACA ' +
+    '   AND acd.ID_AV_ACD = av.ID_AV ' +
+    ' WHERE sk.CODIGO_UNIDAD_SKU = v.SKU ' +
+    '   AND sk.CODIGO_ART_SKU = v.CODIGO_ARTICULO ' +
+    '       ), 2147483647), v.SKU';
 
 type
   TRepositorioTraspasoOpeUniDAC = class(

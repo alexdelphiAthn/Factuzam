@@ -114,7 +114,33 @@ const
     'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
     SQL_CODIGO_PROVEEDOR + ' ELSE '''' END, ' +
     'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
-    SQL_NOMBRE_PROVEEDOR + ' ELSE '''' END, L.LINEA_TRSOLLIN';
+    'CASE WHEN ' + SQL_CODIGO_PROVEEDOR + ' = '''' THEN ' +
+    SQL_NOMBRE_PROVEEDOR + ' ELSE '''' END ELSE '''' END, ' +
+    'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
+    'L.CODIGO_ART_TRSOLLIN ELSE '''' END, ' +
+    'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
+    'COALESCE(( ' +
+    'SELECT MIN(COALESCE(AAB.ORDEN_AAB, ACD.ORDEN_ACD, ' +
+    '                    AV.ORDEN_AV)) ' +
+    'FROM fza_articulos_skus SK ' +
+    'JOIN fza_atributos_sku SA ' +
+    'ON SA.CODIGO_UNIDAD_SKU_SA = SK.CODIGO_UNIDAD_SKU ' +
+    'JOIN fza_atributos_valores AV ON AV.ID_AV = SA.ID_AV_SA ' +
+    'AND AV.ID_VA_AV = ''TAL'' ' +
+    'LEFT JOIN fza_articulos_atributos_basicos AAB ' +
+    'ON AAB.CODIGO_ART_AAB = SK.CODIGO_ART_SKU ' +
+    'AND AAB.ID_AV_AAB = AV.ID_AV ' +
+    'LEFT JOIN fza_articulos_conjuntos_asign ACA ' +
+    'ON ACA.CODIGO_ART_ACA = SK.CODIGO_ART_SKU ' +
+    'AND ACA.ID_VA_ACA = AV.ID_VA_AV ' +
+    'LEFT JOIN fza_atributos_conjuntos_det ACD ' +
+    'ON ACD.ID_AC_ACD = ACA.ID_AC_ACA ' +
+    'AND ACD.ID_AV_ACD = AV.ID_AV ' +
+    'WHERE SK.CODIGO_UNIDAD_SKU = L.CODIGO_UNIDAD_TRSOLLIN ' +
+    'AND SK.CODIGO_ART_SKU = L.CODIGO_ART_TRSOLLIN ' +
+    '), 2147483647) ELSE 0 END, ' +
+    'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
+    'L.CODIGO_UNIDAD_TRSOLLIN ELSE '''' END, L.LINEA_TRSOLLIN';
   SQL_STOCK =
     'SELECT COALESCE(SUM(S.CANTIDAD_STK),0) AS STOCK ' +
     'FROM fza_articulos_stockactual S ' +
