@@ -30,6 +30,8 @@ type
     function Texto: string;
   end;
   TReferenciasComandoFactura = TArray<TReferenciaComandoFactura>;
+  TObtenerReferenciasComandoFactura = reference to function:
+                                                     TReferenciasComandoFactura;
   TErrorComandoImprimirFacturas = (
     ecifNinguno,
     ecifSintaxis,

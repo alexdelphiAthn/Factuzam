@@ -1099,11 +1099,18 @@ begin
       begin
         raise ECifradoCopia.Create(SErrorScriptZipVacio);
       end;
-      oZip.Read(
+      {$IF CompilerVersion >= 36.0}
+        oZip.Read(
+          0,
+          oEntrada,
+          oCabeceraLocal,
+          True);
+      {$ELSE}
+        oZip.Read(
         0,
         oEntrada,
-        oCabeceraLocal,
-        True);
+        oCabeceraLocal);
+      {$IFEND}
       oDestino := TFileStream.Create(sRutaTemporal, fmCreate);
       iCopiados := CopiarFlujoHastaFin(oEntrada, oDestino);
       if UInt64(iCopiados) <> oCabecera.UncompressedSize64 then

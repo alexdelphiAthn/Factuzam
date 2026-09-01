@@ -58,9 +58,9 @@ type
     const AReferencias: TReferenciasComandoFactura;
     const AFormato: string;
     AEnviarEmail: Boolean): Boolean;
-  TObtenerLoteFacturas = reference to function:
-    TReferenciasComandoFactura;
-
+//  TObtenerLoteFacturas = reference to function:
+//    TReferenciasComandoFactura;
+    TObtenerLoteFacturas = TObtenerReferenciasComandoFactura;
 const
   WM_INICIAR_ENVIO_EMAIL_FACTURA = WM_APP + $461;
 

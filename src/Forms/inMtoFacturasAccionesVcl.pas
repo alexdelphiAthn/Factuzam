@@ -15,8 +15,9 @@ uses
 
 type
   TGuardarPendienteFacturaVcl = reference to procedure;
-  TObtenerFacturasFiltradasVcl = reference to function:
-    TReferenciasComandoFactura;
+//  TObtenerFacturasFiltradasVcl = reference to function:
+//    TReferenciasComandoFactura;
+  TObtenerFacturasFiltradasVcl = TObtenerReferenciasComandoFactura;
 
 procedure ArchivarFacturaConsolidadaVcl(
   AFacturas: TdmFacturas;

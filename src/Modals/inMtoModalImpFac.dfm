@@ -1,9 +1,8 @@
-﻿inherited frmPrintFac: TfrmPrintFac
+inherited frmPrintFac: TfrmPrintFac
   Caption = 'Imprimir Borrador'
   ClientHeight = 249
   ClientWidth = 412
   Position = poMainFormCenter
-  StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 428
   ExplicitHeight = 288
   TextHeight = 17
@@ -11,7 +10,6 @@
     Left = 258
     Width = 154
     Height = 249
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 256
     ExplicitWidth = 154
     ExplicitHeight = 241
@@ -52,7 +50,7 @@
   object lblcxlbl1: TcxLabel [2]
     Left = 8
     Top = 4
-    Caption = 'Borrador Número'
+    Caption = 'Borrador N'#250'mero'
     TabOrder = 2
     Transparent = True
   end
@@ -102,7 +100,6 @@
     TabOrder = 5
     Transparent = True
     Visible = False
-    Width = 242
   end
   inherited Localizer1: TcxLocalizer
     Left = 128
@@ -977,16 +974,16 @@
           AllowVectorExport = True
           Width = 724.000000000000000000
           Height = 22.000000000000000000
-          Color = 15395562
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack
           Font.Height = -11
           Font.Name = 'Arial'
           Font.Style = [fsBold]
           Frame.Typ = [ftLeft, ftRight, ftTop, ftBottom]
+          Fill.BackColor = 15395562
+          GapX = 5.000000000000000000
           Memo.UTF8W = (
             'Operaci'#243'n origen')
-          GapX = 5.000000000000000000
           ParentFont = False
         end
         object MemoDocumentoOperacionCaja: TfrxMemoView
@@ -1622,7 +1619,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Número de Factura: [Facturas."DOCUMENTO_FORMATO"]')
+            'N'#250'mero de Factura: [Facturas."DOCUMENTO_FORMATO"]')
           ParentFont = False
           Formats = <
             item
@@ -1643,7 +1640,7 @@
           Font.Style = [fsBold]
           Frame.Typ = []
           Memo.UTF8W = (
-            'Descripción')
+            'Descripci'#243'n')
           ParentFont = False
         end
         object Memo9: TfrxMemoView
@@ -2457,7 +2454,7 @@
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            'Retención IRPF [Facturas."PORCENTAJE_RETENCION_FAC"]%')
+            'Retenci'#243'n IRPF [Facturas."PORCENTAJE_RETENCION_FAC"]%')
           ParentFont = False
         end
         object txtRetencionTotal: TfrxMemoView
@@ -2618,7 +2615,7 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'Página [<Page>] de [<TotalPages#>]')
+            'P'#225'gina [<Page>] de [<TotalPages#>]')
           ParentFont = False
           Formats = <
             item
@@ -2639,7 +2636,7 @@
           Frame.Typ = []
           HAlign = haRight
           Memo.UTF8W = (
-            'Continúa en la siguiente página ...')
+            'Contin'#250'a en la siguiente p'#225'gina ...')
           ParentFont = False
         end
         object mTotalFacturaCtd: TfrxMemoView
