@@ -67,6 +67,7 @@ type
     FTimerResolve: TTimer;
     FSkuPend: string;
     FUltimoFiltro: string;
+    FAvanzarTrasResolucion: Boolean;
     // OnExit del editor in-place de la celda de SKU: avisa al host para
     // restaurar el EnterAsTab que desactivo al entrar.
     procedure EditorSalir(Sender: TObject);
@@ -162,6 +163,7 @@ begin
   FTimerResolve.Enabled := False;
   FTimerResolve.Interval := 1;
   FTimerResolve.OnTimer := TimerResolveTimer;
+  FAvanzarTrasResolucion := False;
 end;
 
 destructor TModoEntradaSku.Destroy;
@@ -572,7 +574,11 @@ begin
       // El Enter se consume (la resolucion recoloca el foco); el Tab
       // sigue su curso y avanza de celda con la entrada ya en curso.
       if Key = VK_RETURN then
+      begin
+        FAvanzarTrasResolucion :=
+          FConfig.AvanzarConEnterTrasResolver;
         Key := 0;
+      end;
       DispararResolucion(sEntrada);
     end;
   end;
@@ -694,10 +700,13 @@ end;
 procedure TModoEntradaSku.TimerResolveTimer(Sender: TObject);
 var
   sEntrada: string;
+  bAvanzar: Boolean;
 begin
   FTimerResolve.Enabled := False;
   sEntrada := FSkuPend;
   FSkuPend := '';
+  bAvanzar := FAvanzarTrasResolucion;
+  FAvanzarTrasResolucion := False;
   if sEntrada <> '' then
   begin
     if ResolverEntrada(sEntrada) then
@@ -719,7 +728,17 @@ begin
       // celda del combo, InitEdit lo desactiva de nuevo).
       if Assigned(FOnSalirEdicion) then
         FOnSalirEdicion(nil);
-      MostrarEditor;
+      // Inventarios usa navegacion Excel: el Enter debe continuar por
+      // la siguiente celda. Los demas documentos conservan el editor de
+      // SKU abierto para la entrada repetida con lector.
+      if bAvanzar then
+      begin
+        if not FConfig.View.Controller.FocusNextCell(
+             True, True, False) then
+          MostrarEditor;
+      end
+      else
+        MostrarEditor;
     end;
   end;
 end;

@@ -176,6 +176,9 @@ type
     procedure DoShow; override;
     procedure DoClose(var Action: TCloseAction); override;
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
+    procedure ConfigurarBotonBusquedaDesplegable(
+      AControl: TcxCustomDropDownEdit;
+      AEvento: TcxEditButtonClickEvent);
     procedure DesactivarEnterAsTabTemporal(Sender: TObject);
     procedure RestaurarEnterAsTabTemporal(Sender: TObject);
     procedure ActualizarAuditoria(DataSet: TDataSet);
@@ -1169,6 +1172,28 @@ begin
           Comp.EnterAsTab := False;
         end;
       end;
+end;
+
+procedure TfrmBase.ConfigurarBotonBusquedaDesplegable(
+  AControl: TcxCustomDropDownEdit;
+  AEvento: TcxEditButtonClickEvent);
+var
+  Boton: TcxEditButton;
+begin
+  if Assigned(AControl) then
+  begin
+    AControl.Properties.BeginUpdate;
+    try
+      AControl.Properties.Buttons.Clear;
+      Boton := AControl.Properties.Buttons.Add;
+      Boton.Kind := bkDown;
+      Boton := AControl.Properties.Buttons.Add;
+      Boton.Kind := bkEllipsis;
+      AControl.Properties.OnButtonClick := AEvento;
+    finally
+      AControl.Properties.EndUpdate;
+    end;
+  end;
 end;
 
 procedure TfrmBase.DesactivarEnterAsTabTemporal(Sender: TObject);

@@ -502,6 +502,9 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinFaccColorPivotButtonClick);
   inherited;
+  ConfigurarBotonBusquedaDesplegable(
+    cbbCODIGO_PRV_FACC,
+    cbbCODIGO_PRV_FACCPropertiesButtonClick);
   ConfigurarColumnaBusquedaDocumento(
     tvLineasFactura, 'CODIGO_ART_FACCLIN',
     colLineaFaccCODIGO_ARTPropertiesButtonClick,
@@ -1400,19 +1403,25 @@ var
   ds      : TDataSet;
 begin
   inherited;
-  if Assigned(dmmFacturasCompra) then
+  if (AButtonIndex >= 0) and
+     (AButtonIndex < cbbCODIGO_PRV_FACC.Properties.Buttons.Count) and
+     (cbbCODIGO_PRV_FACC.Properties.Buttons[
+        AButtonIndex].Kind = bkEllipsis) then
   begin
-    ds := dmmFacturasCompra.unqryTablaG;
-    if ds.IsEmpty then
-      MessageDlg(SErrorFacturaCompraElegirProveedorNoSeleccionada,
-                 mtInformation, [mbOk], 0)
-    else if BuscarProveedorFacturaCompra(sCodigo) then
+    if Assigned(dmmFacturasCompra) then
     begin
-      if not (ds.State in [dsInsert, dsEdit]) then
-        ds.Edit;
-      ds.FieldByName('CODIGO_PRV_FACC').AsString := sCodigo;
-      dmmFacturasCompra.CargarFormaPagoProveedor(sCodigo);
-      ActualizarLabelProveedor;
+      ds := dmmFacturasCompra.unqryTablaG;
+      if ds.IsEmpty then
+        MessageDlg(SErrorFacturaCompraElegirProveedorNoSeleccionada,
+                   mtInformation, [mbOk], 0)
+      else if BuscarProveedorFacturaCompra(sCodigo) then
+      begin
+        if not (ds.State in [dsInsert, dsEdit]) then
+          ds.Edit;
+        ds.FieldByName('CODIGO_PRV_FACC').AsString := sCodigo;
+        dmmFacturasCompra.CargarFormaPagoProveedor(sCodigo);
+        ActualizarLabelProveedor;
+      end;
     end;
   end;
 end;
@@ -1440,7 +1449,7 @@ begin
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    cbbCODIGO_PRV_FACCPropertiesButtonClick(Sender, 0);
+    cbbCODIGO_PRV_FACCPropertiesButtonClick(Sender, 1);
   end;
 end;
 

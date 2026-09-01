@@ -993,6 +993,7 @@ begin
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';
   Cfg.Campos.NumAtributos := 'NUM_ATRIBUTOS_REQ_INV_LINEA';
+  Cfg.AvanzarConEnterTrasResolver := True;
   for i := 1 to 5 do
   begin
     Cfg.Campos.AttrValor[i] := 'ATTR' + IntToStr(i) + '_VALOR';

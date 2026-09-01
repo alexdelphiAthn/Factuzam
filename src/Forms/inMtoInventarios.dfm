@@ -289,7 +289,7 @@
                 Left = 0
                 Top = 0
                 Width = 1122
-                Height = 80
+                Height = 52
                 Align = alTop
                 BevelOuter = bvNone
                 TabOrder = 0

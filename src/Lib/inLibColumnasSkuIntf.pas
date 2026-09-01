@@ -126,6 +126,9 @@ type
     // con ASku='' y ACompleto=True para que el documento complete la
     // fiscalidad. Lo activan las facturas de venta mayor.
     AceptarNoCatalogo: Boolean;
+    // Al resolver una entrada con Enter, avanza con la misma navegacion
+    // nativa del grid en vez de volver a abrir el editor de SKU.
+    AvanzarConEnterTrasResolver: Boolean;
     // Precio del SKU segun el documento (ver TObtenerPrecioSkuEvent).
     ObtenerPrecioSku: TObtenerPrecioSkuEvent;
   end;

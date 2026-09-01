@@ -1543,6 +1543,9 @@ begin
   CrearColaboradorTallas;
   FTallas.CrearColumnas;
   inherited;
+  ConfigurarBotonBusquedaDesplegable(
+    cbbProveedor,
+    cbbProveedorPropertiesButtonClick);
   FFotos.ConfigurarCabecera;
   cxPageControl2.OnChange := cxPageControl2Change;
   FEstiloRecepcionVencida := TcxStyle.Create(Self);
@@ -1652,7 +1655,11 @@ end;
 procedure TfrmMtoComprasSesiones.cbbProveedorPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
-  FProveedor.BuscarProveedor;
+  if (AButtonIndex >= 0) and
+     (AButtonIndex < cbbProveedor.Properties.Buttons.Count) and
+     (cbbProveedor.Properties.Buttons[
+        AButtonIndex].Kind = bkEllipsis) then
+    FProveedor.BuscarProveedor;
 end;
 
 procedure TfrmMtoComprasSesiones.cbbProveedorKeyUp(Sender: TObject;

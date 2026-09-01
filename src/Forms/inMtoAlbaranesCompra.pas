@@ -570,6 +570,9 @@ begin
   ConfigurarColumnaBotonDocumento(
     FColColorPivot, colLinAlbcColorPivotButtonClick);
   inherited;
+  ConfigurarBotonBusquedaDesplegable(
+    cbbCODIGO_PRV_ALBC,
+    cbbCODIGO_PRV_ALBCPropertiesButtonClick);
   ConfigurarColumnaBusquedaDocumento(
     tvLineasAlbaran, 'CODIGO_UNIDAD_ALBCLIN',
     colLineaAlbcCODIGO_UNIDADPropertiesButtonClick,
@@ -1304,22 +1307,28 @@ var
   ds      : TDataSet;
 begin
   inherited;
-  if Assigned(dmmAlbaranesCompra) then
+  if (AButtonIndex >= 0) and
+     (AButtonIndex < cbbCODIGO_PRV_ALBC.Properties.Buttons.Count) and
+     (cbbCODIGO_PRV_ALBC.Properties.Buttons[
+        AButtonIndex].Kind = bkEllipsis) then
   begin
-    ds := dmmAlbaranesCompra.unqryTablaG;
-    if ds.IsEmpty then
-      MessageDlg(SErrorAlbaranCompraNecesarioElegirProveedor,
-                 mtInformation, [mbOk], 0)
-    else if BuscarProveedorAlbaranCompra(sCodigo) then
+    if Assigned(dmmAlbaranesCompra) then
     begin
-      if not (ds.State in [dsInsert, dsEdit]) then
-        ds.Edit;
-      ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
-      AplicarIvaExentoIntracomunitarioProveedor(
-        CrearLecturasImpuestos(ConexionPrincipal), ds,
-        'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
-      dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
-      ActualizarLabelProveedor;
+      ds := dmmAlbaranesCompra.unqryTablaG;
+      if ds.IsEmpty then
+        MessageDlg(SErrorAlbaranCompraNecesarioElegirProveedor,
+                   mtInformation, [mbOk], 0)
+      else if BuscarProveedorAlbaranCompra(sCodigo) then
+      begin
+        if not (ds.State in [dsInsert, dsEdit]) then
+          ds.Edit;
+        ds.FieldByName('CODIGO_PRV_ALBC').AsString := sCodigo;
+        AplicarIvaExentoIntracomunitarioProveedor(
+          CrearLecturasImpuestos(ConexionPrincipal), ds,
+          'CODIGO_PRV_ALBC', 'ESIVA_EXENTO_INTRACOMUNITARIO_ALBC');
+        dmmAlbaranesCompra.CalcularTotalesAlbaranCompra;
+        ActualizarLabelProveedor;
+      end;
     end;
   end;
 end;
@@ -1394,7 +1403,7 @@ begin
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    cbbCODIGO_PRV_ALBCPropertiesButtonClick(Sender, 0);
+    cbbCODIGO_PRV_ALBCPropertiesButtonClick(Sender, 1);
   end;
 end;
 

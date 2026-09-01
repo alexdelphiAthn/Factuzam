@@ -669,6 +669,9 @@ begin
     FColColorPivot, colLinPedcColorPivotButtonClick);
   FColColorProveedorPivot := nil;
   inherited;
+  ConfigurarBotonBusquedaDesplegable(
+    cbbCODIGO_PRV_PEDC,
+    cbbCODIGO_PRV_PEDCPropertiesButtonClick);
   for i := 0 to cxGrdDBTabPrin.ItemCount - 1 do
     cxGrdDBTabPrin.Items[i].Styles.OnGetContentStyle :=
       GridListaGetContentStyle;
@@ -1347,32 +1350,38 @@ var
   ds: TDataSet;
 begin
   inherited;
-  if Assigned(dmmPedidosCompra) then
+  if (AButtonIndex >= 0) and
+     (AButtonIndex < cbbCODIGO_PRV_PEDC.Properties.Buttons.Count) and
+     (cbbCODIGO_PRV_PEDC.Properties.Buttons[
+        AButtonIndex].Kind = bkEllipsis) then
   begin
-    ds := dmmPedidosCompra.unqryTablaG;
-    if ds.IsEmpty then
-      MessageDlg(SErrorPedidoCompraNecesarioElegirProveedor,
-                 mtInformation, [mbOk], 0)
-    else
+    if Assigned(dmmPedidosCompra) then
     begin
-      oConsulta := FBusquedaProveedores.ConsultarProveedores;
-      if BusquedaVisual.EjecutarBusquedaDataSet(
-        STituloBuscarProveedoresPedidoCompra,
-        oConsulta.DataSet,
-        'frmMtoPedcProvSearch',
-        Self) then
+      ds := dmmPedidosCompra.unqryTablaG;
+      if ds.IsEmpty then
+        MessageDlg(SErrorPedidoCompraNecesarioElegirProveedor,
+                   mtInformation, [mbOk], 0)
+      else
       begin
-        if not (ds.State in [dsInsert, dsEdit]) then
-          ds.Edit;
-        ds.FieldByName('CODIGO_PRV_PEDC').AsString :=
-          oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
-        AplicarIvaExentoIntracomunitarioProveedor(
-          CrearLecturasImpuestos(ConexionPrincipal),
-          ds,
-          'CODIGO_PRV_PEDC',
-          'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
-        dmmPedidosCompra.CalcularTotalesPedidoCompra;
-        ActualizarLabelProveedor;
+        oConsulta := FBusquedaProveedores.ConsultarProveedores;
+        if BusquedaVisual.EjecutarBusquedaDataSet(
+          STituloBuscarProveedoresPedidoCompra,
+          oConsulta.DataSet,
+          'frmMtoPedcProvSearch',
+          Self) then
+        begin
+          if not (ds.State in [dsInsert, dsEdit]) then
+            ds.Edit;
+          ds.FieldByName('CODIGO_PRV_PEDC').AsString :=
+            oConsulta.DataSet.FieldByName('CODIGO_PRV_PRV').AsString;
+          AplicarIvaExentoIntracomunitarioProveedor(
+            CrearLecturasImpuestos(ConexionPrincipal),
+            ds,
+            'CODIGO_PRV_PEDC',
+            'ESIVA_EXENTO_INTRACOMUNITARIO_PEDC');
+          dmmPedidosCompra.CalcularTotalesPedidoCompra;
+          ActualizarLabelProveedor;
+        end;
       end;
     end;
   end;
@@ -1448,7 +1457,7 @@ begin
   if (Key = VK_RETURN) and (ssCtrl in Shift) then
   begin
     Key := 0;
-    cbbCODIGO_PRV_PEDCPropertiesButtonClick(Sender, 0);
+    cbbCODIGO_PRV_PEDCPropertiesButtonClick(Sender, 1);
   end;
 end;
 
