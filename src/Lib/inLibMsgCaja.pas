@@ -73,6 +73,13 @@ resourcestring
     'Selecciona el almacén destino.';
   SErrorAlmacenesTraspasoCoincidentes =
     'Origen y destino no pueden ser el mismo almacén.';
+  SErrorAlmacenOrigenReposicionNoSeleccionado =
+    'Selecciona el almacén origen de la reposición.';
+  SErrorRangoVentasReposicionNoValido =
+    'El intervalo de ventas debe tener fecha y hora válidas y el inicio ' +
+    'debe ser anterior al final.';
+  SErrorVentasReposicionNoCargadas =
+    'Carga primero las ventas de la reposición.';
   SErrorLineasSolicitudTraspasoNoDisponibles =
     'No hay líneas que solicitar.';
   SErrorAlmacenOrigenSolicitudNoSeleccionado =
@@ -266,6 +273,10 @@ resourcestring
     'No has marcado nada para servir. ¿Denegar toda la petición?';
   SInfoTraspasoGrabado =
     'Traspaso %s grabado correctamente.';
+  SInfoVentasReposicionNoEncontradas =
+    'No hay ventas en el intervalo indicado.';
+  SInfoReposicionAutoEmitida =
+    'Reposición automática %s/%s emitida.';
   SErrorEmpleadoGastoCajaNoIndicado =
     'Introduzca el empleado que realiza la operación.';
   SErrorImporteGastoCajaNoValido =
@@ -342,10 +353,16 @@ resourcestring
   SCaptionColCaducidadVale = 'Caducidad';
   SCaptionColObservacionesVale = 'Observaciones';
   // R13 - Traspasos entre almacenes
+  SCaptionModoReposiciones = 'F5 Reposiciones';
+  SCaptionVentasDesdeReposicion = 'VENTAS DESDE';
+  SCaptionVentasHastaReposicion = 'VENTAS HASTA';
+  SCaptionCargarVentasReposicion = 'Cargar ventas';
   SCaptionColDescripcionTraspaso = 'Descripción';
   SCaptionColUdsTraspaso = 'Uds';
+  SCaptionColAPedirReposicion = 'A pedir';
   SCaptionColCosteTraspaso = 'Coste';
-  SCaptionColStockOrigenTraspaso = 'Stock org';
+  SCaptionColStockDestinoTraspaso = 'Stock Destino';
+  SCaptionColStockOrigenTraspaso = 'Stock Origen';
   SCaptionColPedidasTraspaso = 'Pedidas';
   SCaptionColMotivoRechazoTraspaso = 'Motivo rechazo';
   SCaptionColSirvoTraspaso = 'Sirvo';
@@ -354,6 +371,7 @@ resourcestring
   SCaptionF12ConTicket = 'F12 Con ticket';
   SCaptionF12EnviarSolicitud = 'F12 Enviar solicitud';
   SCaptionF12ServirConTicket = 'F12 Servir con ticket';
+  SCaptionF12EmitirReposicion = 'F12 Emitir reposición';
   SCaptionImporteTraspaso = 'Importe traspaso: %m';
   STituloSolicitudesPendientesAtender =
     'Solicitudes pendientes de atender';

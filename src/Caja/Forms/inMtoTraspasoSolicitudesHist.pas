@@ -26,7 +26,7 @@ uses
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit,
   cxNavigator, cxDBData, cxContainer, cxLabel, cxTextEdit, cxDBEdit,
   cxCheckBox, cxCalendar, cxMemo, cxCurrencyEdit, cxSplitter,
-  cxButtons,
+  cxButtons, cxDropDownEdit,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxClasses, cxDBNavigator,
   dxDateRanges, dxCore, dxScrollbarAnnotations, dxSkinsCore,
@@ -74,6 +74,7 @@ type
     cxGrdDBTabPrinCODIGO_EMPLEADO_TRSOL: TcxGridDBColumn;
     cxGrdDBTabPrinNOMBRE_EMPLEADO_TRSOL: TcxGridDBColumn;
     cxGrdDBTabPrinESTADO_TRSOL: TcxGridDBColumn;
+    cxGrdDBTabPrinMODO_PETICION_TRSOL: TcxGridDBColumn;
     cxGrdDBTabPrinATENDIDA_TRSOL: TcxGridDBColumn;
     cxGrdDBTabPrinTIENE_TRASPASO_TRSOL: TcxGridDBColumn;
     cxGrdDBTabPrinTOTAL_TRASPASOS_TRSOL: TcxGridDBColumn;
@@ -172,11 +173,15 @@ type
     lvMovimientosTraspaso: TcxGridLevel;
     btnListadoSolicitudes: TcxButton;
     btnImprimirDuplicadoSolicitud: TcxButton;
+    pnlFiltroModoPeticion: TPanel;
+    lblFiltroModoPeticion: TcxLabel;
+    cboFiltroModoPeticion: TcxComboBox;
     alSolicitudesTraspasoHist: TActionList;
     actImprimirDuplicadoSolicitud: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnListadoSolicitudesClick(Sender: TObject);
+    procedure cboFiltroModoPeticionPropertiesChange(Sender: TObject);
     procedure actImprimirDuplicadoSolicitudExecute(Sender: TObject);
     procedure actImprimirDuplicadoSolicitudUpdate(Sender: TObject);
   private
@@ -189,6 +194,7 @@ type
     procedure AsegurarDataModule;
     procedure ConfigurarEdicion;
     procedure ConfigurarFuentesDetalle;
+    procedure AplicarFiltroModoPeticion;
     function DependenciasInformeDisponibles: Boolean;
     function PuedeImprimirDuplicadoSolicitud: Boolean;
     procedure ActualizarVisibilidadTraspaso;
@@ -330,6 +336,43 @@ begin
     TraspasosDataChange;
 end;
 
+procedure TfrmMtoTraspasoSolicitudesHist.AplicarFiltroModoPeticion;
+const
+  ModosFiltro: array[0..5] of string = (
+    '',
+    'PENDIENTE',
+    'AUTO',
+    'ATENDIDA',
+    'RECHAZADA PARCIAL',
+    'RECHAZADA TOTAL');
+var
+  Datos: TDataSet;
+  Indice: Integer;
+begin
+  Datos := dsTablaG.DataSet;
+  Indice := cboFiltroModoPeticion.ItemIndex;
+  if Assigned(Datos) and Datos.Active and
+     (Indice >= Low(ModosFiltro)) and
+     (Indice <= High(ModosFiltro)) then
+  begin
+    Datos.Filtered := False;
+    Datos.Filter := '';
+    if ModosFiltro[Indice] <> '' then
+    begin
+      Datos.Filter := Format(
+        'MODO_PETICION_TRSOL = ''%s''',
+        [ModosFiltro[Indice]]);
+      Datos.Filtered := True;
+    end;
+  end;
+end;
+
+procedure TfrmMtoTraspasoSolicitudesHist.
+  cboFiltroModoPeticionPropertiesChange(Sender: TObject);
+begin
+  AplicarFiltroModoPeticion;
+end;
+
 function TfrmMtoTraspasoSolicitudesHist.
   DependenciasInformeDisponibles: Boolean;
 begin
@@ -359,6 +402,8 @@ end;
 procedure TfrmMtoTraspasoSolicitudesHist.FormCreate(Sender: TObject);
 begin
   inherited;
+  cboFiltroModoPeticion.ItemIndex := 0;
+  AplicarFiltroModoPeticion;
   actImprimirDuplicadoSolicitud.Visible := PuedeImprimir;
   btnListadoSolicitudes.Visible :=
     (PuedeImprimir or PuedeExportar) and

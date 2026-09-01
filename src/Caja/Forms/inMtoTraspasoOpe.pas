@@ -10,9 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Operativa de traspasos entre almacenes (TPV, F3 del menú de caja).        }
-{    Tres modos en una barra superior: Traspaso (origen propio -> destino      }
-{    ESTANDAR), Solicitar (pido a otro almacén) y Atender (sirvo una           }
-{    solicitud que me han hecho). F12 con ticket / F11 sin ticket.             }
+{    Cuatro modos: Traspaso, Solicitar, Atender y Reposiciones automáticas.    }
+{    F12 emite con ticket; F11 queda para los traspasos que lo permiten.       }
 {    Ver DESARROLLOS EN CURSO/traspasos_caja.md.                               }
 {******************************************************************************}
 unit inMtoTraspasoOpe;
@@ -45,6 +44,7 @@ type
   TfrmMtoOpeTraspaso = class(TfrmBase, ITraspasoCaja)
     pnlModos: TPanel;
     btnModoTraspaso: TcxButton;
+    btnModoReposicion: TcxButton;
     btnModoSolicitar: TcxButton;
     btnModoAtender: TcxButton;
     btnMisPeticiones: TcxButton;
@@ -56,6 +56,11 @@ type
     lblEmpleado: TcxLabel;
     txtEmpleado: TcxButtonEdit;
     lblEmpleadoNombre: TcxLabel;
+    lblVentasDesde: TcxLabel;
+    dteVentasDesde: TcxDateEdit;
+    lblVentasHasta: TcxLabel;
+    dteVentasHasta: TcxDateEdit;
+    btnCargarVentas: TcxButton;
     pnlCentro: TPanel;
     pnlBottom: TPanel;
     lblTotal: TcxLabel;
@@ -88,6 +93,8 @@ type
     procedure txtEmpleadoExit(Sender: TObject);
     procedure txtEmpleadoButtonClick(Sender: TObject; AButtonIndex: Integer);
     procedure cboDestinoPropertiesChange(Sender: TObject);
+    procedure dteVentasPropertiesChange(Sender: TObject);
+    procedure btnCargarVentasClick(Sender: TObject);
     procedure btnMisPeticionesClick(Sender: TObject);
   private
     FDatos: TdmTraspaso;
@@ -105,6 +112,7 @@ type
     FStockDs: TDataSource;
     FNavDs: TDataSource;
     FColUds: TcxGridDBColumn;
+    FColStockDestino: TcxGridDBColumn;
     FColPedidas: TcxGridDBColumn;
     FColMotivo: TcxGridDBColumn;
     FQModalSolic: TDataSet;
@@ -114,6 +122,8 @@ type
     FValidadorArticulos: IArticulosValidador;
     FLookupAtributosArticulos: IArticulosAtributosLookup;
     FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
+    FReposicionCargada: Boolean;
+    FCargandoVentasReposicion: Boolean;
     // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe): la
     // mecanica (trama STX/ETX + rafaga por velocidad) la lleva TLectorScanner.
     // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
@@ -137,6 +147,7 @@ type
     procedure CrearColumnasTraspaso;
     procedure LiberarModoEntrada;
     procedure ConfigurarGridSegunModo;
+    function ModoPermiteCargaManual: Boolean;
     procedure AlternarModoEntrada;
     function ResolverEntradaModo(const AEntrada: string): Boolean;
     procedure MostrarEditorModo;
@@ -190,6 +201,16 @@ type
       const AAlmacen, ATitulo: string);
     procedure AbrirMisPeticiones;
     procedure AplicarModo(AModo: TModoTraspaso);
+    procedure ConfigurarControlesReposicion;
+    procedure InicializarRangoVentasReposicion;
+    procedure InvalidarVentasReposicion;
+    function FechaEditada(AEdit: TcxDateEdit): TDateTime;
+    function ObtenerOrigenReposicion(out AOrigen: string): Boolean;
+    function ObtenerRangoReposicion(
+      out ADesde, AHasta: TDateTime): Boolean;
+    procedure CargarVentasReposicion;
+    procedure EmitirReposicion;
+    procedure EmitirReposicionInterna;
     procedure CargarCombo;
     procedure CargarAlmacenesDestino;
     function DestinoSeleccionado: string;
@@ -247,6 +268,13 @@ uses
   UniDataGridArticulosRepositorio, UniDataColumnasSkuServicios,
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
   inLibMsgArticulos;
+
+const
+  ALTO_CABECERA_NORMAL_96_DPI = 89;
+  ALTO_CABECERA_REPOSICION_96_DPI = 128;
+  ANCHO_MIN_A_PEDIR_96_DPI = 70;
+  ANCHO_MIN_STOCK_DESTINO_96_DPI = 105;
+  ANCHO_MIN_STOCK_ORIGEN_96_DPI = 100;
 
 resourcestring
   STituloMisPeticionesTraspaso =
@@ -337,12 +365,16 @@ begin
   inherited;
   // El catálogo instalado puede conservar los atajos anteriores. Se mantiene
   // el texto traducido y se impone el mapa funcional vigente.
+  btnModoReposicion.Caption := SCaptionModoReposiciones;
   btnModoSolicitar.Caption :=
     TextoBotonConAtajo(btnModoSolicitar.Caption, 'F6');
   btnModoAtender.Caption :=
     TextoBotonConAtajo(btnModoAtender.Caption, 'F7');
   btnF8.Caption := 'F8 ' + Trim(
     StringReplace(SCaptionMenuBorrarLinea, '&', '', [rfReplaceAll]));
+  lblVentasDesde.Caption := SCaptionVentasDesdeReposicion;
+  lblVentasHasta.Caption := SCaptionVentasHastaReposicion;
+  btnCargarVentas.Caption := SCaptionCargarVentasReposicion;
   ValidarDependencias;
   KeyPreview := True;
   // Detector del lector de codigo de barras (trama STX/ETX + rafaga por
@@ -530,12 +562,29 @@ begin
   Columna.DataBinding.FieldName := 'PRECIO_COSTE';
   Columna.Options.Editing := False;
   Columna.Width := 70;
-  Columna.Visible := FVerCoste;
+  Columna.Visible := FVerCoste and (FModo <> mtReposicion);
+  Columna := FView.CreateColumn;
+  Columna.Caption := SCaptionColStockDestinoTraspaso;
+  Columna.DataBinding.FieldName := 'STOCK_DESTINO';
+  Columna.Options.Editing := False;
+  Columna.Width := 90;
+  Columna.Visible := FModo = mtReposicion;
+  if FModo = mtReposicion then
+    Columna.MinWidth := MulDiv(
+      ANCHO_MIN_STOCK_DESTINO_96_DPI,
+      CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+  FColStockDestino := Columna;
   Columna := FView.CreateColumn;
   Columna.Caption := SCaptionColStockOrigenTraspaso;
   Columna.DataBinding.FieldName := 'STOCK_ORIGEN';
   Columna.Options.Editing := False;
-  Columna.Width := 70;
+  Columna.Width := 90;
+  if FModo = mtReposicion then
+    Columna.MinWidth := MulDiv(
+      ANCHO_MIN_STOCK_ORIGEN_96_DPI,
+      CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
   Columna := FView.CreateColumn;
   Columna.Caption := SCaptionColPedidasTraspaso;
   Columna.DataBinding.FieldName := 'CANTIDAD_PEDIDA';
@@ -578,6 +627,7 @@ begin
   FreeAndNil(FModoSku);
   FreeAndNil(FGridCtrl);
   FColUds := nil;
+  FColStockDestino := nil;
   FColPedidas := nil;
   FColMotivo := nil;
 end;
@@ -586,8 +636,8 @@ procedure TfrmMtoOpeTraspaso.ConfigurarGridSegunModo;
 var
   i: Integer;
 begin
-  FView.OptionsData.Inserting := FModo <> mtAtender;
-  FView.OptionsData.Deleting := FModo <> mtAtender;
+  FView.OptionsData.Inserting := ModoPermiteCargaManual;
+  FView.OptionsData.Deleting := ModoPermiteCargaManual;
   FView.OptionsData.Editing := True;
   for i := 0 to FView.ColumnCount - 1 do
   begin
@@ -595,6 +645,8 @@ begin
       FView.Columns[i].Options.Editing :=
         (FView.Columns[i] = FColUds) or
         (FView.Columns[i] = FColMotivo)
+    else if FModo = mtReposicion then
+      FView.Columns[i].Options.Editing := FView.Columns[i] = FColUds
     else
       FView.Columns[i].Options.Editing := True;
   end;
@@ -606,9 +658,22 @@ begin
   begin
     if FModo = mtAtender then
       FColUds.Caption := SCaptionColSirvoTraspaso
+    else if FModo = mtReposicion then
+    begin
+      FColUds.Caption := SCaptionColAPedirReposicion;
+      FColUds.MinWidth := MulDiv(
+        ANCHO_MIN_A_PEDIR_96_DPI,
+        CurrentPPI,
+        USER_DEFAULT_SCREEN_DPI);
+    end
     else
       FColUds.Caption := SCaptionColUdsTraspaso;
   end;
+end;
+
+function TfrmMtoOpeTraspaso.ModoPermiteCargaManual: Boolean;
+begin
+  Result := FModo in [mtTraspaso, mtSolicitar];
 end;
 
 procedure TfrmMtoOpeTraspaso.AlternarModoEntrada;
@@ -627,12 +692,12 @@ begin
     if sArticulo <> '' then
       FGridCtrl.MostrarColumnasAtributosArticulo(sArticulo);
   end;
-  if FModo <> mtAtender then
+  if ModoPermiteCargaManual then
     AsegurarLineaNueva;
   if Showing and FGrid.CanFocus then
   begin
     FGrid.SetFocus;
-    if FModo <> mtAtender then
+    if ModoPermiteCargaManual then
       MostrarEditorModo;
   end;
 end;
@@ -666,7 +731,7 @@ begin
     bFocoEmpleado := txtEmpleado.ContainsControl(ControlActivo);
   if bFocoEmpleado then
     BuscarEmpleado
-  else if FModo <> mtAtender then
+  else if ModoPermiteCargaManual then
   begin
     if Assigned(FModoSku) then
       AsegurarLineaNueva;
@@ -859,7 +924,7 @@ end;
 procedure TfrmMtoOpeTraspaso.NavDataChange(Sender: TObject; Field: TField);
 begin
   // Solo al cambiar de registro (Field = nil), no en cada cambio de columna.
-  if Field = nil then
+  if (Field = nil) and not FCargandoVentasReposicion then
     ActualizarStockYFoto;
 end;
 
@@ -921,7 +986,7 @@ begin
       ConsultarStock(ACodArt);
       RefrescarFotoStock(ACodArt, ASku);
       // Otra linea en blanco para seguir metiendo (solo traspaso/solicitar).
-      if FModo <> mtAtender then
+      if ModoPermiteCargaManual then
         AsegurarLineaNueva;
     end;
   end;
@@ -1071,13 +1136,14 @@ end;
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
 begin
   FModo := AModo;
+  FReposicionCargada := False;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
   txtOrigen.Text := FAlmacen;
   // La reconstruccion conserva el modo F1 y actualiza el almacen de stock del
-  // buscador tras cambiar entre Traspaso, Solicitar y Atender.
+  // buscador tras cambiar de modo.
   ConstruirGrid;
-  btnF11.Visible := AModo <> mtSolicitar;
-  btnF8.Enabled := AModo <> mtAtender;
+  btnF11.Visible := AModo in [mtTraspaso, mtAtender];
+  btnF8.Enabled := ModoPermiteCargaManual;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -1093,6 +1159,12 @@ begin
       lblDestino.Caption := SCaptionAlmacenOrigen;
       btnF12.Caption := SCaptionF12EnviarSolicitud;
     end;
+    mtReposicion:
+    begin
+      lblOrigen.Caption := SCaptionAlmacenDestino;
+      lblDestino.Caption := SCaptionAlmacenOrigen;
+      btnF12.Caption := SCaptionF12EmitirReposicion;
+    end;
     mtAtender:
     begin
       lblOrigen.Caption := SCaptionAlmacenOrigen;
@@ -1100,16 +1172,177 @@ begin
       btnF12.Caption := SCaptionF12ServirConTicket;
     end;
   end;
+  ConfigurarControlesReposicion;
   CargarCombo;
   cboDestino.ItemIndex := -1;
   cboDestino.Text := '';
   cboDestino.Properties.ReadOnly := AModo = mtAtender;
   // Sin NewItemRow: dejamos una linea en blanco para teclear (estilo Excel);
   // al completar un SKU el grid anyade otra (GridResuelto). Al atender no.
-  if AModo <> mtAtender then
+  if ModoPermiteCargaManual then
     AsegurarLineaNueva;
   ActualizarTotal;
   EnfocarSegunModo;
+end;
+
+procedure TfrmMtoOpeTraspaso.ConfigurarControlesReposicion;
+var
+  bReposicion: Boolean;
+begin
+  bReposicion := FModo = mtReposicion;
+  lblVentasDesde.Visible := bReposicion;
+  dteVentasDesde.Visible := bReposicion;
+  lblVentasHasta.Visible := bReposicion;
+  dteVentasHasta.Visible := bReposicion;
+  btnCargarVentas.Visible := bReposicion;
+  if bReposicion then
+  begin
+    pnlTop.Height := MulDiv(
+      ALTO_CABECERA_REPOSICION_96_DPI,
+      CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    InicializarRangoVentasReposicion;
+  end
+  else
+    pnlTop.Height := MulDiv(
+      ALTO_CABECERA_NORMAL_96_DPI,
+      CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+  btnF12.Enabled := not bReposicion;
+end;
+
+procedure TfrmMtoOpeTraspaso.InicializarRangoVentasReposicion;
+var
+  dtDia: TDateTime;
+begin
+  dtDia := Trunc(FFecha);
+  if dtDia <= 0 then
+    dtDia := Date;
+  dteVentasDesde.Date := dtDia;
+  if dtDia = Date then
+    dteVentasHasta.Date := Now
+  else
+    dteVentasHasta.Date := dtDia + 1;
+end;
+
+procedure TfrmMtoOpeTraspaso.InvalidarVentasReposicion;
+begin
+  if (FModo = mtReposicion) and Assigned(FDatos) and
+     Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
+  begin
+    if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
+      FDatos.cdsLineas.Cancel;
+    FDatos.cdsLineas.EmptyDataSet;
+    FReposicionCargada := False;
+    btnF12.Enabled := False;
+    ActualizarTotal;
+  end;
+end;
+
+function TfrmMtoOpeTraspaso.FechaEditada(
+  AEdit: TcxDateEdit): TDateTime;
+begin
+  if VarIsNull(AEdit.EditValue) or VarIsEmpty(AEdit.EditValue) then
+    Result := 0
+  else
+    Result := AEdit.Date;
+end;
+
+function TfrmMtoOpeTraspaso.ObtenerOrigenReposicion(
+  out AOrigen: string): Boolean;
+begin
+  AOrigen := DestinoSeleccionado;
+  Result := AOrigen <> '';
+  if not Result then
+    ShowMessage(SErrorAlmacenOrigenReposicionNoSeleccionado);
+end;
+
+function TfrmMtoOpeTraspaso.ObtenerRangoReposicion(
+  out ADesde, AHasta: TDateTime): Boolean;
+begin
+  ADesde := FechaEditada(dteVentasDesde);
+  AHasta := FechaEditada(dteVentasHasta);
+  Result := (ADesde > 0) and (AHasta > 0) and (ADesde < AHasta);
+  if not Result then
+    ShowMessage(SErrorRangoVentasReposicionNoValido);
+end;
+
+procedure TfrmMtoOpeTraspaso.CargarVentasReposicion;
+var
+  Filtro: TFiltroVentasReposicion;
+  Lineas: TLineasVentaReposicion;
+  sOrigen: string;
+  dtDesde: TDateTime;
+  dtHasta: TDateTime;
+begin
+  if (FModo = mtReposicion) and
+     ObtenerOrigenReposicion(sOrigen) and
+     ObtenerRangoReposicion(dtDesde, dtHasta) then
+  begin
+    Filtro := Default(TFiltroVentasReposicion);
+    Filtro.Empresa := FEmpresa;
+    Filtro.AlmacenDestino := FAlmacen;
+    Filtro.AlmacenOrigen := sOrigen;
+    Filtro.Desde := dtDesde;
+    Filtro.Hasta := dtHasta;
+    Lineas := FRepositorioPersistencia.ListarVentasReposicion(Filtro);
+    FCargandoVentasReposicion := True;
+    try
+      FDatos.cdsLineas.DisableControls;
+      try
+        FDatos.CargarVentasReposicion(Lineas);
+        FReposicionCargada := Length(Lineas) > 0;
+        btnF12.Enabled := FReposicionCargada;
+        ActualizarTotal;
+        if FReposicionCargada then
+          FDatos.cdsLineas.First;
+      finally
+        FDatos.cdsLineas.EnableControls;
+      end;
+    finally
+      FCargandoVentasReposicion := False;
+    end;
+    ActualizarStockYFoto;
+    if not FReposicionCargada then
+      ShowMessage(SInfoVentasReposicionNoEncontradas);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.EmitirReposicion;
+begin
+  try
+    EmitirReposicionInterna;
+  except
+    on E: EValidacionTraspaso do
+      ShowMessage(E.Message);
+  end;
+end;
+
+procedure TfrmMtoOpeTraspaso.EmitirReposicionInterna;
+var
+  sOrigen: string;
+  sNumero: string;
+  sSerie: string;
+  dtDesde: TDateTime;
+  dtHasta: TDateTime;
+begin
+  if not FReposicionCargada then
+    ShowMessage(SErrorVentasReposicionNoCargadas)
+  else if EmpleadoValido and
+          ObtenerOrigenReposicion(sOrigen) and
+          ObtenerRangoReposicion(dtDesde, dtHasta) and
+          FDatos.GrabarReposicionAuto(
+            sOrigen, dtDesde, dtHasta, sNumero, sSerie) then
+  begin
+    ShowMessage(Format(SInfoReposicionAutoEmitida, [sSerie, sNumero]));
+    TTraspasoTicket.ImprimirSolicitud(
+      PreviewTicket,
+      FRepositorioTraspasoTicket,
+      sNumero,
+      sSerie,
+      ParametrosCaja.ImpresoraCaja);
+    AplicarModo(mtReposicion);
+  end;
 end;
 
 procedure TfrmMtoOpeTraspaso.AsegurarLineaNueva;
@@ -1160,7 +1393,8 @@ begin
   // Alta por lectura de pistola con framing STX/ETX. La consolidacion (sumar
   // si la SKU ya esta) la hace GridResuelto, que es el punto comun para todas
   // las vias de resolucion (celda Codigo+CR, STX/ETX o teclado).
-  if (Trim(ACodigo) <> '') and Assigned(FDatos) and
+  if ModoPermiteCargaManual and (Trim(ACodigo) <> '') and
+     Assigned(FDatos) and
      Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
   begin
     AsegurarLineaNueva;
@@ -1211,15 +1445,15 @@ end;
 
 procedure TfrmMtoOpeTraspaso.EnfocarSegunModo;
 begin
-  // Solicitar: foco en ALMACEN ORIGEN (a quien pido = cboDestino). Atender:
-  // abre el modal de solicitudes abiertas. Traspaso: a teclear en el grid.
+  // Solicitar/Reposicion: foco en el origen elegido. Atender abre el modal de
+  // solicitudes abiertas. Traspaso deja el foco en la rejilla.
   // Solo si el form ya es visible: AplicarModo se llama tambien desde
   // PrepararValores (antes del ShowModal), y enfocar/abrir modal sobre una
   // ventana invisible lanza EInvalidOperation.
   if Showing then
   begin
     case FModo of
-      mtSolicitar:
+      mtSolicitar, mtReposicion:
         if cboDestino.CanFocus then
           cboDestino.SetFocus;
       mtAtender:
@@ -1249,7 +1483,7 @@ begin
   cboDestino.Properties.Items.Clear;
   FComboCodigos.Clear;
   // En Atender la solicitud se elige por el modal (F7); el desplegable solo
-  // lista almacenes destino en Traspaso/Solicitar.
+  // lista almacenes en Traspaso, Solicitar y Reposiciones.
   if FModo <> mtAtender then
     CargarAlmacenesDestino;
 end;
@@ -1339,7 +1573,7 @@ begin
     end;
   end;
   // Sin permiso de ver coste, no se muestra el importe (revela coste).
-  if FVerCoste then
+  if FVerCoste and (FModo <> mtReposicion) then
     lblTotal.Caption := Format(SCaptionImporteTraspaso, [cTotal])
   else
     lblTotal.Caption := '';
@@ -1347,8 +1581,18 @@ end;
 
 procedure TfrmMtoOpeTraspaso.cboDestinoPropertiesChange(Sender: TObject);
 begin
-  // En Atender la solicitud se elige en el modal (F7), no por el desplegable.
-  // Aqui no se hace nada; el combo solo se usa en Traspaso/Solicitar.
+  if FModo = mtReposicion then
+    InvalidarVentasReposicion;
+end;
+
+procedure TfrmMtoOpeTraspaso.dteVentasPropertiesChange(Sender: TObject);
+begin
+  InvalidarVentasReposicion;
+end;
+
+procedure TfrmMtoOpeTraspaso.btnCargarVentasClick(Sender: TObject);
+begin
+  CargarVentasReposicion;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConfigurarModalSolicitudes(
@@ -2183,8 +2427,8 @@ end;
 procedure TfrmMtoOpeTraspaso.QuitarLinea;
 begin
   // Borra la linea enfocada con F8 o desde el navegador. No se borra al
-  // atender: las lineas vienen de la solicitud. F3 queda para buscar.
-  if (FModo <> mtAtender) and (not FDatos.cdsLineas.IsEmpty) then
+  // atender ni en reposiciones: esas lineas proceden de una carga previa.
+  if ModoPermiteCargaManual and (not FDatos.cdsLineas.IsEmpty) then
   begin
     FDatos.cdsLineas.Delete;
     AsegurarLineaNueva;
@@ -2194,7 +2438,7 @@ end;
 
 procedure TfrmMtoOpeTraspaso.btnF11Click(Sender: TObject);
 begin
-  if FModo <> mtSolicitar then
+  if FModo in [mtTraspaso, mtAtender] then
     EjecutarTraspaso(False);
 end;
 
@@ -2207,6 +2451,8 @@ procedure TfrmMtoOpeTraspaso.btnF12Click(Sender: TObject);
 begin
   if FModo = mtSolicitar then
     EnviarSolicitud
+  else if FModo = mtReposicion then
+    EmitirReposicion
   else
     EjecutarTraspaso(True);
 end;
@@ -2221,7 +2467,8 @@ begin
       if Shift = [] then
       begin
         Key := 0;
-        AlternarModoEntrada;
+        if ModoPermiteCargaManual then
+          AlternarModoEntrada;
       end;
     VK_F3:
     begin
@@ -2232,6 +2479,11 @@ begin
     begin
       Key := 0;
       DenegarSolicitudCargada;
+    end;
+    VK_F5:
+    begin
+      Key := 0;
+      AplicarModo(mtReposicion);
     end;
     VK_F6:
     begin

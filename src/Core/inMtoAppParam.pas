@@ -119,6 +119,7 @@ type
     procedure ConfigurarItemCadena(
       AItem: TJvCustomInspectorItem;
       const ANombre: string);
+    procedure ValidarFormulaCodigoArticulo;
     procedure AgregarParametroInspector(const AParametro: TParamInfo);
     procedure ConfigurarVisibilidadParametro(
       AItem: TJvCustomInspectorItem);
@@ -179,6 +180,9 @@ type
       const ANombre, ADefecto: string): string;
 
     // Handlers de listas desplegables
+    procedure GetFormulasCodigoArticuloList(
+      Sender: TJvCustomInspectorItem;
+      Strings: TStrings);
     procedure GetImpresorasInformesList(Sender: TJvCustomInspectorItem;
                                         Strings: TStrings);
     procedure GetIdiomasList(Sender: TJvCustomInspectorItem;
@@ -216,6 +220,7 @@ uses
    inLibMsgConfiguracion, inLibTraducciones, inLibTraduccionesIntf,
    inLibTraduccionesDescargaPersistenciaIntf,
    inMtoModalDescargaTraduccion, inLibLogIntf,
+   inLibComprasSesionesCodigoArticulo,
    UniDataAppParamGrupoUsuarioConsulta,
    UniDataConfiguracionPantalla,
    UniDataTraduccionesDescargaRepositorio,
@@ -484,7 +489,15 @@ procedure TfrmMtoAppParam.ConfigurarItemCadena(
   AItem: TJvCustomInspectorItem;
   const ANombre: string);
 begin
-  if SameText(ANombre, 'appImpresoraInformes') then
+  if SameText(
+       ANombre,
+       CLAVE_FORMULA_CODIGO_ARTICULO_SESION) then
+  begin
+    AItem.Flags := AItem.Flags +
+      [iifValueList, iifAllowNonListValues];
+    AItem.OnGetValueList := GetFormulasCodigoArticuloList;
+  end
+  else if SameText(ANombre, 'appImpresoraInformes') then
   begin
     AItem.Flags := AItem.Flags +
       [iifValueList, iifAllowNonListValues];
@@ -525,6 +538,17 @@ begin
   end
   else if StartsText('appDir', ANombre) then
     AItem.Flags := AItem.Flags + [iifEditButton];
+end;
+
+procedure TfrmMtoAppParam.ValidarFormulaCodigoArticulo;
+var
+  oItem: TJvCustomInspectorItem;
+begin
+  oItem := BuscarItemPorNombre(
+    JvInspector1.Root,
+    CLAVE_FORMULA_CODIGO_ARTICULO_SESION);
+  if Assigned(oItem) and Assigned(oItem.Data) then
+    TFormulaCodigoArticuloSesion.Validar(oItem.Data.AsString);
 end;
 
 procedure TfrmMtoAppParam.AgregarParametroInspector(
@@ -597,6 +621,15 @@ end;
 // -----------------------------------------------------------------------
 // HANDLERS DE LISTAS
 // -----------------------------------------------------------------------
+
+procedure TfrmMtoAppParam.GetFormulasCodigoArticuloList(
+  Sender: TJvCustomInspectorItem;
+  Strings: TStrings);
+begin
+  Strings.Clear;
+  Strings.Add(FORMULA_CODIGO_ARTICULO_SESION_DEFECTO);
+  Strings.Add(FORMULA_CODIGO_ARTICULO_MODELO_PROVEEDOR);
+end;
 
 procedure TfrmMtoAppParam.GetImpresorasInformesList(
   Sender: TJvCustomInspectorItem; Strings: TStrings);
@@ -1287,6 +1320,7 @@ var
   sTemaAnterior: string;
 begin
   JvInspector1.SaveValues;
+  ValidarFormulaCodigoArticulo;
   if cmbGrupoUsuario.ItemIndex >= 0 then
   begin
     sAmbito := cmbGrupoUsuario.Text;

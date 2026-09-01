@@ -78,6 +78,9 @@ type
     destructor Destroy; override;
     // Codigos de color basico activos; alimentan la paleta de la linea.
     procedure CargarBasicosColor;
+    // Acepta codigo o nombre; los nombres repetidos no son identificadores.
+    function ResolverColorBasicoLiteral(
+      const ALiteral: string; out ACodigo: string): Boolean;
     // Si el texto libre coincide con el codigo o nombre de un basico,
     // asigna su codigo canonico a la linea actual.
     procedure AsignarColorBasicoCoincidente;
@@ -190,6 +193,16 @@ begin
   end;
 end;
 
+function TCoordinadorProveedorSesion.ResolverColorBasicoLiteral(
+  const ALiteral: string; out ACodigo: string): Boolean;
+begin
+  ACodigo := '';
+  Result := Trim(ALiteral) = '';
+  if not Result then
+    Result := ResolverCodigoColorBasico(
+      ALiteral, FBasicosColor, FNombresBasicosColor, ACodigo);
+end;
+
 procedure TCoordinadorProveedorSesion.AsignarColorBasicoCoincidente;
 var
   sLiteral: string;
@@ -214,8 +227,8 @@ begin
   if Lineas.Active and (not Lineas.IsEmpty) and
      (Lineas.State in [dsEdit, dsInsert]) then
   begin
-    if ResolverCodigoColorBasico(
-      ALiteral, FBasicosColor, FNombresBasicosColor, sCodigo) and
+    if (Trim(ALiteral) <> '') and
+      ResolverColorBasicoLiteral(ALiteral, sCodigo) and
       (not SameText(sCodigo, Lineas.FieldByName(
         'CODIGO_ATB_COLOR_SESLIN').AsString)) then
       Lineas.FieldByName(
@@ -550,6 +563,7 @@ function TCoordinadorProveedorSesion.DibujarCeldaColor(
   AViewInfo: TcxGridTableDataCellViewInfo): Boolean;
 var
   sActual: string;
+  sTexto: string;
   Info: TInfoBasico;
 begin
   Result := False;
@@ -563,7 +577,14 @@ begin
       Info := Default(TInfoBasico);
       if ObtenerInfoBasico(FEntorno.Conexion, cIdVaColor, sActual, Info)
          and Info.EsValido then
-        Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info);
+      begin
+        sTexto := sActual;
+        if (Trim(Info.Nombre) <> '') and
+           (not SameText(sActual, Info.Nombre)) then
+          sTexto := sActual + ' - ' + Info.Nombre;
+        Result := PintarCeldaConCuadradoColor(
+          ACanvas, AViewInfo, Info, sTexto);
+      end;
     end;
   end;
 end;

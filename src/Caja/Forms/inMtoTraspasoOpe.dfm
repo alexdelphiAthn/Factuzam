@@ -21,41 +21,51 @@
     TabOrder = 0
     ExplicitWidth = 894
     object btnModoTraspaso: TcxButton
-      Left = 12
+      Left = 8
       Top = 6
-      Width = 200
+      Width = 112
       Height = 28
       Caption = 'Traspaso'
       TabOrder = 0
       OnClick = btnModoClick
     end
+    object btnModoReposicion: TcxButton
+      Tag = 3
+      Left = 126
+      Top = 6
+      Width = 148
+      Height = 28
+      Caption = 'F5 Reposiciones'
+      TabOrder = 1
+      OnClick = btnModoClick
+    end
     object btnModoSolicitar: TcxButton
       Tag = 1
-      Left = 220
+      Left = 282
       Top = 6
-      Width = 220
+      Width = 215
       Height = 28
       Caption = 'F6 Solicitar a otro almac'#233'n'
-      TabOrder = 1
+      TabOrder = 2
       OnClick = btnModoClick
     end
     object btnModoAtender: TcxButton
       Tag = 2
-      Left = 448
+      Left = 505
       Top = 6
-      Width = 200
+      Width = 185
       Height = 28
       Caption = 'F7 Atender solicitudes'
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnModoClick
     end
     object btnMisPeticiones: TcxButton
-      Left = 656
+      Left = 698
       Top = 6
-      Width = 224
+      Width = 190
       Height = 28
       Caption = 'Mis peticiones'
-      TabOrder = 3
+      TabOrder = 4
       OnClick = btnMisPeticionesClick
     end
   end
@@ -116,6 +126,52 @@
       Left = 330
       Top = 52
       TabOrder = 6
+    end
+    object lblVentasDesde: TcxLabel
+      Left = 16
+      Top = 94
+      Caption = 'VENTAS DESDE'
+      TabOrder = 7
+      Visible = False
+    end
+    object dteVentasDesde: TcxDateEdit
+      Left = 136
+      Top = 91
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.EditFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.Kind = ckDateTime
+      Properties.OnChange = dteVentasPropertiesChange
+      TabOrder = 3
+      Visible = False
+      Width = 180
+    end
+    object lblVentasHasta: TcxLabel
+      Left = 332
+      Top = 94
+      Caption = 'VENTAS HASTA'
+      TabOrder = 8
+      Visible = False
+    end
+    object dteVentasHasta: TcxDateEdit
+      Left = 452
+      Top = 91
+      Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.EditFormat = 'dd/mm/yyyy hh:nn:ss'
+      Properties.Kind = ckDateTime
+      Properties.OnChange = dteVentasPropertiesChange
+      TabOrder = 4
+      Visible = False
+      Width = 180
+    end
+    object btnCargarVentas: TcxButton
+      Left = 648
+      Top = 89
+      Width = 232
+      Height = 28
+      Caption = 'Cargar ventas'
+      TabOrder = 5
+      Visible = False
+      OnClick = btnCargarVentasClick
     end
   end
   object pnlBottom: TPanel [2]

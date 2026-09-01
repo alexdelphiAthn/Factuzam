@@ -22,12 +22,12 @@ uses
   System.SysUtils, System.Classes, Data.DB, Datasnap.DBClient, Uni, MemDS,
   DBAccess, System.Math, System.StrUtils,
   UniDataValoresAutomaticosRepositorio,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf,
+  inLibTraspasoOpePersistenciaIntf;
 
 type
-  // Modo de la operativa: traspaso directo, solicitar a otro almacén o
-  // atender una solicitud que me han hecho.
-  TModoTraspaso = (mtTraspaso, mtSolicitar, mtAtender);
+  // Modo de la operativa: traspaso directo, solicitud, atención o reposición.
+  TModoTraspaso = (mtTraspaso, mtSolicitar, mtAtender, mtReposicion);
 
   // Validación de negocio (stock insuficiente, líneas incompletas, destino
   // sin elegir...). El formulario la captura y la muestra como aviso
@@ -69,6 +69,8 @@ type
     function ObtenerEmpresaAlmacen(const AAlmacen: string): string;
     // Devuelve el articulo padre del SKU activo. Vacio si no existe.
     function ObtenerArticuloSku(const ASku: string): string;
+    // Devuelve el articulo padre aunque el SKU historico este inactivo.
+    function ObtenerArticuloSkuHistorico(const ASku: string): string;
     function ObtenerIdColorBasicoSolicitud(const AArticulo, AColor: string;
                              out AIdColorBasico: Integer): Boolean;
     function BuscarSkuTcActivoUnico(const AArticulo, ATalla: string;
@@ -79,6 +81,7 @@ type
     // (sin articulo) y aborta con error si una linea tiene articulo pero el
     // SKU no esta cerrado (falta color/talla).
     procedure LimpiarLineasIncompletas;
+    procedure ValidarLineasReposicionAuto;
     // Aborta (raise) si un traspaso directo pide mas unidades de las que hay
     // en el almacen origen. Las solicitudes usan el mismo detalle como aviso.
     procedure ValidarStockOrigen(const AAlmacenOrigen: string);
@@ -125,6 +128,14 @@ type
       var AContexto: TContextoGrabacionTraspaso;
       const ANumSolicitud, ASerieSolicitud: string;
       out ANumOperacion: string): Boolean;
+    procedure InsertarCabeceraReposicionAuto(
+      AConsulta: TUniQuery;
+      const AAlmacenOrigen, ANumero, ASerie: string;
+      const ADesde, AHasta: TDateTime);
+    function InsertarLineasReposicionAuto(
+      AConsulta: TUniQuery;
+      const ANumero, ASerie: string): Integer;
+    function TieneLineasReposicionPositivas: Boolean;
   public
     constructor Create(
       AOwner: TComponent;
@@ -149,6 +160,12 @@ type
     // PENDIENTE, sin mover stock.
     function GrabarSolicitud(const AAlmacenOrigen: string;
                              out ANumero, ASerie: string): Boolean;
+    procedure CargarVentasReposicion(
+      const ALineas: TLineasVentaReposicion);
+    function GrabarReposicionAuto(
+      const AAlmacenOrigen: string;
+      const ADesde, AHasta: TDateTime;
+      out ANumero, ASerie: string): Boolean;
     // Atender: lista las solicitudes pendientes que me tocan (yo, origen).
     procedure CargarSolicitudesPendientes(AItems, ACodigos: TStrings);
     // Dataset para el modal de solicitudes abiertas. El llamante lo libera.
@@ -271,6 +288,9 @@ begin
     Add('PRECIO_COSTE', ftCurrency, 0);
     Add('TOTAL', ftCurrency, 0);
     Add('STOCK_ORIGEN', ftFloat, 0);
+    Add('STOCK_DESTINO', ftFloat, 0);
+    Add('CODIGO_PROVEEDOR', ftString, 20);
+    Add('NOMBRE_PROVEEDOR', ftString, 200);
   Add('MOTIVO', ftString, 255);
   cdsLineas.CreateDataSet;
 end;
@@ -317,6 +337,56 @@ begin
   cdsCabecera.Post;
 end;
 
+procedure TdmTraspaso.CargarVentasReposicion(
+  const ALineas: TLineasVentaReposicion);
+var
+  iLinea: Integer;
+begin
+  ConfigurarEstructuraLineas;
+  for iLinea := 0 to High(ALineas) do
+  begin
+    cdsLineas.Append;
+    cdsLineas.FieldByName('LINEA').AsString :=
+      Format('%.4d', [(iLinea + 1) * 10]);
+    cdsLineas.FieldByName('CODIGO_ART').AsString :=
+      ALineas[iLinea].CodigoArticulo;
+    cdsLineas.FieldByName('CODIGO_UNIDAD').AsString :=
+      ALineas[iLinea].Sku;
+    DesempaquetarAtributosLinea(ALineas[iLinea].Sku);
+    cdsLineas.FieldByName('DESCRIPCION').AsString :=
+      ALineas[iLinea].Descripcion;
+    cdsLineas.FieldByName('CANTIDAD').AsFloat :=
+      ALineas[iLinea].APedir;
+    cdsLineas.FieldByName('CANTIDAD_PEDIDA').AsFloat :=
+      ALineas[iLinea].APedir;
+    cdsLineas.FieldByName('STOCK_DESTINO').AsFloat :=
+      ALineas[iLinea].StockDestino;
+    cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+      ALineas[iLinea].StockOrigen;
+    cdsLineas.FieldByName('CODIGO_PROVEEDOR').AsString :=
+      ALineas[iLinea].CodigoProveedor;
+    cdsLineas.FieldByName('NOMBRE_PROVEEDOR').AsString :=
+      ALineas[iLinea].NombreProveedor;
+    cdsLineas.Post;
+  end;
+  if cdsCabecera.State = dsBrowse then
+    cdsCabecera.Edit;
+  cdsCabecera.FieldByName('CONTADOR_LINEAS').AsInteger := Length(ALineas);
+  cdsCabecera.Post;
+end;
+
+function TdmTraspaso.TieneLineasReposicionPositivas: Boolean;
+begin
+  Result := False;
+  cdsLineas.First;
+  while not cdsLineas.Eof and not Result do
+  begin
+    Result := cdsLineas.FieldByName('CANTIDAD').AsFloat > 0;
+    if not Result then
+      cdsLineas.Next;
+  end;
+end;
+
 function TdmTraspaso.ObtenerEmpresaAlmacen(const AAlmacen: string): string;
 begin
   qryAux.SQL.Text :=
@@ -341,6 +411,24 @@ begin
   qryAux.SQL.Text :=
     'SELECT CODIGO_ART_SKU FROM fza_articulos_skus' +
     ' WHERE CODIGO_UNIDAD_SKU = :SKU AND ESACTIVO_SKU = ''S'' LIMIT 1';
+  qryAux.ParamByName('SKU').AsString := ASku;
+  qryAux.Open;
+  try
+    if qryAux.IsEmpty then
+      Result := ''
+    else
+      Result := qryAux.FieldByName('CODIGO_ART_SKU').AsString;
+  finally
+    qryAux.Close;
+  end;
+end;
+
+function TdmTraspaso.ObtenerArticuloSkuHistorico(
+  const ASku: string): string;
+begin
+  qryAux.SQL.Text :=
+    'SELECT CODIGO_ART_SKU FROM fza_articulos_skus' +
+    ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
   qryAux.ParamByName('SKU').AsString := ASku;
   qryAux.Open;
   try
@@ -518,6 +606,35 @@ begin
       else
         cdsLineas.Next;
     end;
+  end;
+end;
+
+procedure TdmTraspaso.ValidarLineasReposicionAuto;
+var
+  sArt, sSku, sArtSku: string;
+begin
+  if cdsLineas.State in [dsEdit, dsInsert] then
+    cdsLineas.Post;
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    if cdsLineas.FieldByName('CANTIDAD').AsFloat > 0 then
+    begin
+      sArt := Trim(cdsLineas.FieldByName('CODIGO_ART').AsString);
+      sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+      if (sArt = '') or (sSku = '') then
+        raise EValidacionTraspaso.CreateFmt(
+          SErrorSkuTraspasoIncompleto, [sArt, sSku]);
+      sArtSku := ObtenerArticuloSkuHistorico(sSku);
+      if sArtSku = '' then
+        raise EValidacionTraspaso.CreateFmt(
+          SErrorSkuTraspasoNoDisponible, [sSku, sArt])
+      else if not SameText(sArt, sArtSku) then
+        raise EValidacionTraspaso.CreateFmt(
+          SErrorArticuloSkuTraspasoNoCoincide,
+          [sArt, sSku, sArtSku]);
+    end;
+    cdsLineas.Next;
   end;
 end;
 
@@ -1062,6 +1179,143 @@ begin
   QryTrx.Execute;
 end;
 
+procedure TdmTraspaso.InsertarCabeceraReposicionAuto(
+  AConsulta: TUniQuery;
+  const AAlmacenOrigen, ANumero, ASerie: string;
+  const ADesde, AHasta: TDateTime);
+var
+  sAlmacenDestino: string;
+begin
+  sAlmacenDestino :=
+    cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  AConsulta.SQL.Text :=
+    'INSERT INTO fza_traspasos_solicitudes (' +
+    '  NUMERO_TRSOL, SERIE_TRSOL, FECHA_TRSOL, TIPO_TRSOL,' +
+    '  ESTADO_TRSOL, CODIGO_EMP_TRSOL,' +
+    '  CODIGO_ALM_ORIGEN_TRSOL, CODIGO_ALM_DESTINO_TRSOL,' +
+    '  CODIGO_EMP_CONTRA_TRSOL, CODIGO_CAJA_TRSOL,' +
+    '  CODIGO_EMPLEADO_TRSOL, INSTANTE_VENTAS_DESDE_TRSOL,' +
+    '  INSTANTE_VENTAS_HASTA_TRSOL, USUARIO_ALTA,' +
+    '  USUARIO_MODIF, INSTANTE_ALTA) ' +
+    'VALUES (:NUM, :SER, CURRENT_TIMESTAMP, ''AUTO'', NULL, :EMP,' +
+    '  :ORI, :DES, NULLIF(:EMPC, ''''), :CAJA, :EMPLE,' +
+    '  :DESDE, :HASTA, :USU, :USU, NOW())';
+  AConsulta.ParamByName('NUM').AsString := ANumero;
+  AConsulta.ParamByName('SER').AsString := ASerie;
+  AConsulta.ParamByName('EMP').AsString :=
+    cdsCabecera.FieldByName('CODIGO_EMP').AsString;
+  AConsulta.ParamByName('ORI').AsString := AAlmacenOrigen;
+  AConsulta.ParamByName('DES').AsString := sAlmacenDestino;
+  AConsulta.ParamByName('EMPC').AsString :=
+    ObtenerEmpresaAlmacen(AAlmacenOrigen);
+  AConsulta.ParamByName('CAJA').AsString :=
+    cdsCabecera.FieldByName('CODIGO_CAJA').AsString;
+  AConsulta.ParamByName('EMPLE').AsString :=
+    cdsCabecera.FieldByName('CODIGO_EMPLEADO').AsString;
+  AConsulta.ParamByName('DESDE').AsDateTime := ADesde;
+  AConsulta.ParamByName('HASTA').AsDateTime := AHasta;
+  AConsulta.ParamByName('USU').AsString := IdentidadSesion.Usuario;
+  AConsulta.Execute;
+end;
+
+function TdmTraspaso.InsertarLineasReposicionAuto(
+  AConsulta: TUniQuery;
+  const ANumero, ASerie: string): Integer;
+var
+  iLinea: Integer;
+begin
+  iLinea := 0;
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    if cdsLineas.FieldByName('CANTIDAD').AsFloat > 0 then
+    begin
+      Inc(iLinea, 10);
+      AConsulta.SQL.Text :=
+        'INSERT INTO fza_traspasos_solicitudes_lineas (' +
+        '  NUMERO_TRSOL_TRSOLLIN, SERIE_TRSOL_TRSOLLIN,' +
+        '  LINEA_TRSOLLIN, CODIGO_ART_TRSOLLIN,' +
+        '  CODIGO_UNIDAD_TRSOLLIN, DESCRIPCION_ARTICULO_TRSOLLIN,' +
+        '  CANTIDAD_PEDIDA_TRSOLLIN, CANTIDAD_SERVIDA_TRSOLLIN,' +
+        '  ESATENDIDA_TRSOLLIN, CODIGO_PRV_TRSOLLIN,' +
+        '  RAZON_SOCIAL_PRV_TRSOLLIN, USUARIO_ALTA,' +
+        '  USUARIO_MODIF, INSTANTE_ALTA) ' +
+        'VALUES (:NUM, :SER, :LIN, :ART, :SKU, :DESC, :CANT, 0,' +
+        '  ''N'', NULLIF(:PRV, ''''), NULLIF(:NOMPRV, ''''),' +
+        '  :USU, :USU, NOW())';
+      AConsulta.ParamByName('NUM').AsString := ANumero;
+      AConsulta.ParamByName('SER').AsString := ASerie;
+      AConsulta.ParamByName('LIN').AsString := Format('%.4d', [iLinea]);
+      AConsulta.ParamByName('ART').AsString :=
+        cdsLineas.FieldByName('CODIGO_ART').AsString;
+      AConsulta.ParamByName('SKU').AsString :=
+        cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+      AConsulta.ParamByName('DESC').AsString :=
+        cdsLineas.FieldByName('DESCRIPCION').AsString;
+      AConsulta.ParamByName('CANT').AsFloat :=
+        cdsLineas.FieldByName('CANTIDAD').AsFloat;
+      AConsulta.ParamByName('PRV').AsString :=
+        cdsLineas.FieldByName('CODIGO_PROVEEDOR').AsString;
+      AConsulta.ParamByName('NOMPRV').AsString :=
+        cdsLineas.FieldByName('NOMBRE_PROVEEDOR').AsString;
+      AConsulta.ParamByName('USU').AsString := IdentidadSesion.Usuario;
+      AConsulta.Execute;
+    end;
+    cdsLineas.Next;
+  end;
+  Result := iLinea div 10;
+end;
+
+function TdmTraspaso.GrabarReposicionAuto(
+  const AAlmacenOrigen: string;
+  const ADesde, AHasta: TDateTime;
+  out ANumero, ASerie: string): Boolean;
+var
+  oConsulta: TUniQuery;
+  sAlmacenDestino: string;
+begin
+  ValidarLineasReposicionAuto;
+  if ADesde >= AHasta then
+    raise EValidacionTraspaso.Create(
+      SErrorRangoVentasReposicionNoValido);
+  if cdsLineas.IsEmpty then
+    raise EValidacionTraspaso.Create(
+      SErrorLineasSolicitudTraspasoNoDisponibles);
+  if not TieneLineasReposicionPositivas then
+    raise EValidacionTraspaso.Create(
+      SErrorLineasSolicitudTraspasoNoDisponibles);
+  if Trim(AAlmacenOrigen) = '' then
+    raise EValidacionTraspaso.Create(
+      SErrorAlmacenOrigenSolicitudNoSeleccionado);
+  sAlmacenDestino :=
+    cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
+  if SameText(sAlmacenDestino, AAlmacenOrigen) then
+    raise EValidacionTraspaso.Create(SErrorSolicitudTraspasoMismoAlmacen);
+  ANumero := ObtenerSiguienteContador(
+    FConexion, 'TS', IdentidadSesion.Usuario);
+  ASerie := 'TS';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    FConexion.StartTransaction;
+    try
+      InsertarCabeceraReposicionAuto(
+        oConsulta, AAlmacenOrigen, ANumero, ASerie, ADesde, AHasta);
+      if InsertarLineasReposicionAuto(
+        oConsulta, ANumero, ASerie) = 0 then
+        raise EValidacionTraspaso.Create(
+          SErrorLineasSolicitudTraspasoNoDisponibles);
+      FConexion.Commit;
+      Result := True;
+    except
+      FConexion.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
 function TdmTraspaso.GrabarSolicitud(const AAlmacenOrigen: string;
                                      out ANumero, ASerie: string): Boolean;
 var
@@ -1246,13 +1500,16 @@ begin
   oConsulta.Connection := FConexion;
   oConsulta.SQL.Text :=
     'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
-    '       S.CODIGO_ALM_ORIGEN_TRSOL, S.ESTADO_TRSOL,' +
+    '       S.CODIGO_ALM_ORIGEN_TRSOL, S.TIPO_TRSOL,' +
+    '       S.ESTADO_TRSOL,' +
+    '       CASE WHEN S.TIPO_TRSOL = ''AUTO'' THEN 0 ELSE' +
     '       (SELECT COUNT(*) FROM fza_traspasos_solicitudes_lineas L' +
     '         WHERE L.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
     '           AND L.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
     '           AND COALESCE(L.ESATENDIDA_TRSOLLIN, ''N'') <> ''S''' +
     '           AND NULLIF(TRIM(' +
     '               L.MOTIVO_RECHAZO_TRSOLLIN), '''') IS NULL)' +
+    '       END' +
     '         AS LINEAS_PEND_TRSOL' +
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_DESTINO_TRSOL = :PROPIO' +
@@ -1283,14 +1540,24 @@ begin
       '         L.DESCRIPCION_ARTICULO_TRSOLLIN), ''''),' +
       '         A.DESCRIPCION_ART, '''') AS DESCRIPCION_ART,' +
       '       L.CANTIDAD_PEDIDA_TRSOLLIN,' +
-      '       L.CANTIDAD_SERVIDA_TRSOLLIN,' +
-      '       GREATEST(' +
+      '       CASE WHEN S.TIPO_TRSOL = ''AUTO'' THEN 0 ELSE' +
+      '         L.CANTIDAD_SERVIDA_TRSOLLIN END' +
+      '         AS CANTIDAD_SERVIDA_TRSOLLIN,' +
+      '       CASE WHEN S.TIPO_TRSOL = ''AUTO'' THEN 0 ELSE GREATEST(' +
       '         COALESCE(L.CANTIDAD_PEDIDA_TRSOLLIN, 0) -' +
-      '         COALESCE(L.CANTIDAD_SERVIDA_TRSOLLIN, 0), 0)' +
+      '         COALESCE(L.CANTIDAD_SERVIDA_TRSOLLIN, 0), 0) END' +
       '         AS CANTIDAD_PENDIENTE_TRSOLLIN,' +
-      '       L.ESATENDIDA_TRSOLLIN,' +
-      '       L.MOTIVO_RECHAZO_TRSOLLIN' +
+      '       CASE WHEN S.TIPO_TRSOL = ''AUTO'' THEN NULL ELSE' +
+      '         L.ESATENDIDA_TRSOLLIN END AS ESATENDIDA_TRSOLLIN,' +
+      '       CASE WHEN S.TIPO_TRSOL = ''AUTO'' THEN NULL ELSE' +
+      '         L.MOTIVO_RECHAZO_TRSOLLIN END' +
+      '         AS MOTIVO_RECHAZO_TRSOLLIN,' +
+      '       L.CODIGO_PRV_TRSOLLIN,' +
+      '       L.RAZON_SOCIAL_PRV_TRSOLLIN' +
       '  FROM fza_traspasos_solicitudes_lineas L' +
+      '  JOIN fza_traspasos_solicitudes S' +
+      '    ON S.NUMERO_TRSOL = L.NUMERO_TRSOL_TRSOLLIN' +
+      '   AND S.SERIE_TRSOL = L.SERIE_TRSOL_TRSOLLIN' +
       '  LEFT JOIN fza_articulos A' +
       '    ON A.CODIGO_ART_ART = L.CODIGO_ART_TRSOLLIN' +
       ' WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUMERO_TRSOL' +

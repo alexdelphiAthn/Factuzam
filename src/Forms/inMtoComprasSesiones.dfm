@@ -228,7 +228,7 @@
                     Caption = 'Modelo prov.'
                     DataBinding.FieldName = 'REF_PRV_SESLIN'
                     PropertiesClassName = 'TcxTextEditProperties'
-                    Properties.OnEditValueChanged = dbcLinRefPrvPropertiesEditValueChanged
+                    Properties.OnValidate = dbcLinRefPrvPropertiesValidate
                     Width = 130
                   end
                   object dbcLinDescripcion: TcxGridDBColumn
@@ -264,7 +264,8 @@
                         Kind = bkEllipsis
                       end>
                     Properties.OnButtonClick = dbcLinColorBasicoPropertiesButtonClick
-                    Width = 110
+                    Properties.OnValidate = dbcLinColorBasicoPropertiesValidate
+                    Width = 170
                   end
                   object dbcLinPrecioCompra: TcxGridDBColumn
                     Caption = 'Pr. compra s/IVA'

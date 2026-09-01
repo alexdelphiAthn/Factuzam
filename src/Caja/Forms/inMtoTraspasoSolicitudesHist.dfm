@@ -97,6 +97,11 @@
               DataBinding.FieldName = 'ESTADO_TRSOL'
               Width = 135
             end
+            object cxGrdDBTabPrinMODO_PETICION_TRSOL: TcxGridDBColumn
+              Caption = 'Modo de petici'#243'n'
+              DataBinding.FieldName = 'MODO_PETICION_TRSOL'
+              Width = 145
+            end
             object cxGrdDBTabPrinATENDIDA_TRSOL: TcxGridDBColumn
               Caption = 'Atenci'#243'n'
               DataBinding.FieldName = 'ATENDIDA_TRSOL'
@@ -177,6 +182,36 @@
               DataBinding.FieldName = 'OBSERVACIONES_TRSOL'
               Width = 250
             end
+          end
+        end
+        object pnlFiltroModoPeticion: TPanel
+          Left = 0
+          Top = 0
+          Width = 947
+          Height = 38
+          Align = alTop
+          BevelOuter = bvNone
+          TabOrder = 1
+          object lblFiltroModoPeticion: TcxLabel
+            Left = 12
+            Top = 8
+            Caption = 'Modo de la petici'#243'n'
+            TabOrder = 0
+          end
+          object cboFiltroModoPeticion: TcxComboBox
+            Left = 168
+            Top = 6
+            Properties.DropDownListStyle = lsFixedList
+            Properties.Items.Strings = (
+              'Todos'
+              'Pendiente'
+              'Auto'
+              'Atendida'
+              'Rechazada parcial'
+              'Rechazada Total')
+            Properties.OnChange = cboFiltroModoPeticionPropertiesChange
+            TabOrder = 1
+            Width = 210
           end
         end
       end

@@ -8347,6 +8347,30 @@ begin
       SErrorTipoRestauracionNoPermitido);
   ARegistrar(
     'inLibMsgConfiguracion.' +
+    'SErrorRestauracionRequiereAdministrador',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorRestauracionRequiereAdministrador);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorOperacionRestauracionEnCurso',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorOperacionRestauracionEnCurso);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SPreguntaConfirmarRestauracionAdministrativa',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SPreguntaConfirmarRestauracionAdministrativa);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorRelanzarFactuzam',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorRelanzarFactuzam);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
     'SPreguntaReemplazarFichero',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
@@ -13189,6 +13213,12 @@ begin
       SCaptionFiltrarInicioCompras);
   ARegistrar(
     'inLibMsgVentas.' +
+    'SCaptionEntradasGlobalesMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionEntradasGlobalesMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
     'SCaptionSoloArticulosConVentas',
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
@@ -17767,6 +17797,174 @@ begin
     @Vcl.Consts.
       SActionManagerNotAssigned);
 {$ENDIF}
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorAlmacenOrigenReposicionNoSeleccionado',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorAlmacenOrigenReposicionNoSeleccionado);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorRangoVentasReposicionNoValido',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorRangoVentasReposicionNoValido);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SErrorVentasReposicionNoCargadas',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SErrorVentasReposicionNoCargadas);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SInfoVentasReposicionNoEncontradas',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SInfoVentasReposicionNoEncontradas);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SInfoReposicionAutoEmitida',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SInfoReposicionAutoEmitida);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionModoReposiciones',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionModoReposiciones);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionVentasDesdeReposicion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionVentasDesdeReposicion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionVentasHastaReposicion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionVentasHastaReposicion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionCargarVentasReposicion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionCargarVentasReposicion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionColAPedirReposicion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionColAPedirReposicion);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionColStockDestinoTraspaso',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionColStockDestinoTraspaso);
+  ARegistrar(
+    'inLibMsgCaja.' +
+    'SCaptionF12EmitirReposicion',
+    'src/Lib/inLibMsgCaja.pas',
+    @inLibMsgCaja.
+      SCaptionF12EmitirReposicion);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorCambiarProveedorSesionConFormula',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorCambiarProveedorSesionConFormula);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorFormulaCodigoArticuloLlaves',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorFormulaCodigoArticuloLlaves);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorFormulaCodigoArticuloParametro',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorFormulaCodigoArticuloParametro);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorFormulaCodigoArticuloSinParametros',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorFormulaCodigoArticuloSinParametros);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorFormulaCodigoArticuloDatos',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorFormulaCodigoArticuloDatos);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorFormulaCodigoArticuloResultadoVacio',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorFormulaCodigoArticuloResultadoVacio);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SErrorFormulaCodigoArticuloLongitud',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorFormulaCodigoArticuloLongitud);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketReposicionAutomatica',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketReposicionAutomatica);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasDesde',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasDesde);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketVentasHasta',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketVentasHasta);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketProveedor',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketProveedor);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketSinProveedor',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketSinProveedor);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketAPedir',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketAPedir);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionArticuloAgrupacionMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionArticuloAgrupacionMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionColorAgrupacionMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionColorAgrupacionMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionTallaAgrupacionMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionTallaAgrupacionMovimientosVentas);
 end;
 {$WARN SYMBOL_DEPRECATED ON}
 

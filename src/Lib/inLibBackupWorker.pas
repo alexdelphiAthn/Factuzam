@@ -26,6 +26,11 @@ type
   TWorkerProgresoEvent = TProgresoCopiaSeguridadEvent;
   TWorkerFinalizarEvent = TFinalizarCopiaSeguridadEvent;
 
+const
+  TIMEOUT_CONEXION_PREDETERMINADO_SEG = 5;
+  TIMEOUT_COMANDO_PREDETERMINADO_SEG = 30;
+
+type
   TBackupWorker = class(TThread)
   private
     FHost: string;
@@ -187,6 +192,10 @@ begin
   Result.BaseDatos := ADatabase;
   Result.Usuario := AUser;
   Result.Contrasena := APassword;
+  Result.TimeoutConexionSeg :=
+    TIMEOUT_CONEXION_PREDETERMINADO_SEG;
+  Result.TimeoutComandoSeg :=
+    TIMEOUT_COMANDO_PREDETERMINADO_SEG;
 end;
 
 function ResolverFabricaPersistencia(
@@ -703,6 +712,10 @@ var
 begin
   oFlujo := CrearFlujoRestauracion;
   try
+    FProgresoEtapa := 'Preparando la base de datos';
+    FPosicion := 0;
+    FTotal := 0;
+    Synchronize(SyncProgreso);
     oEjecutor := TEjecutorRestauracionSQL.Create(
       APersistencia,
       ComprobarCancelacion,
@@ -778,6 +791,10 @@ begin
           [FRutaFichero]));
       end;
       ComprobarCancelacion;
+      FProgresoEtapa := 'Conectando para restaurar';
+      FPosicion := 0;
+      FTotal := 0;
+      Synchronize(SyncProgreso);
       oFabrica := ResolverFabricaPersistencia(FFabricaPersistencia);
       oPersistencia := oFabrica.CrearRestauracion(
         CrearConfiguracionConexion(

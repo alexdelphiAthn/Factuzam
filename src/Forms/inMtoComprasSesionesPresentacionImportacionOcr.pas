@@ -386,6 +386,7 @@ begin
     AEntorno.Datos.unqrySesionLin.FieldByName(
       'TOTAL_LINEA_SESLIN').AsFloat :=
         ALinea.Datos.Cantidad * ALinea.Datos.PrecioCompra;
+    AEntorno.Datos.GenerarCodigoArticuloLineaActual(False);
     ALinea.CodigoArticulo := Trim(
       AEntorno.Datos.unqrySesionLin.FieldByName(
         'CODIGO_ART_TENTATIVO_SESLIN').AsString);

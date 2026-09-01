@@ -20,11 +20,18 @@ interface
 uses
   inLibRegistroPantallas,
   inLibComprasSesionesMaterializacionIntf,
+  inLibComprasSesionesCodigoArticulo,
+  System.Generics.Collections,
   System.SysUtils, System.Classes, UniDataGen, Data.DB, MemDS, DBAccess, Uni,
   frxClass, frxDBSet,
   inLibUser, frCoreClasses;
 
 type
+  TGeneracionCodigoArticuloSesion = record
+    Codigo: string;
+    Huella: string;
+  end;
+
   TdmComprasSesiones = class(TdmBase)
     // Cabecera de sesión (lista principal). unqryTablaG ya existe en TdmBase.
     unqrySesionLin: TUniQuery;
@@ -176,6 +183,8 @@ type
                         // defecto del documento", no el del proveedor.
                         // RecargarProveedorSesion lo resetea a 0 al navegar
                         // a otra sesion o proveedor.
+    FGeneracionesCodigoArticulo: TDictionary<string,
+      TGeneracionCodigoArticuloSesion>;
     function ConexionDatos: TUniConnection;
     procedure LogSes(const ATexto: string);
     procedure ConfigurarSqlCabecera;
@@ -186,9 +195,33 @@ type
     procedure ConectarCatalogos;
     procedure AbrirCatalogos;
     procedure AjustarCamposDerivadosCabecera;
+    procedure ValidarCambioProveedorFormulaCodigo;
     procedure CalcularTotalesLineaActual;
     procedure PersistirTotalesSesion;
+    function FormulaCodigoArticuloSesion: string;
+    procedure CargarValoresFormulaCodigoArticulo(
+      out AValores: TValoresFormulaCodigoArticuloSesion);
+    procedure ResolverContadorFormulaCodigoArticulo(
+      const AFormula: string;
+      var AValores: TValoresFormulaCodigoArticuloSesion);
+    function ClaveLineaCodigoArticulo: string;
+    function HuellaGeneracionCodigoArticulo(
+      const AFormula: string;
+      const AValores: TValoresFormulaCodigoArticuloSesion): string;
+    function EsMismaGeneracionCodigoArticulo(
+      const AFormula: string;
+      const AValores: TValoresFormulaCodigoArticuloSesion;
+      const ACodigo: string): Boolean;
+    procedure RegistrarGeneracionCodigoArticulo(
+      const AFormula: string;
+      const AValores: TValoresFormulaCodigoArticuloSesion;
+      const ACodigo: string);
+    procedure OlvidarGeneracionCodigoArticulo;
+    function EsFamiliaActiva(const ACodigo: string): Boolean;
+    procedure AsignarCodigoArticuloLinea(const ACodigo: string);
+    procedure LimpiarCodigoArticuloLinea;
   public
+    destructor Destroy; override;
     property PermitirLineasSinCodigoArticulo: Boolean
       read FPermitirLineasSinCodigoArticulo
       write FPermitirLineasSinCodigoArticulo;
@@ -197,6 +230,10 @@ type
     class function ResolverCodigoFamiliaConexion(AConn: TUniConnection;
       const ACodigoTecleado, AUsuario: string;
       out ACodigoGenerado: string): Boolean; static;
+    function GenerarCodigoArticuloLineaActual(
+      AReemplazarCodigo: Boolean): Boolean;
+    function GenerarCodigoArticuloTrasCambiarFamilia: Boolean;
+    function GenerarCodigoArticuloTrasCambiarModelo: Boolean;
     procedure GetCodigoAutoSesion;
     procedure IniciarImportacionMasiva(APrimeraLinea,
       ACantidadLineas: Integer);
@@ -364,9 +401,265 @@ begin
         Result := True;
       end;
     finally
-      oConsulta.Free;
+      FreeAndNil(oConsulta);
     end;
   end;
+end;
+
+destructor TdmComprasSesiones.Destroy;
+begin
+  FreeAndNil(FGeneracionesCodigoArticulo);
+  inherited;
+end;
+
+function TdmComprasSesiones.FormulaCodigoArticuloSesion: string;
+begin
+  Result := FORMULA_CODIGO_ARTICULO_SESION_DEFECTO;
+  if Assigned(ParametrosApp) then
+    Result := ParametrosApp.GetString(
+      CLAVE_FORMULA_CODIGO_ARTICULO_SESION);
+  Result := TFormulaCodigoArticuloSesion.Normalizar(Result);
+end;
+
+procedure TdmComprasSesiones.ValidarCambioProveedorFormulaCodigo;
+var
+  oCampoProveedor: TField;
+  sFormula: string;
+begin
+  oCampoProveedor := unqryTablaG.FindField('CODIGO_PRV_SES');
+  if Assigned(oCampoProveedor) and
+     (unqryTablaG.State = dsEdit) and
+     (VarToStr(oCampoProveedor.OldValue) <>
+      VarToStr(oCampoProveedor.NewValue)) and
+     unqrySesionLin.Active and
+     (not unqrySesionLin.IsEmpty) then
+  begin
+    sFormula := FormulaCodigoArticuloSesion;
+    if TFormulaCodigoArticuloSesion.UsaModeloProveedor(sFormula) or
+       TFormulaCodigoArticuloSesion.UsaCodigoProveedor(sFormula) then
+      raise EInvalidOpException.Create(
+        SErrorCambiarProveedorSesionConFormula);
+  end;
+end;
+
+procedure TdmComprasSesiones.CargarValoresFormulaCodigoArticulo(
+  out AValores: TValoresFormulaCodigoArticuloSesion);
+begin
+  AValores := Default(TValoresFormulaCodigoArticuloSesion);
+  AValores.CodFamilia := Trim(unqrySesionLin.FieldByName(
+    'CODIGO_FAM_SESLIN').AsString);
+  AValores.ModeloProv := Trim(unqrySesionLin.FieldByName(
+    'REF_PRV_SESLIN').AsString);
+  AValores.CodProv := Trim(unqryTablaG.FieldByName(
+    'CODIGO_PRV_SES').AsString);
+end;
+
+function TdmComprasSesiones.ClaveLineaCodigoArticulo: string;
+begin
+  Result :=
+    unqrySesionLin.FieldByName(
+      'SERIE_SES_SESLIN').AsString + #0 +
+    unqrySesionLin.FieldByName(
+      'NUMERO_SES_SESLIN').AsString + #0 +
+    unqrySesionLin.FieldByName(
+      'LINEA_SESLIN').AsString;
+end;
+
+function TdmComprasSesiones.HuellaGeneracionCodigoArticulo(
+  const AFormula: string;
+  const AValores: TValoresFormulaCodigoArticuloSesion): string;
+begin
+  Result :=
+    TFormulaCodigoArticuloSesion.Normalizar(AFormula) + #0 +
+    AValores.CodFamilia + #0 +
+    AValores.ModeloProv + #0 +
+    AValores.CodProv;
+end;
+
+function TdmComprasSesiones.EsMismaGeneracionCodigoArticulo(
+  const AFormula: string;
+  const AValores: TValoresFormulaCodigoArticuloSesion;
+  const ACodigo: string): Boolean;
+var
+  Generacion: TGeneracionCodigoArticuloSesion;
+begin
+  Result := Assigned(FGeneracionesCodigoArticulo) and
+    FGeneracionesCodigoArticulo.TryGetValue(
+      ClaveLineaCodigoArticulo, Generacion);
+  if Result then
+    Result := SameText(Generacion.Codigo, ACodigo) and
+      SameText(
+        Generacion.Huella,
+        HuellaGeneracionCodigoArticulo(AFormula, AValores));
+end;
+
+procedure TdmComprasSesiones.RegistrarGeneracionCodigoArticulo(
+  const AFormula: string;
+  const AValores: TValoresFormulaCodigoArticuloSesion;
+  const ACodigo: string);
+var
+  Generacion: TGeneracionCodigoArticuloSesion;
+begin
+  if Assigned(FGeneracionesCodigoArticulo) then
+  begin
+    Generacion.Codigo := ACodigo;
+    Generacion.Huella := HuellaGeneracionCodigoArticulo(
+      AFormula, AValores);
+    FGeneracionesCodigoArticulo.AddOrSetValue(
+      ClaveLineaCodigoArticulo, Generacion);
+  end;
+end;
+
+procedure TdmComprasSesiones.OlvidarGeneracionCodigoArticulo;
+begin
+  if Assigned(FGeneracionesCodigoArticulo) then
+    FGeneracionesCodigoArticulo.Remove(
+      ClaveLineaCodigoArticulo);
+end;
+
+procedure TdmComprasSesiones.ResolverContadorFormulaCodigoArticulo(
+  const AFormula: string;
+  var AValores: TValoresFormulaCodigoArticuloSesion);
+var
+  bDatosDisponibles: Boolean;
+  sCodigoFamiliaContador: string;
+begin
+  if TFormulaCodigoArticuloSesion.UsaContadorFamilia(AFormula) then
+  begin
+    AValores.ContadorFamilia := 'PENDIENTE';
+    bDatosDisponibles :=
+      (AValores.CodFamilia <> '') and
+      TFormulaCodigoArticuloSesion.PuedeEvaluar(AFormula, AValores);
+    AValores.ContadorFamilia := '';
+    if bDatosDisponibles and
+       ResolverCodigoFamiliaConexion(
+         ConexionDatos,
+         AValores.CodFamilia,
+         IdentidadSesion.Usuario,
+         sCodigoFamiliaContador) then
+      AValores.ContadorFamilia := Copy(
+        sCodigoFamiliaContador,
+        Length(AValores.CodFamilia) + 1,
+        MaxInt);
+  end;
+end;
+
+procedure TdmComprasSesiones.AsignarCodigoArticuloLinea(
+  const ACodigo: string);
+begin
+  if not (unqrySesionLin.State in [dsEdit, dsInsert]) then
+    unqrySesionLin.Edit;
+  unqrySesionLin.FieldByName(
+    'CODIGO_ART_TENTATIVO_SESLIN').AsString := ACodigo;
+end;
+
+procedure TdmComprasSesiones.LimpiarCodigoArticuloLinea;
+begin
+  if not (unqrySesionLin.State in [dsEdit, dsInsert]) then
+    unqrySesionLin.Edit;
+  unqrySesionLin.FieldByName(
+    'CODIGO_ART_TENTATIVO_SESLIN').Clear;
+  unqrySesionLin.FieldByName(
+    'ACCION_DUPLICADO_SESLIN').Clear;
+  unqrySesionLin.FieldByName(
+    'CODIGO_ART_REUSAR_SESLIN').Clear;
+  unqrySesionLin.FieldByName(
+    'ESDUPLICADO_SESLIN').AsString := 'N';
+  OlvidarGeneracionCodigoArticulo;
+end;
+
+function TdmComprasSesiones.EsFamiliaActiva(
+  const ACodigo: string): Boolean;
+var
+  vNombre: Variant;
+begin
+  Result := False;
+  if unqryFamilias.Active and (Trim(ACodigo) <> '') then
+  begin
+    vNombre := unqryFamilias.Lookup(
+      'CODIGO_FAM_FAM',
+      Trim(ACodigo),
+      'NOMBRE_FAM_FAM');
+    Result := not VarIsNull(vNombre);
+  end;
+end;
+
+function TdmComprasSesiones.GenerarCodigoArticuloLineaActual(
+  AReemplazarCodigo: Boolean): Boolean;
+var
+  Valores: TValoresFormulaCodigoArticuloSesion;
+  sCodigoActual: string;
+  sFormula: string;
+  sGenerado: string;
+begin
+  Result := False;
+  if unqrySesionLin.Active and
+     (not unqrySesionLin.IsEmpty) then
+  begin
+    sCodigoActual := Trim(unqrySesionLin.FieldByName(
+      'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+    if AReemplazarCodigo or (sCodigoActual = '') then
+    begin
+      sGenerado := '';
+      sFormula := FormulaCodigoArticuloSesion;
+      CargarValoresFormulaCodigoArticulo(Valores);
+      if AReemplazarCodigo and (sCodigoActual <> '') and
+         TFormulaCodigoArticuloSesion.UsaContadorFamilia(sFormula) and
+         EsMismaGeneracionCodigoArticulo(
+           sFormula, Valores, sCodigoActual) then
+        Result := True
+      else
+      begin
+        ResolverContadorFormulaCodigoArticulo(sFormula, Valores);
+        if TFormulaCodigoArticuloSesion.PuedeEvaluar(
+             sFormula, Valores) then
+          sGenerado := TFormulaCodigoArticuloSesion.Evaluar(
+            sFormula, Valores)
+        else if SameText(
+                  sFormula,
+                  FORMULA_CODIGO_ARTICULO_SESION_DEFECTO) and
+                (Valores.CodFamilia <> '') then
+          sGenerado := Valores.CodFamilia;
+        if sGenerado <> '' then
+        begin
+          AsignarCodigoArticuloLinea(sGenerado);
+          if TFormulaCodigoArticuloSesion.UsaContadorFamilia(
+               sFormula) and
+             (Valores.ContadorFamilia <> '') then
+            RegistrarGeneracionCodigoArticulo(
+              sFormula, Valores, sGenerado)
+          else
+            OlvidarGeneracionCodigoArticulo;
+          Result := True;
+        end
+        else if AReemplazarCodigo then
+        begin
+          LimpiarCodigoArticuloLinea;
+          Result := True;
+        end;
+      end;
+    end;
+  end;
+end;
+
+function TdmComprasSesiones.
+  GenerarCodigoArticuloTrasCambiarFamilia: Boolean;
+var
+  sFormula: string;
+begin
+  sFormula := FormulaCodigoArticuloSesion;
+  Result := GenerarCodigoArticuloLineaActual(
+    TFormulaCodigoArticuloSesion.UsaDatosFamilia(sFormula));
+end;
+
+function TdmComprasSesiones.
+  GenerarCodigoArticuloTrasCambiarModelo: Boolean;
+var
+  sFormula: string;
+begin
+  sFormula := FormulaCodigoArticuloSesion;
+  Result := GenerarCodigoArticuloLineaActual(
+    TFormulaCodigoArticuloSesion.UsaModeloProveedor(sFormula));
 end;
 
 procedure TdmComprasSesiones.LogSes(const ATexto: string);
@@ -750,6 +1043,8 @@ end;
 procedure TdmComprasSesiones.DataModuleCreate(Sender: TObject);
 begin
   inherited;
+  FGeneracionesCodigoArticulo :=
+    TDictionary<string, TGeneracionCodigoArticuloSesion>.Create;
   ConfigurarSqlCabecera;
   ConfigurarLecturasCabecera;
   ConectarConsultas;
@@ -887,6 +1182,7 @@ begin
   if (oFldDist <> nil) and (DataSet.State = dsEdit) and
      (VarToStr(oFldDist.OldValue) <> VarToStr(oFldDist.NewValue)) then
     raise Exception.Create(SErrorCambiarFormatoSesion);
+  ValidarCambioProveedorFormulaCodigo;
   sNumero  := unqryTablaG.FieldByName('NUMERO_SES').AsString;
   sSerie   := Trim(unqryTablaG.FieldByName('SERIE_SES').AsString);
   sEmpresa := Trim(unqryTablaG.FieldByName('CODIGO_EMP_SES').AsString);
@@ -1007,8 +1303,8 @@ var
   bExiste : Boolean;
   bLineaVacia: Boolean;
   sDescr  : string;
+  sFamilia: string;
   sTecla  : string;
-  sNuevo  : string;
 begin
   inherited;
   LogSes(Format(
@@ -1043,6 +1339,21 @@ begin
       end);
     Abort;
   end;
+  sTecla := Trim(unqrySesionLin.FieldByName(
+    'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+  sFamilia := Trim(unqrySesionLin.FieldByName(
+    'CODIGO_FAM_SESLIN').AsString);
+  if (sTecla <> '') and (sFamilia = '') and
+     EsFamiliaActiva(sTecla) then
+  begin
+    sFamilia := sTecla;
+    unqrySesionLin.FieldByName(
+      'CODIGO_FAM_SESLIN').AsString := sFamilia;
+  end;
+  if sTecla = '' then
+    GenerarCodigoArticuloLineaActual(False)
+  else if SameText(sTecla, sFamilia) then
+    GenerarCodigoArticuloLineaActual(True);
   // Sincroniza TIPO_ART desde TIPO_LINEA
   if unqrySesionLin.FieldByName('TIPO_LINEA_SESLIN').AsString = 'SERVICIO' then
     unqrySesionLin.FieldByName('TIPO_ART_SESLIN').AsString := 'SERVICIO'
@@ -1063,57 +1374,47 @@ begin
     unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
       inLibComprasSesionesReglas.SanearColorSku(
         unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString);
-  if not FImportacionMasiva then
+  sTecla := Trim(unqrySesionLin.FieldByName(
+    'CODIGO_ART_TENTATIVO_SESLIN').AsString);
+  if SameText(
+       unqrySesionLin.FieldByName(
+         'ACCION_DUPLICADO_SESLIN').AsString,
+       'REUSAR') and
+     (not SameText(
+       unqrySesionLin.FieldByName(
+         'CODIGO_ART_REUSAR_SESLIN').AsString,
+       sTecla)) then
   begin
-    // Detección de duplicado
-    if unqrySesionLin.FieldByName(
-      'CODIGO_ART_TENTATIVO_SESLIN').AsString <> '' then
-      sTecla := Trim(unqrySesionLin.FieldByName(
-        'CODIGO_ART_TENTATIVO_SESLIN').AsString);
-    // Atajo familia->codigo autogenerado: si lo tecleado es exactamente el
-    // codigo de una familia con contador activo, expandir al siguiente
-    // numero de la serie e incrementar el contador.
-    if sTecla <> '' then
+    unqrySesionLin.FieldByName(
+      'ACCION_DUPLICADO_SESLIN').Clear;
+    unqrySesionLin.FieldByName(
+      'CODIGO_ART_REUSAR_SESLIN').Clear;
+  end;
+  if sTecla <> '' then
+  begin
+    ChequearDuplicado(sTecla, bExiste, sDescr);
+    if bExiste then
     begin
-      if ResolverCodigoFamiliaConexion(ConexionDatos, sTecla,
-          IdentidadSesion.Usuario, sNuevo) then
+      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
+        'S';
+      // Si la linea no tiene accion resuelta, marcamos REUSAR por
+      // defecto apuntando al articulo existente.
+      if (not FImportacionMasiva) and
+         (Trim(unqrySesionLin.FieldByName(
+           'ACCION_DUPLICADO_SESLIN').AsString) = '') then
       begin
         unqrySesionLin.FieldByName(
-          'CODIGO_ART_TENTATIVO_SESLIN').AsString := sNuevo;
-        // Si la familia no esta seteada en la linea, ponerla a la tecleada
-        if unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').IsNull or
-           (unqrySesionLin.FieldByName(
-             'CODIGO_FAM_SESLIN').AsString = '') then
-          unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString :=
-            sTecla;
-        sTecla := sNuevo;
+          'ACCION_DUPLICADO_SESLIN').AsString := 'REUSAR';
+        unqrySesionLin.FieldByName(
+          'CODIGO_ART_REUSAR_SESLIN').AsString := sTecla;
       end;
-    end;
-    // Detección de duplicado
-    if sTecla <> '' then
-    begin
-      ChequearDuplicado(sTecla, bExiste, sDescr);
-      if bExiste then
-      begin
-        unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
-          'S';
-        // Si la linea no tiene accion resuelta, marcamos REUSAR por
-        // defecto apuntando al articulo existente.
-        if Trim(unqrySesionLin.FieldByName(
-          'ACCION_DUPLICADO_SESLIN').AsString) = '' then
-        begin
-          unqrySesionLin.FieldByName(
-            'ACCION_DUPLICADO_SESLIN').AsString := 'REUSAR';
-          unqrySesionLin.FieldByName(
-            'CODIGO_ART_REUSAR_SESLIN').AsString := sTecla;
-        end;
-      end
-      else
-        unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
-          'N';
-    end;
-    CalcularTotalesLineaActual;
+    end
+    else
+      unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
+        'N';
   end;
+  if not FImportacionMasiva then
+    CalcularTotalesLineaActual;
   unqrySesionLin.FieldByName('USUARIO_MODIF').AsString :=
     IdentidadSesion.Usuario;
   unqrySesionLin.FieldByName('INSTANTE_MODIF').AsDateTime := Now;
@@ -1131,6 +1432,8 @@ end;
 procedure TdmComprasSesiones.unqrySesionLinAfterDelete(DataSet: TDataSet);
 begin
   inherited;
+  if Assigned(FGeneracionesCodigoArticulo) then
+    FGeneracionesCodigoArticulo.Clear;
   LogSes('DM.unqrySesionLinAfterDelete');
   // Las celdas y filas se borran en cascada por la app (no por FK).
   RefrescarTotalesSesion;

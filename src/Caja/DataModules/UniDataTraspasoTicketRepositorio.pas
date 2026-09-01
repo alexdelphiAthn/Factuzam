@@ -62,9 +62,19 @@ uses
 const
   SQL_SOLICITUD =
     'SELECT CODIGO_ALM_ORIGEN_TRSOL, CODIGO_ALM_DESTINO_TRSOL, ' +
-    'CODIGO_EMPLEADO_TRSOL, ESTADO_TRSOL, FECHA_TRSOL ' +
+    'CODIGO_EMPLEADO_TRSOL, ESTADO_TRSOL, FECHA_TRSOL, ' +
+    'COALESCE(TIPO_TRSOL, ''MANUAL'') AS TIPO_TRSOL, ' +
+    'INSTANTE_VENTAS_DESDE_TRSOL, INSTANTE_VENTAS_HASTA_TRSOL ' +
     'FROM fza_traspasos_solicitudes ' +
     'WHERE NUMERO_TRSOL = :NUM AND SERIE_TRSOL = :SER';
+  SQL_CODIGO_PROVEEDOR =
+    'COALESCE(NULLIF(TRIM(L.CODIGO_PRV_TRSOLLIN), ''''), ' +
+    'AP.CODIGO_PRV_AP, '''')';
+  SQL_NOMBRE_PROVEEDOR =
+    'COALESCE(NULLIF(TRIM(L.RAZON_SOCIAL_PRV_TRSOLLIN), ''''), ' +
+    'NULLIF(TRIM(P.RAZON_SOCIAL_PRV), ''''), ' +
+    'NULLIF(TRIM(L.CODIGO_PRV_TRSOLLIN), ''''), ' +
+    'AP.CODIGO_PRV_AP, '''')';
   SQL_LINEAS_SOLICITUD =
     'SELECT L.CODIGO_UNIDAD_TRSOLLIN AS SKU, ' +
     'COALESCE(L.DESCRIPCION_ARTICULO_TRSOLLIN, '''') AS DESCRIPCION, ' +
@@ -76,10 +86,35 @@ const
     '(SELECT COALESCE(SUM(S.CANTIDAD_STK),0) ' +
     'FROM fza_articulos_stockactual S ' +
     'WHERE S.CODIGO_ALM_STK = :DES ' +
-    'AND S.CODIGO_UNIDAD_STK = L.CODIGO_UNIDAD_TRSOLLIN) AS STK_DES ' +
+    'AND S.CODIGO_UNIDAD_STK = L.CODIGO_UNIDAD_TRSOLLIN) AS STK_DES, ' +
+    SQL_CODIGO_PROVEEDOR + ' AS CODIGO_PRV, ' +
+    SQL_NOMBRE_PROVEEDOR + ' AS PROVEEDOR ' +
     'FROM fza_traspasos_solicitudes_lineas L ' +
+    'INNER JOIN fza_traspasos_solicitudes C ' +
+    'ON C.NUMERO_TRSOL = L.NUMERO_TRSOL_TRSOLLIN ' +
+    'AND C.SERIE_TRSOL = L.SERIE_TRSOL_TRSOLLIN ' +
+    'LEFT JOIN fza_articulos_proveedores AP ' +
+    'ON AP.CODIGO_ART_AP = L.CODIGO_ART_TRSOLLIN ' +
+    'AND AP.CODIGO_PRV_AP = COALESCE(' +
+    'NULLIF(TRIM(L.CODIGO_PRV_TRSOLLIN), ''''), ' +
+    '(SELECT APX.CODIGO_PRV_AP ' +
+    'FROM fza_articulos_proveedores APX ' +
+    'WHERE APX.CODIGO_ART_AP = L.CODIGO_ART_TRSOLLIN ' +
+    'ORDER BY CASE ' +
+    'WHEN APX.ESPROVEEDORPRINCIPAL_AP = ''S'' THEN 0 ELSE 1 END, ' +
+    'APX.FECHA_VALIDEZ_AP DESC, APX.CODIGO_PRV_AP LIMIT 1)) ' +
+    'LEFT JOIN fza_proveedores P ' +
+    'ON P.CODIGO_PRV_PRV = COALESCE(' +
+    'NULLIF(TRIM(L.CODIGO_PRV_TRSOLLIN), ''''), AP.CODIGO_PRV_AP) ' +
     'WHERE L.NUMERO_TRSOL_TRSOLLIN = :NUM ' +
-    'AND L.SERIE_TRSOL_TRSOLLIN = :SER ORDER BY L.LINEA_TRSOLLIN';
+    'AND L.SERIE_TRSOL_TRSOLLIN = :SER ' +
+    'ORDER BY CASE WHEN ' +
+    'COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' AND ' +
+    SQL_CODIGO_PROVEEDOR + ' = '''' THEN 1 ELSE 0 END, ' +
+    'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
+    SQL_CODIGO_PROVEEDOR + ' ELSE '''' END, ' +
+    'CASE WHEN COALESCE(C.TIPO_TRSOL, ''MANUAL'') = ''AUTO'' THEN ' +
+    SQL_NOMBRE_PROVEEDOR + ' ELSE '''' END, L.LINEA_TRSOLLIN';
   SQL_STOCK =
     'SELECT COALESCE(SUM(S.CANTIDAD_STK),0) AS STOCK ' +
     'FROM fza_articulos_stockactual S ' +
@@ -139,12 +174,13 @@ begin
     SQL_SOLICITUD,
     'NUM,SER',
     'CODIGO_ALM_ORIGEN_TRSOL,CODIGO_ALM_DESTINO_TRSOL,' +
-    'CODIGO_EMPLEADO_TRSOL,ESTADO_TRSOL,FECHA_TRSOL');
+    'CODIGO_EMPLEADO_TRSOL,ESTADO_TRSOL,FECHA_TRSOL,TIPO_TRSOL,' +
+    'INSTANTE_VENTAS_DESDE_TRSOL,INSTANTE_VENTAS_HASTA_TRSOL');
   Result[1] := DefinicionSql(
     'ListarLineasSolicitud',
     SQL_LINEAS_SOLICITUD,
     'ORI,DES,NUM,SER',
-    'SKU,DESCRIPCION,PED,STK_ORI,STK_DES');
+    'SKU,DESCRIPCION,PED,STK_ORI,STK_DES,CODIGO_PRV,PROVEEDOR');
   Result[2] := DefinicionSql(
     'ObtenerStock',
     SQL_STOCK,
@@ -194,6 +230,8 @@ begin
     Result.Existe := not oQuery.IsEmpty;
     if Result.Existe then
     begin
+      Result.Tipo :=
+        oQuery.FieldByName('TIPO_TRSOL').AsString;
       Result.Origen :=
         oQuery.FieldByName('CODIGO_ALM_ORIGEN_TRSOL').AsString;
       Result.Destino :=
@@ -204,6 +242,10 @@ begin
         oQuery.FieldByName('ESTADO_TRSOL').AsString;
       Result.Fecha :=
         oQuery.FieldByName('FECHA_TRSOL').AsDateTime;
+      Result.InstanteVentasDesde :=
+        oQuery.FieldByName('INSTANTE_VENTAS_DESDE_TRSOL').AsDateTime;
+      Result.InstanteVentasHasta :=
+        oQuery.FieldByName('INSTANTE_VENTAS_HASTA_TRSOL').AsDateTime;
     end;
   finally
     FreeAndNil(oQuery);
@@ -253,6 +295,10 @@ begin
         oQuery.FieldByName('STK_ORI').AsFloat;
       oLinea.StockDestino :=
         oQuery.FieldByName('STK_DES').AsFloat;
+      oLinea.CodigoProveedor :=
+        oQuery.FieldByName('CODIGO_PRV').AsString;
+      oLinea.Proveedor :=
+        oQuery.FieldByName('PROVEEDOR').AsString;
       oLineas.Add(oLinea);
       oQuery.Next;
     end;

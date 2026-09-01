@@ -3,6 +3,7 @@
   ClientHeight = 720
   ClientWidth = 1280
   StyleElements = [seFont, seClient, seBorder]
+  OnDestroy = FormDestroy
   ExplicitWidth = 1280
   ExplicitHeight = 720
   TextHeight = 17

@@ -1531,6 +1531,7 @@
         <DCCReference Include="src\Lib\inLibComprasSesionesCreacionDataSet.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesAplicacionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesAplicacion.pas"/>
+        <DCCReference Include="src\Lib\inLibComprasSesionesCodigoArticulo.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializacionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesLecturasIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesReglas.pas"/>

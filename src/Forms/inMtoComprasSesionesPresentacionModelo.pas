@@ -52,6 +52,13 @@ type
     const AColorBasico: string;
     AMargen: Double);
 
+  TOrigenGeneracionCodigoArticuloSesion = (
+    ogcaFamilia,
+    ogcaModelo);
+
+  TGenerarCodigoArticuloSesion = reference to function(
+    AOrigen: TOrigenGeneracionCodigoArticuloSesion): Boolean;
+
   TEntornoModeloProveedorSesion = record
     Propietario: TComponent;
     Conexion: TUniConnection;
@@ -64,6 +71,7 @@ type
     RefrescarTallas: TProc;
     FijarTallajeDefecto: TProc<Integer>;
     SolicitarCopiaLinea: TSolicitarCopiaLineaSesion;
+    GenerarCodigoArticulo: TGenerarCodigoArticuloSesion;
     RegistrarAviso: TProc<string>;
   end;
 
@@ -94,6 +102,7 @@ type
       var AProperties: TcxCustomEditProperties);
     procedure AbrirDesplegableFiltrado;
     procedure ResolverPendiente;
+    procedure GenerarCodigoPorModelo(const AModelo: string);
     procedure AplicarReferenciaResuelta(const AModelo: string;
       const ADuplicado: TResolverDuplicadoSesion);
     procedure CerrarEditorEnCurso;
@@ -116,7 +125,7 @@ type
       const ACodigoArticulo: string): Boolean;
     procedure ResolverFamiliaTecleada(ASender: TObject);
     procedure ResolverCodigoTecleado(ASender: TObject);
-    procedure ResolverReferenciaTecleada(ASender: TObject);
+    procedure ConfirmarReferenciaTecleada(const AReferencia: string);
     procedure ExpandirCodigoFamiliaActiva(const ACodigoFamilia: string;
       const ANombreFamilia: string = '');
     // Abre el picker jerarquico de familias y expande la eleccion.
@@ -151,6 +160,8 @@ begin
     raise EArgumentNilException.Create('AEntorno.Servicio');
   if not Assigned(AEntorno.Vista) then
     raise EArgumentNilException.Create('AEntorno.Vista');
+  if not Assigned(AEntorno.GenerarCodigoArticulo) then
+    raise EArgumentNilException.Create('AEntorno.GenerarCodigoArticulo');
   FEntorno := AEntorno;
   PlanificadorBusqueda := TPlanificadorDiferidoTimer.Create(
     cIntervaloDebounceMs,
@@ -281,8 +292,8 @@ begin
 end;
 
 // Editor por celda: celda vacia y enfocada -> ExtLookupComboBox; en otro
-// caso el editor de texto por defecto de la columna, que conserva el
-// match exacto en OnEditValueChanged.
+// caso el editor de texto por defecto de la columna, que confirma el
+// valor mediante OnValidate.
 procedure TBuscadorModeloProveedorSesion.ObtenerPropiedadesCelda(
   ASender: TcxCustomGridTableItem;
   ARecord: TcxCustomGridRecord;
@@ -370,7 +381,7 @@ procedure TBuscadorModeloProveedorSesion.ComboValidado(ASender: TObject;
 begin
   AError := False;
   AErrorText := '';
-  FNucleo.RegistrarConfirmacion(VarToStr(ADisplayValue));
+  ConfirmarReferenciaTecleada(VarToStr(ADisplayValue));
 end;
 
 function TBuscadorModeloProveedorSesion.ProveedorCabecera: string;
@@ -468,6 +479,16 @@ begin
   RefrescarColumnasTallas;
 end;
 
+procedure TBuscadorModeloProveedorSesion.GenerarCodigoPorModelo(
+  const AModelo: string);
+begin
+  if not (FEntorno.Lineas.State in [dsEdit, dsInsert]) then
+    FEntorno.Lineas.Edit;
+  FEntorno.Lineas.FieldByName(
+    'REF_PRV_SESLIN').AsString := AModelo;
+  FEntorno.GenerarCodigoArticulo(ogcaModelo);
+end;
+
 procedure TBuscadorModeloProveedorSesion.ResolverPendiente;
 var
   sModelo: string;
@@ -480,19 +501,33 @@ begin
   if FNucleo.TomarPendiente(sModelo, sCodigoArticulo) and
      HayLineaEditable then
   begin
-    sProveedor := ProveedorCabecera;
-    if sProveedor <> '' then
-      bResuelto := AplicarDuplicadoDeSesion(sModelo, sCodigoArticulo);
-    if (sProveedor <> '') and (not bResuelto) then
+    if Trim(sModelo) = '' then
     begin
-      rDuplicado := FEntorno.Servicio.ResolverDuplicado(
-        sModelo,
-        sProveedor,
-        True,
-        sCodigoArticulo);
-      if rDuplicado.Encontrado then
+      GenerarCodigoPorModelo('');
+      bResuelto := True;
+    end
+    else
+    begin
+      sProveedor := ProveedorCabecera;
+      if sProveedor <> '' then
+        bResuelto := AplicarDuplicadoDeSesion(
+          sModelo, sCodigoArticulo);
+      if (sProveedor <> '') and (not bResuelto) then
       begin
-        AplicarReferenciaResuelta(sModelo, rDuplicado);
+        rDuplicado := FEntorno.Servicio.ResolverDuplicado(
+          sModelo,
+          sProveedor,
+          True,
+          sCodigoArticulo);
+        if rDuplicado.Encontrado then
+        begin
+          AplicarReferenciaResuelta(sModelo, rDuplicado);
+          bResuelto := True;
+        end;
+      end;
+      if (sProveedor <> '') and (not bResuelto) then
+      begin
+        GenerarCodigoPorModelo(sModelo);
         bResuelto := True;
       end;
     end;
@@ -502,12 +537,11 @@ begin
 end;
 
 // 1. Reusar datos de otra linea del mismo documento. 2. Reusar un
-// articulo existente. 3. Expandir la familia con su contador.
+// articulo existente. 3. Generar el codigo con la formula configurada.
 procedure TBuscadorModeloProveedorSesion.ResolverFamiliaTecleada(
   ASender: TObject);
 var
   sFamilia: string;
-  sTentativo: string;
   bPendiente: Boolean;
   rDuplicado: TResolverDuplicadoSesion;
 begin
@@ -519,6 +553,9 @@ begin
       'CODIGO_FAM_SESLIN').AsString);
   end;
   bPendiente := sFamilia <> '';
+  if (sFamilia = '') and Assigned(FEntorno.Lineas) and
+     (not FEntorno.Lineas.IsEmpty) then
+    FEntorno.GenerarCodigoArticulo(ogcaFamilia);
   if bPendiente and AplicarDuplicadoDeSesion('', sFamilia) then
     bPendiente := False;
   if bPendiente then
@@ -534,29 +571,16 @@ begin
     end;
   end;
   if bPendiente then
-  begin
-    // Salvaguarda: si ya hay un codigo tentativo expandido para la
-    // misma familia no consumimos otro contador.
-    sTentativo := FEntorno.Lineas.FieldByName(
-      'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-    if (sTentativo <> '') and
-       (Length(sTentativo) > Length(sFamilia)) and
-       SameText(Copy(sTentativo, 1, Length(sFamilia)), sFamilia) then
-      bPendiente := False;
-  end;
-  if bPendiente then
     ExpandirCodigoFamiliaActiva(sFamilia);
 end;
 
-// Codigo tecleado en la celda "Cod. articulo": si coincide con una
-// familia con contador activo se expande a FAMILIA+RELLENO; si no, se
-// queda como codigo manual y no se toca CODIGO_FAM_SESLIN.
+// El codigo tecleado se conserva como manual salvo cuando coincide con
+// una familia. En ese caso se genera mediante la formula configurada.
 procedure TBuscadorModeloProveedorSesion.ResolverCodigoTecleado(
   ASender: TObject);
 var
   Editor: TcxCustomEdit;
   sTecleado: string;
-  sExpandido: string;
   sNombre: string;
   bPendiente: Boolean;
 begin
@@ -573,13 +597,10 @@ begin
   bPendiente := sTecleado <> '';
   if bPendiente and AplicarDuplicadoDeSesion('', sTecleado) then
     bPendiente := False;
-  // ResolverCodigoFamilia incrementa el contador como efecto colateral
-  // si resuelve: solo se llama una vez por edicion de celda.
-  sExpandido := '';
   if bPendiente then
   begin
-    if not FEntorno.Servicio.ResolverCodigoFamilia(
-      sTecleado, FEntorno.Usuario, sExpandido) then
+    sNombre := FEntorno.Servicio.ObtenerNombreFamilia(sTecleado);
+    if sNombre = '' then
       bPendiente := False;
   end;
   if bPendiente then
@@ -588,63 +609,27 @@ begin
       FEntorno.Lineas.Edit;
     FEntorno.Lineas.FieldByName('CODIGO_FAM_SESLIN').AsString :=
       sTecleado;
-    FEntorno.Lineas.FieldByName(
-      'CODIGO_ART_TENTATIVO_SESLIN').AsString := sExpandido;
-    Editor.EditValue := sExpandido;
+    FEntorno.GenerarCodigoArticulo(ogcaFamilia);
+    Editor.EditValue := FEntorno.Lineas.FieldByName(
+      'CODIGO_ART_TENTATIVO_SESLIN').AsString;
     if FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
-    begin
-      sNombre := FEntorno.Servicio.ObtenerNombreFamilia(sTecleado);
-      if sNombre <> '' then
-        FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString :=
-          sNombre;
-    end;
+      FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString :=
+        sNombre;
   end;
 end;
 
-// Referencia del proveedor tecleada a mano en la celda "Modelo prov.".
-procedure TBuscadorModeloProveedorSesion.ResolverReferenciaTecleada(
-  ASender: TObject);
-var
-  sReferencia: string;
-  sProveedor: string;
-  bPendiente: Boolean;
-  rDuplicado: TResolverDuplicadoSesion;
+procedure TBuscadorModeloProveedorSesion.ConfirmarReferenciaTecleada(
+  const AReferencia: string);
 begin
-  sReferencia := '';
-  sProveedor := ProveedorCabecera;
-  if (ASender is TcxCustomEdit) and HayLineaEditable and
-     (sProveedor <> '') then
-  begin
-    TcxCustomEdit(ASender).PostEditValue;
-    sReferencia := Trim(FEntorno.Lineas.FieldByName(
-      'REF_PRV_SESLIN').AsString);
-  end;
-  bPendiente := sReferencia <> '';
-  if bPendiente and AplicarDuplicadoDeSesion(sReferencia, '') then
-    bPendiente := False;
-  if bPendiente then
-  begin
-    rDuplicado := FEntorno.Servicio.ResolverDuplicado(
-      sReferencia,
-      sProveedor,
-      True);
-    if rDuplicado.Encontrado then
-    begin
-      FEntorno.Servicio.AplicarDuplicadoEnLinea(rDuplicado);
-      RefrescarColumnasTallas;
-    end;
-  end;
+  FNucleo.RegistrarConfirmacion(Trim(AReferencia));
 end;
 
-// Helper compartido por F3 y por el tecleo en la columna Familia: pone
-// CODIGO_FAM_SESLIN, expande a CODIGO_ART_TENTATIVO via el contador de
-// la familia y prerellena la descripcion si esta vacia.
+// Helper compartido por F3 y por el tecleo en Familia: guarda la familia,
+// genera el codigo con la formula y prerellena la descripcion.
 procedure TBuscadorModeloProveedorSesion.ExpandirCodigoFamiliaActiva(
   const ACodigoFamilia: string;
   const ANombreFamilia: string);
 var
-  sExpandido: string;
-  sTentativo: string;
   sNombre: string;
 begin
   if (Trim(ACodigoFamilia) <> '') and Assigned(FEntorno.Lineas) and
@@ -654,12 +639,7 @@ begin
       FEntorno.Lineas.Edit;
     FEntorno.Lineas.FieldByName('CODIGO_FAM_SESLIN').AsString :=
       ACodigoFamilia;
-    sTentativo := ACodigoFamilia;
-    if FEntorno.Servicio.ResolverCodigoFamilia(
-         ACodigoFamilia, FEntorno.Usuario, sExpandido) then
-      sTentativo := sExpandido;
-    FEntorno.Lineas.FieldByName(
-      'CODIGO_ART_TENTATIVO_SESLIN').AsString := sTentativo;
+    FEntorno.GenerarCodigoArticulo(ogcaFamilia);
     if FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
     begin
       sNombre := ANombreFamilia;

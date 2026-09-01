@@ -24,7 +24,13 @@ function ResolverIdAvColorLinea(
   AConn: TUniConnection;
   const ALecturas: ILecturasArticulosMaterializacion;
   const AColorTexto, ACodigoAtbColor, AUsuario: string;
-  out AValor: string): Integer;
+  out AValor: string): Integer; overload;
+function ResolverIdAvColorLinea(
+  AConn: TUniConnection;
+  const ALecturas: ILecturasArticulosMaterializacion;
+  const AColorTexto, ACodigoAtbColor, AUsuario: string;
+  out AValor: string;
+  out AIdColorBasico: Integer): Integer; overload;
 
 implementation
 
@@ -51,13 +57,15 @@ end;
 function BuscarValorColor(
   const ALecturas: ILecturasArticulosMaterializacion;
   const AValor: string;
-  out ATieneColorBasico: Boolean): Integer;
+  out ATieneColorBasico: Boolean;
+  out AIdColorBasico: Integer): Integer;
 var
   oValor: TValorColorMaterializacion;
 begin
   oValor := ALecturas.BuscarValorColor(AValor);
   Result := oValor.IdValor;
   ATieneColorBasico := oValor.TieneColorBasico;
+  AIdColorBasico := oValor.IdColorBasico;
 end;
 
 procedure AsignarColorBasicoAValor(
@@ -113,13 +121,33 @@ function ResolverIdAvColorLinea(
   const AColorTexto, ACodigoAtbColor, AUsuario: string;
   out AValor: string): Integer;
 var
+  iIdColorBasico: Integer;
+begin
+  Result := ResolverIdAvColorLinea(
+    AConn,
+    ALecturas,
+    AColorTexto,
+    ACodigoAtbColor,
+    AUsuario,
+    AValor,
+    iIdColorBasico);
+end;
+
+function ResolverIdAvColorLinea(
+  AConn: TUniConnection;
+  const ALecturas: ILecturasArticulosMaterializacion;
+  const AColorTexto, ACodigoAtbColor, AUsuario: string;
+  out AValor: string;
+  out AIdColorBasico: Integer): Integer;
+var
   q                 : TUniQuery;
-  iIdColorBasico    : Integer;
   sValor            : string;
+  iIdColorGlobal    : Integer;
   bTieneColorBasico : Boolean;
 begin
   Result := 0;
   AValor := '';
+  AIdColorBasico := 0;
   sValor := SanearColorSku(AColorTexto);
   if sValor = '' then
     sValor := SanearColorSku(ACodigoAtbColor);
@@ -128,18 +156,21 @@ begin
     q := TUniQuery.Create(nil);
     try
       q.Connection := AConn;
-      iIdColorBasico :=
+      AIdColorBasico :=
         ResolverIdColorBasico(ALecturas, ACodigoAtbColor);
       Result := BuscarValorColor(
-        ALecturas, sValor, bTieneColorBasico);
+        ALecturas, sValor, bTieneColorBasico,
+        iIdColorGlobal);
+      if AIdColorBasico = 0 then
+        AIdColorBasico := iIdColorGlobal;
       if Result = 0 then
         Result := CrearValorColor(
           q, ALecturas, sValor, AColorTexto, AUsuario,
-          iIdColorBasico)
+          AIdColorBasico)
       else if (not bTieneColorBasico) and
-              (iIdColorBasico > 0) then
+              (AIdColorBasico > 0) then
         AsignarColorBasicoAValor(
-          q, Result, iIdColorBasico);
+          q, Result, AIdColorBasico);
       if Result > 0 then
         AValor := sValor;
     finally

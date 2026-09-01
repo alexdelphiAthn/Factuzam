@@ -23,15 +23,21 @@ uses
 type
   TComprobarDDLRestauracion = reference to function(
     const ASQL: string): Boolean;
-  TCrearCopiaPreviaRestauracion = reference to function: Boolean;
+  TSolicitarCopiaPreviaRestauracion = reference to function(
+    out ARutaFichero: string): Boolean;
+  TPreparacionRestauracionCopiasVcl = record
+    RutaRestauracion: string;
+    RutaCopiaPrevia: string;
+  end;
   TContextoRestauracionCopiasVcl = record
     Owner: TComponent;
     Dialogo: TFileOpenDialog;
     CasoUso: ICasoUsoCopiasSeguridad;
     RutaCopias: string;
     Visible: Boolean;
+    EsAdministrador: Boolean;
     ComprobarDDL: TComprobarDDLRestauracion;
-    CrearCopiaPrevia: TCrearCopiaPreviaRestauracion;
+    SolicitarCopiaPrevia: TSolicitarCopiaPreviaRestauracion;
   end;
   TCoordinadorRestauracionCopiasVcl = class
   private
@@ -39,15 +45,17 @@ type
       const AContexto: TContextoRestauracionCopiasVcl); static;
     class function SolicitarOrigen(
       const AContexto: TContextoRestauracionCopiasVcl;
-      out ARutaFichero, AContrasena: string): Boolean; static;
+      out ARutaFichero: string): Boolean; static;
     class function LeerCabeceraSql(
       const ARutaFichero: string): string; static;
     class function ConfirmarCopiaPrevia(
       const AContexto: TContextoRestauracionCopiasVcl;
-      const ARutaFichero: string): Boolean; static;
+      const ARutaFichero: string;
+      out ARutaCopiaPrevia: string): Boolean; static;
   public
-    class procedure Ejecutar(
-      const AContexto: TContextoRestauracionCopiasVcl); static;
+    class function Ejecutar(
+      const AContexto: TContextoRestauracionCopiasVcl;
+      out APreparacion: TPreparacionRestauracionCopiasVcl): Boolean; static;
   end;
 
 function SolicitarNuevaContrasenaCopia(
@@ -76,15 +84,12 @@ end;
 class procedure TCoordinadorRestauracionCopiasVcl.ConfigurarDialogo(
   const AContexto: TContextoRestauracionCopiasVcl);
 var
-  bEsAdministrador: Boolean;
   oTipoFichero: TFileTypeItem;
 begin
-  bEsAdministrador := AContexto.CasoUso.ModoCreacionCopia =
-    mpcTextoPlano;
   AContexto.Dialogo.Title := STituloRestaurarCopiaEjecutarScript;
   AContexto.Dialogo.FileTypes.Clear;
   oTipoFichero := AContexto.Dialogo.FileTypes.Add;
-  if bEsAdministrador then
+  if AContexto.EsAdministrador then
   begin
     oTipoFichero.DisplayName := SCaptionFiltroCopiasSqlCifradas;
     oTipoFichero.FileMask := '*.sql;*.zip;*.crypt';
@@ -103,10 +108,9 @@ end;
 
 class function TCoordinadorRestauracionCopiasVcl.SolicitarOrigen(
   const AContexto: TContextoRestauracionCopiasVcl;
-  out ARutaFichero, AContrasena: string): Boolean;
+  out ARutaFichero: string): Boolean;
 begin
   ARutaFichero := '';
-  AContrasena := '';
   ConfigurarDialogo(AContexto);
   Result := AContexto.Dialogo.Execute;
   if Result then
@@ -114,12 +118,7 @@ begin
     ARutaFichero := AContexto.Dialogo.FileName;
     Result := AContexto.CasoUso.PuedeRestaurar(ARutaFichero);
     if not Result then
-      ShowMessage(SErrorTipoRestauracionNoPermitido)
-    else if AContexto.CasoUso.RequiereContrasena(
-              ARutaFichero) then
-      Result := TfrmModalContrasenaCopia.SolicitarExistente(
-        AContexto.Owner,
-        AContrasena);
+      ShowMessage(SErrorTipoRestauracionNoPermitido);
   end;
 end;
 
@@ -147,7 +146,8 @@ end;
 
 class function TCoordinadorRestauracionCopiasVcl.ConfirmarCopiaPrevia(
   const AContexto: TContextoRestauracionCopiasVcl;
-  const ARutaFichero: string): Boolean;
+  const ARutaFichero: string;
+  out ARutaCopiaPrevia: string): Boolean;
 var
   bCifrada: Boolean;
   bCopiaCompleta: Boolean;
@@ -155,6 +155,7 @@ var
   iRespuesta: Integer;
   sPregunta: string;
 begin
+  ARutaCopiaPrevia := '';
   bCifrada := AContexto.CasoUso.RequiereContrasena(ARutaFichero);
   bCopiaCompleta := bCifrada or SameText(
     ExtractFileExt(ARutaFichero),
@@ -177,7 +178,8 @@ begin
       0);
     case iRespuesta of
       mrYes:
-        Result := AContexto.CrearCopiaPrevia();
+        Result := AContexto.SolicitarCopiaPrevia(
+          ARutaCopiaPrevia);
       mrCancel:
         Result := False;
     end;
@@ -186,27 +188,24 @@ begin
   end;
 end;
 
-class procedure TCoordinadorRestauracionCopiasVcl.Ejecutar(
-  const AContexto: TContextoRestauracionCopiasVcl);
-var
-  bContinuar: Boolean;
-  sContrasena: string;
-  sRutaFichero: string;
+class function TCoordinadorRestauracionCopiasVcl.Ejecutar(
+  const AContexto: TContextoRestauracionCopiasVcl;
+  out APreparacion: TPreparacionRestauracionCopiasVcl): Boolean;
 begin
+  APreparacion := Default(TPreparacionRestauracionCopiasVcl);
+  Result := False;
   if AContexto.Visible then
   begin
-    bContinuar := SolicitarOrigen(
+    Result := SolicitarOrigen(
       AContexto,
-      sRutaFichero,
-      sContrasena);
-    if bContinuar then
-      bContinuar := ConfirmarCopiaPrevia(
+      APreparacion.RutaRestauracion);
+    if Result then
+      Result := ConfirmarCopiaPrevia(
         AContexto,
-        sRutaFichero);
-    if bContinuar then
-      AContexto.CasoUso.IniciarRestauracion(
-        sRutaFichero,
-        sContrasena);
+        APreparacion.RutaRestauracion,
+        APreparacion.RutaCopiaPrevia);
+    if not Result then
+      APreparacion := Default(TPreparacionRestauracionCopiasVcl);
   end;
 end;
 

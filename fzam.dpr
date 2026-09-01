@@ -1310,6 +1310,8 @@ uses
     'src\Lib\inLibComprasSesionesAplicacionIntf.pas',
   inLibComprasSesionesAplicacion in
     'src\Lib\inLibComprasSesionesAplicacion.pas',
+  inLibComprasSesionesCodigoArticulo in
+    'src\Lib\inLibComprasSesionesCodigoArticulo.pas',
   inLibComprasSesionesMaterializacionIntf in
     'src\Lib\inLibComprasSesionesMaterializacionIntf.pas',
   inLibComprasSesionesLecturasIntf in
@@ -1687,6 +1689,7 @@ function CrearContextoSesionInicial(
   const AFabricaConexiones: IFabricaConexionesUniDAC;
   const ARegistroLog: IRegistroLog;
   AForzarCredenciales: Boolean;
+  const ARutaRestauracionAdministrativa: string;
   out AContextoSesion: IContextoSesionAplicacion;
   out AResultadoLicencia: TResultadoLicenciaAplicacion): Boolean;
 var
@@ -1703,10 +1706,16 @@ begin
     AFabricaConexiones);
   frmLogon.AsignarRegistroLog(ARegistroLog);
   try
+    if ARutaRestauracionAdministrativa <> '' then
+    begin
+      frmLogon.PrepararRestauracionAdministrativa(
+        ARutaRestauracionAdministrativa);
+    end;
     if not frmLogon.DebeCerrarAplicacion then
     begin
       AutoLoginCorrecto := False;
       if (not AForzarCredenciales) and
+         (ARutaRestauracionAdministrativa = '') and
          frmLogon.IsInitializeAuto then
       begin
         AutoLoginCorrecto :=
@@ -1746,6 +1755,7 @@ begin
   var GestorContextoCierre: IGestorContextoSesion;
   var Principal: TfrmMtoPrincipal;
   var RegistroLogAplicacion: IRegistroLog;
+  var RutaRestauracionAdministrativa: string;
   var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
   var EsModoComandoCopiaSeguridad: Boolean;
   var EsModoComandoImprimirFacturas: Boolean;
@@ -1761,6 +1771,9 @@ begin
     EsProcesoComandoCopiaSeguridad;
   EsModoComandoImprimirFacturas :=
     EsProcesoComandoImprimirFacturas;
+  RutaRestauracionAdministrativa := ObtenerValorConmutador(
+    ObtenerParametrosLineaComandos,
+    'restaurar');
   if (not EsModoComandoCopiaSeguridad) and
      (not EsModoComandoImprimirFacturas) then
   begin
@@ -1820,6 +1833,7 @@ begin
       FabricaConexiones,
       RegistroLogAplicacion,
       EsModoComandoImprimirFacturas,
+      RutaRestauracionAdministrativa,
       ContextoSesionInicial,
       ResultadoLicenciaInicial) then
     begin

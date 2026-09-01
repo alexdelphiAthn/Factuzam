@@ -62,6 +62,8 @@ function ResolverCodigoColorBasico(
   out ACodigo: string): Boolean;
 var
   i: Integer;
+  iCoincidencias: Integer;
+  sCodigoNombre: string;
   sLiteral: string;
 begin
   Result := False;
@@ -82,16 +84,23 @@ begin
       end;
       Inc(i);
     end;
+    iCoincidencias := 0;
+    sCodigoNombre := '';
     i := 0;
     while (i <= High(ACodigos)) and not Result do
     begin
       if (i <= High(ANombres)) and
          SameText(sLiteral, SanearColorSku(ANombres[i])) then
       begin
-        ACodigo := ACodigos[i];
-        Result := True;
+        Inc(iCoincidencias);
+        sCodigoNombre := ACodigos[i];
       end;
       Inc(i);
+    end;
+    if (not Result) and (iCoincidencias = 1) then
+    begin
+      ACodigo := sCodigoNombre;
+      Result := True;
     end;
   end;
 end;

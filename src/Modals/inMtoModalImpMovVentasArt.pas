@@ -10,8 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Modal de impresión del "Movimientos de ventas por artículos y fechas"     }
-{    (ranking de ventas, FastReport). Una fila por artículo/color cuando hay   }
-{    color (o por artículo/color+almacén si se agrupa por almacén), con las    }
+{    (ranking de ventas, FastReport). Una fila por artículo/color/talla según  }
+{    los desgloses elegidos (y por almacén si se agrupa por almacén), con las  }
 {    entradas y venta del periodo, margen 1 sobre el coste vendido y margen 2  }
 {    sobre el importe de entradas. Mantiene la foto del artículo. Se apoya en  }
 {    el SP PRC_GET_MOV_VENTAS_ART (ver                                         }
@@ -49,9 +49,10 @@ type
     FRepositorioMovimientos:
       IRepositorioInformeMovimientosVentasArticulo;
     FResultadoMovimientos: IResultadoInformeMovimientosVentasArticulo;
-    FchkIniCompras: TcxCheckBox;   // activa el filtro de inicio de compras
-    // fecha de primera compra a partir de la cual
+    FchkIniCompras: TcxCheckBox;   // activa la fecha inicial de las entradas
+    // fecha desde la que se suman albaranes y, en modo local, traspasos
     FdteIniCompras: TcxDateEdit;
+    FchkEntradasGlobales: TcxCheckBox;
     FchkSoloVentas: TcxCheckBox;   // 'solo artículos con ventas' en el periodo
     FchkConImpuestos: TcxCheckBox;
     FclbOrden: TcxCheckListBox;
@@ -69,8 +70,8 @@ type
     procedure ReportBeforePrint(Component: TfrxReportComponent);
     procedure CompletarSubtotales;
     procedure ActualizarFormulasPorcentajes;
-    // Adapta el detalle a procedimientos nuevos o antiguos sin campo color.
-    procedure ConfigurarDetalleArticuloColor;
+    // Adapta el detalle a procedimientos antiguos sin color o talla.
+    procedure ConfigurarDetalleArticuloAtributos;
     // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
     procedure PrecargarFotosArticulos;
   protected
@@ -98,7 +99,6 @@ resourcestring
   SCaptionProveedorAgrupacionMovimientosVentas = 'Proveedor';
   SCaptionFamiliaAgrupacionMovimientosVentas = 'Familia';
   SCaptionTemporadaAgrupacionMovimientosVentas = 'Temporada';
-  SCaptionColorAgrupacionMovimientosVentas = 'Color';
   SNombreArchivoMovimientosVentasArticulos =
     'Movimientos_ventas_articulos';
 
@@ -132,9 +132,8 @@ begin
     // cero. El base pone el 1 del mes; aquí lo ampliamos al 1 de enero.
     if DteDesde <> nil then
       DteDesde.Date := EncodeDate(YearOf(Date), 1, 1);
-    // "Inicio compras": filtra los artículos por su primera entrada (AC/AE).
-    // El check permite desactivarlo (sin filtro = todos los que tengan
-    // actividad). Arranca DESMARCADO para no ocultar artículos sin querer.
+    // "Inicio compras" limita la fecha desde la que se suman las entradas.
+    // Desmarcado conserva todo el histórico de entradas.
     FchkIniCompras := TcxCheckBox.Create(Self);
     FchkIniCompras.Parent    := TabFechas;
     FchkIniCompras.Left      := 220;
@@ -149,12 +148,23 @@ begin
     FdteIniCompras.Width   := 160;
     FdteIniCompras.Date    := EncodeDate(YearOf(Date), 1, 1);
     FdteIniCompras.Enabled := False;
+    // Global: albaranes AC/AE de toda la empresa. Local: albaranes y
+    // traspasos de entrada de los almacenes seleccionados.
+    FchkEntradasGlobales := TcxCheckBox.Create(Self);
+    FchkEntradasGlobales.Parent := TabFechas;
+    FchkEntradasGlobales.Left := FchkIniCompras.Left;
+    FchkEntradasGlobales.Top := 72;
+    FchkEntradasGlobales.Width := 210;
+    FchkEntradasGlobales.Caption :=
+      SCaptionEntradasGlobalesMovimientosVentas;
+    FchkEntradasGlobales.Checked := True;
     // "Solo artículos con ventas": oculta los que solo tienen entradas (lo
     // típico de un ranking de ventas). Arranca DESMARCADO = salen todos.
     FchkSoloVentas := TcxCheckBox.Create(Self);
     FchkSoloVentas.Parent  := TabFechas;
-    FchkSoloVentas.Left    := 220;
-    FchkSoloVentas.Top     := 72;
+    FchkSoloVentas.Left    := FchkEntradasGlobales.Left;
+    FchkSoloVentas.Top     := FchkEntradasGlobales.Top +
+      FchkEntradasGlobales.Height + 8;
     FchkSoloVentas.Width   := 210;
     FchkSoloVentas.Caption := SCaptionSoloArticulosConVentas;
     FchkConImpuestos := TcxCheckBox.Create(Self);
@@ -167,15 +177,17 @@ begin
     FchkConImpuestos.Checked := True;
   end;
   CrearControlesOrdenacion;
-  // Pestaña "Agrupaciones": almacén/proveedor/familia/temporada/color.
+  // Agrupaciones reordenables, incluidos los desgloses por color y talla.
   // + spin de nivel de familia (igual que el balance de almacén).
   CrearTabAgrupacion(STituloAgrupacionesMovimientosVentasArticulo,
-    ['ALM', 'PRV', 'FAM', 'TMP', 'COL'],
+    ['ALM', 'PRV', 'FAM', 'TMP', 'ART', 'COL', 'TAL'],
     [SCaptionAlmacenAgrupacionMovimientosVentas,
      SCaptionProveedorAgrupacionMovimientosVentas,
      SCaptionFamiliaAgrupacionMovimientosVentas,
      SCaptionTemporadaAgrupacionMovimientosVentas,
-     SCaptionColorAgrupacionMovimientosVentas], True);
+     SCaptionArticuloAgrupacionMovimientosVentas,
+     SCaptionColorAgrupacionMovimientosVentas,
+     SCaptionTallaAgrupacionMovimientosVentas], True);
 end;
 
 procedure TfrmPrintMovVentasArt.CrearControlesOrdenacion;
@@ -297,6 +309,8 @@ begin
     FchkIniCompras.Checked and (FdteIniCompras <> nil);
   if criterios.UsarInicioCompras then
     criterios.InicioCompras := FdteIniCompras.Date;
+  criterios.EntradasGlobales := (FchkEntradasGlobales = nil) or
+    FchkEntradasGlobales.Checked;
   criterios.Almacenes := CSVAlmacenes;
   criterios.Familias := CSVFamilias;
   criterios.Proveedores := CSVProveedores;
@@ -329,7 +343,7 @@ begin
   fxdsMovVentas.DataSet := FResultadoMovimientos.DataSet;
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(fxdsMovVentas);
-  ConfigurarDetalleArticuloColor;
+  ConfigurarDetalleArticuloAtributos;
   CompletarSubtotales;
   ActualizarFormulasPorcentajes;
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
@@ -433,30 +447,47 @@ begin
   PonerFormula('MemoHPctVlast', '% Vtas');
 end;
 
-procedure TfrmPrintMovVentasArt.ConfigurarDetalleArticuloColor;
+procedure TfrmPrintMovVentasArt.ConfigurarDetalleArticuloAtributos;
 var
+  aNiveles: TArray<string>;
+  bMostrarColor: Boolean;
+  bMostrarTalla: Boolean;
   oComponente: TfrxComponent;
   sCampoColor: string;
+  sCampoTalla: string;
+  sDetalle: string;
 begin
   if (FResultadoMovimientos <> nil) and
      FResultadoMovimientos.DataSet.Active then
   begin
+    aNiveles := NivelesAgrupacion;
+    bMostrarColor := MatchText('COL', aNiveles);
+    bMostrarTalla := MatchText('TAL', aNiveles);
     sCampoColor := '';
-    if FResultadoMovimientos.DataSet.FindField('COLOR_ETIQUETA') <> nil then
+    if bMostrarColor and
+       (FResultadoMovimientos.DataSet.FindField('COLOR_ETIQUETA') <> nil) then
       sCampoColor := 'COLOR_ETIQUETA'
-    else if FResultadoMovimientos.DataSet.FindField('COLOR') <> nil then
+    else if bMostrarColor and
+            (FResultadoMovimientos.DataSet.FindField('COLOR') <> nil) then
       sCampoColor := 'COLOR';
+    sCampoTalla := '';
+    if bMostrarTalla and
+       (FResultadoMovimientos.DataSet.FindField('TALLA_ETIQUETA') <> nil) then
+      sCampoTalla := 'TALLA_ETIQUETA'
+    else if bMostrarTalla and
+            (FResultadoMovimientos.DataSet.FindField('TALLA') <> nil) then
+      sCampoTalla := 'TALLA';
     oComponente := frxrprt1.FindObject('MemoArtDesc');
     if oComponente is TfrxMemoView then
     begin
+      sDetalle := '[MovVentas."CODIGO_ART_ART"]';
       if sCampoColor <> '' then
-        TfrxMemoView(oComponente).Memo.Text :=
-          '[MovVentas."CODIGO_ART_ART"]  [MovVentas."' + sCampoColor + '"]' +
-          sLineBreak + '[MovVentas."DESCRIPCION_ART"]'
-      else
-        TfrxMemoView(oComponente).Memo.Text :=
-          '[MovVentas."CODIGO_ART_ART"]' + sLineBreak +
-          '[MovVentas."DESCRIPCION_ART"]';
+        sDetalle := sDetalle + '  [MovVentas."' + sCampoColor + '"]';
+      if sCampoTalla <> '' then
+        sDetalle := sDetalle + '  Talla: [MovVentas."' +
+          sCampoTalla + '"]';
+      TfrxMemoView(oComponente).Memo.Text := sDetalle + sLineBreak +
+        '[MovVentas."DESCRIPCION_ART"]';
     end;
   end;
 end;

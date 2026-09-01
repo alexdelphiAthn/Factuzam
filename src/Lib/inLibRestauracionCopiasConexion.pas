@@ -77,7 +77,7 @@ begin
     raise EArgumentException.Create(
       'La ruta de la copia no puede estar vacía.');
   if not TPoliticaCopiasSeguridad.PuedeRestaurar(
-           False,
+           ASolicitud.AdministradorAutenticado,
            ASolicitud.RutaFichero) then
   begin
     raise EArgumentException.Create(

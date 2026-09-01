@@ -22,6 +22,9 @@ uses
 function ObtenerParametrosLineaComandos: TArray<string>;
 function NormalizarConmutador(const AParametro: string): string;
 function EsParametroPerfilValido(const AParametro: string): Boolean;
+function ObtenerValorConmutador(
+  const AParametros: TArray<string>;
+  const ANombre: string): string;
 
 implementation
 
@@ -55,6 +58,28 @@ begin
             not CharInSet(sParametro[1], ['/', '-']) and
             SameText(ExtractFileName(sParametro), sParametro) and
             SameText(ExtractFileExt(sParametro), '.ini');
+end;
+
+function ObtenerValorConmutador(
+  const AParametros: TArray<string>;
+  const ANombre: string): string;
+var
+  iIndice: Integer;
+  sNombre: string;
+begin
+  Result := '';
+  sNombre := NormalizarConmutador(ANombre);
+  iIndice := 0;
+  while (Result = '') and (iIndice < High(AParametros)) do
+  begin
+    if SameText(
+         NormalizarConmutador(AParametros[iIndice]),
+         sNombre) then
+    begin
+      Result := Trim(AParametros[iIndice + 1]);
+    end;
+    Inc(iIndice);
+  end;
 end;
 
 end.

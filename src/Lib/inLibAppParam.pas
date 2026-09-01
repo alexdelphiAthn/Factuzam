@@ -60,7 +60,8 @@ implementation
 
 uses
   System.SysUtils, inLibPathTokens,
-  inLibMsgConfiguracion;
+  inLibMsgConfiguracion,
+  inLibComprasSesionesCodigoArticulo;
 
 { TParametrosAplicacion }
 
@@ -350,6 +351,14 @@ begin
   RegistrarParametro('Consulta de Stock', 'appStockOcultarCeros',
     'Ocultar líneas a cero en las consultas de stock',
     tpBoolean, 'True');
+
+  // --- Creación de artículos desde sesiones de compra ---
+  RegistrarParametro('Creación de artículos',
+    'appFormulaCodigoArticuloSesion',
+    'Fórmula del código en sesiones. Parámetros: {CodFamilia}, ' +
+    '{ContadorFamilia}, {ModeloProv} y {CodProv}. Ejemplos: ' +
+    '{CodFamilia}{ContadorFamilia} o {ModeloProv}-{CodProv}',
+    tpString, FORMULA_CODIGO_ARTICULO_SESION_DEFECTO);
 
   // --- Valores por defecto ---
   // NOTA: la tarifa por defecto ya NO se define aquí. La única definición

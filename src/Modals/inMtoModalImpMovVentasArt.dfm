@@ -1,4 +1,4 @@
-inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
+﻿inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
   Caption = 'Movimientos de ventas por art'#237'culos y fechas'
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1056
@@ -458,7 +458,8 @@ inherited frmPrintMovVentasArt: TfrmPrintMovVentasArt
           Font.Style = []
           Frame.Typ = []
           Memo.UTF8W = (
-            '[MovVentas."CODIGO_ART_ART"]  [MovVentas."COLOR_ETIQUETA"]'
+            '[MovVentas."CODIGO_ART_ART"]  [MovVentas."COLOR_ETIQUETA"]  ' +
+            'Talla: [MovVentas."TALLA_ETIQUETA"]'
             '[MovVentas."DESCRIPCION_ART"]')
           ParentFont = False
         end

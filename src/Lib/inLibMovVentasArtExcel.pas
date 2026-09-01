@@ -10,11 +10,11 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Exportación a Excel del informe "Movimientos de ventas por artículos y    }
-{    fechas". Una fila por artículo/color cuando hay color, con las magnitudes }
-{    periodo y los dos márgenes. Si el SP devuelve agrupaciones (GRUPO1..3),   }
-{    dibuja una cabecera por grupo y una línea de TOTAL por corte (sumas de    }
-{    las magnitudes base y porcentajes/márgenes recalculados a partir de esas  }
-{    sumas, no sumando porcentajes).                                           }
+{    fechas". Una fila por artículo/color/talla según los desgloses elegidos,  }
+{    con las magnitudes del periodo y los dos márgenes. Si el SP devuelve      }
+{    agrupaciones (GRUPO1..3), dibuja una cabecera por grupo y una línea de    }
+{    TOTAL por corte. Las magnitudes base se suman y los porcentajes y         }
+{    márgenes se recalculan a partir de esas sumas.                            }
 {                                                                              }
 {    v3.0 (Fase 4): recibe por separado escritura y formato; no depende del    }
 {    guardado del libro ni de DevExpress. Ver                                  }
@@ -334,6 +334,7 @@ procedure TExportadorMovVentasArt.EscribirDetalle;
 var
   sArticulo: string;
   sColor: string;
+  sTalla: string;
 begin
   sArticulo := FDatos.FieldByName('CODIGO_ART_ART').AsString;
   sColor := Trim(CampoTexto('COLOR_ETIQUETA'));
@@ -341,6 +342,11 @@ begin
     sColor := Trim(CampoTexto('COLOR'));
   if sColor <> '' then
     sArticulo := sArticulo + '  Color: ' + sColor;
+  sTalla := Trim(CampoTexto('TALLA_ETIQUETA'));
+  if sTalla = '' then
+    sTalla := Trim(CampoTexto('TALLA'));
+  if sTalla <> '' then
+    sArticulo := sArticulo + '  Talla: ' + sTalla;
   sArticulo := sArticulo + '  ' +
     FDatos.FieldByName('DESCRIPCION_ART').AsString;
   EscribirValor(COL_ART, sArticulo);

@@ -330,6 +330,17 @@ begin
     'Ocultar líneas a cero en las consultas de stock',
     'src/Lib/inLibAppParam.pas');
   ARegistrar(
+    'inMtoAppParam.Parametros.Categoria.Creaciondearticulos',
+    'Creación de artículos',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
+    'inMtoAppParam.Parametros.appFormulaCodigoArticuloSesion.' +
+    'Descripcion',
+    'Fórmula del código en sesiones. Parámetros: {CodFamilia}' +
+    ', {ContadorFamilia}, {ModeloProv} y {CodProv}. Ejemplos:' +
+    ' {CodFamilia}{ContadorFamilia} o {ModeloProv}-{CodProv}',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
     'inMtoAppParam.Parametros.Categoria.Valorespordefecto',
     'Valores por defecto',
     'src/Lib/inLibAppParam.pas');

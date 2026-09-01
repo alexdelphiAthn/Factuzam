@@ -20,6 +20,7 @@ type
   end;
   TValorColorMaterializacion = record
     IdValor: Integer;
+    IdColorBasico: Integer;
     TieneColorBasico: Boolean;
   end;
   TSkuSesionMaterializacion = record

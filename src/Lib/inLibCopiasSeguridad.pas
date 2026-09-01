@@ -270,9 +270,10 @@ end;
 function TRepositorioCopiasSeguridadUniDAC.PuedeRestaurar(
   const ARutaFichero: string): Boolean;
 begin
-  Result := TPoliticaCopiasSeguridad.PuedeRestaurar(
-    EsAdministrador,
-    ARutaFichero);
+  Result := EsAdministrador and
+    TPoliticaCopiasSeguridad.PuedeRestaurar(
+      True,
+      ARutaFichero);
 end;
 
 function TRepositorioCopiasSeguridadUniDAC.RequiereContrasena(
@@ -320,7 +321,7 @@ begin
   if not PuedeRestaurar(ARutaFichero) then
   begin
     raise EArgumentException.Create(
-      'El usuario no puede restaurar este tipo de archivo.');
+      SErrorRestauracionRequiereAdministrador);
   end;
   if not TPoliticaCopiasSeguridad.IntentarObtenerModo(
     ARutaFichero,

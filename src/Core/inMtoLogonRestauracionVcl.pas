@@ -31,6 +31,9 @@ type
     Puerto: string;
     BaseDatos: string;
     Usuario: string;
+    RutaFichero: string;
+    ContrasenaConexion: string;
+    AdministradorAutenticado: Boolean;
     OnPrepararWorker: TPrepararWorkerRestauracionEvent;
     OnProgreso: TProgresoCopiaSeguridadEvent;
     OnFinalizar: TFinalizarCopiaSeguridadEvent;
@@ -103,25 +106,38 @@ begin
     raise EInvalidOpException.Create(
       SErrorServicioRestauracionNoDisponible);
   end;
-  sContrasena := InputBox(SGetPassBBDD, '', '');
+  oSolicitud := Default(TSolicitudRestauracionConexion);
+  sContrasena := AContexto.ContrasenaConexion;
+  if AContexto.RutaFichero = '' then
+  begin
+    sContrasena := InputBox(SGetPassBBDD, '', '');
+    ConfigurarDialogo(AContexto.Dialogo);
+    bContinuar := AContexto.Dialogo.Execute;
+    if bContinuar then
+      oSolicitud.RutaFichero := AContexto.Dialogo.FileName;
+  end
+  else
+  begin
+    bContinuar := True;
+    oSolicitud.RutaFichero := AContexto.RutaFichero;
+  end;
   AContexto.EstablecerContrasena(sContrasena);
-  ConfigurarDialogo(AContexto.Dialogo);
-  if AContexto.Dialogo.Execute then
+  if bContinuar then
   begin
     bContinuar := SolicitarContrasenaCopia(
       AContexto.Dialogo,
-      AContexto.Dialogo.FileName,
+      oSolicitud.RutaFichero,
       sContrasenaCopia);
     if bContinuar then
     begin
-      oSolicitud := Default(TSolicitudRestauracionConexion);
       oSolicitud.Host := AContexto.Host;
       oSolicitud.Puerto := StrToIntDef(AContexto.Puerto, 3306);
       oSolicitud.BaseDatos := AContexto.BaseDatos;
       oSolicitud.Usuario := AContexto.Usuario;
       oSolicitud.ContrasenaConexion := sContrasena;
-      oSolicitud.RutaFichero := AContexto.Dialogo.FileName;
       oSolicitud.ContrasenaCopia := sContrasenaCopia;
+      oSolicitud.AdministradorAutenticado :=
+        AContexto.AdministradorAutenticado;
       AContexto.MostrarPreparacion();
       AContexto.CasoUso.Ejecutar(
         oSolicitud,
@@ -130,7 +146,7 @@ begin
         AContexto.OnFinalizar);
     end;
   end
-  else
+  else if AContexto.RutaFichero = '' then
     ShowMessage(SCargaScriptCancelada);
 end;
 

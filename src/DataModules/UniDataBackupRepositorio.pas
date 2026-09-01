@@ -88,6 +88,7 @@ begin
   inherited Create;
   FConfiguracion := AConfiguracion;
   FConexion := TUniConnection.Create(nil);
+  FConexion.Pooling := False;
 end;
 
 destructor TPersistenciaBackupBase.Destroy;
@@ -106,6 +107,8 @@ begin
   FConexion.Password := FConfiguracion.Contrasena;
   FConexion.SpecificOptions.Values['MySQL.UseUnicode'] := 'True';
   FConexion.SpecificOptions.Values['MySQL.Charset'] := 'utf8mb4';
+  FConexion.SpecificOptions.Values['ConnectionTimeout'] :=
+    IntToStr(FConfiguracion.TimeoutConexionSeg);
   FConexion.LoginPrompt := False;
   FConexion.Connected := True;
 end;
@@ -176,6 +179,9 @@ begin
   Conectar('information_schema');
   Conexion.ExecSQL(
     'SET NAMES utf8mb4 COLLATE utf8mb4_spanish_ci');
+  Conexion.ExecSQL(
+    'SET SESSION lock_wait_timeout = ' +
+    IntToStr(Configuracion.TimeoutComandoSeg));
   sBaseDatos := DelimitarIdentificador(Configuracion.BaseDatos);
   Conexion.ExecSQL(
     'CREATE DATABASE IF NOT EXISTS ' + sBaseDatos +

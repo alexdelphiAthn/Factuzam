@@ -18,11 +18,14 @@ interface
 type
   TSolicitudTraspasoTicket = record
     Existe: Boolean;
+    Tipo: string;
     Origen: string;
     Destino: string;
     Empleado: string;
     Estado: string;
     Fecha: TDateTime;
+    InstanteVentasDesde: TDateTime;
+    InstanteVentasHasta: TDateTime;
   end;
 
   TLineaSolicitudTraspasoTicket = record
@@ -31,6 +34,8 @@ type
     CantidadPedida: Double;
     StockOrigen: Double;
     StockDestino: Double;
+    CodigoProveedor: string;
+    Proveedor: string;
   end;
 
   TTraspasoTicketHistorico = record

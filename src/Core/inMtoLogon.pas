@@ -116,6 +116,7 @@ type
     FConfiguracionConexionPendiente: Boolean;
     FResultadoInicioSesion: TResultadoInicioSesion;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
+    FRutaRestauracionAdministrativa: string;
     FCasoUsoRestauracion: ICasoUsoRestauracionConexion;
     FConexionLogon: TUniConnection;
     FRepositorioLogon: IRepositorioLogon;
@@ -172,6 +173,10 @@ type
     function LicenciaAplicacionPreparada: Boolean;
     function ProcesarLicenciaAplicacion: Boolean;
     procedure InvalidarResultadoInicioSesion;
+    function EsAdministradorAutenticado(
+      const AResultado: TResultadoAutenticacionLogon): Boolean;
+    procedure IniciarRestauracionAdministrativa;
+    procedure ReiniciarServiciosLogonTrasRestauracion;
   public
     constructor Create(
       AOwner: TComponent;
@@ -180,6 +185,8 @@ type
     function EjecutarAutenticacionAutomatica: Boolean;
     function IsInitializeAuto:Boolean;
     function DebeCerrarAplicacion:Boolean;
+    procedure PrepararRestauracionAdministrativa(
+      const ARutaFichero: string);
     property ResultadoInicioSesion: TResultadoInicioSesion
       read FResultadoInicioSesion;
     property ResultadoLicencia: TResultadoLicenciaAplicacion
@@ -1347,6 +1354,55 @@ begin
       ShowMessage(Format(SErrorRestaurarCopiaSeguridad, [AError]));
     end;
   end;
+  ReiniciarServiciosLogonTrasRestauracion;
+end;
+
+function TfrmLogon.EsAdministradorAutenticado(
+  const AResultado: TResultadoAutenticacionLogon): Boolean;
+var
+  oIdentidad: TIdentidadSesion;
+begin
+  oIdentidad := TIdentidadSesion.Crear(
+    AResultado.Usuario,
+    AResultado.Grupo,
+    AResultado.EsGrupoAdministrador);
+  Result := oIdentidad.EsAdministrador;
+end;
+
+procedure TfrmLogon.IniciarRestauracionAdministrativa;
+var
+  oContexto: TContextoLogonRestauracionVcl;
+begin
+  oContexto := CrearContextoLogonRestauracionVcl(Self);
+  oContexto.RutaFichero := FRutaRestauracionAdministrativa;
+  oContexto.ContrasenaConexion := FConexionLogon.Password;
+  oContexto.AdministradorAutenticado := True;
+  try
+    TCoordinadorLogonRestauracionVcl.Ejecutar(oContexto);
+    FRutaRestauracionAdministrativa := '';
+  except
+    FWorkerOperacion := nil;
+    FCancelaOperacionSolicitada := False;
+    if FEnOperacionLarga then
+      OcultarBarraProgreso;
+    raise;
+  end;
+end;
+
+procedure TfrmLogon.ReiniciarServiciosLogonTrasRestauracion;
+begin
+  FRutaRestauracionAdministrativa := '';
+  AsignarTraducciones(nil);
+  FCasoUsoRestauracion := nil;
+  FAplicacionLogon := nil;
+  if Assigned(FConexionLogon) and FConexionLogon.Connected then
+  begin
+    FConexionLogon.RemoveFromPool;
+    FConexionLogon.Disconnect;
+  end;
+  FRepositorioLogon := nil;
+  FConexionLogon := nil;
+  PrepararLogon;
 end;
 
 procedure TfrmLogon.PrepararWorkerRestauracion(
@@ -1493,31 +1549,61 @@ begin
       ealAutenticado:
       begin
         RegistroLog.RegistrarInformacion('Login correcto');
-        try
-          SetIniValues;
-        except
-          on E: Exception do
+        if FRutaRestauracionAdministrativa <> '' then
+        begin
+          if EsAdministradorAutenticado(Resultado) then
           begin
-            RegistroLog.RegistrarError(
-              'Login correcto, pero falló el guardado de preferencias: ' +
-              E.ClassName + ': ' + E.Message);
-            ShowMessage(Format(
-              SErrorGuardarPreferenciasInicioSesion,
-              [E.Message]));
+            RegistroLog.RegistrarInformacion(
+              'Administrador revalidado para restaurar una copia.');
+            if MessageDlg(
+                 Format(
+                   SPreguntaConfirmarRestauracionAdministrativa,
+                   [FRutaRestauracionAdministrativa]),
+                 mtWarning,
+                 [mbYes, mbNo],
+                 0) = mrYes then
+            begin
+              IniciarRestauracionAdministrativa;
+            end
+            else
+              FRutaRestauracionAdministrativa := '';
+          end
+          else
+          begin
+            RegistroLog.RegistrarAviso(
+              SErrorRestauracionRequiereAdministrador);
+            ShowMessage(SErrorRestauracionRequiereAdministrador);
           end;
+          ModalResult := mrNone;
+        end
+        else
+        begin
+          try
+            SetIniValues;
+          except
+            on E: Exception do
+            begin
+              RegistroLog.RegistrarError(
+                'Login correcto, pero falló el guardado de preferencias: ' +
+                E.ClassName + ': ' + E.Message);
+              ShowMessage(Format(
+                SErrorGuardarPreferenciasInicioSesion,
+                [E.Message]));
+            end;
+          end;
+          FResultadoInicioSesion :=
+            TResultadoInicioSesion.CrearAutenticado(
+              TIdentidadSesion.Crear(
+                Resultado.Usuario,
+                Resultado.Grupo,
+                Resultado.EsGrupoAdministrador),
+              TUbicacionSesion.Crear(
+                Resultado.Empresa,
+                Resultado.Almacen,
+                Resultado.Caja));
+          PostMessage(Handle, WM_CLOSE, 0, 0);
+          ModalResult := mrOK;
         end;
-        FResultadoInicioSesion :=
-          TResultadoInicioSesion.CrearAutenticado(
-            TIdentidadSesion.Crear(
-              Resultado.Usuario,
-              Resultado.Grupo,
-              Resultado.EsGrupoAdministrador),
-            TUbicacionSesion.Crear(
-              Resultado.Empresa,
-              Resultado.Almacen,
-              Resultado.Caja));
-        PostMessage(Handle, WM_CLOSE, 0, 0);
-        ModalResult := mrOK;
       end;
       ealCredencialesInvalidas:
       begin
@@ -1777,6 +1863,16 @@ begin
   {$ENDIF }
 end;
 
+procedure TfrmLogon.PrepararRestauracionAdministrativa(
+  const ARutaFichero: string);
+begin
+  FRutaRestauracionAdministrativa := ExpandFileName(ARutaFichero);
+  edtPass.Text := '';
+  RegistroLog.RegistrarInformacion(
+    'Restauración administrativa pendiente de revalidación: ' +
+    FRutaRestauracionAdministrativa);
+end;
+
 function TfrmLogon.DebeCerrarAplicacion: Boolean;
 begin
   Result := FCerrarAplicacion;
@@ -1795,9 +1891,10 @@ procedure TfrmLogon.FormClose(Sender: TObject; var Action: TCloseAction);
 begin
   DescartarConfiguracionConexionPendiente;
   AsignarTraducciones(nil);
-  if (FConexionLogon.Connected = true) then
+  if Assigned(FConexionLogon) and FConexionLogon.Connected then
     FConexionLogon.Disconnect;
-  FConexionLogon.Pooling := false;
+  if Assigned(FConexionLogon) then
+    FConexionLogon.Pooling := false;
 end;
 
 procedure TfrmLogon.FormCloseQuery(Sender: TObject; var CanClose: Boolean);

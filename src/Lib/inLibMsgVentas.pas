@@ -526,8 +526,12 @@ resourcestring
   SCaptionAlbaranesEncontrados = 'Albaranes encontrados: %d';
   STituloBusquedaClientes = 'Búsqueda de Clientes';
   // R10 - Informes y listados de ventas
-  SCaptionFiltrarInicioCompras = 'Filtrar por inicio de compras';
+  SCaptionFiltrarInicioCompras = 'Calcular entradas desde';
+  SCaptionEntradasGlobalesMovimientosVentas = 'Entradas globales';
   SCaptionSoloArticulosConVentas = 'Solo artículos con ventas';
+  SCaptionArticuloAgrupacionMovimientosVentas = 'Artículo';
+  SCaptionColorAgrupacionMovimientosVentas = 'Color';
+  SCaptionTallaAgrupacionMovimientosVentas = 'Talla';
   SCaptionSoloEmitidas = 'Solo emitidas';
   SCaptionLineasCargadas = '%d líneas cargadas';
   SCaptionPrimeraVentaVacia = 'Primera venta: -';

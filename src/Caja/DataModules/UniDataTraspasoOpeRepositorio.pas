@@ -22,7 +22,185 @@ function CrearRepositorioTraspasoOpeUniDAC(
 implementation
 
 uses
-  System.SysUtils;
+  System.SysUtils,
+  UniDataRectificativasSql;
+
+const
+  SQL_VENTAS_REPOSICION_FACLIN =
+    'SELECT v.CODIGO_ARTICULO, v.SKU, ' +
+    '       MAX(v.DESCRIPCION) AS DESCRIPCION, ' +
+    '       v.CODIGO_PROVEEDOR, v.NOMBRE_PROVEEDOR, ' +
+    '       SUM(v.CANTIDAD) AS A_PEDIR, ' +
+    '       COALESCE(sd.STOCK, 0) AS STOCK_DESTINO, ' +
+    '       COALESCE(so.STOCK, 0) AS STOCK_ORIGEN ' +
+    '  FROM ( ' +
+    'SELECT fl.CODIGO_ART_FACLIN AS CODIGO_ARTICULO, ' +
+    '       fl.CODIGO_UNIDAD_FACLIN AS SKU, ' +
+    '       COALESCE(NULLIF(TRIM( ' +
+    '         fl.DESCRIPCION_ARTICULO_FACLIN), ''''), ' +
+    '         a.DESCRIPCION_ART, '''') AS DESCRIPCION, ' +
+    '       COALESCE(NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''), ' +
+    '         ap.CODIGO_PRV_AP, '''') AS CODIGO_PROVEEDOR, ' +
+    '       COALESCE(NULLIF(TRIM( ' +
+    '         fl.RAZON_SOCIAL_PROVEEDOR_FACLIN), ''''), ' +
+    '         NULLIF(TRIM(p.RAZON_SOCIAL_PRV), ''''), ' +
+    '         NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''), ' +
+    '         ap.CODIGO_PRV_AP, '''') AS NOMBRE_PROVEEDOR, ' +
+    '       fl.CANTIDAD_FACLIN AS CANTIDAD ' +
+    '  FROM ( ' +
+    'SELECT CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA, ' +
+    '       CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA, ' +
+    '       MAX(FECHA_OPERACION_OPCAJA) ' +
+    '         AS FECHA_OPERACION_OPCAJA, ' +
+    '       MAX(SERIE_FAC_OPCAJA) AS SERIE_FAC_OPCAJA, ' +
+    '       MAX(NUMERO_FAC_OPCAJA) AS NUMERO_FAC_OPCAJA ' +
+    '  FROM fza_caja_operaciones ' +
+    ' WHERE CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '   AND CODIGO_ALM_OPCAJA = :ALMACEN_DESTINO ' +
+    '   AND TIPO_OPERACION_OPCAJA = ''VE'' ' +
+    '   AND FECHA_OPERACION_OPCAJA >= :DESDE ' +
+    '   AND FECHA_OPERACION_OPCAJA < :HASTA ' +
+    ' GROUP BY CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA, ' +
+    '          CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA ' +
+    '       ) o ' +
+    '  JOIN fza_facturas_lineas fl ' +
+    '    ON ((fl.CODIGO_EMP_FACLIN = o.CODIGO_EMP_OPCAJA ' +
+    '     AND fl.CODIGO_ALM_FACLIN = o.CODIGO_ALM_OPCAJA ' +
+    '     AND fl.CODIGO_CAJA_FACLIN = o.CODIGO_CAJA_OPCAJA ' +
+    '     AND fl.NUMERO_OPERACION_FACLIN = ' +
+    '         o.NUMERO_OPERACION_OPCAJA) ' +
+    '     OR (fl.CODIGO_EMP_FACLIN = o.CODIGO_EMP_OPCAJA ' +
+    '     AND fl.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA ' +
+    '     AND fl.NUMERO_FAC_FACLIN = o.NUMERO_FAC_OPCAJA)) ' +
+    '  LEFT JOIN fza_articulos a ' +
+    '    ON a.CODIGO_ART_ART = fl.CODIGO_ART_FACLIN ' +
+    '  LEFT JOIN fza_articulos_proveedores ap ' +
+    '    ON ap.CODIGO_ART_AP = fl.CODIGO_ART_FACLIN ' +
+    '   AND ap.CODIGO_PRV_AP = COALESCE( ' +
+    '       NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''), ' +
+    '       (SELECT apx.CODIGO_PRV_AP ' +
+    '          FROM fza_articulos_proveedores apx ' +
+    '         WHERE apx.CODIGO_ART_AP = fl.CODIGO_ART_FACLIN ' +
+    '         ORDER BY CASE ' +
+    '           WHEN apx.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '           THEN 0 ELSE 1 END, ' +
+    '           apx.FECHA_VALIDEZ_AP DESC, apx.CODIGO_PRV_AP ' +
+    '         LIMIT 1)) ' +
+    '  LEFT JOIN fza_proveedores p ' +
+    '    ON p.CODIGO_PRV_PRV = COALESCE( ' +
+    '       NULLIF(TRIM(fl.CODIGO_PRV_FACLIN), ''''), ' +
+    '       ap.CODIGO_PRV_AP) ' +
+    ' WHERE COALESCE(fl.CANTIDAD_FACLIN, 0) > 0 ' +
+    '   AND fl.TIPO_ARTICULO_FACLIN = ''ESTANDAR'' ' +
+    '   AND NULLIF(TRIM(fl.CODIGO_UNIDAD_FACLIN), '''') IS NOT NULL ';
+
+  SQL_VENTAS_REPOSICION_MOVIMIENTOS =
+    ' UNION ALL ' +
+    'SELECT m.CODIGO_ART_MOV AS CODIGO_ARTICULO, ' +
+    '       sk.CODIGO_UNIDAD_SKU AS SKU, ' +
+    '       COALESCE(NULLIF(TRIM( ' +
+    '         m.DESCRIPCION_ARTICULO_MOV), ''''), ' +
+    '         a.DESCRIPCION_ART, '''') AS DESCRIPCION, ' +
+    '       COALESCE(ap.CODIGO_PRV_AP, '''') ' +
+    '         AS CODIGO_PROVEEDOR, ' +
+    '       COALESCE(NULLIF(TRIM(p.RAZON_SOCIAL_PRV), ''''), ' +
+    '         ap.CODIGO_PRV_AP, '''') AS NOMBRE_PROVEEDOR, ' +
+    '       m.CANTIDAD_MOV AS CANTIDAD ' +
+    '  FROM ( ' +
+    'SELECT CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA, ' +
+    '       CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA, ' +
+    '       MAX(FECHA_OPERACION_OPCAJA) ' +
+    '         AS FECHA_OPERACION_OPCAJA, ' +
+    '       MAX(SERIE_FAC_OPCAJA) AS SERIE_FAC_OPCAJA, ' +
+    '       MAX(NUMERO_FAC_OPCAJA) AS NUMERO_FAC_OPCAJA ' +
+    '  FROM fza_caja_operaciones ' +
+    ' WHERE CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '   AND CODIGO_ALM_OPCAJA = :ALMACEN_DESTINO ' +
+    '   AND TIPO_OPERACION_OPCAJA = ''VE'' ' +
+    '   AND FECHA_OPERACION_OPCAJA >= :DESDE ' +
+    '   AND FECHA_OPERACION_OPCAJA < :HASTA ' +
+    ' GROUP BY CODIGO_EMP_OPCAJA, CODIGO_ALM_OPCAJA, ' +
+    '          CODIGO_CAJA_OPCAJA, NUMERO_OPERACION_OPCAJA ' +
+    '       ) o ' +
+    '  JOIN fza_movimientos_almacen m ' +
+    '    ON m.CODIGO_EMP_MOV = o.CODIGO_EMP_OPCAJA ' +
+    '   AND m.CODIGO_ALM_DOC_MOV = o.CODIGO_ALM_OPCAJA ' +
+    '   AND m.CODIGO_CAJA_DOC_MOV = o.CODIGO_CAJA_OPCAJA ' +
+    '   AND m.NUMERO_OPERACION_DOC_MOV = ' +
+    '       o.NUMERO_OPERACION_OPCAJA ' +
+    '  LEFT JOIN fza_articulos_skus se ' +
+    '    ON se.CODIGO_UNIDAD_SKU = ' +
+    '       NULLIF(TRIM(m.CODIGO_UNIDAD_MOV), '''') ' +
+    '   AND se.CODIGO_ART_SKU = m.CODIGO_ART_MOV ' +
+    '  LEFT JOIN fza_articulos_skus sk ' +
+    '    ON sk.CODIGO_UNIDAD_SKU = COALESCE( ' +
+    '       se.CODIGO_UNIDAD_SKU, ' +
+    '       (SELECT MIN(sku.CODIGO_UNIDAD_SKU) ' +
+    '          FROM fza_articulos_skus sku ' +
+    '         WHERE sku.CODIGO_ART_SKU = m.CODIGO_ART_MOV ' +
+    '           AND sku.ESACTIVO_SKU = ''S'' ' +
+    '        HAVING COUNT(*) = 1)) ' +
+    '   AND sk.CODIGO_ART_SKU = m.CODIGO_ART_MOV ' +
+    '  LEFT JOIN fza_articulos a ' +
+    '    ON a.CODIGO_ART_ART = m.CODIGO_ART_MOV ' +
+    '  LEFT JOIN fza_articulos_proveedores ap ' +
+    '    ON ap.CODIGO_ART_AP = m.CODIGO_ART_MOV ' +
+    '   AND ap.CODIGO_PRV_AP = ( ' +
+    '       SELECT apx.CODIGO_PRV_AP ' +
+    '         FROM fza_articulos_proveedores apx ' +
+    '        WHERE apx.CODIGO_ART_AP = m.CODIGO_ART_MOV ' +
+    '        ORDER BY CASE ' +
+    '          WHEN apx.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '          THEN 0 ELSE 1 END, ' +
+    '          apx.FECHA_VALIDEZ_AP DESC, apx.CODIGO_PRV_AP ' +
+    '        LIMIT 1) ' +
+    '  LEFT JOIN fza_proveedores p ' +
+    '    ON p.CODIGO_PRV_PRV = ap.CODIGO_PRV_AP ' +
+    ' WHERE m.TIPO_DOC_MOV = ''VE'' ' +
+    '   AND m.TIPO_MOV = ''S'' ' +
+    '   AND m.ESACTIVO_MOV = ''S'' ' +
+    '   AND NULLIF(TRIM(m.CODIGO_ART_MOV), '''') IS NOT NULL ' +
+    '   AND COALESCE(m.CANTIDAD_MOV, 0) <> 0 ' +
+    '   AND sk.CODIGO_UNIDAD_SKU IS NOT NULL ' +
+    '   AND NOT EXISTS ( ' +
+    '       SELECT 1 FROM fza_facturas_lineas fx ' +
+    '        WHERE ((fx.CODIGO_EMP_FACLIN = ' +
+    '                  o.CODIGO_EMP_OPCAJA ' +
+    '          AND fx.CODIGO_ALM_FACLIN = ' +
+    '                  o.CODIGO_ALM_OPCAJA ' +
+    '          AND fx.CODIGO_CAJA_FACLIN = ' +
+    '                  o.CODIGO_CAJA_OPCAJA ' +
+    '          AND fx.NUMERO_OPERACION_FACLIN = ' +
+    '                  o.NUMERO_OPERACION_OPCAJA) ' +
+    '          OR (fx.CODIGO_EMP_FACLIN = ' +
+    '                  o.CODIGO_EMP_OPCAJA ' +
+    '          AND fx.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA ' +
+    '          AND fx.NUMERO_FAC_FACLIN = ' +
+    '                  o.NUMERO_FAC_OPCAJA)) ' +
+    '          AND COALESCE(fx.CANTIDAD_FACLIN, 0) > 0 ' +
+    '          AND fx.TIPO_ARTICULO_FACLIN = ''ESTANDAR'' ' +
+    '          AND NULLIF(TRIM( ' +
+    '                fx.CODIGO_UNIDAD_FACLIN), '''') IS NOT NULL) ';
+
+  SQL_VENTAS_REPOSICION_FIN =
+    '       ) v ' +
+    '  LEFT JOIN ( ' +
+    'SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK ' +
+    '  FROM fza_articulos_stockactual ' +
+    ' WHERE CODIGO_ALM_STK = :ALMACEN_DESTINO ' +
+    ' GROUP BY CODIGO_UNIDAD_STK ' +
+    '       ) sd ON sd.CODIGO_UNIDAD_STK = v.SKU ' +
+    '  LEFT JOIN ( ' +
+    'SELECT CODIGO_UNIDAD_STK, SUM(CANTIDAD_STK) AS STOCK ' +
+    '  FROM fza_articulos_stockactual ' +
+    ' WHERE CODIGO_ALM_STK = :ALMACEN_ORIGEN ' +
+    ' GROUP BY CODIGO_UNIDAD_STK ' +
+    '       ) so ON so.CODIGO_UNIDAD_STK = v.SKU ' +
+    ' GROUP BY v.CODIGO_ARTICULO, v.SKU, ' +
+    '          v.CODIGO_PROVEEDOR, v.NOMBRE_PROVEEDOR, ' +
+    '          sd.STOCK, so.STOCK ' +
+    ' ORDER BY v.CODIGO_PROVEEDOR, v.NOMBRE_PROVEEDOR, ' +
+    '          DESCRIPCION, v.SKU';
 
 type
   TRepositorioTraspasoOpeUniDAC = class(
@@ -34,6 +212,8 @@ type
     constructor Create(AConexion: TUniConnection);
     function ListarAlmacenesDestino(
       const AAlmacenPropio: string): TAlmacenesDestinoTraspaso;
+    function ListarVentasReposicion(
+      const AFiltro: TFiltroVentasReposicion): TLineasVentaReposicion;
   end;
 
 constructor TRepositorioTraspasoOpeUniDAC.Create(
@@ -41,6 +221,66 @@ constructor TRepositorioTraspasoOpeUniDAC.Create(
 begin
   inherited Create;
   FConexion := AConexion;
+end;
+
+function TRepositorioTraspasoOpeUniDAC.ListarVentasReposicion(
+  const AFiltro: TFiltroVentasReposicion): TLineasVentaReposicion;
+var
+  iLinea: Integer;
+  oConsulta: TUniQuery;
+begin
+  SetLength(Result, 0);
+  if AFiltro.Desde >= AFiltro.Hasta then
+    raise EArgumentException.Create('AFiltro.Desde/AFiltro.Hasta');
+  if SameText(AFiltro.AlmacenDestino, AFiltro.AlmacenOrigen) then
+    raise EArgumentException.Create('AFiltro.AlmacenOrigen');
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_VENTAS_REPOSICION_FACLIN +
+      SQLExcluirVentaRetirada(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
+      SQL_VENTAS_REPOSICION_MOVIMIENTOS +
+      SQLExcluirVentaRetirada(
+        'o.CODIGO_EMP_OPCAJA',
+        'o.SERIE_FAC_OPCAJA',
+        'o.NUMERO_FAC_OPCAJA') +
+      SQL_VENTAS_REPOSICION_FIN;
+    oConsulta.ParamByName('EMPRESA').AsString := AFiltro.Empresa;
+    oConsulta.ParamByName('ALMACEN_DESTINO').AsString :=
+      AFiltro.AlmacenDestino;
+    oConsulta.ParamByName('ALMACEN_ORIGEN').AsString :=
+      AFiltro.AlmacenOrigen;
+    oConsulta.ParamByName('DESDE').AsDateTime := AFiltro.Desde;
+    oConsulta.ParamByName('HASTA').AsDateTime := AFiltro.Hasta;
+    oConsulta.Open;
+    SetLength(Result, oConsulta.RecordCount);
+    iLinea := 0;
+    while not oConsulta.Eof do
+    begin
+      Result[iLinea].CodigoArticulo :=
+        oConsulta.FieldByName('CODIGO_ARTICULO').AsString;
+      Result[iLinea].Sku := oConsulta.FieldByName('SKU').AsString;
+      Result[iLinea].Descripcion :=
+        oConsulta.FieldByName('DESCRIPCION').AsString;
+      Result[iLinea].CodigoProveedor :=
+        oConsulta.FieldByName('CODIGO_PROVEEDOR').AsString;
+      Result[iLinea].NombreProveedor :=
+        oConsulta.FieldByName('NOMBRE_PROVEEDOR').AsString;
+      Result[iLinea].APedir :=
+        oConsulta.FieldByName('A_PEDIR').AsFloat;
+      Result[iLinea].StockDestino :=
+        oConsulta.FieldByName('STOCK_DESTINO').AsFloat;
+      Result[iLinea].StockOrigen :=
+        oConsulta.FieldByName('STOCK_ORIGEN').AsFloat;
+      Inc(iLinea);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
 end;
 
 function TRepositorioTraspasoOpeUniDAC.ListarAlmacenesDestino(

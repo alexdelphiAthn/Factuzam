@@ -258,7 +258,8 @@ function CargarColorLineaSku(
   const ALecturas: ILecturasArticulosMaterializacion;
   const ASerieSesion, ANumeroSesion, AUsuario: string;
   ALinea: Integer;
-  out AValorColor: string): Integer;
+  out AValorColor: string;
+  out AIdColorBasico: Integer): Integer;
 var
   oColor: TColorLineaMaterializacion;
 begin
@@ -272,28 +273,26 @@ begin
     oColor.Texto,
     oColor.CodigoBasico,
     AUsuario,
-    AValorColor);
+    AValorColor,
+    AIdColorBasico);
 end;
 
 procedure AsociarColorBasicoArticulo(
   AQuery: TUniQuery;
   const ACodigoArticulo, AUsuario: string;
-  AIdColor: Integer);
+  AIdColor, AIdColorBasico: Integer);
 begin
-  if AIdColor > 0 then
+  if (AIdColor > 0) and (AIdColorBasico > 0) then
   begin
     AQuery.SQL.Text :=
       'INSERT IGNORE INTO fza_articulos_atributos_basicos ' +
       '  (CODIGO_ART_AAB, ID_AV_AAB, ID_ATB_AAB, ' +
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
       '   USUARIO_MODIF) ' +
-      'SELECT :art, AV.ID_AV, AV.ID_ATB_AV, ' +
-      '       NOW(), :u, NOW(), :u ' +
-      '  FROM fza_atributos_valores AV ' +
-      ' WHERE AV.ID_AV = :av ' +
-      '   AND AV.ID_ATB_AV IS NOT NULL';
+      'VALUES (:art, :av, :atb, NOW(), :u, NOW(), :u)';
     AQuery.ParamByName('art').AsString := ACodigoArticulo;
     AQuery.ParamByName('av').AsInteger := AIdColor;
+    AQuery.ParamByName('atb').AsInteger := AIdColorBasico;
     AQuery.ParamByName('u').AsString := AUsuario;
     AQuery.ExecSQL;
   end;
@@ -437,11 +436,12 @@ var
   qOperacion: TUniQuery;
   sValorColor: string;
   iIdColor: Integer;
+  iIdColorBasico: Integer;
   iSku: Integer;
 begin
   iIdColor := CargarColorLineaSku(
     AConn, ALecturas, ASerieSes, ANumSes, AUsuario, ALinea,
-    sValorColor);
+    sValorColor, iIdColorBasico);
   oSkus := ALecturas.ConsultarSkusSesion(
     ASerieSes,
     ANumSes,
@@ -450,7 +450,8 @@ begin
   try
     qOperacion.Connection := AConn;
     AsociarColorBasicoArticulo(
-      qOperacion, ACodigoArt, AUsuario, iIdColor);
+      qOperacion, ACodigoArt, AUsuario, iIdColor,
+      iIdColorBasico);
     for iSku := 0 to High(oSkus) do
     begin
       ProcesarSkuSesion(

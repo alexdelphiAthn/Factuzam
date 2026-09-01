@@ -940,6 +940,9 @@ begin
             oConsulta.FieldByName('ID_AV').AsInteger;
           oResultado.TieneColorBasico :=
             not oConsulta.FieldByName('ID_ATB_AV').IsNull;
+          if oResultado.TieneColorBasico then
+            oResultado.IdColorBasico :=
+              oConsulta.FieldByName('ID_ATB_AV').AsInteger;
         end;
       finally
         FreeAndNil(oConsulta);

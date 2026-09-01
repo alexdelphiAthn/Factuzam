@@ -90,11 +90,17 @@ resourcestring
   STicketImporte = 'IMPORTE:';
   STicketFirma = 'Firma:';
   STicketSolicitudTraspaso = 'SOLICITUD DE TRASPASO';
+  STicketReposicionAutomatica = 'REPOSICIÓN AUTOMÁTICA';
   STicketTraspaso = 'TRASPASO';
   STicketOrigen = 'Origen:';
   STicketDestino = 'Destino:';
   STicketEstado = 'Estado:';
+  STicketVentasDesde = 'Ventas desde:';
+  STicketVentasHasta = 'Ventas hasta:';
   STicketArticulos = 'ARTICULOS';
+  STicketProveedor = 'PROVEEDOR:';
+  STicketSinProveedor = 'SIN PROVEEDOR';
+  STicketAPedir = '  A pedir:';
   STicketUnidadesPedidas = '  Unidades pedidas:';
   STicketUnidades = '  Unidades:';
   STicketStockOrigen = '  Stock origen:';

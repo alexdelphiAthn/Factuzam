@@ -84,22 +84,35 @@ begin
   oPerfilTemporal.Usuario := ASolicitud.Usuario;
   oPerfilTemporal := FFabricaConexiones.CrearPerfilAdministrativo(
     oPerfilTemporal);
-  FFabricaConexiones.ConectarTemporal(
-    FConexion,
-    oPerfilTemporal,
-    ASolicitud.ContrasenaConexion);
-  oConsulta := TUniQuery.Create(nil);
+  if FConexion.Connected then
+  begin
+    FConexion.RemoveFromPool;
+    FConexion.Disconnect;
+  end;
   try
-    oConsulta.Connection := FConexion;
-    oConsulta.SQL.Text :=
-      'SELECT SCHEMA_NAME ' +
-      'FROM INFORMATION_SCHEMA.SCHEMATA ' +
-      'WHERE SCHEMA_NAME = :BBDD';
-    oConsulta.ParamByName('BBDD').AsString :=
-      ASolicitud.BaseDatos;
-    oConsulta.Open;
+    FFabricaConexiones.ConectarTemporal(
+      FConexion,
+      oPerfilTemporal,
+      ASolicitud.ContrasenaConexion);
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := FConexion;
+      oConsulta.SQL.Text :=
+        'SELECT SCHEMA_NAME ' +
+        'FROM INFORMATION_SCHEMA.SCHEMATA ' +
+        'WHERE SCHEMA_NAME = :BBDD';
+      oConsulta.ParamByName('BBDD').AsString :=
+        ASolicitud.BaseDatos;
+      oConsulta.Open;
+    finally
+      FreeAndNil(oConsulta);
+    end;
   finally
-    FreeAndNil(oConsulta);
+    if FConexion.Connected then
+    begin
+      FConexion.RemoveFromPool;
+      FConexion.Disconnect;
+    end;
   end;
 end;
 
@@ -120,7 +133,7 @@ begin
       SErrorFormatoCopiaNoCompatible);
   end;
   if not TPoliticaCopiasSeguridad.PuedeRestaurar(
-           False,
+           ASolicitud.AdministradorAutenticado,
            ASolicitud.RutaFichero) then
   begin
     raise EArgumentException.Create(

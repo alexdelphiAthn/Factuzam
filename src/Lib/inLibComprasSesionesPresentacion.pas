@@ -42,6 +42,7 @@ type
     FProveedorCargado: string;
     FModeloPendiente: string;
     FArticuloPendiente: string;
+    FResolucionPendiente: Boolean;
   public
     constructor Create(
       const APlanificadorBusqueda: IPlanificadorDiferido;
@@ -57,8 +58,8 @@ type
     // Si la seleccion del desplegable ya armo este mismo texto se
     // respeta, porque aquella lleva ademas el codigo de articulo.
     procedure RegistrarConfirmacion(const ATexto: string);
-    // Consume la resolucion pendiente. False cuando no hay nada que
-    // resolver; en ese caso los parametros salen vacios.
+    // Consume la resolucion pendiente. Un modelo vacio representa que
+    // el usuario ha borrado el dato y debe invalidarse el codigo derivado.
     function TomarPendiente(
       out AModelo: string;
       out ACodigoArticulo: string): Boolean;
@@ -110,6 +111,7 @@ begin
   FProveedorCargado := cProveedorSinCargar;
   FModeloPendiente := '';
   FArticuloPendiente := '';
+  FResolucionPendiente := False;
 end;
 
 procedure TNucleoBusquedaModeloSesion.RegistrarTecleo;
@@ -123,7 +125,8 @@ procedure TNucleoBusquedaModeloSesion.RegistrarSeleccion(
 begin
   FModeloPendiente := AModelo;
   FArticuloPendiente := ACodigoArticulo;
-  if Trim(FModeloPendiente) <> '' then
+  FResolucionPendiente := Trim(FModeloPendiente) <> '';
+  if FResolucionPendiente then
     FPlanificadorResolucion.Rearmar;
 end;
 
@@ -133,12 +136,13 @@ var
   sTexto: string;
 begin
   sTexto := Trim(ATexto);
-  if (sTexto <> '') and
-     ((not FPlanificadorResolucion.Armado) or
-      (FModeloPendiente <> sTexto)) then
+  if (not FResolucionPendiente) or
+     (not FPlanificadorResolucion.Armado) or
+     (FModeloPendiente <> sTexto) then
   begin
     FModeloPendiente := sTexto;
     FArticuloPendiente := '';
+    FResolucionPendiente := True;
     FPlanificadorResolucion.Rearmar;
   end;
 end;
@@ -151,7 +155,8 @@ begin
   ACodigoArticulo := Trim(FArticuloPendiente);
   FModeloPendiente := '';
   FArticuloPendiente := '';
-  Result := AModelo <> '';
+  Result := FResolucionPendiente;
+  FResolucionPendiente := False;
 end;
 
 function TNucleoBusquedaModeloSesion.DebeRecargarLista(

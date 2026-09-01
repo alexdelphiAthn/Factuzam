@@ -207,6 +207,17 @@ resourcestring
   SErrorTipoRestauracionNoPermitido =
     'Los usuarios no administradores sólo pueden restaurar copias o ' +
     'scripts cifrados (*.crypt).';
+  SErrorRestauracionRequiereAdministrador =
+    'Sólo un administrador puede restaurar una copia desde la aplicación.';
+  SErrorOperacionRestauracionEnCurso =
+    'Hay otra operación en curso. Espere a que termine antes de restaurar.';
+  SPreguntaConfirmarRestauracionAdministrativa =
+    'Se va a restaurar la siguiente copia:' + sLineBreak + sLineBreak +
+    '%s' + sLineBreak + sLineBreak +
+    'La base de datos actual será reemplazada. ¿Desea continuar?';
+  SErrorRelanzarFactuzam =
+    'No se pudo reiniciar Factuzam (código %d).' + sLineBreak +
+    'Abra la aplicación de nuevo para continuar.';
   SPreguntaReemplazarFichero =
     '¿Desea reemplazar el fichero existente?';
   SCopiaSeguridadCancelada = 'La copia se canceló';

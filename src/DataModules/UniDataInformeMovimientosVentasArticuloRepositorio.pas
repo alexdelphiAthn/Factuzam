@@ -114,7 +114,7 @@ begin
       'CALL PRC_GET_MOV_VENTAS_ART(' +
       ':pDESDE, :pHASTA, :pINICMP, :pALM, :pFAM, :pPRV, :pTMP, :pART, ' +
       ':pN1, :pN2, :pN3, :pNFAM, :pSOLOVEN, :pCONIMP, :pORDEN, ' +
-      ':pORDENDESC)';
+      ':pORDENDESC, :pENTGLOBAL)';
     oConsulta.ParamByName('pDESDE').AsDateTime := ACriterios.FechaDesde;
     oConsulta.ParamByName('pHASTA').AsDateTime := ACriterios.FechaHasta;
     if ACriterios.UsarInicioCompras then
@@ -148,6 +148,10 @@ begin
       oConsulta.ParamByName('pORDENDESC').AsString := 'S'
     else
       oConsulta.ParamByName('pORDENDESC').AsString := 'N';
+    if ACriterios.EntradasGlobales then
+      oConsulta.ParamByName('pENTGLOBAL').AsString := 'S'
+    else
+      oConsulta.ParamByName('pENTGLOBAL').AsString := 'N';
     oConsulta.Open;
     Result :=
       TResultadoInformeMovimientosVentasArticuloUniDAC.Create(oConsulta);

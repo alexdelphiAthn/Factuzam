@@ -26,6 +26,8 @@ type
     BaseDatos: string;
     Usuario: string;
     Contrasena: string;
+    TimeoutConexionSeg: Integer;
+    TimeoutComandoSeg: Integer;
   end;
 
   TBackupOptions = record

@@ -28,6 +28,7 @@ type
     ContrasenaConexion: string;
     RutaFichero: string;
     ContrasenaCopia: string;
+    AdministradorAutenticado: Boolean;
   end;
   TPrepararWorkerRestauracionEvent = procedure(
     AWorker: TThread) of object;

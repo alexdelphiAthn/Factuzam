@@ -32,6 +32,10 @@ resourcestring
   SErrorCambiarFormatoSesion =
     'No se puede cambiar el formato distribuido de una sesion ya creada. ' +
     'Crea una sesion nueva con el modo deseado.';
+  SErrorCambiarProveedorSesionConFormula =
+    'No se puede cambiar el proveedor porque la sesión ya tiene líneas y ' +
+    'la fórmula del código usa ModeloProv o CodProv. Cree una sesión nueva ' +
+    'o elimine primero sus líneas.';
   SErrorEmpresaSesionObligatoria =
     'Selecciona una empresa antes de grabar la sesion.';
   SErrorSerieSesionObligatoria =
@@ -223,6 +227,24 @@ resourcestring
   STipoIncidenciaCodigo = 'CODIGO';
   SErrorLineaSesionSinCodigo =
     'La linea no tiene CODIGO_ART_TENTATIVO_SESLIN.';
+  SErrorFormulaCodigoArticuloLlaves =
+    'La fórmula del código de artículo contiene llaves sin cerrar o ' +
+    'mal colocadas.';
+  SErrorFormulaCodigoArticuloParametro =
+    'El parámetro "%s" no existe en la fórmula del código de artículo. ' +
+    'Use CodFamilia, ContadorFamilia, ModeloProv o CodProv entre llaves.';
+  SErrorFormulaCodigoArticuloSinParametros =
+    'La fórmula del código de artículo debe incluir al menos uno de estos ' +
+    'parámetros entre llaves: CodFamilia, ContadorFamilia, ModeloProv o ' +
+    'CodProv.';
+  SErrorFormulaCodigoArticuloDatos =
+    'No están informados todos los datos que requiere la fórmula del ' +
+    'código de artículo.';
+  SErrorFormulaCodigoArticuloResultadoVacio =
+    'La fórmula ha generado un código de artículo vacío.';
+  SErrorFormulaCodigoArticuloLongitud =
+    'La fórmula ha generado el código "%s" con %d caracteres. El máximo ' +
+    'permitido es %d.';
   STipoIncidenciaDescripcion = 'DESCRIPCION';
   SErrorLineaSesionSinDescripcion =
     'Linea sin descripcion (codigo %s).';

@@ -426,12 +426,17 @@ type
     procedure tvPrvKitsDblClick(Sender: TObject);
     procedure dbcLinColorBasicoPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure dbcLinColorBasicoPropertiesValidate(Sender: TObject;
+                var DisplayValue: Variant; var ErrorText: TCaption;
+                var Error: Boolean);
     procedure dbcLinPrecioCompraPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinTallasPropertiesButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
     procedure dbcLinFamiliaPropertiesEditValueChanged(Sender: TObject);
     procedure dbcLinCodArtPropertiesEditValueChanged(Sender: TObject);
-    procedure dbcLinRefPrvPropertiesEditValueChanged(Sender: TObject);
+    procedure dbcLinRefPrvPropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption;
+      var Error: Boolean);
     procedure cbbTipoIvaDefectoPropertiesChange(Sender: TObject);
     procedure chkVariosTiposIvaPropertiesChange(Sender: TObject);
     procedure chkRecargoComprasPropertiesChange(Sender: TObject);
@@ -891,6 +896,15 @@ begin
     begin
       FCopiaLineas.PrepararCopiaPendiente(
         AModelo, ALineaOrigen, AColorTexto, AColorBasico, AMargen);
+    end;
+  EntornoModelo.GenerarCodigoArticulo :=
+    function(
+      AOrigen: TOrigenGeneracionCodigoArticuloSesion): Boolean
+    begin
+      if AOrigen = ogcaFamilia then
+        Result := Dmm.GenerarCodigoArticuloTrasCambiarFamilia
+      else
+        Result := Dmm.GenerarCodigoArticuloTrasCambiarModelo;
     end;
   EntornoModelo.RegistrarAviso :=
     procedure(ATexto: string)
@@ -1405,11 +1419,25 @@ end;
 
 procedure TfrmMtoComprasSesiones.unqrySesionLinBeforePostHook(
   DataSet: TDataSet);
+var
+  sCodigo: string;
+  sLiteral: string;
 begin
   // Respaldo para cambios programaticos o controles que no hayan publicado
   // un DataChange antes de confirmar el registro.
   if (FProveedor <> nil) and (not FAplicandoColorOcr) then
     FProveedor.AsignarColorBasicoCoincidente;
+  if FProveedor <> nil then
+  begin
+    sLiteral := DataSet.FieldByName(
+      'CODIGO_ATB_COLOR_SESLIN').AsString;
+    if not FProveedor.ResolverColorBasicoLiteral(sLiteral, sCodigo) then
+      raise Exception.CreateFmt(
+        SErrorColorBasicoCompraNoExiste, [sLiteral]);
+    if not SameText(sLiteral, sCodigo) then
+      DataSet.FieldByName(
+        'CODIGO_ATB_COLOR_SESLIN').AsString := sCodigo;
+  end;
   Dmm.unqrySesionLinBeforePost(DataSet);
 end;
 
@@ -1910,11 +1938,15 @@ begin
   FModeloPrv.ResolverCodigoTecleado(Sender);
 end;
 
-procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesEditValueChanged(
-  Sender: TObject);
+procedure TfrmMtoComprasSesiones.dbcLinRefPrvPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant;
+  var ErrorText: TCaption; var Error: Boolean);
 begin
   inherited;
-  FModeloPrv.ResolverReferenciaTecleada(Sender);
+  Error := False;
+  ErrorText := '';
+  FModeloPrv.ConfirmarReferenciaTecleada(
+    VarToStr(DisplayValue));
 end;
 
 procedure TfrmMtoComprasSesiones.tvLineasFocusedRecordChanged(
@@ -1974,6 +2006,28 @@ procedure TfrmMtoComprasSesiones.dbcLinColorBasicoPropertiesButtonClick(
   Sender: TObject; AButtonIndex: Integer);
 begin
   FProveedor.ElegirColorBasico(Sender);
+end;
+
+procedure TfrmMtoComprasSesiones.dbcLinColorBasicoPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+var
+  sCodigo: string;
+  sLiteral: string;
+begin
+  inherited;
+  if (not Error) and (FProveedor <> nil) then
+  begin
+    sLiteral := Trim(VarToStr(DisplayValue));
+    if FProveedor.ResolverColorBasicoLiteral(sLiteral, sCodigo) then
+      DisplayValue := sCodigo
+    else
+    begin
+      Error := True;
+      ErrorText := Format(
+        SErrorColorBasicoCompraNoExiste, [sLiteral]);
+    end;
+  end;
 end;
 
 // ===========================================================================

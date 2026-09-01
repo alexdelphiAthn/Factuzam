@@ -64,6 +64,9 @@ uses
   inMtoConfiguracionInyeccionRaiz,
   inMtoPrincipalPresentacionInicio;
 
+const
+  WM_REINICIAR_RESTAURACION = WM_USER + 121;
+
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   TfrmMtoPrincipal = class(
@@ -272,6 +275,7 @@ type
     FProgressLabel: TcxLabel;
     FReiniciando: Boolean;
     FRelanzarLoginPendiente: Boolean;
+    FRutaRestauracionPendiente: string;
     FFalloCargaPermisosAvisado: Boolean;
     FGestorExcepciones: IGestorExcepcionesAplicacion;
     FFabricaConexiones: IFabricaConexionesUniDAC;
@@ -286,6 +290,8 @@ type
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
     // (multicaster de la VCL), p.ej. el generador de procesos.
     FAppEvents: TApplicationEvents;
+    procedure WMReiniciarRestauracion(
+      var AMensaje: TMessage); message WM_REINICIAR_RESTAURACION;
     procedure PrepararContextoAplicacion(
       const AContextoSesion: IContextoSesionAplicacion;
       out AIdentidad: TIdentidadSesion;
@@ -324,6 +330,7 @@ type
       out ARutaFichero: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
+    procedure PrepararReinicioRestauracion;
     function ConsultarDecisionCierrePrestaShop:
       TDecisionCierrePrestaShop;
     procedure RelanzarLoginSiPendiente;
@@ -398,7 +405,10 @@ begin
   Result.CasoUso := AFormulario.FCoordinadorOperaciones;
   Result.RutaCopias := AFormulario.ParametrosApp.GetPath(
     'appDirCopiasSeguridad');
-  Result.Visible := AFormulario.mnuEjecutarScript.Visible;
+  Result.EsAdministrador :=
+    AFormulario.ContextoSesion.Identidad.EsAdministrador;
+  Result.Visible := AFormulario.mnuEjecutarScript.Visible and
+    Result.EsAdministrador;
   Result.ComprobarDDL :=
     function(const ASQL: string): Boolean
     begin
@@ -407,10 +417,10 @@ begin
         '\b(CREATE|ALTER|DROP|TRUNCATE|RENAME)\b',
         [roIgnoreCase]);
     end;
-  Result.CrearCopiaPrevia :=
-    function: Boolean
+  Result.SolicitarCopiaPrevia :=
+    function(out ARutaFichero: string): Boolean
     begin
-      Result := AFormulario.CrearCopiaPreviaScript;
+      Result := AFormulario.SolicitarDestinoCopia(ARutaFichero);
     end;
 end;
 
@@ -444,6 +454,10 @@ resourcestring
     'copiaseguridad%s';
   SEncabezadoRestauracionCopiaSeguridad =
     '-- RESTAURACIÓN DE COPIA DE SEGURIDAD --';
+  SInfoReinicioRestauracion =
+    'Factuzam se reiniciará para restaurar la copia sin conexiones ni ' +
+    'procesos activos. Identifíquese de nuevo como administrador para ' +
+    'continuar.';
 
 type
   TClaseFrmBase = class of TfrmBase;
@@ -668,6 +682,11 @@ end;
 procedure TfrmMtoPrincipal.ConfigurarPresentacionPrincipal;
 begin
   AplicarPermisosMenu;
+  if not ContextoSesion.Identidad.EsAdministrador then
+  begin
+    mnuEjecutarScript.Visible := False;
+    mnuEjecutarScript.Enabled := False;
+  end;
   // Visibilidad inicial del panel de monitor SQL: ya no la decide solo el
   // {$IFDEF DEBUG}. AplicarModosDepuracion la sincronizará con los flags
   // appModoDebug / appModoDebugSQL que acaba de cargar el servicio.
@@ -922,6 +941,8 @@ procedure TfrmMtoPrincipal.FinalizarOperacion(
   const AError: string;
   ALogBuffer: TStringList);
 var
+  bCopiaPreviaRestauracion: Boolean;
+  bReiniciarRestauracion: Boolean;
   LogForm: TfrmMtoModalScriptLog;
 begin
   if Assigned(FProgressBar) then
@@ -929,7 +950,23 @@ begin
   if Assigned(FProgressLabel) then
     FProgressLabel.Visible := False;
   pnlPPBottom.Visible := False;
-  if (AResultado = rcsFallida) and (AError = '') then
+  bCopiaPreviaRestauracion :=
+    (ATipo = toaCopiaSeguridad) and
+    (FRutaRestauracionPendiente <> '');
+  bReiniciarRestauracion :=
+    bCopiaPreviaRestauracion and
+    (AResultado = rcsCompletada);
+  if bCopiaPreviaRestauracion then
+  begin
+    FreeAndNil(ALogBuffer);
+    if AResultado = rcsCancelada then
+      ShowMessage(SOperacionCancelada)
+    else if AResultado = rcsFallida then
+      ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
+    if not bReiniciarRestauracion then
+      FRutaRestauracionPendiente := '';
+  end
+  else if (AResultado = rcsFallida) and (AError = '') then
     FreeAndNil(ALogBuffer)
   else if ATipo = toaCopiaSeguridad then
   begin
@@ -966,6 +1003,14 @@ begin
       else
         ShowMessage(Format(SErrorEjecutarScript, [AError]));
     end;
+  end;
+  if bReiniciarRestauracion then
+  begin
+    PostMessage(
+      Handle,
+      WM_REINICIAR_RESTAURACION,
+      0,
+      0);
   end;
 end;
 
@@ -1037,6 +1082,24 @@ begin
     Result := FCoordinadorOperaciones.CrearCopia(
       sRutaFichero,
       '');
+end;
+
+procedure TfrmMtoPrincipal.PrepararReinicioRestauracion;
+begin
+  if FRutaRestauracionPendiente <> '' then
+  begin
+    ShowMessage(SInfoReinicioRestauracion);
+    FReiniciando := True;
+    FRelanzarLoginPendiente := True;
+    Close;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.WMReiniciarRestauracion(
+  var AMensaje: TMessage);
+begin
+  PrepararReinicioRestauracion;
+  AMensaje.Result := 0;
 end;
 
 function TfrmMtoPrincipal.CrearCopiaPreviaScriptSoporte: Boolean;
@@ -1132,6 +1195,11 @@ begin
     sNombreIni := ExtractFileName(
       RutaPerfilConexionAplicacion(GetUserFolder));
     sParametros := '"' + sNombreIni + '" /relogin';
+    if FRutaRestauracionPendiente <> '' then
+    begin
+      sParametros := sParametros + ' /restaurar "' +
+        FRutaRestauracionPendiente + '"';
+    end;
     iResultado := ShellExecute(
       0,
       'open',
@@ -1140,9 +1208,15 @@ begin
       nil,
       SW_SHOWNORMAL);
     if NativeInt(iResultado) <= 32 then
+    begin
       RegistroLog.RegistrarError(
         'No se pudo relanzar Factuzam para solicitar el login. Código: ' +
         IntToStr(NativeInt(iResultado)));
+      ShowMessage(Format(
+        SErrorRelanzarFactuzam,
+        [NativeInt(iResultado)]));
+    end;
+    FRutaRestauracionPendiente := '';
   end;
 end;
 
@@ -1169,7 +1243,6 @@ begin
     FComposicion.RegistrarCierreFiscal;
     FComposicion.DetenerProcesosSegundoPlano;
   end;
-  RelanzarLoginSiPendiente;
   // Las ventas flotantes conservan referencias a servicios de la sesion.
   // Deben destruirse antes de liberar la composicion que los proporciona.
   LiberarOperacionesCaja;
@@ -1207,6 +1280,7 @@ begin
       FAppEvents.OnMessage := nil;
     end;
     FGestorExcepciones := nil;
+    RelanzarLoginSiPendiente;
   finally
     RegistroLog.RegistrarInformacion('Ventana principal Cerrada');
     Action := caFree;
@@ -1253,6 +1327,7 @@ begin
   begin
     FRelanzarLoginPendiente := False;
     FReiniciando := False;
+    FRutaRestauracionPendiente := '';
   end;
 end;
 
@@ -1487,9 +1562,37 @@ begin
 end;
 
 procedure TfrmMtoPrincipal.mnuEjecutarScriptClick(Sender: TObject);
+var
+  oPreparacion: TPreparacionRestauracionCopiasVcl;
 begin
-  TCoordinadorRestauracionCopiasVcl.Ejecutar(
-    CrearContextoRestauracionCopiasVcl(Self));
+  if Assigned(FCoordinadorOperaciones) and
+     FCoordinadorOperaciones.EnCurso then
+  begin
+    ShowMessage(SErrorOperacionRestauracionEnCurso);
+  end
+  else if ContextoSesion.Identidad.EsAdministrador and
+     TCoordinadorRestauracionCopiasVcl.Ejecutar(
+       CrearContextoRestauracionCopiasVcl(Self),
+       oPreparacion) then
+  begin
+    FRutaRestauracionPendiente :=
+      oPreparacion.RutaRestauracion;
+    try
+      if oPreparacion.RutaCopiaPrevia <> '' then
+      begin
+        FCoordinadorOperaciones.IniciarCopia(
+          oPreparacion.RutaCopiaPrevia,
+          '');
+      end
+      else
+        PrepararReinicioRestauracion;
+    except
+      FRutaRestauracionPendiente := '';
+      FReiniciando := False;
+      FRelanzarLoginPendiente := False;
+      raise;
+    end;
+  end;
 end;
 
 procedure TfrmMtoPrincipal.tmr1Timer(Sender: TObject);

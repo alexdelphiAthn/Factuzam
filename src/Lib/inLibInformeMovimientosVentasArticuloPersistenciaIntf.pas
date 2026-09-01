@@ -28,6 +28,7 @@ type
     FechaHasta: TDateTime;
     UsarInicioCompras: Boolean;
     InicioCompras: TDateTime;
+    EntradasGlobales: Boolean;
     Almacenes: string;
     Familias: string;
     Proveedores: string;
