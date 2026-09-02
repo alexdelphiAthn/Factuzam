@@ -2624,29 +2624,8 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
-var
-  VieneDeDep: string;
-  bEliminar: Boolean;
 begin
-  bEliminar := True;
-  // NUEVO: Bloqueo de borrado
-  if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
-  begin
-    VieneDeDep := DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
-    if (VieneDeDep = 'S') or (VieneDeDep = 'A') then
-    begin
-      ShowMessage(SErrorLineaDepositoCajaNoEliminable);
-      bEliminar := False;
-    end;
-  end;
-  if bEliminar then
-  begin
-    if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
-      DatosCaja.cdsLineas.Cancel
-    else if DatosCaja.cdsLineas.State = dsBrowse then
-      DatosCaja.cdsLineas.Delete;
-    FEditorLineas.AsegurarLineaNueva;
-  end;
+  FEditorLineas.CancelarLinea;
 end;
 
 procedure TfrmMtoOpeCaja.actGuardarLayoutExecute(Sender: TObject);

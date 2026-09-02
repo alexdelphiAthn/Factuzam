@@ -82,7 +82,7 @@ type
       lblArt        : TcxLabel;
       btnArt        : TcxButtonEdit;
       lblDescr      : TcxLabel;
-      mInfoCabecera : TcxMemo;
+      lblInfo       : TcxLabel;
       lblLetreroTemp: TcxLabel;
       imgFoto       : TImage;
     pnlFiltros    : TPanel;
@@ -939,40 +939,22 @@ const
   ANCHO_TEXTO_MIN   = 480;
   ANCHO_FOTO_MIN    = 180;
 var
-  iIzquierda    : Integer;
-  iAlto         : Integer;
-  iLimiteInferior: Integer;
-  iMargen       : Integer;
-  iAnchoTextoMin: Integer;
-  iAnchoFotoMin : Integer;
+  iIzquierda : Integer;
+  iAlto      : Integer;
 begin
-  iMargen := MulDiv(MARGEN_FOTO, CurrentPPI,
-    USER_DEFAULT_SCREEN_DPI);
-  iAnchoTextoMin := MulDiv(ANCHO_TEXTO_MIN, CurrentPPI,
-    USER_DEFAULT_SCREEN_DPI);
-  iAnchoFotoMin := MulDiv(ANCHO_FOTO_MIN, CurrentPPI,
-    USER_DEFAULT_SCREEN_DPI);
   iIzquierda := pnlCabecera.ClientWidth * PORCENTAJE_INICIO div 100;
-  if iIzquierda < iAnchoTextoMin then
-    iIzquierda := iAnchoTextoMin;
-  if iIzquierda > pnlCabecera.ClientWidth - iAnchoFotoMin then
-    iIzquierda := pnlCabecera.ClientWidth - iAnchoFotoMin;
-  iLimiteInferior := pnlCabecera.ClientHeight - iMargen;
+  if iIzquierda < ANCHO_TEXTO_MIN then
+    iIzquierda := ANCHO_TEXTO_MIN;
+  if iIzquierda > pnlCabecera.ClientWidth - ANCHO_FOTO_MIN then
+    iIzquierda := pnlCabecera.ClientWidth - ANCHO_FOTO_MIN;
+  iAlto := pnlCabecera.ClientHeight - (MARGEN_FOTO * 2);
   if lblLetreroTemp.Visible then
-    Dec(iLimiteInferior, lblLetreroTemp.Height);
-
-  // El texto largo se desplaza dentro del memo, sin invadir los filtros
-  // ni quitar espacio a la rejilla al cambiar de articulo.
-  iAlto := iLimiteInferior - mInfoCabecera.Top;
-  if iAlto < 0 then
-    iAlto := 0;
-  mInfoCabecera.SetBounds(mInfoCabecera.Left, mInfoCabecera.Top,
-    iIzquierda - mInfoCabecera.Left - iMargen, iAlto);
-  iAlto := iLimiteInferior - iMargen;
+    iAlto := iAlto - lblLetreroTemp.Height;
   imgFoto.SetBounds(iIzquierda,
-                    iMargen,
-                    pnlCabecera.ClientWidth - iIzquierda - iMargen,
+                    MARGEN_FOTO,
+                    pnlCabecera.ClientWidth - iIzquierda - MARGEN_FOTO,
                     iAlto);
+  lblInfo.Width := iIzquierda - lblInfo.Left - MARGEN_FOTO;
 end;
 
 // En la consulta de stock la foto dispone de una zona amplia: se carga
@@ -1005,13 +987,12 @@ end;
 // proveedores). El formato lo decide inLibStockConsultaInfo.
 procedure TfrmStockConsulta.CargarInfoCabecera;
 begin
-  mInfoCabecera.Lines.Clear;
+  lblInfo.Caption := '';
   if FVista.HayArticulo then
-    mInfoCabecera.Lines.Text := FormatearInfoCabeceraStock(
+    lblInfo.Caption := FormatearInfoCabeceraStock(
       FDependencias.InfoCabecera.Cargar(FVista.CodigoArticulo),
       ParametrosCaja.TarifaDefecto,
       FVista.VerCoste);
-  mInfoCabecera.SelStart := 0;
 end;
 
 // ---------------------------------------------------------------------------

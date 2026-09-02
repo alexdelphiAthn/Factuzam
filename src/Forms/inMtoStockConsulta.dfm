@@ -22,7 +22,6 @@
     Height = 256
     Align = alTop
     BevelOuter = bvNone
-    Constraints.MinHeight = 256
     TabOrder = 0
     ExplicitWidth = 896
     DesignSize = (
@@ -86,20 +85,14 @@
       TabOrder = 4
       Transparent = True
     end
-    object mInfoCabecera: TcxMemo
+    object lblInfo: TcxLabel
       Left = 16
       Top = 118
-      Anchors = [akLeft, akTop, akRight, akBottom]
-      ParentColor = True
-      Properties.ReadOnly = True
-      Properties.ScrollBars = ssVertical
+      Anchors = [akLeft, akTop, akRight]
       Properties.WordWrap = True
-      Style.BorderStyle = ebsNone
-      StyleFocused.BorderStyle = ebsNone
-      StyleHot.BorderStyle = ebsNone
-      StyleReadOnly.BorderStyle = ebsNone
       TabOrder = 5
-      Height = 130
+      Transparent = True
+      ExplicitWidth = 459
       Width = 461
     end
     object lblLetreroTemp: TcxLabel
