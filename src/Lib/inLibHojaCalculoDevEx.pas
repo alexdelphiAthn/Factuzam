@@ -23,9 +23,9 @@ interface
 uses
   dxSpreadSheet, dxSpreadSheetCore, Winapi.Windows, Winapi.Messages,
   System.SysUtils, System.Variants, cxGraphics,
-  System.Classes, Vcl.Graphics, System.Types,
+  System.Classes, System.Generics.Collections, Vcl.Graphics, System.Types,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics, dxShellDialogs,
-  dxSpreadSheetStyles, dxHashUtils,
+  dxSpreadSheetStyles, dxSpreadSheetCoreStyles, dxHashUtils,
   inLibHojaCalculoIntf;
 
 type
@@ -35,12 +35,18 @@ type
   TEscritorHojaCalculoDevEx = class(
     TInterfacedObject,
     IEscritorHojaCalculo,
+    IEscritorHojaCalculoConFormato,
     IFormateadorHojaCalculo,
     IGuardadorHojaCalculo,
     ILectorHojaCalculo)
   private
     FControl: TdxSpreadSheet;
+    FEstilosEscritura:
+      TDictionary<string, TdxSpreadSheetCellStyleHandle>;
     FTabla: TdxSpreadSheetTableView;
+    function ClaveEstiloEscritura(ANegrita: Boolean;
+      AAlineacion: TAlineacionCelda; const AFormato: string): string;
+    procedure LimpiarEstilosEscritura;
     function MapAlineacion(
       AAlineacion: TAlineacionCelda): TdxSpreadSheetDataAlignHorz;
     function MapBorde(AEstilo: TEstiloBorde): TdxSpreadSheetCellBorderStyle;
@@ -48,6 +54,7 @@ type
   public
     constructor Create(const AControl: TdxSpreadSheet);
     constructor CreateTabla(const ATabla: TdxSpreadSheetTableView);
+    destructor Destroy; override;
     // Operaciones dx de bajo nivel (fuente única). Reciben tipos dx tal cual
     // para que los shims de inLibDevExcel deleguen sin mapeo inverso.
     class procedure MezclarDx(const ATabla: TdxSpreadSheetTableView;
@@ -70,6 +77,13 @@ type
       const AFormula: string);
     procedure Combinar(AFila, ACol, ANumFilas, ANumCols: Integer);
     function CeldaExiste(AFila, ACol: Integer): Boolean;
+    // IEscritorHojaCalculoConFormato
+    procedure EscribirConFormato(
+      AFila, ACol: Integer;
+      const AValor: Variant;
+      ANegrita: Boolean;
+      AAlineacion: TAlineacionCelda;
+      const AFormato: string);
     // IFormateadorHojaCalculo
     procedure DibujarCuadro(AF1, AC1, AF2, AC2: Integer;
       AEstilo: TEstiloBorde);
@@ -186,6 +200,8 @@ constructor TEscritorHojaCalculoDevEx.Create(const AControl: TdxSpreadSheet);
 begin
   inherited Create;
   FControl := AControl;
+  FEstilosEscritura :=
+    TDictionary<string, TdxSpreadSheetCellStyleHandle>.Create;
   // La hoja se crea al llamar a NuevaHoja (patrón de los exportadores).
   FTabla := nil;
 end;
@@ -195,7 +211,36 @@ constructor TEscritorHojaCalculoDevEx.CreateTabla(
 begin
   inherited Create;
   FControl := nil;
+  FEstilosEscritura :=
+    TDictionary<string, TdxSpreadSheetCellStyleHandle>.Create;
   FTabla := ATabla;
+end;
+
+destructor TEscritorHojaCalculoDevEx.Destroy;
+begin
+  LimpiarEstilosEscritura;
+  FreeAndNil(FEstilosEscritura);
+  inherited Destroy;
+end;
+
+function TEscritorHojaCalculoDevEx.ClaveEstiloEscritura(
+  ANegrita: Boolean; AAlineacion: TAlineacionCelda;
+  const AFormato: string): string;
+begin
+  Result := IntToStr(Ord(ANegrita)) + ':' +
+    IntToStr(Ord(AAlineacion)) + ':' + AFormato;
+end;
+
+procedure TEscritorHojaCalculoDevEx.LimpiarEstilosEscritura;
+var
+  oEstilo: TdxSpreadSheetCellStyleHandle;
+begin
+  if FEstilosEscritura <> nil then
+  begin
+    for oEstilo in FEstilosEscritura.Values do
+      oEstilo.Release;
+    FEstilosEscritura.Clear;
+  end;
 end;
 
 function TEscritorHojaCalculoDevEx.MapAlineacion(
@@ -236,6 +281,7 @@ procedure TEscritorHojaCalculoDevEx.NuevaHoja(const ANombre: string);
 begin
   if FControl = nil then
     raise EHojaCalculo.Create(SErrorControlHojaCalculoObligatorio);
+  LimpiarEstilosEscritura;
   FControl.ClearAll;
   FTabla := FControl.AddSheet(ANombre, TdxSpreadSheetTableView)
     as TdxSpreadSheetTableView;
@@ -259,6 +305,53 @@ procedure TEscritorHojaCalculoDevEx.Escribir(
 begin
   AsegurarTabla;
   FTabla.CreateCell(AFila, ACol).AsVariant := AValor;
+end;
+
+procedure TEscritorHojaCalculoDevEx.EscribirConFormato(
+  AFila, ACol: Integer;
+  const AValor: Variant;
+  ANegrita: Boolean;
+  AAlineacion: TAlineacionCelda;
+  const AFormato: string);
+var
+  oCelda: TdxSpreadSheetCell;
+  oEstilo: TdxSpreadSheetCellStyle;
+  oEstiloHandle: TdxSpreadSheetCellStyleHandle;
+  sClaveEstilo: string;
+begin
+  AsegurarTabla;
+  oCelda := FTabla.CreateCell(AFila, ACol);
+  oCelda.AsVariant := AValor;
+  sClaveEstilo := ClaveEstiloEscritura(
+    ANegrita, AAlineacion, AFormato);
+  oEstiloHandle := nil;
+  if FEstilosEscritura.TryGetValue(sClaveEstilo, oEstiloHandle) then
+    oCelda.StyleHandle := oEstiloHandle
+  else
+  begin
+    oEstilo := oCelda.Style;
+    oEstilo.BeginUpdate;
+    try
+      if ANegrita then
+        oEstilo.Font.Style := [fsBold]
+      else
+        oEstilo.Font.Style := [];
+      oEstilo.AlignHorz := MapAlineacion(AAlineacion);
+      oEstilo.AlignVert := ssavCenter;
+      if AFormato <> '' then
+        oEstilo.DataFormat.FormatCode := AFormato;
+    finally
+      oEstilo.EndUpdate;
+    end;
+    oEstiloHandle := oCelda.StyleHandle;
+    oEstiloHandle.AddRef;
+    try
+      FEstilosEscritura.Add(sClaveEstilo, oEstiloHandle);
+    except
+      oEstiloHandle.Release;
+      raise;
+    end;
+  end;
 end;
 
 procedure TEscritorHojaCalculoDevEx.EscribirFormula(

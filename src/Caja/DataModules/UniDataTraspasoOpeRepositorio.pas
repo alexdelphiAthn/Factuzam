@@ -163,24 +163,30 @@ const
     '   AND COALESCE(m.CANTIDAD_MOV, 0) <> 0 ' +
     '   AND sk.CODIGO_UNIDAD_SKU IS NOT NULL ' +
     '   AND NOT EXISTS ( ' +
-    '       SELECT 1 FROM fza_facturas_lineas fx ' +
-    '        WHERE ((fx.CODIGO_EMP_FACLIN = ' +
+    '       SELECT 1 FROM fza_facturas_lineas fxo ' +
+    '        WHERE fxo.CODIGO_EMP_FACLIN = ' +
     '                  o.CODIGO_EMP_OPCAJA ' +
-    '          AND fx.CODIGO_ALM_FACLIN = ' +
+    '          AND fxo.CODIGO_ALM_FACLIN = ' +
     '                  o.CODIGO_ALM_OPCAJA ' +
-    '          AND fx.CODIGO_CAJA_FACLIN = ' +
+    '          AND fxo.CODIGO_CAJA_FACLIN = ' +
     '                  o.CODIGO_CAJA_OPCAJA ' +
-    '          AND fx.NUMERO_OPERACION_FACLIN = ' +
-    '                  o.NUMERO_OPERACION_OPCAJA) ' +
-    '          OR (fx.CODIGO_EMP_FACLIN = ' +
-    '                  o.CODIGO_EMP_OPCAJA ' +
-    '          AND fx.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA ' +
-    '          AND fx.NUMERO_FAC_FACLIN = ' +
-    '                  o.NUMERO_FAC_OPCAJA)) ' +
-    '          AND COALESCE(fx.CANTIDAD_FACLIN, 0) > 0 ' +
-    '          AND fx.TIPO_ARTICULO_FACLIN = ''ESTANDAR'' ' +
+    '          AND fxo.NUMERO_OPERACION_FACLIN = ' +
+    '                  o.NUMERO_OPERACION_OPCAJA ' +
+    '          AND COALESCE(fxo.CANTIDAD_FACLIN, 0) > 0 ' +
+    '          AND fxo.TIPO_ARTICULO_FACLIN = ''ESTANDAR'' ' +
     '          AND NULLIF(TRIM( ' +
-    '                fx.CODIGO_UNIDAD_FACLIN), '''') IS NOT NULL) ';
+    '                fxo.CODIGO_UNIDAD_FACLIN), '''') IS NOT NULL) ' +
+    '   AND NOT EXISTS ( ' +
+    '       SELECT 1 FROM fza_facturas_lineas fxf ' +
+    '        WHERE fxf.CODIGO_EMP_FACLIN = ' +
+    '                  o.CODIGO_EMP_OPCAJA ' +
+    '          AND fxf.SERIE_FAC_FACLIN = o.SERIE_FAC_OPCAJA ' +
+    '          AND fxf.NUMERO_FAC_FACLIN = ' +
+    '                  o.NUMERO_FAC_OPCAJA ' +
+    '          AND COALESCE(fxf.CANTIDAD_FACLIN, 0) > 0 ' +
+    '          AND fxf.TIPO_ARTICULO_FACLIN = ''ESTANDAR'' ' +
+    '          AND NULLIF(TRIM( ' +
+    '                fxf.CODIGO_UNIDAD_FACLIN), '''') IS NOT NULL) ';
 
   SQL_VENTAS_REPOSICION_FIN =
     '       ) v ' +
@@ -222,7 +228,7 @@ const
     '   AND acd.ID_AV_ACD = av.ID_AV ' +
     ' WHERE sk.CODIGO_UNIDAD_SKU = v.SKU ' +
     '   AND sk.CODIGO_ART_SKU = v.CODIGO_ARTICULO ' +
-    '       ), 2147483647), v.SKU';
+    '       ), 2147483647), v.SKU, v.NOMBRE_PROVEEDOR';
 
 type
   TRepositorioTraspasoOpeUniDAC = class(

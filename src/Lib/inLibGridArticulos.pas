@@ -49,7 +49,8 @@ procedure SincronizarVisibilidadAtributosGrid(
   AVista: TcxGridDBTableView;
   AColumnaNumeroAtributos: TcxGridDBColumn;
   const AColumnasAtributo: array of TcxGridDBColumn;
-  AMinimoAtributos: Integer = 0);
+  AMinimoAtributos: Integer = 0;
+  AMaximoAtributos: Integer = 5);
 
 type
   // Nombres de los campos del cds que usa la controladora. Cada host los
@@ -98,6 +99,7 @@ type
     FTimerPopup: TTimer;
     FTimerVisibilidad: TTimer;
     FOrdenPopupPend: Integer;
+    FMaximoAtributosVisibles: Integer;
     // True mientras AbrirPaletaOrden esta mostrando el editor/paleta, para que
     // el OnEnter del editor (AtributoEnter) no reprograme otra apertura.
     FEnPaleta: Boolean;
@@ -125,6 +127,7 @@ type
                                      APrevFocusedItem,
                                   AFocusedItem: TcxCustomGridTableItem);
     procedure SetAlmacenStock(const AValue: string);
+    procedure SetMaximoAtributosVisibles(AValue: Integer);
     // Si el documento YA tiene una linea con ese SKU cerrado, suma 1
     // a su cantidad y devuelve True (la lectura queda consumida sin
     // crear otra linea igual). La linea en blanco no casa porque su
@@ -218,6 +221,9 @@ type
     // Admitir codigos fuera de catalogo como linea libre (ver campo).
     property AceptarNoCatalogo: Boolean read FAceptarNoCatalogo
                                         write FAceptarNoCatalogo;
+    // Permite que una pantalla limite la presentacion sin alterar el SKU.
+    property MaximoAtributosVisibles: Integer
+      read FMaximoAtributosVisibles write SetMaximoAtributosVisibles;
   end;
 
 implementation
@@ -272,7 +278,8 @@ procedure SincronizarVisibilidadAtributosGrid(
   AVista: TcxGridDBTableView;
   AColumnaNumeroAtributos: TcxGridDBColumn;
   const AColumnasAtributo: array of TcxGridDBColumn;
-  AMinimoAtributos: Integer);
+  AMinimoAtributos: Integer;
+  AMaximoAtributos: Integer);
 var
   iColumna: Integer;
   iMaximo: Integer;
@@ -281,6 +288,10 @@ begin
   begin
     iMaximo := MaximoAtributosVisiblesGrid(
       AVista, AColumnaNumeroAtributos, AMinimoAtributos);
+    if AMaximoAtributos < 0 then
+      iMaximo := 0
+    else if iMaximo > AMaximoAtributos then
+      iMaximo := AMaximoAtributos;
     AVista.BeginUpdate;
     try
       for iColumna := Low(AColumnasAtributo) to
@@ -320,6 +331,7 @@ begin
   if not Assigned(FLookup) then
     raise Exception.Create(SErrorLookupAtributosNoInyectado);
   FOrdenPopupPend := 0;
+  FMaximoAtributosVisibles := 5;
   FTimerPopup := TTimer.Create(nil);
   FTimerPopup.Enabled := False;
   FTimerPopup.Interval := 1;
@@ -576,7 +588,23 @@ procedure TGridArticulosLineas.RefrescarVisibilidadAtributos(
   AMinimoAtributos: Integer);
 begin
   SincronizarVisibilidadAtributosGrid(
-    FView, FColNumeroAtributos, FColAtributo, AMinimoAtributos);
+    FView,
+    FColNumeroAtributos,
+    FColAtributo,
+    AMinimoAtributos,
+    FMaximoAtributosVisibles);
+end;
+
+procedure TGridArticulosLineas.SetMaximoAtributosVisibles(
+  AValue: Integer);
+begin
+  if AValue < 0 then
+    FMaximoAtributosVisibles := 0
+  else if AValue > 5 then
+    FMaximoAtributosVisibles := 5
+  else
+    FMaximoAtributosVisibles := AValue;
+  RefrescarVisibilidadAtributos;
 end;
 
 procedure TGridArticulosLineas.Construir;

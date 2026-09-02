@@ -12,9 +12,9 @@
 {    Exportación a Excel del informe "Movimientos de ventas por artículos y    }
 {    fechas". Una fila por artículo/color/talla según los desgloses elegidos,  }
 {    con las magnitudes del periodo y los dos márgenes. Si el SP devuelve      }
-{    agrupaciones (GRUPO1..3), dibuja una cabecera por grupo y una línea de    }
-{    TOTAL por corte. Las magnitudes base se suman y los porcentajes y         }
-{    márgenes se recalculan a partir de esas sumas.                            }
+{    agrupaciones (GRUPO1..3), dibuja una cabecera y un total por grupo, salvo }
+{    para una talla con un solo detalle. Las magnitudes base se suman y los    }
+{    porcentajes y márgenes se recalculan a partir de esas sumas.              }
 {                                                                              }
 {    v3.0 (Fase 4): recibe por separado escritura y formato; no depende del    }
 {    guardado del libro ni de DevExpress. Ver                                  }
@@ -30,12 +30,33 @@ interface
 uses
   System.SysUtils, System.Variants, Data.DB, inLibHojaCalculoIntf;
 
+type
+  IExportacionMovVentasArtPorLotes = interface
+    ['{8D406C73-C483-4027-8B89-BB9FBDAAA02D}']
+    procedure Iniciar;
+    function ProcesarLote(AMaximoRegistros: Integer): Boolean;
+  end;
+
+function CrearExportacionMovVentasArtExcelPorLotes(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  const QDatos: TDataSet;
+  const ANivelesAgrupacion: TArray<string>):
+  IExportacionMovVentasArtPorLotes;
 procedure ExportarMovVentasArtExcel(
   const AEscritor: IEscritorHojaCalculo;
   const AFormateador: IFormateadorHojaCalculo;
-  const QDatos: TDataSet);
+  const QDatos: TDataSet); overload;
+procedure ExportarMovVentasArtExcel(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  const QDatos: TDataSet;
+  const ANivelesAgrupacion: TArray<string>); overload;
 
 implementation
+
+uses
+  System.Generics.Collections;
 
 const
   COL_ART     = 0;                 // artículo (código + descripción)
@@ -65,6 +86,12 @@ const
   N_NIVELES   = 3;
 
 type
+  TEstadoExportacionMovVentas = (
+    eemvSinIniciar,
+    eemvContarTallas,
+    eemvEscribirDetalles,
+    eemvFinalizar,
+    eemvFinalizada);
   TAcum = record
     UniEnt: Double;
     ImpEnt: Double;
@@ -76,18 +103,31 @@ type
     procedure Reset;
     procedure Add(const Q: TDataSet);
   end;
-  TExportadorMovVentasArt = class
+  TExportadorMovVentasArt = class(
+    TInterfacedObject,
+    IExportacionMovVentasArtPorLotes)
   private
     FEscritor: IEscritorHojaCalculo;
+    FEscritorConFormato: IEscritorHojaCalculoConFormato;
     FFormateador: IFormateadorHojaCalculo;
     FDatos: TDataSet;
+    FEstado: TEstadoExportacionMovVentas;
     FFila: Integer;
     FGrupoCodigos: array[1..N_NIVELES] of string;
     FGrupoEtiquetas: array[1..N_NIVELES] of string;
+    FGrupoTipos: array[1..N_NIVELES] of string;
     FGrupoUsado: array[1..N_NIVELES] of Boolean;
     FGrupoAcumulado: array[1..N_NIVELES] of TAcum;
+    FGrupoNumeroDetalles: array[1..N_NIVELES] of Integer;
+    FGrupoFilaDetalle: array[1..N_NIVELES] of Integer;
     FGrupoVentasPadre: array[1..N_NIVELES] of Double;
+    FNumeroDetallesTalla: TDictionary<string, Integer>;
     FTotalAcumulado: TAcum;
+    FAgrupaPorArticulo: Boolean;
+    FNivelTalla: Integer;
+    FLoteIniciado: Boolean;
+    FControlesDeshabilitados: Boolean;
+    FHayDatos: Boolean;
     procedure EscribirValor(AColumna: Integer; const AValor: Variant;
       ANegrita: Boolean = False;
       AAlineacion: TAlineacionCelda = acIzquierda;
@@ -102,14 +142,28 @@ type
       AVentasUnidadesPadre: Double);
     procedure AbrirGrupo(ANivel: Integer);
     procedure EmitirResumenGrupo(ANivel: Integer);
+    procedure ActualizarParticipacionDetalle(ANivel: Integer);
+    procedure ContarDetalleTallaActual;
+    function ClaveGrupoActual(ANivel: Integer): string;
+    function EsGrupoArticulo(ANivel: Integer): Boolean;
+    function EsGrupoTalla(ANivel: Integer): Boolean;
+    function EtiquetaResumenGrupo(ANivel: Integer): string;
+    function NumeroDetallesGrupoActual(ANivel: Integer): Integer;
     procedure DetectarAgrupaciones;
     procedure EscribirDetalle;
     procedure AcumularFila;
+    procedure EscribirDetalleActual;
     procedure ProcesarDatos;
     procedure ConfigurarAnchos;
+    procedure FinalizarExportacion;
+    procedure LiberarRecursos;
   public
     constructor Create(const AEscritor: IEscritorHojaCalculo;
-      const AFormateador: IFormateadorHojaCalculo; ADatos: TDataSet);
+      const AFormateador: IFormateadorHojaCalculo; ADatos: TDataSet;
+      const ANivelesAgrupacion: TArray<string>);
+    destructor Destroy; override;
+    procedure Iniciar;
+    function ProcesarLote(AMaximoRegistros: Integer): Boolean;
     procedure Ejecutar;
   end;
 
@@ -138,24 +192,65 @@ end;
 constructor TExportadorMovVentasArt.Create(
   const AEscritor: IEscritorHojaCalculo;
   const AFormateador: IFormateadorHojaCalculo;
-  ADatos: TDataSet);
+  ADatos: TDataSet;
+  const ANivelesAgrupacion: TArray<string>);
+var
+  iNivel: Integer;
+  oFormateadorConFormato: IEscritorHojaCalculoConFormato;
 begin
   inherited Create;
   FEscritor := AEscritor;
   FFormateador := AFormateador;
   FDatos := ADatos;
+  FNumeroDetallesTalla := TDictionary<string, Integer>.Create;
+  Supports(FEscritor, IEscritorHojaCalculoConFormato,
+    FEscritorConFormato);
+  Supports(FFormateador, IEscritorHojaCalculoConFormato,
+    oFormateadorConFormato);
+  if FEscritorConFormato <> oFormateadorConFormato then
+    FEscritorConFormato := nil;
+  FAgrupaPorArticulo := False;
+  FNivelTalla := 0;
+  for iNivel := 1 to N_NIVELES do
+  begin
+    FGrupoTipos[iNivel] := '';
+    if iNivel <= Length(ANivelesAgrupacion) then
+      FGrupoTipos[iNivel] := ANivelesAgrupacion[iNivel - 1];
+    if SameText(FGrupoTipos[iNivel], 'ART') then
+      FAgrupaPorArticulo := True;
+    if SameText(FGrupoTipos[iNivel], 'TAL') then
+      FNivelTalla := iNivel;
+  end;
+end;
+
+destructor TExportadorMovVentasArt.Destroy;
+begin
+  try
+    if FEstado <> eemvFinalizada then
+      LiberarRecursos;
+  finally
+    FEscritorConFormato := nil;
+    FreeAndNil(FNumeroDetallesTalla);
+    inherited Destroy;
+  end;
 end;
 
 procedure TExportadorMovVentasArt.EscribirValor(AColumna: Integer;
   const AValor: Variant; ANegrita: Boolean;
   AAlineacion: TAlineacionCelda; const AFormato: string);
 begin
-  FEscritor.Escribir(FFila, AColumna, AValor);
-  if ANegrita then
-    FFormateador.Negrita(FFila, AColumna);
-  FFormateador.Alinear(FFila, AColumna, AAlineacion);
-  if AFormato <> '' then
-    FFormateador.AplicarFormato(FFila, AColumna, AFormato);
+  if Assigned(FEscritorConFormato) then
+    FEscritorConFormato.EscribirConFormato(
+      FFila, AColumna, AValor, ANegrita, AAlineacion, AFormato)
+  else
+  begin
+    FEscritor.Escribir(FFila, AColumna, AValor);
+    if ANegrita then
+      FFormateador.Negrita(FFila, AColumna);
+    FFormateador.Alinear(FFila, AColumna, AAlineacion);
+    if AFormato <> '' then
+      FFormateador.AplicarFormato(FFila, AColumna, AFormato);
+  end;
 end;
 
 procedure TExportadorMovVentasArt.EscribirNumero(AColumna: Integer;
@@ -263,7 +358,9 @@ const
 var
   iColumna: Integer;
 begin
-  if FGrupoUsado[ANivel] then
+  if FGrupoUsado[ANivel] and
+     (not EsGrupoTalla(ANivel) or
+      (NumeroDetallesGrupoActual(ANivel) > 1)) then
   begin
     EscribirValor(COL_ART,
       StringOfChar(' ', (ANivel - 1) * 2) + FGrupoEtiquetas[ANivel],
@@ -279,21 +376,109 @@ begin
       end;
     end;
     Inc(FFila);
-    EscribirCabeceraColumnas;
-    Inc(FFila);
   end;
   FGrupoVentasPadre[ANivel] :=
     CampoNumero(CAMPOS_VENTAS_PADRE[ANivel]);
   FGrupoAcumulado[ANivel].Reset;
+  FGrupoNumeroDetalles[ANivel] := 0;
+  FGrupoFilaDetalle[ANivel] := -1;
+end;
+
+procedure TExportadorMovVentasArt.ContarDetalleTallaActual;
+var
+  iNumeroDetalles: Integer;
+  sClave: string;
+begin
+  sClave := ClaveGrupoActual(FNivelTalla);
+  iNumeroDetalles := 0;
+  FNumeroDetallesTalla.TryGetValue(sClave, iNumeroDetalles);
+  FNumeroDetallesTalla.AddOrSetValue(
+    sClave, iNumeroDetalles + 1);
+end;
+
+function TExportadorMovVentasArt.ClaveGrupoActual(
+  ANivel: Integer): string;
+var
+  iNivel: Integer;
+  sCodigo: string;
+begin
+  Result := '';
+  for iNivel := 1 to ANivel do
+  begin
+    sCodigo := CampoTexto(Format('GRUPO%d_COD', [iNivel]));
+    Result := Result + IntToStr(Length(sCodigo)) + ':' + sCodigo + ';';
+  end;
 end;
 
 procedure TExportadorMovVentasArt.EmitirResumenGrupo(ANivel: Integer);
 begin
   if FGrupoUsado[ANivel] then
-    EscribirTotales(FGrupoAcumulado[ANivel],
-      'TOTAL ' + FGrupoEtiquetas[ANivel], CL_GRUPO_T,
-      FGrupoVentasPadre[ANivel]);
+  begin
+    if EsGrupoTalla(ANivel) and
+       (FGrupoNumeroDetalles[ANivel] = 1) then
+      ActualizarParticipacionDetalle(ANivel)
+    else
+      EscribirTotales(FGrupoAcumulado[ANivel],
+        EtiquetaResumenGrupo(ANivel), CL_GRUPO_T,
+        FGrupoVentasPadre[ANivel]);
+  end;
   FGrupoAcumulado[ANivel].Reset;
+  FGrupoNumeroDetalles[ANivel] := 0;
+  FGrupoFilaDetalle[ANivel] := -1;
+end;
+
+procedure TExportadorMovVentasArt.ActualizarParticipacionDetalle(
+  ANivel: Integer);
+var
+  dPorcentaje: Double;
+  iFila: Integer;
+begin
+  iFila := FGrupoFilaDetalle[ANivel];
+  if iFila >= 0 then
+  begin
+    if FGrupoVentasPadre[ANivel] <> 0 then
+    begin
+      dPorcentaje := FGrupoAcumulado[ANivel].UdsVta /
+        FGrupoVentasPadre[ANivel] * 100;
+      FEscritor.Escribir(iFila, COL_PCTVLAST, dPorcentaje);
+    end
+    else
+      FEscritor.Escribir(iFila, COL_PCTVLAST, Null);
+    FFormateador.Alinear(iFila, COL_PCTVLAST, acDerecha);
+    FFormateador.AplicarFormato(iFila, COL_PCTVLAST, FMT_PCT);
+  end;
+end;
+
+function TExportadorMovVentasArt.EsGrupoArticulo(
+  ANivel: Integer): Boolean;
+begin
+  Result := (ANivel >= 1) and (ANivel <= N_NIVELES) and
+    SameText(FGrupoTipos[ANivel], 'ART');
+end;
+
+function TExportadorMovVentasArt.EsGrupoTalla(
+  ANivel: Integer): Boolean;
+begin
+  Result := (ANivel >= 1) and (ANivel <= N_NIVELES) and
+    SameText(FGrupoTipos[ANivel], 'TAL');
+end;
+
+function TExportadorMovVentasArt.EtiquetaResumenGrupo(
+  ANivel: Integer): string;
+begin
+  if EsGrupoArticulo(ANivel) then
+    Result := 'TOTAL ARTÍCULO ' + FGrupoCodigos[ANivel]
+  else
+    Result := 'TOTAL ' + FGrupoEtiquetas[ANivel];
+end;
+
+function TExportadorMovVentasArt.NumeroDetallesGrupoActual(
+  ANivel: Integer): Integer;
+begin
+  Result := 0;
+  if EsGrupoTalla(ANivel) then
+    FNumeroDetallesTalla.TryGetValue(
+      ClaveGrupoActual(ANivel), Result);
 end;
 
 procedure TExportadorMovVentasArt.DetectarAgrupaciones;
@@ -335,20 +520,33 @@ var
   sArticulo: string;
   sColor: string;
   sTalla: string;
+  procedure AnadirFragmento(const AFragmento: string);
+  begin
+    if AFragmento <> '' then
+    begin
+      if sArticulo <> '' then
+        sArticulo := sArticulo + '  ';
+      sArticulo := sArticulo + AFragmento;
+    end;
+  end;
 begin
-  sArticulo := FDatos.FieldByName('CODIGO_ART_ART').AsString;
+  sArticulo := '';
+  if not FAgrupaPorArticulo then
+    AnadirFragmento(
+      FDatos.FieldByName('CODIGO_ART_ART').AsString);
   sColor := Trim(CampoTexto('COLOR_ETIQUETA'));
   if sColor = '' then
     sColor := Trim(CampoTexto('COLOR'));
   if sColor <> '' then
-    sArticulo := sArticulo + '  Color: ' + sColor;
+    AnadirFragmento('Color: ' + sColor);
   sTalla := Trim(CampoTexto('TALLA_ETIQUETA'));
   if sTalla = '' then
     sTalla := Trim(CampoTexto('TALLA'));
   if sTalla <> '' then
-    sArticulo := sArticulo + '  Talla: ' + sTalla;
-  sArticulo := sArticulo + '  ' +
-    FDatos.FieldByName('DESCRIPCION_ART').AsString;
+    AnadirFragmento('Talla: ' + sTalla);
+  if not FAgrupaPorArticulo then
+    sArticulo := sArticulo + '  ' +
+      FDatos.FieldByName('DESCRIPCION_ART').AsString;
   EscribirValor(COL_ART, sArticulo);
   EscribirNumero(COL_UNIENT,
     FDatos.FieldByName('UNI_ENT_TOT').AsFloat, FMT_NUM, True);
@@ -386,39 +584,28 @@ begin
   for iNivel := 1 to N_NIVELES do
   begin
     if FGrupoUsado[iNivel] then
+    begin
+      if FGrupoNumeroDetalles[iNivel] = 0 then
+        FGrupoFilaDetalle[iNivel] := FFila;
+      Inc(FGrupoNumeroDetalles[iNivel]);
       FGrupoAcumulado[iNivel].Add(FDatos);
+    end;
   end;
 end;
 
-procedure TExportadorMovVentasArt.ProcesarDatos;
-var
-  iNivel: Integer;
+procedure TExportadorMovVentasArt.EscribirDetalleActual;
 begin
-  if (FDatos <> nil) and FDatos.Active and (not FDatos.IsEmpty) then
+  DetectarAgrupaciones;
+  EscribirDetalle;
+  AcumularFila;
+  Inc(FFila);
+  FDatos.Next;
+end;
+
+procedure TExportadorMovVentasArt.ProcesarDatos;
+begin
+  while not ProcesarLote(1000) do
   begin
-    FDatos.DisableControls;
-    try
-      FDatos.First;
-      while not FDatos.Eof do
-      begin
-        DetectarAgrupaciones;
-        EscribirDetalle;
-        AcumularFila;
-        Inc(FFila);
-        FDatos.Next;
-      end;
-      if FGrupoCodigos[1] <> #1 then
-      begin
-        for iNivel := N_NIVELES downto 1 do
-          EmitirResumenGrupo(iNivel);
-      end;
-      EscribirTotales(FTotalAcumulado, 'TOTAL GENERAL', CL_GRUPO_H,
-        FTotalAcumulado.UdsVta);
-      FFormateador.BordeCelda(
-        FFila - 1, COL_ART, lbInferior, ebFino);
-    finally
-      FDatos.EnableControls;
-    end;
   end;
 end;
 
@@ -431,51 +618,197 @@ begin
     FFormateador.AnchoColumna(iColumna, 72);
 end;
 
-procedure TExportadorMovVentasArt.Ejecutar;
+procedure TExportadorMovVentasArt.LiberarRecursos;
+begin
+  try
+    if FControlesDeshabilitados then
+    begin
+      FControlesDeshabilitados := False;
+      FDatos.EnableControls;
+    end;
+  finally
+    if FLoteIniciado then
+    begin
+      FLoteIniciado := False;
+      FEscritor.FinalizarLote;
+    end;
+  end;
+end;
+
+procedure TExportadorMovVentasArt.Iniciar;
 var
   iNivel: Integer;
 begin
-  FEscritor.NuevaHoja('Ventas');
-  for iNivel := 1 to N_NIVELES do
+  if FEstado = eemvSinIniciar then
   begin
-    FGrupoCodigos[iNivel] := #1;
-    FGrupoEtiquetas[iNivel] := '';
-    FGrupoUsado[iNivel] := False;
-    FGrupoAcumulado[iNivel].Reset;
-    FGrupoVentasPadre[iNivel] := 0;
+    FEstado := eemvFinalizar;
+    try
+      FEscritor.NuevaHoja('Ventas');
+      for iNivel := 1 to N_NIVELES do
+      begin
+        FGrupoCodigos[iNivel] := #1;
+        FGrupoEtiquetas[iNivel] := '';
+        FGrupoUsado[iNivel] := False;
+        FGrupoAcumulado[iNivel].Reset;
+        FGrupoNumeroDetalles[iNivel] := 0;
+        FGrupoFilaDetalle[iNivel] := -1;
+        FGrupoVentasPadre[iNivel] := 0;
+      end;
+      FNumeroDetallesTalla.Clear;
+      FTotalAcumulado.Reset;
+      FEscritor.IniciarLote;
+      FLoteIniciado := True;
+      FFila := 1;
+      EscribirValor(
+        COL_ART,
+        'MOVIMIENTOS DE VENTAS POR ARTÍCULOS Y FECHAS',
+        True);
+      FFormateador.TamanoFuente(FFila, COL_ART, 14);
+      Inc(FFila, 2);
+      EscribirCabeceraColumnas;
+      Inc(FFila);
+      FHayDatos := (FDatos <> nil) and FDatos.Active and
+        (not FDatos.IsEmpty);
+      if FHayDatos then
+      begin
+        FDatos.DisableControls;
+        FControlesDeshabilitados := True;
+        FDatos.First;
+        if FNivelTalla > 0 then
+          FEstado := eemvContarTallas
+        else
+          FEstado := eemvEscribirDetalles;
+      end;
+    except
+      try
+        LiberarRecursos;
+      finally
+        FEstado := eemvFinalizada;
+      end;
+      raise;
+    end;
   end;
-  FTotalAcumulado.Reset;
-  FEscritor.IniciarLote;
+end;
+
+procedure TExportadorMovVentasArt.FinalizarExportacion;
+var
+  iNivel: Integer;
+begin
   try
-    FFila := 1;
-    EscribirValor(
-      COL_ART,
-      'MOVIMIENTOS DE VENTAS POR ARTÍCULOS Y FECHAS',
-      True);
-    FFormateador.TamanoFuente(FFila, COL_ART, 14);
-    Inc(FFila, 2);
-    EscribirCabeceraColumnas;
-    Inc(FFila);
-    ProcesarDatos;
+    if FHayDatos then
+    begin
+      if FGrupoCodigos[1] <> #1 then
+      begin
+        for iNivel := N_NIVELES downto 1 do
+          EmitirResumenGrupo(iNivel);
+      end;
+      EscribirTotales(FTotalAcumulado, 'TOTAL GENERAL', CL_GRUPO_H,
+        FTotalAcumulado.UdsVta);
+      FFormateador.BordeCelda(
+        FFila - 1, COL_ART, lbInferior, ebFino);
+    end;
     ConfigurarAnchos;
   finally
-    FEscritor.FinalizarLote;
+    try
+      LiberarRecursos;
+    finally
+      FEstado := eemvFinalizada;
+    end;
   end;
+end;
+
+function TExportadorMovVentasArt.ProcesarLote(
+  AMaximoRegistros: Integer): Boolean;
+var
+  iProcesados: Integer;
+begin
+  if AMaximoRegistros <= 0 then
+    raise EArgumentOutOfRangeException.Create(
+      'El tamaño del lote debe ser mayor que cero');
+  try
+    Iniciar;
+    iProcesados := 0;
+    while (iProcesados < AMaximoRegistros) and
+          (FEstado <> eemvFinalizada) do
+    begin
+      case FEstado of
+        eemvContarTallas:
+          if FDatos.Eof then
+          begin
+            FDatos.First;
+            FEstado := eemvEscribirDetalles;
+          end
+          else
+          begin
+            ContarDetalleTallaActual;
+            FDatos.Next;
+            Inc(iProcesados);
+          end;
+        eemvEscribirDetalles:
+          if FDatos.Eof then
+            FEstado := eemvFinalizar
+          else
+          begin
+            EscribirDetalleActual;
+            Inc(iProcesados);
+          end;
+        eemvFinalizar:
+          FinalizarExportacion;
+      end;
+    end;
+    Result := FEstado = eemvFinalizada;
+  except
+    try
+      LiberarRecursos;
+    finally
+      FEstado := eemvFinalizada;
+    end;
+    raise;
+  end;
+end;
+
+procedure TExportadorMovVentasArt.Ejecutar;
+begin
+  Iniciar;
+  ProcesarDatos;
+end;
+
+function CrearExportacionMovVentasArtExcelPorLotes(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  const QDatos: TDataSet;
+  const ANivelesAgrupacion: TArray<string>):
+  IExportacionMovVentasArtPorLotes;
+begin
+  Result := TExportadorMovVentasArt.Create(
+    AEscritor, AFormateador, QDatos, ANivelesAgrupacion);
 end;
 
 procedure ExportarMovVentasArtExcel(
   const AEscritor: IEscritorHojaCalculo;
   const AFormateador: IFormateadorHojaCalculo;
-  const QDatos: TDataSet);
+  const QDatos: TDataSet); overload;
 var
-  oExportador: TExportadorMovVentasArt;
+  aNivelesAgrupacion: TArray<string>;
 begin
-  oExportador := TExportadorMovVentasArt.Create(
-    AEscritor, AFormateador, QDatos);
-  try
-    oExportador.Ejecutar;
-  finally
-    FreeAndNil(oExportador);
+  SetLength(aNivelesAgrupacion, 0);
+  ExportarMovVentasArtExcel(
+    AEscritor, AFormateador, QDatos, aNivelesAgrupacion);
+end;
+
+procedure ExportarMovVentasArtExcel(
+  const AEscritor: IEscritorHojaCalculo;
+  const AFormateador: IFormateadorHojaCalculo;
+  const QDatos: TDataSet;
+  const ANivelesAgrupacion: TArray<string>); overload;
+var
+  oExportador: IExportacionMovVentasArtPorLotes;
+begin
+  oExportador := CrearExportacionMovVentasArtExcelPorLotes(
+    AEscritor, AFormateador, QDatos, ANivelesAgrupacion);
+  oExportador.Iniciar;
+  while not oExportador.ProcesarLote(1000) do
+  begin
   end;
 end;
 

@@ -37,8 +37,6 @@ type
     class function CrearFormatoReposicion(
       const ALineas: TArray<TLineaSolicitudTraspasoTicket>):
       TFormatoReposicion;
-    class function EtiquetaSinDosPuntos(
-      const AEtiqueta: string): string;
     class function FormatearArticuloReposicion(
       const ASku, ADescripcion: string;
       const AFormato: TFormatoReposicion): string;
@@ -104,29 +102,50 @@ type
 implementation
 
 uses
+  System.Math,
   inLibFormatoDocumento, inLibMsgTickets;
 
 const
   // La fuente B permite 56 caracteres y la C, 72. La fuente C conserva
   // completo el maximo de 50 caracteres admitido por CODIGO_UNIDAD_SKU.
-  ANCHO_ARTICULO_REPOSICION_B = 40;
+  ANCHO_ARTICULO_REPOSICION_B = 41;
   ANCHO_PEDIDO_REPOSICION_B = 7;
-  ANCHO_STOCK_ORIGEN_REPOSICION_B = 7;
-  ANCHO_ARTICULO_REPOSICION_C = 54;
+  ANCHO_STOCK_ORIGEN_REPOSICION_B = 6;
+  ANCHO_ARTICULO_REPOSICION_C = 55;
   ANCHO_PEDIDO_REPOSICION_C = 8;
-  ANCHO_STOCK_ORIGEN_REPOSICION_C = 8;
+  ANCHO_STOCK_ORIGEN_REPOSICION_C = 7;
   MIN_DESCRIPCION_REPOSICION = 7;
+  SEPARACION_SKU_DESCRIPCION_REPOSICION = '  ';
+  CABECERA_PEDIDO_REPOSICION = 'PED';
+  CABECERA_STOCK_REPOSICION = 'STK';
 
 class function TTraspasoTicket.CrearFormatoReposicion(
   const ALineas: TArray<TLineaSolicitudTraspasoTicket>):
   TFormatoReposicion;
+var
+  iAnchoPedido: Integer;
+  iAnchoStockOrigen: Integer;
+  iLinea: Integer;
 begin
   Result := Default(TFormatoReposicion);
   if RequiereFormatoExtendidoReposicion(ALineas) then
   begin
-    Result.AnchoArticulo := ANCHO_ARTICULO_REPOSICION_C;
-    Result.AnchoPedido := ANCHO_PEDIDO_REPOSICION_C;
-    Result.AnchoStockOrigen := ANCHO_STOCK_ORIGEN_REPOSICION_C;
+    iAnchoPedido := ANCHO_PEDIDO_REPOSICION_C;
+    iAnchoStockOrigen := ANCHO_STOCK_ORIGEN_REPOSICION_C;
+    for iLinea := 0 to High(ALineas) do
+    begin
+      iAnchoPedido := Max(
+        iAnchoPedido,
+        Length(FormatFloat('0.###', ALineas[iLinea].CantidadPedida)));
+      iAnchoStockOrigen := Max(
+        iAnchoStockOrigen,
+        Length(FormatFloat('0.###', ALineas[iLinea].StockOrigen)));
+    end;
+    Result.AnchoPedido := iAnchoPedido;
+    Result.AnchoStockOrigen := iAnchoStockOrigen;
+    Result.AnchoArticulo := ANCHO_ARTICULO_REPOSICION_C -
+      (Result.AnchoPedido - ANCHO_PEDIDO_REPOSICION_C) -
+      (Result.AnchoStockOrigen - ANCHO_STOCK_ORIGEN_REPOSICION_C);
     Result.Fuente := ftRasterC;
   end
   else
@@ -138,14 +157,6 @@ begin
   end;
 end;
 
-class function TTraspasoTicket.EtiquetaSinDosPuntos(
-  const AEtiqueta: string): string;
-begin
-  Result := Trim(AEtiqueta);
-  if (Result <> '') and (Result[Length(Result)] = ':') then
-    Delete(Result, Length(Result), 1);
-end;
-
 class function TTraspasoTicket.FormatearArticuloReposicion(
   const ASku, ADescripcion: string;
   const AFormato: TFormatoReposicion): string;
@@ -155,9 +166,10 @@ var
 begin
   Result := Trim(ASku);
   sDescripcion := Trim(ADescripcion);
-  iAnchoDescripcion := AFormato.AnchoArticulo - Length(Result) - 1;
+  iAnchoDescripcion := AFormato.AnchoArticulo - Length(Result) -
+    Length(SEPARACION_SKU_DESCRIPCION_REPOSICION);
   if (sDescripcion <> '') and (iAnchoDescripcion > 0) then
-    Result := Result + ' ' + Copy(
+    Result := Result + SEPARACION_SKU_DESCRIPCION_REPOSICION + Copy(
       sDescripcion,
       1,
       iAnchoDescripcion);
@@ -192,7 +204,8 @@ begin
   begin
     if (Length(Trim(ALineas[iLinea].Sku)) >
         ANCHO_ARTICULO_REPOSICION_B -
-        MIN_DESCRIPCION_REPOSICION - 1) or
+        MIN_DESCRIPCION_REPOSICION -
+        Length(SEPARACION_SKU_DESCRIPCION_REPOSICION)) or
        (Length(FormatFloat(
           '0.###',
           ALineas[iLinea].CantidadPedida)) >
@@ -233,11 +246,7 @@ class procedure TTraspasoTicket.ImprimirCabeceraReposicion(
   const AFormato: TFormatoReposicion);
 var
   iAnchoLinea: Integer;
-  sPedido: string;
-  sStockOrigen: string;
 begin
-  sPedido := EtiquetaSinDosPuntos(STicketAPedir);
-  sStockOrigen := EtiquetaSinDosPuntos(STicketOrigen);
   iAnchoLinea := AFormato.AnchoArticulo + AFormato.AnchoPedido +
     AFormato.AnchoStockOrigen + 2;
   ATicket.SeleccionarFuente(AFormato.Fuente);
@@ -247,10 +256,10 @@ begin
       STicketArticulos,
       AFormato.AnchoArticulo) + ' ' +
     RellenarIzquierda(
-      sPedido,
+      CABECERA_PEDIDO_REPOSICION,
       AFormato.AnchoPedido) + ' ' +
     RellenarIzquierda(
-      sStockOrigen,
+      CABECERA_STOCK_REPOSICION,
       AFormato.AnchoStockOrigen));
   ATicket.Negrita(False);
   ATicket.EscribirLinea(StringOfChar('-', iAnchoLinea));

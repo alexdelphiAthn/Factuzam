@@ -42,6 +42,16 @@ type
     procedure Combinar(AFila, ACol, ANumFilas, ANumCols: Integer);
     function CeldaExiste(AFila, ACol: Integer): Boolean;
   end;
+  // Capacidad opcional para escribir y formatear una celda de una vez.
+  IEscritorHojaCalculoConFormato = interface
+    ['{06D55DC5-2D65-4866-9CB5-7EB65196A6BA}']
+    procedure EscribirConFormato(
+      AFila, ACol: Integer;
+      const AValor: Variant;
+      ANegrita: Boolean;
+      AAlineacion: TAlineacionCelda;
+      const AFormato: string);
+  end;
   // Formato visual. El color es un TColor codificado como Cardinal
   // ($00BBGGRR) para no depender de la VCL.
   IFormateadorHojaCalculo = interface

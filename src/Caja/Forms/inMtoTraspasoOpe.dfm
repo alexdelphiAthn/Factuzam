@@ -138,7 +138,6 @@
       Left = 136
       Top = 91
       Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
-      Properties.EditFormat = 'dd/mm/yyyy hh:nn:ss'
       Properties.Kind = ckDateTime
       Properties.OnChange = dteVentasPropertiesChange
       TabOrder = 3
@@ -156,7 +155,6 @@
       Left = 452
       Top = 91
       Properties.DisplayFormat = 'dd/mm/yyyy hh:nn:ss'
-      Properties.EditFormat = 'dd/mm/yyyy hh:nn:ss'
       Properties.Kind = ckDateTime
       Properties.OnChange = dteVentasPropertiesChange
       TabOrder = 4
@@ -225,6 +223,8 @@
     Height = 450
     Align = alClient
     BevelOuter = bvNone
+    Padding.Left = 4
+    Padding.Right = 4
     TabOrder = 2
     ExplicitWidth = 894
     ExplicitHeight = 442

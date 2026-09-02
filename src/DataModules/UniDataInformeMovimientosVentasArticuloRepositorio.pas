@@ -14,7 +14,12 @@ implementation
 uses
   System.SysUtils, Data.DB;
 
+const
+  FILAS_POR_BLOQUE_INFORME = 1000;
+
 type
+  TUniQueryMovimientosVentasArticulo = class(TUniQuery);
+
   TResultadoInformeMovimientosVentasArticuloUniDAC = class(
     TInterfacedObject,
     IResultadoInformeMovimientosVentasArticulo)
@@ -110,6 +115,8 @@ begin
   oConsulta := TUniQuery.Create(nil);
   try
     oConsulta.Connection := FConexion;
+    oConsulta.FetchRows := FILAS_POR_BLOQUE_INFORME;
+    TUniQueryMovimientosVentasArticulo(oConsulta).FetchAll := True;
     oConsulta.SQL.Text :=
       'CALL PRC_GET_MOV_VENTAS_ART(' +
       ':pDESDE, :pHASTA, :pINICMP, :pALM, :pFAM, :pPRV, :pTMP, :pART, ' +

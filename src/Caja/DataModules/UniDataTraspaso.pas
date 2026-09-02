@@ -293,6 +293,8 @@ begin
     Add('NOMBRE_PROVEEDOR', ftString, 200);
   Add('MOTIVO', ftString, 255);
   cdsLineas.CreateDataSet;
+  cdsLineas.FieldByName('STOCK_DESTINO').Alignment := taCenter;
+  cdsLineas.FieldByName('STOCK_ORIGEN').Alignment := taCenter;
 end;
 
 procedure TdmTraspaso.DesempaquetarAtributosLinea(const ASku: string);
@@ -618,23 +620,30 @@ begin
   cdsLineas.First;
   while not cdsLineas.Eof do
   begin
-    if cdsLineas.FieldByName('CANTIDAD').AsFloat > 0 then
+    sArt := Trim(cdsLineas.FieldByName('CODIGO_ART').AsString);
+    sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
+    // El alta manual puede dejar la fila nueva sin usar. No debe impedir
+    // emitir las lineas completas que ya estaban cargadas.
+    if sArt = '' then
+      cdsLineas.Delete
+    else
     begin
-      sArt := Trim(cdsLineas.FieldByName('CODIGO_ART').AsString);
-      sSku := Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString);
-      if (sArt = '') or (sSku = '') then
-        raise EValidacionTraspaso.CreateFmt(
-          SErrorSkuTraspasoIncompleto, [sArt, sSku]);
-      sArtSku := ObtenerArticuloSkuHistorico(sSku);
-      if sArtSku = '' then
-        raise EValidacionTraspaso.CreateFmt(
-          SErrorSkuTraspasoNoDisponible, [sSku, sArt])
-      else if not SameText(sArt, sArtSku) then
-        raise EValidacionTraspaso.CreateFmt(
-          SErrorArticuloSkuTraspasoNoCoincide,
-          [sArt, sSku, sArtSku]);
+      if cdsLineas.FieldByName('CANTIDAD').AsFloat > 0 then
+      begin
+        if sSku = '' then
+          raise EValidacionTraspaso.CreateFmt(
+            SErrorSkuTraspasoIncompleto, [sArt, sSku]);
+        sArtSku := ObtenerArticuloSkuHistorico(sSku);
+        if sArtSku = '' then
+          raise EValidacionTraspaso.CreateFmt(
+            SErrorSkuTraspasoNoDisponible, [sSku, sArt])
+        else if not SameText(sArt, sArtSku) then
+          raise EValidacionTraspaso.CreateFmt(
+            SErrorArticuloSkuTraspasoNoCoincide,
+            [sArt, sSku, sArtSku]);
+      end;
+      cdsLineas.Next;
     end;
-    cdsLineas.Next;
   end;
 end;
 

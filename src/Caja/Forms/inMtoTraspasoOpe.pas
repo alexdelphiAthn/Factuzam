@@ -124,6 +124,11 @@ type
     FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
     FReposicionCargada: Boolean;
     FCargandoVentasReposicion: Boolean;
+    FEmpleadoConsultado: Boolean;
+    FEmpleadoValidoConsultado: Boolean;
+    FEntradaEmpleadoConsultada: string;
+    FCodigoEmpleadoConsultado: string;
+    FNombreEmpleadoConsultado: string;
     // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe): la
     // mecanica (trama STX/ETX + rafaga por velocidad) la lleva TLectorScanner.
     // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
@@ -145,9 +150,13 @@ type
     procedure ConstruirEntradaSku(const ACampos: TCamposGridArt);
     procedure ConstruirEntradaDesglosada(const ACampos: TCamposGridArt);
     procedure CrearColumnasTraspaso;
+    procedure CrearColumnaSeparacionDerecha(
+      AVista: TcxGridDBTableView);
     procedure LiberarModoEntrada;
     procedure ConfigurarGridSegunModo;
     function ModoPermiteCargaManual: Boolean;
+    function ModoPermiteAltaManual: Boolean;
+    function PuedeBorrarLinea: Boolean;
     procedure AlternarModoEntrada;
     function ResolverEntradaModo(const AEntrada: string): Boolean;
     procedure MostrarEditorModo;
@@ -220,6 +229,8 @@ type
     procedure EjecutarTraspasoInterno(AConTicket: Boolean);
     procedure AvisarStockSolicitud(const AAlmacenOrigen: string);
     procedure EnviarSolicitud;
+    function ValidarEmpleadoActual(
+      out ACodigo, ANombre: string): Boolean;
     function EmpleadoValido: Boolean;
     procedure BuscarEmpleado;
     // Consulta rapida de stock (banda inferior, igual que inMtoCajaOpe): una
@@ -275,6 +286,7 @@ const
   ANCHO_MIN_A_PEDIR_96_DPI = 70;
   ANCHO_MIN_STOCK_DESTINO_96_DPI = 105;
   ANCHO_MIN_STOCK_ORIGEN_96_DPI = 100;
+  ANCHO_SEPARADOR_DERECHO_GRID_96_DPI = 10;
 
 resourcestring
   STituloMisPeticionesTraspaso =
@@ -524,6 +536,8 @@ begin
   FGridCtrl.AlmacenStock :=
     FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   FGridCtrl.OnResuelto := GridResuelto;
+  if FModo = mtReposicion then
+    FGridCtrl.MaximoAtributosVisibles := 2;
   FGridCtrl.Construir;
   Columna := FView.GetColumnByFieldName('CODIGO_ART');
   if Assigned(Columna) then
@@ -567,6 +581,7 @@ begin
   Columna.Caption := SCaptionColStockDestinoTraspaso;
   Columna.DataBinding.FieldName := 'STOCK_DESTINO';
   Columna.Options.Editing := False;
+  Columna.HeaderAlignmentHorz := taCenter;
   Columna.Width := 90;
   Columna.Visible := FModo = mtReposicion;
   if FModo = mtReposicion then
@@ -579,6 +594,7 @@ begin
   Columna.Caption := SCaptionColStockOrigenTraspaso;
   Columna.DataBinding.FieldName := 'STOCK_ORIGEN';
   Columna.Options.Editing := False;
+  Columna.HeaderAlignmentHorz := taCenter;
   Columna.Width := 90;
   if FModo = mtReposicion then
     Columna.MinWidth := MulDiv(
@@ -600,6 +616,36 @@ begin
   FColMotivo := Columna;
 end;
 
+procedure TfrmMtoOpeTraspaso.CrearColumnaSeparacionDerecha(
+  AVista: TcxGridDBTableView);
+var
+  Columna: TcxGridDBColumn;
+  iAncho: Integer;
+begin
+  if Assigned(AVista) then
+  begin
+    iAncho := MulDiv(
+      ANCHO_SEPARADOR_DERECHO_GRID_96_DPI,
+      CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    Columna := AVista.CreateColumn;
+    Columna.Caption := '';
+    Columna.DataBinding.ValueTypeClass := TcxStringValueType;
+    Columna.Width := iAncho;
+    Columna.MinWidth := iAncho;
+    Columna.Options.AutoWidthSizable := False;
+    Columna.Options.Editing := False;
+    Columna.Options.Filtering := False;
+    Columna.Options.Focusing := False;
+    Columna.Options.Grouping := False;
+    Columna.Options.HorzSizing := False;
+    Columna.Options.Moving := False;
+    Columna.Options.ShowCaption := False;
+    Columna.Options.Sorting := False;
+    Columna.VisibleForCustomization := False;
+  end;
+end;
+
 procedure TfrmMtoOpeTraspaso.ConstruirGrid;
 var
   Campos: TCamposGridArt;
@@ -615,6 +661,7 @@ begin
     ConstruirEntradaDesglosada(Campos);
   CrearColumnasTraspaso;
   ConfigurarGridSegunModo;
+  CrearColumnaSeparacionDerecha(FView);
 end;
 
 procedure TfrmMtoOpeTraspaso.LiberarModoEntrada;
@@ -635,8 +682,9 @@ end;
 procedure TfrmMtoOpeTraspaso.ConfigurarGridSegunModo;
 var
   i: Integer;
+  sCampo: string;
 begin
-  FView.OptionsData.Inserting := ModoPermiteCargaManual;
+  FView.OptionsData.Inserting := ModoPermiteAltaManual;
   FView.OptionsData.Deleting := ModoPermiteCargaManual;
   FView.OptionsData.Editing := True;
   for i := 0 to FView.ColumnCount - 1 do
@@ -646,7 +694,17 @@ begin
         (FView.Columns[i] = FColUds) or
         (FView.Columns[i] = FColMotivo)
     else if FModo = mtReposicion then
-      FView.Columns[i].Options.Editing := FView.Columns[i] = FColUds
+    begin
+      sCampo := FView.Columns[i].DataBinding.FieldName;
+      FView.Columns[i].Options.Editing :=
+        SameText(sCampo, 'CODIGO_ART') or
+        SameText(sCampo, 'CODIGO_UNIDAD') or
+        SameText(sCampo, 'CANTIDAD') or
+        ((Length(sCampo) = 11) and
+         SameText(Copy(sCampo, 1, 4), 'ATTR') and
+         CharInSet(sCampo[5], ['1'..'5']) and
+         SameText(Copy(sCampo, 6, 6), '_VALOR'));
+    end
     else
       FView.Columns[i].Options.Editing := True;
   end;
@@ -674,6 +732,21 @@ end;
 function TfrmMtoOpeTraspaso.ModoPermiteCargaManual: Boolean;
 begin
   Result := FModo in [mtTraspaso, mtSolicitar];
+end;
+
+function TfrmMtoOpeTraspaso.ModoPermiteAltaManual: Boolean;
+begin
+  Result := FModo in [mtTraspaso, mtSolicitar, mtReposicion];
+end;
+
+function TfrmMtoOpeTraspaso.PuedeBorrarLinea: Boolean;
+begin
+  Result := ModoPermiteCargaManual or
+    ((FModo = mtReposicion) and
+     Assigned(FDatos) and
+     Assigned(FDatos.cdsLineas) and
+     FDatos.cdsLineas.Active and
+     (not FDatos.cdsLineas.IsEmpty));
 end;
 
 procedure TfrmMtoOpeTraspaso.AlternarModoEntrada;
@@ -731,12 +804,16 @@ begin
     bFocoEmpleado := txtEmpleado.ContainsControl(ControlActivo);
   if bFocoEmpleado then
     BuscarEmpleado
-  else if ModoPermiteCargaManual then
+  else if ModoPermiteAltaManual then
   begin
-    if Assigned(FModoSku) then
+    if (FModo = mtReposicion) or Assigned(FModoSku) then
       AsegurarLineaNueva;
     if FGrid.CanFocus then
       FGrid.SetFocus;
+    if (FModo = mtReposicion) and
+       (Trim(FDatos.cdsLineas.FieldByName(
+         'CODIGO_ART').AsString) = '') then
+      MostrarEditorModo;
     if Assigned(FModoSku) then
       FModoSku.BuscarArticulo
     else if Assigned(FGridCtrl) then
@@ -855,6 +932,7 @@ begin
         finally
           FStockDatos.EnableControls;
         end;
+        CrearColumnaSeparacionDerecha(FStockView);
       finally
         FStockView.EndUpdate;
       end;
@@ -923,6 +1001,8 @@ end;
 
 procedure TfrmMtoOpeTraspaso.NavDataChange(Sender: TObject; Field: TField);
 begin
+  if FModo = mtReposicion then
+    btnF8.Enabled := PuedeBorrarLinea;
   // Solo al cambiar de registro (Field = nil), no en cada cambio de columna.
   if (Field = nil) and not FCargandoVentasReposicion then
     ActualizarStockYFoto;
@@ -968,19 +1048,33 @@ begin
          (Trim(FDatos.cdsLineas.FieldByName(
            'CODIGO_UNIDAD').AsString) = sKey) then
         FDatos.cdsLineas.Delete;
-      AsegurarLineaNueva;
+      if ModoPermiteCargaManual then
+        AsegurarLineaNueva;
       ActualizarTotal;
     end
     else
     begin
       if FDatos.cdsLineas.State in [dsEdit, dsInsert] then
       begin
-        sAlmacenOrigen :=
-          FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
-        FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
-          FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
-        FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
-          FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+        if FModo = mtReposicion then
+        begin
+          sAlmacenOrigen := DestinoSeleccionado;
+          FDatos.cdsLineas.FieldByName('STOCK_DESTINO').AsFloat :=
+            FDatos.ObtenerStock(ASku, FAlmacen);
+          if sAlmacenOrigen <> '' then
+            FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+              FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+        end
+        else
+        begin
+          sAlmacenOrigen :=
+            FDatos.cdsCabecera.FieldByName(
+              'CODIGO_ALM_ORIGEN').AsString;
+          FDatos.cdsLineas.FieldByName('PRECIO_COSTE').AsCurrency :=
+            FDatos.ObtenerCosteMedio(ASku, sAlmacenOrigen);
+          FDatos.cdsLineas.FieldByName('STOCK_ORIGEN').AsFloat :=
+            FDatos.ObtenerStock(ASku, sAlmacenOrigen);
+        end;
       end;
       ActualizarTotal;
       ConsultarStock(ACodArt);
@@ -988,6 +1082,12 @@ begin
       // Otra linea en blanco para seguir metiendo (solo traspaso/solicitar).
       if ModoPermiteCargaManual then
         AsegurarLineaNueva;
+    end;
+    if FModo = mtReposicion then
+    begin
+      FReposicionCargada := True;
+      btnF8.Enabled := PuedeBorrarLinea;
+      btnF12.Enabled := True;
     end;
   end;
 end;
@@ -1136,6 +1236,9 @@ end;
 procedure TfrmMtoOpeTraspaso.AplicarModo(AModo: TModoTraspaso);
 begin
   FModo := AModo;
+  // El lector no tiene destino funcional en reposicion ni al atender. Evita
+  // que el tecleo rapido en fechas o combos se confunda con una rafaga.
+  FLector.Activo := ModoPermiteCargaManual;
   FReposicionCargada := False;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
   txtOrigen.Text := FAlmacen;
@@ -1143,7 +1246,7 @@ begin
   // buscador tras cambiar de modo.
   ConstruirGrid;
   btnF11.Visible := AModo in [mtTraspaso, mtAtender];
-  btnF8.Enabled := ModoPermiteCargaManual;
+  btnF8.Enabled := PuedeBorrarLinea;
   // Captions con tilde en literal: este .pas va en UTF-8 con BOM (igual que
   // inMtoCajaMenu.pas) para que el compilador las lea bien.
   case AModo of
@@ -1234,6 +1337,7 @@ begin
       FDatos.cdsLineas.Cancel;
     FDatos.cdsLineas.EmptyDataSet;
     FReposicionCargada := False;
+    btnF8.Enabled := PuedeBorrarLinea;
     btnF12.Enabled := False;
     ActualizarTotal;
   end;
@@ -1279,6 +1383,8 @@ begin
      ObtenerOrigenReposicion(sOrigen) and
      ObtenerRangoReposicion(dtDesde, dtHasta) then
   begin
+    if Assigned(FGridCtrl) then
+      FGridCtrl.AlmacenStock := sOrigen;
     Filtro := Default(TFiltroVentasReposicion);
     Filtro.Empresa := FEmpresa;
     Filtro.AlmacenDestino := FAlmacen;
@@ -1292,6 +1398,7 @@ begin
       try
         FDatos.CargarVentasReposicion(Lineas);
         FReposicionCargada := Length(Lineas) > 0;
+        btnF8.Enabled := PuedeBorrarLinea;
         btnF12.Enabled := FReposicionCargada;
         ActualizarTotal;
         if FReposicionCargada then
@@ -1331,17 +1438,23 @@ begin
   else if EmpleadoValido and
           ObtenerOrigenReposicion(sOrigen) and
           ObtenerRangoReposicion(dtDesde, dtHasta) and
-          FDatos.GrabarReposicionAuto(
-            sOrigen, dtDesde, dtHasta, sNumero, sSerie) then
+           FDatos.GrabarReposicionAuto(
+             sOrigen, dtDesde, dtHasta, sNumero, sSerie) then
   begin
-    ShowMessage(Format(SInfoReposicionAutoEmitida, [sSerie, sNumero]));
-    TTraspasoTicket.ImprimirSolicitud(
-      PreviewTicket,
-      FRepositorioTraspasoTicket,
-      sNumero,
-      sSerie,
-      ParametrosCaja.ImpresoraCaja);
-    AplicarModo(mtReposicion);
+    FReposicionCargada := False;
+    btnF8.Enabled := PuedeBorrarLinea;
+    btnF12.Enabled := False;
+    try
+      ShowMessage(Format(SInfoReposicionAutoEmitida, [sSerie, sNumero]));
+      TTraspasoTicket.ImprimirSolicitud(
+        PreviewTicket,
+        FRepositorioTraspasoTicket,
+        sNumero,
+        sSerie,
+        ParametrosCaja.ImpresoraCaja);
+    finally
+      AplicarModo(mtReposicion);
+    end;
   end;
 end;
 
@@ -2248,11 +2361,13 @@ end;
 
 procedure TfrmMtoOpeTraspaso.txtEmpleadoExit(Sender: TObject);
 var
+  bValido: Boolean;
   sCod, sNom: string;
 begin
+  bValido := ValidarEmpleadoActual(sCod, sNom);
   if Trim(txtEmpleado.Text) = '' then
     lblEmpleadoNombre.Caption := ''
-  else if FDatos.ValidarEmpleado(Trim(txtEmpleado.Text), sCod, sNom) then
+  else if bValido then
     lblEmpleadoNombre.Caption := sNom
   else
     lblEmpleadoNombre.Caption := SCaptionEmpleadoNoEncontrado;
@@ -2284,16 +2399,44 @@ begin
   end;
 end;
 
+function TfrmMtoOpeTraspaso.ValidarEmpleadoActual(
+  out ACodigo, ANombre: string): Boolean;
+var
+  sEntrada: string;
+begin
+  sEntrada := Trim(txtEmpleado.Text);
+  if (not FEmpleadoConsultado) or
+     (FEntradaEmpleadoConsultada <> sEntrada) then
+  begin
+    FEmpleadoConsultado := False;
+    FEntradaEmpleadoConsultada := sEntrada;
+    FCodigoEmpleadoConsultado := '';
+    FNombreEmpleadoConsultado := '';
+    FEmpleadoValidoConsultado := False;
+    if sEntrada <> '' then
+      FEmpleadoValidoConsultado := FDatos.ValidarEmpleado(
+        sEntrada,
+        FCodigoEmpleadoConsultado,
+        FNombreEmpleadoConsultado);
+    FEmpleadoConsultado := True;
+  end;
+  ACodigo := FCodigoEmpleadoConsultado;
+  ANombre := FNombreEmpleadoConsultado;
+  Result := FEmpleadoValidoConsultado;
+end;
+
 function TfrmMtoOpeTraspaso.EmpleadoValido: Boolean;
 var
+  bValido: Boolean;
   sCod, sNom: string;
 begin
+  bValido := ValidarEmpleadoActual(sCod, sNom);
   if Trim(txtEmpleado.Text) = '' then
   begin
     ShowMessage(SErrorEmpleadoTraspasoNoIndicado);
     Result := False;
   end
-  else if FDatos.ValidarEmpleado(Trim(txtEmpleado.Text), sCod, sNom) then
+  else if bValido then
   begin
     lblEmpleadoNombre.Caption := sNom;
     if FDatos.cdsCabecera.State = dsBrowse then
@@ -2426,12 +2569,18 @@ end;
 
 procedure TfrmMtoOpeTraspaso.QuitarLinea;
 begin
-  // Borra la linea enfocada con F8 o desde el navegador. No se borra al
-  // atender ni en reposiciones: esas lineas proceden de una carga previa.
-  if ModoPermiteCargaManual and (not FDatos.cdsLineas.IsEmpty) then
+  // En reposicion se permite retirar lineas cargadas antes de emitirla.
+  if PuedeBorrarLinea and (not FDatos.cdsLineas.IsEmpty) then
   begin
     FDatos.cdsLineas.Delete;
-    AsegurarLineaNueva;
+    if FModo = mtReposicion then
+    begin
+      FReposicionCargada := not FDatos.cdsLineas.IsEmpty;
+      btnF8.Enabled := PuedeBorrarLinea;
+      btnF12.Enabled := FReposicionCargada;
+    end
+    else
+      AsegurarLineaNueva;
     ActualizarTotal;
   end;
 end;

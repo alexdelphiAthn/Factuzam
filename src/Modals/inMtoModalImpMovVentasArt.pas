@@ -46,6 +46,7 @@ type
     fxdsMovVentas: TfrxDBDataset;
   private
     FInicializado: Boolean;
+    FConexionMovimientos: TUniConnection;
     FRepositorioMovimientos:
       IRepositorioInformeMovimientosVentasArticulo;
     FResultadoMovimientos: IResultadoInformeMovimientosVentasArticulo;
@@ -70,6 +71,8 @@ type
     procedure ReportBeforePrint(Component: TfrxReportComponent);
     procedure CompletarSubtotales;
     procedure ActualizarFormulasPorcentajes;
+    procedure PrepararMovimientosEnSegundoPlano(
+      const ACriterios: TCriteriosInformeMovimientosVentasArticulo);
     // Adapta el detalle a procedimientos antiguos sin color o talla.
     procedure ConfigurarDetalleArticuloAtributos;
     // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
@@ -88,10 +91,34 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inMtoPreviewExcel, inLibMovVentasArtExcel,
-  inLibMsgVentas,
+  System.StrUtils, System.Threading, Vcl.ComCtrls,
+  inMtoPreviewExcel, inLibMovVentasArtExcel, inLibMsgVentas,
+  inLibMsgComun, inLibConexionesIntf,
   inLibHojaCalculoIntf, inLibHojaCalculoDevEx, dxSpreadSheet,
-  inLibFotos, UniDataInformeMovimientosVentasArticuloRepositorio;
+  inLibFotos,
+  UniDataInformeMovimientosVentasArticuloRepositorio;
+
+type
+  TProcesarLoteEspera = reference to function: Boolean;
+
+  TfrmEsperaMovVentas = class(TForm)
+  private
+    FError: string;
+    FProcesarLote: TProcesarLoteEspera;
+    FPuedeCerrar: Boolean;
+    FTarea: ITask;
+    FTemporizador: TTimer;
+    procedure ComprobarCierre(Sender: TObject; var CanClose: Boolean);
+    procedure ComprobarTrabajo(Sender: TObject);
+  protected
+    procedure DoShow; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+    procedure Esperar(const ATarea: ITask);
+    procedure EsperarPorLotes(
+      const AProcesarLote: TProcesarLoteEspera);
+    procedure Finalizar;
+  end;
 
 resourcestring
   STituloAgrupacionesMovimientosVentasArticulo = 'Agrupaciones';
@@ -101,6 +128,143 @@ resourcestring
   SCaptionTemporadaAgrupacionMovimientosVentas = 'Temporada';
   SNombreArchivoMovimientosVentasArticulos =
     'Movimientos_ventas_articulos';
+
+const
+  DURACION_LOTE_EXCEL_MS = 150;
+  FILAS_POR_PASO_EXCEL = 10;
+  INTERVALO_LOTE_EXCEL_MS = 10;
+
+{ TfrmEsperaMovVentas }
+
+constructor TfrmEsperaMovVentas.Create(AOwner: TComponent);
+var
+  oBarra: TProgressBar;
+  oTexto: TLabel;
+begin
+  inherited CreateNew(AOwner);
+  BorderIcons := [];
+  BorderStyle := bsDialog;
+  Caption := SCaptionCargandoDatosEspere;
+  ClientHeight := 100;
+  ClientWidth := 420;
+  Cursor := crHourGlass;
+  FPuedeCerrar := False;
+  Position := poOwnerFormCenter;
+  OnCloseQuery := ComprobarCierre;
+  oTexto := TLabel.Create(Self);
+  oTexto.Parent := Self;
+  oTexto.SetBounds(16, 16, ClientWidth - 32, 30);
+  oTexto.Alignment := taCenter;
+  oTexto.AutoSize := False;
+  oTexto.Caption := SCaptionCargandoDatosEspere;
+  oTexto.Cursor := crHourGlass;
+  oTexto.Font.Style := [fsBold];
+  oTexto.Layout := tlCenter;
+  oBarra := TProgressBar.Create(Self);
+  oBarra.Parent := Self;
+  oBarra.SetBounds(60, 58, ClientWidth - 120, 18);
+  oBarra.Cursor := crHourGlass;
+  oBarra.MarqueeInterval := 30;
+  oBarra.Style := pbstMarquee;
+  FTemporizador := TTimer.Create(Self);
+  FTemporizador.Enabled := False;
+  FTemporizador.Interval := 50;
+  FTemporizador.OnTimer := ComprobarTrabajo;
+end;
+
+procedure TfrmEsperaMovVentas.ComprobarCierre(
+  Sender: TObject; var CanClose: Boolean);
+begin
+  CanClose := FPuedeCerrar;
+end;
+
+procedure TfrmEsperaMovVentas.ComprobarTrabajo(Sender: TObject);
+var
+  bFinalizado: Boolean;
+begin
+  FTemporizador.Enabled := False;
+  try
+    if Assigned(FTarea) then
+    begin
+      if FTarea.Status in [
+         TTaskStatus.Completed,
+         TTaskStatus.Canceled,
+         TTaskStatus.Exception] then
+        Finalizar;
+    end
+    else if Assigned(FProcesarLote) then
+    begin
+      try
+        bFinalizado := FProcesarLote();
+        if bFinalizado then
+          Finalizar;
+      except
+        on E: Exception do
+        begin
+          FError := E.Message;
+          if FError = '' then
+            FError := E.ClassName;
+          Finalizar;
+        end;
+      end;
+    end;
+  finally
+    if not FPuedeCerrar then
+      FTemporizador.Enabled := True;
+  end;
+end;
+
+procedure TfrmEsperaMovVentas.DoShow;
+begin
+  inherited;
+  Screen.Cursor := crHourGlass;
+end;
+
+procedure TfrmEsperaMovVentas.Esperar(const ATarea: ITask);
+begin
+  FError := '';
+  FProcesarLote := nil;
+  FPuedeCerrar := False;
+  FTarea := ATarea;
+  FTemporizador.Interval := 50;
+  FTemporizador.Enabled := True;
+  try
+    ShowModal;
+  finally
+    FTemporizador.Enabled := False;
+    FTarea := nil;
+  end;
+end;
+
+procedure TfrmEsperaMovVentas.EsperarPorLotes(
+  const AProcesarLote: TProcesarLoteEspera);
+var
+  sError: string;
+begin
+  FError := '';
+  FProcesarLote := AProcesarLote;
+  FPuedeCerrar := False;
+  FTarea := nil;
+  FTemporizador.Interval := INTERVALO_LOTE_EXCEL_MS;
+  FTemporizador.Enabled := True;
+  try
+    ShowModal;
+  finally
+    FTemporizador.Enabled := False;
+    FProcesarLote := nil;
+    sError := FError;
+    FError := '';
+  end;
+  if sError <> '' then
+    raise Exception.Create(sError);
+end;
+
+procedure TfrmEsperaMovVentas.Finalizar;
+begin
+  FTemporizador.Enabled := False;
+  FPuedeCerrar := True;
+  ModalResult := mrOk;
+end;
 
 { TfrmPrintMovVentasArt }
 
@@ -327,12 +491,89 @@ begin
   criterios.UsarOrden := OrdenSeleccionado(criterios.Orden);
   criterios.OrdenDescendente := (FrgSentidoOrden <> nil) and
     (FrgSentidoOrden.ItemIndex = 0);
-  if FRepositorioMovimientos = nil then
-    FRepositorioMovimientos :=
-      CrearRepositorioInformeMovimientosVentasArticuloUniDAC(
-        ConexionPrincipal);
-  FResultadoMovimientos := FRepositorioMovimientos.Preparar(criterios);
+  PrepararMovimientosEnSegundoPlano(criterios);
   fxdsMovVentas.UpdateBounds;
+end;
+
+procedure TfrmPrintMovVentasArt.PrepararMovimientosEnSegundoPlano(
+  const ACriterios: TCriteriosInformeMovimientosVentasArticulo);
+var
+  crCursorAnterior: TCursor;
+  oConexionNueva: TUniConnection;
+  oConexiones: IServicioConexiones;
+  oEspera: TfrmEsperaMovVentas;
+  oRepositorioNuevo: IRepositorioInformeMovimientosVentasArticulo;
+  oResultadoNuevo: IResultadoInformeMovimientosVentasArticulo;
+  oTarea: ITask;
+  iNumeroFilas: Integer;
+  nInicioCarga: UInt64;
+  nTiempoCarga: Int64;
+  sError: string;
+begin
+  oConexiones := Conexiones;
+  if not Assigned(oConexiones) then
+    raise Exception.Create(SErrorServicioConexionesDatosNoConfigurado);
+  oConexionNueva := nil;
+  oEspera := TfrmEsperaMovVentas.Create(Self);
+  try
+    crCursorAnterior := Screen.Cursor;
+    Screen.Cursor := crHourGlass;
+    try
+      oTarea := TTask.Run(
+        procedure
+        begin
+          try
+            nInicioCarga := GetTickCount64;
+            oConexionNueva := oConexiones.CrearConexion(
+              nil, uctSegundoPlano);
+            oRepositorioNuevo :=
+              CrearRepositorioInformeMovimientosVentasArticuloUniDAC(
+                oConexionNueva);
+            oResultadoNuevo := oRepositorioNuevo.Preparar(ACriterios);
+            iNumeroFilas := oResultadoNuevo.DataSet.RecordCount;
+            nTiempoCarga := Int64(GetTickCount64 - nInicioCarga);
+          except
+            on E: Exception do
+            begin
+              sError := E.Message;
+              if sError = '' then
+                sError := E.ClassName;
+              oResultadoNuevo := nil;
+              oRepositorioNuevo := nil;
+              FreeAndNil(oConexionNueva);
+            end;
+          end;
+        end);
+      try
+        oEspera.Esperar(oTarea);
+      finally
+        TTask.WaitForAll([oTarea]);
+      end;
+    finally
+      Screen.Cursor := crCursorAnterior;
+    end;
+    if sError <> '' then
+      raise Exception.Create(sError);
+    if not Assigned(oResultadoNuevo) then
+      raise Exception.Create(SCaptionCargandoDatosEspere);
+    RegistroLog.RegistrarRendimiento(
+      'MovVentasArt.Carga',
+      Format('filas=%d; resultado completo', [iNumeroFilas]),
+      nTiempoCarga);
+    fxdsMovVentas.DataSet := nil;
+    FResultadoMovimientos := nil;
+    FRepositorioMovimientos := nil;
+    FreeAndNil(FConexionMovimientos);
+    FConexionMovimientos := oConexionNueva;
+    oConexionNueva := nil;
+    FRepositorioMovimientos := oRepositorioNuevo;
+    FResultadoMovimientos := oResultadoNuevo;
+  finally
+    FreeAndNil(oEspera);
+    oResultadoNuevo := nil;
+    oRepositorioNuevo := nil;
+    FreeAndNil(oConexionNueva);
+  end;
 end;
 
 procedure TfrmPrintMovVentasArt.AfterReportLoaded;
@@ -450,17 +691,31 @@ end;
 procedure TfrmPrintMovVentasArt.ConfigurarDetalleArticuloAtributos;
 var
   aNiveles: TArray<string>;
+  bAgruparArticulo: Boolean;
   bMostrarColor: Boolean;
   bMostrarTalla: Boolean;
+  iNivel: Integer;
+  iNivelArticulo: Integer;
   oComponente: TfrxComponent;
   sCampoColor: string;
   sCampoTalla: string;
   sDetalle: string;
+  procedure AnadirFragmento(const AFragmento: string);
+  begin
+    if AFragmento <> '' then
+    begin
+      if sDetalle <> '' then
+        sDetalle := sDetalle + '  ';
+      sDetalle := sDetalle + AFragmento;
+    end;
+  end;
 begin
   if (FResultadoMovimientos <> nil) and
      FResultadoMovimientos.DataSet.Active then
   begin
     aNiveles := NivelesAgrupacion;
+    iNivelArticulo := IndexText('ART', aNiveles) + 1;
+    bAgruparArticulo := iNivelArticulo > 0;
     bMostrarColor := MatchText('COL', aNiveles);
     bMostrarTalla := MatchText('TAL', aNiveles);
     sCampoColor := '';
@@ -477,17 +732,38 @@ begin
     else if bMostrarTalla and
             (FResultadoMovimientos.DataSet.FindField('TALLA') <> nil) then
       sCampoTalla := 'TALLA';
+    for iNivel := 1 to 3 do
+    begin
+      oComponente := frxrprt1.FindObject(
+        Format('MemoGF%dLbl', [iNivel]));
+      if oComponente is TfrxMemoView then
+        TfrxMemoView(oComponente).Memo.Text := Format(
+          'TOTAL [MovVentas."GRUPO%d_ETIQ"]', [iNivel]);
+    end;
+    if bAgruparArticulo then
+    begin
+      oComponente := frxrprt1.FindObject(
+        Format('MemoGF%dLbl', [iNivelArticulo]));
+      if oComponente is TfrxMemoView then
+        TfrxMemoView(oComponente).Memo.Text := Format(
+          'TOTAL ARTÍCULO [MovVentas."GRUPO%d_COD"]',
+          [iNivelArticulo]);
+    end;
     oComponente := frxrprt1.FindObject('MemoArtDesc');
     if oComponente is TfrxMemoView then
     begin
-      sDetalle := '[MovVentas."CODIGO_ART_ART"]';
+      sDetalle := '';
+      if not bAgruparArticulo then
+        AnadirFragmento('[MovVentas."CODIGO_ART_ART"]');
       if sCampoColor <> '' then
-        sDetalle := sDetalle + '  [MovVentas."' + sCampoColor + '"]';
+        AnadirFragmento('[MovVentas."' + sCampoColor + '"]');
       if sCampoTalla <> '' then
-        sDetalle := sDetalle + '  Talla: [MovVentas."' +
-          sCampoTalla + '"]';
-      TfrxMemoView(oComponente).Memo.Text := sDetalle + sLineBreak +
-        '[MovVentas."DESCRIPCION_ART"]';
+        AnadirFragmento(
+          'Talla: [MovVentas."' + sCampoTalla + '"]');
+      if not bAgruparArticulo then
+        sDetalle := sDetalle + sLineBreak +
+          '[MovVentas."DESCRIPCION_ART"]';
+      TfrxMemoView(oComponente).Memo.Text := sDetalle;
     end;
   end;
 end;
@@ -495,6 +771,10 @@ end;
 destructor TfrmPrintMovVentasArt.Destroy;
 begin
   FotosArticulos.LimpiarPrecargaFotos;
+  fxdsMovVentas.DataSet := nil;
+  FResultadoMovimientos := nil;
+  FRepositorioMovimientos := nil;
+  FreeAndNil(FConexionMovimientos);
   inherited Destroy;
 end;
 
@@ -557,12 +837,21 @@ end;
 
 procedure TfrmPrintMovVentasArt.ExportarExcelMovVentas(Sender: TObject);
 var
+  crCursorAnterior: TCursor;
   fPreview: TfrmMtoPreviewExcel;
+  iLotesExcel: Integer;
+  iNumeroFilas: Integer;
+  nInicioExportacion: UInt64;
+  nInicioLote: UInt64;
+  nTiempoTrabajoExcel: UInt64;
+  oEspera: TfrmEsperaMovVentas;
+  oExportacion: IExportacionMovVentasArtPorLotes;
   oServiciosHoja: TServiciosHojaCalculo;
 begin
-  preparar_consulta;
-  Self.Hide;
+  crCursorAnterior := Screen.Cursor;
+  Screen.Cursor := crHourGlass;
   try
+    preparar_consulta;
     fPreview := TfrmMtoPreviewExcel.Create(Self);
     try
       fPreview.DialogoGuardar.InitialDir :=
@@ -571,16 +860,53 @@ begin
         SNombreArchivoMovimientosVentasArticulos;
       oServiciosHoja := CrearServiciosHojaCalculoDevEx(
         fPreview.dxSpreadSheet1);
-      ExportarMovVentasArtExcel(
+      oExportacion := CrearExportacionMovVentasArtExcelPorLotes(
         oServiciosHoja.Escritor,
         oServiciosHoja.Formateador,
-        FResultadoMovimientos.DataSet);
-      fPreview.ShowModal;
+        FResultadoMovimientos.DataSet,
+        NivelesAgrupacion);
+      iLotesExcel := 0;
+      iNumeroFilas := FResultadoMovimientos.DataSet.RecordCount;
+      nInicioExportacion := GetTickCount64;
+      nTiempoTrabajoExcel := 0;
+      oEspera := TfrmEsperaMovVentas.Create(Self);
+      try
+        oEspera.EsperarPorLotes(
+          function: Boolean
+          begin
+            Inc(iLotesExcel);
+            nInicioLote := GetTickCount64;
+            repeat
+              Result := oExportacion.ProcesarLote(
+                FILAS_POR_PASO_EXCEL);
+            until Result or
+              (GetTickCount64 - nInicioLote >=
+               DURACION_LOTE_EXCEL_MS);
+            Inc(nTiempoTrabajoExcel,
+              GetTickCount64 - nInicioLote);
+          end);
+      finally
+        FreeAndNil(oEspera);
+      end;
+      RegistroLog.RegistrarRendimiento(
+        'MovVentasArt.Excel',
+        Format(
+          'filas=%d; lotes=%d; trabajo=%d ms',
+          [iNumeroFilas, iLotesExcel, nTiempoTrabajoExcel]),
+        GetTickCount64 - nInicioExportacion);
+      oExportacion := nil;
+      Self.Hide;
+      try
+        fPreview.ShowModal;
+      finally
+        Self.Show;
+      end;
     finally
+      oExportacion := nil;
       FreeAndNil(fPreview);
     end;
   finally
-    Self.Show;
+    Screen.Cursor := crCursorAnterior;
   end;
 end;
 
