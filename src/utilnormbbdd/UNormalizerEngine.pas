@@ -280,6 +280,7 @@ begin
   AddSuf('fza_ivas_zonas',                      'IVAZON');
   AddSuf('fza_metadatos',                       'META');
   AddSuf('fza_movimientos_almacen',             'MOV');
+  AddSuf('fza_movimientos_recalculos_pendientes','MOVREC');
   AddSuf('fza_paises',                          'PAI');
   AddSuf('fza_pedidos',                         'PED');
   AddSuf('fza_pedidos_lineas',                  'PEDLIN');
@@ -419,6 +420,8 @@ begin
   AddOwn('fza_ivas_tipos',                     ['TIPO']);
   AddOwn('fza_ivas_zonas',                     ['ZONA']);
   AddOwn('fza_movimientos_almacen',            ['MOVIMIENTO','MOV']);
+  AddOwn('fza_movimientos_recalculos_pendientes',
+         ['MOVIMIENTO','RECALCULO','PENDIENTE']);
   AddOwn('fza_codigos_barras',                 ['BARRAS','CODIGO_BARRAS']);
   AddOwn('fza_config_campos',                  ['CAMPO']);
   AddOwn('fza_valores_defecto',                ['DEFECTO']);

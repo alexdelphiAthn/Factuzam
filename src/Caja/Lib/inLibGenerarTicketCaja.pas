@@ -27,6 +27,7 @@ uses
 type
   TEstadoAperturaCajon = (
     eacAbierto,
+    eacSimulada,
     eacSinPermiso,
     eacSinImpresora
   );
@@ -96,7 +97,7 @@ type
 
 function TResultadoAperturaCajon.Correcto: Boolean;
 begin
-  Result := Estado = eacAbierto;
+  Result := Estado in [eacAbierto, eacSimulada];
 end;
 
 function PrepararModeloTicketOperacionCaja(
@@ -289,6 +290,14 @@ begin
   begin
     Result.Estado := eacSinPermiso;
     Result.Mensaje := SErrorPermisoAbrirCajon;
+  end
+  else if Assigned(AParametrosCaja) and
+          SameText(
+            Trim(AParametrosCaja.ImpresoraCaja),
+            'DEBUG') then
+  begin
+    Result.Estado := eacSimulada;
+    Result.Mensaje := '';
   end
   else if not ImpresoraCajaAsignada(AParametrosCaja) then
   begin

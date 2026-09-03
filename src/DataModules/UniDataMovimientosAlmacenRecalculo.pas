@@ -25,9 +25,22 @@ procedure FecharYRecalcularMovimientosDocumento(
   AConexion: TUniConnection;
   const ATipo, ASerie, ANumero: string;
   AFecha: TDateTime);
+procedure FecharYEncolarMovimientosDocumento(
+  AConexion: TUniConnection;
+  const ATipo, ASerie, ANumero: string;
+  AFecha: TDateTime;
+  const AMotivo, AUsuario: string);
 procedure RecalcularMovimientosOperacion(
   AConexion: TUniConnection;
   const AOperacion: string);
+function EncolarMovimientosRecalculo(
+  AConexion: TUniConnection;
+  const ANumerosMovimiento: array of string;
+  const AMotivo, AUsuario: string): Boolean;
+function MovimientosCajaRequierenRecalculo(
+  AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja, AOperacion: string;
+  const ANumerosMovimiento: array of string): Boolean;
 procedure RecalcularMovimiento(
   AConexion: TUniConnection;
   const ANumeroMovimiento: string);
@@ -61,7 +74,224 @@ begin
   end;
 end;
 
-procedure FecharYRecalcularMovimientosDocumento(
+function CrearListaParametros(
+  const APrefijo: string;
+  ACantidad: Integer): string;
+var
+  Indice: Integer;
+begin
+  Result := '';
+  for Indice := 0 to ACantidad - 1 do
+  begin
+    if Result <> '' then
+      Result := Result + ', ';
+    Result := Result + ':' + APrefijo + IntToStr(Indice);
+  end;
+end;
+
+procedure AsignarNumerosMovimiento(
+  AConsulta: TUniQuery;
+  const APrefijo: string;
+  const ANumerosMovimiento: array of string);
+var
+  Indice: Integer;
+begin
+  for Indice := Low(ANumerosMovimiento) to High(ANumerosMovimiento) do
+    AConsulta.ParamByName(
+      APrefijo + IntToStr(Indice)).AsString :=
+        Trim(ANumerosMovimiento[Indice]);
+end;
+
+function NumerosMovimientoValidos(
+  const ANumerosMovimiento: array of string): Boolean;
+var
+  Indice: Integer;
+  IndiceAnterior: Integer;
+begin
+  Result := Length(ANumerosMovimiento) > 0;
+  Indice := Low(ANumerosMovimiento);
+  while Result and (Indice <= High(ANumerosMovimiento)) do
+  begin
+    Result := Trim(ANumerosMovimiento[Indice]) <> '';
+    IndiceAnterior := Low(ANumerosMovimiento);
+    while Result and (IndiceAnterior < Indice) do
+    begin
+      Result := not SameText(
+        Trim(ANumerosMovimiento[IndiceAnterior]),
+        Trim(ANumerosMovimiento[Indice]));
+      Inc(IndiceAnterior);
+    end;
+    Inc(Indice);
+  end;
+end;
+
+function MovimientosNoSonVentasLocales(
+  AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja, AOperacion: string;
+  const ANumerosMovimiento: array of string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT COUNT(*) AS TOTAL, ' +
+      '       IFNULL(SUM(CASE WHEN ' +
+      '         m.ESACTIVO_MOV = ''S'' ' +
+      '         AND m.TIPO_DOC_MOV = ''VE'' ' +
+      '         AND m.TIPO_MOV = ''S'' ' +
+      '         AND IFNULL(m.CANTIDAD_MOV, 0) > 0 ' +
+      '         AND m.FECHA_MOV IS NOT NULL ' +
+      '         AND m.INSTANTE_ALTA IS NOT NULL ' +
+      '         AND IFNULL(m.CODIGO_EMP_MOV, '''') = :EMPRESA ' +
+      '         AND IFNULL(m.CODIGO_ALM_MOV, '''') = :ALMACEN ' +
+      '         AND IFNULL(m.CODIGO_ALM_DOC_MOV, '''') = :ALMACEN ' +
+      '         AND IFNULL(m.CODIGO_CAJA_DOC_MOV, '''') = :CAJA ' +
+      '         AND IFNULL(m.NUMERO_OPERACION_DOC_MOV, '''') = ' +
+      '             :OPERACION ' +
+      '         AND IFNULL(m.CODIGO_ALM_CONTRA_MOV, '''') = '''' ' +
+      '         AND IFNULL(m.CODIGO_UNIDAD_MOV, '''') <> '''' ' +
+      '       THEN 0 ELSE 1 END), 0) AS INSEGUROS ' +
+      '  FROM fza_movimientos_almacen m ' +
+      ' WHERE m.NUMERO_MOV IN (' +
+      CrearListaParametros('MOV', Length(ANumerosMovimiento)) + ')';
+    Consulta.ParamByName('EMPRESA').AsString := AEmpresa;
+    Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
+    Consulta.ParamByName('CAJA').AsString := ACaja;
+    Consulta.ParamByName('OPERACION').AsString := AOperacion;
+    AsignarNumerosMovimiento(
+      Consulta, 'MOV', ANumerosMovimiento);
+    Consulta.Open;
+    Result :=
+      (Consulta.FieldByName('TOTAL').AsInteger <>
+       Length(ANumerosMovimiento)) or
+      (Consulta.FieldByName('INSEGUROS').AsInteger > 0);
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function HayMovimientosPosteriores(
+  AConexion: TUniConnection;
+  const ANumerosMovimiento: array of string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT 1 AS REQUIERE ' +
+      '  FROM fza_movimientos_almacen nuevo ' +
+      '  JOIN fza_movimientos_almacen posterior ' +
+      '    ON posterior.CODIGO_ALM_MOV = nuevo.CODIGO_ALM_MOV ' +
+      '   AND posterior.CODIGO_UNIDAD_MOV = ' +
+      '       nuevo.CODIGO_UNIDAD_MOV ' +
+      '   AND posterior.ESACTIVO_MOV = ''S'' ' +
+      '   AND posterior.NUMERO_MOV NOT IN (' +
+      CrearListaParametros('OTRO', Length(ANumerosMovimiento)) + ') ' +
+      ' WHERE nuevo.NUMERO_MOV IN (' +
+      CrearListaParametros('NUEVO', Length(ANumerosMovimiento)) + ') ' +
+      '   AND ( ' +
+      '     IFNULL(posterior.FECHA_MOV, ' +
+      '       ''1000-01-01 00:00:00'') > ' +
+      '     IFNULL(nuevo.FECHA_MOV, ''1000-01-01 00:00:00'') ' +
+      '     OR (IFNULL(posterior.FECHA_MOV, ' +
+      '           ''1000-01-01 00:00:00'') = ' +
+      '         IFNULL(nuevo.FECHA_MOV, ''1000-01-01 00:00:00'') ' +
+      '       AND IFNULL(posterior.INSTANTE_ALTA, ' +
+      '           ''1000-01-01 00:00:00'') > ' +
+      '         IFNULL(nuevo.INSTANTE_ALTA, ' +
+      '           ''1000-01-01 00:00:00'')) ' +
+      '     OR (IFNULL(posterior.FECHA_MOV, ' +
+      '           ''1000-01-01 00:00:00'') = ' +
+      '         IFNULL(nuevo.FECHA_MOV, ''1000-01-01 00:00:00'') ' +
+      '       AND IFNULL(posterior.INSTANTE_ALTA, ' +
+      '           ''1000-01-01 00:00:00'') = ' +
+      '         IFNULL(nuevo.INSTANTE_ALTA, ' +
+      '           ''1000-01-01 00:00:00'') ' +
+      '       AND posterior.NUMERO_MOV > nuevo.NUMERO_MOV) ' +
+      '   ) ' +
+      ' LIMIT 1';
+    AsignarNumerosMovimiento(
+      Consulta, 'OTRO', ANumerosMovimiento);
+    AsignarNumerosMovimiento(
+      Consulta, 'NUEVO', ANumerosMovimiento);
+    Consulta.Open;
+    Result := not Consulta.IsEmpty;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function StockNoPermiteOmitirRecalculo(
+  AConexion: TUniConnection;
+  const ANumerosMovimiento: array of string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := TUniQuery.Create(nil);
+  try
+    Consulta.Connection := AConexion;
+    Consulta.SQL.Text :=
+      'SELECT 1 AS REQUIERE ' +
+      '  FROM ( ' +
+      '    SELECT DISTINCT m.CODIGO_ALM_MOV AS ALMACEN, ' +
+      '           m.CODIGO_UNIDAD_MOV AS SKU ' +
+      '      FROM fza_movimientos_almacen m ' +
+      '     WHERE m.NUMERO_MOV IN (' +
+      CrearListaParametros('STOCK', Length(ANumerosMovimiento)) + ') ' +
+      '  ) claves ' +
+      '  LEFT JOIN fza_articulos_stockactual stock ' +
+      '    ON stock.CODIGO_ALM_STK = claves.ALMACEN ' +
+      '   AND stock.CODIGO_UNIDAD_STK = claves.SKU ' +
+      ' GROUP BY claves.ALMACEN, claves.SKU ' +
+      'HAVING COUNT(stock.CODIGO_ALM_STK) <> 1 ' +
+      '    OR MAX(IF(IFNULL(stock.LOTE_STK, '''') = '''', 0, 1)) <> 0 ' +
+      '    OR MIN(stock.CANTIDAD_STK) IS NULL ' +
+      '    OR MIN(stock.CANTIDAD_STK) < 0 ' +
+      ' LIMIT 1';
+    AsignarNumerosMovimiento(
+      Consulta, 'STOCK', ANumerosMovimiento);
+    Consulta.Open;
+    Result := not Consulta.IsEmpty;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
+function MovimientosCajaRequierenRecalculo(
+  AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ACaja, AOperacion: string;
+  const ANumerosMovimiento: array of string): Boolean;
+begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  Result := Length(ANumerosMovimiento) > 0;
+  if Result then
+  begin
+    Result :=
+      (not AConexion.InTransaction) or
+      (Trim(AEmpresa) = '') or
+      (Trim(AAlmacen) = '') or
+      (Trim(ACaja) = '') or
+      (Trim(AOperacion) = '') or
+      (not NumerosMovimientoValidos(ANumerosMovimiento));
+    if not Result then
+      Result := MovimientosNoSonVentasLocales(
+        AConexion, AEmpresa, AAlmacen, ACaja, AOperacion,
+        ANumerosMovimiento);
+    if not Result then
+      Result := HayMovimientosPosteriores(
+        AConexion, ANumerosMovimiento);
+    if not Result then
+      Result := StockNoPermiteOmitirRecalculo(
+        AConexion, ANumerosMovimiento);
+  end;
+end;
+
+procedure FecharMovimientosDocumento(
   AConexion: TUniConnection;
   const ATipo, ASerie, ANumero: string;
   AFecha: TDateTime);
@@ -87,7 +317,168 @@ begin
   finally
     FreeAndNil(Consulta);
   end;
+end;
+
+function RecalculosDiferidosActivosUsuario(
+  AConexion: TUniConnection;
+  const AUsuario: string): Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Result := False;
+  if Trim(AUsuario) <> '' then
+  begin
+    Consulta := TUniQuery.Create(nil);
+    try
+      Consulta.Connection := AConexion;
+      Consulta.SQL.Text :=
+        'SELECT P.VALUE_USUPER ' +
+        '  FROM fza_usuarios U ' +
+        '  JOIN fza_usuarios_perfiles P ' +
+        '    ON P.USUARIO_GRUPO_USUPER IN ' +
+        '       (U.USUARIO_USU, U.GRUPO_USU, ''Todos'') ' +
+        ' WHERE U.USUARIO_USU = :USUARIO ' +
+        '   AND P.KEY_USUPER = ''frmMtoCajaParam'' ' +
+        '   AND P.SUBKEY_USUPER = ' +
+        '       ''vgerAplazarRecalculoMovimientos'' ' +
+        '   AND P.TYPE_BLOB_USUPER IS NULL ' +
+        ' ORDER BY CASE P.USUARIO_GRUPO_USUPER ' +
+        '            WHEN U.USUARIO_USU THEN 1 ' +
+        '            WHEN U.GRUPO_USU THEN 2 ' +
+        '            ELSE 3 ' +
+        '          END ' +
+        ' LIMIT 1';
+      Consulta.ParamByName('USUARIO').AsString := AUsuario;
+      Consulta.Open;
+      if not Consulta.IsEmpty then
+      begin
+        Result := SameText(
+          Trim(Consulta.FieldByName('VALUE_USUPER').AsString),
+          'True') or
+          (Trim(Consulta.FieldByName('VALUE_USUPER').AsString) = '1');
+      end;
+    finally
+      FreeAndNil(Consulta);
+    end;
+  end;
+end;
+
+function EncolarDocumentoRecalculo(
+  AConexion: TUniConnection;
+  const ATipo, ASerie, ANumero, AMotivo, AUsuario: string): Boolean;
+var
+  Procedimiento: TUniStoredProc;
+begin
+  Result := AConexion.InTransaction and
+    ProcedimientoDisponible(
+      AConexion,
+      'PRC_FZA_MOVIMIENTOS_RECALCULO_ENCOLAR_DOCUMENTO');
+  if Result then
+  begin
+    Procedimiento := TUniStoredProc.Create(nil);
+    try
+      Procedimiento.Connection := AConexion;
+      Procedimiento.StoredProcName :=
+        'PRC_FZA_MOVIMIENTOS_RECALCULO_ENCOLAR_DOCUMENTO';
+      Procedimiento.Params.Clear;
+      Procedimiento.Params.CreateParam(ftString, 'p_TIPO', ptInput);
+      Procedimiento.Params.CreateParam(ftString, 'p_SERIE', ptInput);
+      Procedimiento.Params.CreateParam(ftString, 'p_NUMERO', ptInput);
+      Procedimiento.Params.CreateParam(ftString, 'p_MOTIVO', ptInput);
+      Procedimiento.Params.CreateParam(ftString, 'p_USUARIO', ptInput);
+      Procedimiento.ParamByName('p_TIPO').AsString := ATipo;
+      Procedimiento.ParamByName('p_SERIE').AsString := ASerie;
+      Procedimiento.ParamByName('p_NUMERO').AsString := ANumero;
+      Procedimiento.ParamByName('p_MOTIVO').AsString := AMotivo;
+      Procedimiento.ParamByName('p_USUARIO').AsString := AUsuario;
+      Procedimiento.ExecProc;
+    finally
+      FreeAndNil(Procedimiento);
+    end;
+  end;
+end;
+
+procedure FecharYEncolarMovimientosDocumento(
+  AConexion: TUniConnection;
+  const ATipo, ASerie, ANumero: string;
+  AFecha: TDateTime;
+  const AMotivo, AUsuario: string);
+var
+  Encolado: Boolean;
+begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  FecharMovimientosDocumento(
+    AConexion, ATipo, ASerie, ANumero, AFecha);
+  Encolado := False;
+  if RecalculosDiferidosActivosUsuario(AConexion, AUsuario) then
+  begin
+    Encolado := EncolarDocumentoRecalculo(
+      AConexion, ATipo, ASerie, ANumero, AMotivo, AUsuario);
+  end;
+  if not Encolado then
+  begin
+    RecalcularMovimientosDocumento(
+      AConexion, ATipo, ASerie, ANumero);
+  end;
+end;
+
+procedure FecharYRecalcularMovimientosDocumento(
+  AConexion: TUniConnection;
+  const ATipo, ASerie, ANumero: string;
+  AFecha: TDateTime);
+begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  FecharMovimientosDocumento(
+    AConexion, ATipo, ASerie, ANumero, AFecha);
   RecalcularMovimientosDocumento(AConexion, ATipo, ASerie, ANumero);
+end;
+
+function EncolarMovimientosRecalculo(
+  AConexion: TUniConnection;
+  const ANumerosMovimiento: array of string;
+  const AMotivo, AUsuario: string): Boolean;
+var
+  Indice: Integer;
+  Procedimiento: TUniStoredProc;
+begin
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  Result := AConexion.InTransaction and
+    (Length(ANumerosMovimiento) > 0) and
+    ProcedimientoDisponible(
+      AConexion,
+      'PRC_FZA_MOVIMIENTOS_RECALCULO_ENCOLAR');
+  if Result then
+  begin
+    Procedimiento := TUniStoredProc.Create(nil);
+    try
+      Procedimiento.Connection := AConexion;
+      Procedimiento.StoredProcName :=
+        'PRC_FZA_MOVIMIENTOS_RECALCULO_ENCOLAR';
+      Procedimiento.Params.Clear;
+      Procedimiento.Params.CreateParam(
+        ftString, 'p_NUMERO_MOV', ptInput);
+      Procedimiento.Params.CreateParam(
+        ftString, 'p_MOTIVO', ptInput);
+      Procedimiento.Params.CreateParam(
+        ftString, 'p_USUARIO', ptInput);
+      for Indice := Low(ANumerosMovimiento) to
+                    High(ANumerosMovimiento) do
+      begin
+        if Trim(ANumerosMovimiento[Indice]) = '' then
+          raise EArgumentException.Create('ANumerosMovimiento');
+        Procedimiento.ParamByName('p_NUMERO_MOV').AsString :=
+          ANumerosMovimiento[Indice];
+        Procedimiento.ParamByName('p_MOTIVO').AsString := AMotivo;
+        Procedimiento.ParamByName('p_USUARIO').AsString := AUsuario;
+        Procedimiento.ExecProc;
+      end;
+    finally
+      FreeAndNil(Procedimiento);
+    end;
+  end;
 end;
 
 procedure RecalcularMovimientosDocumento(

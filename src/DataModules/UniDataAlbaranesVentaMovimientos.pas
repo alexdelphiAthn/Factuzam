@@ -648,12 +648,14 @@ begin
   end;
   if Result > 0 then
   begin
-    FecharYRecalcularMovimientosDocumento(
+    FecharYEncolarMovimientosDocumento(
       FConexion,
       ADocumento.TipoDocumento,
       ADocumento.Serie,
       ADocumento.Numero,
-      ADocumento.InstanteMovimiento);
+      ADocumento.InstanteMovimiento,
+      'ALBARAN_VENTA',
+      ADocumento.Usuario);
   end;
 end;
 

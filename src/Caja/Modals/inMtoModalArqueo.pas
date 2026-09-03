@@ -33,7 +33,7 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid,
   Uni,
-  inMtoFrmBase, inLibArqueo, inLibArqueoTicket,
+  inMtoFrmBase, inLibArqueo, inLibArqueoDesglose, inLibArqueoTicket,
   inLibArqueoIntf, inLibArqueoTicketIntf, inLibArqueoPersistencia,
   inLibTiraCajaTicketIntf,
   inLibModalArqueoPersistenciaIntf,
@@ -42,7 +42,7 @@ uses
   inLibVentasCalendario, inLibVentasCalendarioIntf,
   UniDataModalArqueoOperacion,
   Vcl.ComCtrls, dxCore,
-  cxDateUtils, cxCurrencyEdit, cxRadioGroup,
+  cxDateUtils, cxCurrencyEdit, cxSpinEdit, cxRadioGroup,
   JvComponentBase, JvEnterTab, cxLocalization, cxGroupBox,
   inLibCajaPantallaInyeccion;
 
@@ -214,6 +214,7 @@ type
     lblVendedorNombre: TcxLabel;
     btnGrabarArqueo: TcxButton;
 
+    btnDesgloseEfectivo: TcxButton;
     // Pie
     btnAtras: TcxButton;
     lblESC: TcxLabel;
@@ -227,6 +228,7 @@ type
     actDesplegarDesde: TAction;
     actDesplegarHasta: TAction;
     actHistorico: TAction;
+    actDesglose: TAction;
     actTiraCaja: TAction;
     btnTiraCaja: TcxButton;
 
@@ -253,6 +255,17 @@ type
       AItem: TcxCustomGridTableItem);
     procedure tvRecuentoKeyDown(Sender: TObject;
       var Key: Word; Shift: TShiftState);
+    procedure tvRecuentoEditing(
+      Sender: TcxCustomGridTableView;
+      AItem: TcxCustomGridTableItem;
+      var AAllow: Boolean);
+    procedure tvRecuentoCellClick(
+      Sender: TcxCustomGridTableView;
+      ACellViewInfo: TcxGridTableDataCellViewInfo;
+      AButton: TMouseButton;
+      AShift: TShiftState;
+      var AHandled: Boolean);
+    procedure actDesgloseExecute(Sender: TObject);
     procedure txtRetiradaImportePropertiesChange(Sender: TObject);
     procedure txtDejoImportePropertiesChange(Sender: TObject);
     procedure txtVendedorCodigoPropertiesButtonClick(Sender: TObject;
@@ -268,6 +281,9 @@ type
     FEditarCambioPermitido: Boolean;
     FEmitirJustificanteCierre: Boolean;
     FActualizandoImportesCierre: Boolean;
+    FRecuentoDetallado: Boolean;
+    FDenominaciones: TArray<Currency>;
+    FDesglose: TDesgloseArqueo;
     FPuedeVerResumen: Boolean;
     FResumenFamilias: TClientDataSet;
     FRepositorioConsultas: IRepositorioConsultasCaja;
@@ -304,6 +320,9 @@ type
       TSolicitudResumenModalArqueo;
     function  FormatImporte(AValor: Currency): string;
     procedure CargarRecuento(const AArqueo: TArqueoCaja);
+    procedure ConfigurarDesglose;
+    procedure AbrirDesgloseEfectivo;
+    procedure AplicarDesgloseAlRecuento;
     procedure RecalcularTotalesRecuento;
     procedure RecalcularDejoManana;
     function ObtenerDatosRecuento:
@@ -354,6 +373,7 @@ implementation
 
 uses inLibPermisosIntf,
      inMtoModalArqueosHistCaja,
+     inMtoModalDesgloseEfectivo,
      inLibTiraCajaTicket,
      inMtoModalTiraCaja, inMtoGenSearch, inLibVerifactu, inLibMsgCaja;
 
@@ -480,6 +500,7 @@ begin
       frm.btnImprimir.Visible := False;
       frm.actImprimir.Enabled := False;
     end;
+    frm.ConfigurarDesglose;
     frm.Recalcular;
     frm.ShowModal;
   finally
@@ -995,6 +1016,8 @@ begin
     tvRecuento.EndUpdate;
   end;
   RecalcularTotalesRecuento;
+  { Un recálculo no debe perder lo que ya han contado. }
+  AplicarDesgloseAlRecuento;
 end;
 
 function TfrmModalArqueo.ObtenerImporteRecuento(
@@ -1112,7 +1135,16 @@ procedure TfrmModalArqueo.tvRecuentoKeyDown(Sender: TObject;
 var
   iRow, iDest: Integer;
 begin
-  if (Key = VK_RETURN) or
+  if FRecuentoDetallado and
+     (tvRecuento.DataController.FocusedRecordIndex = 0) and
+     (tvRecuento.Controller.FocusedColumn = tvRecuentoImporte) and
+     ((Key = VK_RETURN) or (Key = VK_SPACE) or (Key = VK_F3)) then
+  begin
+    { El efectivo no se teclea: se cuenta en la ventana de desglose. }
+    Key := 0;
+    AbrirDesgloseEfectivo;
+  end
+  else if (Key = VK_RETURN) or
      ((Key = VK_END) and (ssCtrl in Shift)) or
      ((Key = VK_HOME) and (ssCtrl in Shift)) then
   begin
@@ -1138,6 +1170,94 @@ begin
     end;
     Key := 0;
   end;
+end;
+
+// =============================================================================
+//   Desglose de efectivo: recuento detallado de billetes y monedas
+// =============================================================================
+
+procedure TfrmModalArqueo.ConfigurarDesglose;
+begin
+  FRecuentoDetallado := ParametrosCaja.GetBool(
+    'vgerArqueoRecuentoDetallado',
+    False);
+  FDenominaciones := AnalizarDenominacionesArqueo(
+    ParametrosCaja.GetString(
+      'vgerArqueoDenominaciones',
+      DenominacionesArqueoPorDefecto));
+  FDesglose := CrearDesgloseArqueo(FDenominaciones);
+  btnDesgloseEfectivo.Visible := FRecuentoDetallado;
+  actDesglose.Enabled := FRecuentoDetallado;
+end;
+
+procedure TfrmModalArqueo.AbrirDesgloseEfectivo;
+begin
+  if FRecuentoDetallado then
+  begin
+    if TfrmModalDesgloseEfectivo.Ejecutar(
+         Self,
+         FDenominaciones,
+         FArqueoActual.EfectivoCaja,
+         tvRecuentoSistema.Visible,
+         FDesglose) then
+      AplicarDesgloseAlRecuento;
+  end;
+end;
+
+procedure TfrmModalArqueo.AplicarDesgloseAlRecuento;
+var
+  vSistema: Currency;
+  vTotal: Currency;
+begin
+  if FRecuentoDetallado and
+     (tvRecuento.DataController.RecordCount > 0) then
+  begin
+    vTotal := TotalDesgloseArqueo(FDesglose);
+    vSistema := ObtenerImporteRecuento(0, tvRecuentoSistema);
+    tvRecuento.DataController.Values[
+      0, tvRecuentoImporte.Index] := Double(vTotal);
+    tvRecuento.DataController.Values[
+      0, tvRecuentoDiferencia.Index] := Double(vTotal - vSistema);
+    RecalcularTotalesRecuento;
+  end;
+end;
+
+procedure TfrmModalArqueo.tvRecuentoEditing(
+  Sender: TcxCustomGridTableView;
+  AItem: TcxCustomGridTableItem;
+  var AAllow: Boolean);
+begin
+  { Con recuento detallado el efectivo de la primera fila sale del
+    desglose de billetes y monedas: no se teclea en la rejilla. }
+  if FRecuentoDetallado and
+     (AItem = tvRecuentoImporte) and
+     (tvRecuento.DataController.FocusedRecordIndex = 0) then
+    AAllow := False;
+end;
+
+procedure TfrmModalArqueo.tvRecuentoCellClick(
+  Sender: TcxCustomGridTableView;
+  ACellViewInfo: TcxGridTableDataCellViewInfo;
+  AButton: TMouseButton;
+  AShift: TShiftState;
+  var AHandled: Boolean);
+begin
+  if FRecuentoDetallado and
+     (AButton = mbLeft) and
+     (ACellViewInfo.Item = tvRecuentoImporte) and
+     (ACellViewInfo.GridRecord.RecordIndex = 0) then
+  begin
+    AHandled := True;
+    { La ventana se abre cuando la rejilla ha terminado de procesar la
+      pulsación, para no dejarle el ratón capturado. }
+    TThread.ForceQueue(nil, AbrirDesgloseEfectivo);
+  end;
+end;
+
+procedure TfrmModalArqueo.actDesgloseExecute(Sender: TObject);
+begin
+  inherited;
+  AbrirDesgloseEfectivo;
 end;
 
 procedure TfrmModalArqueo.txtRetiradaImportePropertiesChange(
@@ -1277,7 +1397,10 @@ begin
   Result.Recuento := ObtenerDatosRecuento;
   Result.ImporteRetirada := Currency(txtRetiradaImporte.Value);
   Result.ConceptoRetirada := ObtenerConceptoRetirada;
-  Result.DesgloseBilletes := '';
+  if FRecuentoDetallado then
+    Result.DesgloseBilletes := FormatearDesgloseArqueo(FDesglose)
+  else
+    Result.DesgloseBilletes := '';
   Result.Observaciones := Trim(txtObservaciones.Text);
   Result.CodigoVendedor := txtVendedorCodigo.Text;
   Result.Usuario := IdentidadSesion.Usuario;

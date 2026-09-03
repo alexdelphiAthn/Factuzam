@@ -203,6 +203,27 @@ begin
     'AND o.SERIE_FAC_OPCAJA <> '''' ' +
     'AND o.TIPO_OPERACION_OPCAJA ' +
     'NOT IN (''TR'',''AT'',''EC'',''GC'',''DE'') ' +
+    // Una venta puede dejar varias filas en fza_caja_operaciones
+    // con la misma factura (VE + DV, CB de anticipo, VR de vale
+    // canjeado, VL de vale emitido). La tira imprime el documento
+    // completo (líneas y formas de pago de la factura), así que
+    // cada fila extra repetía el ticket y volvía a sumar su total.
+    // Se deja una sola fila por factura: la más representativa
+    // (VE, luego DV) y, a igualdad, la primera grabada.
+    'AND (o.NUMERO_FAC_OPCAJA IS NULL ' +
+    'OR o.NUMERO_FAC_OPCAJA = '''' ' +
+    'OR o.ID_OPCAJA = (SELECT od.ID_OPCAJA ' +
+    'FROM fza_caja_operaciones od ' +
+    'WHERE od.CODIGO_EMP_OPCAJA = o.CODIGO_EMP_OPCAJA ' +
+    'AND od.CODIGO_ALM_OPCAJA = o.CODIGO_ALM_OPCAJA ' +
+    'AND od.CODIGO_CAJA_OPCAJA = o.CODIGO_CAJA_OPCAJA ' +
+    'AND od.SERIE_FAC_OPCAJA = o.SERIE_FAC_OPCAJA ' +
+    'AND od.NUMERO_FAC_OPCAJA = o.NUMERO_FAC_OPCAJA ' +
+    'AND od.TIPO_OPERACION_OPCAJA ' +
+    'NOT IN (''TR'',''AT'',''EC'',''GC'',''DE'') ' +
+    'ORDER BY CASE od.TIPO_OPERACION_OPCAJA ' +
+    'WHEN ''VE'' THEN 0 WHEN ''DV'' THEN 1 ELSE 2 END, ' +
+    'od.ID_OPCAJA LIMIT 1)) ' +
     'AND (:pTODAS_SERIES = ''S'' ' +
     'OR FIND_IN_SET(o.SERIE_FAC_OPCAJA, :pSERIES) > 0)) ' +
     'OR (:pINCLUIR_TRASPASOS = ''S'' ' +

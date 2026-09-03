@@ -853,6 +853,15 @@
             TabOrder = 1
             Transparent = True
           end
+          object btnDesgloseEfectivo: TcxButton
+            Left = 700
+            Top = 2
+            Width = 250
+            Height = 22
+            Action = actDesglose
+            TabOrder = 2
+            Visible = False
+          end
           object cxgrdRecuento: TcxGrid
             Left = 4
             Top = 26
@@ -860,6 +869,8 @@
             Height = 154
             TabOrder = 0
             object tvRecuento: TcxGridTableView
+              OnCellClick = tvRecuentoCellClick
+              OnEditing = tvRecuentoEditing
               OnKeyDown = tvRecuentoKeyDown
               OnEditValueChanged = tvRecuentoImportePropertiesEditValueChanged
               OptionsBehavior.FocusCellOnTab = True
@@ -1153,6 +1164,11 @@
       Caption = 'Hist'#243'rico'
       ShortCut = 119
       OnExecute = actHistoricoExecute
+    end
+    object actDesglose: TAction
+      Caption = 'Desglosar efectivo (F3)'
+      ShortCut = 114
+      OnExecute = actDesgloseExecute
     end
   end
   object dsResEmpleado: TDataSource

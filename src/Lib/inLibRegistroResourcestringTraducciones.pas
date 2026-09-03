@@ -8239,6 +8239,12 @@ begin
       SErrorSintaxisComandoImprimirFacturas);
   ARegistrar(
     'inLibMsgConfiguracion.' +
+    'SErrorSintaxisComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorSintaxisComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
     'SAyudaComandos',
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
@@ -8333,6 +8339,54 @@ begin
     'src/Lib/inLibMsgConfiguracion.pas',
     @inLibMsgConfiguracion.
       SInfoComandoCopiaSeguridadCompletado);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorConexionComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorConexionComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorEjecucionComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorEjecucionComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SErrorColaIncompletaComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SErrorColaIncompletaComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoInicioComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoInicioComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoConfiguracionComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoConfiguracionComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoConexionComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoConexionComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoCompletadoComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoCompletadoComandoRecalculosStock);
+  ARegistrar(
+    'inLibMsgConfiguracion.' +
+    'SInfoProgresoComandoRecalculosStock',
+    'src/Lib/inLibMsgConfiguracion.pas',
+    @inLibMsgConfiguracion.
+      SInfoProgresoComandoRecalculosStock);
   ARegistrar(
     'inLibMsgConfiguracion.' +
     'SRestauracionCancelada',
@@ -11471,6 +11525,12 @@ begin
     'src/Lib/inLibMsgTickets.pas',
     @inLibMsgTickets.
       STicketBilletesMonedas);
+  ARegistrar(
+    'inLibMsgTickets.' +
+    'STicketTotalContado',
+    'src/Lib/inLibMsgTickets.pas',
+    @inLibMsgTickets.
+      STicketTotalContado);
   ARegistrar(
     'inLibMsgTickets.' +
     'STicketEfectivoSistema',

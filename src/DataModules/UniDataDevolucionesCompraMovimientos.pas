@@ -256,12 +256,14 @@ begin
       raise Exception.CreateFmt(
         SErrorDevolucionCompraSinCantidadParaMovimientos,
         [ASerieDevc, ANumDevc]);
-    FecharYRecalcularMovimientosDocumento(
+    FecharYEncolarMovimientosDocumento(
       AConn,
       EstrategiaDevolucionCompra.TipoDocumentoMovimientoStock,
       ASerieDevc,
       ANumDevc,
-      dtInstanteMovimiento);
+      dtInstanteMovimiento,
+      'DEVOLUCION_COMPRA',
+      AUsuario);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

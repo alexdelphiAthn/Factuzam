@@ -462,12 +462,14 @@ begin
       ANumAlbc, AUsuario);
     ActualizarCostesSkuDesdeAlbaranCompra(AConn, ASerieAlbc, ANumAlbc,
       AUsuario);
-    FecharYRecalcularMovimientosDocumento(
+    FecharYEncolarMovimientosDocumento(
       AConn,
       EstrategiaAlbaranCompra.TipoDocumentoMovimientoStock,
       ASerieAlbc,
       ANumAlbc,
-      dtInstanteMovimiento);
+      dtInstanteMovimiento,
+      'ALBARAN_COMPRA',
+      AUsuario);
   finally
     FreeAndNil(qSrc);
     FreeAndNil(spIns);

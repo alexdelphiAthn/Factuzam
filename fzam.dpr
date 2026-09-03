@@ -47,6 +47,12 @@ uses
     'src\Lib\inLibComandoCopiaSeguridad.pas',
   inMtoComandoCopiaSeguridad in
     'src\Core\inMtoComandoCopiaSeguridad.pas',
+  inLibComandoRecalculosStock in
+    'src\Lib\inLibComandoRecalculosStock.pas',
+  inMtoComandoRecalculosStock in
+    'src\Core\inMtoComandoRecalculosStock.pas',
+  UniDataRecalculosStockLote in
+    'src\DataModules\UniDataRecalculosStockLote.pas',
   inLibLineaComandos in
     'src\Lib\inLibLineaComandos.pas',
   inLibSalidaComandos in
@@ -674,6 +680,7 @@ uses
   inMtoCajaParam in 'src\Caja\Forms\inMtoCajaParam.pas' {frmMtoCajaParam},
   inLibCajaParam in 'src\Caja\Lib\inLibCajaParam.pas',
   inLibArqueoIntf in 'src\Caja\Lib\inLibArqueoIntf.pas',
+  inLibArqueoDesglose in 'src\Caja\Lib\inLibArqueoDesglose.pas',
   UniDataArqueoRepositorio in
     'src\Caja\DataModules\UniDataArqueoRepositorio.pas',
   inLibArqueoTicketIntf in
@@ -733,6 +740,9 @@ uses
   inMtoModalMotivoDevolucion in
     'src\Caja\Modals\inMtoModalMotivoDevolucion.pas'
     {frmModalMotivoDevolucion},
+  inMtoModalDesgloseEfectivo in
+    'src\Caja\Modals\inMtoModalDesgloseEfectivo.pas'
+    {frmModalDesgloseEfectivo},
   inMtoModalCambioIva in
     'src\Caja\Modals\inMtoModalCambioIva.pas'
     {frmModalCambioIva},
@@ -1759,9 +1769,11 @@ begin
   var ResultadoLicenciaInicial: TResultadoLicenciaAplicacion;
   var EsModoComandoCopiaSeguridad: Boolean;
   var EsModoComandoImprimirFacturas: Boolean;
+  var EsModoComandoRecalculosStock: Boolean;
   var CodigoSalidaComandoAyuda: Cardinal;
   var CodigoSalidaComandoCopia: Cardinal;
   var CodigoSalidaComandoImpresion: Cardinal;
+  var CodigoSalidaComandoRecalculosStock: Cardinal;
   if EsProcesoComandoAyuda then
   begin
     CodigoSalidaComandoAyuda := EjecutarProcesoComandoAyuda;
@@ -1771,11 +1783,14 @@ begin
     EsProcesoComandoCopiaSeguridad;
   EsModoComandoImprimirFacturas :=
     EsProcesoComandoImprimirFacturas;
+  EsModoComandoRecalculosStock :=
+    EsProcesoComandoRecalculosStock;
   RutaRestauracionAdministrativa := ObtenerValorConmutador(
     ObtenerParametrosLineaComandos,
     'restaurar');
   if (not EsModoComandoCopiaSeguridad) and
-     (not EsModoComandoImprimirFacturas) then
+     (not EsModoComandoImprimirFacturas) and
+     (not EsModoComandoRecalculosStock) then
   begin
     ProcesarArranqueActualizacionSoporte;
   end;
@@ -1814,6 +1829,17 @@ begin
     except
     end;
     ExitProcess(CodigoSalidaComandoCopia);
+  end;
+  if EsModoComandoRecalculosStock then
+  begin
+    FabricaConexiones :=
+      CrearFabricaConexionesAplicacionUniDAC(GetUserFolder);
+    CodigoSalidaComandoRecalculosStock :=
+      EjecutarProcesoComandoRecalculosStock(
+        FabricaConexiones,
+        RegistroLogAplicacion);
+    CerrarLogAplicacionSeguro(RegistroLogAplicacion);
+    ExitProcess(CodigoSalidaComandoRecalculosStock);
   end;
   if EsModoComandoImprimirFacturas then
   begin

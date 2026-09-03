@@ -64,7 +64,7 @@ implementation
 
 uses
   System.Classes, System.SyncObjs, System.SysUtils, Winapi.Windows,
-  inLibBuscarImpresora, inLibMsgCaja;
+  inLibArqueoDesglose, inLibBuscarImpresora, inLibMsgCaja;
 
 const
   cIntervaloDeteccionImpresoraMs = 1000;
@@ -564,6 +564,11 @@ begin
                      'Agrupar unidades iguales en una sola línea',
                      tpBoolean,
                      'False');
+  RegistrarParametro('Configuración de Caja',
+                     'vgerAplazarRecalculoMovimientos',
+                     'Aplazar recálculos de stock de caja y albaranes',
+                     tpBoolean,
+                     'False');
   RegistrarParametro('Servicios web',
                      'vgerEnviarVentasWS',
                      'Enviar ventas completas al webservice de respaldo',
@@ -725,6 +730,17 @@ begin
                      'Emitir justificante al grabar el cierre',
                      tpBoolean,
                      'True');
+  RegistrarParametro('Arqueo',
+                     'vgerArqueoRecuentoDetallado',
+                     'Recuento detallado de billetes y monedas',
+                     tpBoolean,
+                     'False');
+  RegistrarParametro('Arqueo',
+                     'vgerArqueoDenominaciones',
+                     'Denominaciones del recuento detallado ' +
+                     'separadas por punto y coma',
+                     tpString,
+                     DenominacionesArqueoPorDefecto);
 end;
 
 function TParametrosCaja.NivelesFamiliaArqueo: Integer;

@@ -138,6 +138,8 @@ resourcestring
     'Uso: fzam.exe /imprimirfacturas ' +
     '"SERIE\NUMERO, SERIE\NUMERO" ["Formato"] "C:\destino". ' +
     'Si se omite el formato o se pasa "", se usa Predeterminado.';
+  SErrorSintaxisComandoRecalculosStock =
+    'Uso: fzam.exe perfil.ini /recalcular_mov.';
   SAyudaComandos =
     'Factuzam - opciones de ejecución' + sLineBreak +
     sLineBreak +
@@ -158,7 +160,11 @@ resourcestring
     '   Acepta una o varias referencias y un formato opcional. Solicita ' +
     'una sesión autenticada.' + sLineBreak +
     sLineBreak +
-    '4. Ayuda' + sLineBreak +
+    '4. Recálculo diferido de movimientos de stock' + sLineBreak +
+    '   %s' + sLineBreak +
+    '   Procesa la cola pendiente en lotes pequeños hasta dejarla vacía.' +
+    sLineBreak + sLineBreak +
+    '5. Ayuda' + sLineBreak +
     '   fzam.exe /?' + sLineBreak +
     '   fzam.exe /help' + sLineBreak +
     '   Muestra este texto en la consola y termina con código 0.' +
@@ -197,6 +203,25 @@ resourcestring
     'existe, se reemplazará.';
   SInfoComandoCopiaSeguridadCompletado =
     'Copia de seguridad completada: %s';
+  SErrorConexionComandoRecalculosStock =
+    'No se pudo preparar la conexión para recalcular el stock: %s';
+  SErrorEjecucionComandoRecalculosStock =
+    'No se pudo procesar la cola de recálculos de stock: %s';
+  SErrorColaIncompletaComandoRecalculosStock =
+    'La cola no quedó vacía. Sin procesar: %d; pendientes: %d; ' +
+    'procesando: %d; con error: %d.';
+  SInfoInicioComandoRecalculosStock =
+    'Inicio del recálculo de movimientos por línea de comandos.';
+  SInfoConfiguracionComandoRecalculosStock =
+    'Proceso interno: hasta %d grupos por lote, pausa %d ms, ' +
+    'reserva %d s y reintento %d s.';
+  SInfoConexionComandoRecalculosStock =
+    'Conexión preparada: servidor %s; base de datos %s.';
+  SInfoCompletadoComandoRecalculosStock =
+    'Cola de recálculos procesada. Lotes ejecutados: %d.';
+  SInfoProgresoComandoRecalculosStock =
+    'Lote %d terminado: %d grupos recalculados y %d con error; ' +
+    'quedan %d movimientos sin procesar.';
   SRestauracionCancelada =
     'Operación cancelada. La base de datos puede haber quedado ' +
     'parcialmente restaurada.';

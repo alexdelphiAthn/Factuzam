@@ -72,7 +72,7 @@ implementation
 
 uses
   System.SysUtils,
-  System.Classes,
+  inLibArqueoDesglose,
   inLibMsgTickets;
 
 procedure AgregarComando(
@@ -231,54 +231,37 @@ end;
 
 procedure AgregarParBilletes(
   var APresentacion: TPresentacionTicketArqueo;
-  const APar: string);
-var
-  dDenominacion: Double;
-  iPosicion: Integer;
-  iUnidades: Integer;
-  sDenominacion: string;
-  sUnidades: string;
+  const ADenominacion: TDenominacionArqueo);
 begin
-  iPosicion := Pos(':', APar);
-  if iPosicion > 0 then
-  begin
-    sDenominacion := Copy(APar, 1, iPosicion - 1);
-    sUnidades := Copy(APar, iPosicion + 1, MaxInt);
-    iUnidades := StrToIntDef(sUnidades, 0);
-    dDenominacion := StrToFloatDef(sDenominacion, 0);
-    if iUnidades > 0 then
-      AgregarColumnas(
-        APresentacion,
-        '  ' + sDenominacion + ' EUR x ' + sUnidades,
-        FormatearImportePresentacion(dDenominacion * iUnidades));
-  end;
+  AgregarColumnas(
+    APresentacion,
+    '  ' + FormatearImportePresentacion(ADenominacion.Valor) +
+      ' EUR x ' + IntToStr(ADenominacion.Unidades),
+    FormatearImportePresentacion(ADenominacion.Importe));
 end;
 
 procedure AgregarDesgloseBilletes(
   var APresentacion: TPresentacionTicketArqueo;
   const ADesglose: string);
 var
+  aDenominaciones: TDesgloseArqueo;
   iLinea: Integer;
-  oLineas: TStringList;
 begin
-  if ADesglose <> '' then
+  { El texto persistido llega como "denominacion:unidades;..." con punto
+    decimal; el dominio descarta los pares no válidos o sin unidades. }
+  aDenominaciones := AnalizarDesgloseArqueo(ADesglose);
+  if Length(aDenominaciones) > 0 then
   begin
     AgregarNegrita(APresentacion, True);
     AgregarLinea(APresentacion, STicketBilletesMonedas);
     AgregarNegrita(APresentacion, False);
-    oLineas := TStringList.Create;
-    try
-      oLineas.Delimiter := ';';
-      oLineas.DelimitedText := ADesglose;
-      iLinea := 0;
-      while iLinea < oLineas.Count do
-      begin
-        AgregarParBilletes(APresentacion, oLineas[iLinea]);
-        Inc(iLinea);
-      end;
-    finally
-      FreeAndNil(oLineas);
-    end;
+    for iLinea := 0 to High(aDenominaciones) do
+      AgregarParBilletes(APresentacion, aDenominaciones[iLinea]);
+    AgregarColumnas(
+      APresentacion,
+      STicketTotalContado,
+      FormatearImportePresentacion(
+        TotalDesgloseArqueo(aDenominaciones)));
     AgregarSeparador(APresentacion);
   end;
 end;

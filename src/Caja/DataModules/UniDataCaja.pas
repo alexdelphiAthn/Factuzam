@@ -110,9 +110,9 @@ type
     FRepositorioTicketsCaja: TRepositoriosTicketsCaja;
     FPreviewTicket: IPreviewTicket;
     function GetIdentidadSesion: TIdentidadSesion;
-    procedure InsertarMovimientoAlmacen(
+    function InsertarMovimientoAlmacen(
       AConsultaTransaccion: TUniQuery;
-      const ASolicitud: TSolicitudMovimientoAlmacenCaja);
+      const ASolicitud: TSolicitudMovimientoAlmacenCaja): string;
     procedure InsertarLineaFactura(
                         QryTrx:              TUniQuery;
                         // — identificación —
@@ -170,7 +170,9 @@ type
                                         AEsImpIncl: string;
                                         const ACaja, ANumOperacion: string;
                                         AFechaOperacion: TDateTime;
-                                        out IdGenerado:string);
+                                        out IdGenerado: string;
+                                        out ANumerosMovimiento:
+                                          TArray<string>);
     procedure CerrarDepositoCliente(QryTrx: TUniQuery;
                                     const AIdDeposito, AEmpresa,
                                           AAlmacen, ACaja,
@@ -341,6 +343,7 @@ type
     FEmpresaOrigenDevolucion: string;
     FAlmacenOrigenDevolucion: string;
     FLineasTraspasoDev: TArray<TLineaTraspasoDevolucion>;
+    FNumerosMovimientos: TArray<string>;
     procedure CargarContexto;
     function OperacionTieneNovedad: Boolean;
     procedure AtenderOperacionSinNovedad;
@@ -377,6 +380,9 @@ type
     procedure ImprimirDocumentosDeposito;
     procedure LimpiarLineasSinImporte;
     procedure RevertirTransaccion;
+    procedure RegistrarMovimientoCreado(
+      const ANumeroMovimiento: string);
+    procedure ProcesarRecalculoMovimientos;
     function EsDevolucionOtraTienda: Boolean;
     procedure GenerarCodigoBarrasTicket;
     procedure RegistrarLineaTraspasoDevolucion(
@@ -872,9 +878,9 @@ begin
     Result := Now;
 end;
 
-procedure TdmCajaOpe.InsertarMovimientoAlmacen(
+function TdmCajaOpe.InsertarMovimientoAlmacen(
   AConsultaTransaccion: TUniQuery;
-  const ASolicitud: TSolicitudMovimientoAlmacenCaja);
+  const ASolicitud: TSolicitudMovimientoAlmacenCaja): string;
 var
   uspMov: TUniStoredProc;
   QryFecha: TUniQuery;
@@ -953,6 +959,7 @@ begin
   finally
     FreeAndNil(uspMov);
   end;
+  Result := sNumeroMov;
 end;
 
 procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery;
@@ -1039,12 +1046,15 @@ procedure TdmCajaOpe.CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                                const ACaja,
                                                ANumOperacion: string;
                                                AFechaOperacion: TDateTime;
-                                               out IdGenerado:string);
+                                               out IdGenerado: string;
+                                               out ANumerosMovimiento:
+                                                 TArray<string>);
 var
   NuevoIdDep: string;
   SolicitudMovimiento: TSolicitudMovimientoAlmacenCaja;
   uspDep: TUniStoredProc;
 begin
+  SetLength(ANumerosMovimiento, 2);
   SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
   SolicitudMovimiento.Movimiento.TipoDocumento := 'TR';
   SolicitudMovimiento.Movimiento.Linea := '0001';
@@ -1061,7 +1071,8 @@ begin
   SolicitudMovimiento.AlmacenDocumento := AAlmacenOrigen;
   SolicitudMovimiento.NumeroOperacion := ANumOperacion;
   SolicitudMovimiento.CodigoCliente := ACliente;
-  InsertarMovimientoAlmacen(QryTrx, SolicitudMovimiento);
+  ANumerosMovimiento[0] := InsertarMovimientoAlmacen(
+    QryTrx, SolicitudMovimiento);
   // 1b. Entrada al almacén depósito
   SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
   SolicitudMovimiento.Movimiento.TipoDocumento := 'TR';
@@ -1079,7 +1090,8 @@ begin
   SolicitudMovimiento.AlmacenDocumento := AAlmacenOrigen;
   SolicitudMovimiento.NumeroOperacion := ANumOperacion;
   SolicitudMovimiento.CodigoCliente := ACliente;
-  InsertarMovimientoAlmacen(QryTrx, SolicitudMovimiento);
+  ANumerosMovimiento[1] := InsertarMovimientoAlmacen(
+    QryTrx, SolicitudMovimiento);
   // 2. Generar ID único para el depósito (lógica original)
   NuevoIdDep := 'DP' + FormatDateTime('yymmddhhnnsszzz', Now) +
                 RightStr(ASku, 3);  // máx 20 chars
@@ -1190,6 +1202,7 @@ begin
   FEmpresaOrigenDevolucion := AEmpresaOrigenDevolucion;
   FAlmacenOrigenDevolucion := AAlmacenOrigenDevolucion;
   SetLength(FLineasTraspasoDev, 0);
+  SetLength(FNumerosMovimientos, 0);
 end;
 
 destructor TGrabacionFacturaCaja.Destroy;
@@ -1498,6 +1511,8 @@ end;
 procedure TGrabacionFacturaCaja.ProcesarNuevoDeposito(
   const ALinea: TDatosLineaFactura);
 var
+  iIndice: Integer;
+  NumerosMovimiento: TArray<string>;
   sIdDeposito: string;
 begin
   if ALinea.TotalCIva > 0 then
@@ -1524,7 +1539,10 @@ begin
       ALinea.PrecioOriginalDep, ALinea.TotalCIva,
       FAlmacen, FAlmacenDeposito, ALinea.Cantidad,
       ALinea.TipoIva, ALinea.PorcIva, ALinea.EsImpIncl,
-      FCaja, FNumeroOperacion, FFechaOperacion, sIdDeposito);
+      FCaja, FNumeroOperacion, FFechaOperacion, sIdDeposito,
+      NumerosMovimiento);
+    for iIndice := Low(NumerosMovimiento) to High(NumerosMovimiento) do
+      RegistrarMovimientoCreado(NumerosMovimiento[iIndice]);
     FPersistencia.GuardarOperacion(
       FQuery, FEmpresa, FAlmacen, FCaja, FNumeroOperacion,
       'DE', ALinea.TotalCIva, FUsuario, FFechaOperacion,
@@ -1604,7 +1622,8 @@ begin
   Solicitud.AlmacenDocumento := FAlmacen;
   Solicitud.NumeroOperacion := FNumeroOperacion;
   Solicitud.CodigoCliente := FCabecera.CodigoCliente;
-  FDataModule.InsertarMovimientoAlmacen(FQuery, Solicitud);
+  RegistrarMovimientoCreado(
+    FDataModule.InsertarMovimientoAlmacen(FQuery, Solicitud));
 end;
 
 procedure TGrabacionFacturaCaja.ProcesarVenta(
@@ -2003,6 +2022,59 @@ begin
   FPersistencia.RevertirUnidadTrabajo;
 end;
 
+procedure TGrabacionFacturaCaja.RegistrarMovimientoCreado(
+  const ANumeroMovimiento: string);
+var
+  Indice: Integer;
+begin
+  if Trim(ANumeroMovimiento) = '' then
+    raise EArgumentException.Create('ANumeroMovimiento');
+  Indice := Length(FNumerosMovimientos);
+  SetLength(FNumerosMovimientos, Indice + 1);
+  FNumerosMovimientos[Indice] := ANumeroMovimiento;
+end;
+
+procedure TGrabacionFacturaCaja.ProcesarRecalculoMovimientos;
+var
+  Aplazar: Boolean;
+  Encolado: Boolean;
+  RequiereRecalculo: Boolean;
+  sUsuario: string;
+begin
+  if FGenerarMovimientos and (Trim(FNumeroOperacion) <> '') then
+  begin
+    Aplazar := FDataModule.FParametrosCaja.GetBool(
+      'vgerAplazarRecalculoMovimientos', False);
+    if Aplazar then
+    begin
+      RequiereRecalculo := MovimientosCajaRequierenRecalculo(
+        FDataModule.FConexion, FEmpresa, FAlmacen, FCaja,
+        FNumeroOperacion, FNumerosMovimientos);
+      if RequiereRecalculo then
+      begin
+        sUsuario := FDataModule.IdentidadSesion.Usuario;
+        if Trim(sUsuario) = '' then
+          sUsuario := FUsuario;
+        Encolado := EncolarMovimientosRecalculo(
+          FDataModule.FConexion,
+          FNumerosMovimientos,
+          'CAJA_RECALCULO_DETECTADO',
+          sUsuario);
+        if not Encolado then
+        begin
+          RecalcularMovimientosOperacion(
+            FDataModule.FConexion, FNumeroOperacion);
+        end;
+      end;
+    end
+    else
+    begin
+      RecalcularMovimientosOperacion(
+        FDataModule.FConexion, FNumeroOperacion);
+    end;
+  end;
+end;
+
 function TGrabacionFacturaCaja.Ejecutar(
   out ANumeroGenerado, AValeGenerado: string): Boolean;
 begin
@@ -2021,10 +2093,7 @@ begin
       SincronizarContadorLineas;
       RegistrarTotalesVenta;
       GenerarTraspasoAutomaticoDevolucion;
-      if FGenerarMovimientos and (Trim(FNumeroOperacion) <> '') then
-        RecalcularMovimientosOperacion(
-          FDataModule.FConexion,
-          FNumeroOperacion);
+      ProcesarRecalculoMovimientos;
       RegistrarFiscalmente;
       RegistrarFormasPago;
       RegistrarValesRecogidos;

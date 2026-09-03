@@ -194,6 +194,9 @@
         <DCCReference Include="src\Lib\inLibCifradoCopias.pas"/>
         <DCCReference Include="src\Lib\inLibComandoCopiaSeguridad.pas"/>
         <DCCReference Include="src\Core\inMtoComandoCopiaSeguridad.pas"/>
+        <DCCReference Include="src\Lib\inLibComandoRecalculosStock.pas"/>
+        <DCCReference Include="src\Core\inMtoComandoRecalculosStock.pas"/>
+        <DCCReference Include="src\DataModules\UniDataRecalculosStockLote.pas"/>
         <DCCReference Include="src\Lib\inLibLineaComandos.pas"/>
         <DCCReference Include="src\Lib\inLibSalidaComandos.pas"/>
         <DCCReference Include="src\Lib\inLibComandoAyuda.pas"/>
@@ -892,6 +895,7 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibCajaParam.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibArqueoIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibArqueoDesglose.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataArqueoRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibArqueoTicketIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataArqueoTicketRepositorio.pas"/>
@@ -959,6 +963,9 @@
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalMotivoDevolucion.pas">
             <Form>frmModalMotivoDevolucion</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalDesgloseEfectivo.pas">
+            <Form>frmModalDesgloseEfectivo</Form>
         </DCCReference>
         <DCCReference Include="src\Caja\Modals\inMtoModalCambioIva.pas">
             <Form>frmModalCambioIva</Form>

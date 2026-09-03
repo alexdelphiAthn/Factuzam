@@ -437,6 +437,10 @@ begin
     'Agrupar unidades iguales en una sola línea',
     'src/Caja/Lib/inLibCajaParam.pas');
   ARegistrar(
+    'inMtoCajaParam.Parametros.vgerAplazarRecalculoMovimientos.Descripcion',
+    'Aplazar recálculos de stock de caja y albaranes',
+    'src/Caja/Lib/inLibCajaParam.pas');
+  ARegistrar(
     'inMtoCajaParam.Parametros.Categoria.Serviciosweb',
     'Servicios web',
     'src/Caja/Lib/inLibCajaParam.pas');
@@ -590,6 +594,17 @@ begin
     'inMtoCajaParam.Parametros.vgerArqueoEmitirJustificante.D' +
     'escripcion',
     'Emitir justificante al grabar el cierre',
+    'src/Caja/Lib/inLibCajaParam.pas');
+  ARegistrar(
+    'inMtoCajaParam.Parametros.vgerArqueoRecuentoDetallado.De' +
+    'scripcion',
+    'Recuento detallado de billetes y monedas',
+    'src/Caja/Lib/inLibCajaParam.pas');
+  ARegistrar(
+    'inMtoCajaParam.Parametros.vgerArqueoDenominaciones.Descr' +
+    'ipcion',
+    'Denominaciones del recuento detallado separadas por punt' +
+    'o y coma',
     'src/Caja/Lib/inLibCajaParam.pas');
 end;
 

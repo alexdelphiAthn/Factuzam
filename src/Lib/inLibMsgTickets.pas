@@ -166,6 +166,7 @@ resourcestring
   STicketCierrePor = 'Cierre por:';
   STicketVendedor = 'Vendedor:';
   STicketBilletesMonedas = 'BILLETES Y MONEDAS';
+  STicketTotalContado = '  Total contado:';
   STicketEfectivoSistema = 'EFECTIVO SISTEMA';
   STicketVentasSangrado = '  Ventas:';
   STicketEntradasSangrado = '  + Entradas:';

@@ -55,7 +55,8 @@ begin
     SAyudaComandos,
     [
       SErrorSintaxisComandoCopiaSeguridad,
-      SErrorSintaxisComandoImprimirFacturas
+      SErrorSintaxisComandoImprimirFacturas,
+      SErrorSintaxisComandoRecalculosStock
     ]);
 end;
 
