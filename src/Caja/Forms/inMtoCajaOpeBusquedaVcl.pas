@@ -67,6 +67,7 @@ implementation
 uses
   System.SysUtils,
   Vcl.Forms,
+  cxDropDownEdit,
   cxEdit,
   inLibCajaVentaOperacion,
   inLibMsgCaja,
@@ -173,7 +174,7 @@ begin
     begin
       oEditor := AContexto.VistaLineas.Controller.
         EditingController.Edit;
-      Result := oEditor is TcxButtonEdit;
+      Result := oEditor is TcxComboBox;
       if Result and Assigned(AContexto.AbrirAtributo) then
         AContexto.AbrirAtributo(oEditor);
     end;

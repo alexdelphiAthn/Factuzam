@@ -18,7 +18,7 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics, inMtoGenSearch, system.Math, inMtoFrmBase,
+  System.Classes, inMtoGenSearch, system.Math, inMtoFrmBase,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxCoreGraphics, cxTextEdit,
   cxMaskEdit, cxButtonEdit, Vcl.ExtCtrls, cxLabel, Vcl.Menus, cxStyles,
@@ -31,7 +31,7 @@ uses
   cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
-  System.Generics.Collections, cxLocalization,
+  cxLocalization,
   inLibLectorScanner, inLibCajaTipos, inLibCajaVentanasIntf,
   inLibCajaVentaIntf, inLibCatalogoSqlIntf,
   inLibFacturasLecturasIntf, inLibCajaEntradaIntf,
@@ -46,23 +46,22 @@ uses
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
   WM_SALTAR_ATRIBUTO = WM_APP + 101;
-  // Diferimos FinalizarUltimoAtributo / avance de columna fuera del
-  // OnButtonClick del TcxButtonEdit. Si los ejecutamos en linea, cxGrid
-  // sigue manteniendo referencia al editor inplace que acaba de procesar
-  // el popup; cuando FinalizarUltimoAtributo lanza el ShowMessage de
+  // Diferimos FinalizarUltimoAtributo / avance de columna fuera del cierre
+  // del combo. Si los ejecutamos en linea, cxGrid sigue manteniendo
+  // referencia al editor inplace que acaba de procesar el popup; cuando
+  // FinalizarUltimoAtributo lanza el ShowMessage de
   // "no hay stock" y luego dispara DataChange via EnableControls/Append,
   // el editor inplace se desparenta y salta EInvalidOperation. Con
-  // PostMessage el click handler retorna, cxGrid limpia su estado y
-  // luego procesamos.
+  // PostMessage el evento retorna, cxGrid limpia su estado y luego
+  // procesamos.
   WM_FINALIZAR_ATRIB_CAJA = WM_APP + 102;
   WM_AVANZAR_ATRIB_CAJA   = WM_APP + 103;
   // Diferimos tambien la apertura del popup desde el OnEnter del
-  // TcxButtonEdit. Cuando WMAvanzarAtribCaja salta de Color a Talla,
+  // TcxComboBox. Cuando WMAvanzarAtribCaja salta de Color a Talla,
   // ShowEdit -> InitEdit -> OnEnter ocurren en cadena en el mismo
-  // callstack; el editor inplace de la talla aun no esta del todo
-  // colocado y ClientToScreen pide Handle -> Parent -> EInvalidOperation.
-  // Con PostMessage, OnEnter retorna, cxGrid termina de parentar, y solo
-  // entonces abrimos el popup.
+  // callstack; el editor inplace de la talla aun no esta completamente
+  // parentado y abrir el desplegable ahi resulta inestable. Con PostMessage,
+  // OnEnter retorna, cxGrid termina de parentar y entonces abrimos el popup.
   WM_ABRIR_POPUP_AV       = WM_APP + 104;
   // El grid termina de crear la fila después del cambio de dataset. El foco
   // se aplica en un mensaje posterior para que no restaure la columna previa.
@@ -71,6 +70,11 @@ const
   // selector de venta de origen (modal) fuera del OnValidate del editor,
   // por las mismas razones que los mensajes de atributos de arriba.
   WM_PREGUNTAR_VENTA_ORIGEN = WM_APP + 106;
+  // La seleccion se aplica cuando DevExpress ya ha cerrado el popup.
+  // Evita cambiar el dataset mientras el combo inplace se desmonta.
+  WM_CONFIRMAR_ATRIB_CAJA = WM_APP + 107;
+  // Revisa el foco cuando DevExpress ya lo ha devuelto tras cerrar el combo.
+  WM_REVISAR_ENTER_AS_TAB_CAJA = WM_APP + 108;
 type
   TServiciosLecturaOperacionCaja = record
     ConsultaStock: IResultadoConsultaCaja;
@@ -109,10 +113,11 @@ type
     RepositorioSoloTexto: TcxEditRepositoryTextItem;
     RepositorioCombo: TcxEditRepositoryExtLookupComboBoxItem;
     TemporizadorBusqueda: TTimer;
-    NavegacionEnter: TJvEnterAsTab;
     BotonBuscar: TcxButton;
     BotonEliminar: TcxButton;
     ImagenStock: TImage;
+    AlAbrirComboAtributo: TNotifyEvent;
+    AlCerrarComboAtributo: TNotifyEvent;
   end;
   TServiciosEditorLineasCajaVcl = record
     DatosCaja: TdmCajaOpe;
@@ -157,7 +162,6 @@ type
     FRender: TRenderEditorLineasCajaVcl;
     FSelectorAtributos: TSelectorAtributosEditorLineasCajaVcl;
     FTecladoLinea: TTecladoLineaOperacionCaja;
-    FBmpSwatchBoton: TBitmap;
     FNumAtributosActual: Integer;
     FUltimoArticuloPadre: string;
     FActualizandoDepositos: Boolean;
@@ -176,7 +180,6 @@ type
     function GetFuenteLineas: TDataSource;
     function GetFuenteBusqueda: TDataSource;
     function GetTemporizadorBusqueda: TTimer;
-    function GetNavegacionEnter: TJvEnterAsTab;
     function GetBotonBuscar: TcxButton;
     function GetBotonEliminar: TcxButton;
     function ObtenerResolviendoPorScanner: Boolean;
@@ -199,7 +202,6 @@ type
     property dsLineas: TDataSource read GetFuenteLineas;
     property dsBusq: TDataSource read GetFuenteBusqueda;
     property tmrBusq: TTimer read GetTemporizadorBusqueda;
-    property jvEnterTab: TJvEnterAsTab read GetNavegacionEnter;
     property btnF3: TcxButton read GetBotonBuscar;
     property btnF8: TcxButton read GetBotonEliminar;
     property DatosCaja: TdmCajaOpe read FDatosCaja;
@@ -262,7 +264,6 @@ type
     procedure PulsarRejilla(Sender: TObject; AButton: TMouseButton;
       AShift: TShiftState; AX, AY: Integer);
     procedure EntrarRejilla(Sender: TObject);
-    procedure SalirRejilla(Sender: TObject);
     procedure ActualizarColumnasDinamicas(const AArticulo: string);
     procedure RecalcularLineas;
     procedure AsegurarLineaNueva;
@@ -271,6 +272,7 @@ type
     procedure AbrirPopupAtributo;
     procedure SeleccionarAtributo(Sender: TObject;
       AButtonIndex: Integer);
+    procedure ConfirmarAtributoPendiente;
     procedure FinalizarAtributos;
     procedure AvanzarAtributo(ANumeroColumna: Integer);
     property ActualizandoDepositos: Boolean
@@ -486,6 +488,11 @@ type
                                        message WM_AVANZAR_ATRIB_CAJA;
     procedure WMAbrirPopupAv(var Msg: TMessage);
                                        message WM_ABRIR_POPUP_AV;
+    procedure WMConfirmarAtribCaja(var Msg: TMessage);
+                                       message WM_CONFIRMAR_ATRIB_CAJA;
+    procedure CerrarComboAtributo(Sender: TObject);
+    procedure WMRevisarEnterAsTabCaja(var Msg: TMessage);
+                                       message WM_REVISAR_ENTER_AS_TAB_CAJA;
     procedure WMEnfocarArticuloCaja(var Msg: TMessage);
                                        message WM_ENFOCAR_ARTICULO_CAJA;
     procedure ProcesarLecturaScanner(const ACodigo: string);
@@ -552,7 +559,6 @@ uses
 
   inLibDevExp, inLibValoresAutomaticos,
   UniDataValoresAutomaticosRepositorio, inLibFacturas,
-  inLibAtributosPaleta,
   inLibShowMto,
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibCajaVentaCliente,
@@ -898,11 +904,6 @@ begin
   Result := FControles.TemporizadorBusqueda;
 end;
 
-function TEditorLineasCajaVcl.GetNavegacionEnter: TJvEnterAsTab;
-begin
-  Result := FControles.NavegacionEnter;
-end;
-
 function TEditorLineasCajaVcl.GetBotonBuscar: TcxButton;
 begin
   Result := FControles.BotonBuscar;
@@ -939,7 +940,6 @@ begin
   FResolviendoPorScanner := AServicios.ResolviendoPorScanner;
   FLectorLeyendoTrama := AServicios.LectorLeyendoTrama;
   FObtenerAlmacen := AServicios.ObtenerAlmacen;
-  FBmpSwatchBoton := TBitmap.Create;
   ContextoBusqueda := Default(TContextoBusquedaEditorLineasCajaVcl);
   ContextoBusqueda.Formulario := AControles.Formulario;
   ContextoBusqueda.DatosCaja := AServicios.DatosCaja;
@@ -1021,6 +1021,7 @@ begin
   ContextoAtributos.MensajeFinalizar := WM_FINALIZAR_ATRIB_CAJA;
   ContextoAtributos.MensajeAvanzar := WM_AVANZAR_ATRIB_CAJA;
   ContextoAtributos.MensajeAbrirPopup := WM_ABRIR_POPUP_AV;
+  ContextoAtributos.MensajeConfirmar := WM_CONFIRMAR_ATRIB_CAJA;
   FSelectorAtributos :=
     TSelectorAtributosEditorLineasCajaVcl.Create(
       ContextoAtributos);
@@ -1042,7 +1043,6 @@ begin
   FAtributosArticulos := nil;
   FParametrosCaja := nil;
   FRegistroLog := nil;
-  FreeAndNil(FBmpSwatchBoton);
   inherited;
 end;
 
@@ -1088,10 +1088,13 @@ begin
   Controles.RepositorioSoloTexto := AFormulario.repSoloTexto;
   Controles.RepositorioCombo := AFormulario.repComboBox;
   Controles.TemporizadorBusqueda := AFormulario.tmrBusq;
-  Controles.NavegacionEnter := AFormulario.jvEnterTab;
   Controles.BotonBuscar := AFormulario.btnF3;
   Controles.BotonEliminar := AFormulario.btnF8;
   Controles.ImagenStock := AFormulario.imgFotoStock;
+  Controles.AlAbrirComboAtributo :=
+    AFormulario.DesactivarEnterAsTabTemporal;
+  Controles.AlCerrarComboAtributo :=
+    AFormulario.CerrarComboAtributo;
   Servicios := Default(TServiciosEditorLineasCajaVcl);
   Servicios.DatosCaja := AFormulario.DatosCaja;
   Servicios.Conexion := AFormulario.ConexionPrincipal;
@@ -1265,8 +1268,35 @@ end;
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1InitEdit(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
+var
+  Combo: TcxComboBox;
 begin
+  if (AItem.Tag >= 1) and (AItem.Tag <= 5) and
+     (AEdit is TcxComboBox) then
+  begin
+    Combo := TcxComboBox(AEdit);
+    DesactivarEnterAsTabTemporal(Combo);
+    Combo.OnExit := RestaurarEnterAsTabTemporal;
+  end;
   FEditorLineas.InicializarEdicion(Sender, AItem, AEdit);
+end;
+
+procedure TfrmMtoOpeCaja.CerrarComboAtributo(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_CAJA, 0, 0);
+end;
+
+procedure TfrmMtoOpeCaja.WMRevisarEnterAsTabCaja(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasOpe) or
+      cxgrdLineasOpe.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1KeyDown(
@@ -1284,12 +1314,22 @@ end;
 
 procedure TfrmMtoOpeCaja.cxGrid1Enter(Sender: TObject);
 begin
+  DesactivarEnterAsTabTemporal(Sender);
   FEditorLineas.EntrarRejilla(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1Exit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
 begin
-  FEditorLineas.SalirRejilla(Sender);
+  Editor := nil;
+  if (tvLineasOpe.Controller.EditingController <> nil) and
+     tvLineasOpe.Controller.EditingController.IsEditing then
+    Editor := tvLineasOpe.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.DsLineasDataChange(
@@ -1306,6 +1346,11 @@ end;
 procedure TfrmMtoOpeCaja.WMAbrirPopupAv(var Msg: TMessage);
 begin
   FEditorLineas.AbrirPopupAtributo;
+end;
+
+procedure TfrmMtoOpeCaja.WMConfirmarAtribCaja(var Msg: TMessage);
+begin
+  FEditorLineas.ConfirmarAtributoPendiente;
 end;
 
 procedure TfrmMtoOpeCaja.tvLineasOpeAvButtonClick(
@@ -2016,38 +2061,46 @@ end;
 
 procedure TEditorLineasCajaVcl.ConstruirColumnasDinamicas;
 var
-  i: Integer;
-  Col: TcxGridDBColumn;
+  I: Integer;
+  Columna: TcxGridDBColumn;
   MaxAtributos: Integer;
-  IndiceBase:Integer;
-  Propiedades: TcxButtonEditProperties;
-  Boton: TcxEditButton;
+  IndiceBase: Integer;
+  Propiedades: TcxComboBoxProperties;
 begin
   MaxAtributos := 5;
   IndiceBase := tvArticulo.Index;
   tvLineasOpe.BeginUpdate;
   try
-    for i := 1 to MaxAtributos do
+    for I := 1 to MaxAtributos do
     begin
-      Col := tvLineasOpe.CreateColumn;
-      Col.Name := 'tvAtributoDyn' + IntToStr(i);
-      Col.Tag := i;
-      Col.DataBinding.FieldName := 'ATTR' + IntToStr(i) + '_VALOR';
-      Col.Caption := '-';
-      Col.Visible := False;
-      Col.Width := 80;
-      // TcxButtonEdit con un boton bkEllipsis (que cambiamos a bkGlyph en
-      // InitEdit cuando el AV actual tiene swatch en la paleta basica). El
-      // click abre SeleccionarAvConPaleta — mismo patron que inMtoInventarios.
-      Col.PropertiesClass := TcxButtonEditProperties;
-      Propiedades := TcxButtonEditProperties(Col.Properties);
-      Propiedades.ReadOnly := True;
-      Propiedades.Buttons.Clear;
-      Boton := Propiedades.Buttons.Add;
-      Boton.Default := True;
-      Boton.Kind := bkEllipsis;
-      Propiedades.OnButtonClick := FSelectorAtributos.SeleccionarAtributo;
-      Col.Index := IndiceBase + i;
+      Columna := tvLineasOpe.CreateColumn;
+      Columna.Name := 'tvAtributoDyn' + IntToStr(I);
+      Columna.Tag := I;
+      Columna.DataBinding.FieldName :=
+        'ATTR' + IntToStr(I) + '_VALOR';
+      Columna.Caption := '-';
+      Columna.Visible := False;
+      Columna.Width := 80;
+      Columna.PropertiesClass := TcxComboBoxProperties;
+      Propiedades := TcxComboBoxProperties(Columna.Properties);
+      // Es una seleccion cerrada. El texto escrito solo filtra opciones.
+      Propiedades.DropDownListStyle := lsEditFixedList;
+      Propiedades.DropDownRows := 15;
+      Propiedades.ImmediateDropDownWhenKeyPressed := True;
+      Propiedades.ImmediatePost := False;
+      Propiedades.IncrementalFiltering := True;
+      // Sin ifoUseContainsOperator: "4" muestra solo valores que empiezan
+      // por 4 y conserva el orden configurado del tallaje.
+      Propiedades.IncrementalFilteringOptions :=
+        [ifoHighlightSearchText];
+      // En Caja se confirma con Intro o clic. Tab conserva su navegacion.
+      Propiedades.PostPopupValueOnTab := False;
+      Propiedades.Sorted := False;
+      Propiedades.OnClosePopup := FSelectorAtributos.CerrarPopup;
+      Propiedades.OnDrawItem := FSelectorAtributos.DibujarOpcion;
+      Propiedades.OnInitPopup := FControles.AlAbrirComboAtributo;
+      Propiedades.OnCloseUp := FControles.AlCerrarComboAtributo;
+      Columna.Index := IndiceBase + I;
     end;
   finally
     tvLineasOpe.EndUpdate;
@@ -2295,67 +2348,31 @@ procedure TEditorLineasCajaVcl.InicializarEdicion(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit);
 var
-  BE        : TcxButtonEdit;
-  AvActual  : string;
-  NombreAtb : string;
-  IdVa      : string;
-  Mapa      : TDictionary<string, string>;
-  Info      : TInfoBasico;
-  Btn       : TcxEditButton;
+  Combo: TcxComboBox;
+  ValorAtributoActual: string;
 begin
   // Estilo Excel: al entrar en una celda, teclear sustituye su contenido.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
-  // Columnas de atributo dinamico (Color, Talla, ...). Mismo patron que
-  // inMtoInventarios:
-  //   (1) Si el AV actual tiene color en la paleta basica, el boton muestra
-  //       un glyph con el cuadradito; si no, vuelve a bkEllipsis.
-  //   (2) Si la celda esta vacia, OnEnter dispara el popup automaticamente
-  //       (sustituye al antiguo Combo.DroppedDown via ForzarDespliegue).
+  // El combo es de seleccion fija, aunque admite escribir para filtrar.
+  // Si la celda esta vacia se abre despues de que cxGrid lo haya parentado.
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
-    if AEdit is TcxButtonEdit then
+    if AEdit is TcxComboBox then
     begin
-      BE := TcxButtonEdit(AEdit);
-      BE.Tag := AItem.Tag;
-      if BE.Properties.Buttons.Count > 0 then
+      Combo := TcxComboBox(AEdit);
+      Combo.Tag := AItem.Tag;
+      ValorAtributoActual := '';
+      if DatosCaja.cdsLineas.Active and
+         not DatosCaja.cdsLineas.IsEmpty then
       begin
-        Btn := BE.Properties.Buttons[0];
-
-        AvActual  := '';
-        NombreAtb := '';
-        if DatosCaja.cdsLineas.Active
-           and (not DatosCaja.cdsLineas.IsEmpty) then
-        begin
-          AvActual  := DatosCaja.cdsLineas.FieldByName(
-                         'ATTR' + IntToStr(AItem.Tag) + '_VALOR').AsString;
-          NombreAtb := DatosCaja.cdsLineas.FieldByName(
-                         'ATTR' + IntToStr(AItem.Tag) + '_NOMBRE').AsString;
-        end;
-
-        IdVa := '';
-        Mapa := ObtenerMapaAtributosGlobal(ConexionPrincipal);
-        if Mapa <> nil then
-          Mapa.TryGetValue(UpperCase(Trim(NombreAtb)), IdVa);
-
-        Info := Default(TInfoBasico);
-        if (IdVa <> '') and (Trim(AvActual) <> '') then
-          ObtenerInfoBasico(ConexionPrincipal,IdVa, AvActual, Info);
-
-        if Info.EsValido and
-           PintarSwatchEnBitmap(FBmpSwatchBoton, Info, 14) then
-        begin
-          Btn.Glyph.Assign(FBmpSwatchBoton);
-          Btn.Kind := bkGlyph;
-        end
-        else
-          Btn.Kind := bkEllipsis;
-
-        if Trim(AvActual) = '' then
-          BE.OnEnter := FSelectorAtributos.AbrirPopupEnEntrada
-        else
-          BE.OnEnter := nil;
+        ValorAtributoActual := DatosCaja.cdsLineas.FieldByName(
+          'ATTR' + IntToStr(AItem.Tag) + '_VALOR').AsString;
       end;
+      if Trim(ValorAtributoActual) = '' then
+        Combo.OnEnter := FSelectorAtributos.AbrirPopupEnEntrada
+      else
+        Combo.OnEnter := nil;
     end;
   end;
   if AItem = tvArticulo then
@@ -2434,13 +2451,7 @@ begin
       tvLineasOpe.Controller.FocusedColumn := tvArticulo;
       tvLineasOpe.Controller.EditingController.ShowEdit;
     end;
-    jvEnterTab.EnterAsTab := False;
   end;
-end;
-
-procedure TEditorLineasCajaVcl.SalirRejilla(Sender: TObject);
-begin
-  jvEnterTab.EnterAsTab := True;
 end;
 
 procedure TfrmMtoOpeCaja.actBuscarEmpleadosExecute(Sender: TObject);
@@ -2666,62 +2677,72 @@ end;
 procedure TEditorLineasCajaVcl.ActualizarColumnasDinamicas(
   const AArticulo: string);
 var
-  i: Integer;
-  Col: TcxGridDBColumn;
-  aNombresAtributos: TNombresAtributosCaja;
+  I: Integer;
+  Columna: TcxGridDBColumn;
+  NombresAtributos: TNombresAtributosCaja;
   Cacheado: Boolean;
+  Propiedades: TcxComboBoxProperties;
 begin
   // --- OPTIMIZACIÓN: Si es el mismo tipo de artículo, no repintamos ---
   Cacheado := SameText(AArticulo, FUltimoArticuloPadre);
   if not Cacheado then
   begin
     FUltimoArticuloPadre := AArticulo;
-  SetLength(aNombresAtributos, 0);
-  if (AArticulo <> '') and (AArticulo <> 'ACUENTA') then
-  begin
-    aNombresAtributos :=
-      FRepositorioArticulos.ListarNombresAtributosArticulo(
-        AArticulo);
-  end;
-  FNumAtributosActual := Length(aNombresAtributos);
-  // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo
-  if DatosCaja.cdsLineas.Active and
-     (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
-  begin
-    DatosCaja.cdsLineas.FieldByName(
-      'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger :=
-      Length(aNombresAtributos);
-  end;
-  tvLineasOpe.BeginUpdate;
-  try
-    for i := 1 to 5 do
+    SetLength(NombresAtributos, 0);
+    if (AArticulo <> '') and (AArticulo <> 'ACUENTA') then
+      NombresAtributos :=
+        FRepositorioArticulos.ListarNombresAtributosArticulo(
+          AArticulo);
+    FNumAtributosActual := Length(NombresAtributos);
+    // Solo tocamos la memoria del dataset si estamos escaneando algo nuevo.
+    if DatosCaja.cdsLineas.Active and
+       (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
     begin
-      Col := ObtenerColumnaPorTag(i);
-      if Col <> nil then
+      DatosCaja.cdsLineas.FieldByName(
+        'NUM_ATRIBUTOS_REQ_FACTURA_LINEA').AsInteger :=
+        Length(NombresAtributos);
+    end;
+    tvLineasOpe.BeginUpdate;
+    try
+      for I := 1 to 5 do
       begin
-        if i <= Length(aNombresAtributos) then
+        Columna := ObtenerColumnaPorTag(I);
+        if Columna <> nil then
         begin
-          Col.Caption := aNombresAtributos[i - 1];
-          Col.Visible := True;
-          Col.Options.Editing := True;
-          if DatosCaja.cdsLineas.Active and
-             (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+          Propiedades := nil;
+          if Columna.Properties is TcxComboBoxProperties then
+            Propiedades := TcxComboBoxProperties(Columna.Properties);
+          if I <= Length(NombresAtributos) then
           begin
-            DatosCaja.cdsLineas.FieldByName(
-              'ATTR' + IntToStr(i) + '_NOMBRE').AsString :=
-              aNombresAtributos[i - 1];
+            FSelectorAtributos.CargarOpciones(
+              I,
+              AArticulo,
+              Propiedades);
+            Columna.Caption := NombresAtributos[I - 1];
+            Columna.Visible := True;
+            Columna.Options.Editing := True;
+            if DatosCaja.cdsLineas.Active and
+               (DatosCaja.cdsLineas.State in [dsEdit, dsInsert]) then
+            begin
+              DatosCaja.cdsLineas.FieldByName(
+                'ATTR' + IntToStr(I) + '_NOMBRE').AsString :=
+                NombresAtributos[I - 1];
+            end;
+          end
+          else
+          begin
+            FSelectorAtributos.CargarOpciones(
+              I,
+              '',
+              Propiedades);
+            Columna.Visible := False;
+            Columna.Options.Editing := False;
+            Columna.Caption := '-';
           end;
-        end
-        else
-        begin
-          Col.Visible := False;
-          Col.Options.Editing := False;
-          Col.Caption := '-';
         end;
       end;
-    end;
-  finally
-    tvLineasOpe.EndUpdate;
+    finally
+      tvLineasOpe.EndUpdate;
     end;
   end;
 end;
@@ -3244,6 +3265,7 @@ end;
 
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
+  RestaurarEnterAsTabTemporal(Sender);
   if Assigned(DatosCaja) then
   begin
     DatosCaja.OnUpdateTotal := nil;
@@ -3582,6 +3604,11 @@ procedure TEditorLineasCajaVcl.SeleccionarAtributo(
   Sender: TObject; AButtonIndex: Integer);
 begin
   FSelectorAtributos.SeleccionarAtributo(Sender, AButtonIndex);
+end;
+
+procedure TEditorLineasCajaVcl.ConfirmarAtributoPendiente;
+begin
+  FSelectorAtributos.ConfirmarAtributoPendiente;
 end;
 
 procedure TEditorLineasCajaVcl.FinalizarAtributos;

@@ -1,4 +1,4 @@
-inherited frmModalDesgloseEfectivo: TfrmModalDesgloseEfectivo
+﻿inherited frmModalDesgloseEfectivo: TfrmModalDesgloseEfectivo
   BorderStyle = bsDialog
   Caption = 'Recuento de billetes y monedas'
   ClientHeight = 560

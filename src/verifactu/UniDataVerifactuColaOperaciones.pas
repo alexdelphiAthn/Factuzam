@@ -456,7 +456,11 @@ begin
       // aunque la original se rectifique varias veces
       RegistrarRelacionFactura(AConn, AUsuario, ASerieRect, ANumeroRect,
         ASerieOriginal, ANumeroOriginal, 'RECTIFICA');
-      if sTipoRectificativa = 'S' then
+      // Solo se retiran los movimientos de la original cuando quien
+      // rectifica crea los sustitutos (caja). La incidencia fiscal R4
+      // duplica la factura sin generar movimientos, asi que pide
+      // conservarlos: borrarlos dejaria la venta sin descontar stock.
+      if (sTipoRectificativa = 'S') and ABorrarMovimientosOriginales then
       begin
         BorrarMovimientosFactura(Qry, ASerieOriginal, ANumeroOriginal);
       end;

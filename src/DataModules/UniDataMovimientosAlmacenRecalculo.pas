@@ -391,7 +391,14 @@ begin
       Procedimiento.ParamByName('p_NUMERO').AsString := ANumero;
       Procedimiento.ParamByName('p_MOTIVO').AsString := AMotivo;
       Procedimiento.ParamByName('p_USUARIO').AsString := AUsuario;
-      Procedimiento.ExecProc;
+      try
+        Procedimiento.ExecProc;
+      except
+        // Igual que en el encolado por movimiento: si la cola falla se
+        // recalcula sincronamente en vez de dejar el stock desfasado.
+        on Exception do
+          Result := False;
+      end;
     finally
       FreeAndNil(Procedimiento);
     end;
@@ -450,6 +457,11 @@ begin
     ProcedimientoDisponible(
       AConexion,
       'PRC_FZA_MOVIMIENTOS_RECALCULO_ENCOLAR');
+  for Indice := Low(ANumerosMovimiento) to High(ANumerosMovimiento) do
+  begin
+    if Trim(ANumerosMovimiento[Indice]) = '' then
+      raise EArgumentException.Create('ANumerosMovimiento');
+  end;
   if Result then
   begin
     Procedimiento := TUniStoredProc.Create(nil);
@@ -464,16 +476,25 @@ begin
         ftString, 'p_MOTIVO', ptInput);
       Procedimiento.Params.CreateParam(
         ftString, 'p_USUARIO', ptInput);
-      for Indice := Low(ANumerosMovimiento) to
-                    High(ANumerosMovimiento) do
-      begin
-        if Trim(ANumerosMovimiento[Indice]) = '' then
-          raise EArgumentException.Create('ANumerosMovimiento');
-        Procedimiento.ParamByName('p_NUMERO_MOV').AsString :=
-          ANumerosMovimiento[Indice];
-        Procedimiento.ParamByName('p_MOTIVO').AsString := AMotivo;
-        Procedimiento.ParamByName('p_USUARIO').AsString := AUsuario;
-        Procedimiento.ExecProc;
+      try
+        for Indice := Low(ANumerosMovimiento) to
+                      High(ANumerosMovimiento) do
+        begin
+          Procedimiento.ParamByName('p_NUMERO_MOV').AsString :=
+            ANumerosMovimiento[Indice];
+          Procedimiento.ParamByName('p_MOTIVO').AsString := AMotivo;
+          Procedimiento.ParamByName('p_USUARIO').AsString := AUsuario;
+          Procedimiento.ExecProc;
+        end;
+      except
+        // Decision explicita ante un fallo de la cola: aplazar es solo
+        // una optimizacion, asi que se devuelve False y el llamante
+        // recalcula aqui mismo. Nunca se deja pasar la operacion sin
+        // recalcular: eso dejaria las existencias desfasadas en
+        // silencio. Si el recalculo sincrono tambien falla, su
+        // excepcion sube y bloquea la operacion.
+        on Exception do
+          Result := False;
       end;
     finally
       FreeAndNil(Procedimiento);
