@@ -484,8 +484,7 @@ begin
   finally
     FreeAndNil(oConsulta);
   end;
-  Result.Activo := Result.SincronizarStockPrecios or
-    Result.CrearArticulos;
+  Result.Activo := Result.SincronizarStockPrecios;
   Result.Cola.StockActivo := Result.SincronizarStockPrecios;
   if Result.SegundosCiclo < 60 then
     Result.SegundosCiclo := 60;
@@ -583,8 +582,7 @@ begin
       'FROM candidatos GROUP BY USUARIO) ' +
       'SELECT COUNT(*) AS CONFLICTOS FROM efectivos E ' +
       'WHERE E.USUARIO <> :USUARIO ' +
-      'AND (UPPER(TRIM(E.SINCRONIZAR)) IN (''TRUE'', ''1'', ''S'') ' +
-      'OR UPPER(TRIM(E.CREAR)) IN (''TRUE'', ''1'', ''S'')) ' +
+      'AND UPPER(TRIM(E.SINCRONIZAR)) IN (''TRUE'', ''1'', ''S'') ' +
       'AND NULLIF(TRIM(E.URL_API), '''') IS NOT NULL ' +
       'AND NULLIF(TRIM(E.API_KEY), '''') IS NOT NULL ' +
       'AND NULLIF(TRIM(E.EMPRESA), '''') IS NOT NULL ' +

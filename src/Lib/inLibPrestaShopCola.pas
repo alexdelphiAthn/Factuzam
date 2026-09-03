@@ -82,6 +82,7 @@ type
     FRepositorio: IRepositorioPrestaShopCola;
     FRepositorioAlta: IRepositorioAltaArticuloPresta;
     FContextoSesion: IContextoSesionAplicacion;
+    FParametrosApp: IParametrosAplicacion;
     FControlTrabajo: TControlTrabajoPrestaShop;
     FFabricaSesion: IFabricaSesionPrestaShopCola;
     FRegistroLog: IRegistroLog;
@@ -89,6 +90,7 @@ type
     FClaveOculta: string;
     FSegundosCiclo: Integer;
     FAvisoConfiguracion: Boolean;
+    function ColaActiva: Boolean;
     function ConfiguracionCompleta(
       const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
     function PrepararConfiguracion:
@@ -151,6 +153,7 @@ type
       const AConfiguracion: TConfiguracionGlobalPrestaShop;
       const AError: ERecursoPrestaNoEncontrado);
     procedure LiberarTrabajoActual(AIdCola: Int64; const AToken: string);
+    procedure LiberarSesion;
     procedure ProcesarArticulo(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ACliente: IClienteCatalogoPrestaInstantanea;
@@ -166,6 +169,7 @@ type
     procedure EjecutarBarridoSiProcede(
       const AConfiguracion: TConfiguracionGlobalPrestaShop);
     procedure ProcesarCiclo(ARecuperacion: Boolean);
+    procedure ProcesarCicloActivo(ARecuperacion: Boolean);
     function ProcesarFila(
       AIdCola: Int64;
       const ACliente: IClienteCatalogoPrestaInstantanea;
@@ -222,12 +226,11 @@ resourcestring
     'PrestaShop no confirmó el impacto de precio de la combinación %d.';
   SStockPrestaShopNoVerificado =
     'PrestaShop no confirmó el stock %d.';
-  SCierrePrestaShopReencolado =
-    'Cierre de aplicación: artículo PrestaShop %d reencolado sin consumir ' +
-    'intento.';
-  SCierrePrestaShopNoLiberado =
-    'Cierre de aplicación: no se liberó el artículo PrestaShop %d porque ' +
-    'su reclamación ya no estaba vigente.';
+  STrabajoPrestaShopReencolado =
+    'Artículo PrestaShop %d reencolado sin consumir intento.';
+  STrabajoPrestaShopNoLiberado =
+    'No se liberó el artículo PrestaShop %d porque su reclamación ya no ' +
+    'estaba vigente.';
   SBarridoPrestaShopOmitido =
     'Barrido de respaldo PrestaShop omitido: %s';
   SProductoPrestaShopNoEncontradoSinAlta =
@@ -430,6 +433,7 @@ begin
     raise EArgumentNilException.Create('AControlTrabajo');
   inherited Create(True);
   FContextoSesion := AContextoSesion;
+  FParametrosApp := AParametrosApp;
   FControlTrabajo := AControlTrabajo;
   FFabricaSesion := AFabricaSesion;
   FUsuario := Trim(AUsuario);
@@ -441,14 +445,24 @@ end;
 
 destructor THiloPrestaShopCola.Destroy;
 begin
-  FRepositorioAlta := nil;
-  FRepositorio := nil;
-  FSesion := nil;
+  LiberarSesion;
   FFabricaSesion := nil;
   FControlTrabajo := nil;
+  FParametrosApp := nil;
   FContextoSesion := nil;
   FRegistroLog := nil;
   inherited;
+end;
+
+function THiloPrestaShopCola.ColaActiva: Boolean;
+var
+  sValor: string;
+begin
+  sValor := Trim(FParametrosApp.GetString(
+    'appPrestaShopSincronizarStockPrecios',
+    'False'));
+  Result := SameText(sValor, 'True') or
+    (sValor = '1') or SameText(sValor, 'S');
 end;
 
 function THiloPrestaShopCola.ConfiguracionCompleta(
@@ -488,38 +502,42 @@ function THiloPrestaShopCola.SigueVigente(
 var
   oActual: TConfiguracionGlobalPrestaShop;
 begin
-  oActual := PrepararConfiguracion;
-  Result := FRepositorio.DestinoSinConflictos(oActual, FUsuario) and
-    SameText(oActual.UrlApi, AConfiguracion.UrlApi) and
-    (oActual.ClaveApi = AConfiguracion.ClaveApi) and
-    SameText(
-      oActual.Cola.ClaveInstalacion,
-      AConfiguracion.Cola.ClaveInstalacion) and
-    (oActual.Cola.IdTienda = AConfiguracion.Cola.IdTienda) and
-    (oActual.Cola.IdIdioma = AConfiguracion.Cola.IdIdioma) and
-    (oActual.Cola.IdCategoriaRaiz =
-      AConfiguracion.Cola.IdCategoriaRaiz) and
-    (oActual.Cola.IdReglaIvaNormal =
-      AConfiguracion.Cola.IdReglaIvaNormal) and
-    (oActual.Cola.IdReglaIvaReducido =
-      AConfiguracion.Cola.IdReglaIvaReducido) and
-    (oActual.Cola.IdReglaIvaSuperreducido =
-      AConfiguracion.Cola.IdReglaIvaSuperreducido) and
-    (oActual.Cola.IdReglaIvaExento =
-      AConfiguracion.Cola.IdReglaIvaExento) and
-    (oActual.Cola.NivelesFamiliaAlta =
-      AConfiguracion.Cola.NivelesFamiliaAlta) and
-    (oActual.SincronizarStockPrecios =
-      AConfiguracion.SincronizarStockPrecios) and
-    (oActual.CrearArticulos = AConfiguracion.CrearArticulos) and
-    (oActual.Cola.StockActivo = AConfiguracion.Cola.StockActivo) and
-    (oActual.HorasBarrido = AConfiguracion.HorasBarrido) and
-    SameText(
-      oActual.Cola.CodigoEmpresa,
-      AConfiguracion.Cola.CodigoEmpresa) and
-    SameText(
-      oActual.Cola.CodigoTarifa,
-      AConfiguracion.Cola.CodigoTarifa);
+  Result := ColaActiva;
+  if Result then
+  begin
+    oActual := PrepararConfiguracion;
+    Result := FRepositorio.DestinoSinConflictos(oActual, FUsuario) and
+      SameText(oActual.UrlApi, AConfiguracion.UrlApi) and
+      (oActual.ClaveApi = AConfiguracion.ClaveApi) and
+      SameText(
+        oActual.Cola.ClaveInstalacion,
+        AConfiguracion.Cola.ClaveInstalacion) and
+      (oActual.Cola.IdTienda = AConfiguracion.Cola.IdTienda) and
+      (oActual.Cola.IdIdioma = AConfiguracion.Cola.IdIdioma) and
+      (oActual.Cola.IdCategoriaRaiz =
+        AConfiguracion.Cola.IdCategoriaRaiz) and
+      (oActual.Cola.IdReglaIvaNormal =
+        AConfiguracion.Cola.IdReglaIvaNormal) and
+      (oActual.Cola.IdReglaIvaReducido =
+        AConfiguracion.Cola.IdReglaIvaReducido) and
+      (oActual.Cola.IdReglaIvaSuperreducido =
+        AConfiguracion.Cola.IdReglaIvaSuperreducido) and
+      (oActual.Cola.IdReglaIvaExento =
+        AConfiguracion.Cola.IdReglaIvaExento) and
+      (oActual.Cola.NivelesFamiliaAlta =
+        AConfiguracion.Cola.NivelesFamiliaAlta) and
+      (oActual.SincronizarStockPrecios =
+        AConfiguracion.SincronizarStockPrecios) and
+      (oActual.CrearArticulos = AConfiguracion.CrearArticulos) and
+      (oActual.Cola.StockActivo = AConfiguracion.Cola.StockActivo) and
+      (oActual.HorasBarrido = AConfiguracion.HorasBarrido) and
+      SameText(
+        oActual.Cola.CodigoEmpresa,
+        AConfiguracion.Cola.CodigoEmpresa) and
+      SameText(
+        oActual.Cola.CodigoTarifa,
+        AConfiguracion.Cola.CodigoTarifa);
+  end;
 end;
 
 procedure THiloPrestaShopCola.AsegurarLease(
@@ -866,8 +884,7 @@ begin
           if Assigned(FRegistroLog) then
             FRegistroLog.RegistrarError(
               'Cola PrestaShop: ' + sMensaje);
-          FRepositorio := nil;
-          FSesion := nil;
+          LiberarSesion;
         end;
       end;
       if bRecuperacion then
@@ -902,6 +919,13 @@ begin
   end;
 end;
 
+procedure THiloPrestaShopCola.LiberarSesion;
+begin
+  FRepositorioAlta := nil;
+  FRepositorio := nil;
+  FSesion := nil;
+end;
+
 procedure THiloPrestaShopCola.EjecutarBarridoSiProcede(
   const AConfiguracion: TConfiguracionGlobalPrestaShop);
 var
@@ -927,10 +951,21 @@ begin
 end;
 
 procedure THiloPrestaShopCola.ProcesarCiclo(ARecuperacion: Boolean);
+begin
+  if ColaActiva then
+    ProcesarCicloActivo(ARecuperacion)
+  else
+  begin
+    LiberarSesion;
+    FClaveOculta := '';
+    FAvisoConfiguracion := False;
+  end;
+end;
+
+procedure THiloPrestaShopCola.ProcesarCicloActivo(
+  ARecuperacion: Boolean);
 var
   bProcesar: Boolean;
-  bSolicitaProcesado: Boolean;
-  bTieneVisibilidad: Boolean;
   oCliente: IClienteCatalogoPrestaInstantanea;
   oClienteAlta: IClienteCatalogoAltaPresta;
   oConfiguracion: TConfiguracionGlobalPrestaShop;
@@ -948,14 +983,7 @@ begin
     FRepositorioAlta := FSesion.RepositorioAlta;
   end;
   oConfiguracion := PrepararConfiguracion;
-  bTieneVisibilidad := False;
-  if (oConfiguracion.Cola.ClaveInstalacion <> '') and
-     (oConfiguracion.Cola.IdTienda > 0) then
-    bTieneVisibilidad := FRepositorio.TieneVisibilidadPendiente(
-      oConfiguracion.Cola.ClaveInstalacion,
-      oConfiguracion.Cola.IdTienda);
-  bSolicitaProcesado := oConfiguracion.Activo or bTieneVisibilidad;
-  if bSolicitaProcesado and ConfiguracionCompleta(oConfiguracion) and
+  if oConfiguracion.Activo and ConfiguracionCompleta(oConfiguracion) and
      FRepositorio.DestinoSinConflictos(oConfiguracion, FUsuario) then
   begin
     FAvisoConfiguracion := False;
@@ -1004,7 +1032,7 @@ begin
   end
   else
   begin
-    if bSolicitaProcesado and (not FAvisoConfiguracion) then
+    if oConfiguracion.Activo and (not FAvisoConfiguracion) then
     begin
       if Assigned(FRegistroLog) then
       begin
@@ -1015,7 +1043,7 @@ begin
       end;
       FAvisoConfiguracion := True;
     end;
-    if not bSolicitaProcesado then
+    if not oConfiguracion.Activo then
       FAvisoConfiguracion := False;
   end;
 end;
@@ -1032,7 +1060,7 @@ var
   iIndice: Integer;
 begin
   bContinuar := True;
-  while bContinuar and (not Terminated) and
+  while ColaActiva and bContinuar and (not Terminated) and
         (not FContextoSesion.CerrandoAplicacion) and
         FControlTrabajo.PermiteNuevasReclamaciones do
   begin
@@ -1042,7 +1070,7 @@ begin
       CFilasPorCiclo);
     bContinuar := Length(aPendientes) > 0;
     iIndice := 0;
-    while (iIndice <= High(aPendientes)) and bContinuar and
+    while ColaActiva and (iIndice <= High(aPendientes)) and bContinuar and
           (not Terminated) and
           (not FContextoSesion.CerrandoAplicacion) and
           FControlTrabajo.PermiteNuevasReclamaciones do
@@ -1145,6 +1173,11 @@ begin
               if FControlTrabajo.DebeLiberarTrabajo or
                  (E is ECierreForzadoPrestaShop) then
                 LiberarTrabajoActual(AIdCola, sToken)
+              else if not ColaActiva then
+              begin
+                LiberarTrabajoActual(AIdCola, sToken);
+                Result := False;
+              end
               else if E is EAltaArticuloPrestaLocal then
                 GuardarIncidenciaTerminal(
                   oTrabajo,
@@ -1195,11 +1228,11 @@ begin
   begin
     if Assigned(FRegistroLog) then
       FRegistroLog.RegistrarInformacion(
-        Format(SCierrePrestaShopReencolado, [AIdCola]));
+        Format(STrabajoPrestaShopReencolado, [AIdCola]));
   end
   else if Assigned(FRegistroLog) then
     FRegistroLog.RegistrarAviso(
-      Format(SCierrePrestaShopNoLiberado, [AIdCola]));
+      Format(STrabajoPrestaShopNoLiberado, [AIdCola]));
 end;
 
 procedure THiloPrestaShopCola.ProcesarDesactivacion(

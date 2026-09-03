@@ -10,11 +10,10 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Exportación a Excel del informe "Movimientos de ventas por artículos y    }
-{    fechas". Una fila por artículo/color/talla según los desgloses elegidos,  }
-{    con las magnitudes del periodo y los dos márgenes. Si el SP devuelve      }
-{    agrupaciones (GRUPO1..3), dibuja una cabecera y un total por grupo, salvo }
-{    para una talla con un solo detalle. Las magnitudes base se suman y los    }
-{    porcentajes y márgenes se recalculan a partir de esas sumas.              }
+{    fechas". Sin agrupaciones muestra una fila por artículo. Con niveles sin  }
+{    ART, el último es el detalle agregado y los anteriores son grupos        }
+{    exteriores. Si se marca ART conserva su desglose. Las magnitudes base se }
+{    suman y los porcentajes y márgenes se recalculan desde esas sumas.        }
 {                                                                              }
 {    v3.0 (Fase 4): recibe por separado escritura y formato; no depende del    }
 {    guardado del libro ni de DevExpress. Ver                                  }
@@ -124,6 +123,8 @@ type
     FNumeroDetallesTalla: TDictionary<string, Integer>;
     FTotalAcumulado: TAcum;
     FAgrupaPorArticulo: Boolean;
+    FResumenAgrupado: Boolean;
+    FNivelDetalle: Integer;
     FNivelTalla: Integer;
     FLoteIniciado: Boolean;
     FControlesDeshabilitados: Boolean;
@@ -149,6 +150,7 @@ type
     function EsGrupoTalla(ANivel: Integer): Boolean;
     function EtiquetaResumenGrupo(ANivel: Integer): string;
     function NumeroDetallesGrupoActual(ANivel: Integer): Integer;
+    function TituloColumnaDetalle: string;
     procedure DetectarAgrupaciones;
     procedure EscribirDetalle;
     procedure AcumularFila;
@@ -210,17 +212,23 @@ begin
   if FEscritorConFormato <> oFormateadorConFormato then
     FEscritorConFormato := nil;
   FAgrupaPorArticulo := False;
+  FResumenAgrupado := False;
+  FNivelDetalle := 0;
   FNivelTalla := 0;
   for iNivel := 1 to N_NIVELES do
   begin
     FGrupoTipos[iNivel] := '';
     if iNivel <= Length(ANivelesAgrupacion) then
       FGrupoTipos[iNivel] := ANivelesAgrupacion[iNivel - 1];
+    if FGrupoTipos[iNivel] <> '' then
+      FNivelDetalle := iNivel;
     if SameText(FGrupoTipos[iNivel], 'ART') then
       FAgrupaPorArticulo := True;
     if SameText(FGrupoTipos[iNivel], 'TAL') then
       FNivelTalla := iNivel;
   end;
+  FResumenAgrupado :=
+    (FNivelDetalle > 0) and (not FAgrupaPorArticulo);
 end;
 
 destructor TExportadorMovVentasArt.Destroy;
@@ -284,16 +292,18 @@ end;
 
 procedure TExportadorMovVentasArt.EscribirCabeceraColumnas;
 const
-  TITULOS: array[0..COL_MAX] of string = (
-    'Artículo', 'Uni.Ent.', 'Imp.Ent.', 'Uds Vta', 'Imp Venta',
+  TITULOS: array[1..COL_MAX] of string = (
+    'Uni.Ent.', 'Imp.Ent.', 'Uds Vta', 'Imp Venta',
     'Imp Coste', 'Beneficio', '% Bnf', 'Venta-Ent', 'VentEnt%',
     'Margen 1', 'Margen 2', '% Vdo', '% Vtas');
 var
   iColumna: Integer;
 begin
+  EscribirValor(COL_ART, TituloColumnaDetalle, True);
   for iColumna := 0 to COL_MAX do
   begin
-    EscribirValor(iColumna, TITULOS[iColumna], True);
+    if iColumna > COL_ART then
+      EscribirValor(iColumna, TITULOS[iColumna], True);
     if iColumna > COL_ART then
       FFormateador.Alinear(FFila, iColumna, acDerecha);
     if FEscritor.CeldaExiste(FFila, iColumna) then
@@ -359,6 +369,7 @@ var
   iColumna: Integer;
 begin
   if FGrupoUsado[ANivel] and
+     (not FResumenAgrupado or (ANivel <> FNivelDetalle)) and
      (not EsGrupoTalla(ANivel) or
       (NumeroDetallesGrupoActual(ANivel) > 1)) then
   begin
@@ -414,7 +425,8 @@ procedure TExportadorMovVentasArt.EmitirResumenGrupo(ANivel: Integer);
 begin
   if FGrupoUsado[ANivel] then
   begin
-    if EsGrupoTalla(ANivel) and
+    if (not FResumenAgrupado or (ANivel <> FNivelDetalle)) and
+       EsGrupoTalla(ANivel) and
        (FGrupoNumeroDetalles[ANivel] = 1) then
       ActualizarParticipacionDetalle(ANivel)
     else
@@ -466,10 +478,33 @@ end;
 function TExportadorMovVentasArt.EtiquetaResumenGrupo(
   ANivel: Integer): string;
 begin
-  if EsGrupoArticulo(ANivel) then
+  if FResumenAgrupado and (ANivel = FNivelDetalle) then
+    Result := StringOfChar(' ', (ANivel - 1) * 2) +
+      FGrupoEtiquetas[ANivel]
+  else if EsGrupoArticulo(ANivel) then
     Result := 'TOTAL ARTÍCULO ' + FGrupoCodigos[ANivel]
   else
     Result := 'TOTAL ' + FGrupoEtiquetas[ANivel];
+end;
+
+function TExportadorMovVentasArt.TituloColumnaDetalle: string;
+begin
+  Result := 'Artículo';
+  if FResumenAgrupado then
+  begin
+    if SameText(FGrupoTipos[FNivelDetalle], 'ALM') then
+      Result := 'Almacén'
+    else if SameText(FGrupoTipos[FNivelDetalle], 'PRV') then
+      Result := 'Proveedor'
+    else if SameText(FGrupoTipos[FNivelDetalle], 'FAM') then
+      Result := 'Familia'
+    else if SameText(FGrupoTipos[FNivelDetalle], 'TMP') then
+      Result := 'Temporada'
+    else if SameText(FGrupoTipos[FNivelDetalle], 'COL') then
+      Result := 'Color'
+    else if SameText(FGrupoTipos[FNivelDetalle], 'TAL') then
+      Result := 'Talla';
+  end;
 end;
 
 function TExportadorMovVentasArt.NumeroDetallesGrupoActual(
@@ -596,9 +631,11 @@ end;
 procedure TExportadorMovVentasArt.EscribirDetalleActual;
 begin
   DetectarAgrupaciones;
-  EscribirDetalle;
+  if not FResumenAgrupado then
+    EscribirDetalle;
   AcumularFila;
-  Inc(FFila);
+  if not FResumenAgrupado then
+    Inc(FFila);
   FDatos.Next;
 end;
 

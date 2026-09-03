@@ -31,7 +31,9 @@ function ObtenerClavePrimaria(ADataSet: TDataSet;
 function AsignarCampoTextoSiEditable(ADataSet: TDataSet;
   const ACampo, AValor: string): Boolean;
 procedure GrabarDatasets(AModulo: TDataModule);
-procedure CancelarDatasets(AModulo: TDataModule);
+procedure CancelarDatasets(AModulo: TDataModule); overload;
+procedure CancelarDatasets(AModulo: TDataModule;
+  APrincipal: TDataSet); overload;
 function CheckOpenDatasets(AModulo: TDataModule): Boolean;
 function ExistePeriodoUnico(
   ADataSet: TDataSet;
@@ -300,6 +302,34 @@ begin
           oDataSet.Cancel;
       end;
     end;
+  end;
+end;
+
+procedure CancelarDatasets(AModulo: TDataModule;
+  APrincipal: TDataSet);
+var
+  i: Integer;
+  oDataSet: TDataSet;
+begin
+  if Assigned(AModulo) then
+  begin
+    for i := AModulo.ComponentCount - 1 downto 0 do
+    begin
+      if AModulo.Components[i] is TDataSet then
+      begin
+        oDataSet := TDataSet(AModulo.Components[i]);
+        if (oDataSet <> APrincipal) and
+           oDataSet.Active and
+           (oDataSet.State in [dsEdit, dsInsert]) then
+          oDataSet.Cancel;
+      end;
+    end;
+  end;
+  if Assigned(APrincipal) then
+  begin
+    if APrincipal.Active and
+       (APrincipal.State in [dsEdit, dsInsert]) then
+      APrincipal.Cancel;
   end;
 end;
 

@@ -226,6 +226,8 @@ resourcestring
   SErrorGrabarDatos = 'Error al grabar: %s';
   SPreguntaGrabarCambiosPendientes =
     'Hay datos no grabados. ¿Desea grabar los cambios?';
+  SPreguntaCancelarIntroduccionDatos =
+    'Hay un alta sin grabar. ¿Desea cancelar la introducción de datos?';
   STituloMensajeAdvertenciaGen = 'Mensaje de Advertencia';
   SInfoCambiosGrabados = 'Cambios grabados';
   SInfoCambiosCancelados = 'Cambios revertidos/cancelados';

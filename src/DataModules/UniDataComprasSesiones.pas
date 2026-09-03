@@ -1166,6 +1166,8 @@ var
 begin
   AjustarCamposDerivadosCabecera;
   inherited;
+  if Trim(DataSet.FieldByName('CODIGO_PRV_SES').AsString) = '' then
+    raise Exception.Create(SErrorProveedorSesionObligatorio);
   LogSes(Format(
     'DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
                 [Ord(unqryTablaG.State),

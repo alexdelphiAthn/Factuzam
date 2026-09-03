@@ -10,10 +10,10 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Modal de impresión del "Movimientos de ventas por artículos y fechas"     }
-{    (ranking de ventas, FastReport). Una fila por artículo/color/talla según  }
-{    los desgloses elegidos (y por almacén si se agrupa por almacén), con las  }
-{    entradas y venta del periodo, margen 1 sobre el coste vendido y margen 2  }
-{    sobre el importe de entradas. Mantiene la foto del artículo. Se apoya en  }
+{    (ranking de ventas, FastReport). Sin agrupaciones muestra el artículo.    }
+{    Con niveles sin ART, el último es el detalle agregado y los anteriores   }
+{    son grupos exteriores. Si se marca ART conserva su desglose. Incluye las }
+{    entradas y venta del periodo y los márgenes. Se apoya en                 }
 {    el SP PRC_GET_MOV_VENTAS_ART (ver                                         }
 {    DESARROLLOS EN CURSO/movimientos_ventas_articulos.sql).                   }
 {                                                                              }
@@ -50,6 +50,8 @@ type
     FRepositorioMovimientos:
       IRepositorioInformeMovimientosVentasArticulo;
     FResultadoMovimientos: IResultadoInformeMovimientosVentasArticulo;
+    FNivelDetalleAgrupacion: Integer;
+    FResumenAgrupado: Boolean;
     FchkIniCompras: TcxCheckBox;   // activa la fecha inicial de las entradas
     // fecha desde la que se suman albaranes y, en modo local, traspasos
     FdteIniCompras: TcxDateEdit;
@@ -71,6 +73,7 @@ type
     procedure ReportBeforePrint(Component: TfrxReportComponent);
     procedure CompletarSubtotales;
     procedure ActualizarFormulasPorcentajes;
+    procedure IncluirDetalleOcultoEnAcumulados;
     procedure PrepararMovimientosEnSegundoPlano(
       const ACriterios: TCriteriosInformeMovimientosVentasArticulo);
     // Adapta el detalle a procedimientos antiguos sin color o talla.
@@ -587,6 +590,7 @@ begin
   ConfigurarDetalleArticuloAtributos;
   CompletarSubtotales;
   ActualizarFormulasPorcentajes;
+  IncluirDetalleOcultoEnAcumulados;
   // Sustituimos el OnBeforePrint del base (fotos) por el nuestro, que encadena
   // las fotos y oculta las bandas de grupo de los niveles inactivos.
   frxrprt1.OnBeforePrint := ReportBeforePrint;
@@ -688,6 +692,29 @@ begin
   PonerFormula('MemoHPctVlast', '% Vtas');
 end;
 
+procedure TfrmPrintMovVentasArt.IncluirDetalleOcultoEnAcumulados;
+const
+  SReferenciaDetalle = ',MasterData1)';
+  SReferenciaDetalleOculto = ',MasterData1,1)';
+var
+  iComponente: Integer;
+  oMemo: TfrxMemoView;
+begin
+  if FResumenAgrupado then
+  begin
+    for iComponente := 0 to frxrprt1.AllObjects.Count - 1 do
+    begin
+      if TObject(frxrprt1.AllObjects[iComponente]) is TfrxMemoView then
+      begin
+        oMemo := TfrxMemoView(frxrprt1.AllObjects[iComponente]);
+        oMemo.Memo.Text := StringReplace(
+          oMemo.Memo.Text, SReferenciaDetalle,
+          SReferenciaDetalleOculto, [rfReplaceAll, rfIgnoreCase]);
+      end;
+    end;
+  end;
+end;
+
 procedure TfrmPrintMovVentasArt.ConfigurarDetalleArticuloAtributos;
 var
   aNiveles: TArray<string>;
@@ -700,6 +727,28 @@ var
   sCampoColor: string;
   sCampoTalla: string;
   sDetalle: string;
+  function TituloDetalle: string;
+  var
+    sNivel: string;
+  begin
+    Result := SCaptionArticuloAgrupacionMovimientosVentas;
+    if FResumenAgrupado then
+    begin
+      sNivel := aNiveles[FNivelDetalleAgrupacion - 1];
+      if SameText(sNivel, 'ALM') then
+        Result := SCaptionAlmacenAgrupacionMovimientosVentas
+      else if SameText(sNivel, 'PRV') then
+        Result := SCaptionProveedorAgrupacionMovimientosVentas
+      else if SameText(sNivel, 'FAM') then
+        Result := SCaptionFamiliaAgrupacionMovimientosVentas
+      else if SameText(sNivel, 'TMP') then
+        Result := SCaptionTemporadaAgrupacionMovimientosVentas
+      else if SameText(sNivel, 'COL') then
+        Result := SCaptionColorAgrupacionMovimientosVentas
+      else if SameText(sNivel, 'TAL') then
+        Result := SCaptionTallaAgrupacionMovimientosVentas;
+    end;
+  end;
   procedure AnadirFragmento(const AFragmento: string);
   begin
     if AFragmento <> '' then
@@ -714,8 +763,11 @@ begin
      FResultadoMovimientos.DataSet.Active then
   begin
     aNiveles := NivelesAgrupacion;
+    FNivelDetalleAgrupacion := Length(aNiveles);
     iNivelArticulo := IndexText('ART', aNiveles) + 1;
     bAgruparArticulo := iNivelArticulo > 0;
+    FResumenAgrupado :=
+      (FNivelDetalleAgrupacion > 0) and (not bAgruparArticulo);
     bMostrarColor := MatchText('COL', aNiveles);
     bMostrarTalla := MatchText('TAL', aNiveles);
     sCampoColor := '';
@@ -737,8 +789,15 @@ begin
       oComponente := frxrprt1.FindObject(
         Format('MemoGF%dLbl', [iNivel]));
       if oComponente is TfrxMemoView then
-        TfrxMemoView(oComponente).Memo.Text := Format(
-          'TOTAL [MovVentas."GRUPO%d_ETIQ"]', [iNivel]);
+      begin
+        if FResumenAgrupado and
+           (iNivel = FNivelDetalleAgrupacion) then
+          TfrxMemoView(oComponente).Memo.Text := Format(
+            '[MovVentas."GRUPO%d_ETIQ"]', [iNivel])
+        else
+          TfrxMemoView(oComponente).Memo.Text := Format(
+            'TOTAL [MovVentas."GRUPO%d_ETIQ"]', [iNivel]);
+      end;
     end;
     if bAgruparArticulo then
     begin
@@ -749,6 +808,9 @@ begin
           'TOTAL ARTÍCULO [MovVentas."GRUPO%d_COD"]',
           [iNivelArticulo]);
     end;
+    oComponente := frxrprt1.FindObject('MemoHDesc');
+    if oComponente is TfrxMemoView then
+      TfrxMemoView(oComponente).Memo.Text := TituloDetalle;
     oComponente := frxrprt1.FindObject('MemoArtDesc');
     if oComponente is TfrxMemoView then
     begin
@@ -784,6 +846,7 @@ var
 begin
   if (FResultadoMovimientos <> nil) and
      FResultadoMovimientos.DataSet.Active and
+     (not FResumenAgrupado) and
      (not FResultadoMovimientos.DataSet.IsEmpty) then
   begin
     slCod := TStringList.Create;
@@ -820,14 +883,23 @@ begin
   begin
     sNom := Component.Name;
     nivel := 0;
-    if (Pos('GroupHeaderG', sNom) = 1) or (Pos('GroupFooterG', sNom) = 1) then
+    if sNom = 'MasterData1' then
+      TfrxBand(Component).Visible := not FResumenAgrupado
+    else if (Pos('GroupHeaderG', sNom) = 1) or
+            (Pos('GroupFooterG', sNom) = 1) then
       nivel := StrToIntDef(Copy(sNom, Length(sNom), 1), 0);
     if (nivel >= 1) and (nivel <= 3) and
        (FResultadoMovimientos <> nil) and
        FResultadoMovimientos.DataSet.Active then
+    begin
       TfrxBand(Component).Visible :=
         FResultadoMovimientos.DataSet.FieldByName(
-          Format('GRUPO%d_ETIQ', [nivel])).AsString <> ''
+          Format('GRUPO%d_ETIQ', [nivel])).AsString <> '';
+      if FResumenAgrupado and
+         (nivel = FNivelDetalleAgrupacion) and
+         (Pos('GroupHeaderG', sNom) = 1) then
+        TfrxBand(Component).Visible := False;
+    end
     else if (sNom = 'GroupHeaderFam') or (sNom = 'GroupFooterFam') then
       // La familia NO agrupa por sí sola: solo se agrupa por familia si se
       // elige FAM en la pestaña Agrupaciones (sale como "Familia: ...").

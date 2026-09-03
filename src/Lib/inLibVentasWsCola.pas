@@ -64,6 +64,7 @@ type
     procedure IniciarHilo(
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja;
       const AFabricaSesion: IFabricaSesionVentasWs;
       const AUsuario: string);
     procedure DetenerHilo;
@@ -87,6 +88,7 @@ type
     FRegistradorIntentos: IRegistradorIntentosVentasWsCola;
     FContextoSesion: IContextoSesionAplicacion;
     FParametrosApp: IParametrosAplicacion;
+    FParametrosCaja: IParametrosCaja;
     FFabricaSesion: IFabricaSesionVentasWs;
     FRegistroLog: IRegistroLog;
     FUsuario: string;
@@ -109,6 +111,7 @@ type
     constructor Create(
       const AContextoSesion: IContextoSesionAplicacion;
       const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja;
       const AFabricaSesion: IFabricaSesionVentasWs;
       const AUsuario: string;
       const ARegistroLog: IRegistroLog); reintroduce;
@@ -385,6 +388,7 @@ end;
 procedure TVentasWsCola.IniciarHilo(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
   const AFabricaSesion: IFabricaSesionVentasWs;
   const AUsuario: string);
 var
@@ -395,6 +399,7 @@ begin
     oHilo := THiloVentasWsCola.Create(
       AContextoSesion,
       AParametrosApp,
+      AParametrosCaja,
       AFabricaSesion,
       AUsuario,
       FRegistroLog);
@@ -434,6 +439,7 @@ end;
 constructor THiloVentasWsCola.Create(
   const AContextoSesion: IContextoSesionAplicacion;
   const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
   const AFabricaSesion: IFabricaSesionVentasWs;
   const AUsuario: string;
   const ARegistroLog: IRegistroLog);
@@ -442,11 +448,14 @@ begin
     raise EArgumentNilException.Create('AContextoSesion');
   if not Assigned(AParametrosApp) then
     raise EArgumentNilException.Create('AParametrosApp');
+  if not Assigned(AParametrosCaja) then
+    raise EArgumentNilException.Create('AParametrosCaja');
   if not Assigned(AFabricaSesion) then
     raise EArgumentNilException.Create('AFabricaSesion');
   inherited Create(True);
   FContextoSesion := AContextoSesion;
   FParametrosApp := AParametrosApp;
+  FParametrosCaja := AParametrosCaja;
   FFabricaSesion := AFabricaSesion;
   FUsuario := AUsuario;
   FRegistroLog := ARegistroLog;
@@ -459,6 +468,7 @@ begin
   FSesion := nil;
   FFabricaSesion := nil;
   FContextoSesion := nil;
+  FParametrosCaja := nil;
   FParametrosApp := nil;
   FRegistroLog := nil;
   inherited;
@@ -523,39 +533,50 @@ var
   aPendientes: TArray<Int64>;
   iIndice: Integer;
 begin
-  if TClienteFactuzamApi.Configurada(FParametrosApp) then
+  if TVentasWsCola.Activa(FParametrosCaja) then
   begin
-    FAvisoConfiguracion := False;
-    if FSesion = nil then
+    if TClienteFactuzamApi.Configurada(FParametrosApp) then
     begin
-      FSesion := FFabricaSesion.CrearSesion;
-      if not Assigned(FSesion) then
-        raise Exception.Create('La fábrica no creó la sesión VentasWs');
-      FRepositorio := FSesion.Repositorio;
-      if not Assigned(FRepositorio) then
-        raise Exception.Create('La sesión VentasWs no tiene repositorio');
-      if not Assigned(FSesion.Json) then
-        raise Exception.Create('La sesión VentasWs no tiene serializador');
-      FRegistradorIntentos := FSesion.RegistradorIntentos;
-    end;
-    FRepositorio.ReencolarProcesandoCaducadas;
-    aPendientes := FRepositorio.BuscarPendientes(10);
-    iIndice := 0;
-    while (iIndice <= High(aPendientes)) and (not Terminated) and
-          (not FContextoSesion.CerrandoAplicacion) do
+      FAvisoConfiguracion := False;
+      if FSesion = nil then
+      begin
+        FSesion := FFabricaSesion.CrearSesion;
+        if not Assigned(FSesion) then
+          raise Exception.Create('La fábrica no creó la sesión VentasWs');
+        FRepositorio := FSesion.Repositorio;
+        if not Assigned(FRepositorio) then
+          raise Exception.Create('La sesión VentasWs no tiene repositorio');
+        if not Assigned(FSesion.Json) then
+          raise Exception.Create('La sesión VentasWs no tiene serializador');
+        FRegistradorIntentos := FSesion.RegistradorIntentos;
+      end;
+      FRepositorio.ReencolarProcesandoCaducadas;
+      aPendientes := FRepositorio.BuscarPendientes(10);
+      iIndice := 0;
+      while TVentasWsCola.Activa(FParametrosCaja) and
+            (iIndice <= High(aPendientes)) and (not Terminated) and
+            (not FContextoSesion.CerrandoAplicacion) do
+      begin
+        if not ProcesarFila(aPendientes[iIndice]) then
+          Break;
+        Inc(iIndice);
+      end;
+    end
+    else if not FAvisoConfiguracion then
     begin
-      if not ProcesarFila(aPendientes[iIndice]) then
-        Break;
-      Inc(iIndice);
+      if Assigned(FRegistroLog) then
+        FRegistroLog.RegistrarAviso(
+          'Cola de ventas WS pendiente: falta URL, API key o ' +
+          'referencia de instalación.');
+      FAvisoConfiguracion := True;
     end;
   end
-  else if not FAvisoConfiguracion then
+  else
   begin
-    if Assigned(FRegistroLog) then
-      FRegistroLog.RegistrarAviso(
-        'Cola de ventas WS pendiente: falta URL, API key o ' +
-        'referencia de instalación.');
-    FAvisoConfiguracion := True;
+    FRegistradorIntentos := nil;
+    FRepositorio := nil;
+    FSesion := nil;
+    FAvisoConfiguracion := False;
   end;
 end;
 

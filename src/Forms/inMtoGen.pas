@@ -433,14 +433,37 @@ end;
 
 procedure TfrmMtoGen.btnSalirClick(Sender: TObject);
 var
-  ts: TcxTabSheet;
+  bAltaPendiente: Boolean;
+  bCerrar: Boolean;
   formMain: TCustomForm;
+  oModuloDatos: TDataModule;
+  oTablaPrincipal: TDataSet;
+  ts: TcxTabSheet;
 begin
   inherited;
   if Self.Parent is TcxTabSheet then
   begin
-    if (tdmDataModule <> nil) and
-       CheckOpenDatasets(tdmDataModule as TDataModule) then
+    oModuloDatos := nil;
+    if tdmDataModule is TDataModule then
+      oModuloDatos := TDataModule(tdmDataModule);
+    oTablaPrincipal := nil;
+    if Assigned(dsTablaG) then
+      oTablaPrincipal := dsTablaG.DataSet;
+    bAltaPendiente := False;
+    if Assigned(oTablaPrincipal) then
+      bAltaPendiente := oTablaPrincipal.State = dsInsert;
+    bCerrar := True;
+    if bAltaPendiente then
+    begin
+      bCerrar := Application.MessageBox(
+        PChar(SPreguntaCancelarIntroduccionDatos),
+        PChar(STituloMensajeAdvertenciaGen),
+        MB_YESNO + MB_ICONQUESTION + MB_DEFBUTTON2) = ID_YES;
+      if bCerrar then
+        CancelarDatasets(oModuloDatos, oTablaPrincipal);
+    end
+    else if Assigned(oModuloDatos) and
+            CheckOpenDatasets(oModuloDatos) then
     begin
       if Application.MessageBox(PChar(SPreguntaGrabarCambiosPendientes),
         PChar(STituloMensajeAdvertenciaGen),
@@ -451,13 +474,16 @@ begin
       end
       else
       begin
-        CancelarDatasets(tdmDataModule as TDataModule);
+        CancelarDatasets(oModuloDatos);
         ShowMessage(SInfoCambiosCancelados);
       end;
     end;
-    ts := TcxTabSheet(Self.Parent);
-    formMain := Application.MainForm;
-    PostMessage(formMain.Handle, WM_FREECONTROL, 0, LParam(ts));
+    if bCerrar then
+    begin
+      ts := TcxTabSheet(Self.Parent);
+      formMain := Application.MainForm;
+      PostMessage(formMain.Handle, WM_FREECONTROL, 0, LParam(ts));
+    end;
   end;
 end;
 

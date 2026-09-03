@@ -4393,6 +4393,12 @@ begin
       SErrorEmpresaSesionObligatoria);
   ARegistrar(
     'inLibMsgCompras.' +
+    'SErrorProveedorSesionObligatorio',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SErrorProveedorSesionObligatorio);
+  ARegistrar(
+    'inLibMsgCompras.' +
     'SErrorSerieSesionObligatoria',
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.
@@ -6545,6 +6551,12 @@ begin
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.
       SPreguntaGrabarCambiosPendientes);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SPreguntaCancelarIntroduccionDatos',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SPreguntaCancelarIntroduccionDatos);
   ARegistrar(
     'inLibMsgComun.' +
     'STituloMensajeAdvertenciaGen',

@@ -38,6 +38,8 @@ resourcestring
     'o elimine primero sus líneas.';
   SErrorEmpresaSesionObligatoria =
     'Selecciona una empresa antes de grabar la sesion.';
+  SErrorProveedorSesionObligatorio =
+    'Selecciona un proveedor antes de grabar la sesión.';
   SErrorSerieSesionObligatoria =
     'Teclea una serie antes de grabar la sesion (p.ej. %s-SE-1).';
   SErrorContadorSesion =

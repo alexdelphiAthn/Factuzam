@@ -161,6 +161,7 @@ begin
       oVentasWsCola.IniciarHilo(
         FContextoSesion,
         FParametrosApp,
+        FParametrosCaja,
         CrearFabricaSesionVentasWsUniDAC(FConexiones),
         FContextoSesion.Identidad.Usuario);
       oPrestaShopCola := TPrestaShopCola.Create(FRegistroLog);
