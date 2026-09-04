@@ -55,10 +55,13 @@ type
     FEditRepo: TcxEditRepository;
     FRepCombo: TcxEditRepositoryExtLookupComboBoxItem;
     FTimerResolve: TTimer;
+    FTimerDespuesResolver: TTimer;
     FTimerBusq: TTimer;
     FSkuPend: string;
+    FDespuesResolverPendiente: Boolean;
     FEnScanner: Boolean;
     FScanBuffer: string;
+    FMostrarCodigoPadre: Boolean;
     procedure CrearControlesBusqueda;
     procedure AbrirBusquedaFiltrada(const ATexto: string);
     procedure LimpiarFiltroDesplegable;
@@ -67,10 +70,14 @@ type
     procedure ArticuloChange(Sender: TObject);
     procedure TimerBusqTimer(Sender: TObject);
     procedure TimerResolveTimer(Sender: TObject);
+    procedure TimerDespuesResolverTimer(Sender: TObject);
     procedure DispararResolucion(const ACodigo: string);
+    procedure ProgramarDespuesResolver;
     procedure OcultarEditor(const AOrigen: string);
     procedure AbrirBusquedaCompleta(Sender: TObject);
     procedure Registrar(const ATexto: string);
+    function ResolverEntradaYProgramar(
+      const AEntrada: string): Boolean;
   public
     constructor Create(AView: TcxGridDBTableView; ADatos: TDataSet;
       const ACampoArticulo: string;
@@ -81,7 +88,8 @@ type
       AResolverEntrada: TResolverEntradaGridArticulos;
       ADespuesResolver: TAccionGridArticulos;
       AMostrarPaleta: TMostrarPaletaGridArticulos;
-      ARegistro: TRegistroGridArticulos);
+      ARegistro: TRegistroGridArticulos;
+      AMostrarCodigoPadre: Boolean);
     destructor Destroy; override;
     procedure ConfigurarColumna(AColumna: TcxGridDBColumn);
     procedure ConfigurarEditorArticulo(AEditor: TcxCustomTextEdit);
@@ -108,6 +116,9 @@ implementation
 uses
   inLibMsgArticulos;
 
+type
+  TAccesoDropDownEdit = class(TcxCustomDropDownEdit);
+
 resourcestring
   STituloBusquedaArticulosGrid = 'Búsqueda de artículos';
   SColumnaDescripcionBusquedaArticulos = 'Descripción';
@@ -125,7 +136,8 @@ constructor TBusquedaGridArticulos.Create(
   AResolverEntrada: TResolverEntradaGridArticulos;
   ADespuesResolver: TAccionGridArticulos;
   AMostrarPaleta: TMostrarPaletaGridArticulos;
-  ARegistro: TRegistroGridArticulos);
+  ARegistro: TRegistroGridArticulos;
+  AMostrarCodigoPadre: Boolean);
 begin
   inherited Create;
   if not Assigned(AView) then
@@ -149,10 +161,15 @@ begin
   FDespuesResolver := ADespuesResolver;
   FMostrarPaleta := AMostrarPaleta;
   FRegistro := ARegistro;
+  FMostrarCodigoPadre := AMostrarCodigoPadre;
   FTimerResolve := TTimer.Create(nil);
   FTimerResolve.Enabled := False;
   FTimerResolve.Interval := 1;
   FTimerResolve.OnTimer := TimerResolveTimer;
+  FTimerDespuesResolver := TTimer.Create(nil);
+  FTimerDespuesResolver.Enabled := False;
+  FTimerDespuesResolver.Interval := 1;
+  FTimerDespuesResolver.OnTimer := TimerDespuesResolverTimer;
   FTimerBusq := TTimer.Create(nil);
   FTimerBusq.Enabled := False;
   FTimerBusq.Interval := 350;
@@ -171,6 +188,7 @@ begin
     FRepCombo.Properties.OnButtonClick := nil;
   end;
   FTimerBusq.Free;
+  FTimerDespuesResolver.Free;
   FTimerResolve.Free;
   FEditRepo.Free;
   FBusqRepo.Free;
@@ -199,7 +217,10 @@ begin
   FBusqView.OptionsSelection.CellSelect := False;
   FBusqView.OptionsBehavior.IncSearch := False;
   FBusqColSku := FBusqView.CreateColumn;
-  FBusqColSku.Caption := SCaptionColSku;
+  if FMostrarCodigoPadre then
+    FBusqColSku.Caption := SCaptionColArticulo
+  else
+    FBusqColSku.Caption := SCaptionColSku;
   FBusqColSku.DataBinding.FieldName := 'SKU';
   FBusqColSku.Width := 200;
   FBusqColInput := FBusqView.CreateColumn;
@@ -417,9 +438,30 @@ begin
   FSkuPend := Trim(ACodigo);
   if FSkuPend <> '' then
   begin
+    FTimerBusq.Enabled := False;
     FTimerResolve.Enabled := False;
     FTimerResolve.Enabled := True;
   end;
+end;
+
+procedure TBusquedaGridArticulos.ProgramarDespuesResolver;
+begin
+  if Assigned(FDespuesResolver) and
+     Assigned(FTimerDespuesResolver) then
+  begin
+    FDespuesResolverPendiente := True;
+    FTimerDespuesResolver.Enabled := False;
+    FTimerDespuesResolver.Enabled := True;
+  end;
+end;
+
+function TBusquedaGridArticulos.ResolverEntradaYProgramar(
+  const AEntrada: string): Boolean;
+begin
+  Result := Assigned(FResolverEntrada) and
+    FResolverEntrada(AEntrada);
+  if Result then
+    ProgramarDespuesResolver;
 end;
 
 procedure TBusquedaGridArticulos.ArticuloKeyPress(
@@ -453,7 +495,9 @@ procedure TBusquedaGridArticulos.ViewEditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 var
+  EditorTexto: TcxCustomTextEdit;
   sEntrada: string;
+  sSeleccion: string;
 begin
   if Key = VK_F3 then
   begin
@@ -489,18 +533,33 @@ begin
   end
   else if (AItem = FColArticulo) and (Key = VK_RETURN) then
   begin
+    // Conserva lo escrito antes de cerrar el lookup: CloseUp puede
+    // sustituirlo por la fila autocompletada o dejarlo vacio.
+    sEntrada := '';
+    if AEdit is TcxCustomTextEdit then
+    begin
+      EditorTexto := TcxCustomTextEdit(AEdit);
+      sEntrada := EditorTexto.Text;
+      if EditorTexto.SelLength > 0 then
+        sEntrada := Copy(sEntrada, 1, EditorTexto.SelStart);
+      sEntrada := Trim(sEntrada);
+    end;
+    if (sEntrada = '') and Assigned(AEdit) then
+      sEntrada := Trim(VarToStr(AEdit.EditingValue));
+    Key := 0;
     if (AEdit is TcxCustomDropDownEdit) and
        TcxCustomDropDownEdit(AEdit).DroppedDown then
-      TcxCustomDropDownEdit(AEdit).DroppedDown := False;
-    if AEdit is TcxCustomTextEdit then
-      sEntrada := Trim(TcxCustomTextEdit(AEdit).Text)
-    else
-      sEntrada := Trim(VarToStr(AEdit.EditValue));
-    if sEntrada <> '' then
     begin
-      Key := 0;
-      DispararResolucion(sEntrada);
+      // Con el popup abierto, Intro confirma una seleccion, no una edicion.
+      TAccesoDropDownEdit(AEdit).CloseUp(crEnter);
+      sSeleccion := Trim(VarToStr(AEdit.EditingValue));
+      if sSeleccion = '' then
+        sSeleccion := Trim(VarToStr(AEdit.EditValue));
+      if sSeleccion <> '' then
+        sEntrada := sSeleccion;
     end;
+    if sEntrada <> '' then
+      DispararResolucion(sEntrada);
   end;
 end;
 
@@ -552,10 +611,17 @@ begin
   FTimerResolve.Enabled := False;
   sSku := FSkuPend;
   FSkuPend := '';
-  if (Trim(sSku) <> '') and Assigned(FResolverEntrada) and
-     FResolverEntrada(sSku) then
-  begin
+  if (Trim(sSku) <> '') and ResolverEntradaYProgramar(sSku) then
     OcultarEditor('TimerResolve');
+end;
+
+procedure TBusquedaGridArticulos.TimerDespuesResolverTimer(
+  Sender: TObject);
+begin
+  FTimerDespuesResolver.Enabled := False;
+  if FDespuesResolverPendiente then
+  begin
+    FDespuesResolverPendiente := False;
     if Assigned(FDespuesResolver) then
       FDespuesResolver;
   end;
@@ -569,6 +635,11 @@ var
 begin
   if Sender is TcxExtLookupComboBox then
     TcxExtLookupComboBox(Sender).DroppedDown := False;
+  FTimerBusq.Enabled := False;
+  FTimerResolve.Enabled := False;
+  FTimerDespuesResolver.Enabled := False;
+  FSkuPend := '';
+  FDespuesResolverPendiente := False;
   FConsultaArticulos.Aplicar(FAlmacenStock);
   oDatos := FConsultaArticulos.DataSet;
   if FBusquedaVisual.EjecutarBusquedaDataSet(
@@ -576,7 +647,7 @@ begin
     'frmMtoArtTraspasoSearch') then
   begin
     sArticulo := oDatos.FieldByName('ARTICULO').AsString;
-    if Assigned(FResolverEntrada) and FResolverEntrada(sArticulo) then
+    if ResolverEntradaYProgramar(sArticulo) then
       OcultarEditor('ArticuloButtonClick');
   end;
 end;
@@ -603,6 +674,9 @@ begin
   sEntrada := Trim(VarToStr(DisplayValue));
   if sEntrada <> '' then
   begin
+    FTimerBusq.Enabled := False;
+    FTimerResolve.Enabled := False;
+    FSkuPend := '';
     if Assigned(FResolverEntrada) and FResolverEntrada(sEntrada) then
       DisplayValue := FDatos.FieldByName(FCampoArticulo).AsString
     else

@@ -40,6 +40,9 @@ uses
   inLibVentasPantallaIntf, inLibVentasPantallaCrearAlbaran,
   inLibPedidosVentaPresentacionReglas, inLibArticulosResolverIntf;
 
+const
+  WM_REVISAR_ENTER_AS_TAB_PEDIDO = WM_APP + 249;
+
 type
   TfrmMtoPedidos = class(TfrmMtoDocumento)
     pnlTopFicha: TPanel;
@@ -261,6 +264,9 @@ type
     FPivoteAlbaranar: IPivoteVentaAlbaranar;
     FPivoteBorrarGrupo: IPivoteVentaBorrarGrupo;
     FContextoVentas: TContextoPedidosVentasPantalla;
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabPedido(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_PEDIDO;
     procedure AsegurarModoEntradaLineas(AMostrarEditor: Boolean);
     procedure ConstruirModoEntrada;
     function PuedeConstruirModoEntrada(
@@ -357,7 +363,6 @@ uses
   inLibShowMto, inLibFiltroUsuario,
   inLibVentasImpuestos, UniDataImpuestosRepositorio,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
-  inLibGridTallasInline,
   inLibEntradaAlbaranVentaPersistenciaIntf,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku, inLibColumnasDocumento,
@@ -1138,15 +1143,16 @@ end;
 procedure TfrmMtoPedidos.cxGrdPedidosLineasEnter(Sender: TObject);
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, False);
+  DesactivarEnterAsTabTemporal(Sender);
   AsegurarPrimeraLineaPedido;
   AsegurarModoEntradaLineas(True);
 end;
 
 procedure TfrmMtoPedidos.cxGrdPedidosLineasExit(Sender: TObject);
 var
-  ds: TDataSet;
   bVacia: Boolean;
+  ds: TDataSet;
+  Editor: TcxCustomEdit;
   function CampoVacio(const ANombre: string): Boolean;
   var
     Campo: TField;
@@ -1176,7 +1182,32 @@ begin
         ds.Cancel;
     end;
   end;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+  Editor := nil;
+  if Assigned(tvPedidosLineas.Controller.EditingController) and
+     tvPedidosLineas.Controller.EditingController.IsEditing then
+    Editor := tvPedidosLineas.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoPedidos.SalirEdicionModoEntrada(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_PEDIDO, 0, 0);
+end;
+
+procedure TfrmMtoPedidos.WMRevisarEnterAsTabPedido(var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxGrdPedidosLineas) or
+      cxGrdPedidosLineas.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoPedidos.KeyDown(var Key: Word; Shift: TShiftState);
@@ -1364,6 +1395,8 @@ begin
   Result.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Result.ValidadorArticulos := FContextoVentas.ValidadorArticulos;
   Result.LookupAtributos := FContextoVentas.AtributosArticulos;
+  Result.UsarCombosAtributos := True;
+  Result.BuscarSoloPadresEnDesglose := True;
   Result.ObtenerPrecioSku := PrecioSkuTallas;
 end;
 
@@ -1416,7 +1449,7 @@ begin
   if APlan.CrearColumnasAntes then
     CrearColumnasHostPedido;
   ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
-    DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+    DesactivarEnterAsTabTemporal, SalirEdicionModoEntrada,
     FModoEntradaSel, [], '');
   if not APlan.CrearColumnasAntes then
     CrearColumnasHostPedido;

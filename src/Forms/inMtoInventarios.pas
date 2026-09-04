@@ -989,6 +989,8 @@ begin
   Cfg.ValidadorArticulos :=
     FDependencias.Articulos.ResolucionValidacion;
   Cfg.LookupAtributos := FDependencias.Articulos.Atributos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';

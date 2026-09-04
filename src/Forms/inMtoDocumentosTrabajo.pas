@@ -45,6 +45,7 @@ uses
 
 const
   NOMBRE_PANTALLA_DOCUMENTOS_TRABAJO = 'frmMtoDocumentosTrabajo';
+  WM_REVISAR_ENTER_AS_TAB_DTR = WM_APP + 251;
 
 type
   TTipoEnvioNumeradoDocumentoTrabajo = (
@@ -178,6 +179,10 @@ type
                                   ADescripcion: string;
                                   ACompleto: Boolean);
     procedure GridLineasEnterDTR(Sender: TObject);
+    procedure GridLineasExitDTR(Sender: TObject);
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabDTR(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_DTR;
     // "Enviar a...": comprueba documento grabado con lineas y deja los
     // posts hechos; devuelve el ID_DTR o 0 si no procede.
     function PrepararEnvio: Int64;
@@ -342,6 +347,7 @@ begin
   FModoEntradaSel := mcsAuto;
   FColsModoConstruido := False;
   cxgrdLineasDTR.OnEnter := GridLineasEnterDTR;
+  cxgrdLineasDTR.OnExit := GridLineasExitDTR;
   btnListadoDTR.Visible := PuedeExportar;
 end;
 
@@ -374,12 +380,47 @@ end;
 
 procedure TfrmMtoDocumentosTrabajo.GridLineasEnterDTR(Sender: TObject);
 begin
+  DesactivarEnterAsTabTemporal(Sender);
   if FModoEntrada = nil then
     ConstruirModoEntrada;
   if (FModoEntrada <> nil) and
      (dmmDocumentosTrabajo <> nil) and
      dmmDocumentosTrabajo.PuedeEditarDocumentoActual then
     FModoEntrada.MostrarEditor;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.GridLineasExitDTR(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
+begin
+  Editor := nil;
+  if Assigned(tvLineasDTR.Controller.EditingController) and
+     tvLineasDTR.Controller.EditingController.IsEditing then
+    Editor := tvLineasDTR.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.SalirEdicionModoEntrada(
+  Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_DTR, 0, 0);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.WMRevisarEnterAsTabDTR(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasDTR) or
+      cxgrdLineasDTR.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoDocumentosTrabajo.KeyDown(var Key: Word;
@@ -454,6 +495,8 @@ begin
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos := FValidadorArticulos;
   Cfg.LookupAtributos := FLookupAtributos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   Cfg.View := tvLineasDTR;
   Cfg.Cds := ds;
   Cfg.Modo := FModoEntradaSel;
@@ -510,8 +553,11 @@ begin
   FModoEntrada.Construir(
     ModoEntradaResuelto,
     DesactivarEnterAsTabTemporal,
-    RestaurarEnterAsTabTemporal);
+    SalirEdicionModoEntrada);
   CrearColumnasHostDTR;
+  tvLineasDTR.OptionsBehavior.GoToNextCellOnEnter := True;
+  tvLineasDTR.OptionsBehavior.FocusCellOnTab := True;
+  tvLineasDTR.OptionsBehavior.FocusCellOnCycle := True;
   case DetectarModoColumnasSku(Cfg) of
     mcsSku: tsLineasDTR.Caption := SCaptionLineasSku;
     mcsTallasInline:

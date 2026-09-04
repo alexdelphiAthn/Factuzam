@@ -17,10 +17,13 @@ interface
 
 uses
   Uni,
-  inLibGridArticulosPersistenciaIntf;
+  inLibGridArticulosPersistenciaIntf,
+  inLibModoTallasIntf;
 
 function CrearConsultaArticulosGridUniDAC(
   AConexion: TUniConnection): IConsultaArticulosGrid;
+function CrearBusquedaArticulosPadreGridUniDAC(
+  AConexion: TUniConnection): IBusquedaSkusTallas;
 
 implementation
 
@@ -71,6 +74,46 @@ const
     ' WHERE a.ESACTIVO_ART = ''S'' AND a.TIPO_ART = ''ESTANDAR''' +
     ' ORDER BY STOCK DESC, a.CODIGO_ART_ART';
 
+  // El lookup compartido espera los alias SKU e INPUT_BUSQUEDA. Aqui ambos
+  // contienen el codigo padre: nunca se devuelve una fila por variante.
+  SQL_BUSQUEDA_PADRES_CABECERA =
+    'SELECT x.ARTICULO AS SKU,' +
+    '       x.ARTICULO AS INPUT_BUSQUEDA,' +
+    '       x.DESCRIPCION,' +
+    '       CAST(COALESCE((SELECT GROUP_CONCAT(' +
+    '                             DISTINCT cb.CODIGO_BARRAS_CB' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_codigos_barras cb' +
+    '                   JOIN fza_articulos_skus sk_cb' +
+    '                     ON sk_cb.CODIGO_UNIDAD_SKU =' +
+    '                        cb.CODIGO_UNIDAD_CB' +
+    '                  WHERE sk_cb.CODIGO_ART_SKU = x.ARTICULO),' +
+    '                  '''') AS CHAR(120)) AS CODBARRAS,' +
+    '       CAST(COALESCE((SELECT GROUP_CONCAT(' +
+    '                             DISTINCT ap.REF_PROVEEDOR_AP' +
+    '                                     SEPARATOR '' '')' +
+    '                   FROM fza_articulos_proveedores ap' +
+    '                  WHERE ap.CODIGO_ART_AP = x.ARTICULO' +
+    '                    AND ap.REF_PROVEEDOR_AP IS NOT NULL),' +
+    '                  '''') AS CHAR(120)) AS REFPRV,' +
+    '       COALESCE((SELECT SUM(st.CANTIDAD_STK)' +
+    '                   FROM fza_articulos_stockactual st' +
+    '                   JOIN fza_articulos_skus sk_st' +
+    '                     ON sk_st.CODIGO_UNIDAD_SKU =' +
+    '                        st.CODIGO_UNIDAD_STK' +
+    '                  WHERE sk_st.CODIGO_ART_SKU = x.ARTICULO' +
+    '                    AND st.CODIGO_ALM_STK = :ALM), 0) AS STOCK' +
+    '  FROM (SELECT a.CODIGO_ART_ART AS ARTICULO,' +
+    '               a.DESCRIPCION_ART AS DESCRIPCION' +
+    '          FROM fza_articulos a' +
+    '         WHERE a.ESACTIVO_ART = ''S''' +
+    '           AND a.TIPO_ART = ''ESTANDAR''';
+  SQL_BUSQUEDA_PADRES_FILTRO =
+    '           AND a.CODIGO_ART_ART LIKE :TPREF';
+  SQL_BUSQUEDA_PADRES_ORDEN =
+    '         ORDER BY a.CODIGO_ART_ART LIMIT 100) x' +
+    ' ORDER BY STOCK DESC, x.ARTICULO LIMIT 100';
+
 type
   TConsultaArticulosGridUniDAC = class(
     TInterfacedObject,
@@ -82,6 +125,21 @@ type
     destructor Destroy; override;
     function DataSet: TDataSet;
     procedure Aplicar(const AAlmacenStock: string);
+  end;
+
+  TBusquedaArticulosPadreGridUniDAC = class(
+    TInterfacedObject,
+    IBusquedaSkusTallas)
+  private
+    FConsulta: TUniQuery;
+    FUltimoAlmacen: string;
+    FUltimoFiltro: string;
+  public
+    constructor Create(AConexion: TUniConnection);
+    destructor Destroy; override;
+    function Dataset: TDataSet;
+    procedure Aplicar(const ATexto, AAlmacenStock: string);
+    procedure Invalidar;
   end;
 
 constructor TConsultaArticulosGridUniDAC.Create(
@@ -134,6 +192,68 @@ function CrearConsultaArticulosGridUniDAC(
   AConexion: TUniConnection): IConsultaArticulosGrid;
 begin
   Result := TConsultaArticulosGridUniDAC.Create(AConexion);
+end;
+
+constructor TBusquedaArticulosPadreGridUniDAC.Create(
+  AConexion: TUniConnection);
+begin
+  inherited Create;
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  FConsulta := TUniQuery.Create(nil);
+  FConsulta.Connection := AConexion;
+  FUltimoAlmacen := #1;
+  FUltimoFiltro := #1;
+end;
+
+destructor TBusquedaArticulosPadreGridUniDAC.Destroy;
+begin
+  FreeAndNil(FConsulta);
+  inherited;
+end;
+
+function TBusquedaArticulosPadreGridUniDAC.Dataset: TDataSet;
+begin
+  Result := FConsulta;
+end;
+
+procedure TBusquedaArticulosPadreGridUniDAC.Aplicar(
+  const ATexto, AAlmacenStock: string);
+var
+  sAlmacen: string;
+  sFiltro: string;
+begin
+  sAlmacen := Trim(AAlmacenStock);
+  sFiltro := Trim(ATexto);
+  if not (FConsulta.Active and SameText(FUltimoFiltro, sFiltro) and
+          SameText(FUltimoAlmacen, sAlmacen)) then
+  begin
+    FConsulta.Close;
+    FConsulta.SQL.Text := SQL_BUSQUEDA_PADRES_CABECERA;
+    if sFiltro <> '' then
+      FConsulta.SQL.Add(SQL_BUSQUEDA_PADRES_FILTRO);
+    FConsulta.SQL.Add(SQL_BUSQUEDA_PADRES_ORDEN);
+    if sFiltro <> '' then
+      FConsulta.ParamByName('TPREF').AsString := sFiltro + '%';
+    FConsulta.ParamByName('ALM').AsString := sAlmacen;
+    FConsulta.Open;
+    FUltimoFiltro := sFiltro;
+    FUltimoAlmacen := sAlmacen;
+  end;
+end;
+
+procedure TBusquedaArticulosPadreGridUniDAC.Invalidar;
+begin
+  FUltimoAlmacen := #1;
+  FUltimoFiltro := #1;
+  if FConsulta.Active then
+    FConsulta.Close;
+end;
+
+function CrearBusquedaArticulosPadreGridUniDAC(
+  AConexion: TUniConnection): IBusquedaSkusTallas;
+begin
+  Result := TBusquedaArticulosPadreGridUniDAC.Create(AConexion);
 end;
 
 end.

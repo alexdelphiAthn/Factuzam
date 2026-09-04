@@ -58,6 +58,7 @@ const
   CANT_TALLAS_MAX = 20;
   CANT_ATRIB_MAX  = 5;
   NOMBRE_PANTALLA_DEVOLUCIONES_COMPRA = 'frmMtoDevolucionesCompra';
+  WM_REVISAR_ENTER_AS_TAB_DEVOLUCION_COMPRA = WM_APP + 254;
 
 type
   TfrmMtoDevolucionesCompra = class(TfrmMtoDocumento)
@@ -303,6 +304,9 @@ type
                 var DisplayValue: Variant; var ErrorText: TCaption;
                 var Error: Boolean);
     procedure PersistirPreferenciaPivote;
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabDevolucionCompra(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_DEVOLUCION_COMPRA;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDevolucionCompra;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
@@ -1590,15 +1594,45 @@ end;
 procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionEnter(Sender: TObject);
 begin
   inherited;
+  DesactivarEnterAsTabTemporal(Sender);
   EntrarGridLineasDocumento(
     Self, FColsModoConstruido, False, FModoEntrada,
     AsegurarPrimeraLineaDevolucionCompra, ConstruirModoEntrada);
 end;
 
 procedure TfrmMtoDevolucionesCompra.cxgrdLineasDevolucionExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+  Editor := nil;
+  if Assigned(tvLineasDevolucion.Controller.EditingController) and
+     tvLineasDevolucion.Controller.EditingController.IsEditing then
+    Editor := tvLineasDevolucion.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoDevolucionesCompra.SalirEdicionModoEntrada(
+  Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_DEVOLUCION_COMPRA, 0, 0);
+end;
+
+procedure TfrmMtoDevolucionesCompra.WMRevisarEnterAsTabDevolucionCompra(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasDevolucion) or
+      cxgrdLineasDevolucion.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoDevolucionesCompra.ActualizarCaptionModoLineas;
@@ -1650,6 +1684,8 @@ begin
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos := FValidadorArticulos;
   Cfg.LookupAtributos := FLookupAtributos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1680,7 +1716,7 @@ begin
   FColsModoConstruido := True;
   bDegradarASku := not ConstruirModoEntradaDocumento(
     FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
-    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    SalirEdicionModoEntrada, FModoEntradaSel,
     [mcsTallasHorPed], 'DevolucionesCompra');
   if bDegradarASku then
   begin

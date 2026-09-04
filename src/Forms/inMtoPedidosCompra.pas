@@ -63,6 +63,7 @@ const
   CANT_ATRIB_MAX  = 5;
   ID_VA_COLOR     = 'CO';
   NOMBRE_PANTALLA_PEDIDOS_COMPRA = 'frmMtoPedidosCompra';
+  WM_REVISAR_ENTER_AS_TAB_PEDIDO_COMPRA = WM_APP + 251;
   // Ancho (px) de cada columna talla en modo pivote. Tambien actua de
   // suelo tras ApplyBestFit: el BestFit mide solo el Value numerico corto
   // de la celda y, al ignorar el custom-draw (rotulo de talla + sub-cifras
@@ -357,6 +358,9 @@ type
     // tormenta de SQL por cada click (10/07/26).
     FPedidoModoActual: string;
     FTemporizadorAnchosInline: TTimer;
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabPedidoCompra(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_PEDIDO_COMPRA;
     procedure ConstruirModoEntrada;
     function  PedidoClaveActual: string;
     procedure CrearColumnasHostPedidoCompra;
@@ -1685,6 +1689,7 @@ end;
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoEnter(Sender: TObject);
 begin
   inherited;
+  DesactivarEnterAsTabTemporal(Sender);
   ConfigurarEdicionExcelLineasDocumento(tvLineasPedido);
   EntrarGridLineasDocumento(
     Self, FColsModoConstruido,
@@ -1697,9 +1702,38 @@ begin
 end;
 
 procedure TfrmMtoPedidosCompra.cxgrdLineasPedidoExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+  Editor := nil;
+  if Assigned(tvLineasPedido.Controller.EditingController) and
+     tvLineasPedido.Controller.EditingController.IsEditing then
+    Editor := tvLineasPedido.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoPedidosCompra.SalirEdicionModoEntrada(
+  Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_PEDIDO_COMPRA, 0, 0);
+end;
+
+procedure TfrmMtoPedidosCompra.WMRevisarEnterAsTabPedidoCompra(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasPedido) or
+      cxgrdLineasPedido.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 // Alimenta el label de contexto con Pedido/Recibida de la celda
@@ -1894,6 +1928,8 @@ begin
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos := FValidadorArticulos;
   Cfg.LookupAtributos := FLookupAtributos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1958,7 +1994,7 @@ begin
   FColsModoConstruido := True;
   bDegradarASku := not ConstruirModoEntradaDocumento(
     FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
-    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    SalirEdicionModoEntrada, FModoEntradaSel,
     [mcsTallasInline, mcsTallasHorPed], 'PedidosCompra');
   if not bDegradarASku then
   begin

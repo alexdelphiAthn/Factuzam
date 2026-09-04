@@ -40,6 +40,9 @@ uses
   inLibVentasPantallaIntf,
   inLibAlbaranesVentaPresentacionArticulo;
 
+const
+  WM_REVISAR_ENTER_AS_TAB_ALBARAN = WM_APP + 250;
+
 type
   TfrmMtoAlbaranes = class(TfrmMtoDocumento)
     pnlTopFicha: TPanel;
@@ -242,6 +245,9 @@ type
     FModoEntrada: IModoEntradaGrid;
     FColsModoConstruido: Boolean;
     FContextoVentas: TContextoAlbaranesVentasPantalla;
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabAlbaran(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_ALBARAN;
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
@@ -308,6 +314,7 @@ type
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
     dmmAlbaranes: TdmAlbaranes;
+    destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
   end;
 
@@ -339,6 +346,25 @@ resourcestring
   STituloBuscarClientesAlbaran = 'Búsqueda de Clientes en Albaranes';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+destructor TfrmMtoAlbaranes.Destroy;
+begin
+  // El modo debe soltar sus eventos mientras el grid y el dataset existen.
+  if FModoEntrada <> nil then
+  begin
+    try
+      FModoEntrada.Desmontar;
+    except
+      on E: Exception do
+        if RegistroLog <> nil then
+          RegistroLog.RegistrarAviso(
+            'Albaranes.Destroy: Desmontar fallo: ' + E.Message);
+    end;
+    FModoEntrada := nil;
+  end;
+  FContextoVentas := Default(TContextoAlbaranesVentasPantalla);
+  inherited;
+end;
 
 procedure TfrmMtoAlbaranes.cbbSERIE_ALBPropertiesInitPopup(Sender: TObject);
 var
@@ -726,6 +752,8 @@ begin
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos := FContextoVentas.ValidadorArticulos;
   Cfg.LookupAtributos := FContextoVentas.AtributosArticulos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   // Precio por SKU para la consolidacion del modo tallas: lineas con
   // precio distinto no fusionan.
   Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
@@ -763,9 +791,12 @@ begin
   // las columnas del dfm, muertas en el ClearItems.
   FColsModoConstruido := True;
   ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
-    DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+    DesactivarEnterAsTabTemporal, SalirEdicionModoEntrada,
     FModoEntradaSel, [], '');
   CrearColumnasHostAlbaran;
+  tvLineasAlbaran.OptionsBehavior.GoToNextCellOnEnter := True;
+  tvLineasAlbaran.OptionsBehavior.FocusCellOnTab := True;
+  tvLineasAlbaran.OptionsBehavior.FocusCellOnCycle := True;
   case DetectarModoColumnasSku(Cfg) of
     mcsSku: tsLineasAlbaran.Caption := SCaptionLineasSku;
     mcsTallasInline:
@@ -871,8 +902,9 @@ end;
 
 procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranExit(Sender: TObject);
 var
-  ds: TDataSet;
   bVacia: Boolean;
+  ds: TDataSet;
+  Editor: TcxCustomEdit;
   function CampoVacio(const ANombre: string): Boolean;
   var
     Campo: TField;
@@ -883,6 +915,7 @@ var
       Result := Trim(Campo.AsString) = '';
   end;
 begin
+  inherited;
   // Al salir del grid hacia la cabecera, la linea vacia auto-anadida
   // (AsegurarPrimeraLineaAlbaran) se cancela: si quedara en dsInsert,//
   // cualquier Edit de la cabecera la postearia via CheckBrowseMode del
@@ -898,6 +931,33 @@ begin
         ds.Cancel;
     end;
   end;
+  Editor := nil;
+  if Assigned(tvLineasAlbaran.Controller.EditingController) and
+     tvLineasAlbaran.Controller.EditingController.IsEditing then
+    Editor := tvLineasAlbaran.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoAlbaranes.SalirEdicionModoEntrada(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_ALBARAN, 0, 0);
+end;
+
+procedure TfrmMtoAlbaranes.WMRevisarEnterAsTabAlbaran(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasAlbaran) or
+      cxgrdLineasAlbaran.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoAlbaranes.CrearTablaPrincipal;
@@ -1400,6 +1460,8 @@ end;
 
 procedure TfrmMtoAlbaranes.cxgrdLineasAlbaranEnter(Sender: TObject);
 begin
+  inherited;
+  DesactivarEnterAsTabTemporal(Sender);
   AsegurarPrimeraLineaAlbaran;
   // Contrato de entrada: primera construccion al entrar en el grid
   // (las lineas ya estan abiertas como detail del albaran).

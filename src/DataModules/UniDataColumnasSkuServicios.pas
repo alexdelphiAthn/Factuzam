@@ -146,6 +146,7 @@ end;
 function TServiciosColumnasSkuUniDAC.CrearModoDesglose(
   const AConfig: TConfigColumnasSku): IModoEntradaGrid;
 var
+  Busqueda: IBusquedaSkusTallas;
   Campos: TCamposGridArt;
   Grid: TGridArticulosLineas;
   iIndice: Integer;
@@ -161,6 +162,10 @@ begin
     Campos.AttrValor[iIndice] := AConfig.Campos.AttrValor[iIndice];
     Campos.AttrNombre[iIndice] := AConfig.Campos.AttrNombre[iIndice];
   end;
+  if AConfig.BuscarSoloPadresEnDesglose then
+    Busqueda := CrearBusquedaArticulosPadreGridUniDAC(FConexion)
+  else
+    Busqueda := CrearBusquedaSkusTallas(FConexion);
   Grid := TGridArticulosLineas.Create(
     FConexion,
     AConfig.View,
@@ -168,12 +173,14 @@ begin
     Campos,
     AConfig.ContextoSesion,
     AConfig.BusquedaVisual,
-    CrearBusquedaSkusTallas(FConexion),
+    Busqueda,
     CrearConsultaArticulosGridUniDAC(FConexion),
     AConfig.ValidadorArticulos,
     AConfig.LookupAtributos,
-    AConfig.RegistroLog);
+    AConfig.RegistroLog,
+    AConfig.BuscarSoloPadresEnDesglose);
   try
+    Grid.UsarCombosAtributos := AConfig.UsarCombosAtributos;
     Result := TModoEntradaDesglose.Create(AConfig, Grid);
     Grid := nil;
   finally

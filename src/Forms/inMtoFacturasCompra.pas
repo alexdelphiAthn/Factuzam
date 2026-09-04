@@ -60,6 +60,7 @@ const
   CANT_ATRIB_MAX  = 5;
   ID_VA_COLOR     = 'CO';
   NOMBRE_PANTALLA_FACTURAS_COMPRA = 'frmMtoFacturasCompra';
+  WM_REVISAR_ENTER_AS_TAB_FACTURA_COMPRA = WM_APP + 253;
 
 type
   TfrmMtoFacturasCompra = class(TfrmMtoDocumento)
@@ -267,6 +268,9 @@ type
                 AButtonIndex: Integer);
     procedure colLinFaccColorPivotButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabFacturaCompra(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_FACTURA_COMPRA;
     procedure AsegurarCabeceraPersistidaParaLineas;
     procedure AsegurarPrimeraLineaFacturaCompra;
     function PuedeActivarTallasHorizontal(var AMensaje: string): Boolean;
@@ -945,15 +949,45 @@ end;
 procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaEnter(Sender: TObject);
 begin
   inherited;
+  DesactivarEnterAsTabTemporal(Sender);
   EntrarGridLineasDocumento(
     Self, FColsModoConstruido, False, FModoEntrada,
     AsegurarPrimeraLineaFacturaCompra, ConstruirModoEntrada);
 end;
 
 procedure TfrmMtoFacturasCompra.cxgrdLineasFacturaExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+  Editor := nil;
+  if Assigned(tvLineasFactura.Controller.EditingController) and
+     tvLineasFactura.Controller.EditingController.IsEditing then
+    Editor := tvLineasFactura.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoFacturasCompra.SalirEdicionModoEntrada(
+  Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_FACTURA_COMPRA, 0, 0);
+end;
+
+procedure TfrmMtoFacturasCompra.WMRevisarEnterAsTabFacturaCompra(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasFactura) or
+      cxgrdLineasFactura.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoFacturasCompra.ActualizarCaptionModoLineas;
@@ -1005,6 +1039,8 @@ begin
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos := FValidadorArticulos;
   Cfg.LookupAtributos := FLookupAtributos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1035,7 +1071,7 @@ begin
   FColsModoConstruido := True;
   bDegradarASku := not ConstruirModoEntradaDocumento(
     FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
-    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    SalirEdicionModoEntrada, FModoEntradaSel,
     [mcsTallasHorPed], 'FacturasCompra');
   if bDegradarASku then
   begin

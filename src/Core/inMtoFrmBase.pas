@@ -352,6 +352,9 @@ end;
 
 destructor TfrmBase.Destroy;
 begin
+  // Ningun cierre puede dejar desactivado el EnterAsTab del propietario
+  // o del formulario principal por un editor temporal ya destruido.
+  RestaurarEnterAsTabTemporal(Self);
   FRegistroLog := nil;
   FConfiguracionCampos := nil;
   FFotosArticulos := nil;

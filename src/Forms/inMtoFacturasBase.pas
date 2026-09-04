@@ -1232,6 +1232,8 @@ begin
     AFormulario.FDependenciasInyeccion.Lineas.Articulos.Validador;
   Result.LookupAtributos :=
     AFormulario.FDependenciasInyeccion.Lineas.Articulos.Atributos;
+  Result.UsarCombosAtributos := True;
+  Result.BuscarSoloPadresEnDesglose := True;
   if AFormulario.dmmFacturas.unqryTablaG.FindField(
     'CODIGO_ALM_FAC') <> nil then
     Result.AlmacenStock := Trim(

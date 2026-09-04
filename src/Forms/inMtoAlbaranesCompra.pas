@@ -58,6 +58,7 @@ const
   CANT_ATRIB_MAX  = 5;
   ID_VA_COLOR     = 'CO';
   NOMBRE_PANTALLA_ALBARANES_COMPRA = 'frmMtoAlbaranesCompra';
+  WM_REVISAR_ENTER_AS_TAB_ALBARAN_COMPRA = WM_APP + 252;
 
 type
   TfrmMtoAlbaranesCompra = class(TfrmMtoDocumento)
@@ -275,6 +276,9 @@ type
                 AButtonIndex: Integer);
     procedure colLinAlbcColorPivotButtonClick(Sender: TObject;
                 AButtonIndex: Integer);
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabAlbaranCompra(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_ALBARAN_COMPRA;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostAlbaranCompra;
     procedure ModoEntradaResuelto(const ACodArt, ASku,
@@ -1033,6 +1037,7 @@ end;
 procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranEnter(Sender: TObject);
 begin
   inherited;
+  DesactivarEnterAsTabTemporal(Sender);
   ConfigurarEdicionExcelLineasDocumento(tvLineasAlbaran);
   EntrarGridLineasDocumento(
     Self, FColsModoConstruido, False, FModoEntrada,
@@ -1040,9 +1045,38 @@ begin
 end;
 
 procedure TfrmMtoAlbaranesCompra.cxgrdLineasAlbaranExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
 begin
   inherited;
-  inLibGridTallasInline.ActivarEnterComoTab(Self, True);
+  Editor := nil;
+  if Assigned(tvLineasAlbaran.Controller.EditingController) and
+     tvLineasAlbaran.Controller.EditingController.IsEditing then
+    Editor := tvLineasAlbaran.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoAlbaranesCompra.SalirEdicionModoEntrada(
+  Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_ALBARAN_COMPRA, 0, 0);
+end;
+
+procedure TfrmMtoAlbaranesCompra.WMRevisarEnterAsTabAlbaranCompra(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasAlbaran) or
+      cxgrdLineasAlbaran.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoAlbaranesCompra.ActualizarCaptionModoLineas;
@@ -1099,6 +1133,8 @@ begin
   Cfg.DistribuidorTallasVisual := DistribuidorTallasVisual;
   Cfg.ValidadorArticulos := FValidadorArticulos;
   Cfg.LookupAtributos := FLookupAtributos;
+  Cfg.UsarCombosAtributos := True;
+  Cfg.BuscarSoloPadresEnDesglose := True;
   if FModoEntradaSel = mcsTallasHorPed then
   begin
     CfgPV := CrearConfigPivoteBandasDocumentoCompra(
@@ -1129,7 +1165,7 @@ begin
   FColsModoConstruido := True;
   bDegradarASku := not ConstruirModoEntradaDocumento(
     FModoEntrada, ModoEntradaResuelto, DesactivarEnterAsTabTemporal,
-    RestaurarEnterAsTabTemporal, FModoEntradaSel,
+    SalirEdicionModoEntrada, FModoEntradaSel,
     [mcsTallasHorPed], 'AlbaranesCompra');
   if bDegradarASku then
   begin

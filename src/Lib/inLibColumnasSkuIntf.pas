@@ -129,6 +129,12 @@ type
     // Al resolver una entrada con Enter, avanza con la misma navegacion
     // nativa del grid en vez de volver a abrir el editor de SKU.
     AvanzarConEnterTrasResolver: Boolean;
+    // En modo desglose, presenta los atributos como combos de seleccion
+    // fija con filtrado por prefijo. False conserva la paleta tradicional.
+    UsarCombosAtributos: Boolean;
+    // En ventas, el desplegable incremental del modo desglose devuelve una
+    // fila por articulo padre. False conserva la busqueda historica de SKU.
+    BuscarSoloPadresEnDesglose: Boolean;
     // Precio del SKU segun el documento (ver TObtenerPrecioSkuEvent).
     ObtenerPrecioSku: TObtenerPrecioSkuEvent;
   end;
