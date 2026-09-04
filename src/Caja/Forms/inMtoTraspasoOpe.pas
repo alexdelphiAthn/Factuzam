@@ -40,6 +40,9 @@ uses
   inLibTraspasoTicketIntf, inLibCajaPantallaInyeccion,
   inLibColumnasSkuIntf, inLibColumnasSkuModoSku;
 
+const
+  WM_REVISAR_ENTER_AS_TAB_TRASPASO = WM_APP + 109;
+
 type
   TfrmMtoOpeTraspaso = class(TfrmBase, ITraspasoCaja)
     pnlModos: TPanel;
@@ -158,6 +161,15 @@ type
     function ModoPermiteAltaManual: Boolean;
     function PuedeBorrarLinea: Boolean;
     procedure AlternarModoEntrada;
+    // Los combos de atributo del desglose desactivan el EnterAsTab del
+    // formulario mientras editan; al salir se restaura y, en diferido,
+    // se vuelve a desactivar si el foco sigue en la rejilla (mismo
+    // patron que los documentos de venta y compra).
+    procedure GridLineasEnter(Sender: TObject);
+    procedure GridLineasExit(Sender: TObject);
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabTraspaso(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_TRASPASO;
     function ResolverEntradaModo(const AEntrada: string): Boolean;
     procedure MostrarEditorModo;
     procedure BuscarContextual;
@@ -275,7 +287,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMsgCaja, inLibMsgComun, UniDataModoTallas,
+  inLibMsgCaja, inLibMsgComun,
   UniDataGridArticulosRepositorio, UniDataColumnasSkuServicios,
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
   inLibMsgArticulos;
@@ -411,6 +423,11 @@ begin
                  PERMISO_CAJA_VER_COSTE,
                  paDenegar);
   // Los labels los pone transparentes TfrmBase.FormCreate (via inherited).
+  // El EnterAsTab de TfrmBase se suspende mientras el foco esta en la
+  // rejilla: Intro lo gestiona el propio grid (GoToNextCellOnEnter) y
+  // los combos de atributo lo necesitan para confirmar el valor.
+  FGrid.OnEnter := GridLineasEnter;
+  FGrid.OnExit := GridLineasExit;
   ConstruirGrid;
   ConstruirPanelStock;
   // Elegir una solicitud en el desplegable (modo Atender) la carga sola.
@@ -512,7 +529,8 @@ begin
   Configuracion.AlmacenStock :=
     FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   FModoSku := TModoEntradaSku.Create(Configuracion);
-  FModoSku.Construir(GridResuelto, nil, nil);
+  FModoSku.Construir(GridResuelto, DesactivarEnterAsTabTemporal,
+    SalirEdicionModoEntrada);
 end;
 
 procedure TfrmMtoOpeTraspaso.ConstruirEntradaDesglosada(
@@ -528,14 +546,22 @@ begin
     ACampos,
     ContextoSesion,
     BusquedaVisual,
-    CrearBusquedaSkusTallas(ConexionPrincipal),
+    // Desplegable incremental por articulo padre: una fila por modelo;
+    // color y talla se eligen despues en sus combos (patron ventas).
+    CrearBusquedaArticulosPadreGridUniDAC(ConexionPrincipal),
     CrearConsultaArticulosGridUniDAC(ConexionPrincipal),
     FValidadorArticulos,
     FLookupAtributosArticulos,
-    RegistroLog);
+    RegistroLog,
+    True);
   FGridCtrl.AlmacenStock :=
     FDatos.cdsCabecera.FieldByName('CODIGO_ALM_ORIGEN').AsString;
   FGridCtrl.OnResuelto := GridResuelto;
+  // Selector de atributos en combo fijo con filtrado, en vez de la
+  // paleta emergente.
+  FGridCtrl.UsarCombosAtributos := True;
+  FGridCtrl.OnEntrarEdicion := DesactivarEnterAsTabTemporal;
+  FGridCtrl.OnSalirEdicion := SalirEdicionModoEntrada;
   if FModo = mtReposicion then
     FGridCtrl.MaximoAtributosVisibles := 2;
   FGridCtrl.Construir;
@@ -677,6 +703,46 @@ begin
   FColStockDestino := nil;
   FColPedidas := nil;
   FColMotivo := nil;
+end;
+
+procedure TfrmMtoOpeTraspaso.GridLineasEnter(Sender: TObject);
+begin
+  DesactivarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoOpeTraspaso.GridLineasExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
+begin
+  // Un combo de atributo desplegado mantiene el EnterAsTab desactivado
+  // hasta cerrarse: se restaura sobre el editor y no sobre la rejilla.
+  Editor := nil;
+  if Assigned(FView) and
+     Assigned(FView.Controller.EditingController) and
+     FView.Controller.EditingController.IsEditing then
+    Editor := FView.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoOpeTraspaso.SalirEdicionModoEntrada(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_TRASPASO, 0, 0);
+end;
+
+procedure TfrmMtoOpeTraspaso.WMRevisarEnterAsTabTraspaso(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and Assigned(FGrid) and
+     ((ControlActivo = FGrid) or FGrid.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoOpeTraspaso.ConfigurarGridSegunModo;

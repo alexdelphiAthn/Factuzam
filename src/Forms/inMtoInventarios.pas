@@ -44,6 +44,9 @@ uses
   inMtoInventariosPresentacionColumnas,
   inMtoInventariosPresentacionEntrada;
 
+const
+  WM_REVISAR_ENTER_AS_TAB_INVENTARIO = WM_APP + 255;
+
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
     dlgAbrir: TOpenDialog;
@@ -173,6 +176,7 @@ type
     procedure btnEliminarLineaClick(Sender: TObject);
     procedure btnRecalcularDetalleClick(Sender: TObject);
     procedure cxgrdLineasEnter(Sender: TObject);
+    procedure cxgrdLineasExit(Sender: TObject);
     procedure tvLineasArticuloPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
     procedure tvLineasUnidadPropertiesValidate(Sender: TObject;
@@ -307,6 +311,13 @@ type
     procedure ModoEntradaResuelto(const ACodArt, ASku,
                                   ADescripcion: string;
                                   ACompleto: Boolean);
+    // Los combos de atributo del desglose desactivan el EnterAsTab del
+    // formulario mientras editan; al salir se restaura y, en diferido,
+    // se vuelve a desactivar si el foco sigue dentro del grid (mismo
+    // patron que albaranes y pedidos de venta).
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabInventario(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_INVENTARIO;
 
   protected
     // F1 = alternar modo de entrada (KeyPreview de TfrmBase).
@@ -661,6 +672,9 @@ begin
   // (resuelve a desglose) y F1 cicla Auto -> SKU. El toggle clasico
   // queda oculto: el modo lo gobierna el contrato.
   FModoEntradaSel := mcsAuto;
+  // Al abandonar el grid se restaura el EnterAsTab que los combos de
+  // atributo dejan desactivado (el dfm no engancha OnExit).
+  cxgrdLineas.OnExit := cxgrdLineasExit;
   chkVerColumnasAtributos.Visible := False;
   // 150 lineas es el umbral empirico: por debajo el desempaquetado va
   // imperceptible aunque haga un Edit/Post por linea (DisableControls
@@ -790,6 +804,7 @@ end;
 procedure TfrmMtoInventarios.cxgrdLineasEnter(Sender: TObject);
 begin
   inherited;
+  DesactivarEnterAsTabTemporal(Sender);
   AsegurarPrimeraLineaInventario;
   // Red de seguridad: si el modo se construyo con el cds aun vacio
   // (la carga de lineas del data module no pasa por el form), las
@@ -804,6 +819,38 @@ begin
   // entrada del modo (sustituye al despliegue de la columna clasica).
   if (FModoEntrada <> nil) and PuedeEditar then
     FModoEntrada.MostrarEditor;
+end;
+procedure TfrmMtoInventarios.cxgrdLineasExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
+begin
+  // Un combo de atributo desplegado mantiene el EnterAsTab desactivado
+  // hasta cerrarse: se restaura sobre el editor y no sobre el grid.
+  Editor := nil;
+  if Assigned(tvLineas.Controller.EditingController) and
+     tvLineas.Controller.EditingController.IsEditing then
+    Editor := tvLineas.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+procedure TfrmMtoInventarios.SalirEdicionModoEntrada(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_INVENTARIO, 0, 0);
+end;
+procedure TfrmMtoInventarios.WMRevisarEnterAsTabInventario(
+  var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineas) or
+      cxgrdLineas.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 procedure TfrmMtoInventarios.pcDetailChange(Sender: TObject);
 var
@@ -1013,7 +1060,7 @@ begin
   // columnas del dfm, que han muerto en el ClearItems.
   FGestorColumnas.ContratoConstruido := True;
   ConstruirModoEntradaDocumento(FModoEntrada, ModoEntradaResuelto,
-    DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+    DesactivarEnterAsTabTemporal, SalirEdicionModoEntrada,
     FModoEntradaSel, [], '');
   CrearColumnasHostInventario;
   // En desglose, las columnas de atributo del contrato nacen ocultas
