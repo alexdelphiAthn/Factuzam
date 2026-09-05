@@ -467,6 +467,7 @@ type
   )
   private
     FMemo: TcxMemo;
+    procedure AnadirLinea(const ALinea: string);
   public
     constructor Create(AMemo: TcxMemo);
     procedure EstablecerVisible(AVisible: Boolean);
@@ -489,11 +490,28 @@ begin
   end;
 end;
 
-procedure TVisorMonitorSQLMemo.MostrarSQL(const ASQL: string);
+procedure TVisorMonitorSQLMemo.AnadirLinea(const ALinea: string);
 begin
   if Assigned(FMemo) and FMemo.Visible then
-    FMemo.Lines.Add(
-      FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL);
+    FMemo.Lines.Add(ALinea);
+end;
+
+procedure TVisorMonitorSQLMemo.MostrarSQL(const ASQL: string);
+var
+  sLinea: string;
+begin
+  sLinea := FormatDateTime('hh:nn:ss.zzz', Now) + ' - ' + ASQL;
+  // El monitor avisa desde el hilo que ejecuta la sentencia (consultas en
+  // segundo plano incluidas). Escribir en el memo desde otro hilo es un
+  // SendMessage al principal, que se bloquea si este está esperando.
+  if TThread.Current.ThreadID = MainThreadID then
+    AnadirLinea(sLinea)
+  else
+    TThread.Queue(nil,
+      procedure
+      begin
+        AnadirLinea(sLinea);
+      end);
 end;
 
 procedure TfrmMtoPrincipal.ApplicationEvents1Idle(Sender: TObject;

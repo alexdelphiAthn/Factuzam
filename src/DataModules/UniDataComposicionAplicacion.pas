@@ -715,6 +715,10 @@ begin
   FRegistroLog.RegistrarInformacion(
     'Arranque: detección diferida de impresora de caja; valor actual = "' +
     FServiciosParametrosCaja.Lectura.ImpresoraCaja + '"');
+  FRegistroLog.RegistrarInformacion(
+    'Arranque: detección diferida de impresora de documentos; ' +
+    'valor actual = "' +
+    FServiciosParametrosApp.Lectura.ImpresoraDocumentos + '"');
 end;
 
 procedure TComposicionAplicacion.IniciarProcesosSegundoPlano;

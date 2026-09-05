@@ -378,6 +378,12 @@ resourcestring
   // R01 - Textos de controles e indicadores en ejecución
   SCaptionCancelandoOperacion = 'Cancelando operación...';
   SCaptionPreparando = 'Preparando...';
+  SCaptionEsperaConsultandoDatosInforme =
+    'Consultando los datos del informe...';
+  SCaptionEsperaPreparandoInforme = 'Preparando el informe...';
+  SCaptionEsperaPaginaInforme = 'Página %d';
+  SCaptionEsperaGenerandoHojaCalculo =
+    'Generando la hoja de cálculo...';
   SCaptionVersion = 'Versión %s';
   STituloGuardarExcel = 'Guardar Excel';
   SCaptionFiltroTodosArchivos = 'Todos los archivos';

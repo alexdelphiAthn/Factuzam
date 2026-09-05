@@ -47,6 +47,7 @@ type
     FCachePerfiles: ICachePerfilesUsuario;
     FFormularioPerfil: string;
     FClavesExcluidas: TArray<string>;
+    FUsuarioRecarga: string;
     function EsClaveExcluida(const AClave: string): Boolean;
     procedure RegistrarDefectosSinBloqueo;
     procedure RegistrarParametroSinBloqueo(
@@ -68,6 +69,9 @@ type
       ATipo: TTipoParametro;
       const AValorPorDefecto: string
     );
+    // Usuario con el que se cargaron los valores; disponible en el
+    // hook DespuesDeRecargar.
+    property UsuarioRecargado: string read FUsuarioRecarga;
   public
     destructor Destroy; override;
     function GetString(
@@ -210,6 +214,7 @@ var
   ParPerfil: TPair<string, TDictValue>;
   Parametro: TParametroDef;
 begin
+  FUsuarioRecarga := AUsuario;
   Perfil := nil;
   try
     FCachePerfiles.ResincronizarPerfilFormulario(FFormularioPerfil);

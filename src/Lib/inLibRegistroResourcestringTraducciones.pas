@@ -18037,6 +18037,42 @@ begin
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
       SCaptionTallaAgrupacionMovimientosVentas);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionEsperaConsultandoDatosInforme',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionEsperaConsultandoDatosInforme);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionEsperaPreparandoInforme',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionEsperaPreparandoInforme);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionEsperaPaginaInforme',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionEsperaPaginaInforme);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionEsperaGenerandoHojaCalculo',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionEsperaGenerandoHojaCalculo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionSeleccionandoArticuloMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionSeleccionandoArticuloMovimientosVentas);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SCaptionExportandoFilasMovimientosVentas',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SCaptionExportandoFilasMovimientosVentas);
 end;
 {$WARN SYMBOL_DEPRECATED ON}
 

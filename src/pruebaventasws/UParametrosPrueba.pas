@@ -38,6 +38,7 @@ type
       const ADefault: Integer = 0
     ): Integer;
     function GetPath(const ANombre: string): string;
+    function ImpresoraDocumentos: string;
     function Licencia: TResultadoLicenciaAplicacion;
     function GetString(
       const AKey: string;
@@ -87,6 +88,11 @@ begin
 end;
 
 function TParametrosPrueba.GetPath(const ANombre: string): string;
+begin
+  Result := '';
+end;
+
+function TParametrosPrueba.ImpresoraDocumentos: string;
 begin
   Result := '';
 end;

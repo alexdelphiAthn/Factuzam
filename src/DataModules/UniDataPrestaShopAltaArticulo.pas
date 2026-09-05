@@ -184,6 +184,7 @@ type
     function GetInt(const AKey: string;
       const ADefault: Integer = 0): Integer;
     function GetPath(const ANombre: string): string;
+    function ImpresoraDocumentos: string;
     function Licencia: TResultadoLicenciaAplicacion;
   end;
 
@@ -276,6 +277,11 @@ end;
 function TParametrosFotosPerfil.GetPath(const ANombre: string): string;
 begin
   Result := ExpandPathTokens(GetString(ANombre));
+end;
+
+function TParametrosFotosPerfil.ImpresoraDocumentos: string;
+begin
+  Result := '';
 end;
 
 function TParametrosFotosPerfil.Licencia: TResultadoLicenciaAplicacion;

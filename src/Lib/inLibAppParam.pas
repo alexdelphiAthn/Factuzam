@@ -19,7 +19,7 @@ interface
 uses
   System.SyncObjs,
   inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf,
-  inLibLicenciaAplicacion, inLibLogIntf;
+  inLibLicenciaAplicacion, inLibLogIntf, inLibDeteccionImpresora;
 
 type
   TParametrosAplicacion = class(
@@ -29,8 +29,12 @@ type
   )
   private
     FBloqueoLicencia: TCriticalSection;
+    FDetectorImpresora: IDetectorImpresora;
     FRegistroLog: IRegistroLog;
     FResultadoLicencia: TResultadoLicenciaAplicacion;
+    function SegundosEsperaDeteccionImpresora: Integer;
+    procedure PrepararDeteccionImpresora;
+    procedure InicializarParametrosImpresion;
     procedure InicializarParametrosPrestaShop;
     procedure InicializarParametrosVerifactu;
     procedure InicializarParametrosApp(
@@ -46,6 +50,7 @@ type
     procedure EstablecerLicencia(
       const AResultado: TResultadoLicenciaAplicacion);
     function GetPath(const ANombre: string): string;
+    function ImpresoraDocumentos: string;
     function Licencia: TResultadoLicenciaAplicacion;
   end;
 
@@ -60,8 +65,12 @@ implementation
 
 uses
   System.SysUtils, inLibPathTokens,
-  inLibMsgConfiguracion,
+  inLibBuscarImpresora, inLibMsgConfiguracion,
   inLibComprasSesionesCodigoArticulo;
+
+const
+  cParametroEsperaDeteccionImpresoraDocumentos =
+    'appImpresoraEsperaSegundos';
 
 { TParametrosAplicacion }
 
@@ -91,10 +100,15 @@ begin
   FRegistroLog := ARegistroLog;
   FResultadoLicencia :=
     TResultadoLicenciaAplicacion.CrearNoComprobada;
+  FDetectorImpresora := CrearDetectorImpresora(
+    'DetectorImpresoraDocumentos');
 end;
 
 destructor TParametrosAplicacion.Destroy;
 begin
+  if Assigned(FDetectorImpresora) then
+    FDetectorImpresora.Cancelar;
+  FDetectorImpresora := nil;
   FRegistroLog := nil;
   FreeAndNil(FBloqueoLicencia);
   inherited;
@@ -193,6 +207,22 @@ begin
   RegistrarParametro('Verifactu', 'appVerifactuDescripcionOpe',
     'Texto de DescripcionOperacion del registro de alta', tpString,
     'Venta');
+end;
+
+procedure TParametrosAplicacion.InicializarParametrosImpresion;
+begin
+  // Mismo tratamiento que la impresora de tickets (vgerDefPrinter):
+  // nombre exacto de una impresora instalada, o patrón con subcadenas
+  // separadas por ';' que se busca entre las impresoras locales y las
+  // redirigidas por Terminal Server. La impresora resuelta pasa a ser
+  // la predeterminada de los informes (inLibDeteccionImpresora).
+  RegistrarParametro('Impresión', cParametroImpresoraDocumentos,
+    'Impresora para informes', tpString, '');
+  RegistrarParametro('Impresión',
+    cParametroEsperaDeteccionImpresoraDocumentos,
+    'Espera para detectar la impresora de informes al arrancar ' +
+    '(0-300 segundos)',
+    tpInteger, '5');
 end;
 
 procedure TParametrosAplicacion.InicializarParametrosPrestaShop;
@@ -326,8 +356,7 @@ begin
   RegistrarParametro('', 'appRecuentoCarpetaCliente',
     'Referencia histórica del servicio de recuentos', tpString, '');
   // --- Impresión ---
-  RegistrarParametro('Impresión', 'appImpresoraInformes',
-    'Impresora para informes', tpString, '');
+  InicializarParametrosImpresion;
 
   // --- Exportación ---
   RegistrarParametro('Exportación', 'appFormatoHojaCalculo',
@@ -421,6 +450,34 @@ procedure TParametrosAplicacion.DespuesDeRecargar;
 begin
   FRegistroLog.AplicarModosDepuracion(
     Self as IParametrosAplicacion);
+  PrepararDeteccionImpresora;
+end;
+
+procedure TParametrosAplicacion.PrepararDeteccionImpresora;
+begin
+  FDetectorImpresora.Preparar(
+    Trim(GetString(cParametroImpresoraDocumentos, '')),
+    Format('Documentos_%s.cache', [UsuarioRecargado]),
+    SegundosEsperaDeteccionImpresora);
+end;
+
+function TParametrosAplicacion.SegundosEsperaDeteccionImpresora:
+  Integer;
+begin
+  Result := LimitarEsperaDeteccionImpresora(
+    GetInt(cParametroEsperaDeteccionImpresoraDocumentos, 5));
+end;
+
+function TParametrosAplicacion.ImpresoraDocumentos: string;
+begin
+  Result := FDetectorImpresora.ValorActual;
+  try
+    FDetectorImpresora.IniciarDeteccion;
+  except
+    on E: Exception do
+      InformarFalloSecundarioEnDepurador(
+        'inLibAppParam.ImpresoraDocumentos.IniciarDeteccion', E);
+  end;
 end;
 
 function TParametrosAplicacion.GetPath(const ANombre: string): string;

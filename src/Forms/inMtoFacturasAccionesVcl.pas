@@ -48,7 +48,7 @@ implementation
 uses
   System.IOUtils, System.SysUtils, System.UITypes,
   Vcl.Forms, Vcl.Dialogs,
-  inLibCorreoTickets,
+  inLibBuscarImpresora, inLibCorreoTickets,
   inLibFacturas, inLibVerifactu, inLibVerifactuTipos,
   inLibMsgFacturas, inMtoComandoImprimirFacturas,
   inMtoModalFacRec, inMtoModalImpFac, inMtoModalFacturarTicket;
@@ -546,7 +546,7 @@ begin
   oParametros := FParametros;
   oRegistroLog := FRegistroLog;
   sFormato := AFormato;
-  sImpresora := FParametros.GetString('appImpresoraInformes', '');
+  sImpresora := ImpresoraDocumentosConfigurada(FParametros);
   IniciarLoteImpresionFacturas(
     AReferencias,
     AFormato,

@@ -20,6 +20,16 @@ uses
   Classes, Windows, WinSpool, SysUtils, StrUtils,
   inLibContextoSesionIntf, inLibParametrosIntf;
 
+const
+  // Parámetro de aplicación con la impresora de documentos (informes).
+  cParametroImpresoraDocumentos = 'appImpresoraInformes';
+
+// Impresora de documentos que debe usar la impresión: la resuelta por
+// la detección diferida o, mientras no haya resultado, el valor
+// configurado tal cual (un nombre exacto sigue sirviendo; un patrón sin
+// resolver provoca el aviso de impresora no disponible en los lotes).
+function ImpresoraDocumentosConfigurada(
+  const AParametros: IParametrosAplicacion): string;
 function ObtenerSesionImpresora(const NombreImpresora: string): string;
 function EsImpresoraRedireccionada(const NombreImpresora: string): Boolean;
 function BuscarImpresoraPorPatrones(const Patrones: string): string;
@@ -39,6 +49,19 @@ function GetImpresoraCaja(
   const AContextoSesion: IContextoSesionAplicacion): string;
 
 implementation
+
+function ImpresoraDocumentosConfigurada(
+  const AParametros: IParametrosAplicacion): string;
+begin
+  Result := '';
+  if Assigned(AParametros) then
+  begin
+    Result := Trim(AParametros.ImpresoraDocumentos);
+    if Result = '' then
+      Result := Trim(
+        AParametros.GetString(cParametroImpresoraDocumentos, ''));
+  end;
+end;
 
 function EstaImpresoraDisponible(const ANombreImpresora: string): Boolean;
 var

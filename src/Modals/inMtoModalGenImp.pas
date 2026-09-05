@@ -45,7 +45,8 @@ uses
   dxSkinXmas2008Blue, System.Actions, Vcl.ActnList,
   frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization, frxBarcode,
-  frLanguageSpanish, frxSmartMemo, inLibImpresionPersistenciaIntf;
+  frLanguageSpanish, frxSmartMemo, inLibImpresionPersistenciaIntf,
+  inLibVentanaEspera;
 type
   TfrmPrint = class(TfrmBase, IEliminadorFormatoImpresion)
     pnl1: TPanel;
@@ -91,6 +92,11 @@ type
     FInformeEsPersonalizado: Boolean;
     // D22: evita traducir dos veces el informe ya cargado.
     FInformeTraducido: Boolean;
+    // Ventana de espera de los flujos interactivos (consulta, carga del
+    // formato y preparación de páginas). Vive solo durante cada flujo.
+    FVentanaEspera: IVentanaEspera;
+    // Página que FastReport está preparando; alimenta el detalle.
+    FPaginaInforme: Integer;
     function ContextoFormatos: TContextoFormatosImpresion;
     function LeerBlobFormato(const aDescripcion: string;
                              aStream: TStream): Boolean;
@@ -102,6 +108,24 @@ type
     // de PrepareReport. No se invoca en el flujo de edicion para
     // no guardar textos traducidos en el BLOB del formato.
     procedure TraducirInformeActual;
+    // Fija como impresora del informe la de documentos resuelta por
+    // parámetros (appImpresoraInformes). Solo al imprimir o
+    // previsualizar: no se invoca antes de editar para no guardar el
+    // nombre de la impresora en el BLOB del formato.
+    procedure AplicarImpresoraDocumentos;
+    function RectanguloReferenciaEspera: TRect;
+    // Consulta, selección de formato y preparación de páginas con la
+    // ventana de espera. True si hay formato y el informe quedó
+    // preparado sin que el usuario cancelase.
+    function PrepararInformeConEspera(
+      AAplicarImpresora: Boolean): Boolean;
+    // PrepareReport con el progreso redirigido a la ventana de espera.
+    function PrepararPaginasInforme: Boolean;
+    procedure InformeProgreso(
+      Sender: TfrxReport;
+      ProgressType: TfrxProgressType;
+      Progress: Integer);
+    procedure ExportarPdfInteractivo;
     procedure PrepararSelectorFormato(
       ASelector: TfrmMtoModalGenImpEle;
       const AFormatoPredeterminado: string);
@@ -119,6 +143,16 @@ type
   protected
     function TraducirContenidoInforme: Boolean; virtual;
     procedure PdfExportado(const ARuta: string); virtual;
+    // Ventana de espera compartida por los flujos de impresión; los
+    // descendientes la usan en sus propios flujos (p. ej. Excel).
+    procedure IniciarEspera(const AFase: string);
+    procedure ActualizarDetalleEspera(const ADetalle: string);
+    procedure OcultarEspera;
+    procedure TerminarEspera;
+    function EsperaCancelada: Boolean;
+    // Texto de detalle mientras se preparan las páginas; los
+    // descendientes pueden añadir el registro en curso.
+    function DetalleProgresoInforme: string; virtual;
     property FormatoElegido: string read sElegido;
     property UltimaImpresionCorrecta: Boolean
       read FUltimaImpresionCorrecta;
@@ -187,7 +221,8 @@ implementation
 uses
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, System.TypInfo,
-  inLibFotos, inLibVerifactu,
+  frPrinter,
+  inLibBuscarImpresora, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar,
   inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme,
   inLibVentasPantallaIntf,
@@ -200,6 +235,7 @@ resourcestring
 
 destructor TfrmPrint.Destroy;
 begin
+  FVentanaEspera := nil;
   try
     try
       CerrarGuiasRuntime;
@@ -805,47 +841,157 @@ end;
 procedure TfrmPrint.btnExcelClick(Sender: TObject);
 begin
   inherited;
-  Preparar_consulta;
-  Self.Hide;
-  Consultar_Formularios;
-  if (sElegido <> '') then
-  begin
-    AfterReportLoaded;
-    AbrirGuiasRuntime(True);
-    OnGuiasAplicadas;
-    TraducirInformeActual;
-    try
-      frxrprt1.PrepareReport(True);
+  try
+    if PrepararInformeConEspera(False) then
+    begin
       frxlsxprtExcel.DefaultPath := ParametrosApp.GetPath('appDirExcel');
       frxrprt1.Export(frxlsxprtExcel);
+    end;
+  finally
+    CerrarGuiasRuntime;
+    TerminarEspera;
+    Self.Show;
+  end;
+end;
+
+procedure TfrmPrint.AplicarImpresoraDocumentos;
+var
+  sImpresora: string;
+begin
+  sImpresora := ImpresoraDocumentosConfigurada(ParametrosApp);
+  if (sImpresora <> '') and (frxPrinters.IndexOf(sImpresora) >= 0) then
+    frxrprt1.PrintOptions.Printer := sImpresora;
+end;
+
+function TfrmPrint.RectanguloReferenciaEspera: TRect;
+begin
+  if Self.Visible then
+    Result := Self.BoundsRect
+  else if Assigned(Application.MainForm) then
+    Result := Application.MainForm.BoundsRect
+  else
+    Result := Screen.WorkAreaRect;
+end;
+
+procedure TfrmPrint.IniciarEspera(const AFase: string);
+begin
+  if not Assigned(FVentanaEspera) then
+    FVentanaEspera := CrearVentanaEspera(
+      RectanguloReferenciaEspera, Self.CurrentPPI);
+  FVentanaEspera.Mostrar(AFase);
+end;
+
+procedure TfrmPrint.ActualizarDetalleEspera(const ADetalle: string);
+begin
+  if Assigned(FVentanaEspera) then
+    FVentanaEspera.ActualizarDetalle(ADetalle);
+end;
+
+procedure TfrmPrint.OcultarEspera;
+begin
+  if Assigned(FVentanaEspera) then
+    FVentanaEspera.Ocultar;
+end;
+
+procedure TfrmPrint.TerminarEspera;
+begin
+  OcultarEspera;
+  FVentanaEspera := nil;
+end;
+
+function TfrmPrint.EsperaCancelada: Boolean;
+begin
+  Result := Assigned(FVentanaEspera) and FVentanaEspera.Cancelado;
+end;
+
+function TfrmPrint.DetalleProgresoInforme: string;
+begin
+  Result := Format(SCaptionEsperaPaginaInforme, [FPaginaInforme]);
+end;
+
+procedure TfrmPrint.InformeProgreso(
+  Sender: TfrxReport;
+  ProgressType: TfrxProgressType;
+  Progress: Integer);
+begin
+  if ProgressType = ptRunning then
+  begin
+    if Progress > 0 then
+      FPaginaInforme := Progress;
+    ActualizarDetalleEspera(DetalleProgresoInforme);
+    if EsperaCancelada then
+      Sender.Terminated := True;
+  end;
+end;
+
+function TfrmPrint.PrepararPaginasInforme: Boolean;
+begin
+  FPaginaInforme := 1;
+  frxrprt1.OnProgress := InformeProgreso;
+  if Assigned(FVentanaEspera) then
+    FVentanaEspera.PermitirCancelar(True);
+  try
+    Result := frxrprt1.PrepareReport(True) and (not EsperaCancelada);
+  finally
+    frxrprt1.OnProgress := nil;
+    if Assigned(FVentanaEspera) then
+      FVentanaEspera.PermitirCancelar(False);
+  end;
+end;
+
+function TfrmPrint.PrepararInformeConEspera(
+  AAplicarImpresora: Boolean): Boolean;
+begin
+  Result := False;
+  IniciarEspera(SCaptionEsperaConsultandoDatosInforme);
+  try
+    Preparar_consulta;
+  finally
+    OcultarEspera;
+  end;
+  Self.Hide;
+  Consultar_Formularios;
+  if sElegido <> '' then
+  begin
+    IniciarEspera(SCaptionEsperaPreparandoInforme);
+    try
+      AfterReportLoaded;
+      AbrirGuiasRuntime(True);
+      OnGuiasAplicadas;
+      TraducirInformeActual;
+      if AAplicarImpresora then
+        AplicarImpresoraDocumentos;
+      Result := PrepararPaginasInforme;
     finally
-      CerrarGuiasRuntime;
+      OcultarEspera;
     end;
   end;
-  Self.Show;
+end;
+
+procedure TfrmPrint.ExportarPdfInteractivo;
+var
+  sRutaPdf: string;
+begin
+  frxpdfxprtPedWeb.DefaultPath := ParametrosApp.GetPath('appDirPDF');
+  if frxrprt1.Export(frxpdfxprtPedWeb) then
+  begin
+    sRutaPdf := RutaPdfExportado(frxpdfxprtPedWeb);
+    if sRutaPdf <> '' then
+      PdfExportado(sRutaPdf);
+  end;
 end;
 
 procedure TfrmPrint.btnImprimirClick(Sender: TObject);
 begin
   FUltimaImpresionCorrecta := False;
-  Preparar_consulta;
-  Self.Hide;
-  Consultar_Formularios;
-    if (sElegido <> '') then
-  begin
-    AfterReportLoaded;
-    AbrirGuiasRuntime(True);
-    OnGuiasAplicadas;
-    TraducirInformeActual;
-    try
-      FUltimaImpresionCorrecta := frxrprt1.PrepareReport(True);
-      if FUltimaImpresionCorrecta then
-        FUltimaImpresionCorrecta := frxrprt1.Print;
-    finally
-      CerrarGuiasRuntime;
-    end;
+  try
+    if PrepararInformeConEspera(True) then
+      FUltimaImpresionCorrecta := frxrprt1.Print;
+  finally
+    CerrarGuiasRuntime;
+    TerminarEspera;
+    Self.Show;
   end;
-  Self.Show;
 end;
 
 procedure TfrmPrint.btnSalirClick(Sender: TObject);
@@ -854,35 +1000,16 @@ begin
 end;
 
 procedure TfrmPrint.btnPDFClick(Sender: TObject);
-var
-  sRutaPdf: string;
 begin
   FUltimaRutaPdf := '';
-  Preparar_consulta;
-  Self.Hide;
-  Consultar_Formularios;
-    if (sElegido <> '') then
-  begin
-    AfterReportLoaded;
-    AbrirGuiasRuntime(True);
-    OnGuiasAplicadas;
-    TraducirInformeActual;
-    try
-      if frxrprt1.PrepareReport(True) then
-      begin
-        frxpdfxprtPedWeb.DefaultPath := ParametrosApp.GetPath('appDirPDF');
-        if frxrprt1.Export(frxpdfxprtPedWeb) then
-        begin
-          sRutaPdf := RutaPdfExportado(frxpdfxprtPedWeb);
-          if sRutaPdf <> '' then
-            PdfExportado(sRutaPdf);
-        end;
-      end;
-    finally
-      CerrarGuiasRuntime;
-    end;
+  try
+    if PrepararInformeConEspera(False) then
+      ExportarPdfInteractivo;
+  finally
+    CerrarGuiasRuntime;
+    TerminarEspera;
+    Self.Show;
   end;
-  Self.Show;
 end;
 
 function TfrmPrint.ExportarPdfActual(const ARuta: string): Boolean;
@@ -968,27 +1095,17 @@ end;
 
 procedure TfrmPrint.btnVistaPreliminarClick(Sender: TObject);
 begin
-  Preparar_consulta;
-  Self.Hide;
-  Consultar_Formularios;
-  if (sElegido <> '') then
-  begin
-    AfterReportLoaded;
-    AbrirGuiasRuntime(True);
-    OnGuiasAplicadas;
-    TraducirInformeActual;
-    try
-      // Los demas botones (Imprimir/PDF/Excel/Editar) hacen
-      // PrepareReport(True) antes; Vista Preliminar tenia ShowReport
-      // pelado y FastReport reutilizaba la preparacion previa, sin
-      // los campos enriquecidos por las guias.
-      frxrprt1.PrepareReport(True);
-      frxrprt1.ShowReport;
-    finally
-      CerrarGuiasRuntime;
-    end;
+  try
+    // Las páginas ya están preparadas con el progreso a la vista;
+    // ShowReport las descartaría y volvería a construir el informe
+    // dentro de la vista preliminar.
+    if PrepararInformeConEspera(True) then
+      frxrprt1.ShowPreparedReport;
+  finally
+    CerrarGuiasRuntime;
+    TerminarEspera;
+    Self.Show;
   end;
-  Self.Show;
 end;
 
 procedure TfrmPrint.CargarFormatos(form:TfrmMtoModalGenImpEle);

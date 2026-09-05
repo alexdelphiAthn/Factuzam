@@ -18,7 +18,7 @@ interface
 
 uses
   inLibParametrosIntf, inLibParametrosBase, inLibPerfilesUsuarioIntf,
-  inLibContextoSesionIntf;
+  inLibContextoSesionIntf, inLibDeteccionImpresora;
 
 type
   TParametrosCaja = class(
@@ -27,9 +27,8 @@ type
   )
   private
     FContextoSesion: IContextoSesionAplicacion;
-    FEstadoDeteccionImpresora: IInterface;
+    FDetectorImpresora: IDetectorImpresora;
     function SegundosEsperaDeteccionImpresora: Integer;
-    procedure IniciarDeteccionImpresora;
     procedure RegistrarControlArticulos;
     procedure RegistrarConfiguracionCaja;
     procedure RegistrarDevolucionesYVales;
@@ -63,330 +62,12 @@ function CrearParametrosCaja(
 implementation
 
 uses
-  System.Classes, System.SyncObjs, System.SysUtils, Winapi.Windows,
-  inLibArqueoDesglose, inLibBuscarImpresora, inLibMsgCaja;
+  System.SysUtils,
+  inLibArqueoDesglose, inLibMsgCaja;
 
 const
-  cIntervaloDeteccionImpresoraMs = 1000;
-  cMaximoEsperaDeteccionImpresoraSegundos = 300;
   cParametroEsperaDeteccionImpresora =
     'vgerImpresoraEsperaSegundos';
-
-procedure InformarFalloSecundarioEnDepurador(
-  const AContexto: PChar;
-  E: Exception);
-begin
-  try
-    OutputDebugString(PChar(
-      string(AContexto) + ': ' + E.ClassName + ': ' + E.Message));
-  except
-    OutputDebugString(AContexto);
-  end;
-end;
-
-type
-  IEstadoDeteccionImpresora = interface
-    ['{0B5F543D-E73A-48FC-A7FD-91BD12E74B4A}']
-    procedure Cancelar;
-    procedure Completar(
-      AGeneracion: Integer;
-      const ANombreImpresora: string);
-    function EstaVigente(AGeneracion: Integer): Boolean;
-    procedure Preparar(
-      const APatronImpresora, AArchivoCache: string;
-      ASegundosEspera: Integer;
-      out AIniciarTrasRecarga: Boolean);
-    procedure RestablecerInicio(AGeneracion: Integer);
-    procedure Solicitar(
-      out AIniciar: Boolean;
-      out AGeneracion: Integer;
-      out APatronImpresora, AArchivoCache: string;
-      out ASegundosEspera: Integer);
-    function ValorActual: string;
-  end;
-
-  TEstadoDeteccionImpresora = class(
-    TInterfacedObject,
-    IEstadoDeteccionImpresora
-  )
-  private
-    FArchivoCache: string;
-    FBloqueo: TCriticalSection;
-    FGeneracion: Integer;
-    FIniciada: Boolean;
-    FPatronImpresora: string;
-    FPreparada: Boolean;
-    FSegundosEspera: Integer;
-    FValorActual: string;
-  public
-    constructor Create;
-    destructor Destroy; override;
-    procedure Cancelar;
-    procedure Completar(
-      AGeneracion: Integer;
-      const ANombreImpresora: string);
-    function EstaVigente(AGeneracion: Integer): Boolean;
-    procedure Preparar(
-      const APatronImpresora, AArchivoCache: string;
-      ASegundosEspera: Integer;
-      out AIniciarTrasRecarga: Boolean);
-    procedure RestablecerInicio(AGeneracion: Integer);
-    procedure Solicitar(
-      out AIniciar: Boolean;
-      out AGeneracion: Integer;
-      out APatronImpresora, AArchivoCache: string;
-      out ASegundosEspera: Integer);
-    function ValorActual: string;
-  end;
-
-  THiloDeteccionImpresora = class(TThread)
-  private
-    FArchivoCache: string;
-    FEstado: IEstadoDeteccionImpresora;
-    FGeneracion: Integer;
-    FPatronImpresora: string;
-    FSegundosEspera: Integer;
-  protected
-    procedure Execute; override;
-  public
-    constructor Create(
-      const AEstado: IEstadoDeteccionImpresora;
-      AGeneracion: Integer;
-      const APatronImpresora, AArchivoCache: string;
-      ASegundosEspera: Integer);
-  end;
-
-{ TEstadoDeteccionImpresora }
-
-constructor TEstadoDeteccionImpresora.Create;
-begin
-  inherited Create;
-  FBloqueo := TCriticalSection.Create;
-end;
-
-destructor TEstadoDeteccionImpresora.Destroy;
-begin
-  FreeAndNil(FBloqueo);
-  inherited;
-end;
-
-procedure TEstadoDeteccionImpresora.Cancelar;
-begin
-  FBloqueo.Acquire;
-  try
-    Inc(FGeneracion);
-    FIniciada := True;
-    FArchivoCache := '';
-    FPatronImpresora := '';
-    FValorActual := '';
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-procedure TEstadoDeteccionImpresora.Completar(
-  AGeneracion: Integer;
-  const ANombreImpresora: string);
-begin
-  FBloqueo.Acquire;
-  try
-    if FGeneracion = AGeneracion then
-      FValorActual := ANombreImpresora;
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-function TEstadoDeteccionImpresora.EstaVigente(
-  AGeneracion: Integer): Boolean;
-begin
-  FBloqueo.Acquire;
-  try
-    Result := FIniciada and (FGeneracion = AGeneracion);
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-procedure TEstadoDeteccionImpresora.Preparar(
-  const APatronImpresora, AArchivoCache: string;
-  ASegundosEspera: Integer;
-  out AIniciarTrasRecarga: Boolean);
-begin
-  FBloqueo.Acquire;
-  try
-    AIniciarTrasRecarga := FPreparada;
-    FPreparada := True;
-    Inc(FGeneracion);
-    FArchivoCache := AArchivoCache;
-    FIniciada := (APatronImpresora = '') or
-      SameText(APatronImpresora, 'DEBUG');
-    FPatronImpresora := APatronImpresora;
-    FSegundosEspera := ASegundosEspera;
-    if SameText(APatronImpresora, 'DEBUG') then
-      FValorActual := 'DEBUG'
-    else
-      FValorActual := '';
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-procedure TEstadoDeteccionImpresora.RestablecerInicio(
-  AGeneracion: Integer);
-begin
-  FBloqueo.Acquire;
-  try
-    if FGeneracion = AGeneracion then
-      FIniciada := False;
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-procedure TEstadoDeteccionImpresora.Solicitar(
-  out AIniciar: Boolean;
-  out AGeneracion: Integer;
-  out APatronImpresora, AArchivoCache: string;
-  out ASegundosEspera: Integer);
-begin
-  FBloqueo.Acquire;
-  try
-    AIniciar := not FIniciada;
-    if AIniciar then
-      FIniciada := True;
-    AGeneracion := FGeneracion;
-    APatronImpresora := FPatronImpresora;
-    AArchivoCache := FArchivoCache;
-    ASegundosEspera := FSegundosEspera;
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-function TEstadoDeteccionImpresora.ValorActual: string;
-begin
-  FBloqueo.Acquire;
-  try
-    Result := FValorActual;
-  finally
-    FBloqueo.Release;
-  end;
-end;
-
-function EstadoDeteccionImpresora(
-  const AEstado: IInterface): IEstadoDeteccionImpresora;
-begin
-  Result := AEstado as IEstadoDeteccionImpresora;
-end;
-
-function BuscarImpresoraSegura(
-  const APatronImpresora, AArchivoCache: string): string;
-begin
-  try
-    Result := ObtenerImpresoraPorPatronCached(
-      APatronImpresora,
-      AArchivoCache);
-  except
-    Result := '';
-  end;
-end;
-
-procedure EjecutarDeteccionImpresora(
-  const AEstado: IEstadoDeteccionImpresora;
-  AGeneracion: Integer;
-  const APatronImpresora, AArchivoCache: string;
-  ASegundosEspera: Integer);
-var
-  iAhora: UInt64;
-  iEsperaMs: Cardinal;
-  iLimite: UInt64;
-  iRestanteMs: UInt64;
-  sImpresora: string;
-begin
-  sImpresora := '';
-  iLimite := GetTickCount64 + UInt64(ASegundosEspera) * 1000;
-  try
-    TThread.NameThreadForDebugging('DetectorImpresoraTickets');
-    // Winspool no permite cancelar una enumeración ya iniciada.
-    if AEstado.EstaVigente(AGeneracion) then
-      sImpresora := BuscarImpresoraSegura(
-        APatronImpresora,
-        AArchivoCache);
-    iAhora := GetTickCount64;
-    while (sImpresora = '') and
-          AEstado.EstaVigente(AGeneracion) and
-          (iAhora < iLimite) do
-    begin
-      iRestanteMs := iLimite - iAhora;
-      if iRestanteMs > cIntervaloDeteccionImpresoraMs then
-        iEsperaMs := cIntervaloDeteccionImpresoraMs
-      else
-        iEsperaMs := Cardinal(iRestanteMs);
-      Sleep(iEsperaMs);
-      if AEstado.EstaVigente(AGeneracion) and
-         (GetTickCount64 <= iLimite) then
-      begin
-        sImpresora := BuscarImpresoraSegura(
-          APatronImpresora,
-          AArchivoCache);
-      end;
-      iAhora := GetTickCount64;
-    end;
-  finally
-    if AEstado.EstaVigente(AGeneracion) then
-      AEstado.Completar(AGeneracion, sImpresora);
-  end;
-end;
-
-{ THiloDeteccionImpresora }
-
-constructor THiloDeteccionImpresora.Create(
-  const AEstado: IEstadoDeteccionImpresora;
-  AGeneracion: Integer;
-  const APatronImpresora, AArchivoCache: string;
-  ASegundosEspera: Integer);
-begin
-  inherited Create(True);
-  FArchivoCache := AArchivoCache;
-  FEstado := AEstado;
-  FGeneracion := AGeneracion;
-  FPatronImpresora := APatronImpresora;
-  FSegundosEspera := ASegundosEspera;
-  FreeOnTerminate := True;
-end;
-
-procedure THiloDeteccionImpresora.Execute;
-begin
-  EjecutarDeteccionImpresora(
-    FEstado,
-    FGeneracion,
-    FPatronImpresora,
-    FArchivoCache,
-    FSegundosEspera);
-end;
-
-procedure LanzarDeteccionImpresora(
-  const AEstado: IEstadoDeteccionImpresora;
-  AGeneracion: Integer;
-  const APatronImpresora, AArchivoCache: string;
-  ASegundosEspera: Integer);
-var
-  oHilo: THiloDeteccionImpresora;
-begin
-  oHilo := THiloDeteccionImpresora.Create(
-    AEstado,
-    AGeneracion,
-    APatronImpresora,
-    AArchivoCache,
-    ASegundosEspera);
-  try
-    oHilo.Start;
-  except
-    oHilo.Free;
-    raise;
-  end;
-end;
 
 { TParametrosCaja }
 
@@ -412,95 +93,47 @@ begin
     )
   );
   FContextoSesion := AContextoSesion;
-  FEstadoDeteccionImpresora := TEstadoDeteccionImpresora.Create;
+  FDetectorImpresora := CrearDetectorImpresora('DetectorImpresoraTickets');
 end;
 
 destructor TParametrosCaja.Destroy;
-var
-  oEstado: IEstadoDeteccionImpresora;
 begin
-  if Assigned(FEstadoDeteccionImpresora) then
-  begin
-    oEstado := EstadoDeteccionImpresora(FEstadoDeteccionImpresora);
-    oEstado.Cancelar;
-  end;
-  FEstadoDeteccionImpresora := nil;
+  if Assigned(FDetectorImpresora) then
+    FDetectorImpresora.Cancelar;
+  FDetectorImpresora := nil;
   FContextoSesion := nil;
   inherited;
 end;
 
 procedure TParametrosCaja.DespuesDeRecargar;
 var
-  bIniciarTrasRecarga: Boolean;
-  oEstado: IEstadoDeteccionImpresora;
   sArchivoCache: string;
   sPatronImpresora: string;
 begin
   sPatronImpresora := Trim(GetString('vgerDefPrinter', 'DEBUG'));
   sArchivoCache := Format('Caja_%s.cache',
     [FContextoSesion.Identidad.Usuario]);
-  oEstado := EstadoDeteccionImpresora(FEstadoDeteccionImpresora);
-  oEstado.Preparar(
+  FDetectorImpresora.Preparar(
     sPatronImpresora,
     sArchivoCache,
-    SegundosEsperaDeteccionImpresora,
-    bIniciarTrasRecarga);
-  if bIniciarTrasRecarga then
-    IniciarDeteccionImpresora;
+    SegundosEsperaDeteccionImpresora);
 end;
 
 function TParametrosCaja.SegundosEsperaDeteccionImpresora: Integer;
 begin
-  Result := GetInt(cParametroEsperaDeteccionImpresora, 5);
-  if Result < 0 then
-    Result := 0;
-  if Result > cMaximoEsperaDeteccionImpresoraSegundos then
-    Result := cMaximoEsperaDeteccionImpresoraSegundos;
-end;
-
-procedure TParametrosCaja.IniciarDeteccionImpresora;
-var
-  bIniciar: Boolean;
-  iGeneracion: Integer;
-  iSegundosEspera: Integer;
-  oEstado: IEstadoDeteccionImpresora;
-  sArchivoCache: string;
-  sPatronImpresora: string;
-begin
-  oEstado := EstadoDeteccionImpresora(FEstadoDeteccionImpresora);
-  oEstado.Solicitar(
-    bIniciar,
-    iGeneracion,
-    sPatronImpresora,
-    sArchivoCache,
-    iSegundosEspera);
-  if bIniciar then
-  begin
-    try
-      LanzarDeteccionImpresora(
-        oEstado,
-        iGeneracion,
-        sPatronImpresora,
-        sArchivoCache,
-        iSegundosEspera);
-    except
-      oEstado.RestablecerInicio(iGeneracion);
-    end;
-  end;
+  Result := LimitarEsperaDeteccionImpresora(
+    GetInt(cParametroEsperaDeteccionImpresora, 5));
 end;
 
 function TParametrosCaja.ImpresoraCaja: string;
-var
-  oEstado: IEstadoDeteccionImpresora;
 begin
-  oEstado := EstadoDeteccionImpresora(FEstadoDeteccionImpresora);
-  Result := oEstado.ValorActual;
+  Result := FDetectorImpresora.ValorActual;
   try
-    IniciarDeteccionImpresora;
+    FDetectorImpresora.IniciarDeteccion;
   except
     on E: Exception do
       InformarFalloSecundarioEnDepurador(
-        'inLibCajaParam.ImpresoraCaja.IniciarDeteccionImpresora', E);
+        'inLibCajaParam.ImpresoraCaja.IniciarDeteccion', E);
   end;
 end;
 

@@ -1044,6 +1044,8 @@
             <Form>frmMtoPreviewTicket</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
+        <DCCReference Include="src\Lib\inLibDeteccionImpresora.pas"/>
+        <DCCReference Include="src\Lib\inLibVentanaEspera.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa1914XML.pas"/>

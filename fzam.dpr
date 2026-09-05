@@ -843,6 +843,8 @@ uses
   inLibPreviewTicket in 'src\Lib\inLibPreviewTicket.pas',
   inMtoPreviewTicket in 'src\Core\inMtoPreviewTicket.pas' {frmMtoPreviewTicket},
   inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
+  inLibDeteccionImpresora in 'src\Lib\inLibDeteccionImpresora.pas',
+  inLibVentanaEspera in 'src\Lib\inLibVentanaEspera.pas',
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
   uDJMSepa in 'src\Lib3par\uDJMSepa.pas',
   uDJMSepa1914XML in 'src\Lib3par\uDJMSepa1914XML.pas',

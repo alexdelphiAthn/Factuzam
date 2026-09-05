@@ -39,6 +39,7 @@ uses
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frCoreClasses,
   frxExportBaseImageSettingsDialog, JvComponentBase, JvEnterTab, cxLocalization,
+  inMtoPreviewExcel,
   inLibInformeMovimientosVentasArticuloPersistenciaIntf;
 
 type
@@ -69,6 +70,9 @@ type
     function OrdenSeleccionado(out AOrden: TOrdenMovVentasArt): Boolean;
     // Exportación a Excel propia (sustituye al export FastReport del base).
     procedure ExportarExcelMovVentas(Sender: TObject);
+    // Genera la hoja por lotes refrescando el detalle de la espera.
+    procedure GenerarHojaExcelMovVentas(APreview: TfrmMtoPreviewExcel);
+    procedure MostrarPreviewExcel(APreview: TfrmMtoPreviewExcel);
     // Handler de OnBeforePrint: fotos + ocultar bandas de grupo inactivas.
     procedure ReportBeforePrint(Component: TfrxReportComponent);
     procedure CompletarSubtotales;
@@ -83,6 +87,8 @@ type
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
+    // Añade al detalle de la espera el artículo que se está volcando.
+    function DetalleProgresoInforme: string; override;
   public
     destructor Destroy; override;
     procedure preparar_consulta; override;
@@ -94,34 +100,12 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, System.Threading, Vcl.ComCtrls,
-  inMtoPreviewExcel, inLibMovVentasArtExcel, inLibMsgVentas,
+  System.Math, System.StrUtils, System.Threading,
+  inLibMovVentasArtExcel, inLibMsgVentas,
   inLibMsgComun, inLibConexionesIntf,
   inLibHojaCalculoIntf, inLibHojaCalculoDevEx, dxSpreadSheet,
-  inLibFotos,
+  inLibFotos, inLibVentanaEspera,
   UniDataInformeMovimientosVentasArticuloRepositorio;
-
-type
-  TProcesarLoteEspera = reference to function: Boolean;
-
-  TfrmEsperaMovVentas = class(TForm)
-  private
-    FError: string;
-    FProcesarLote: TProcesarLoteEspera;
-    FPuedeCerrar: Boolean;
-    FTarea: ITask;
-    FTemporizador: TTimer;
-    procedure ComprobarCierre(Sender: TObject; var CanClose: Boolean);
-    procedure ComprobarTrabajo(Sender: TObject);
-  protected
-    procedure DoShow; override;
-  public
-    constructor Create(AOwner: TComponent); override;
-    procedure Esperar(const ATarea: ITask);
-    procedure EsperarPorLotes(
-      const AProcesarLote: TProcesarLoteEspera);
-    procedure Finalizar;
-  end;
 
 resourcestring
   STituloAgrupacionesMovimientosVentasArticulo = 'Agrupaciones';
@@ -133,141 +117,9 @@ resourcestring
     'Movimientos_ventas_articulos';
 
 const
-  DURACION_LOTE_EXCEL_MS = 150;
-  FILAS_POR_PASO_EXCEL = 10;
-  INTERVALO_LOTE_EXCEL_MS = 10;
-
-{ TfrmEsperaMovVentas }
-
-constructor TfrmEsperaMovVentas.Create(AOwner: TComponent);
-var
-  oBarra: TProgressBar;
-  oTexto: TLabel;
-begin
-  inherited CreateNew(AOwner);
-  BorderIcons := [];
-  BorderStyle := bsDialog;
-  Caption := SCaptionCargandoDatosEspere;
-  ClientHeight := 100;
-  ClientWidth := 420;
-  Cursor := crHourGlass;
-  FPuedeCerrar := False;
-  Position := poOwnerFormCenter;
-  OnCloseQuery := ComprobarCierre;
-  oTexto := TLabel.Create(Self);
-  oTexto.Parent := Self;
-  oTexto.SetBounds(16, 16, ClientWidth - 32, 30);
-  oTexto.Alignment := taCenter;
-  oTexto.AutoSize := False;
-  oTexto.Caption := SCaptionCargandoDatosEspere;
-  oTexto.Cursor := crHourGlass;
-  oTexto.Font.Style := [fsBold];
-  oTexto.Layout := tlCenter;
-  oBarra := TProgressBar.Create(Self);
-  oBarra.Parent := Self;
-  oBarra.SetBounds(60, 58, ClientWidth - 120, 18);
-  oBarra.Cursor := crHourGlass;
-  oBarra.MarqueeInterval := 30;
-  oBarra.Style := pbstMarquee;
-  FTemporizador := TTimer.Create(Self);
-  FTemporizador.Enabled := False;
-  FTemporizador.Interval := 50;
-  FTemporizador.OnTimer := ComprobarTrabajo;
-end;
-
-procedure TfrmEsperaMovVentas.ComprobarCierre(
-  Sender: TObject; var CanClose: Boolean);
-begin
-  CanClose := FPuedeCerrar;
-end;
-
-procedure TfrmEsperaMovVentas.ComprobarTrabajo(Sender: TObject);
-var
-  bFinalizado: Boolean;
-begin
-  FTemporizador.Enabled := False;
-  try
-    if Assigned(FTarea) then
-    begin
-      if FTarea.Status in [
-         TTaskStatus.Completed,
-         TTaskStatus.Canceled,
-         TTaskStatus.Exception] then
-        Finalizar;
-    end
-    else if Assigned(FProcesarLote) then
-    begin
-      try
-        bFinalizado := FProcesarLote();
-        if bFinalizado then
-          Finalizar;
-      except
-        on E: Exception do
-        begin
-          FError := E.Message;
-          if FError = '' then
-            FError := E.ClassName;
-          Finalizar;
-        end;
-      end;
-    end;
-  finally
-    if not FPuedeCerrar then
-      FTemporizador.Enabled := True;
-  end;
-end;
-
-procedure TfrmEsperaMovVentas.DoShow;
-begin
-  inherited;
-  Screen.Cursor := crHourGlass;
-end;
-
-procedure TfrmEsperaMovVentas.Esperar(const ATarea: ITask);
-begin
-  FError := '';
-  FProcesarLote := nil;
-  FPuedeCerrar := False;
-  FTarea := ATarea;
-  FTemporizador.Interval := 50;
-  FTemporizador.Enabled := True;
-  try
-    ShowModal;
-  finally
-    FTemporizador.Enabled := False;
-    FTarea := nil;
-  end;
-end;
-
-procedure TfrmEsperaMovVentas.EsperarPorLotes(
-  const AProcesarLote: TProcesarLoteEspera);
-var
-  sError: string;
-begin
-  FError := '';
-  FProcesarLote := AProcesarLote;
-  FPuedeCerrar := False;
-  FTarea := nil;
-  FTemporizador.Interval := INTERVALO_LOTE_EXCEL_MS;
-  FTemporizador.Enabled := True;
-  try
-    ShowModal;
-  finally
-    FTemporizador.Enabled := False;
-    FProcesarLote := nil;
-    sError := FError;
-    FError := '';
-  end;
-  if sError <> '' then
-    raise Exception.Create(sError);
-end;
-
-procedure TfrmEsperaMovVentas.Finalizar;
-begin
-  FTemporizador.Enabled := False;
-  FPuedeCerrar := True;
-  ModalResult := mrOk;
-end;
+  // Registros por lote al generar la hoja de cálculo; entre lotes se
+  // refresca el detalle de la ventana de espera.
+  FILAS_POR_LOTE_EXCEL = 200;
 
 { TfrmPrintMovVentasArt }
 
@@ -504,7 +356,6 @@ var
   crCursorAnterior: TCursor;
   oConexionNueva: TUniConnection;
   oConexiones: IServicioConexiones;
-  oEspera: TfrmEsperaMovVentas;
   oRepositorioNuevo: IRepositorioInformeMovimientosVentasArticulo;
   oResultadoNuevo: IResultadoInformeMovimientosVentasArticulo;
   oTarea: ITask;
@@ -517,7 +368,6 @@ begin
   if not Assigned(oConexiones) then
     raise Exception.Create(SErrorServicioConexionesDatosNoConfigurado);
   oConexionNueva := nil;
-  oEspera := TfrmEsperaMovVentas.Create(Self);
   try
     crCursorAnterior := Screen.Cursor;
     Screen.Cursor := crHourGlass;
@@ -547,11 +397,11 @@ begin
             end;
           end;
         end);
-      try
-        oEspera.Esperar(oTarea);
-      finally
-        TTask.WaitForAll([oTarea]);
-      end;
+      // La ventana de espera vive en su propio hilo; mientras, el
+      // principal atiende lo que la tarea le pide (el monitor SQL escribe
+      // en el memo del principal desde el hilo de la consulta) sin
+      // despachar teclado ni ratón.
+      EsperarTareaAtendiendoMensajes(oTarea);
     finally
       Screen.Cursor := crCursorAnterior;
     end;
@@ -572,7 +422,6 @@ begin
     FRepositorioMovimientos := oRepositorioNuevo;
     FResultadoMovimientos := oResultadoNuevo;
   finally
-    FreeAndNil(oEspera);
     oResultadoNuevo := nil;
     oRepositorioNuevo := nil;
     FreeAndNil(oConexionNueva);
@@ -884,7 +733,10 @@ begin
     sNom := Component.Name;
     nivel := 0;
     if sNom = 'MasterData1' then
-      TfrxBand(Component).Visible := not FResumenAgrupado
+    begin
+      TfrxBand(Component).Visible := not FResumenAgrupado;
+      ActualizarDetalleEspera(DetalleProgresoInforme);
+    end
     else if (Pos('GroupHeaderG', sNom) = 1) or
             (Pos('GroupFooterG', sNom) = 1) then
       nivel := StrToIntDef(Copy(sNom, Length(sNom), 1), 0);
@@ -907,77 +759,94 @@ begin
   end;
 end;
 
+function TfrmPrintMovVentasArt.DetalleProgresoInforme: string;
+var
+  oDatos: TDataSet;
+begin
+  Result := inherited DetalleProgresoInforme;
+  if (FResultadoMovimientos <> nil) and
+     FResultadoMovimientos.DataSet.Active and
+     (not FResultadoMovimientos.DataSet.IsEmpty) then
+  begin
+    oDatos := FResultadoMovimientos.DataSet;
+    Result := Format(SCaptionSeleccionandoArticuloMovimientosVentas,
+      [Result, Trim(
+        oDatos.FieldByName('CODIGO_ART_ART').AsString + ' ' +
+        oDatos.FieldByName('DESCRIPCION_ART').AsString)]);
+  end;
+end;
+
+procedure TfrmPrintMovVentasArt.GenerarHojaExcelMovVentas(
+  APreview: TfrmMtoPreviewExcel);
+var
+  bFinalizado: Boolean;
+  iLotesExcel: Integer;
+  iNumeroFilas: Integer;
+  nInicioExportacion: UInt64;
+  oDatos: TDataSet;
+  oExportacion: IExportacionMovVentasArtPorLotes;
+  oServiciosHoja: TServiciosHojaCalculo;
+  sTotalFilas: string;
+begin
+  APreview.DialogoGuardar.InitialDir :=
+    ParametrosApp.GetPath('appDirExcel');
+  APreview.DialogoGuardar.FileName :=
+    SNombreArchivoMovimientosVentasArticulos;
+  oServiciosHoja := CrearServiciosHojaCalculoDevEx(APreview.dxSpreadSheet1);
+  oDatos := FResultadoMovimientos.DataSet;
+  oExportacion := CrearExportacionMovVentasArtExcelPorLotes(
+    oServiciosHoja.Escritor,
+    oServiciosHoja.Formateador,
+    oDatos,
+    NivelesAgrupacion);
+  iNumeroFilas := oDatos.RecordCount;
+  sTotalFilas := FormatFloat('#,##0', iNumeroFilas);
+  iLotesExcel := 0;
+  nInicioExportacion := GetTickCount64;
+  IniciarEspera(SCaptionEsperaGenerandoHojaCalculo);
+  repeat
+    bFinalizado := oExportacion.ProcesarLote(FILAS_POR_LOTE_EXCEL);
+    Inc(iLotesExcel);
+    ActualizarDetalleEspera(Format(
+      SCaptionExportandoFilasMovimientosVentas,
+      [FormatFloat('#,##0', EnsureRange(oDatos.RecNo, 0, iNumeroFilas)),
+       sTotalFilas]));
+  until bFinalizado;
+  RegistroLog.RegistrarRendimiento(
+    'MovVentasArt.Excel',
+    Format('filas=%d; lotes=%d', [iNumeroFilas, iLotesExcel]),
+    GetTickCount64 - nInicioExportacion);
+end;
+
+procedure TfrmPrintMovVentasArt.MostrarPreviewExcel(
+  APreview: TfrmMtoPreviewExcel);
+begin
+  Self.Hide;
+  try
+    APreview.ShowModal;
+  finally
+    Self.Show;
+  end;
+end;
+
 procedure TfrmPrintMovVentasArt.ExportarExcelMovVentas(Sender: TObject);
 var
   crCursorAnterior: TCursor;
   fPreview: TfrmMtoPreviewExcel;
-  iLotesExcel: Integer;
-  iNumeroFilas: Integer;
-  nInicioExportacion: UInt64;
-  nInicioLote: UInt64;
-  nTiempoTrabajoExcel: UInt64;
-  oEspera: TfrmEsperaMovVentas;
-  oExportacion: IExportacionMovVentasArtPorLotes;
-  oServiciosHoja: TServiciosHojaCalculo;
 begin
   crCursorAnterior := Screen.Cursor;
   Screen.Cursor := crHourGlass;
+  fPreview := nil;
   try
+    IniciarEspera(SCaptionEsperaConsultandoDatosInforme);
     preparar_consulta;
     fPreview := TfrmMtoPreviewExcel.Create(Self);
-    try
-      fPreview.DialogoGuardar.InitialDir :=
-        ParametrosApp.GetPath('appDirExcel');
-      fPreview.DialogoGuardar.FileName :=
-        SNombreArchivoMovimientosVentasArticulos;
-      oServiciosHoja := CrearServiciosHojaCalculoDevEx(
-        fPreview.dxSpreadSheet1);
-      oExportacion := CrearExportacionMovVentasArtExcelPorLotes(
-        oServiciosHoja.Escritor,
-        oServiciosHoja.Formateador,
-        FResultadoMovimientos.DataSet,
-        NivelesAgrupacion);
-      iLotesExcel := 0;
-      iNumeroFilas := FResultadoMovimientos.DataSet.RecordCount;
-      nInicioExportacion := GetTickCount64;
-      nTiempoTrabajoExcel := 0;
-      oEspera := TfrmEsperaMovVentas.Create(Self);
-      try
-        oEspera.EsperarPorLotes(
-          function: Boolean
-          begin
-            Inc(iLotesExcel);
-            nInicioLote := GetTickCount64;
-            repeat
-              Result := oExportacion.ProcesarLote(
-                FILAS_POR_PASO_EXCEL);
-            until Result or
-              (GetTickCount64 - nInicioLote >=
-               DURACION_LOTE_EXCEL_MS);
-            Inc(nTiempoTrabajoExcel,
-              GetTickCount64 - nInicioLote);
-          end);
-      finally
-        FreeAndNil(oEspera);
-      end;
-      RegistroLog.RegistrarRendimiento(
-        'MovVentasArt.Excel',
-        Format(
-          'filas=%d; lotes=%d; trabajo=%d ms',
-          [iNumeroFilas, iLotesExcel, nTiempoTrabajoExcel]),
-        GetTickCount64 - nInicioExportacion);
-      oExportacion := nil;
-      Self.Hide;
-      try
-        fPreview.ShowModal;
-      finally
-        Self.Show;
-      end;
-    finally
-      oExportacion := nil;
-      FreeAndNil(fPreview);
-    end;
+    GenerarHojaExcelMovVentas(fPreview);
+    TerminarEspera;
+    MostrarPreviewExcel(fPreview);
   finally
+    TerminarEspera;
+    FreeAndNil(fPreview);
     Screen.Cursor := crCursorAnterior;
   end;
 end;

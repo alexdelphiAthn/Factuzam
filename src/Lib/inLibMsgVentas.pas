@@ -577,6 +577,10 @@ resourcestring
   SOrdenPorcentajeVentasMovimientosVentas = '% Vtas';
   SOrdenAscendenteMovimientosVentas = 'Ascendente';
   SOrdenDescendenteMovimientosVentas = 'Descendente';
+  SCaptionSeleccionandoArticuloMovimientosVentas =
+    '%s. Seleccionando artículo: %s';
+  SCaptionExportandoFilasMovimientosVentas =
+    'Exportando fila %s de %s';
 implementation
 
 end.

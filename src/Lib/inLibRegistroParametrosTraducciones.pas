@@ -296,6 +296,12 @@ begin
     'Impresora para informes',
     'src/Lib/inLibAppParam.pas');
   ARegistrar(
+    'inMtoAppParam.Parametros.appImpresoraEsperaSegundos.Desc' +
+    'ripcion',
+    'Espera para detectar la impresora de informes al arrancar ' +
+    '(0-300 segundos)',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
     'inMtoAppParam.Parametros.Categoria.Exportacion',
     'Exportación',
     'src/Lib/inLibAppParam.pas');

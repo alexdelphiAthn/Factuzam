@@ -49,6 +49,9 @@ type
   IParametrosAplicacion = interface(IParametros)
     ['{CB15A18C-2433-4955-B98D-DD510E13C73C}']
     function GetPath(const ANombre: string): string;
+    // Impresora de documentos resuelta por patrón, con el mismo
+    // tratamiento que ImpresoraCaja (vacía mientras no se resuelva).
+    function ImpresoraDocumentos: string;
     function Licencia: TResultadoLicenciaAplicacion;
   end;
 
