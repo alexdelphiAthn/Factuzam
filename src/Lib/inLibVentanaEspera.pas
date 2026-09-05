@@ -75,8 +75,8 @@ const
   WM_ESPERA_CERRAR = WM_APP + 6;
   ID_BOTON_CANCELAR = 1;
   PIXELES_POR_PULGADA_BASE = 96;
-  PUNTOS_FUENTE = 9;
-  NOMBRE_FUENTE = 'Segoe UI';
+  PUNTOS_FUENTE = 13;
+  NOMBRE_FUENTE = 'Lucida Sans';
   // Medidas a 96 ppp; se escalan a los ppp indicados al crear la ventana.
   ANCHO_VENTANA = 460;
   ALTO_VENTANA = 156;
