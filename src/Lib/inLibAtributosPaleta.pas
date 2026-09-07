@@ -541,23 +541,54 @@ function PintarCeldaSwatchArticuloSiAplica(
   const ACodArt, ATexto: string;
   ADict: TDictionary<string, string>): Boolean;
 var
-  Dict: TDictionary<string, string>;
   Info: TInfoBasico;
-  sTexto: string;
+  sTexto, sIdVa, sSegmento: string;
+  Segmentos: TArray<string>;
+  i: Integer;
+
+  function Casa(const AValor: string): Boolean;
+  begin
+    Result := (AValor <> '') and
+      (ObtenerInfoBasicoArticulo(
+         AConexion, ACodArt, sIdVa, AValor, Info) or
+       ObtenerInfoBasico(AConexion, sIdVa, AValor, Info));
+  end;
+
 begin
   Result := False;
-  sTexto := ATexto;
+  sTexto := Trim(ATexto);
   if (sTexto = '') and (AViewInfo <> nil) then
-    sTexto := AViewInfo.Text;
-  if ADict <> nil then
-    Dict := ADict
-  else
-    Dict := ObtenerMapaAtributosGlobal(AConexion);
-  if (ACanvas <> nil) and (AViewInfo <> nil) and
-     (Dict <> nil) and (Dict.Count > 0) and
-     BuscarInfoBasicoEnArticuloContextual(
-       AConexion, ACodArt, sTexto, Dict, Info) then
-    Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
+    sTexto := Trim(AViewInfo.Text);
+  if (ACanvas <> nil) and (AViewInfo <> nil) and (sTexto <> '') then
+  begin
+    // Solo UN atributo: el de la columna (su caption es el nombre del
+    // atributo: Color, Talla...) y, si la columna no es de atributo (el
+    // texto es un SKU o un color suelto), el de color. Antes se probaba
+    // el texto contra todos los atributos y la paleta global, y una
+    // talla "100" heredaba el cuadradito del color basico "100".
+    sIdVa := '';
+    if AViewInfo.Item is TcxGridColumn then
+      sIdVa := IdVaDeNombreAtributo(
+        AConexion, TcxGridColumn(AViewInfo.Item).Caption);
+    if sIdVa = '' then
+      sIdVa := ID_VA_COLOR;
+    Result := Casa(sTexto);
+    if (not Result) and (Pos('/', sTexto) > 0) then
+    begin
+      Segmentos := sTexto.Split(['/']);
+      for i := High(Segmentos) downto 0 do
+      begin
+        if not Result then
+        begin
+          sSegmento := Trim(Segmentos[i]);
+          Result := Casa(sSegmento);
+        end;
+      end;
+    end;
+    if Result then
+      Result := PintarCeldaConCuadradoColor(
+        ACanvas, AViewInfo, Info, sTexto);
+  end;
 end;
 
 function IdVaDeNombreAtributo(AConexion: TUniConnection;

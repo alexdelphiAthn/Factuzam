@@ -1083,6 +1083,11 @@ begin
   Cfg.LookupAtributos := FDependencias.Articulos.Atributos;
   Cfg.UsarCombosAtributos := True;
   Cfg.BuscarSoloPadresEnDesglose := True;
+  // Las columnas conservan su ancho y el grid se desplaza a la
+  // derecha: ensanchar una columna no encoge las demas (el detalle
+  // supera las quince columnas y repartir el ancho las dejaba
+  // ilegibles).
+  Cfg.DesplazamientoHorizontal := True;
   Cfg.Campos.Cantidad := 'CANTIDAD_FISICA_INVLIN';
   // El almacen es de CABECERA en inventario: sin columna de linea.
   Cfg.Campos.Almacen := '';

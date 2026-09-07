@@ -261,7 +261,10 @@ begin
   FConfig.View.OnFocusedItemChanged := FocoItemCambiado;
   FConfig.View.OptionsBehavior.GoToNextCellOnEnter := True;
   FConfig.View.OptionsBehavior.FocusFirstCellOnNewRecord := True;
-  FConfig.View.OptionsView.ColumnAutoWidth := True;
+  // Con DesplazamientoHorizontal las columnas conservan su ancho y el
+  // grid se desplaza a la derecha en vez de repartir el ancho.
+  FConfig.View.OptionsView.ColumnAutoWidth :=
+    not FConfig.DesplazamientoHorizontal;
   FConfig.View.OptionsView.NoDataToDisplayInfoText :=
     SCaptionSinArticulos;
   FConfig.View.Navigator.Visible := True;

@@ -1,7 +1,7 @@
-﻿inherited frmMtoOpeCaja: TfrmMtoOpeCaja
+inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   Caption = 'Operaci'#243'n de Caja'
-  ClientHeight = 413
-  ClientWidth = 1355
+  ClientHeight = 405
+  ClientWidth = 1353
   Font.Charset = ANSI_CHARSET
   Font.Height = -19
   StyleElements = [seFont, seClient, seBorder]
@@ -16,13 +16,12 @@
   object pnlUp: TPanel [0]
     Left = 0
     Top = 0
-    Width = 1355
+    Width = 1353
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1353
     DesignSize = (
-      1355
+      1353
       89)
     object lblFecha: TcxLabel
       Left = 11
@@ -181,7 +180,7 @@
       Width = 121
     end
     object lblTipoRectificativa: TcxLabel
-      Left = 1116
+      Left = 1112
       Top = 6
       Anchors = [akTop, akRight]
       AutoSize = False
@@ -204,22 +203,19 @@
       TabOrder = 9
       Transparent = True
       Visible = False
-      ExplicitLeft = 1114
       Height = 77
       Width = 229
-      AnchorX = 1231
+      AnchorX = 1227
       AnchorY = 45
     end
   end
   object pnlCli: TPanel [1]
     Left = 0
     Top = 89
-    Width = 1355
-    Height = 324
+    Width = 1353
+    Height = 316
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1353
-    ExplicitHeight = 316
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 225
@@ -237,6 +233,7 @@
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
+        ExplicitLeft = 940
         object lblTotal: TcxLabel
           Left = 0
           Top = 0
@@ -262,7 +259,6 @@
           Properties.Orientation = cxoRight
           Properties.WordWrap = True
           TabOrder = 0
-          ExplicitLeft = 18
           Height = 96
           Width = 410
           AnchorX = 410
@@ -271,12 +267,11 @@
       object pnlBotones: TPanel
         Left = 1
         Top = 1
-        Width = 941
+        Width = 939
         Height = 96
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 921
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -465,6 +460,7 @@
           Transparent = True
           Height = 26
           Width = 96
+          AnchorX = 58
         end
         object lblBuscar: TcxLabel
           Left = 110
@@ -476,6 +472,7 @@
           Transparent = True
           Height = 26
           Width = 96
+          AnchorX = 158
         end
         object lblEliminar: TcxLabel
           Left = 210
@@ -487,6 +484,7 @@
           Transparent = True
           Height = 26
           Width = 96
+          AnchorX = 258
         end
         object lblTextoTarifa: TcxLabel
           Left = 310
@@ -498,6 +496,7 @@
           Transparent = True
           Height = 26
           Width = 96
+          AnchorX = 358
         end
         object lblBusqTick: TcxLabel
           Left = 408
@@ -509,6 +508,7 @@
           Transparent = True
           Height = 26
           Width = 100
+          AnchorX = 458
         end
         object lblIndIVA: TcxLabel
           Left = 510
@@ -520,6 +520,7 @@
           Transparent = True
           Height = 26
           Width = 96
+          AnchorX = 558
         end
         object lblOtro: TcxLabel
           Left = 610
@@ -531,6 +532,7 @@
           Transparent = True
           Height = 26
           Width = 96
+          AnchorX = 658
         end
         object lblCargarCta: TcxLabel
           Left = 694
@@ -542,6 +544,7 @@
           Transparent = True
           Height = 26
           Width = 128
+          AnchorX = 758
         end
         object lblBuscarModificar: TcxLabel
           Left = 812
@@ -553,18 +556,17 @@
           Transparent = True
           Height = 26
           Width = 128
+          AnchorX = 876
         end
       end
     end
     object pnlAccionesDer: TPanel
       Left = 1
       Top = 1
-      Width = 1353
-      Height = 224
+      Width = 1351
+      Height = 216
       Align = alClient
       TabOrder = 0
-      ExplicitWidth = 1351
-      ExplicitHeight = 216
       object cxgrdLineasOpe: TcxGrid
         Left = 1
         Top = 1

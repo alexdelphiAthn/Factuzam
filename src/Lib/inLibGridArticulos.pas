@@ -127,6 +127,11 @@ type
     // atributos, no mueve stock) en vez de descartarse. Lo activan las
     // facturas de venta mayor; caja y traspasos lo dejan a False.
     FAceptarNoCatalogo: Boolean;
+    // Las columnas conservan su ancho y el grid se desplaza en
+    // horizontal en vez de repartir el ancho entre ellas
+    // (ColumnAutoWidth). Lo activa inventarios; caja y traspasos
+    // mantienen el reparto.
+    FDesplazamientoHorizontal: Boolean;
     FAfterOpenOriginal: TDataSetNotifyEvent;
     FAfterPostOriginal: TDataSetNotifyEvent;
     FAfterScrollOriginal: TDataSetNotifyEvent;
@@ -281,6 +286,9 @@ type
     // Admitir codigos fuera de catalogo como linea libre (ver campo).
     property AceptarNoCatalogo: Boolean read FAceptarNoCatalogo
                                         write FAceptarNoCatalogo;
+    // Conservar anchos y desplazar en horizontal (ver campo).
+    property DesplazamientoHorizontal: Boolean
+      read FDesplazamientoHorizontal write FDesplazamientoHorizontal;
     // Permite activar el selector combo sin cambiar los consumidores que
     // todavia usan la paleta tradicional.
     property UsarCombosAtributos: Boolean read FUsarCombosAtributos
@@ -900,9 +908,10 @@ begin
   // Mismos parametros de comportamiento/vista que el grid de ventas de
   // inMtoCajaOpe (tvLineasOpe): el ciclo de foco vuelve a la primera celda de
   // la fila siguiente, las columnas reparten el ancho del grid y se muestra un
-  // aviso cuando no hay articulos.
+  // aviso cuando no hay articulos. Con DesplazamientoHorizontal las
+  // columnas conservan su ancho y el grid se desplaza a la derecha.
   FView.OptionsBehavior.FocusCellOnCycle := True;
-  FView.OptionsView.ColumnAutoWidth := True;
+  FView.OptionsView.ColumnAutoWidth := not FDesplazamientoHorizontal;
   FView.OptionsView.NoDataToDisplayInfoText :=
     SCaptionSinArticulos;
   // Navegador pequeño embebido: navegar + añadir al final + borrar.

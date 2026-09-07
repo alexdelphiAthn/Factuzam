@@ -60,6 +60,7 @@ begin
   FGrid.OnResuelto := GridResuelto;
   FGrid.AlmacenStock := AConfig.AlmacenStock;
   FGrid.AceptarNoCatalogo := AConfig.AceptarNoCatalogo;
+  FGrid.DesplazamientoHorizontal := AConfig.DesplazamientoHorizontal;
 end;
 
 destructor TModoEntradaDesglose.Destroy;

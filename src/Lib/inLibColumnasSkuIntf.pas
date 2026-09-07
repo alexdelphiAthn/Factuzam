@@ -135,6 +135,11 @@ type
     // En ventas, el desplegable incremental del modo desglose devuelve una
     // fila por articulo padre. False conserva la busqueda historica de SKU.
     BuscarSoloPadresEnDesglose: Boolean;
+    // Las columnas conservan su ancho y el grid se desplaza en
+    // horizontal (ColumnAutoWidth = False): ensanchar una columna no
+    // encoge las demas. Lo activa inventarios; False reparte el ancho
+    // del grid entre las columnas, como en caja y ventas.
+    DesplazamientoHorizontal: Boolean;
     // Precio del SKU segun el documento (ver TObtenerPrecioSkuEvent).
     ObtenerPrecioSku: TObtenerPrecioSkuEvent;
   end;

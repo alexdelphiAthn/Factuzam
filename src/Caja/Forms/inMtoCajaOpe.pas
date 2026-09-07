@@ -2089,7 +2089,7 @@ begin
       Propiedades.DropDownRows := 15;
       Propiedades.ImmediateDropDownWhenKeyPressed := True;
       Propiedades.ImmediatePost := False;
-      Propiedades.IncrementalFiltering := True;
+      Propiedades.IncrementalFiltering := False;
       // Sin ifoUseContainsOperator: "4" muestra solo valores que empiezan
       // por 4 y conserva el orden configurado del tallaje.
       Propiedades.IncrementalFilteringOptions :=
