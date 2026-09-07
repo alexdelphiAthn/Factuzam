@@ -98,6 +98,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos;
 
 constructor TModoEntradaTallas.Create(
@@ -499,7 +500,7 @@ begin
     else
       // Feedback como el desglose: sin aviso parecia que el Enter no
       // hacia nada cuando la entrada no existe (SKU no dado de alta).
-      ShowMessage(Format(SErrorArticuloSkuNoEncontrado, [sEntrada]));
+      ShowMessage_fza(Format(SErrorArticuloSkuNoEncontrado, [sEntrada]));
   end;
 end;
 

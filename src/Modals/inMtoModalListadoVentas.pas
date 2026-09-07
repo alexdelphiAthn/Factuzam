@@ -96,6 +96,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.Diagnostics, inLibDevExp, inLibFotos,
   inLibDocumentosTrabajoPresentacion,
   inMtoFotoArticulo,
@@ -516,7 +517,7 @@ begin
       FResolverArticulos);
   except
     on E: Exception do
-      MessageDlg(E.Message, mtError, [mbOK], 0);
+      MessageDlg_fza(E.Message, mtError, [mbOK], 0);
   end;
 end;
 

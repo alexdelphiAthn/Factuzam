@@ -170,7 +170,9 @@ type
 
 implementation
 
-uses uGenericIfThen, inLibMsgArticulos;
+uses
+  inLibMensajesVcl,
+  uGenericIfThen, inLibMsgArticulos;
 
 resourcestring
   STituloAnadirPropiedadesArticulo = 'Añadir propiedades al artículo';
@@ -200,7 +202,7 @@ begin
   Height     := 400;
   Position   := poOwnerFormCenter;
   BorderStyle:= bsDialog;
-  Font.name := 'Lucida Sans';
+  Font.name := 'DejaVu Sans';
   FListBox := TListBox.Create(Self);
   FListBox.Parent      := pnlBody;
   FListBox.Align       := alClient;
@@ -712,7 +714,7 @@ var
 begin
   idx := (Sender as TcxButton).Tag;
   if (idx >= 0) and (idx < FSlots.Count) and
-     (MessageDlg(Format(SPreguntaQuitarPropiedadArticulo,
+     (MessageDlg_fza(Format(SPreguntaQuitarPropiedadArticulo,
        [FSlots[idx].NombrePropiedad]),
        mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -760,7 +762,7 @@ begin
   if (idx >= 0) and (idx < FSlots.Count) then
   begin
     if FCodigoArticulo = '' then
-      ShowMessage(SErrorArticuloNoGuardadoValoresColor)
+      ShowMessage_fza(SErrorArticuloNoGuardadoValoresColor)
     else
       AbrirEditorPorUnidad(FSlots[idx]);
   end;
@@ -799,7 +801,7 @@ var
 begin
   if FCodigoArticulo = '' then
   begin
-    ShowMessage(SErrorArticuloNoGuardadoAnadirPropiedades);
+    ShowMessage_fza(SErrorArticuloNoGuardadoAnadirPropiedades);
   end
   else
   begin
@@ -993,7 +995,7 @@ begin
   Height      := 460;
   Position    := poOwnerFormCenter;
   BorderStyle := bsDialog;
-  Font.Name   := 'Lucida Sans';
+  Font.Name   := 'DejaVu Sans';
   FScroll := TScrollBox.Create(Self);
   FScroll.Parent      := pnlBody;
   FScroll.Align       := alClient;

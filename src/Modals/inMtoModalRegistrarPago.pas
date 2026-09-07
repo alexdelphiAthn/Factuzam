@@ -64,6 +64,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -85,9 +86,9 @@ procedure TfrmModalRegistrarPago.btnAceptarClick(Sender: TObject);
 begin
   inherited;
   if GetImporte <= 0 then
-    ShowMessage(SErrorImporteConciliadoNoValido)
+    ShowMessage_fza(SErrorImporteConciliadoNoValido)
   else if (FImporteMax > 0) and (GetImporte > FImporteMax + 0.0001) then
-    ShowMessage(SErrorImporteConciliadoSuperaPendiente)
+    ShowMessage_fza(SErrorImporteConciliadoSuperaPendiente)
   else
   begin
     FConfirmado := True;

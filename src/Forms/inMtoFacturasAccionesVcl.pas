@@ -46,6 +46,7 @@ procedure FacturarTicketVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.IOUtils, System.SysUtils, System.UITypes,
   Vcl.Forms, Vcl.Dialogs,
   inLibBuscarImpresora, inLibCorreoTickets,
@@ -336,9 +337,9 @@ begin
   if (AResultado.Error <> '') or
      (AResultado.CorreosConError > 0) or
      (AResultado.CorreosSinDestinatario > 0) then
-    MessageDlg(sMensaje, mtError, [mbOK], 0)
+    MessageDlg_fza(sMensaje, mtError, [mbOK], 0)
   else
-    MessageDlg(sMensaje, mtInformation, [mbOK], 0);
+    MessageDlg_fza(sMensaje, mtInformation, [mbOK], 0);
 end;
 
 { TCoordinadorImpresionFacturaVcl }
@@ -528,7 +529,7 @@ begin
       oTipoMensaje := mtError
     else
       oTipoMensaje := mtInformation;
-    MessageDlg(sMensaje, oTipoMensaje, [mbOK], 0);
+    MessageDlg_fza(sMensaje, oTipoMensaje, [mbOK], 0);
     Result := True;
   end;
 end;
@@ -602,7 +603,7 @@ begin
       (ModoVerifactu(AParametros) <> mvSinVerifactu));
   if not bPuedeUsarActual and not Assigned(AObtenerFiltradas) then
   begin
-    ShowMessage(SAvisoBorradorPendienteImpresionFiscal);
+    ShowMessage_fza(SAvisoBorradorPendienteImpresionFiscal);
     Abort;
   end;
 
@@ -656,11 +657,11 @@ begin
   Serie := ACabecera.FieldByName('SERIE_FAC').AsString;
   Numero := ACabecera.FieldByName('NUMERO_FAC').AsString;
   if Trim(Numero) = '' then
-    ShowMessage(SErrorBorradorListaNoSeleccionado)
+    ShowMessage_fza(SErrorBorradorListaNoSeleccionado)
   else if not SameText(
     ACabecera.FieldByName('TIPO_FAC').AsString,
     'SIMPLIFICADA') then
-    ShowMessage(SErrorFacturarTicketRequiereSimplificado)
+    ShowMessage_fza(SErrorFacturarTicketRequiereSimplificado)
   else
   begin
     Resultado := TfrmModalFacturarTicket.Ejecutar(
@@ -672,7 +673,7 @@ begin
       ACabecera.FieldByName('FECHA_FAC').AsDateTime);
     if Resultado.Aceptado then
     begin
-      ShowMessage(Format(
+      ShowMessage_fza(Format(
         SInfoBorradorSustitucionTicketCreado,
         [Resultado.SerieNueva, Resultado.NumeroNueva,
          Serie, Numero, ModoVerifactuTexto(AParametros)]));

@@ -129,6 +129,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inLibUser, inLibShowMto, inLibGridCantidad,
   inLibMsgArticulos, inLibMsgComun,
   UniDataMovimientosAlmacenRepositorio,
@@ -225,7 +226,7 @@ begin
     ShowMto(Self.Owner, 'CajaOperacionesHist',
       sEmpresa + ',' + sAlmacen + ',' + sCaja + ',' + sOperacion)
   else
-    ShowMessage(SAvisoMovimientoCajaSinClave);
+    ShowMessage_fza(SAvisoMovimientoCajaSinClave);
 end;
 
 procedure TfrmMtoMovimientosAlmacen.AbrirDocumentoSerieNumero(
@@ -237,7 +238,7 @@ begin
   sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
   sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
   if (sSerie = '') or (sNumero = '') then
-    ShowMessage(SAvisoMovimientoSinDocumento)
+    ShowMessage_fza(SAvisoMovimientoSinDocumento)
   else
   begin
     if AInvertirClave then
@@ -257,7 +258,7 @@ begin
   inherited;
   sTipo := UpperCase(ValorCampoMovimiento('TIPO_DOC_MOV'));
   if sTipo = '' then
-    ShowMessage(SAvisoMovimientoSinDocumento)
+    ShowMessage_fza(SAvisoMovimientoSinDocumento)
   else
   begin
     if EsTipoOperacionCaja(sTipo) then
@@ -271,7 +272,7 @@ begin
       sSerie := ValorCampoMovimiento('SERIE_DOC_MOV');
       sNumero := ValorCampoMovimiento('NUMERO_DOC_MOV');
       if (sSerie = '') or (sNumero = '') then
-        ShowMessage(SAvisoMovimientoSinDocumento)
+        ShowMessage_fza(SAvisoMovimientoSinDocumento)
       else
       begin
         sCallFactura := ResolverCallFactura(
@@ -293,7 +294,7 @@ begin
     else if sTipo = 'SE' then
       AbrirDocumentoSerieNumero('ComprasSesiones')
     else
-      ShowMessageFmt(SAvisoTipoDocumentoMovimientoNoSoportado, [sTipo]);
+      ShowMessageFmt_fza(SAvisoTipoDocumentoMovimientoNoSoportado, [sTipo]);
   end;
 end;
 
@@ -520,7 +521,7 @@ begin
       200,
       NotificarProgresoCarga);
     if Resultado.Estado = ecmLimiteSuperado then
-      MessageDlg(Format(SAvisoLimiteRegistrosMovimientosAlmacen,
+      MessageDlg_fza(Format(SAvisoLimiteRegistrosMovimientosAlmacen,
         [FormatFloat('#,##0', Resultado.Total)]), mtWarning, [mbOK], 0);
   finally
     OcultarProgresoCarga;

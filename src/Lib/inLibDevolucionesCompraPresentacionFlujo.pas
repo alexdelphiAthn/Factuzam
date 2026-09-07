@@ -84,6 +84,7 @@ procedure EnfocarSkuDevolucion(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.Classes,
   System.UITypes,
   Vcl.Controls,
@@ -178,23 +179,23 @@ procedure MostrarEstadoStock(
 begin
   case AEstado of
     esdcProveedorNoIndicado:
-      MessageDlg(
+      MessageDlg_fza(
         SErrorProveedorDevolucionFilaNoSeleccionado,
         mtWarning, [mbOk], 0);
     esdcAlmacenNoIndicado:
-      MessageDlg(
+      MessageDlg_fza(
         SErrorAlmacenDevolucionFilaNoSeleccionado,
         mtWarning, [mbOk], 0);
     esdcArticuloNoIndicado:
-      MessageDlg(
+      MessageDlg_fza(
         SErrorArticuloDevolucionFilaNoSeleccionado,
         mtInformation, [mbOk], 0);
     esdcRequiereColor:
-      MessageDlg(
+      MessageDlg_fza(
         SErrorColorDevolucionFilaNoSeleccionado,
         mtInformation, [mbOk], 0);
     esdcSinStock:
-      MessageDlg(
+      MessageDlg_fza(
         SErrorStockDevolucionFilaNoDisponible,
         mtInformation, [mbOk], 0);
   end;
@@ -292,7 +293,7 @@ begin
   AContexto.CalcularTotales;
   if AContexto.Cabecera.State in dsEditModes then
     AContexto.Cabecera.Post;
-  MessageDlg(
+  MessageDlg_fza(
     Format(SInfoStockFilaDevolucionPreparado, [AResultado.Lineas]),
     mtInformation, [mbOk], 0);
 end;
@@ -332,7 +333,7 @@ begin
        (AContexto.Lineas.State in dsEditModes) then
       AContexto.Lineas.Post;
     if AContexto.LineaSeleccionada = '' then
-      MessageDlg(
+      MessageDlg_fza(
         SErrorFilaDevolucionStockNoSeleccionada,
         mtInformation, [mbOk], 0)
     else
@@ -343,7 +344,7 @@ begin
         oParametros);
       if oEstado <> esdcDisponible then
         MostrarEstadoStock(oEstado)
-      else if MessageDlg(
+      else if MessageDlg_fza(
         SPreguntaPrepararStockFilaDevolucion,
         mtConfirmation, [mbYes, mbNo], 0) = mrYes then
         EjecutarOperacionStockConfirmada(AContexto, oParametros);

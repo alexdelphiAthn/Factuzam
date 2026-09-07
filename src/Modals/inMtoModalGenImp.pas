@@ -219,6 +219,7 @@ procedure AjustarFormatoHorizontalTallas(AInforme: TfrxReport);
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoModalGenImpSave, inLibUser, inLibPathTokens,
   System.Generics.Collections, System.Rtti, System.TypInfo,
   frPrinter,
@@ -743,7 +744,7 @@ begin
   // editar campos extra (guias) de tablas / vistas externas. Si dice
   // que no, vamos directos al flujo clasico de edicion (Consultar_
   // Formularios + DesignReport). Cancelar sale sin abrir el diseñador.
-  iRespuesta := MessageDlg(
+  iRespuesta := MessageDlg_fza(
     SPreguntaEditarCamposExtraInforme,
     mtConfirmation, [mbYes, mbNo, mbCancel], 0);
   if iRespuesta <> mrCancel then
@@ -1369,13 +1370,13 @@ begin
     (IdentidadSesion.Grupo = sPropietario)
   ) then
   begin
-    ShowMessageFmt(
+    ShowMessageFmt_fza(
       SErrorPrivilegiosBorrarFormato,
       [sPropietario]);
   end
   else
   begin
-    iBotonSeleccionado := MessageDlg(
+    iBotonSeleccionado := MessageDlg_fza(
       SPreguntaBorrarFormato,
       mtCustom,
       [mbYes, mbNo],
@@ -1535,7 +1536,7 @@ begin
       // de sobreescribir un formato existente.
       if bExiste and (not FFormatoFijado) then
       begin
-        if Application.MessageBox(PChar(SPreguntaReemplazarInforme),
+        if MessageBox_fza(PChar(SPreguntaReemplazarInforme),
                                   PChar(STituloAdvertenciaInforme),
                                   MB_YESNO) <> ID_YES then
           bGuardar := False;

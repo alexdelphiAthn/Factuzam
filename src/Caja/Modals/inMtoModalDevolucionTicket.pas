@@ -95,6 +95,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -150,7 +151,7 @@ end;
 procedure TfrmModalDevolucionTicket.AvisarNoEncontrado;
 begin
   LimpiarSeleccion;
-  Application.MessageBox(
+  MessageBox_fza(
     PChar(SErrorTicketDevolucionCajaNoEncontrado),
     PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
 end;
@@ -165,7 +166,7 @@ begin
     'RECTIFICATIVA') then
   begin
     LimpiarSeleccion;
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorTicketDevolucionCajaEsRectificativa),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
   end
@@ -228,7 +229,7 @@ begin
     MostrarResultado(oConsulta.DataSet);
   end
   else
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorTicketDevolucionCajaDatosOperacion),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
 end;
@@ -246,7 +247,7 @@ begin
     MostrarResultado(oConsulta.DataSet);
   end
   else
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorTicketDevolucionCajaDatosDocumento),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
 end;
@@ -279,7 +280,7 @@ begin
   if FSeleccion.Encontrado then
     ModalResult := mrOk
   else
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorTicketDevolucionCajaSinSeleccion),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
 end;

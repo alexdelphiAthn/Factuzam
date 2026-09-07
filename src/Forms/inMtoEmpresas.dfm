@@ -1770,7 +1770,7 @@
                 Style.Font.Charset = ANSI_CHARSET
                 Style.Font.Color = clWindowText
                 Style.Font.Height = -15
-                Style.Font.Name = 'Lucida Sans'
+                Style.Font.Name = 'DejaVu Sans'
                 Style.Font.Style = []
                 Style.IsFontAssigned = True
                 TabOrder = 1

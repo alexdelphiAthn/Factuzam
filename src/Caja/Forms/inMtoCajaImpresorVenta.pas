@@ -55,6 +55,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils, System.UITypes, Data.DB, Vcl.Forms, Vcl.Dialogs,
   UniDataFacturas, inMtoModalImpFac,
   inLibCorreoTickets,
@@ -252,7 +253,7 @@ begin
           FParametrosCaja);
         if not ResultadoApertura.Correcto then
         begin
-          MessageDlg(
+          MessageDlg_fza(
             ResultadoApertura.Mensaje,
             mtWarning,
             [mbOK],

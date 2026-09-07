@@ -115,13 +115,27 @@ type
     procedure cdsLineasAfterDelete(DataSet: TDataSet);
     procedure cdsLineasCalcFields(DataSet: TDataSet);
     procedure cdsLineasNewRecord(DataSet: TDataSet);
+    procedure cdsLineasAfterEdit(DataSet: TDataSet);
+    procedure cdsLineasAfterCancel(DataSet: TDataSet);
   private
     FCodigoEmpresa: string;
     FCodigoAlmacen: string;
     FSerie: string;
     FNumero: string;
     FUsuario: string;
-    FDesempaquetando: Boolean;
+    // Clave (empresa|almacen|serie|numero) de las lineas que hay en
+    // cdsLineas: permite saltar las recargas repetidas del mismo
+    // inventario que llegan por AfterScroll y por DataChange.
+    FClaveLineasCargada: string;
+    // True mientras Midas, al calcular los fkInternalCalc de cada registro
+    // (State = dsInternalCalc), debe rellenar ATTR1..5/NUM desde el SKU.
+    FCalcularAtributosAlLeer: Boolean;
+    // True entre Edit/Insert y Post/Cancel: Midas recalcula los
+    // fkInternalCalc al cambiar cualquier campo de datos y no debe pisar
+    // los atributos que el usuario esta tecleando.
+    FLineaEnEdicion: Boolean;
+    FAlEmpezarCargaLineas: TProc<Integer>;
+    FAlTerminarCargaLineas: TProc;
     FColumnasRecuentoRemoto: Boolean;
     FColumnaContadorLineas: Boolean;
     FAplicacionLineasDiferida: Boolean;
@@ -147,6 +161,11 @@ type
     function ExisteColumnaInventarios(const ACampo: string): Boolean;
     procedure GetCodigoAutoInventario;
     procedure PrepararSqlCabecera;
+    function ContarLineasInventario: Integer;
+    // Reabre cdsLineas desde unqryLineas (ya abierto: sin SQL) para que
+    // Midas vuelva a calcular los fkInternalCalc de cada registro.
+    procedure RecargarCdsLineas;
+    procedure CalcularAtributosLinea(ADataSet: TDataSet);
     // Quita Required=True de todos los persistent fields de cdsLineas. La
     // herencia via udspLineas + poIncFieldProps hacia que el cds rechazara
     // el Post antes de cdsLineasBeforePost.
@@ -187,7 +206,10 @@ type
       read FDesempaquetarAlCargar write FDesempaquetarAlCargar;
 
     // === CARGA DE LÍNEAS ===
-    procedure CargarLineasInventario;
+    // Con ASoloSiCambiaClave=True no recarga si cdsLineas ya tiene las
+    // lineas del inventario activo (navegacion); las rutas que modifican
+    // la BBDD (aplicar, importar, recalcular...) usan el valor por defecto.
+    procedure CargarLineasInventario(ASoloSiCambiaClave: Boolean = False);
     procedure CargarMovimientosRegularizacion;
 
     // === GESTIÓN DE LÍNEAS ===
@@ -253,6 +275,13 @@ type
     // ATTR1..ATTR5_VALOR de las lineas actuales. El form consulta este
     // flag para no relanzar el desempaquetado si ya esta hecho.
     property LineasDesempaquetadas: Boolean read FLineasDesempaquetadas;
+    // Avisos de CargarLineasInventario para que la pantalla ensene un
+    // letrero de espera: antes (con el numero de lineas del inventario)
+    // y despues de la carga, tambien si falla.
+    property AlEmpezarCargaLineas: TProc<Integer>
+      read FAlEmpezarCargaLineas write FAlEmpezarCargaLineas;
+    property AlTerminarCargaLineas: TProc
+      read FAlTerminarCargaLineas write FAlTerminarCargaLineas;
 
     procedure CargarAlmacenesPorEmpresa(const ACodigoEmpresa: string);
     procedure CargarSeriesPorEmpresa(const ACodigoEmpresa: string);
@@ -277,6 +306,7 @@ uses
   inLibInventarioNube,
   inLibPrestaShopColaSenal,
   inLibInventariosEntradaDataSet,
+  inLibInventariosPresentacion,  // AtributosDesdeSkuInventario
   inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -287,7 +317,10 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TdmInventarios }
 
-procedure TdmInventarios.CargarLineasInventario;
+procedure TdmInventarios.CargarLineasInventario(
+  ASoloSiCambiaClave: Boolean);
+var
+  sClave: string;
 begin
   // FNumero='0' es el marcador de "cabecera todavia sin numero asignado":
   // unqryTablaGAfterInsert lo pone, y BeforePost lo sustituye por el numero
@@ -296,6 +329,7 @@ begin
   // previa que se cancelo despues de grabar lineas (registro fantasma).
   if (FCodigoEmpresa = '') or (FNumero = '') or (FNumero = '0') then
   begin
+    FClaveLineasCargada := '';
     if cdsLineas.Active then
       cdsLineas.EmptyDataSet;
   end
@@ -303,74 +337,131 @@ begin
               (cdsLineas.State in [dsInsert, dsEdit])) then
   begin
     // No se recarga durante un Insert o Edit para evitar reentradas.
-    unqryLineas.Close;
-    unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
-    unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-    unqryLineas.ParamByName('SERIE').AsString   := FSerie;
-    unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
-    unqryLineas.Open;
-    if cdsLineas.Active then
-      cdsLineas.Close;
-    cdsLineas.Open;
-    ForzarRequiredFalseEnCdsLineas;
-    FLineasDesempaquetadas := False;
-    if FDesempaquetarAlCargar then
-      DesempaquetarAtributosDesdeSku;
+    sClave := FCodigoEmpresa + '|' + FCodigoAlmacen + '|' + FSerie + '|' +
+      FNumero;
+    if ASoloSiCambiaClave and cdsLineas.Active and
+       (FClaveLineasCargada = sClave) then
+      Exit;
+    FClaveLineasCargada := '';
+    if Assigned(FAlEmpezarCargaLineas) then
+      FAlEmpezarCargaLineas(ContarLineasInventario);
+    try
+      unqryLineas.Close;
+      unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+      unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+      unqryLineas.ParamByName('SERIE').AsString   := FSerie;
+      unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
+      unqryLineas.Open;
+      if cdsLineas.Active then
+        cdsLineas.Close;
+      // Los atributos (ATTR1..5/NUM) los calcula Midas registro a
+      // registro al leerlo (cdsLineasCalcFields con dsInternalCalc):
+      // ninguna pasada extra sobre las lineas.
+      FCalcularAtributosAlLeer := FDesempaquetarAlCargar;
+      RecargarCdsLineas;
+      FLineasDesempaquetadas := FCalcularAtributosAlLeer;
+      FClaveLineasCargada := sClave;
+    finally
+      if Assigned(FAlTerminarCargaLineas) then
+        FAlTerminarCargaLineas();
+    end;
   end;
 end;
 
-procedure TdmInventarios.DesempaquetarAtributosDesdeSku;
+function TdmInventarios.ContarLineasInventario: Integer;
 var
-  Sku, ValorAtr: string;
+  qry: TUniQuery;
+begin
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := unqryLineas.Connection;
+    qry.SQL.Text :=
+      'SELECT COUNT(*) AS N FROM fza_inventarios_lineas' + sLineBreak +
+      ' WHERE CODIGO_EMP_INVLIN = :EMPRESA' + sLineBreak +
+      '   AND CODIGO_ALM_INVLIN = :ALMACEN' + sLineBreak +
+      '   AND SERIE_INV_INVLIN = :SERIE' + sLineBreak +
+      '   AND NUMERO_INV_INVLIN = :NUMERO';
+    qry.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+    qry.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+    qry.ParamByName('SERIE').AsString   := FSerie;
+    qry.ParamByName('NUMERO').AsString  := FNumero;
+    qry.Open;
+    Result := qry.FieldByName('N').AsInteger;
+  finally
+    FreeAndNil(qry);
+  end;
+end;
+
+procedure TdmInventarios.RecargarCdsLineas;
+var
+  iRecNo: Integer;
+begin
+  iRecNo := 0;
+  if cdsLineas.Active then
+  begin
+    if not cdsLineas.IsEmpty then
+      iRecNo := cdsLineas.RecNo;
+    cdsLineas.Close;
+  end;
+  FLineaEnEdicion := False;
+  cdsLineas.Open;
+  ForzarRequiredFalseEnCdsLineas;
+  if (iRecNo > 0) and (iRecNo <= cdsLineas.RecordCount) then
+    cdsLineas.RecNo := iRecNo;
+end;
+
+procedure TdmInventarios.DesempaquetarAtributosDesdeSku;
+begin
+  // Antes se recorrian las lineas con Edit/Post por cada una: con
+  // 80.000 lineas el change log de Midas lo hacia cuadratico (mas de un
+  // minuto por inventario). Ahora basta con reabrir el buffer con el
+  // calculo activado: Midas pide cdsLineasCalcFields por registro.
+  if cdsLineas.Active and (not cdsLineas.IsEmpty) and
+     (not FLineasDesempaquetadas) and unqryLineas.Active then
+  begin
+    FCalcularAtributosAlLeer := True;
+    RecargarCdsLineas;
+    FLineasDesempaquetadas := True;
+  end;
+end;
+
+procedure TdmInventarios.CalcularAtributosLinea(ADataSet: TDataSet);
+var
   Partes: TArray<string>;
   i: Integer;
-  Bm: TBookmark;
 begin
-  if cdsLineas.Active and (not cdsLineas.IsEmpty) and
-     (not FLineasDesempaquetadas) then
+  // Solo para registros leidos de la carga (no en edicion) y solo si el
+  // SKU lleva atributos: una linea nueva o sin SKU conserva lo que tenga.
+  if FCalcularAtributosAlLeer and (not FLineaEnEdicion) then
   begin
-    FDesempaquetando := True;
-    Bm := cdsLineas.GetBookmark;
-    cdsLineas.DisableControls;
-    try
-      cdsLineas.First;
-      while not cdsLineas.Eof do
+    Partes := AtributosDesdeSkuInventario(
+      ADataSet.FieldByName('CODIGO_ART_INVLIN').AsString,
+      ADataSet.FieldByName('CODIGO_UNIDAD_INVLIN').AsString);
+    if Length(Partes) > 0 then
+    begin
+      ADataSet.FieldByName('NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
+        Length(Partes);
+      for i := 1 to 5 do
       begin
-        Sku := cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString;
-        if Sku <> '' then
-        begin
-          Partes := Sku.Split(['/']);
-          if Length(Partes) > 1 then
-          begin
-            if not (cdsLineas.State in [dsEdit, dsInsert]) then
-              cdsLineas.Edit;
-            cdsLineas.FieldByName(
-              'NUM_ATRIBUTOS_REQ_INV_LINEA').AsInteger :=
-              Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                ValorAtr := Partes[i]
-              else
-                ValorAtr := '';
-              cdsLineas.FieldByName(
-                'ATTR' + IntToStr(i) + '_VALOR').AsString := ValorAtr;
-            end;
-            cdsLineas.Post;
-          end;
-        end;
-        cdsLineas.Next;
+        if i <= Length(Partes) then
+          ADataSet.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
+            Partes[i - 1]
+        else
+          ADataSet.FieldByName('ATTR' + IntToStr(i) + '_VALOR').AsString :=
+            '';
       end;
-      cdsLineas.MergeChangeLog;
-      FLineasDesempaquetadas := True;
-    finally
-      if cdsLineas.BookmarkValid(Bm) then
-        cdsLineas.GotoBookmark(Bm);
-      cdsLineas.FreeBookmark(Bm);
-      cdsLineas.EnableControls;
-      FDesempaquetando := False;
     end;
   end;
+end;
+
+procedure TdmInventarios.cdsLineasAfterEdit(DataSet: TDataSet);
+begin
+  FLineaEnEdicion := True;
+end;
+
+procedure TdmInventarios.cdsLineasAfterCancel(DataSet: TDataSet);
+begin
+  FLineaEnEdicion := False;
 end;
 
 procedure TdmInventarios.DataModuleCreate(Sender: TObject);
@@ -558,7 +649,7 @@ begin
                      DataSet.FieldByName('CODIGO_ALM_INV').AsString,
                      DataSet.FieldByName('SERIE_INV').AsString,
                      DataSet.FieldByName('NUMERO_INV').AsString);
-    CargarLineasInventario;
+    CargarLineasInventario(True);
     CargarMovimientosRegularizacion;
   end;
 end;
@@ -963,6 +1054,10 @@ var
   Estado: string;
   Diferencia: Currency;
 begin
+  // Midas llama con dsInternalCalc al leer cada registro: ahi se rellenan
+  // los fkInternalCalc ATTR1..5/NUM a partir del SKU.
+  if DataSet.State = dsInternalCalc then
+    CalcularAtributosLinea(DataSet);
   // El cálculo de uds regularizadas: si el inventario está APLICADO,
   // entonces es la propia diferencia. Si está ABIERTO/CANCELADO es 0.
   Estado := GetEstadoInventario;
@@ -1106,29 +1201,25 @@ procedure TdmInventarios.cdsLineasBeforePost(DataSet: TDataSet);
 var
   sCodigoArticulo: string;
 begin
-  if not FDesempaquetando then
+  DesactivarRequeridosLinea(DataSet);
+  AsegurarIdPivoteLineaInventario(DataSet);
+  RegistrarSnapshotLinea(DataSet);
+  AsegurarFechaRecuentoLinea;
+  ValidarClavesLinea(DataSet);
+  DescartarLineaSinArticulo(DataSet);
+  CompletarUnidadLinea(DataSet);
+  sCodigoArticulo := DataSet.FieldByName(
+    'CODIGO_ART_INVLIN').AsString;
+  if RequiereValidarSkuLinea(DataSet) then
   begin
-    DesactivarRequeridosLinea(DataSet);
-    AsegurarIdPivoteLineaInventario(DataSet);
-    RegistrarSnapshotLinea(DataSet);
-    AsegurarFechaRecuentoLinea;
-    ValidarClavesLinea(DataSet);
-    DescartarLineaSinArticulo(DataSet);
-    CompletarUnidadLinea(DataSet);
-    sCodigoArticulo := DataSet.FieldByName(
-      'CODIGO_ART_INVLIN').AsString;
-    if RequiereValidarSkuLinea(DataSet) then
-    begin
-      ReconstruirSkuLinea(DataSet, sCodigoArticulo);
-      ValidarOCrearSkuLinea(DataSet, sCodigoArticulo);
-    end;
+    ReconstruirSkuLinea(DataSet, sCodigoArticulo);
+    ValidarOCrearSkuLinea(DataSet, sCodigoArticulo);
   end;
 end;
 procedure TdmInventarios.cdsLineasAfterPost(DataSet: TDataSet);
 begin
-  // Durante el desempaquetado de atributos in-memory NO debemos enviar
-  // cambios a BD: esos campos no existen en fza_inventarios_lineas.
-  if not FDesempaquetando and not FAplicacionLineasDiferida then
+  FLineaEnEdicion := False;
+  if not FAplicacionLineasDiferida then
   begin
     if cdsLineas.ChangeCount > 0 then
       cdsLineas.ApplyUpdates(0);
@@ -1176,6 +1267,9 @@ begin
       );
     end;
   end;
+  // El form reasigna AfterInsert (cdsLineasAfterInsertHook): el estado de
+  // edicion de la linea nueva se marca aqui, ya cancelado el placeholder.
+  FLineaEnEdicion := True;
 end;
 
 procedure TdmInventarios.cdsLineasAfterDelete(DataSet: TDataSet);

@@ -25,7 +25,7 @@
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 3618615
       Style.Font.Height = -15
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Style = [fsBold]
       Style.IsFontAssigned = True
       Style.TransparentBorder = False
@@ -38,7 +38,7 @@
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = 6710886
       Style.Font.Height = -15
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
       Transparent = True
@@ -70,7 +70,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = 4210752
         Style.Font.Height = -13
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
         Transparent = True
@@ -106,7 +106,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = 4210752
         Style.Font.Height = -13
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
         Transparent = True
@@ -132,7 +132,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = 4210752
         Style.Font.Height = -13
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
         Transparent = True
@@ -168,7 +168,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = 4210752
         Style.Font.Height = -13
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
         Transparent = True
@@ -192,7 +192,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = 4210752
         Style.Font.Height = -13
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
         Transparent = True
@@ -339,7 +339,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -15
-      Font.Name = 'Lucida Sans'
+      Font.Name = 'DejaVu Sans'
       Font.Style = [fsBold]
     end
   end

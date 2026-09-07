@@ -84,6 +84,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.UITypes,
   Vcl.Dialogs,
@@ -181,7 +182,7 @@ end;
 procedure TfrmModalResolverIncidenciaVerifactu.MostrarError(
   const AMensaje: string);
 begin
-  MessageDlg(AMensaje, mtError, [mbOK], 0);
+  MessageDlg_fza(AMensaje, mtError, [mbOK], 0);
 end;
 
 procedure TfrmModalResolverIncidenciaVerifactu.btnCancelarClick(

@@ -269,6 +269,7 @@ implementation
 uses
   System.Variants,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
+  inLibCodigosSinBarra,
   inLibComprasSesionesReglas,
   inLibContadorLineas,
   UniDataContadorLineasRepositorio,
@@ -1168,6 +1169,9 @@ begin
   inherited;
   if Trim(DataSet.FieldByName('CODIGO_PRV_SES').AsString) = '' then
     raise Exception.Create(SErrorProveedorSesionObligatorio);
+  // Referencia/modelo del proveedor de la cabecera: sin barras (separador
+  // de atributos del SKU), igual que en las lineas.
+  QuitarBarraSkuCampo(DataSet, 'REF_PRV_SES');
   LogSes(Format(
     'DM.unqryTablaGBeforePost: state=%d, SERIE=%s NUMERO=%s CONTADOR_LINEAS=%d',
                 [Ord(unqryTablaG.State),
@@ -1316,6 +1320,11 @@ begin
                  unqrySesionLin.FieldByName(
                    'CODIGO_ART_TENTATIVO_SESLIN').AsString,
                  unqrySesionLin.FieldByName('CODIGO_FAM_SESLIN').AsString]));
+  // La barra es el separador de atributos del SKU: ni el codigo tecleado
+  // ni el modelo del proveedor (entra en la formula del codigo) la llevan;
+  // se cambia por guion, como hace el migrador.
+  QuitarBarraSkuCampo(DataSet, 'CODIGO_ART_TENTATIVO_SESLIN');
+  QuitarBarraSkuCampo(DataSet, 'REF_PRV_SESLIN');
   // Solo se descarta el placeholder nuevo completamente vacio. Las lineas
   // importadas pueden no tener codigo hasta que el usuario asigne familia;
   // deben poder postearse y navegarse sin que Cancel + Abort bloquee el grid.

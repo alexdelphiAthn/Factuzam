@@ -62,6 +62,7 @@ function CrearAplicacionEntradaCajaOpeVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   Vcl.Dialogs,
   inLibCajaEntrada,
@@ -177,7 +178,7 @@ begin
   AOperaciones.MostrarError :=
     procedure(const AMensaje: string)
     begin
-      ShowMessage(AMensaje);
+      ShowMessage_fza(AMensaje);
     end;
   AOperaciones.EnfocarVendedor :=
     procedure

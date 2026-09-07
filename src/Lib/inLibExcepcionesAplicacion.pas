@@ -29,6 +29,7 @@ function CrearGestorExcepcionesAplicacion(
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows,
   System.SysUtils,
   System.UITypes,
@@ -246,7 +247,7 @@ procedure TGestorExcepcionesAplicacion.MostrarValidacion(
   E: Exception);
 begin
   try
-    MessageDlg(
+    MessageDlg_fza(
       E.Message,
       mtWarning,
       [mbOk],
@@ -434,7 +435,7 @@ begin
         bTerminar := True
       else if Trim(EdtContrasena.Text) = '' then
       begin
-        MessageDlg(
+        MessageDlg_fza(
           SErrorContrasenaCopiaErrorVacia,
           mtWarning,
           [mbOk],
@@ -443,7 +444,7 @@ begin
       end
       else if EdtContrasena.Text <> EdtConfirmacion.Text then
       begin
-        MessageDlg(
+        MessageDlg_fza(
           SErrorContrasenasCopiaErrorNoCoinciden,
           mtWarning,
           [mbOk],
@@ -535,7 +536,7 @@ begin
   if Assigned(FServicioEnvioErrores) and
      not FEvidencia.Log.Completo then
   begin
-    if MessageDlg(
+    if MessageDlg_fza(
          SPreguntaActivarLogCompleto,
          mtConfirmation,
          [mbYes, mbNo],
@@ -574,7 +575,7 @@ begin
       if not Result then
       begin
         Screen.Cursor := crDefault;
-        MessageDlg(
+        MessageDlg_fza(
           Format(SErrorPrepararCopiaSeguridadError, [sError]),
           mtError,
           [mbOk],
@@ -614,7 +615,7 @@ begin
   if not EmailSoporteValido(Contacto.Email) or
      not TelefonoSoporteValido(Contacto.Telefono) then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorContactoEnvioErrorNoValido,
       mtWarning,
       [mbOk],
@@ -676,7 +677,7 @@ begin
           AplicarEstadoVista;
           FRegistroLog.RegistrarAviso(
             'No se pudo enviar AppException: ' + sMensaje);
-          MessageDlg(sMensaje, mtError, [mbOk], 0);
+          MessageDlg_fza(sMensaje, mtError, [mbOk], 0);
         end;
       end;
       if not bContinuar then

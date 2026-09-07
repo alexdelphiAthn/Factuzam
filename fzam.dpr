@@ -845,6 +845,7 @@ uses
   inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
   inLibDeteccionImpresora in 'src\Lib\inLibDeteccionImpresora.pas',
   inLibVentanaEspera in 'src\Lib\inLibVentanaEspera.pas',
+  inLibMensajesVcl in 'src\Lib\inLibMensajesVcl.pas',
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
   uDJMSepa in 'src\Lib3par\uDJMSepa.pas',
   uDJMSepa1914XML in 'src\Lib3par\uDJMSepa1914XML.pas',
@@ -1329,6 +1330,7 @@ uses
   inLibComprasSesionesLecturasIntf in
     'src\Lib\inLibComprasSesionesLecturasIntf.pas',
   inLibComprasSesionesReglas in 'src\Lib\inLibComprasSesionesReglas.pas',
+  inLibCodigosSinBarra in 'src\Lib\inLibCodigosSinBarra.pas',
   inLibPedidoOcr in 'src\Lib\inLibPedidoOcr.pas',
   inLibArchivosPedidoSesion in
     'src\Lib\inLibArchivosPedidoSesion.pas',
@@ -1866,9 +1868,9 @@ begin
       ResultadoLicenciaInicial) then
     begin
     // Fuente global para toda la aplicacion
-    Application.DefaultFont.Name   := 'Lucida Sans';
+    Application.DefaultFont.Name   := 'DejaVu Sans';
     Application.DefaultFont.Height := -15;
-    Screen.MenuFont.Name := 'Lucida Sans';
+    Screen.MenuFont.Name := 'DejaVu Sans';
     Screen.MenuFont.Size := 11;
     Application.CreateForm(TfrmMtoPrincipal, Principal);
     Principal.AsignarRegistroLog(RegistroLogAplicacion);

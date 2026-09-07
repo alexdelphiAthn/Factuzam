@@ -185,7 +185,7 @@ begin
   FNombre.Parent := FPagina;
   FNombre.Caption := 'Alejandro Laorden Hidalgo';
   FNombre.AutoSize := False;
-  FNombre.Style.Font.Name := 'Lucida Sans';
+  FNombre.Style.Font.Name := 'DejaVu Sans';
   FNombre.Style.Font.Height := -17;
   FNombre.Style.Font.Style := [fsBold];
   FNombre.Properties.Alignment.Horz := taCenter;
@@ -194,7 +194,7 @@ begin
   FVersion.Parent := FPagina;
   FVersion.Caption := Format(SCaptionVersion, [AVersion]);
   FVersion.AutoSize := False;
-  FVersion.Style.Font.Name := 'Lucida Sans';
+  FVersion.Style.Font.Name := 'DejaVu Sans';
   FVersion.Style.Font.Height := -14;
   FVersion.Properties.Alignment.Horz := taCenter;
   FVersion.Transparent := True;

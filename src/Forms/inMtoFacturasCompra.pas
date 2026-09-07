@@ -305,6 +305,7 @@ function CrearFacturasCompraInyectada(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.StrUtils,
   inLibFiltroUsuario,
   UniDataAplicacionArticuloCompra,
@@ -415,7 +416,7 @@ begin
     cbbSERIE_FACC.Properties.Items);
   if cbbSERIE_FACC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesFacturaCompra, [sEmpresa]),
+    if MessageDlg_fza(Format(SPreguntaAbrirSeriesFacturaCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -453,7 +454,7 @@ begin
       FieldByName('CODIGO_PRV_FACC').AsString);
   Result := (sPrv <> '') and (sPrv <> '0');
   if not Result then
-    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra,
+    MessageDlg_fza(SErrorProveedorNoSeleccionadoBuscarArticulosFacturaCompra,
       mtInformation, [mbOk], 0);
 end;
 
@@ -474,10 +475,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmFacturasCompra) then
-    MessageDlg(SErrorFacturaCompraNoAbierta,
+    MessageDlg_fza(SErrorFacturaCompraNoAbierta,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra,
+    MessageDlg_fza(SErrorArticuloNoSeleccionadoBuscarSkusFacturaCompra,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -708,7 +709,7 @@ begin
             PersistirPreferenciaPivote;
         end
         else if Sender <> nil then
-          MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+          MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
       end
       else
       begin
@@ -738,9 +739,9 @@ begin
   if not PuedeImprimir then
     Abort;
   if dmmFacturasCompra = nil then
-    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
+    ShowMessage_fza(SErrorFacturaCompraSinImpresionActiva)
   else if dmmFacturasCompra.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
+    ShowMessage_fza(SErrorFacturaCompraSinImpresionActiva)
   else
   begin
     if dmmFacturasCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -774,9 +775,9 @@ begin
   if not PuedeImprimir then
     Abort;
   if dmmFacturasCompra = nil then
-    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
+    ShowMessage_fza(SErrorFacturaCompraSinImpresionActiva)
   else if dmmFacturasCompra.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorFacturaCompraSinImpresionActiva)
+    ShowMessage_fza(SErrorFacturaCompraSinImpresionActiva)
   else
   begin
     if dmmFacturasCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -805,7 +806,7 @@ begin
   inherited;
   if not PuedeImprimir then
     Abort;
-  ShowMessage(SAvisoEtiquetasBorradorCompraPendientes);
+  ShowMessage_fza(SAvisoEtiquetasBorradorCompraPendientes);
 end;
 
 procedure TfrmMtoFacturasCompra.btnAtributosColumnaClick(Sender: TObject);
@@ -832,7 +833,7 @@ begin
     FValidadorArticulos,
     dmmFacturasCompra.unqryFacturasCompraLineas, 'FACCLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarFacturaCompraSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarFacturaCompraSinSku,
                         [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -1272,7 +1273,7 @@ var
   oLineas: TDataSet;
 begin
   if AResultado.Mensaje <> '' then
-    MessageDlg(AResultado.Mensaje, mtWarning, [mbOk], 0);
+    MessageDlg_fza(AResultado.Mensaje, mtWarning, [mbOk], 0);
   if AResultado.Aplicado then
   begin
     if AResultado.RequiereSku and
@@ -1349,20 +1350,20 @@ var
 begin
   if (FPivote = nil) or (not FPivote.Activo) then
   begin
-    MessageDlg(SErrorActivarTallasHorizontalesParaColor,
+    MessageDlg_fza(SErrorActivarTallasHorizontalesParaColor,
                mtInformation, [mbOk], 0);
   end
   else
   begin
     sArt := ArticuloLineaActivaFacturaCompra;
     if sArt = '' then
-      MessageDlg(SErrorArticuloNoSeleccionadoElegirColor,
+      MessageDlg_fza(SErrorArticuloNoSeleccionadoElegirColor,
                  mtInformation, [mbOk], 0)
     else
     begin
       CargarBasicosColorArticulo(sArt);
       if Length(FBasicosColor) = 0 then
-        MessageDlg(Format(SErrorArticuloSinColoresBasicosActivos, [sArt]),
+        MessageDlg_fza(Format(SErrorArticuloSinColoresBasicosActivos, [sArt]),
                    mtInformation, [mbOk], 0)
       else
       begin
@@ -1386,7 +1387,7 @@ begin
           if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then
             FPivote.RecargarYRepublicar
           else if sMensaje <> '' then
-            MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+            MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
         end
       end;
     end;
@@ -1448,7 +1449,7 @@ begin
     begin
       ds := dmmFacturasCompra.unqryTablaG;
       if ds.IsEmpty then
-        MessageDlg(SErrorFacturaCompraElegirProveedorNoSeleccionada,
+        MessageDlg_fza(SErrorFacturaCompraElegirProveedorNoSeleccionada,
                    mtInformation, [mbOk], 0)
       else if BuscarProveedorFacturaCompra(sCodigo) then
       begin
@@ -1548,7 +1549,7 @@ end;
 procedure TfrmMtoFacturasCompra.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg(SPreguntaEliminarLineaFacturaCompra,
+  if MessageDlg_fza(SPreguntaEliminarLineaFacturaCompra,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmFacturasCompra.unqryFacturasCompraLineas.Delete;
 end;

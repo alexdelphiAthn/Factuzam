@@ -88,6 +88,7 @@ function LocalizarLineaRealPivote(ADs: TDataSet;
 implementation
 
 uses
+  inLibMensajesVcl,
   System.UITypes, Vcl.Dialogs, inLibMsgArticulos;
 
 function LocalizarLineaRealPivote(ADs: TDataSet;
@@ -152,7 +153,7 @@ begin
     FBorradorAlta := False
   else if Assigned(FAlBorrarGrupo) then
   begin
-    if MessageDlg(SPreguntaEliminarLineaTallasVenta,
+    if MessageDlg_fza(SPreguntaEliminarLineaTallasVenta,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if (FAlBorrarGrupo(iLineaBase) > 0) and

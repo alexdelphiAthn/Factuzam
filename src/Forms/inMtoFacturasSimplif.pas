@@ -93,6 +93,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibMsgComun, inLibMsgFacturas,
   UniDataVentasPantallaComposicion;
 
@@ -364,7 +365,7 @@ begin
         begin
           OcultarProgresoCarga;
           Screen.Cursor := cursorPrev;
-          MessageDlg(Format(SAvisoLimiteRegistrosFacturaSimplificada,
+          MessageDlg_fza(Format(SAvisoLimiteRegistrosFacturaSimplificada,
             [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
         end
         else

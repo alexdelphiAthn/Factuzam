@@ -110,6 +110,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
@@ -290,20 +291,20 @@ begin
   sTabla  := cbbTabla.Text;
   if sCodigo = '' then
   begin
-    ShowMessage(SErrorCodigoGuiaNoIndicado);
+    ShowMessage_fza(SErrorCodigoGuiaNoIndicado);
     edtCodigo.SetFocus;
   end
   else if sTabla = '' then
   begin
-    ShowMessage(SErrorTablaExternaGuiaNoSeleccionada);
+    ShowMessage_fza(SErrorTablaExternaGuiaNoSeleccionada);
   end
   else if lbCamposMaster.ItemIndex < 0 then
   begin
-    ShowMessage(SErrorCampoMasterGuiaNoSeleccionado);
+    ShowMessage_fza(SErrorCampoMasterGuiaNoSeleccionado);
   end
   else if lbCamposTabla.ItemIndex < 0 then
   begin
-    ShowMessage(SErrorCampoDetailGuiaNoSeleccionado);
+    ShowMessage_fza(SErrorCampoDetailGuiaNoSeleccionado);
   end
   else
   begin
@@ -327,7 +328,7 @@ begin
     FGuias.FieldByName('USUARIO_MODIF').AsString := IdentidadSesion.Usuario;
     ConfigurarGuiaNueva;
     FGuias.Post;
-    ShowMessage(Format(SInfoGuiaAnadida,
+    ShowMessage_fza(Format(SInfoGuiaAnadida,
       [sCodigo, sTabla, sDetail, sMaster]));
     edtCodigo.Text := '';
   end;
@@ -337,9 +338,9 @@ procedure TfrmModalGuiasBase.btnEliminarClick(Sender: TObject);
 begin
   if FGuias.IsEmpty then
   begin
-    ShowMessage(SInfoGuiasEliminarNoEncontradas);
+    ShowMessage_fza(SInfoGuiasEliminarNoEncontradas);
   end
-  else if MessageDlg(
+  else if MessageDlg_fza(
     Format(SPreguntaEliminarGuia,
       [FGuias.FieldByName('CODIGO_INFGUI').AsString]),
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then

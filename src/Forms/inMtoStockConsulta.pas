@@ -178,6 +178,7 @@ procedure DesvincularPerfilesStockConsulta;
 implementation
 
 uses
+  inLibMensajesVcl,
   System.StrUtils,
   inLibGenBusq, inLibUser,
   inLibRegistroPantallas,
@@ -565,7 +566,7 @@ begin
   end
   else
   begin
-    Application.MessageBox(PChar(sMensaje),
+    MessageBox_fza(PChar(sMensaje),
       PChar(STituloDocumentoTrabajo),
       MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
   end;
@@ -706,7 +707,7 @@ begin
       sCodigoSku,
       lblDescr.Caption)
   else
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(sMensaje),
       PChar(STituloOperacionesCajaStock),
       MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
@@ -727,7 +728,7 @@ begin
       RecargarConsulta;
   end
   else
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(sMensaje),
       PChar(STituloMovimientosAlmacen),
       MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
@@ -766,7 +767,7 @@ end;
 // colgada; MB_TOPMOST + MB_SETFOREGROUND fuerzan el aviso al frente.
 procedure TfrmStockConsulta.MostrarError(const AMsg: string);
 begin
-  Application.MessageBox(PChar(AMsg), PChar(STituloConsultaStock),
+  MessageBox_fza(PChar(AMsg), PChar(STituloConsultaStock),
     MB_OK or MB_ICONERROR or MB_TOPMOST or MB_SETFOREGROUND);
 end;
 

@@ -112,7 +112,9 @@ TDJMNorma1914XML = class //el Ordenante cobra al DEUDOR
 end;
 
 implementation
-uses uDJMSepa, SysUtils, windows, dialogs;
+uses
+  inLibMensajesVcl,
+  uDJMSepa, SysUtils, windows, dialogs;
 
 resourcestring
  SErrorOrdenanteSepaCobroNoEncontrado =
@@ -423,14 +425,14 @@ do begin
    end;
 if iOrdenanteFound=-1
 then begin
-     ShowMessage(Format(SErrorOrdenanteSepaCobroNoEncontrado,
+     ShowMessage_fza(Format(SErrorOrdenanteSepaCobroNoEncontrado,
        [sIBANOrdenante]));
      Exit;
      end;
 
 if FListOrdenantes[iOrdenanteFound].iCobros=5000
 then begin
-     showmessage(SErrorMaximoCobrosOrdenanteSepa);
+     ShowMessage_fza(SErrorMaximoCobrosOrdenanteSepa);
      Exit;
      end;
 
@@ -459,7 +461,7 @@ var
 begin
   if FiOrdenantes=10
   then begin
-       ShowMessage(SErrorMaximoOrdenantesSepaCobro);
+       ShowMessage_fza(SErrorMaximoOrdenantesSepaCobro);
        Exit;
        end;
   //si ya hay uno con esa cuenta, no lo añadimos

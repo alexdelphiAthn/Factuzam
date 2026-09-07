@@ -112,6 +112,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Forms,
   Vcl.Dialogs,
   Vcl.Graphics,
@@ -300,7 +301,7 @@ begin
   begin
     // Al reusar un modelo el sistema queda fijado al del articulo:
     // cambiarlo descuadraria los SKU ya creados.
-    MessageDlg(SErrorCambiarSistemaTallasModeloExistente,
+    MessageDlg_fza(SErrorCambiarSistemaTallasModeloExistente,
                mtInformation, [mbOk], 0);
     Result := False;
   end;
@@ -359,7 +360,7 @@ var
   Editor: TWinControl;
 begin
   if Length(FOpciones) = 0 then
-    MessageDlg(SErrorSistemasTallasSesionNoDisponibles,
+    MessageDlg_fza(SErrorSistemasTallasSesionNoDisponibles,
                mtInformation, [mbOk], 0)
   else if PuedeElegirSistema then
   begin

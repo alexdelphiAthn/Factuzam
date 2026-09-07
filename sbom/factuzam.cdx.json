@@ -3,7 +3,7 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
   "serialNumber": "urn:uuid:1d7f1b09-b618-4530-bc58-e0cf4c294fd2",
-  "version": 2,
+  "version": 4,
   "metadata": {
     "timestamp": "2026-08-25T18:40:15.839Z",
     "tools": {
@@ -59473,6 +59473,109 @@
           "value": "lib/Win64/VirtualTable.dcu|SHA-256|522FF13E8D8F6EE721FBB4DD4CC4FB33B34BC9F6204904CB277BFA7AD1ECC7A0"
         }
       ]
+    },
+    {
+      "type": "library",
+      "bom-ref": "urn:factuzam:component:dejavu:dejavu-sans:2.37",
+      "supplier": {
+        "name": "DejaVu fonts team",
+        "url": [
+          "https://dejavu-fonts.github.io/"
+        ]
+      },
+      "publisher": "DejaVu fonts team",
+      "group": "dejavu",
+      "name": "DejaVu Sans",
+      "version": "2.37",
+      "description": "Familia tipografica TrueType de terceros prevista para distribuirse con Factuzam. Incluye las caras Book, Bold, Oblique y Bold Oblique.",
+      "isExternal": false,
+      "scope": "required",
+      "licenses": [
+        {
+          "license": {
+            "name": "DejaVu Fonts License (Bitstream Vera Fonts Copyright y Arev Fonts Copyright)",
+            "url": "https://dejavu-fonts.github.io/License.html"
+          }
+        }
+      ],
+      "copyright": "Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved. DejaVu changes are in public domain.",
+      "modified": false,
+      "properties": [
+        {
+          "name": "factuzam:component:classification",
+          "value": "third-party"
+        },
+        {
+          "name": "factuzam:aggregate:sha256",
+          "value": "F6BD7B4A9FFB996BA87057818BB2E3EC79883E43227A1ED220CC86D84923A382"
+        },
+        {
+          "name": "factuzam:aggregate-digest-format",
+          "value": "SHA-256 of UTF-8 logical-path=<SHA-256> LF, sorted by path using ordinal comparison"
+        },
+        {
+          "name": "factuzam:analysis:source-resolution",
+          "value": "not-applicable; binary font asset, not resolved by Pascal Analyzer"
+        },
+        {
+          "name": "factuzam:platform",
+          "value": "any"
+        },
+        {
+          "name": "factuzam:third-party:origin",
+          "value": "https://dejavu-fonts.github.io/"
+        },
+        {
+          "name": "factuzam:sbom:entry-provenance",
+          "value": "manual entry added 2026-09-05; not produced by the Pascal Analyzer run of 2026-08-25"
+        },
+        {
+          "name": "factuzam:distribution:status",
+          "value": "bundled since 2026-09-07 in the NSIS demo installer; the four TTF faces are installed into the Windows font folder"
+        },
+        {
+          "name": "factuzam:distribution:mechanism",
+          "value": "empaquetador/factuzam_demo_autoinstalable.nsi, macro InstalarFuenteTTF; registered under the Windows Fonts key and loaded with AddFontResourceW"
+        },
+        {
+          "name": "factuzam:distribution:license-notice",
+          "value": "LICENCIA_DejaVu.txt installed next to the application"
+        },
+        {
+          "name": "factuzam:distribution:source",
+          "value": "empaquetador/fuentes, generada por scripts/preparar_fuentes_instalador.py"
+        },
+        {
+          "name": "factuzam:dejavu:artifact",
+          "value": "fonts/DejaVuSans-Bold.ttf|SHA-256|E6476C1B80502924294EED40894C5B18E06C181444CA953E5334262DF9C27724"
+        },
+        {
+          "name": "factuzam:dejavu:artifact",
+          "value": "fonts/DejaVuSans-BoldOblique.ttf|SHA-256|EB436DCA0C2594B73D8B603B892E374FDFD8D885D25FFB4F18DF4C4C0B49E50F"
+        },
+        {
+          "name": "factuzam:dejavu:artifact",
+          "value": "fonts/DejaVuSans-Oblique.ttf|SHA-256|4AF75FA16EE6D3AD43E1ECEC41862C24954AF26A55C6BB1EBB27BD486A50F5F4"
+        },
+        {
+          "name": "factuzam:dejavu:artifact",
+          "value": "fonts/DejaVuSans.ttf|SHA-256|7DA195A74C55BEF988D0D48F9508BD5D849425C1770DBA5D7BFC6CE9ED848954"
+        }
+      ],
+      "externalReferences": [
+        {
+          "url": "https://dejavu-fonts.github.io/",
+          "type": "website"
+        },
+        {
+          "url": "https://dejavu-fonts.github.io/License.html",
+          "type": "license"
+        },
+        {
+          "url": "https://github.com/dejavu-fonts/dejavu-fonts",
+          "type": "vcs"
+        }
+      ]
     }
   ],
   "dependencies": [
@@ -86906,6 +87009,10 @@
       "dependsOn": [
         "urn:factuzam:component:devart:dac:15.0.1.0:win64"
       ]
+    },
+    {
+      "ref": "urn:factuzam:component:dejavu:dejavu-sans:2.37",
+      "dependsOn": []
     }
   ],
   "compositions": [
@@ -89489,6 +89596,7 @@
         "998",
         "999",
         "urn:factuzam:application:fzam",
+        "urn:factuzam:component:dejavu:dejavu-sans:2.37",
         "urn:factuzam:component:devart:dac:15.0.1.0:win64",
         "urn:factuzam:component:devart:unidac:12.0.1.0:win64"
       ]

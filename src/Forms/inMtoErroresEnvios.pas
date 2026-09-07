@@ -156,6 +156,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.ShellAPI,
   System.UITypes,
   inLibActualizacionSoporte,
@@ -228,7 +229,7 @@ begin
     dsTablaG.DataSet.Active and
     not dsTablaG.DataSet.IsEmpty;
   if not Result and AMostrarAviso then
-    MessageDlg(
+    MessageDlg_fza(
       SErrorEnvioErrorNoSeleccionado,
       mtInformation,
       [mbOk],
@@ -283,7 +284,7 @@ begin
           'Seguimiento actualizado dentro de Factuzam.';
         lblEstadoSincronizacion.Style.TextColor := clGreen;
         if AMostrarResultado then
-          MessageDlg(
+          MessageDlg_fza(
             SInfoSeguimientoEnvioErrorActualizado,
             mtInformation,
             [mbOk],
@@ -295,7 +296,7 @@ begin
           'No se pudo actualizar: ' + sError;
         lblEstadoSincronizacion.Style.TextColor := clRed;
         if AMostrarResultado then
-          MessageDlg(sError, mtError, [mbOk], 0);
+          MessageDlg_fza(sError, mtError, [mbOk], 0);
       end;
     finally
       ActualizarAccionesFicha;
@@ -333,7 +334,7 @@ begin
          sMensaje) then
     begin
       if Trim(sMensaje) = '' then
-        MessageDlg(SErrorComentarioEnvioErrorVacio,
+        MessageDlg_fza(SErrorComentarioEnvioErrorVacio,
           mtWarning, [mbOk], 0)
       else if dmmErroresEnvios.EnviarComentarioActual(
                 sMensaje,
@@ -342,14 +343,14 @@ begin
         lblEstadoSincronizacion.Caption :=
           'Comentario enviado y conversación actualizada.';
         lblEstadoSincronizacion.Style.TextColor := clGreen;
-        MessageDlg(
+        MessageDlg_fza(
           SInfoComentarioEnvioErrorEnviado,
           mtInformation,
           [mbOk],
           0);
       end
       else
-        MessageDlg(sError, mtError, [mbOk], 0);
+        MessageDlg_fza(sError, mtError, [mbOk], 0);
     end;
   end;
 end;
@@ -365,7 +366,7 @@ begin
     if Trim(sUrl) <> '' then
       ShellExecute(Handle, 'open', PChar(sUrl), nil, nil, SW_SHOWNORMAL)
     else
-      MessageDlg(
+      MessageDlg_fza(
         SInfoEnlaceSeguimientoEnvioErrorNoDisponible,
         mtInformation,
         [mbOk],
@@ -395,7 +396,7 @@ begin
     sHash := CampoTexto('SHA256_SCRIPT_ERENV');
     if (iId <= 0) or (Trim(sSql) = '') or
        not SameText(sEstado, 'PROPUESTO') then
-      MessageDlg(
+      MessageDlg_fza(
         SInfoScriptSoporteNoPendiente,
         mtInformation,
         [mbOk],
@@ -405,7 +406,7 @@ begin
       sTexto := Format(SDetalleScriptSoporte,
         [sDescripcion, sHash, sSql]);
       TfrmModalMensajeTexto.Mostrar(Self, sTexto);
-      if MessageDlg(
+      if MessageDlg_fza(
            SPreguntaEjecutarScriptSoporte,
            mtWarning,
            [mbYes, mbNo],
@@ -413,7 +414,7 @@ begin
       begin
         Anfitrion := FAnfitrionMto;
         if not Assigned(Anfitrion) then
-          MessageDlg(
+          MessageDlg_fza(
             SErrorServicioCopiaSeguridadNoDisponible,
             mtError,
             [mbOk],
@@ -424,16 +425,16 @@ begin
           begin
             ActualizarAccionesFicha;
             if sError = '' then
-              MessageDlg(
+              MessageDlg_fza(
                 SInfoScriptSoporteEjecutado,
                 mtInformation,
                 [mbOk],
                 0)
             else
-              MessageDlg(sError, mtWarning, [mbOk], 0);
+              MessageDlg_fza(sError, mtWarning, [mbOk], 0);
           end
           else
-            MessageDlg(sError, mtError, [mbOk], 0);
+            MessageDlg_fza(sError, mtError, [mbOk], 0);
         end;
       end;
     end;
@@ -468,7 +469,7 @@ begin
       'CANTIDAD_BYTES_EJECUTABLE_ERENV').AsLargeInt;
     if (iId <= 0) or (Trim(sUrl) = '') or
        not SameText(sEstado, 'PROPUESTO') then
-      MessageDlg(
+      MessageDlg_fza(
         SInfoActualizacionSoporteNoPendiente,
         mtInformation,
         [mbOk],
@@ -478,7 +479,7 @@ begin
       sTexto := Format(SDetalleActualizacionSoporte,
         [sVersion, sDescripcion, FormatFloat('#,##0', iBytes), sHash]);
       TfrmModalMensajeTexto.Mostrar(Self, sTexto);
-      if MessageDlg(
+      if MessageDlg_fza(
            SPreguntaInstalarActualizacionSoporte,
            mtWarning,
            [mbYes, mbNo],
@@ -511,7 +512,7 @@ begin
             'ERROR',
             sError,
             sNotificacion);
-          MessageDlg(sError, mtError, [mbOk], 0);
+          MessageDlg_fza(sError, mtError, [mbOk], 0);
         end;
       end;
     end;

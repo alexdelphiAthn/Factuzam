@@ -117,6 +117,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Dialogs,
   Vcl.Graphics,
   cxClasses,
@@ -562,12 +563,12 @@ begin
   Tipo := TipoSeleccionado;
   Porcentaje := curPorcentaje.Value;
   if not PorcentajeRevalorizacionValido(Tipo, Porcentaje) then
-    ShowMessage(SErrorPorcentajeRevalorizacionInventario)
+    ShowMessage_fza(SErrorPorcentajeRevalorizacionInventario)
   else
   begin
     LineasSeleccionadas := RecogerLineasSeleccionadas;
     if Length(LineasSeleccionadas) = 0 then
-      ShowMessage(SErrorSeleccionRevalorizacionInventario)
+      ShowMessage_fza(SErrorSeleccionRevalorizacionInventario)
     else
     begin
       FUltimaSimulacion := SimularRevalorizacionInventario(

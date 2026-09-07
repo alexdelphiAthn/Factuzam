@@ -71,6 +71,9 @@ uses
 
 implementation
 
+uses
+  inLibMensajesVcl;
+
 var
   PerfilesLiteralesActivos: Boolean = False;
 
@@ -398,7 +401,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxLabel,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxLabel,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -414,7 +417,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxTabSheet,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxTabSheet,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -430,7 +433,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxDbCheckBox,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxDbCheckBox,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -446,7 +449,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxButton,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxButton,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -462,7 +465,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxGroupBox,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxGroupBox,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -478,7 +481,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxDbRadioGroup,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxDbRadioGroup,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -494,7 +497,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoSpeedButton,
+    ShowMessage_fza(Format(SDepuracionComponenteNoSpeedButton,
       [AComponente.ClassName]));
     {$ENDIF}
   end;
@@ -510,7 +513,7 @@ begin
   begin
     Sleep(0);
     {$IFDEF DEBUG}
-    ShowMessage(Format(SDepuracionComponenteNoTcxRadioButton,
+    ShowMessage_fza(Format(SDepuracionComponenteNoTcxRadioButton,
       [AComponente.ClassName]));
     {$ENDIF}
   end;

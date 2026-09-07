@@ -104,6 +104,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos, UniDataConfiguracionPantalla;
 
 
@@ -275,17 +276,17 @@ begin
           DimensionesSinValores.Add(FDimensiones[i].NombreAtributo);
       if FDimensiones.Count = 0 then
       begin
-        ShowMessage(SErrorDimensionesSkuNoDefinidas);
+        ShowMessage_fza(SErrorDimensionesSkuNoDefinidas);
         bValido := False;
       end
       else if DimensionesSinValores.Count = FDimensiones.Count then
       begin
-        ShowMessage(SErrorValoresSkuNoSeleccionados);
+        ShowMessage_fza(SErrorValoresSkuNoSeleccionados);
         bValido := False;
       end
       else if DimensionesSinValores.Count > 0 then
       begin
-        ShowMessage(Format(SErrorValoresDimensionesSkuIncompletos,
+        ShowMessage_fza(Format(SErrorValoresDimensionesSkuIncompletos,
           [DimensionesSinValores.CommaText]));
         bValido := False;
       end;
@@ -295,7 +296,7 @@ begin
     if bValido then
     begin
       GenerarCombinaciones(0, '', '');
-      ShowMessage(SInfoCombinacionesSkuGeneradas);
+      ShowMessage_fza(SInfoCombinacionesSkuGeneradas);
       inherited;
     end;
   finally
@@ -353,7 +354,7 @@ begin
         OrdenVal);
       if IdConjuntoAsignado > 0 then
       begin
-        Respuesta := MessageDlg(
+        Respuesta := MessageDlg_fza(
           Format(SPreguntaGuardarValorSkuGlobal,
             [NuevoNombre, NombreConjunto]),
           mtConfirmation,
@@ -370,7 +371,7 @@ begin
       end
       else
       begin
-        Respuesta := MessageDlg(
+        Respuesta := MessageDlg_fza(
           Format(SPreguntaUsarValorSkuTemporal, [NuevoNombre]),
           mtConfirmation,
           [mbYes, mbNo],
@@ -450,7 +451,7 @@ begin
       begin
         Orden := StrToIntDef(OrdenStr, -1);
         if Orden < 0 then
-          ShowMessage(SErrorOrdenValorSkuNoValido)
+          ShowMessage_fza(SErrorOrdenValorSkuNoValido)
         else
         begin
           NombreConjunto := FRepositorio.ObtenerNombreConjunto(
@@ -459,7 +460,7 @@ begin
           bGuardar := True;
           if Trim(NombreConjunto) <> '' then
           begin
-            bGuardar := MessageDlg(
+            bGuardar := MessageDlg_fza(
               Format(SPreguntaCambiarOrdenValorSkuGlobal,
                 [NombreConjunto]),
               mtWarning,
@@ -498,7 +499,7 @@ begin
       begin
         Orden := StrToIntDef(OrdenStr, -1);
         if Orden <= 0 then
-          ShowMessage(SErrorOrdenAtributoSkuNoValido)
+          ShowMessage_fza(SErrorOrdenAtributoSkuNoValido)
         else
         begin
           GuardarOrdenAtributo(IdAtr, Orden);

@@ -188,7 +188,9 @@ implementation
 
 {$R *.dfm}
 
-uses inLibGenerarTicketBD, inLibGenerarTicketCaja,
+uses
+  inLibMensajesVcl,
+  inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto,
      inLibVerifactu, inMtoModalFacturarTicket,
@@ -300,7 +302,7 @@ begin
   else
     TipoMensaje := mtInformation;
   end;
-  MessageDlg(AMensaje, TipoMensaje, [mbOK], 0);
+  MessageDlg_fza(AMensaje, TipoMensaje, [mbOK], 0);
 end;
 
 function TfrmConsultaOpe.FormularioConsultaCaja: TCustomForm;
@@ -553,14 +555,14 @@ var
 begin
   // Anulación fiscal y retirada operativa de la venta.
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage(SErrorOperacionSinBorrador)
+    ShowMessage_fza(SErrorOperacionSinBorrador)
   else
   begin
     Factura := FRepositorioFacturas.ConsultarFactura(sSerie, sNumero);
     if (not Factura.Existe) or (not Factura.Consolidada) then
-      ShowMessage(Format(SErrorBorradorNoCerradoFiscalmente,
+      ShowMessage_fza(Format(SErrorBorradorNoCerradoFiscalmente,
                          [sSerie, sNumero]))
-    else if MessageDlg(Format(SPreguntaAnularFiscalmenteBorrador,
+    else if MessageDlg_fza(Format(SPreguntaAnularFiscalmenteBorrador,
                              [sSerie, sNumero]), mtConfirmation,
                        [mbYes, mbNo], 0) = mrYes then
     begin
@@ -573,7 +575,7 @@ begin
         True,
         'Anulación encolada desde Buscar operaciones');
       Resultado := FServicioEmisionFiscal.Emitir(Solicitud);
-      ShowMessage(Resultado.Mensaje);
+      ShowMessage_fza(Resultado.Mensaje);
       RefrescarOperaciones;
     end;
   end;
@@ -592,13 +594,13 @@ begin
   dtFecha := 0;
   bSigue  := False;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage(SErrorOperacionSinBorrador)
+    ShowMessage_fza(SErrorOperacionSinBorrador)
   else
   begin
     Factura := FRepositorioFacturas.ConsultarFactura(sSerie, sNumero);
     if (not Factura.Existe) or
        (not SameText(Factura.Tipo, 'SIMPLIFICADA')) then
-      ShowMessage(SErrorFacturarTicketRequiereSimplificado)
+      ShowMessage_fza(SErrorFacturarTicketRequiereSimplificado)
     else
     begin
       dtFecha := Factura.Fecha;
@@ -610,7 +612,7 @@ begin
                                                FEmpresa, FAlmacen,
                                                dtFecha);
       if oRes.Aceptado then
-        ShowMessage(Format(SInfoBorradorSustitucionTicketCreado,
+        ShowMessage_fza(Format(SInfoBorradorSustitucionTicketCreado,
                           [oRes.SerieNueva, oRes.NumeroNueva,
                            sSerie, sNumero,
                            ModoVerifactuTexto(ParametrosApp)]));
@@ -630,7 +632,7 @@ begin
   // ticket seleccionado en negativo. La referencia se guarda en la
   // operacion DV, sin relacion ni tipo de rectificativa fiscal.
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage(SErrorOperacionSinBorrador)
+    ShowMessage_fza(SErrorOperacionSinBorrador)
   else
   begin
     oOperacionCaja := BuscarOperacionCajaVacia;
@@ -671,13 +673,13 @@ begin
   // saldrá con serie rectificativa y quedará enlazada.
   bSigue := False;
   if not FacturaSeleccionada(sSerie, sNumero) then
-    ShowMessage(SErrorOperacionSinBorrador)
+    ShowMessage_fza(SErrorOperacionSinBorrador)
   else
   begin
     Factura := FRepositorioFacturas.ConsultarFactura(sSerie, sNumero);
     if (not Factura.Existe) or
        SameText(Factura.Tipo, 'RECTIFICATIVA') then
-      ShowMessage(SErrorRectificarRectificativa)
+      ShowMessage_fza(SErrorRectificarRectificativa)
     else
       bSigue := True;
   end;
@@ -925,7 +927,7 @@ begin
     Layout.GuardarGrid('FacturaLin',  cxViewFacLin);
     if Layout.PreguntarYGrabar(
       STituloPersonalizacionConsultaOperaciones) then
-      ShowMessage(SInfoLayoutGuardado);
+      ShowMessage_fza(SInfoLayoutGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -1050,7 +1052,7 @@ begin
   begin
     bContinuar := CorreoTicketsConfigurado(ParametrosApp, sMensaje);
     if not bContinuar then
-      ShowMessage(sMensaje)
+      ShowMessage_fza(sMensaje)
     else
     begin
       sEmp := FdmConsulta.qryMaestro.
@@ -1066,13 +1068,13 @@ begin
       sEmail := Datos.EmailCliente;
       bContinuar := Datos.Encontrada;
       if not bContinuar then
-        ShowMessage(SErrorOperacionCorreoNoEncontrada)
+        ShowMessage_fza(SErrorOperacionCorreoNoEncontrada)
       else if sEmail = '' then
         bContinuar := InputQuery(STituloEnviarDocumentacion,
           SSolicitudCorreoElectronico, sEmail);
       if bContinuar and (Trim(sEmail) = '') then
       begin
-        ShowMessage(SErrorCorreoElectronicoObligatorio);
+        ShowMessage_fza(SErrorCorreoElectronicoObligatorio);
         bContinuar := False;
       end;
       if bContinuar then
@@ -1092,9 +1094,9 @@ begin
             sAlm,
             sCaja, sNumOp,
             sEmail, sMensaje) then
-            ShowMessage(sMensaje)
+            ShowMessage_fza(sMensaje)
           else
-            ShowMessage(Format(SErrorEnviarCorreoOperacion, [sMensaje]));
+            ShowMessage_fza(Format(SErrorEnviarCorreoOperacion, [sMensaje]));
         finally
           Screen.Cursor := crDefault;
         end;
@@ -1160,7 +1162,7 @@ begin
       if (not FdmConsulta.TieneFactura)
          and (not FdmConsulta.TieneDepositos)
          and (not FdmConsulta.EsOperacionCaja) then
-        ShowMessage(SErrorOperacionSinTicket)
+        ShowMessage_fza(SErrorOperacionSinTicket)
       else if Trim(sCliente) <> '' then
         ImprimirRecordatorio(
           PreviewTicket,

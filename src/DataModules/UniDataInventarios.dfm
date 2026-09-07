@@ -85,6 +85,8 @@
     Params = <>
     ProviderName = 'udspLineas'
     BeforeInsert = cdsLineasBeforeInsert
+    AfterEdit = cdsLineasAfterEdit
+    AfterCancel = cdsLineasAfterCancel
     BeforePost = cdsLineasBeforePost
     AfterPost = cdsLineasAfterPost
     BeforeDelete = cdsLineasBeforeDelete

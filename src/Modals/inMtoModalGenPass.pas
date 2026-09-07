@@ -55,6 +55,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgConfiguracion;
 
 procedure TfrmModalGenPass.AjustarControles;
@@ -106,13 +107,13 @@ begin
   inherited;
   if edtPassword.Text = '' then
   begin
-    ShowMessage(SErrorContrasenaUsuarioVacia);
+    ShowMessage_fza(SErrorContrasenaUsuarioVacia);
     if edtPassword.CanFocus then
       edtPassword.SetFocus;
   end
   else if (edtPassword.Text <> edtPasswordCon.Text) then
   begin
-    ShowMessage(SErrorContrasenasNoCoinciden);
+    ShowMessage_fza(SErrorContrasenasNoCoinciden);
     if edtPasswordCon.CanFocus then
       edtPasswordCon.SetFocus;
   end

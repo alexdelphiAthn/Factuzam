@@ -124,6 +124,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja;
 
 { TfrmMtoCajaSeleccionVale }
@@ -304,7 +305,7 @@ begin
      FDatos.IsEmpty or
      (FDatos.Bof and FDatos.Eof) then
   begin
-    ShowMessage(SErrorValeCajaNoSeleccionado);
+    ShowMessage_fza(SErrorValeCajaNoSeleccionado);
   end
   else
   begin
@@ -315,13 +316,13 @@ begin
     if bPinObligatorio and (PinReal <> '') and
        (PinIntroducido = '') then
     begin
-      ShowMessage(SErrorPinValeCajaNoIndicado);
+      ShowMessage_fza(SErrorPinValeCajaNoIndicado);
       edtPin.SetFocus;
     end
     else if bPinObligatorio and (PinReal <> '') and
             not SameText(PinIntroducido, PinReal) then
     begin
-      ShowMessage(SErrorPinValeCajaIncorrecto);
+      ShowMessage_fza(SErrorPinValeCajaIncorrecto);
       edtPin.Text := '';
       edtPin.SetFocus;
     end

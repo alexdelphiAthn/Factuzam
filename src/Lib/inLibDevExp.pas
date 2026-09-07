@@ -122,9 +122,12 @@ uses
 
 implementation
 
-  uses inLibWin,
+uses
+  inLibMensajesVcl,
+  inLibWin,
        inLibMsgComun,
        inLibDatasets,
+       inLibCodigosSinBarra,
        inLibDir, uGenericIfThen, cxImageComboBox;
 
 resourcestring
@@ -1174,6 +1177,7 @@ var
   i: Integer;
   oListaBusqueda: TcxFilterCriteriaItemList;
   oFiltro: TcxDataFilterCriteria;
+  sVariante: string;
 begin
   if AsDatoBusq <> ''
   then
@@ -1204,10 +1208,14 @@ begin
                                                                  ftWideMemo]
           then
           begin
-            oListaBusqueda.AddItem((AdbTvGen.Columns[i] as TObject),
-              foLike,
-              '%' + AsDatoBusq + '%',
-              '%' + AsDatoBusq + '%');
+            // Con barra se busca tambien la variante con guion: un codigo
+            // legacy '2354/A-158' encuentra '2354-A-158' y un SKU sigue
+            // buscandose con su separador.
+            for sVariante in VariantesBusquedaSinBarra(AsDatoBusq) do
+              oListaBusqueda.AddItem((AdbTvGen.Columns[i] as TObject),
+                foLike,
+                '%' + sVariante + '%',
+                '%' + sVariante + '%');
           end;
         end;
     finally
@@ -1345,7 +1353,7 @@ begin
     if frmMto.Components[i].ClassNameis('TcxGridDBTableView')
     then
     begin
-      // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
+      // ShowMessage_fza((frmMto.Components[i] as TcxGridDBTableView).Name);
       oControlador := (frmMto.Components[i] as
         TcxGridDBTableView).DataController;
       if ((oControlador.DataSource <> nil) and
@@ -1371,7 +1379,7 @@ begin
     begin
       dsData := (frmMto.Components[i] as
             TcxGridDBTableView).DataController.DataSource;
-      // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
+      // ShowMessage_fza((frmMto.Components[i] as TcxGridDBTableView).Name);
       if (dsData <> nil)
       then
         if ((dsData.DataSet.State = dsInsert) or
@@ -1400,7 +1408,7 @@ begin
     begin
       dsData := (frmMto.Components[i] as
             TcxGridDBTableView).DataController.DataSource;
-      // ShowMessage((frmMto.Components[i] as TcxGridDBTableView).Name);
+      // ShowMessage_fza((frmMto.Components[i] as TcxGridDBTableView).Name);
       if dsData <> nil then
         if (dsData.DataSet <> nil)
         then
@@ -1448,7 +1456,7 @@ begin
       end
       else
       begin
-        // ShowMessage( ((oControl.Components[i] as
+        // ShowMessage_fza( ((oControl.Components[i] as
         // TcxGridDBColumn).PropertiesClassName));
       end;
   end;

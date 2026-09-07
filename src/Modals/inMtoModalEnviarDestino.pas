@@ -51,6 +51,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun,
   inLibVentasPantallaIntf,
   UniDataVentasPantallaComposicion;
@@ -105,7 +106,7 @@ begin
       ANumero := Trim(frm.txtNumero.Text);
       Result := (AAlm <> '') and (ASerie <> '') and (ANumero <> '');
       if not Result then
-        ShowMessage(SErrorDestinoEnvioIncompleto);
+        ShowMessage_fza(SErrorDestinoEnvioIncompleto);
     end;
   finally
     FreeAndNil(frm);

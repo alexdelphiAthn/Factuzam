@@ -132,6 +132,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   UniDataValoresAutomaticosRepositorio, inLibMsgCompras,
   inLibMsgVentas;
 
@@ -390,22 +391,22 @@ procedure TfrmModalCrearAlbaranSesion.btnGenerarClick(Sender: TObject);
 begin
   inherited;
   if (not GetGenAlbaran) and (not GetGenPedido) then
-    ShowMessage(SErrorTipoDocumentoSesionNoSeleccionado)
+    ShowMessage_fza(SErrorTipoDocumentoSesionNoSeleccionado)
   else if GetGenAlbaran and (Trim(cbbSerieAlb.Text) = '') then
   begin
-    ShowMessage(SErrorSerieAlbaranSesionNoIndicada);
+    ShowMessage_fza(SErrorSerieAlbaranSesionNoIndicada);
     if cbbSerieAlb.CanFocus then
       cbbSerieAlb.SetFocus;
   end
   else if GetGenPedido and (Trim(cbbSeriePed.Text) = '') then
   begin
-    ShowMessage(SErrorSeriePedidoSesionNoIndicada);
+    ShowMessage_fza(SErrorSeriePedidoSesionNoIndicada);
     if cbbSeriePed.CanFocus then
       cbbSeriePed.SetFocus;
   end
   else if (GetGenAlbaran or GetGenPedido) and (GetAlmacen = '') then
   begin
-    ShowMessage(SErrorAlmacenDestinoSesionNoIndicado);
+    ShowMessage_fza(SErrorAlmacenDestinoSesionNoIndicado);
     if cbbAlmacen.CanFocus then
       cbbAlmacen.SetFocus;
   end

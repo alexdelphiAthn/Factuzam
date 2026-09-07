@@ -243,6 +243,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibUser,
   inLibShowMto,
@@ -468,7 +469,7 @@ begin
     FDmmProveedores.unqryKits.Cancel
   else if not FDmmProveedores.unqryKits.IsEmpty then
   begin
-    if MessageDlg(SPreguntaBorrarKitProveedor,
+    if MessageDlg_fza(SPreguntaBorrarKitProveedor,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       FDmmProveedores.unqryKits.Delete;
   end;

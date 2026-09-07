@@ -51,6 +51,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Dialogs, inLibMsgComun, inLibMsgVentas;
 
 resourcestring
@@ -261,13 +262,13 @@ function TfrmModalSepaRemesaVenta.DatosValidos: Boolean;
 begin
   Result := False;
   if Trim(FEdtCodigoAcreedor.Text) = '' then
-    ShowMessage(SErrorCodigoAcreedorSepaNoIndicado)
+    ShowMessage_fza(SErrorCodigoAcreedorSepaNoIndicado)
   else if Length(Trim(FEdtCodigoAcreedor.Text)) > 35 then
-    ShowMessage(SErrorLongitudCodigoAcreedorSepa)
+    ShowMessage_fza(SErrorLongitudCodigoAcreedorSepa)
   else if not CodigoAcreedorSepaValido(FEdtCodigoAcreedor.Text) then
-    ShowMessage(SErrorFormatoCodigoAcreedorSepaNoValido)
+    ShowMessage_fza(SErrorFormatoCodigoAcreedorSepaNoValido)
   else if not TipoSecuenciaValido(FCbbTipoSecuencia.Text) then
-    ShowMessage(SErrorSecuenciaSepaNoValida)
+    ShowMessage_fza(SErrorSecuenciaSepaNoValida)
   else
   begin
     Result := True;
@@ -279,18 +280,18 @@ begin
       if Trim(FCdsClientes.FieldByName('ID_MANDATO').AsString) = '' then
       begin
         Result := False;
-        ShowMessage(SErrorClientesSinMandatoSepa);
+        ShowMessage_fza(SErrorClientesSinMandatoSepa);
       end
       else if Length(Trim(FCdsClientes.FieldByName('ID_MANDATO').AsString)) >
               35 then
       begin
         Result := False;
-        ShowMessage(SErrorMandatosSepaLongitudNoValida);
+        ShowMessage_fza(SErrorMandatosSepaLongitudNoValida);
       end
       else if FCdsClientes.FieldByName('FECHA_FIRMA').IsNull then
       begin
         Result := False;
-        ShowMessage(SErrorClientesSinFechaFirmaMandatoSepa);
+        ShowMessage_fza(SErrorClientesSinFechaFirmaMandatoSepa);
       end;
       if Result then
         FCdsClientes.Next;

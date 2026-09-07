@@ -84,6 +84,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoModalCambioArticuloColorHistorico;
 
 {$R *.dfm}
@@ -154,7 +155,7 @@ end;
 function TfrmModalCambioArticuloColor.ConfirmarFusionArticulo(
   const AOrigen, ADestino: string): Boolean;
 begin
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     Format(SPreguntaFusionarArticulo, [ADestino, AOrigen]),
     mtWarning,
     [mbYes, mbNo],
@@ -164,7 +165,7 @@ end;
 function TfrmModalCambioArticuloColor.ConfirmarFusionColor(
   const AOrigen, ADestino: string): Boolean;
 begin
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     Format(SPreguntaFusionarColor, [ADestino, AOrigen]),
     mtWarning,
     [mbYes, mbNo],
@@ -213,7 +214,7 @@ begin
     [ATipo, AOrigen, ADestino]);
   if SameText(ATipo, STipoColorCambio) then
     sPregunta := sPregunta + SAdvertenciaCambioColor;
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     sPregunta,
     mtConfirmation,
     [mbYes, mbNo],
@@ -369,7 +370,7 @@ end;
 procedure TfrmModalCambioArticuloColor.MostrarErrorInesperado(
   const AMensaje: string);
 begin
-  MessageDlg(
+  MessageDlg_fza(
     Format(SErrorCambioInesperado, [AMensaje]),
     mtError,
     [mbOK],
@@ -386,7 +387,7 @@ end;
 procedure TfrmModalCambioArticuloColor.MostrarResultado(
   const AResultado: TResultadoCambioArticuloColor);
 begin
-  MessageDlg(
+  MessageDlg_fza(
     MensajeResultado(AResultado),
     TipoMensajeResultado(AResultado),
     [mbOK],

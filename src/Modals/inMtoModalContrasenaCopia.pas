@@ -64,6 +64,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   Vcl.Dialogs,
   inLibMsgConfiguracion;
@@ -98,13 +99,13 @@ procedure TfrmModalContrasenaCopia.btnAceptarClick(
 begin
   if Trim(edtContrasena.Text) = '' then
   begin
-    ShowMessage(SErrorContrasenaCopiaVacia);
+    ShowMessage_fza(SErrorContrasenaCopiaVacia);
     edtContrasena.SetFocus;
   end
   else if FConfirmar and
           (edtContrasena.Text <> edtConfirmacion.Text) then
   begin
-    ShowMessage(SErrorContrasenasNoCoinciden);
+    ShowMessage_fza(SErrorContrasenasNoCoinciden);
     edtConfirmacion.SetFocus;
   end
   else

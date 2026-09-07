@@ -108,6 +108,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibGenBusq, inLibMsgVentas,
   UniDataConfiguracionPantalla;
 
@@ -313,7 +314,7 @@ begin
   inherited;
   sEmp := Trim(btnEmpresa.Text);
   if sEmp = '' then
-    ShowMessage(SErrorEmpresaEfectosRemesaNoIndicada)
+    ShowMessage_fza(SErrorEmpresaEfectosRemesaNoIndicada)
   else
   begin
     // Sin fecha "hasta" -> tope lejano (todos los pendientes).
@@ -329,7 +330,7 @@ begin
     FDsEfe.DataSet := FConsultaEfectos.DataSet;
     CargarRemesasAbiertas(sEmp);
     if FConsultaEfectos.DataSet.IsEmpty then
-      ShowMessage(SInfoEfectosPendientesRemesaNoEncontrados);
+      ShowMessage_fza(SInfoEfectosPendientesRemesaNoEncontrados);
   end;
 end;
 
@@ -361,7 +362,7 @@ begin
   bSeguir := True;
   if nSel = 0 then
   begin
-    ShowMessage(SErrorEfectosRemesaNoSeleccionados);
+    ShowMessage_fza(SErrorEfectosRemesaNoSeleccionados);
     bSeguir := False;
   end;
   sSerieRem := '';
@@ -374,7 +375,7 @@ begin
       if (cbbRemExistente.ItemIndex < 0) or
          (cbbRemExistente.ItemIndex >= FRemSeries.Count) then
       begin
-        ShowMessage(SErrorRemesaExistenteNoSeleccionada);
+        ShowMessage_fza(SErrorRemesaExistenteNoSeleccionada);
         bSeguir := False;
       end
       else
@@ -413,7 +414,7 @@ begin
       sTextoOmitidos := STextoEfectosPagadosRemesa
     else
       sTextoOmitidos := STextoEfectosCobradosRemesa;
-    ShowMessage(Format(SInfoEfectosCargadosRemesa,
+    ShowMessage_fza(Format(SInfoEfectosCargadosRemesa,
       [Resultado.Procesados, sSerieRem, sNumRem, sTextoOmitidos,
        Resultado.Omitidos]));
     if FConfirmado then

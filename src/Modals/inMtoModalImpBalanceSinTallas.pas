@@ -36,7 +36,7 @@ uses
   cxCheckListBox, cxCheckBox, cxCustomListBox,
   cxClasses, dxSkinsForm, System.Actions, Vcl.ActnList, frxSmartMemo,
   frLocalization, frLanguageSpanish, frCoreClasses,
-  inLibInformeBalanceSinTallasPersistenciaIntf;
+  inLibInformeBalanceSinTallasPersistenciaIntf, inMtoPreviewExcel;
 
 type
   TfrmPrintBalanceSinTallas = class(TfrmPrintMultiFiltro)
@@ -58,9 +58,15 @@ type
     procedure ReportBeforePrint(Component: TfrxReportComponent);
     // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
     procedure PrecargarFotosArticulos;
+    // Muestra el visor de Excel ocultando el modal (es fsStayOnTop).
+    procedure MostrarPreviewExcel(APreview: TfrmMtoPreviewExcel);
+    // Detalle "Exportando fila X de Y" de la ventana de espera.
+    procedure AvisarProgresoExcel(AFila, ATotal: Integer);
   protected
     function FiltrosUsados: TFiltrosReport; override;
     procedure DoShow; override;
+    // Añade al detalle de la espera el artículo que se está volcando.
+    function DetalleProgresoInforme: string; override;
   public
     destructor Destroy; override;
     procedure preparar_consulta; override;
@@ -72,7 +78,7 @@ implementation
 {$R *.dfm}
 
 uses
-  System.StrUtils, inMtoPreviewExcel, inLibMsgArticulos,
+  System.StrUtils, inLibMsgArticulos, inLibMsgComun,
   inLibBalanceSinTallasExcel,
   dxSpreadSheet, inLibFotos,
   UniDataInformeBalanceSinTallasRepositorio;
@@ -330,6 +336,8 @@ begin
   begin
     sNom := Component.Name;
     nivel := 0;
+    if Component is TfrxMasterData then
+      ActualizarDetalleEspera(DetalleProgresoInforme);
     if (Pos('GroupHeaderG', sNom) = 1) or (Pos('GroupFooterG', sNom) = 1) then
       nivel := StrToIntDef(Copy(sNom, Length(sNom), 1), 0);
     if (nivel >= 1) and (nivel <= 3) and
@@ -345,27 +353,68 @@ begin
   end;
 end;
 
-procedure TfrmPrintBalanceSinTallas.ExportarExcelBalance(Sender: TObject);
-var
-  fPreview: TfrmMtoPreviewExcel;
+procedure TfrmPrintBalanceSinTallas.MostrarPreviewExcel(
+  APreview: TfrmMtoPreviewExcel);
 begin
-  preparar_consulta;
   Self.Hide;
   try
-    fPreview := TfrmMtoPreviewExcel.Create(Self);
-    try
-      fPreview.DialogoGuardar.InitialDir :=
-        ParametrosApp.GetPath('appDirExcel');
-      fPreview.DialogoGuardar.FileName :=
-        SNombreArchivoBalanceAlmacenSinTallas;
-      ExportarBalanceSinTallasExcel(
-        fPreview.dxSpreadSheet1, FResultadoBalance.DataSet, FotosArticulos);
-      fPreview.ShowModal;
-    finally
-      FreeAndNil(fPreview);
-    end;
+    APreview.ShowModal;
   finally
     Self.Show;
+  end;
+end;
+
+procedure TfrmPrintBalanceSinTallas.AvisarProgresoExcel(AFila, ATotal: Integer);
+begin
+  ActualizarDetalleEspera(Format(SCaptionEsperaExportandoFilas,
+    [FormatFloat('#,##0', AFila), FormatFloat('#,##0', ATotal)]));
+end;
+
+function TfrmPrintBalanceSinTallas.DetalleProgresoInforme: string;
+var
+  oDatos: TDataSet;
+begin
+  Result := inherited DetalleProgresoInforme;
+  if (FResultadoBalance <> nil) and FResultadoBalance.DataSet.Active and
+     (not FResultadoBalance.DataSet.IsEmpty) then
+  begin
+    oDatos := FResultadoBalance.DataSet;
+    Result := Format(SCaptionEsperaSeleccionandoArticulo,
+      [Result, Trim(
+        oDatos.FieldByName('CODIGO_ART_ART').AsString + ' ' +
+        oDatos.FieldByName('DESCRIPCION_ART').AsString)]);
+  end;
+end;
+
+procedure TfrmPrintBalanceSinTallas.ExportarExcelBalance(Sender: TObject);
+var
+  crCursorAnterior: TCursor;
+  fPreview: TfrmMtoPreviewExcel;
+begin
+  // Ejecuta el SP con los filtros actuales y vuelca el resultado en una hoja
+  // con el mismo layout que el informe. La ventana de espera acompaña la
+  // consulta y el volcado fila a fila; el visor permite guardar a .xlsx.
+  crCursorAnterior := Screen.Cursor;
+  Screen.Cursor := crHourGlass;
+  fPreview := nil;
+  try
+    IniciarEspera(SCaptionEsperaConsultandoDatosInforme);
+    preparar_consulta;
+    fPreview := TfrmMtoPreviewExcel.Create(Self);
+    fPreview.DialogoGuardar.InitialDir :=
+      ParametrosApp.GetPath('appDirExcel');
+    fPreview.DialogoGuardar.FileName :=
+      SNombreArchivoBalanceAlmacenSinTallas;
+    IniciarEspera(SCaptionEsperaGenerandoHojaCalculo);
+    ExportarBalanceSinTallasExcel(
+      fPreview.dxSpreadSheet1, FResultadoBalance.DataSet, FotosArticulos,
+      AvisarProgresoExcel);
+    TerminarEspera;
+    MostrarPreviewExcel(fPreview);
+  finally
+    TerminarEspera;
+    FreeAndNil(fPreview);
+    Screen.Cursor := crCursorAnterior;
   end;
 end;
 

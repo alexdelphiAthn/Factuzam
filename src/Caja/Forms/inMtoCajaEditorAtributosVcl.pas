@@ -80,6 +80,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows, System.SysUtils,
   System.Generics.Collections, Data.DB, Vcl.Dialogs,
   cxGridTableView, inLibAtributosPaleta,
@@ -494,7 +495,7 @@ begin
       CargarOpciones(Orden, Articulo, Propiedades);
     if Length(FOpciones[Orden]) = 0 then
     begin
-      ShowMessage(SErrorValoresAtributoCajaNoDefinidos);
+      ShowMessage_fza(SErrorValoresAtributoCajaNoDefinidos);
       Continuar := False;
     end;
   end;

@@ -110,6 +110,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   StrUtils, inLibLayoutForm, inLibMsgCaja;
 
 resourcestring
@@ -374,7 +375,7 @@ begin
     Layout.GuardarDividerInspector('Divider', JvInspector1);
     if Layout.PreguntarYGrabar(
          SDescripcionPersonalizacionParametrosCaja) then
-      ShowMessage(SInfoLayoutCajaGuardado);
+      ShowMessage_fza(SInfoLayoutCajaGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -538,7 +539,7 @@ begin
     end;
     if GuardadosCount > 0 then
     begin
-      ShowMessage(Format(SInfoParametrosCajaGuardados,
+      ShowMessage_fza(Format(SInfoParametrosCajaGuardados,
                          [GuardadosCount, sUsuarioGrupo]));
       if (sUsuarioGrupo = IdentidadSesion.Usuario) or
          (sUsuarioGrupo = IdentidadSesion.Grupo) or
@@ -550,7 +551,7 @@ begin
     end
     else
     begin
-      ShowMessage(SInfoParametrosCajaSinCambios);
+      ShowMessage_fza(SInfoParametrosCajaSinCambios);
     end;
   end;
 end;
@@ -695,7 +696,7 @@ begin
   // Solo pedimos confirmación si hay cambios reales sin guardar
   if not HayCambiosPendientes then
     Close
-  else if MessageDlg(SPreguntaSalirParametrosCajaSinGuardar,
+  else if MessageDlg_fza(SPreguntaSalirParametrosCajaSinGuardar,
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     Close;
 end;
@@ -770,7 +771,7 @@ begin
 
     if usuarios.Count = 0 then
     begin
-      ShowMessage(SInfoUsuariosParametrosCajaNoEncontrados);
+      ShowMessage_fza(SInfoUsuariosParametrosCajaNoEncontrados);
     end
     else
     begin
@@ -780,7 +781,7 @@ begin
           [usuarios.CommaText]), sUsuario) then
       begin
         if usuarios.IndexOf(sUsuario) < 0 then
-          ShowMessage(Format(SErrorUsuarioParametrosCajaNoEncontrado,
+          ShowMessage_fza(Format(SErrorUsuarioParametrosCajaNoEncontrado,
             [sUsuario]))
         else
         begin

@@ -101,6 +101,7 @@ function ResolverDestinoDocumentoSesion(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.UITypes,
   Vcl.Dialogs,
@@ -267,10 +268,10 @@ begin
   else
     Destino := ResolverDestinoDocumentoSesion(False, '', '', '');
   if Destino.Estado = eddsSinDocumento then
-    ShowMessage(SErrorSesionSinDocumentosCreados)
+    ShowMessage_fza(SErrorSesionSinDocumentosCreados)
   else if Destino.Estado = eddsTipoNoDisponible then
   begin
-    ShowMessage(Format(
+    ShowMessage_fza(Format(
       SErrorMantenimientoTipoDocumentoNoDisponible,
       [Destino.Tipo]));
   end
@@ -333,7 +334,7 @@ begin
     FEntorno.ComboSerie.Properties.Items);
   if FEntorno.ComboSerie.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(
+    if MessageDlg_fza(
       Format(SPreguntaAbrirSeriesSesionCompra, [Empresa]),
       mtConfirmation,
       [mbYes, mbNo],

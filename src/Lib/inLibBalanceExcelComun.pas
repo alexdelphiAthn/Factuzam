@@ -21,10 +21,16 @@ uses
 
 type
   TTipoBalanceExcel = (tbeConTallas, tbeSinTallas);
+  // Aviso de avance del volcado: fila procesada y total de filas.
+  TProgresoBalanceExcel = reference to procedure(AFila, ATotal: Integer);
 
 procedure ExportarBalanceExcel(AControl: TdxSpreadSheet;
   const ADatos: TDataSet; AFotos: TFotosArticulos;
-  ATipo: TTipoBalanceExcel);
+  ATipo: TTipoBalanceExcel); overload;
+procedure ExportarBalanceExcel(AControl: TdxSpreadSheet;
+  const ADatos: TDataSet; AFotos: TFotosArticulos;
+  ATipo: TTipoBalanceExcel;
+  const AProgreso: TProgresoBalanceExcel); overload;
 
 implementation
 
@@ -46,6 +52,7 @@ type
 
 const
   N_TALLAS = 14;
+  FILAS_ENTRE_AVISOS = 50;
   COL_BANDA = 0;
   COL_COLOR = 1;
   COL_T1 = 2;
@@ -110,6 +117,8 @@ type
     FTotalExistenciasCantidad: Double;
     FTotalExistenciasImporte: Double;
     FTotalVentas: Double;
+    FFilasProcesadas: Integer;
+    FProgreso: TProgresoBalanceExcel;
     function CampoTexto(const ANombre: string): string;
     function FormulaSuma(AFilas: TList<Integer>;
       AColumna: Integer): string;
@@ -131,11 +140,13 @@ type
     procedure EscribirDetalle;
     procedure ProcesarDatos;
     procedure ConfigurarColumnas;
+    procedure AvisarProgreso;
   public
     constructor Create(AControl: TdxSpreadSheet; const ADatos: TDataSet;
       AFotos: TFotosArticulos; ATipo: TTipoBalanceExcel);
     destructor Destroy; override;
     procedure Ejecutar;
+    property Progreso: TProgresoBalanceExcel read FProgreso write FProgreso;
   end;
 
 constructor TBandaTotal.Create;
@@ -588,7 +599,10 @@ begin
         GestionarCabeceras(sFamilia, sArticulo);
         EscribirDetalle;
         Inc(FFila);
+        Inc(FFilasProcesadas);
         FDatos.Next;
+        if FDatos.Eof or (FFilasProcesadas mod FILAS_ENTRE_AVISOS = 0) then
+          AvisarProgreso;
       end;
       if FArticuloActual <> #1 then
         EmitirTotalesArticulo;
@@ -637,8 +651,15 @@ begin
   end;
 end;
 
+procedure TExportadorBalanceExcel.AvisarProgreso;
+begin
+  if Assigned(FProgreso) then
+    FProgreso(FFilasProcesadas, FDatos.RecordCount);
+end;
+
 procedure TExportadorBalanceExcel.Ejecutar;
 begin
+  FFilasProcesadas := 0;
   FControl.ClearAll;
   FHoja := FControl.AddSheet('Balance',
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
@@ -661,12 +682,21 @@ end;
 procedure ExportarBalanceExcel(AControl: TdxSpreadSheet;
   const ADatos: TDataSet; AFotos: TFotosArticulos;
   ATipo: TTipoBalanceExcel);
+begin
+  ExportarBalanceExcel(AControl, ADatos, AFotos, ATipo, nil);
+end;
+
+procedure ExportarBalanceExcel(AControl: TdxSpreadSheet;
+  const ADatos: TDataSet; AFotos: TFotosArticulos;
+  ATipo: TTipoBalanceExcel;
+  const AProgreso: TProgresoBalanceExcel);
 var
   oExportador: TExportadorBalanceExcel;
 begin
   oExportador := TExportadorBalanceExcel.Create(
     AControl, ADatos, AFotos, ATipo);
   try
+    oExportador.Progreso := AProgreso;
     oExportador.Ejecutar;
   finally
     FreeAndNil(oExportador);

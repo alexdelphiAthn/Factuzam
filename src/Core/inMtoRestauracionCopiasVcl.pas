@@ -65,6 +65,7 @@ function SolicitarNuevaContrasenaCopia(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.UITypes,
   inMtoModalContrasenaCopia,
@@ -118,7 +119,7 @@ begin
     ARutaFichero := AContexto.Dialogo.FileName;
     Result := AContexto.CasoUso.PuedeRestaurar(ARutaFichero);
     if not Result then
-      ShowMessage(SErrorTipoRestauracionNoPermitido);
+      ShowMessage_fza(SErrorTipoRestauracionNoPermitido);
   end;
 end;
 
@@ -171,7 +172,7 @@ begin
   Result := True;
   if bRequiereCopia then
   begin
-    iRespuesta := MessageDlg(
+    iRespuesta := MessageDlg_fza(
       sPregunta,
       mtWarning,
       [mbYes, mbNo, mbCancel],
@@ -184,7 +185,7 @@ begin
         Result := False;
     end;
     if not Result then
-      ShowMessage(SInfoScriptCancelado);
+      ShowMessage_fza(SInfoScriptCancelado);
   end;
 end;
 

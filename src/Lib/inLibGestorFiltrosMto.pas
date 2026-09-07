@@ -78,6 +78,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows, System.SysUtils, System.Variants, System.NetEncoding,
   System.Types, Vcl.Forms, Vcl.Dialogs, cxFilter, inLibDevExp,
   inLibMsgComun;
@@ -308,7 +309,7 @@ var
 begin
   if ABase64 = '' then
   begin
-    ShowMessage(SErrorFiltroSinCondiciones);
+    ShowMessage_fza(SErrorFiltroSinCondiciones);
   end
   else
   begin
@@ -387,7 +388,7 @@ begin
   end;
   if sFiltroBase64 = '' then
   begin
-    ShowMessage(SErrorFiltroActualVacio);
+    ShowMessage_fza(SErrorFiltroActualVacio);
   end
   else if Assigned(FSolicitarDatos) and
           Assigned(FServicioLectura) and
@@ -409,7 +410,7 @@ begin
           FPropietario.Name, FVista.Name, oDatos.Nombre);
         if iIdFiltro > 0 then
         begin
-          if Application.MessageBox(
+          if MessageBox_fza(
               PChar(SPreguntaSobrescribirFiltro),
               PChar(STituloSobrescribirFiltro),
               MB_YESNO + MB_ICONQUESTION) = ID_YES then
@@ -417,7 +418,7 @@ begin
             FServicioEscritura.SobrescribirFiltro(
               iIdFiltro, oDatos.Nombre, oDatos.Descripcion,
               sFiltroBase64);
-            ShowMessage(SInfoFiltroSobrescrito);
+            ShowMessage_fza(SInfoFiltroSobrescrito);
           end;
         end
         else
@@ -425,7 +426,7 @@ begin
           FServicioEscritura.GuardarFiltroNuevo(
             FPropietario.Name, FVista.Name, oDatos.Nombre,
             oDatos.Descripcion, sFiltroBase64);
-          ShowMessage(SInfoFiltroGuardado);
+          ShowMessage_fza(SInfoFiltroGuardado);
         end;
       end;
     finally

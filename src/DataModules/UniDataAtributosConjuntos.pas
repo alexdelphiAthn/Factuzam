@@ -67,7 +67,7 @@ implementation
 
 uses
   System.Diagnostics, System.Variants,
-  UniDataAperturaConsultas, inLibMsgArticulos;
+  UniDataAperturaConsultas, inLibCodigosSinBarra, inLibMsgArticulos;
 
 resourcestring
   SErrorGrabarColeccionAntesValores =
@@ -182,7 +182,7 @@ begin
       oConsulta.Connection := ConexionPrincipal;
       oConsulta.SQL.Text := SQL_BUSCAR_VALOR;
       oConsulta.ParamByName('IDVA').AsString := Trim(AIdAtributo);
-      oConsulta.ParamByName('VALOR').AsString := Trim(ATexto);
+      oConsulta.ParamByName('VALOR').AsString := SinBarraSku(ATexto);
       oConsulta.Open;
       Result := not oConsulta.IsEmpty;
       if Result then
@@ -251,7 +251,7 @@ begin
         oConsulta.Connection := ConexionPrincipal;
         oConsulta.SQL.Text := SQL_INSERTAR_VALOR;
         oConsulta.ParamByName('IDVA').AsString := Trim(AIdAtributo);
-        oConsulta.ParamByName('VALOR').AsString := sTexto;
+        oConsulta.ParamByName('VALOR').AsString := SinBarraSku(sTexto);
         oConsulta.ParamByName('ORDEN').AsInteger := AOrden;
         oConsulta.ParamByName('USUARIO').AsString :=
           IdentidadSesion.Usuario;

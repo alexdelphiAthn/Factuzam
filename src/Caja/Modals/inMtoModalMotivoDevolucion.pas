@@ -54,6 +54,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -95,7 +96,7 @@ procedure TfrmModalMotivoDevolucion.actAceptarExecute(Sender: TObject);
 begin
   if MotivoIndicado = '' then
   begin
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorMotivoDevolucionCajaObligatorio),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     cbbMotivo.SetFocus;

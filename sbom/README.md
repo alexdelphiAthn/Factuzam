@@ -7,7 +7,7 @@ El contenido sirve para preparar el cumplimiento técnico. No es un dictamen jur
 ## Contenido
 
 - [Reglamento-UE-2024-2847-CRA-ES.pdf](Reglamento-UE-2024-2847-CRA-ES.pdf): copia oficial en español del texto publicado en el Diario Oficial de la Unión Europea.
-- [factuzam.cdx.json](factuzam.cdx.json): inventario CycloneDX 1.7 saneado de la resolución de fuentes analizada el 25 de agosto de 2026.
+- [factuzam.cdx.json](factuzam.cdx.json): inventario CycloneDX 1.7 saneado de la resolución de fuentes analizada el 25 de agosto de 2026, con el alta manual de la fuente DejaVu Sans incorporada el 5 de septiembre de 2026.
 - [FUENTE_OFICIAL.md](FUENTE_OFICIAL.md): procedencia, enlaces oficiales y huella de la copia local.
 - [TAREAS_CRA.md](TAREAS_CRA.md): registro priorizado de tareas, responsables y evidencias.
 - [GRAFO_COMPONENTES.md](GRAFO_COMPONENTES.md): vista humana de las familias de componentes observadas.
@@ -19,7 +19,9 @@ El contenido sirve para preparar el cumplimiento técnico. No es un dictamen jur
 
 El analizador Pascal produce un inventario CycloneDX y un grafo de dependencias de las fuentes resueltas. El proceso de normalización corrige la estructura del informe, añade una raíz Factuzam, hashes SHA-256, rutas lógicas, clasificación propia/tercero e inventarios binarios separados de UniDAC y DAC. Las rutas absolutas quedan fuera del conjunto saneado.
 
-`factuzam.cdx.json` es la instantánea estable del análisis Win64 Debug terminado el 25 de agosto de 2026 sin cambios concurrentes. Cumple el esquema oficial CycloneDX 1.7 y contiene 2.576 componentes, un nodo por componente y cero referencias colgantes. Sus 1.046 componentes propios y 1.530 de terceros reflejan resolución de fuentes; la composición se declara expresamente incompleta. Pascal Analyzer no consultó una base de vulnerabilidades, por lo que el estado sigue siendo `UNKNOWN`.
+`factuzam.cdx.json` es la instantánea estable del análisis Win64 Debug terminado el 25 de agosto de 2026 sin cambios concurrentes. Cumple el esquema oficial CycloneDX 1.7 y contiene 2.577 componentes, un nodo por componente y cero referencias colgantes. Sus 1.046 componentes propios y 1.531 de terceros reflejan resolución de fuentes, salvo el componente DejaVu Sans, que es un alta manual descrita más abajo; la composición se declara expresamente incompleta. Pascal Analyzer no consultó una base de vulnerabilidades, por lo que el estado sigue siendo `UNKNOWN`.
+
+La revisión 3 del inventario añade a mano el componente `urn:factuzam:component:dejavu:dejavu-sans:2.37`, la familia tipográfica DejaVu Sans prevista para distribuirse con el producto. Pascal Analyzer no resuelve activos binarios que no sean unidades Pascal, así que la entrada no procede del análisis y lo declara en sus propiedades `factuzam:sbom:entry-provenance` y `factuzam:distribution:status`. Desde el 7 de septiembre de 2026 su ámbito es `required`: el instalador NSIS empaqueta las cuatro caras TrueType, las registra en la carpeta de fuentes de Windows e instala el aviso de licencia junto a la aplicación. Al regenerar el inventario con `normalizar_sbom_pascal_analyzer.ps1` la entrada se pierde: para que sea estable, el normalizador debe inyectarla igual que inyecta los componentes agregados de Devart.
 
 Este archivo es evidencia interna de análisis, no el SBOM definitivo del producto distribuido. Para convertirlo en evidencia de una entrega todavía hay que:
 
@@ -35,4 +37,4 @@ Como este repositorio web puede terminar expuesto públicamente, nunca deben cop
 
 La generación parte de `eng/analizar_pascal.ps1` y `eng/normalizar_sbom_pascal_analyzer.ps1` en el repositorio hermano Factuzam. El normalizador define como exportables únicamente `SBOM.json`, `Security.txt` y `Security Coverage.txt`; los demás informes deben conservarse con acceso restringido. La automatización por versión y plataforma sigue pendiente.
 
-Última revisión de este índice: 2026-08-25.
+Última revisión de este índice: 2026-09-07.

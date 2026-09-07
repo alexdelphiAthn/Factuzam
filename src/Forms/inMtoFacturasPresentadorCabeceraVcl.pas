@@ -105,6 +105,7 @@ procedure AsignarOrigenesRegistroFacturaVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils, System.UITypes, System.Variants, Vcl.Dialogs,
   inLibFacturas,
   inLibFacturasPresentadorCabecera,
@@ -307,7 +308,7 @@ begin
       FContexto.DataModule.unqryTarifas.FieldByName(
         'ESIMP_INCL_TAR').AsString
   else
-    ShowMessage(SErrorTarifaSeleccionadaNoEncontrada);
+    ShowMessage_fza(SErrorTarifaSeleccionadaNoEncontrada);
 end;
 
 procedure TPresentadorCabeceraFacturaVcl.CambiarEstadoRecibo(
@@ -387,34 +388,34 @@ procedure TPresentadorCabeceraFacturaVcl.MostrarResultadoOperacion(
   const AResultado: TResultadoOperacionFactura);
 begin
   if (not AResultado.Exito) and (AResultado.Mensaje <> '') then
-    ShowMessage(AResultado.Mensaje);
+    ShowMessage_fza(AResultado.Mensaje);
 end;
 
 procedure TPresentadorCabeceraFacturaVcl.MostrarResultadoBorrado(
   const AResultado: TResultadoBorradoFactura);
 begin
   if (not AResultado.Permitido) and (AResultado.Mensaje <> '') then
-    ShowMessage(AResultado.Mensaje);
+    ShowMessage_fza(AResultado.Mensaje);
 end;
 
 procedure TPresentadorCabeceraFacturaVcl.MostrarAdvertencia(
   const AMensaje: string);
 begin
   if AMensaje <> '' then
-    ShowMessage(AMensaje);
+    ShowMessage_fza(AMensaje);
 end;
 
 procedure TPresentadorCabeceraFacturaVcl.MostrarErrorValidacion(
   const AError: EValidacionFactura);
 begin
-  ShowMessage(AError.Message);
+  ShowMessage_fza(AError.Message);
   SenalarCampo(AError.Campo);
 end;
 
 function TPresentadorCabeceraFacturaVcl.ConfirmarBorrado(
   const ASerie, ANumero: string): Boolean;
 begin
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     Format(SPreguntaBorrarFactura, [ASerie, ANumero]),
     mtConfirmation,
     [mbYes, mbNo],

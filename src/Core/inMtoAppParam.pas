@@ -212,6 +212,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   StrUtils, Vcl.Printers,
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
@@ -771,7 +772,7 @@ begin
         else
         begin
           Item.DisplayValue := FIdiomaInspectorAnterior;
-          ShowMessage(
+          ShowMessage_fza(
             Format(
               SErrorSeleccionIdiomaNoAplicado,
               [sIdioma, sError]));
@@ -1295,22 +1296,22 @@ procedure TfrmMtoAppParam.MostrarResultadoGuardado(
 begin
   if ACambios.Guardados > 0 then
   begin
-    ShowMessage(Format(
+    ShowMessage_fza(Format(
       SInfoParametrosGuardados,
       [ACambios.Guardados, AmbitoMensajeGuardado(AAmbito, ACambios)]));
     RecargarParametrosGuardados(AAmbito, ATemaAnterior, ACambios);
     RegistrarCambioVerifactuGuardado(AAmbito, ACambios);
     if ACambios.Ignorados > 0 then
-      ShowMessage(Format(
+      ShowMessage_fza(Format(
         SAvisoParametrosRestringidosIgnorados,
         [ACambios.Ignorados]));
   end
   else if ACambios.Ignorados > 0 then
-    ShowMessage(Format(
+    ShowMessage_fza(Format(
       SAvisoParametrosRestringidosNoGuardados,
       [ACambios.Ignorados]))
   else
-    ShowMessage(SInfoSinCambiosParametros);
+    ShowMessage_fza(SInfoSinCambiosParametros);
 end;
 
 procedure TfrmMtoAppParam.btnGuardarClick(Sender: TObject);
@@ -1350,7 +1351,7 @@ begin
     Layout.GuardarDividerInspector('Divider', JvInspector1);
     if Layout.PreguntarYGrabar(
          SDescripcionPersonalizacionParametrosAplicacion) then
-      ShowMessage(SInfoLayoutGuardado);
+      ShowMessage_fza(SInfoLayoutGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -1477,7 +1478,7 @@ begin
   // Solo pedimos confirmación si hay cambios reales sin guardar
   if not HayCambiosPendientes then
     Close
-  else if MessageDlg(SPreguntaSalirSinGuardar,
+  else if MessageDlg_fza(SPreguntaSalirSinGuardar,
                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     Close;
 end;
@@ -1545,7 +1546,7 @@ begin
     end;
 
     if usuarios.Count = 0 then
-      ShowMessage(SAvisoSinUsuariosParametrosGuardados)
+      ShowMessage_fza(SAvisoSinUsuariosParametrosGuardados)
     else
     begin
       sUsuario := usuarios[0];
@@ -1554,7 +1555,7 @@ begin
                     sUsuario) then
       begin
         if usuarios.IndexOf(sUsuario) < 0 then
-          ShowMessage(Format(SErrorUsuarioNoEncontrado, [sUsuario]))
+          ShowMessage_fza(Format(SErrorUsuarioNoEncontrado, [sUsuario]))
         else
         begin
           CargarParametros(

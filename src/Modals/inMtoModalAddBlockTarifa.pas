@@ -120,6 +120,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos;
 
 resourcestring
@@ -386,7 +387,7 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage(SErrorInsertarTarifaAddBlock + E.Message);
+        ShowMessage_fza(SErrorInsertarTarifaAddBlock + E.Message);
       end;
     end;
   end;

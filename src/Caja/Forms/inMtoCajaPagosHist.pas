@@ -97,6 +97,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inLibUser,
   inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario,
   inLibMsgCaja, inLibMsgComun;
@@ -361,7 +362,7 @@ begin
       FreeAndNil(oList);
       Screen.Cursor := crDefault;
     end;
-    ShowMessage(SInfoPrecargaCajaGuardada);
+    ShowMessage_fza(SInfoPrecargaCajaGuardada);
   end;
 end;
 

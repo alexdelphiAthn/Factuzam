@@ -53,11 +53,9 @@ procedure TRenderEditorLineasCajaVcl.DibujarCeldaLinea(
   AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);
 var
-  Info: TInfoBasico;
   Mapa: TDictionary<string, string>;
   Articulo: string;
   IdValorAtributo: string;
-  Texto: string;
 begin
   if Assigned(AViewInfo) and Assigned(AViewInfo.Item) and
      Assigned(AViewInfo.GridRecord) and
@@ -66,7 +64,6 @@ begin
   begin
     Articulo := VarToStr(AViewInfo.GridRecord.Values[
       FContexto.ColumnaArticulo.Index]);
-    Texto := AViewInfo.Text;
     Mapa := ObtenerMapaAtributosGlobal(FContexto.Conexion);
     IdValorAtributo := '';
     if Assigned(Mapa) and
@@ -74,24 +71,18 @@ begin
       Mapa.TryGetValue(
         UpperCase(Trim(TcxGridColumn(AViewInfo.Item).Caption)),
         IdValorAtributo);
-    if ObtenerInfoBasicoArticulo(
+    // Solo con el atributo de la columna (articulo y luego paleta global
+    // de ese atributo): el antiguo fallback generico probaba el texto
+    // contra todos los atributos y una talla "100" heredaba el color
+    // basico "100".
+    if PintarCeldaSwatchAtributoSiAplica(
          FContexto.Conexion,
-         Articulo,
+         ACanvas,
+         AViewInfo,
          IdValorAtributo,
-         Texto,
-         Info) then
-      ADone := PintarCeldaConCuadradoColor(
-        ACanvas,
-        AViewInfo,
-        Info,
-        Texto);
+         Articulo) then
+      ADone := True;
   end;
-  if (not ADone) and PintarCeldaSwatchSiAplica(
-       FContexto.Conexion,
-       ACanvas,
-       AViewInfo,
-       nil) then
-    ADone := True;
 end;
 
 procedure TRenderEditorLineasCajaVcl.DibujarCeldaStock(
@@ -100,13 +91,14 @@ procedure TRenderEditorLineasCajaVcl.DibujarCeldaStock(
   AViewInfo: TcxGridTableDataCellViewInfo;
   var ADone: Boolean);
 begin
+  // La primera columna lleva "CODART/COLOR": solo el color, nunca otro
+  // atributo (una talla "100" heredaba el color basico "100").
   if Assigned(AViewInfo) and Assigned(AViewInfo.Item) and
      (AViewInfo.Item.VisibleIndex = 0) and
-     PintarCeldaSwatchSiAplica(
+     PintarCeldaSwatchColorDeSkuSiAplica(
        FContexto.Conexion,
        ACanvas,
-       AViewInfo,
-       nil) then
+       AViewInfo) then
     ADone := True;
 end;
 

@@ -279,7 +279,9 @@ implementation
 
 {$R *.dfm}
 
-uses inLibData,
+uses
+  inLibMensajesVcl,
+  inLibData,
      inLibConexionesIntf,
      inLibUnitForm,
      inLibShowMto,
@@ -420,7 +422,7 @@ begin
             GrabarDatasets(tdmDataModule as TDataModule);
           end);
         if Resultado = rgmGuardado then
-          ShowMessage(SInfoDatosGuardados);
+          ShowMessage_fza(SInfoDatosGuardados);
       except
         on E: Exception do
           raise Exception.Create(Format(SErrorGrabarDatos, [E.Message]));
@@ -455,7 +457,7 @@ begin
     bCerrar := True;
     if bAltaPendiente then
     begin
-      bCerrar := Application.MessageBox(
+      bCerrar := MessageBox_fza(
         PChar(SPreguntaCancelarIntroduccionDatos),
         PChar(STituloMensajeAdvertenciaGen),
         MB_YESNO + MB_ICONQUESTION + MB_DEFBUTTON2) = ID_YES;
@@ -465,17 +467,17 @@ begin
     else if Assigned(oModuloDatos) and
             CheckOpenDatasets(oModuloDatos) then
     begin
-      if Application.MessageBox(PChar(SPreguntaGrabarCambiosPendientes),
+      if MessageBox_fza(PChar(SPreguntaGrabarCambiosPendientes),
         PChar(STituloMensajeAdvertenciaGen),
         MB_YESNO + MB_ICONQUESTION) = ID_YES then
       begin
         btnGrabarClick(Sender);
-        ShowMessage(SInfoCambiosGrabados);
+        ShowMessage_fza(SInfoCambiosGrabados);
       end
       else
       begin
         CancelarDatasets(oModuloDatos);
-        ShowMessage(SInfoCambiosCancelados);
+        ShowMessage_fza(SInfoCambiosCancelados);
       end;
     end;
     if bCerrar then
@@ -674,7 +676,7 @@ procedure TfrmMtoGen.GuardianBeforeInsert(DataSet: TDataSet);
 begin
   if not PuedeAccionMto(apmInsertar) then
   begin
-    ShowMessage(SErrorPermisoInsertarRegistro);
+    ShowMessage_fza(SErrorPermisoInsertarRegistro);
     Abort;
   end
   else if Assigned(FBeforeInsertOrig) then
@@ -686,7 +688,7 @@ begin
   if (not FDesactivandoPorBorrado) and
      (not PuedeAccionMto(apmModificar)) then
   begin
-    ShowMessage(SErrorPermisoModificarRegistro);
+    ShowMessage_fza(SErrorPermisoModificarRegistro);
     Abort;
   end
   else if Assigned(FBeforeEditOrig) then
@@ -705,7 +707,7 @@ begin
      PuedeAccionMto(apmModificar));
   if not bPermitido then
   begin
-    ShowMessage(SErrorPermisoGuardarRegistro);
+    ShowMessage_fza(SErrorPermisoGuardarRegistro);
     Abort;
   end
   else if Assigned(FBeforePostOrig) then
@@ -718,7 +720,7 @@ var
 begin
   if not PuedeAccionMto(apmBorrar) then
   begin
-    ShowMessage(SErrorPermisoBorrarRegistro);
+    ShowMessage_fza(SErrorPermisoBorrarRegistro);
     Abort;
   end
   else
@@ -957,13 +959,13 @@ begin
   else
     eTipoDialogo := mtError;
   end;
-  MessageDlg(AMensaje, eTipoDialogo, [mbOk], 0);
+  MessageDlg_fza(AMensaje, eTipoDialogo, [mbOk], 0);
 end;
 
 function TfrmMtoGen.ConfirmarMensajeDesdeDM(Sender: TObject;
   const AMensaje: string): Boolean;
 begin
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     AMensaje, mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 end;
 
@@ -1719,7 +1721,7 @@ begin
   // Caso 1: tabla no desactivable y sin hijos -> confirmacion simple Si/No.
   if (not bDesactivable) and (iHijos = 0) then
   begin
-    if Application.MessageBox(
+    if MessageBox_fza(
         PChar(SPreguntaEliminarRegistro),
         PChar(STituloConfirmarEliminacion),
         MB_YESNO + MB_ICONWARNING) = ID_YES then
@@ -1732,7 +1734,7 @@ begin
   begin
     sMsg := Format(SPreguntaEliminarRegistroConHijos,
                    [iHijos, sDescHijos]);
-    if Application.MessageBox(PChar(sMsg),
+    if MessageBox_fza(PChar(sMsg),
         PChar(STituloConfirmarEliminacion),
         MB_YESNO + MB_ICONWARNING + MB_DEFBUTTON2) = ID_YES then
       Result := abContinuar
@@ -1748,7 +1750,7 @@ begin
     else
       sMsg := SAvisoDesactivarRegistroSinHijos;
     sMsg := sMsg + STextoOpcionesBorradoRegistro;
-    iResp := Application.MessageBox(PChar(sMsg),
+    iResp := MessageBox_fza(PChar(sMsg),
                PChar(STituloConfirmarEliminacion),
                MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1);
     case iResp of

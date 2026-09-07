@@ -85,6 +85,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibMsgArticulos;
 
 resourcestring
@@ -239,7 +240,7 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage(SErrorInsertarLineasInventarioAddBlock + E.Message);
+        ShowMessage_fza(SErrorInsertarLineasInventarioAddBlock + E.Message);
       end;
     end;
   end;

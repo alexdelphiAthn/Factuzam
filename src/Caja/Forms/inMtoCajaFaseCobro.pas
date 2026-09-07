@@ -237,7 +237,9 @@ implementation
 
 {$R *.dfm}
 
-uses inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
+uses
+  inLibMensajesVcl,
+  inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
      UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja;
 
 constructor TfrmMtoCajaFaseCobro.Create(
@@ -334,14 +336,14 @@ var
 begin
   //F8 -> grabar la venta como factura completa (A4), no como ticket
   if FRectificaA <> '' then
-    ShowMessage(SErrorRectificacionCajaNoAdmiteBorrador)
+    ShowMessage_fza(SErrorRectificacionCajaNoAdmiteBorrador)
   else if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
-    ShowMessage(SErrorClienteBorradorCajaNoAsignado)
+    ShowMessage_fza(SErrorClienteBorradorCajaNoAsignado)
   else if Trim(FNifCliente) = '' then
-    ShowMessage(SErrorNifClienteBorradorCajaNoIndicado)
+    ShowMessage_fza(SErrorNifClienteBorradorCajaNoIndicado)
   else if PaisEsEspana(FCodigoPaisCliente, FNombrePaisCliente) and
           (not DocumentoFiscalValido(FNifCliente)) then
-    ShowMessage(SErrorDocumentoFiscalClienteCajaNoValido +
+    ShowMessage_fza(SErrorDocumentoFiscalClienteCajaNoValido +
                 MensajeDocumentoFiscalInvalido(FNifCliente))
   else if ValidarYConfirmar then
   begin
@@ -406,7 +408,7 @@ begin
   Res := FDatosCobro.ValidarParaCobro;
   if not Res.Valido then
   begin
-    MessageDlg(Res.Mensaje, mtError, [mbOK], 0);
+    MessageDlg_fza(Res.Mensaje, mtError, [mbOK], 0);
     Result := False;
   end
   else
@@ -429,7 +431,7 @@ begin
   if (dUltima > 0) and (Trunc(AFecha) < Trunc(dUltima)) then
   begin
     Result := False;
-    MessageDlg(
+    MessageDlg_fza(
       Format(SErrorFechaSerieEmisionCajaNoValida,
              [ASerie,
               FormatDateTime('dd/mm/yyyy', dUltima),
@@ -453,7 +455,7 @@ begin
     if (Resumen.Filas > 0) and
        (Resumen.Filas <> Resumen.Maximo - Resumen.Minimo + 1) then
     begin
-      MessageDlg(
+      MessageDlg_fza(
         Format(
           SAvisoHuecosNumeracionSerieCaja,
           [
@@ -493,7 +495,7 @@ begin
   iNumero := StrToInt64Def(Trim(ANumero), 0);
   if iNumero <= 0 then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorNumeroBorradorCajaNoValido,
       mtError,
       [mbOK],
@@ -507,7 +509,7 @@ begin
       iNumero);
     if Resumen.ExistentesNumero > 0 then
     begin
-      MessageDlg(
+      MessageDlg_fza(
         Format(
           SErrorNumeroBorradorCajaExistente,
           [iNumero, ASerie]),
@@ -519,7 +521,7 @@ begin
             (iNumero <= Resumen.Minimo) or
             (iNumero >= Resumen.Maximo) then
     begin
-      MessageDlg(
+      MessageDlg_fza(
         Format(
           SErrorNumeroBorradorCajaNoEsHueco,
           [iNumero, ASerie, Resumen.Minimo, Resumen.Maximo]),
@@ -640,7 +642,7 @@ begin
     begin
       bContinuar := CorreoTicketsConfigurado(ParametrosApp, sMensaje);
       if not bContinuar then
-        ShowMessage(sMensaje)
+        ShowMessage_fza(sMensaje)
       else
       begin
         FEmailEnvio := Trim(FEmailEnvio);
@@ -649,7 +651,7 @@ begin
             SSolicitudCorreoDocumentacionCaja, FEmailEnvio);
         if bContinuar and (Trim(FEmailEnvio) = '') then
         begin
-          ShowMessage(SErrorCorreoDocumentacionCajaNoIndicado);
+          ShowMessage_fza(SErrorCorreoDocumentacionCajaNoIndicado);
           bContinuar := False;
         end;
       end;
@@ -1151,20 +1153,20 @@ begin
   // 1. Validar que tenemos un cliente válido y con permisos para dejar a deber
   if not FDatosCobro.PuedeDejarEnCuenta then
   begin
-    ShowMessage(SErrorCreditoClienteCajaNoPermitido);
+    ShowMessage_fza(SErrorCreditoClienteCajaNoPermitido);
   end
   else if (FDatosCobro.ImportePendiente <= 0) and
           (not FDatosCobro.EsDevolucionEconomica) and
           (FDatosCobro.ImporteTotalPagar > 0) then
   begin
-    ShowMessage(SErrorImporteCreditoCajaNoPendiente);
+    ShowMessage_fza(SErrorImporteCreditoCajaNoPendiente);
   end
   else
   begin
     Res := FDatosCobro.EstablecerDejarEnCuenta(
       FDatosCobro.ImportePendiente);
     if not Res.Valido then
-      ShowMessage(Res.Mensaje)
+      ShowMessage_fza(Res.Mensaje)
     else
     begin
       ActualizarInterfaz;

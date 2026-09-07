@@ -186,7 +186,7 @@ begin
   FlblNombre.Properties.Alignment.Horz := taCenter;
   // Asignar cualquier propiedad de Style.Font activa IsFontAssigned
   // automaticamente; no hay que tocarla en runtime (es read-only).
-  FlblNombre.Style.Font.Name   := 'Lucida Sans';
+  FlblNombre.Style.Font.Name   := 'DejaVu Sans';
   FlblNombre.Style.Font.Height := -16;
   FlblNombre.Style.Font.Style  := [fsBold];
   FlblNombre.Transparent := True;
@@ -198,7 +198,7 @@ begin
   FlblVersion.AutoSize := False;
   FlblVersion.SetBounds(0, 316, Panel1.Width, 18);
   FlblVersion.Properties.Alignment.Horz := taCenter;
-  FlblVersion.Style.Font.Name   := 'Lucida Sans';
+  FlblVersion.Style.Font.Name   := 'DejaVu Sans';
   FlblVersion.Style.Font.Height := -12;
   FlblVersion.Style.Font.Style  := [];
   FlblVersion.Transparent := True;

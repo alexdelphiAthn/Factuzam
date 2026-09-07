@@ -733,7 +733,7 @@
             Font.Charset = DEFAULT_CHARSET
             Font.Color = clWindowText
             Font.Height = -15
-            Font.Name = 'Lucida Sans'
+            Font.Name = 'DejaVu Sans'
             Font.Style = [fsBold]
             ParentFont = False
             OnClick = btnFacturarTodoClick

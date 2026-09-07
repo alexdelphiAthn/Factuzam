@@ -76,7 +76,7 @@ const
   ID_BOTON_CANCELAR = 1;
   PIXELES_POR_PULGADA_BASE = 96;
   PUNTOS_FUENTE = 13;
-  NOMBRE_FUENTE = 'Lucida Sans';
+  NOMBRE_FUENTE = 'DejaVu Sans';
   // Medidas a 96 ppp; se escalan a los ppp indicados al crear la ventana.
   ANCHO_VENTANA = 460;
   ALTO_VENTANA = 156;

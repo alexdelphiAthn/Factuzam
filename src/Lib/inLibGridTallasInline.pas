@@ -236,6 +236,7 @@ function SeleccionarConjuntoTalla(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.Math, System.Types,
   Vcl.Graphics, Vcl.StdCtrls, Vcl.ExtCtrls,
   inLibMsgArticulos;
@@ -590,7 +591,7 @@ begin
       arr := GetPosicionesConjunto(iAc);
       if Length(arr) > FCfg.MaxColumnas then
       begin
-        MessageDlg(Format(SAvisoSistemaTallasSuperaMaximo,
+        MessageDlg_fza(Format(SAvisoSistemaTallasSuperaMaximo,
           [Length(arr), FCfg.MaxColumnas]),
           mtError, [mbOk], 0);
         if not (Lineas.State in [dsEdit, dsInsert]) then

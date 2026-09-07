@@ -201,6 +201,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibShowMto,
   inLibUser,
@@ -283,10 +284,10 @@ begin
   bContinuar := (dsTablaG.DataSet <> nil) and
     not dsTablaG.DataSet.IsEmpty;
   if not bContinuar then
-    ShowMessage(SErrorTarifaNoSeleccionada);
+    ShowMessage_fza(SErrorTarifaNoSeleccionada);
   if bContinuar and (dsTablaG.State in [dsInsert, dsEdit]) then
   begin
-    bContinuar := MessageDlg(SPreguntaGuardarTarifaAntesContinuar,
+    bContinuar := MessageDlg_fza(SPreguntaGuardarTarifaAntesContinuar,
       mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes;
     if bContinuar then
       dsTablaG.DataSet.Post;
@@ -608,7 +609,7 @@ begin
     IdentidadSesion.Usuario);
   FUltimaTarifaCondicionDto := '';
   CargarCondicionDto;
-  ShowMessage(SInfoAplicacionDescuentoGuardada);
+  ShowMessage_fza(SInfoAplicacionDescuentoGuardada);
 end;
 
 procedure TfrmMtoTarifas.dsTablaGDataChangeCondicionDto(

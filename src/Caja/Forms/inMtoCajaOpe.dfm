@@ -81,7 +81,7 @@
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -14
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
       Style.Font.Quality = fqClearTypeNatural
@@ -101,7 +101,7 @@
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -14
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
       Style.Font.Quality = fqClearTypeNatural
@@ -118,7 +118,7 @@
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -13
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
       Style.Font.Quality = fqClearTypeNatural
@@ -574,7 +574,7 @@
         Font.Charset = ANSI_CHARSET
         Font.Color = clWindowText
         Font.Height = -19
-        Font.Name = 'Lucida Sans'
+        Font.Name = 'DejaVu Sans'
         Font.Pitch = fpFixed
         Font.Style = []
         Font.Quality = fqClearTypeNatural
@@ -740,7 +740,7 @@
           Font.Charset = ANSI_CHARSET
           Font.Color = clWindowText
           Font.Height = -19
-          Font.Name = 'Lucida Sans'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearTypeNatural
@@ -814,7 +814,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -12
-      Font.Name = 'Lucida Sans'
+      Font.Name = 'DejaVu Sans'
       Font.Style = [fsBold]
     end
     object styImporte: TcxStyle
@@ -822,7 +822,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clOlive
       Font.Height = -12
-      Font.Name = 'Lucida Sans'
+      Font.Name = 'DejaVu Sans'
       Font.Style = []
     end
     object styCabecera: TcxStyle
@@ -831,7 +831,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = 20
-      Font.Name = 'Lucida Sans'
+      Font.Name = 'DejaVu Sans'
       Font.Style = [fsBold]
       TextColor = clDefault
     end

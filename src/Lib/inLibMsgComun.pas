@@ -384,6 +384,9 @@ resourcestring
   SCaptionEsperaPaginaInforme = 'Página %d';
   SCaptionEsperaGenerandoHojaCalculo =
     'Generando la hoja de cálculo...';
+  SCaptionEsperaSeleccionandoArticulo =
+    '%s. Seleccionando artículo: %s';
+  SCaptionEsperaExportandoFilas = 'Exportando fila %s de %s';
   SCaptionVersion = 'Versión %s';
   STituloGuardarExcel = 'Guardar Excel';
   SCaptionFiltroTodosArchivos = 'Todos los archivos';

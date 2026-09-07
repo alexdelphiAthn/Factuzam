@@ -220,6 +220,7 @@ uses
   inLibPrestaShopColaSenal,
   UniDataPrestaShopEncolado,
   UniDataValoresAutomaticosRepositorio,
+  inLibCodigosSinBarra,
   inLibMsgArticulos;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
@@ -699,6 +700,9 @@ end;
 procedure TdmArticulos.unqryProveedoresArticulosBeforePost(DataSet: TDataSet);
 begin
   inherited;
+  // El modelo/referencia del proveedor entra en el codigo de articulo
+  // generado en compras: sin barras, como el propio codigo.
+  QuitarBarraSkuCampo(DataSet, 'REF_PROVEEDOR');
   if unqryProveedoresArticulos.State = dsInsert then
     if Trim(unqryProveedoresArticulos.FindField(
       'ESPROVEEDORPRINCIPAL').AsString) = 'S' then
@@ -1217,6 +1221,9 @@ begin
     if (DataSet.State = dsInsert) and
        (Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString) = '') then
       Abort;
+    // La barra es el separador de atributos del SKU: en el codigo de
+    // articulo se cambia por guion (misma regla que el migrador).
+    QuitarBarraSkuCampo(DataSet, 'CODIGO_ART_ART');
     var sDescripcion :=
       Trim(unqryTablaG.FindField('DESCRIPCION_ART').AsString);
     if (sDescripcion = '') or

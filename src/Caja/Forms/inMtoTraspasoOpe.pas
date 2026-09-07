@@ -287,6 +287,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja, inLibMsgComun,
   UniDataGridArticulosRepositorio, UniDataColumnasSkuServicios,
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
@@ -1082,9 +1083,12 @@ begin
   // lleva "CODART/COLOR"). En las demas (almacen, tallas) el texto — p.ej. el
   // "0" de una talla — podia colar como valor de atributo y pintar cuadraditos
   // donde no toca. Mismo criterio que la rejilla de stock de caja.
+  // Y solo con el atributo de color: el pintor generico probaba el texto
+  // contra todos los atributos y una talla "100" heredaba el color "100".
   if (AViewInfo <> nil) and (AViewInfo.Item <> nil) and
      (AViewInfo.Item.VisibleIndex = 0) and
-     PintarCeldaSwatchSiAplica(ConexionPrincipal,ACanvas, AViewInfo, nil) then
+     PintarCeldaSwatchColorDeSkuSiAplica(
+       ConexionPrincipal, ACanvas, AViewInfo) then
     ADone := True;
 end;
 
@@ -1424,7 +1428,7 @@ begin
   AOrigen := DestinoSeleccionado;
   Result := AOrigen <> '';
   if not Result then
-    ShowMessage(SErrorAlmacenOrigenReposicionNoSeleccionado);
+    ShowMessage_fza(SErrorAlmacenOrigenReposicionNoSeleccionado);
 end;
 
 function TfrmMtoOpeTraspaso.ObtenerRangoReposicion(
@@ -1434,7 +1438,7 @@ begin
   AHasta := FechaEditada(dteVentasHasta);
   Result := (ADesde > 0) and (AHasta > 0) and (ADesde < AHasta);
   if not Result then
-    ShowMessage(SErrorRangoVentasReposicionNoValido);
+    ShowMessage_fza(SErrorRangoVentasReposicionNoValido);
 end;
 
 procedure TfrmMtoOpeTraspaso.CargarVentasReposicion;
@@ -1477,7 +1481,7 @@ begin
     end;
     ActualizarStockYFoto;
     if not FReposicionCargada then
-      ShowMessage(SInfoVentasReposicionNoEncontradas);
+      ShowMessage_fza(SInfoVentasReposicionNoEncontradas);
   end;
 end;
 
@@ -1487,7 +1491,7 @@ begin
     EmitirReposicionInterna;
   except
     on E: EValidacionTraspaso do
-      ShowMessage(E.Message);
+      ShowMessage_fza(E.Message);
   end;
 end;
 
@@ -1500,7 +1504,7 @@ var
   dtHasta: TDateTime;
 begin
   if not FReposicionCargada then
-    ShowMessage(SErrorVentasReposicionNoCargadas)
+    ShowMessage_fza(SErrorVentasReposicionNoCargadas)
   else if EmpleadoValido and
           ObtenerOrigenReposicion(sOrigen) and
           ObtenerRangoReposicion(dtDesde, dtHasta) and
@@ -1511,7 +1515,7 @@ begin
     btnF8.Enabled := PuedeBorrarLinea;
     btnF12.Enabled := False;
     try
-      ShowMessage(Format(SInfoReposicionAutoEmitida, [sSerie, sNumero]));
+      ShowMessage_fza(Format(SInfoReposicionAutoEmitida, [sSerie, sNumero]));
       TTraspasoTicket.ImprimirSolicitud(
         PreviewTicket,
         FRepositorioTraspasoTicket,
@@ -2192,7 +2196,7 @@ begin
       ActualizarTotal;
     end
     else
-      ShowMessage(SErrorCargarSolicitudTraspaso);
+      ShowMessage_fza(SErrorCargarSolicitudTraspaso);
   end;
 end;
 
@@ -2214,7 +2218,7 @@ begin
     if not FQModalSolic.Active then
       FQModalSolic.Open;
     if FQModalSolic.IsEmpty then
-      ShowMessage(SErrorSolicitudesTraspasoPendientesNoEncontradas)
+      ShowMessage_fza(SErrorSolicitudesTraspasoPendientesNoEncontradas)
     else
     begin
       iResultado := MostrarModalSolicitudes(sNumero, sSerie);
@@ -2274,17 +2278,17 @@ begin
   begin
     if Trim(
       FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
-      ShowMessage(StringReplace(
+      ShowMessage_fza(StringReplace(
         SErrorSolicitudTraspasoCerrarNoCargada,
         'F8',
         'F7',
         [rfReplaceAll]))
-    else if MessageDlg(SPreguntaCerrarSolicitudTraspaso,
+    else if MessageDlg_fza(SPreguntaCerrarSolicitudTraspaso,
       mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if FDatos.CerrarSolicitud then
       begin
-        ShowMessage(SInfoSolicitudTraspasoCerrada);
+        ShowMessage_fza(SInfoSolicitudTraspasoCerrada);
         AplicarModo(mtAtender);
       end;
     end;
@@ -2301,9 +2305,9 @@ begin
   // lineas,// sirve unas con cantidad y deja otras a 0 con su motivo,y pulsa
   // F12.
   if FModo <> mtAtender then
-    ShowMessage(SErrorDenegarSolicitudTraspasoModoNoValido)
+    ShowMessage_fza(SErrorDenegarSolicitudTraspasoModoNoValido)
   else if Trim(FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString) = '' then
-    ShowMessage(StringReplace(
+    ShowMessage_fza(StringReplace(
       SErrorSolicitudTraspasoDenegarNoCargada,
       'F8',
       'F7',
@@ -2315,7 +2319,7 @@ begin
                   SSolicitudMotivoRechazoTraspaso, sMotivo) then
     begin
       if Trim(sMotivo) = '' then
-        ShowMessage(SErrorMotivoDenegacionTraspasoNoIndicado)
+        ShowMessage_fza(SErrorMotivoDenegacionTraspasoNoIndicado)
       else
       begin
         FDatos.cdsLineas.DisableControls;
@@ -2339,13 +2343,13 @@ begin
         try
           if FDatos.GrabarDenegacion then
           begin
-            ShowMessage(SInfoPeticionTraspasoDenegada);
+            ShowMessage_fza(SInfoPeticionTraspasoDenegada);
             AplicarModo(mtAtender);
           end;
         except
           // Validaciones de negocio: aviso normal (EValidacionTraspaso).
           on E: EValidacionTraspaso do
-            ShowMessage(E.Message);
+            ShowMessage_fza(E.Message);
         end;
       end;
     end;
@@ -2366,7 +2370,7 @@ begin
     if not FQModalSolic.Active then
       FQModalSolic.Open;
     if FQModalSolic.IsEmpty then
-      ShowMessage(SInfoSinPeticionesTraspaso)
+      ShowMessage_fza(SInfoSinPeticionesTraspaso)
     else
       MostrarModalMisPeticiones(ATitulo);
   finally
@@ -2387,7 +2391,7 @@ var
 begin
   sAviso := FDatos.ObtenerAvisoStockOrigen(AAlmacenOrigen);
   if sAviso <> '' then
-    MessageDlg(sAviso, mtWarning, [mbOK], 0);
+    MessageDlg_fza(sAviso, mtWarning, [mbOK], 0);
 end;
 
 procedure TfrmMtoOpeTraspaso.EnviarSolicitud;
@@ -2398,7 +2402,7 @@ begin
   begin
     sOrigen := DestinoSeleccionado;
     if sOrigen = '' then
-      ShowMessage(SErrorAlmacenOrigenSolicitudNoSeleccionado)
+      ShowMessage_fza(SErrorAlmacenOrigenSolicitudNoSeleccionado)
     else
     begin
       try
@@ -2407,7 +2411,7 @@ begin
         AvisarStockSolicitud(sOrigen);
         if FDatos.GrabarSolicitud(sOrigen, sNum, sSer) then
         begin
-          ShowMessage(Format(SInfoSolicitudTraspasoEnviada, [sSer, sNum]));
+          ShowMessage_fza(Format(SInfoSolicitudTraspasoEnviada, [sSer, sNum]));
           // Ticket de la solicitud: cada SKU con stock origen / destino.
           TTraspasoTicket.ImprimirSolicitud(
                                             PreviewTicket,
@@ -2419,7 +2423,7 @@ begin
       except
         // Validaciones de negocio: aviso normal (vease EValidacionTraspaso).
         on E: EValidacionTraspaso do
-          ShowMessage(E.Message);
+          ShowMessage_fza(E.Message);
       end;
     end;
   end;
@@ -2499,7 +2503,7 @@ begin
   bValido := ValidarEmpleadoActual(sCod, sNom);
   if Trim(txtEmpleado.Text) = '' then
   begin
-    ShowMessage(SErrorEmpleadoTraspasoNoIndicado);
+    ShowMessage_fza(SErrorEmpleadoTraspasoNoIndicado);
     Result := False;
   end
   else if bValido then
@@ -2513,7 +2517,7 @@ begin
   end
   else
   begin
-    ShowMessage(Format(SErrorEmpleadoTraspasoNoEncontrado,
+    ShowMessage_fza(Format(SErrorEmpleadoTraspasoNoEncontrado,
       [txtEmpleado.Text]));
     Result := False;
   end;
@@ -2529,7 +2533,7 @@ begin
     EjecutarTraspasoInterno(AConTicket);
   except
     on E: EValidacionTraspaso do
-      ShowMessage(E.Message);
+      ShowMessage_fza(E.Message);
   end;
 end;
 
@@ -2552,7 +2556,7 @@ begin
       sNumSol := FDatos.cdsCabecera.FieldByName('NUMERO_SOL').AsString;
       sSerSol := FDatos.cdsCabecera.FieldByName('SERIE_SOL').AsString;
       if sDestino = '' then
-        ShowMessage(SErrorSolicitudTraspasoAtenderNoCargada)
+        ShowMessage_fza(SErrorSolicitudTraspasoAtenderNoCargada)
       else
       begin
         // Reparto por linea: cuenta lo que se sirve (CANTIDAD>0) y exige motivo
@@ -2579,7 +2583,7 @@ begin
           FDatos.cdsLineas.EnableControls;
         end;
         if bFaltaMotivo then
-          ShowMessage(SErrorMotivoLineasTraspasoNoIndicado)
+          ShowMessage_fza(SErrorMotivoLineasTraspasoNoIndicado)
         else if iServidas > 0 then
         begin
           // Hay algo que servir: traspaso de lo servido; lo denegado queda
@@ -2587,7 +2591,7 @@ begin
           AvisarStockSolicitud(sOrigen);
           if FDatos.GrabarTraspaso(sDestino, sNumOp, sNumSol, sSerSol) then
           begin
-            ShowMessage(Format(SInfoSolicitudTraspasoAtendida, [sNumOp]));
+            ShowMessage_fza(Format(SInfoSolicitudTraspasoAtendida, [sNumOp]));
             if AConTicket then
               TTraspasoTicket.ImprimirTraspaso(
                 PreviewTicket,
@@ -2599,13 +2603,13 @@ begin
             AplicarModo(mtAtender);
           end;
         end
-        else if MessageDlg(SPreguntaDenegarPeticionTraspasoCompleta,
+        else if MessageDlg_fza(SPreguntaDenegarPeticionTraspasoCompleta,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
         begin
           // Todo a 0: denegacion total (con el motivo por linea), sin traspaso.
           if FDatos.GrabarDenegacion then
           begin
-            ShowMessage(SInfoPeticionTraspasoDenegada);
+            ShowMessage_fza(SInfoPeticionTraspasoDenegada);
             AplicarModo(mtAtender);
           end;
         end;
@@ -2615,10 +2619,10 @@ begin
     begin
       sDestino := DestinoSeleccionado;
       if sDestino = '' then
-        ShowMessage(SErrorAlmacenDestinoTraspasoNoSeleccionado)
+        ShowMessage_fza(SErrorAlmacenDestinoTraspasoNoSeleccionado)
       else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
       begin
-        ShowMessage(Format(SInfoTraspasoGrabado, [sNumOp]));
+        ShowMessage_fza(Format(SInfoTraspasoGrabado, [sNumOp]));
         if AConTicket then
           TTraspasoTicket.ImprimirTraspaso(
             PreviewTicket,

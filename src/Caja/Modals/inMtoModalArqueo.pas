@@ -371,7 +371,9 @@ implementation
 
 {$R *.dfm}
 
-uses inLibPermisosIntf,
+uses
+  inLibMensajesVcl,
+  inLibPermisosIntf,
      inMtoModalArqueosHistCaja,
      inMtoModalDesgloseEfectivo,
      inLibTiraCajaTicket,
@@ -633,7 +635,7 @@ begin
   begin
     RegistroLog.RegistrarAviso(
       'Intento de imprimir el resumen de arqueo sin permiso');
-    MessageDlg(
+    MessageDlg_fza(
       SErrorPermisoResumenArqueoCaja,
       mtWarning,
       [mbOK],
@@ -715,7 +717,7 @@ begin
       FechaDesdeSeleccionada, FechaHastaSeleccionada);
     if Length(Series) = 0 then
     begin
-      Application.MessageBox(
+      MessageBox_fza(
         PChar(SInfoOperacionesFacturadasArqueoCajaNoEncontradas),
         PChar(STituloTiraCaja), MB_OK or MB_ICONINFORMATION);
       bContinuar := False;
@@ -1297,7 +1299,7 @@ begin
       FActualizandoImportesCierre := False;
     end;
     if MostrarAvisoRecuento then
-      Application.MessageBox(
+      MessageBox_fza(
         PChar(SErrorRestanteArqueoCajaNoValido),
         PChar(STituloAvisoCaja),
         MB_OK or MB_ICONWARNING);
@@ -1409,7 +1411,7 @@ end;
 function TfrmModalArqueo.ConfirmarGrabacion(
   const AEntrada: TEntradaGrabacionModalArqueo): Boolean;
 begin
-  Result := Application.MessageBox(
+  Result := MessageBox_fza(
     PChar(Format(
       SPreguntaGrabarArqueoCaja,
       [FormatDateTime(
@@ -1426,7 +1428,7 @@ function TfrmModalArqueo.DebeImprimirCierre: Boolean;
 begin
   Result := FEmitirJustificanteCierre;
   if not Result then
-    Result := Application.MessageBox(
+    Result := MessageBox_fza(
       PChar(SPreguntaImprimirJustificanteCierreCaja),
       PChar(STituloJustificanteCierreCaja),
       MB_YESNO or MB_ICONQUESTION) = IDYES;
@@ -1437,22 +1439,22 @@ procedure TfrmModalArqueo.MostrarErrorPreparacion(
 begin
   case APreparacion.Estado of
     epmaVendedorNoIndicado:
-      Application.MessageBox(
+      MessageBox_fza(
         PChar(SErrorVendedorArqueoCajaNoIndicado),
         PChar(STituloVendedorArqueoCajaObligatorio),
         MB_OK or MB_ICONWARNING);
     epmaVendedorNoValido:
-      Application.MessageBox(
+      MessageBox_fza(
         PChar(SErrorVendedorArqueoCajaNoValido),
         PChar(STituloVendedorArqueoCajaNoValido),
         MB_OK or MB_ICONWARNING);
     epmaArqueoDuplicado:
-      Application.MessageBox(
+      MessageBox_fza(
         PChar(SErrorArqueoCajaDuplicado),
         PChar(STituloArqueoCajaDuplicado),
         MB_OK or MB_ICONWARNING);
     epmaRecuentoNoDisponible:
-      Application.MessageBox(
+      MessageBox_fza(
         PChar(SErrorRecuentoArqueoCajaNoDisponible),
         PChar(STituloAvisoCaja),
         MB_OK or MB_ICONWARNING);

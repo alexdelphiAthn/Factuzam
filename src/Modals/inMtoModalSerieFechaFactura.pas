@@ -59,6 +59,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun,
   inLibVentasPantallaIntf,
   UniDataVentasPantallaComposicion;
@@ -112,9 +113,9 @@ end;
 procedure TfrmModalSerieFechaFactura.btnAceptarClick(Sender: TObject);
 begin
   if Trim(VarToStr(cbbSerie.EditValue)) = '' then
-    ShowMessage(SErrorSerieBorradorNoSeleccionada)
+    ShowMessage_fza(SErrorSerieBorradorNoSeleccionada)
   else if dtFecha.Date <= 0 then
-    ShowMessage(SErrorFechaBorradorNoIndicada)
+    ShowMessage_fza(SErrorFechaBorradorNoIndicada)
   else
   begin
     FResultado.Aceptado := True;

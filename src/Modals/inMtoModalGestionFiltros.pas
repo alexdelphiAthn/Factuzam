@@ -123,6 +123,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   System.NetEncoding, inLibContextoSesionIntf, inLibGenBusq,
   inMtoModalGuardarFiltro, inLibMsgComun,
   UniDataConfiguracionPantalla;
@@ -531,7 +532,7 @@ begin
   inherited;
   if IdFiltroSeleccionado = 0 then
   begin
-    ShowMessage(SErrorFiltroNoSeleccionado);
+    ShowMessage_fza(SErrorFiltroNoSeleccionado);
   end
   else
   begin
@@ -539,7 +540,7 @@ begin
     if (sFiltroBase64 = '') or
        (Trim(FControlFiltro.FilterCaption) = '') then
     begin
-      ShowMessage(SErrorFiltroSinCondicionesAplicar);
+      ShowMessage_fza(SErrorFiltroSinCondicionesAplicar);
     end
     else
     begin
@@ -562,7 +563,7 @@ begin
   if (sFiltroBase64 = '') or
      (Trim(FControlFiltro.FilterCaption) = '') then
   begin
-    ShowMessage(SErrorFiltroSinCondicionesGuardar);
+    ShowMessage_fza(SErrorFiltroSinCondicionesGuardar);
   end
   else
   begin
@@ -575,7 +576,7 @@ begin
       sDescripcion,
       sFiltroBase64);
     CargarFiltroEnEditor(sFiltroBase64);
-    ShowMessage(SInfoCambiosFiltroGuardados);
+    ShowMessage_fza(SInfoCambiosFiltroGuardados);
   end;
 end;
 
@@ -590,7 +591,7 @@ begin
   inherited;
   if FFiltroActualBase64 = '' then
   begin
-    ShowMessage(SErrorPantallaSinFiltroAplicado);
+    ShowMessage_fza(SErrorPantallaSinFiltroAplicado);
   end
   else
   begin
@@ -599,7 +600,7 @@ begin
     sMensaje := Format(SPreguntaReemplazarFiltro,
       [ResumirFiltro(sFiltroGuardado),
        ResumirFiltro(FFiltroActualBase64)]);
-    if Application.MessageBox(PChar(sMensaje), PChar(STituloReemplazarFiltro),
+    if MessageBox_fza(PChar(sMensaje), PChar(STituloReemplazarFiltro),
        MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
       sNombre := FListadoFiltros.FieldByName('NOMBRE_FILT').AsString;
@@ -611,7 +612,7 @@ begin
         sDescripcion,
         FFiltroActualBase64);
       CargarFiltroEnEditor(FFiltroActualBase64);
-      ShowMessage(SInfoFiltroReemplazado);
+      ShowMessage_fza(SInfoFiltroReemplazado);
     end;
   end;
 end;
@@ -629,7 +630,7 @@ begin
   if (sFiltroBase64 = '') or
      (Trim(FControlFiltro.FilterCaption) = '') then
   begin
-    ShowMessage(SErrorFiltroSinCondicionesGuardar);
+    ShowMessage_fza(SErrorFiltroSinCondicionesGuardar);
   end
   else
   begin
@@ -647,7 +648,7 @@ begin
         res.Nombre);
       if iIdFiltro > 0 then
       begin
-        ShowMessage(SErrorFiltroPropioDuplicado);
+        ShowMessage_fza(SErrorFiltroPropioDuplicado);
       end
       else
       begin
@@ -658,7 +659,7 @@ begin
           res.Descripcion,
           sFiltroBase64);
         CargarDatos;
-        ShowMessage(SInfoCopiaFiltroGuardada);
+        ShowMessage_fza(SInfoCopiaFiltroGuardada);
       end;
     end;
   end;
@@ -671,7 +672,7 @@ begin
   inherited;
   if IdFiltroSeleccionado = 0 then
   begin
-    ShowMessage(SErrorFiltroNoSeleccionado);
+    ShowMessage_fza(SErrorFiltroNoSeleccionado);
   end
   else
   begin
@@ -694,11 +695,11 @@ begin
   inherited;
   if IdFiltroSeleccionado = 0 then
   begin
-    ShowMessage(SErrorFiltroNoSeleccionado);
+    ShowMessage_fza(SErrorFiltroNoSeleccionado);
   end
   else
   begin
-    if Application.MessageBox(PChar(SPreguntaBorrarFiltro),
+    if MessageBox_fza(PChar(SPreguntaBorrarFiltro),
                               PChar(STituloConfirmarBorradoFiltro),
                               MB_YESNO + MB_ICONQUESTION) = ID_YES then
     begin
@@ -765,7 +766,7 @@ begin
       'GRUPO',
       IdentidadActual.Grupo);
     RefrescarCompartidoCon;
-    ShowMessage(Format(SInfoFiltroCompartidoGrupo,
+    ShowMessage_fza(Format(SInfoFiltroCompartidoGrupo,
                        [IdentidadActual.Grupo]));
   end;
 end;
@@ -778,7 +779,7 @@ begin
     'TODOS',
     '');
   RefrescarCompartidoCon;
-  ShowMessage(SInfoFiltroCompartidoTodos);
+  ShowMessage_fza(SInfoFiltroCompartidoTodos);
 end;
 
 procedure TfrmModalGestionFiltros.btnQuitarCompartidoClick(Sender: TObject);

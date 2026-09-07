@@ -114,6 +114,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos, UniDataConfiguracionPantalla;
 
 resourcestring
@@ -227,17 +228,17 @@ begin
   inherited;
 
   if edtCoste.Value <= 0 then
-    ShowMessage(SErrorPrecioCosteMargenNoValido)
+    ShowMessage_fza(SErrorPrecioCosteMargenNoValido)
   else if edtMargen.Value <= 0 then
-    ShowMessage(SErrorMargenNoValido)
+    ShowMessage_fza(SErrorMargenNoValido)
   else if edtAjuste.Value < 0 then
-    ShowMessage(SErrorAjusteMargenNoValido)
+    ShowMessage_fza(SErrorAjusteMargenNoValido)
   else
   begin
     FResultado.PrecioCoste := edtCoste.Value;
     FResultado.PrecioSalidaFinal := CalcularPrecioSalida;
     if (FCodigoUnicoArttar > 0) and (not PersistirCambios(msg)) then
-      ShowMessage(SErrorGuardarCambiosMargen + msg)
+      ShowMessage_fza(SErrorGuardarCambiosMargen + msg)
     else
     begin
       FResultado.Aceptado := True;

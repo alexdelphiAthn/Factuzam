@@ -103,6 +103,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -214,7 +215,7 @@ begin
   sCod := ArqueoSeleccionado;
   if sCod = '' then
   begin
-    ShowMessage(SErrorArqueoCajaNoSeleccionado);
+    ShowMessage_fza(SErrorArqueoCajaNoSeleccionado);
   end
   else
   begin
@@ -243,7 +244,7 @@ begin
   sCod := ArqueoSeleccionado;
   if sCod = '' then
   begin
-    ShowMessage(SErrorArqueoCajaNoSeleccionado);
+    ShowMessage_fza(SErrorArqueoCajaNoSeleccionado);
   end
   else
   begin

@@ -149,6 +149,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   UniDataConn, inLibUser, inLibGlobalVar,
   inLibMsgComun, UniDataWizardEditarRepositorio;
 
@@ -313,12 +314,12 @@ begin
   // Validar que tenemos nombre antes de pasar al paso 2.
   if NombreFinal = '' then
   begin
-    ShowMessage(SErrorNombreFormatoWizardNoIndicado);
+    ShowMessage_fza(SErrorNombreFormatoWizardNoIndicado);
     Stop := True;
   end
   else if SameText(NombreFinal, SItemNuevoFormatoWizard) then
   begin
-    ShowMessage(SErrorNombreFormatoWizardNoModificado);
+    ShowMessage_fza(SErrorNombreFormatoWizardNoModificado);
     Stop := True;
   end
   else
@@ -607,13 +608,13 @@ begin
   sCampoTabla := CamposTablaMarcadosCsv;
 
   if sDS = '' then
-    ShowMessage(SErrorDatasetMasterWizardNoSeleccionado)
+    ShowMessage_fza(SErrorDatasetMasterWizardNoSeleccionado)
   else if sCampos = '' then
-    ShowMessage(SErrorCamposMasterWizardNoSeleccionados)
+    ShowMessage_fza(SErrorCamposMasterWizardNoSeleccionados)
   else if sTabla = '' then
-    ShowMessage(SErrorTablaExternaWizardNoSeleccionada)
+    ShowMessage_fza(SErrorTablaExternaWizardNoSeleccionada)
   else if sCampoTabla = '' then
-    ShowMessage(SErrorCamposTablaExternaWizardNoSeleccionados)
+    ShowMessage_fza(SErrorCamposTablaExternaWizardNoSeleccionados)
   else
   begin
     // El codigo interno identifica master y tabla de forma estable.

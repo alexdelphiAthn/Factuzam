@@ -554,6 +554,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibGridCantidad,
   inLibFormatoMonetario,
 
@@ -1533,7 +1534,7 @@ begin
     ASku,
     FObtenerAlmacen());
   if Resultado.Mensaje <> '' then
-    ShowMessage(Resultado.Mensaje);
+    ShowMessage_fza(Resultado.Mensaje);
   Result := Resultado.Permitida;
 end;
 
@@ -1603,7 +1604,7 @@ begin
         DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
       if EsLineaDeposito(VieneDeDep) then
       begin
-        ShowMessage(SErrorLineaDepositoCajaNoCancelable);
+        ShowMessage_fza(SErrorLineaDepositoCajaNoCancelable);
         bCancelar := False;
       end;
     end;
@@ -2409,7 +2410,7 @@ begin
     end;
     if DatosCaja.cdsLineas.RecordCount > 0 then
     begin
-      if MessageDlg(SPreguntaCancelarVentaCaja,
+      if MessageDlg_fza(SPreguntaCancelarVentaCaja,
                     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         FCerrarFormulario();
@@ -2478,7 +2479,7 @@ begin
   // documento) y cargar sus artículos en negativo. El usuario borra las
   // líneas que no se devuelvan.
   if not OperacionVentaVacia(DatosCaja.cdsLineas) then
-    ShowMessage(SErrorDevolucionTicketOperacionEnCurso)
+    ShowMessage_fza(SErrorDevolucionTicketOperacionEnCurso)
   else
   begin
     if SeleccionarTicketDevolucionCajaVcl(
@@ -2510,7 +2511,7 @@ begin
       end
       else
       begin
-        ShowMessage(SAvisoDevolucionTicketOtraEmpresa);
+        ShowMessage_fza(SAvisoDevolucionTicketOtraEmpresa);
         CargarDevolucion(
           Seleccion.Serie,
           Seleccion.Numero,
@@ -2660,7 +2661,7 @@ procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
 begin
   if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
   begin
-    if MessageDlg(SPreguntaBorrarVentaCaja,
+    if MessageDlg_fza(SPreguntaBorrarVentaCaja,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       if DatosCaja.cdsLineas.State in [dsEdit, dsInsert] then
@@ -3023,7 +3024,7 @@ begin
   FSkuPendienteVentaOrigen := '';
   if AResultado.CodigoValeGenerado <> '' then
   begin
-    ShowMessage(Format(
+    ShowMessage_fza(Format(
       SInfoValeCajaEntregar,
       [AResultado.CodigoValeGenerado]));
   end;
@@ -3052,11 +3053,11 @@ begin
         AEmailEnvio,
         sMensajeCorreo) then
       begin
-        ShowMessage(sMensajeCorreo);
+        ShowMessage_fza(sMensajeCorreo);
       end
       else
       begin
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorCorreoOperacionCajaNoEnviado,
           [sMensajeCorreo]));
       end;
@@ -3133,7 +3134,7 @@ begin
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
   if (Trim(sCodigoCliente) = '') or (Trim(sCodigoCliente) = '0') then
   begin
-    ShowMessage(SErrorClienteDepositosCajaNoSeleccionado);
+    ShowMessage_fza(SErrorClienteDepositosCajaNoSeleccionado);
   end
   else
   begin
@@ -3398,7 +3399,7 @@ begin
   Operaciones.Avisar :=
     procedure(const AMensaje: string)
     begin
-      ShowMessage(AMensaje);
+      ShowMessage_fza(AMensaje);
     end;
   CrearPuertosArticuloLineaCajaVcl(
     Operaciones, PuertoArticulo, Avisos);
@@ -3543,7 +3544,7 @@ begin
         'TIPO_ARTICULO_FACLIN').AsString),
       'SERVICIO');
   if not bLineaInmaterial then
-    ShowMessage(SErrorCambioIvaSoloArticuloInmaterial)
+    ShowMessage_fza(SErrorCambioIvaSoloArticuloInmaterial)
   else
   begin
     sTipoIvaActual := DatosCaja.cdsLineas.FieldByName(
@@ -3634,7 +3635,7 @@ begin
         Show;
         BringToFront;
       end;
-      if MessageDlg(
+      if MessageDlg_fza(
         Format(SPreguntaEliminarOperacionCajaPendiente, [Self.Tag]),
         mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin

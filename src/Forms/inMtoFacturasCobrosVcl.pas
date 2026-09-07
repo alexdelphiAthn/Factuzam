@@ -64,6 +64,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Windows, System.SysUtils, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inMtoModalRegistrarPago, inMtoModalSeleccionarBanco,
   inMtoModalImpRecFac,
@@ -86,11 +87,11 @@ class procedure TCoordinadorCobrosFacturaVcl.MostrarResultadoGeneracion(
   AResultado: Integer);
 begin
   if AResultado > 0 then
-    ShowMessage(Format(SInfoEfectosCobroGenerados, [AResultado]))
+    ShowMessage_fza(Format(SInfoEfectosCobroGenerados, [AResultado]))
   else if AResultado = 0 then
-    ShowMessage(SAvisoEfectosCobroNoGenerados)
+    ShowMessage_fza(SAvisoEfectosCobroNoGenerados)
   else
-    ShowMessage(SErrorGenerarEfectosCobroSinBorrador);
+    ShowMessage_fza(SErrorGenerarEfectosCobroSinBorrador);
 end;
 
 class procedure TCoordinadorCobrosFacturaVcl.Generar(
@@ -128,7 +129,7 @@ begin
       [Configuracion.TextoPlural]);
     if (not Assigned(Cobros)) or
        (Cobros.RecordCount = 0) or
-       (Application.MessageBox(
+       (MessageBox_fza(
           PChar(sMensaje),
           PChar(STituloMensajeAdvertencia),
           MB_YESNO) = ID_YES) then
@@ -146,7 +147,7 @@ begin
         sPreferido);
       if not SeleccionBanco.Aceptado then
       begin
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SInfoGeneracionCobrosCancelada,
           [Configuracion.TextoPlural]));
       end
@@ -202,7 +203,7 @@ begin
         'IMPORTE_PENDIENTE_EFV').AsFloat;
       if fPendiente <= 0.0001 then
       begin
-        ShowMessage(SErrorEfectoSinImportePendiente);
+        ShowMessage_fza(SErrorEfectoSinImportePendiente);
       end
       else
       begin
@@ -232,9 +233,9 @@ begin
             Solicitud.Tipo := Formulario.Tipo;
             Solicitud.Referencia := Formulario.Referencia;
             if AContexto.Aplicacion.Registrar(Solicitud) > 0 then
-              ShowMessage(SInfoEfectoConciliado)
+              ShowMessage_fza(SInfoEfectoConciliado)
             else
-              ShowMessage(SErrorConciliarEfecto);
+              ShowMessage_fza(SErrorConciliarEfecto);
             if Assigned(AContexto.RefrescarEfectos) then
               AContexto.RefrescarEfectos();
           end;
@@ -244,7 +245,7 @@ begin
       end;
     end
     else
-      ShowMessage(SErrorEfectoNoSeleccionado);
+      ShowMessage_fza(SErrorEfectoNoSeleccionado);
   end
   else if Assigned(AContexto.MarcarReciboPagado) then
     AContexto.MarcarReciboPagado();
@@ -272,14 +273,14 @@ begin
       'NUMERO_EFV').AsInteger;
     Solicitud.Estado := AEstado;
     if AContexto.Aplicacion.CambiarEstado(Solicitud) then
-      ShowMessage(AMensajeCorrecto)
+      ShowMessage_fza(AMensajeCorrecto)
     else
-      ShowMessage(AMensajeError);
+      ShowMessage_fza(AMensajeError);
     if Assigned(AContexto.RefrescarEfectos) then
       AContexto.RefrescarEfectos();
   end
   else
-    ShowMessage(SErrorEfectoNoSeleccionado);
+    ShowMessage_fza(SErrorEfectoNoSeleccionado);
 end;
 
 class procedure TCoordinadorCobrosFacturaVcl.MarcarPendiente(
@@ -322,7 +323,7 @@ begin
     Abort;
   if AContexto.EsVentaMayor then
   begin
-    ShowMessage(SInfoImpresionEfectosCobroEnRemesas);
+    ShowMessage_fza(SInfoImpresionEfectosCobroEnRemesas);
   end
   else
   begin

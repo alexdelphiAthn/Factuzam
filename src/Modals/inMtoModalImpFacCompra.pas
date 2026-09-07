@@ -55,6 +55,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoPreviewExcel, inLibDocCompraExcel, inLibMsgCompras;
 
 {$R *.dfm}
@@ -70,7 +71,7 @@ var
   cfg: TDocCompraCabCfg;
 begin
   if dmFacc = nil then
-    ShowMessage(SErrorFacturaCompraExportarNoPreparada)
+    ShowMessage_fza(SErrorFacturaCompraExportarNoPreparada)
   else
   begin
     dmFacc.PrepararPrint(edtSerie.Text, edtNumero.Text);

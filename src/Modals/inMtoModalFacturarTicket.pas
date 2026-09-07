@@ -82,6 +82,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoGenSearch, inLibDocumentoFiscal, inLibMsgComun,
   inLibMsgFacturas, inLibMsgVentas,
   inLibVentasPantallaIntf,
@@ -197,15 +198,15 @@ begin
   sSerie := VarToStr(cbbSerie.EditValue);
   if Trim(sCliente) = '' then
   begin
-    ShowMessage(SErrorClienteBorradorNoSeleccionado);
+    ShowMessage_fza(SErrorClienteBorradorNoSeleccionado);
   end
   else if Trim(sSerie) = '' then
   begin
-    ShowMessage(SErrorSerieBorradorNoSeleccionada);
+    ShowMessage_fza(SErrorSerieBorradorNoSeleccionada);
   end
   else if dtFecha.Date <= 0 then
   begin
-    ShowMessage(SErrorFechaBorradorNoIndicada);
+    ShowMessage_fza(SErrorFechaBorradorNoIndicada);
   end
   else
   begin

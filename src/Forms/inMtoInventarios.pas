@@ -36,6 +36,7 @@ uses
   Vcl.ActnMan, System.Generics.Collections, System.Types,
   // Contrato de entrada de articulos (ColumnSKUcxGrid, en src\Lib).
   inLibColumnasSkuIntf,
+  inLibVentanaEspera,
   inLibInventariosAplicacionIntf,
   inLibInventariosInyeccion,
   inLibPermisosIntf,
@@ -46,6 +47,9 @@ uses
 
 const
   WM_REVISAR_ENTER_AS_TAB_INVENTARIO = WM_APP + 255;
+  // A partir de este numero de lineas la carga del inventario tarda
+  // segundos y se ensena el letrero de espera al cambiar de inventario.
+  UMBRAL_LINEAS_ESPERA_CARGA = 2000;
 
 type
   TfrmMtoInventarios = class(TfrmMtoGen)
@@ -242,6 +246,12 @@ type
     FBmpSwatchBoton: TBitmap;
     // Estado y pintado de las columnas de atributo del grid de lineas.
     FGestorColumnas: TGestorColumnasAtributosInventario;
+    // Ventana de espera de Aplicar (regularizar), Eliminar regularizacion
+    // y carga de lineas de inventarios grandes.
+    FEsperaInventario: IVentanaEspera;
+    // True si el letrero visible lo abrio la carga de lineas (y por tanto
+    // lo cierra ella), no otra operacion mas larga que la envuelva.
+    FEsperaCargaLineas: Boolean;
 
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto -> SKU. El Construir del contrato hace ClearItems:
@@ -294,9 +304,14 @@ type
     function ClaveInventarioActual: TClaveInventario;
     // Recarga de grids tras aplicar el inventario en background.
     procedure RefrescarTrasAplicarInventario;
+    // Muestra (o cambia de fase) la ventana de espera del inventario.
+    procedure MostrarEsperaInventario(const AFase: string);
+    procedure OcultarEsperaInventario;
     function AsegurarCabeceraPersistidaParaLineas: Boolean;
     procedure AsegurarPrimeraLineaInventario;
-    procedure CargarLineasYRefrescar;
+    // ASoloSiCambiaClave=True (navegacion): no recarga si cdsLineas ya
+    // tiene las lineas del inventario activo.
+    procedure CargarLineasYRefrescar(ASoloSiCambiaClave: Boolean = False);
     procedure InicializarImportadorRecuento;
     // Guion comun de las cargas masivas: confirmar, ejecutar y refrescar.
     procedure EjecutarCargaMasiva(const APregunta: string;
@@ -340,6 +355,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibUser,
   inLibFiltroUsuario,
@@ -497,7 +513,7 @@ begin
   Result := Assigned(dmmInventarios) and
             dmmInventarios.ColumnasRecuentoRemoto;
   if not Result then
-    ShowMessage(SErrorMigracionRecuentoInventariosNoAplicada);
+    ShowMessage_fza(SErrorMigracionRecuentoInventariosNoAplicada);
 end;
 function TfrmMtoInventarios.SqlRestriccionUsuario: string;
 begin
@@ -634,6 +650,28 @@ begin
   end;
   tvMovs.DataController.DataSource   := dmmInventarios.dsMovsRegul;
   dmmInventarios.cdsLineas.AfterInsert := cdsLineasAfterInsertHook;
+  // Letrero de espera (hilo propio) mientras se cargan las lineas de un
+  // inventario grande: la carga bloquea el hilo principal varios segundos.
+  dmmInventarios.AlEmpezarCargaLineas :=
+    procedure(ANumeroLineas: Integer)
+    begin
+      if (ANumeroLineas >= UMBRAL_LINEAS_ESPERA_CARGA) and
+         (not Assigned(FEsperaInventario)) then
+      begin
+        FEsperaCargaLineas := True;
+        MostrarEsperaInventario(Format(
+          SCaptionEsperaCargandoLineasInventario, [ANumeroLineas]));
+      end;
+    end;
+  dmmInventarios.AlTerminarCargaLineas :=
+    procedure
+    begin
+      if FEsperaCargaLineas then
+      begin
+        FEsperaCargaLineas := False;
+        OcultarEsperaInventario;
+      end;
+    end;
   // El gestor de columnas ya puede leer lineas y definicion de atributos.
   FGestorColumnas.EstablecerOrigen(
     dmmInventarios.cdsLineas,
@@ -705,6 +743,11 @@ begin
 end;
 procedure TfrmMtoInventarios.FormDestroy(Sender: TObject);
 begin
+  // OJO: TfrmMtoGen.Destroy libera el data module ANTES de que
+  // TCustomForm.Destroy dispare OnDestroy: aqui dmmInventarios ya apunta
+  // a memoria liberada y no se puede tocar (los avisos de carga que
+  // capturan Self se han soltado con el data module).
+  OcultarEsperaInventario;
   FreeAndNil(FImportadorRecuento);
   FAplicacionEntrada := nil;
   FDependencias.Liberar;
@@ -763,7 +806,7 @@ begin
           on E: Exception do
           begin
             Result := False;
-            ShowMessage(Format(
+            ShowMessage_fza(Format(
               SErrorGrabarCabeceraInventarioAutomaticamente,
               [E.Message]));
             pcDetail.ActivePage := tsCabecera;
@@ -872,7 +915,7 @@ begin
         on E: Exception do
         begin
           bCabeceraLista := False;
-          ShowMessage(Format(
+          ShowMessage_fza(Format(
             SErrorGrabarCabeceraInventarioAutomaticamenteDetalle,
             [E.Message]));
           pcDetail.ActivePage := tsCabecera;
@@ -922,9 +965,10 @@ begin
       ActualizarEstadoUI;
       // Recargar lineas cuando cambia el registro activo y la pestana
       // Detalle esta visible (navegacion entre inventarios desde la ficha
-      // o entrada desde la lista).
+      // o entrada desde la lista). El AfterScroll del data module suele
+      // haberlas cargado ya: solo si la clave es otra.
       if pcDetail.ActivePage = tsDetalle then
-        CargarLineasYRefrescar;
+        CargarLineasYRefrescar(True);
     end;
   end;
 end;
@@ -968,7 +1012,8 @@ begin
   end;
 end;
 
-procedure TfrmMtoInventarios.CargarLineasYRefrescar;
+procedure TfrmMtoInventarios.CargarLineasYRefrescar(
+  ASoloSiCambiaClave: Boolean);
 var
   ds: TDataSet;
 begin
@@ -981,7 +1026,7 @@ begin
       ds.FieldByName('CODIGO_ALM_INV').AsString,
       ds.FieldByName('SERIE_INV').AsString,
       ds.FieldByName('NUMERO_INV').AsString);
-    dmmInventarios.CargarLineasInventario;
+    dmmInventarios.CargarLineasInventario(ASoloSiCambiaClave);
     FGestorColumnas.VistaAplicada := False;
     if dmmInventarios.cdsLineas.Active and
        not dmmInventarios.cdsLineas.IsEmpty then
@@ -1224,11 +1269,11 @@ var
   Resultado: TResultadoRevalorizacionInventario;
 begin
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioNoAbiertoEditar)
+    ShowMessage_fza(SErrorInventarioNoAbiertoEditar)
   else if (dmmInventarios = nil) or
           (not dmmInventarios.cdsLineas.Active) or
           dmmInventarios.cdsLineas.IsEmpty then
-    ShowMessage(SErrorLineasInventarioNoAbiertas)
+    ShowMessage_fza(SErrorLineasInventarioNoAbiertas)
   else
   begin
     try
@@ -1254,7 +1299,7 @@ begin
         try
           dmmInventarios.AplicarRevalorizacion(Resultado.Simulacion);
           CargarLineasYRefrescar;
-          ShowMessage(Format(
+          ShowMessage_fza(Format(
             SInfoRevalorizacionInventarioPreparada,
             [Resultado.Simulacion.Resumen.NumeroLineas]));
         finally
@@ -1263,7 +1308,7 @@ begin
       end;
     except
       on E: Exception do
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorAplicarRevalorizacionInventario,
           [E.Message]));
     end;
@@ -1354,16 +1399,35 @@ begin
   if not PuedeEditar then
   begin
     AAllow := False;
-    ShowMessage(SErrorInventarioNoAbiertoEditar);
+    ShowMessage_fza(SErrorInventarioNoAbiertoEditar);
   end;
 end;
 
 procedure TfrmMtoInventarios.tvLineasCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
+var
+  oColumnaArticulo: TcxGridDBColumn;
+  sCodArt: string;
 begin
-  if PintarCeldaSwatchSiAplica(ConexionPrincipal, ACanvas, AViewInfo, nil) then
-    ADone := True;
+  // Solo las columnas de atributo (Tag 1..5) y solo con el atributo de la
+  // columna: la talla "100" no debe heredar el cuadradito del color
+  // basico "100". El resto de columnas nunca lleva cuadradito.
+  if (AViewInfo.Item is TcxGridColumn) and
+     (AViewInfo.Item.Tag >= 1) and
+     (AViewInfo.Item.Tag <= MAX_ATRIBUTOS_INVENTARIO) then
+  begin
+    sCodArt := '';
+    oColumnaArticulo := tvLineas.GetColumnByFieldName('CODIGO_ART_INVLIN');
+    if (oColumnaArticulo <> nil) and (AViewInfo.GridRecord <> nil) then
+      sCodArt := AViewInfo.GridRecord.DisplayTexts[oColumnaArticulo.Index];
+    if PintarCeldaSwatchAtributoSiAplica(
+         ConexionPrincipal, ACanvas, AViewInfo,
+         IdVaDeNombreAtributo(ConexionPrincipal,
+           TcxGridColumn(AViewInfo.Item).Caption),
+         sCodArt) then
+      ADone := True;
+  end;
 end;
 
 procedure TfrmMtoInventarios.tvLineasInitEdit(Sender: TcxCustomGridTableView;
@@ -1574,7 +1638,7 @@ begin
   if Col <> nil then
     Orden := Col.Tag;
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioNoAbiertoEditar)
+    ShowMessage_fza(SErrorInventarioNoAbiertoEditar)
   else if (Orden >= 1) and (Orden <= MAX_ATRIBUTOS_INVENTARIO) and
           dmmInventarios.cdsLineas.Active and
           (not dmmInventarios.cdsLineas.IsEmpty) then
@@ -1584,7 +1648,7 @@ begin
       dmmInventarios.cdsLineas.FieldByName(
         'CODIGO_ART_INVLIN').AsString, Orden);
     if Length(Avs) = 0 then
-      ShowMessage(SErrorValoresAtributoNoDefinidos)
+      ShowMessage_fza(SErrorValoresAtributoNoDefinidos)
     else if SeleccionarValorAtributoInventario(
               ConexionPrincipal, dmmInventarios.cdsLineas, Orden,
               Avs, Sender, AvNuevo) then
@@ -1633,7 +1697,7 @@ begin
     ErrText := '';
     RellenarLineaDesdeBusqueda(Codigo, Resolved, Err, ErrText);
     if Err then
-      ShowMessage(ErrText)
+      ShowMessage_fza(ErrText)
     else
     begin
       // La celda Articulo muestra el codigo de articulo; la unificada, el
@@ -1739,28 +1803,57 @@ end;
 
 procedure TfrmMtoInventarios.btnRecalcularClick(Sender: TObject);
 begin
-  if MessageDlg(SPreguntaRecalcularInventario,
+  if MessageDlg_fza(SPreguntaRecalcularInventario,
        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     Screen.Cursor := crHourGlass;
     try
       dmmInventarios.RecalcularTeorico;
-      ShowMessage(SInfoRecalculoInventario);
+      ShowMessage_fza(SInfoRecalculoInventario);
     finally
       Screen.Cursor := crDefault;
     end;
   end;
 end;
 
+procedure TfrmMtoInventarios.MostrarEsperaInventario(const AFase: string);
+var
+  rReferencia: TRect;
+begin
+  if not Assigned(FEsperaInventario) then
+  begin
+    if Self.Visible then
+      rReferencia := Self.BoundsRect
+    else
+      rReferencia := Screen.WorkAreaRect;
+    FEsperaInventario := CrearVentanaEspera(rReferencia, Self.CurrentPPI);
+  end;
+  FEsperaInventario.Mostrar(AFase);
+end;
+
+procedure TfrmMtoInventarios.OcultarEsperaInventario;
+begin
+  if Assigned(FEsperaInventario) then
+    FEsperaInventario.Ocultar;
+  FEsperaInventario := nil;
+end;
+
 procedure TfrmMtoInventarios.RefrescarTrasAplicarInventario;
 begin
+  // La ventana de espera sigue mientras se recargan los grids y se retira
+  // antes de mostrar el resultado.
+  MostrarEsperaInventario(SCaptionEsperaActualizandoInventario);
   try
-    dmmInventarios.RefrescarTrasAplicar;
-    ShowMessage(SInfoInventarioAplicado);
+    try
+      dmmInventarios.RefrescarTrasAplicar;
+    finally
+      OcultarEsperaInventario;
+    end;
+    ShowMessage_fza(SInfoInventarioAplicado);
     pcDetail.ActivePage := tsMovsRegul;
   except
     on E: Exception do
-      ShowMessage(Format(SErrorRefrescarInventarioAplicado,
+      ShowMessage_fza(Format(SErrorRefrescarInventarioAplicado,
         [E.Message]));
   end;
 end;
@@ -1772,7 +1865,7 @@ begin
   // El regularizar se parte en tres tramos: (1) validacion aqui, en el
   // hilo principal porque toca el grid de lineas; (2) SP en background,
   // solo BBDD; (3) recarga de grids en el callback del hilo principal.
-  bAplicable := MessageDlg(SPreguntaAplicarInventario,
+  bAplicable := MessageDlg_fza(SPreguntaAplicarInventario,
     mtWarning, [mbYes, mbNo], 0) = mrYes;
   if bAplicable then
   begin
@@ -1782,23 +1875,36 @@ begin
       on E: Exception do
       begin
         bAplicable := False;
-        ShowMessage(Format(SErrorAplicarInventario, [E.Message]));
+        ShowMessage_fza(Format(SErrorAplicarInventario, [E.Message]));
       end;
     end;
   end;
   if bAplicable then
-    EjecutarEnBackground(
-      procedure
-      begin
-        dmmInventarios.EjecutarSPAplicar;
-      end,
-      procedure(ErrMsg: string)
-      begin
-        if ErrMsg <> '' then
-          ShowMessage(Format(SErrorAplicacionInventario, [ErrMsg]))
-        else
-          RefrescarTrasAplicarInventario;
-      end);
+  begin
+    // La ventana de espera (hilo propio) acompaña al overlay del gestor de
+    // tareas mientras el SP corre en segundo plano.
+    MostrarEsperaInventario(SCaptionEsperaRegularizandoInventario);
+    try
+      EjecutarEnBackground(
+        procedure
+        begin
+          dmmInventarios.EjecutarSPAplicar;
+        end,
+        procedure(ErrMsg: string)
+        begin
+          if ErrMsg <> '' then
+          begin
+            OcultarEsperaInventario;
+            ShowMessage_fza(Format(SErrorAplicacionInventario, [ErrMsg]));
+          end
+          else
+            RefrescarTrasAplicarInventario;
+        end);
+    except
+      OcultarEsperaInventario;
+      raise;
+    end;
+  end;
 end;
 
 procedure TfrmMtoInventarios.btnRecalcularDetalleClick(Sender: TObject);
@@ -1833,9 +1939,9 @@ begin
   if not PuedeEditar then
   begin
     if Estado = '' then
-      ShowMessage(SErrorInventarioNoSeleccionadoAnadirLineas)
+      ShowMessage_fza(SErrorInventarioNoSeleccionadoAnadirLineas)
     else
-      ShowMessage(Format(SErrorAnadirLineasInventarioEstado, [Estado]));
+      ShowMessage_fza(Format(SErrorAnadirLineasInventarioEstado, [Estado]));
   end
   else
   begin
@@ -1878,9 +1984,9 @@ begin
     CodigoArticulo := Trim(dmmInventarios.cdsLineas.FieldByName(
       'CODIGO_ART_INVLIN').AsString);
   if PuedeEditar and dmmInventarios.cdsLineas.IsEmpty then
-    ShowMessage(SErrorLineaInventarioNoSeleccionadaParaSkus)
+    ShowMessage_fza(SErrorLineaInventarioNoSeleccionadaParaSkus)
   else if PuedeEditar and (CodigoArticulo = '') then
-    ShowMessage(SErrorLineaInventarioSinArticulo)
+    ShowMessage_fza(SErrorLineaInventarioSinArticulo)
   else if PuedeEditar then
   begin
     if dmmInventarios.cdsLineas.State in [dsEdit, dsInsert] then
@@ -1894,14 +2000,14 @@ begin
       begin
         Insertados := -1;
         Screen.Cursor := crDefault;
-        ShowMessage(Format(SErrorAnadirSkusInventario, [E.Message]));
+        ShowMessage_fza(Format(SErrorAnadirSkusInventario, [E.Message]));
       end;
     end;
     Screen.Cursor := crDefault;
     if Insertados = 0 then
-      ShowMessage(Format(SInfoSinSkusAnadidosInventario, [CodigoArticulo]))
+      ShowMessage_fza(Format(SInfoSinSkusAnadidosInventario, [CodigoArticulo]))
     else if Insertados > 0 then
-      ShowMessage(Format(SInfoSkusAnadidosInventario,
+      ShowMessage_fza(Format(SInfoSkusAnadidosInventario,
         [Insertados, CodigoArticulo]));
   end;
 end;
@@ -1909,7 +2015,7 @@ end;
 procedure TfrmMtoInventarios.btnEliminarLineaClick(Sender: TObject);
 begin
   if PuedeEditar and (not dmmInventarios.cdsLineas.IsEmpty) and
-     (MessageDlg(SPreguntaEliminarLineaInventario,
+     (MessageDlg_fza(SPreguntaEliminarLineaInventario,
         mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
   begin
     dmmInventarios.cdsLineas.Delete;
@@ -1924,17 +2030,20 @@ end;
 procedure TfrmMtoInventarios.btnEliminarRegularizacionClick(Sender: TObject);
 begin
   if EstadoActual <> 'APLICADO' then
-    ShowMessage(SErrorEliminarRegularizacionInventarioEstado)
-  else if MessageDlg(SPreguntaEliminarRegularizacionInventario,
+    ShowMessage_fza(SErrorEliminarRegularizacionInventarioEstado)
+  else if MessageDlg_fza(SPreguntaEliminarRegularizacionInventario,
             mtWarning, [mbYes, mbNo], 0) = mrYes then
   begin
     Screen.Cursor := crHourGlass;
+    MostrarEsperaInventario(
+      SCaptionEsperaEliminandoRegularizacionInventario);
     try
       dmmInventarios.EliminarRegularizacion;
-      ShowMessage(SInfoRegularizacionInventarioEliminada);
     finally
+      OcultarEsperaInventario;
       Screen.Cursor := crDefault;
     end;
+    ShowMessage_fza(SInfoRegularizacionInventarioEliminada);
   end;
 end;
 
@@ -1945,7 +2054,7 @@ begin
   if not PuedeExportar then
     Abort;
   if dmmInventarios.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorInventarioNoActivo)
+    ShowMessage_fza(SErrorInventarioNoActivo)
   else
   begin
     fPreview := nil;
@@ -1996,7 +2105,7 @@ procedure TfrmMtoInventarios.EjecutarCargaMasiva(const APregunta: string;
 begin
   // Guion comun de las cuatro cargas masivas: confirmar, ejecutar con el
   // cursor de espera y volver al detalle recargado.
-  if MessageDlg(APregunta, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  if MessageDlg_fza(APregunta, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     Screen.Cursor := crHourGlass;
     try
@@ -2014,13 +2123,13 @@ var
   Familia: string;
 begin
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioDebeEstarAbierto)
+    ShowMessage_fza(SErrorInventarioDebeEstarAbierto)
   else
   begin
     Familia := dmmInventarios.unqryFamilias.FieldByName(
       'CODIGO_FAM_FAM').AsString;
     if Familia = '' then
-      ShowMessage(SErrorFamiliaInventarioNoSeleccionada)
+      ShowMessage_fza(SErrorFamiliaInventarioNoSeleccionada)
     else
       EjecutarCargaMasiva(
         Format(SPreguntaCargarFamiliaInventario, [Familia]),
@@ -2036,13 +2145,13 @@ var
   Proveedor: string;
 begin
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioDebeEstarAbierto)
+    ShowMessage_fza(SErrorInventarioDebeEstarAbierto)
   else
   begin
     Proveedor := dmmInventarios.unqryProveedores.FieldByName(
       'CODIGO_PRV_PRV').AsString;
     if Proveedor = '' then
-      ShowMessage(SErrorProveedorInventarioNoSeleccionado)
+      ShowMessage_fza(SErrorProveedorInventarioNoSeleccionado)
     else
       EjecutarCargaMasiva(
         Format(SPreguntaCargarProveedorInventario, [Proveedor]),
@@ -2056,7 +2165,7 @@ end;
 procedure TfrmMtoInventarios.btnCompletarClick(Sender: TObject);
 begin
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioDebeEstarAbierto)
+    ShowMessage_fza(SErrorInventarioDebeEstarAbierto)
   else
     EjecutarCargaMasiva(SPreguntaCompletarInventario,
       procedure
@@ -2068,7 +2177,7 @@ end;
 procedure TfrmMtoInventarios.btnCargarTodoClick(Sender: TObject);
 begin
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioDebeEstarAbierto)
+    ShowMessage_fza(SErrorInventarioDebeEstarAbierto)
   else
     EjecutarCargaMasiva(SPreguntaCargarTodoInventario,
       procedure
@@ -2092,13 +2201,13 @@ begin
   ds := dsTablaG.DataSet;
   bContinuar := PuedeEditar and (ds <> nil) and (not ds.IsEmpty);
   if not PuedeEditar then
-    ShowMessage(SErrorInventarioDebeEstarAbierto)
+    ShowMessage_fza(SErrorInventarioDebeEstarAbierto)
   else if (ds = nil) or ds.IsEmpty then
-    ShowMessage(SErrorInventarioNoSeleccionado)
+    ShowMessage_fza(SErrorInventarioNoSeleccionado)
   else if ds.State in [dsInsert, dsEdit] then
   begin
     // Cabecera en edicion: se graba antes de abrir la modal del bloque.
-    bContinuar := MessageDlg(SPreguntaGuardarInventarioEnEdicion,
+    bContinuar := MessageDlg_fza(SPreguntaGuardarInventarioEnEdicion,
       mtConfirmation, [mbYes, mbNo, mbCancel], 0) = mrYes;
     if bContinuar then
       ds.Post;
@@ -2116,7 +2225,7 @@ begin
       // Refrescar el grid de lineas y proponer recalcular.
       pcDetail.ActivePage := tsDetalle;
       CargarLineasYRefrescar;
-      if MessageDlg(
+      if MessageDlg_fza(
            Format(SPreguntaRecalcularTrasCargarBloqueInventario,
              [res.NumLineas, res.NumArticulos]),
            mtConfirmation, [mbYes, mbNo], 0) = mrYes then
@@ -2155,12 +2264,12 @@ var
   idRec: Int64;
 begin
   if dmmInventarios.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorInventarioNoActivo)
+    ShowMessage_fza(SErrorInventarioNoActivo)
   else if dmmInventarios.unqryTablaG.FieldByName(
             'ESTADO_INV').AsString <> 'ABIERTO' then
-    ShowMessage(SErrorEnviarRecuentoInventarioNoAbierto)
+    ShowMessage_fza(SErrorEnviarRecuentoInventarioNoAbierto)
   else if ComprobarRecuentoRemotoDisponible and
-          (MessageDlg(SPreguntaEnviarRecuentoInventario,
+          (MessageDlg_fza(SPreguntaEnviarRecuentoInventario,
              mtConfirmation, [mbYes, mbNo], 0) = mrYes) then
   begin
     Clave := ClaveInventarioActual;
@@ -2174,10 +2283,10 @@ begin
       begin
         FDependencias.RecuentoRemoto.MarcarEnviado(Clave, idRec);
         dmmInventarios.unqryTablaG.Refresh;
-        ShowMessage(Format(SInfoInventarioEnviadoRecuento, [idRec]));
+        ShowMessage_fza(Format(SInfoInventarioEnviadoRecuento, [idRec]));
       end
       else
-        ShowMessage(Format(SErrorEnviarRecuentoInventario, [sMsg]));
+        ShowMessage_fza(Format(SErrorEnviarRecuentoInventario, [sMsg]));
     finally
       Screen.Cursor := crDefault;
     end;
@@ -2199,7 +2308,7 @@ begin
   idRec := 0;
   bSeguir := not dmmInventarios.unqryTablaG.IsEmpty;
   if not bSeguir then
-    ShowMessage(SErrorInventarioNoActivo)
+    ShowMessage_fza(SErrorInventarioNoActivo)
   else
     bSeguir := ComprobarRecuentoRemotoDisponible;
   if bSeguir then
@@ -2208,13 +2317,13 @@ begin
   if bSeguir and (idRec <= 0) then
   begin
     bSeguir := False;
-    ShowMessage(SErrorInventarioNoEnviadoRecuento);
+    ShowMessage_fza(SErrorInventarioNoEnviadoRecuento);
   end;
   if bSeguir and (dmmInventarios.unqryTablaG.FieldByName(
        'ESTADO_INV').AsString <> 'ABIERTO') then
   begin
     bSeguir := False;
-    ShowMessage(SErrorRecogerRecuentoInventarioNoAbierto);
+    ShowMessage_fza(SErrorRecogerRecuentoInventarioNoAbierto);
   end;
   if bSeguir then
   begin
@@ -2251,11 +2360,11 @@ begin
         if Assigned(tvLineas) then
           tvLineas.DataController.Refresh;
         dmmInventarios.unqryTablaG.Refresh;
-        ShowMessage(Format(SInfoRecuentoInventarioRecogido,
+        ShowMessage_fza(Format(SInfoRecuentoInventarioRecogido,
           [iNumEv, Lista.Count]));
       end
       else
-        ShowMessage(Format(SErrorRecogerRecuentoInventario, [sMsg]));
+        ShowMessage_fza(Format(SErrorRecogerRecuentoInventario, [sMsg]));
     finally
       FreeAndNil(Lista);
       FreeAndNil(Instantes);

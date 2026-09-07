@@ -101,6 +101,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   dxSpreadSheet,
   inLibHojaCalculoDevEx,
   inLibInventarioExcel,
@@ -415,7 +416,7 @@ begin
         FMensajes.TituloIncidencias,
         ListaNoCargados);
     end;
-    ShowMessage(Format(FMensajes.InfoResultado,
+    ShowMessage_fza(Format(FMensajes.InfoResultado,
       [AMensaje, Resumen.Actualizadas, Resumen.Nuevas]));
   finally
     Screen.Cursor := crDefault;
@@ -440,11 +441,11 @@ begin
   FDialogo.DefaultExt := 'xlsx';
   try
     if not APuedeEditar then
-      ShowMessage(FMensajes.ErrorInventarioCerrado)
+      ShowMessage_fza(FMensajes.ErrorInventarioCerrado)
     else if FDialogo.Execute then
     begin
       if not FileExists(FDialogo.FileName) then
-        ShowMessage(FMensajes.ErrorArchivoNoExiste)
+        ShowMessage_fza(FMensajes.ErrorArchivoNoExiste)
       else
       begin
         EsExcel := SameText(ExtractFileExt(FDialogo.FileName), '.xlsx') or
@@ -482,9 +483,9 @@ begin
           TfrmMtoModalScriptLog.MostrarTexto(
             FPropietario, FMensajes.TituloIncidencias, Incidencias)
         else if Mensaje <> '' then
-          ShowMessage(Mensaje)
+          ShowMessage_fza(Mensaje)
         else
-          ShowMessage(FMensajes.ErrorSinDatos);
+          ShowMessage_fza(FMensajes.ErrorSinDatos);
       end;
     end;
   finally

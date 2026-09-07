@@ -105,6 +105,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   System.Math, Vcl.Themes, inLibDivCurr, inLibCriptoCurr,
   inLibMsgCaja;
 
@@ -285,21 +286,21 @@ begin
      (Trim(edtReferencia.Text) = '') and
      gbReferencia.Visible then
   begin
-    ShowMessage(SErrorReferenciaPagoCajaNoIndicada);
+    ShowMessage_fza(SErrorReferenciaPagoCajaNoIndicada);
     if edtReferencia.CanFocus then
       edtReferencia.SetFocus;
   end
   else if FDatosResultado.EsDivisa and
           (edtFactorCambio.Value <= 0) then
   begin
-    ShowMessage(SErrorFactorCambioCajaNoValido);
+    ShowMessage_fza(SErrorFactorCambioCajaNoValido);
     if edtFactorCambio.CanFocus then
       edtFactorCambio.SetFocus;
   end
   else if FDatosResultado.EsCripto and
           (Trim(edtTxHash.Text) = '') then
   begin
-    ShowMessage(SErrorHashBlockchainCajaNoIndicado);
+    ShowMessage_fza(SErrorHashBlockchainCajaNoIndicado);
     if edtTxHash.CanFocus then
       edtTxHash.SetFocus;
   end
@@ -376,7 +377,7 @@ begin
     Moneda := Copy(txtDivisa.Text, 1, 3);
     Tasa := API.GetRate('EUR', Moneda);
     edtFactorCambio.Value := Tasa;
-//    ShowMessage('1 EUR = ' + FormatFloat('0.0000', Tasa) + ' USD');
+//    ShowMessage_fza('1 EUR = ' + FormatFloat('0.0000', Tasa) + ' USD');
   finally
     FreeAndNil(API);
   end;

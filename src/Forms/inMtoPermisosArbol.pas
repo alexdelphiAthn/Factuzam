@@ -126,6 +126,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.StrUtils, System.Rtti, inLibMsgConfiguracion,
   UniDataPermisosAdminRepositorio;
 
@@ -636,7 +637,7 @@ procedure TfrmMtoPermisosArbol.AplicarRama(ANode: TcxTreeListNode;
   end;
 begin
   if ANode = nil then
-    ShowMessage(SErrorNodoPermisosNoSeleccionado)
+    ShowMessage_fza(SErrorNodoPermisosNoSeleccionado)
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -670,7 +671,7 @@ procedure TfrmMtoPermisosArbol.HeredarRama(ANode: TcxTreeListNode);
   end;
 begin
   if ANode = nil then
-    ShowMessage(SErrorNodoPermisosNoSeleccionado)
+    ShowMessage_fza(SErrorNodoPermisosNoSeleccionado)
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -802,13 +803,13 @@ begin
   idx := cbbDestino.ItemIndex;
   if (io < 0) or (idx < 0) or (io > High(FSujetos)) or
      (idx > High(FSujetos)) then
-    ShowMessage(SErrorOrigenDestinoPermisosNoSeleccionados)
+    ShowMessage_fza(SErrorOrigenDestinoPermisosNoSeleccionados)
   else
   begin
     org := FSujetos[io];
     dst := FSujetos[idx];
     if SameText(org.Nombre, dst.Nombre) then
-      ShowMessage(SErrorOrigenDestinoPermisosIguales)
+      ShowMessage_fza(SErrorOrigenDestinoPermisosIguales)
     else
     begin
       reempl := (rgModo.ItemIndex = 1);
@@ -822,7 +823,7 @@ begin
         sFiltro := SInfoAlcanceTodosPermisos;
       msg := Format(SPreguntaCopiarPermisos,
                     [org.Nombre, dst.Nombre, sModo, sFiltro]);
-      if MessageDlg(msg, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+      if MessageDlg_fza(msg, mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         Screen.Cursor := crHourGlass;
         try
@@ -834,7 +835,7 @@ begin
         finally
           Screen.Cursor := crDefault;
         end;
-        ShowMessage(Format(SInfoPermisosCopiados,
+        ShowMessage_fza(Format(SInfoPermisosCopiados,
                            [n, org.Nombre, dst.Nombre]));
         if SameText(dst.Nombre, FSujetoActual.Nombre) then
           CargarValoresSujeto;

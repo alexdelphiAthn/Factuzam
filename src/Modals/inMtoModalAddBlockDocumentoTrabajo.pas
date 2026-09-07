@@ -86,6 +86,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibCargaMasivaArticulosReglas, inLibUser, inLibMsgArticulos,
   inLibMsgComun, inLibMsgVentas;
 
@@ -298,7 +299,7 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage(SErrorInsertarLineasDocumentoTrabajoAddBlock +
+        ShowMessage_fza(SErrorInsertarLineasDocumentoTrabajoAddBlock +
                     E.Message);
       end;
     end;

@@ -293,6 +293,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos;
 
 type
@@ -1957,7 +1958,7 @@ begin
     else
       SetLength(FOpcionesAtributo[AOrden], 0);
     if Length(FOpcionesAtributo[AOrden]) = 0 then
-      ShowMessage(SErrorValoresAtributoNoDefinidos)
+      ShowMessage_fza(SErrorValoresAtributoNoDefinidos)
     else
     begin
       FAbriendoSelector := True;
@@ -2025,7 +2026,7 @@ begin
     sNombreAtb := FCds.FieldByName(FCampos.AttrNombre[AOrden]).AsString;
     Avs := FLookup.ObtenerAvsEnSkus(sArtPadre, AOrden);
     if Length(Avs) = 0 then
-      ShowMessage(SErrorValoresAtributoNoDefinidos)
+      ShowMessage_fza(SErrorValoresAtributoNoDefinidos)
     else
     begin
       SetLength(AvsStr, Length(Avs));

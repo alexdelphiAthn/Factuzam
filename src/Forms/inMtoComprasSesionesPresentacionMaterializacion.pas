@@ -51,6 +51,7 @@ function CrearAplicacionMaterializacionCompraSesionVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Controls,
   Vcl.Forms,
   Vcl.Dialogs,
@@ -196,15 +197,15 @@ begin
     begin
       case AMotivo of
         mbcSinCabecera:
-          ShowMessage(SErrorSesionCompraNoActiva);
+          ShowMessage_fza(SErrorSesionCompraNoActiva);
         mbcYaMaterializada:
-          ShowMessage(SErrorSesionYaMaterializada);
+          ShowMessage_fza(SErrorSesionYaMaterializada);
       end;
     end;
   ACallbacks.InformarDuplicados :=
     procedure(ACantidad: Integer)
     begin
-      ShowMessage(Format(
+      ShowMessage_fza(Format(
         SInfoDuplicadosSesionMarcadosReusar,
         [ACantidad]));
       AEntorno.Lineas.Refresh;
@@ -254,7 +255,7 @@ begin
       DocumentoSeleccionado: TDocumentoMaterializado;
     begin
       if Length(AResultado.Documentos) = 0 then
-        ShowMessage(SInfoSesionMaterializadaSinDocumentos)
+        ShowMessage_fza(SInfoSesionMaterializadaSinDocumentos)
       else if TfrmModalDocsCreados.Seleccionar(
         AEntorno.Propietario,
         AResultado.Documentos,

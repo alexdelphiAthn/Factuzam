@@ -132,6 +132,36 @@ function PintarCeldaSwatchSiAplica(AConexion: TUniConnection;
                                    AViewInfo: TcxGridTableDataCellViewInfo;
                                    ADict: TDictionary<string, string>): Boolean;
 
+const
+  // Atributo de color: el unico con paleta (HEX en sus basicos). Es el
+  // ID_VA que usan las consultas de toda la aplicacion.
+  ID_VA_COLOR = 'CO';
+
+// ID_VA (CO, TAL...) del atributo cuyo nombre es ANombre segun el
+// diccionario global, o '' si no existe.
+function IdVaDeNombreAtributo(AConexion: TUniConnection;
+                              const ANombre: string): string;
+
+// Para celdas cuyo texto es "ARTICULO/COLOR[/TALLA...]" (rejillas de
+// stock) o directamente un color: pinta el cuadradito del COLOR (primero
+// la asignacion del articulo, luego la paleta global de color), nunca de
+// otro atributo: una talla "100" no debe heredar el color basico "100".
+function PintarCeldaSwatchColorDeSkuSiAplica(
+  AConexion: TUniConnection;
+  ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo): Boolean;
+
+// Variante para una columna de atributo concreta: solo pinta si el texto
+// es un valor del atributo AIdVa (primero la asignacion del articulo
+// ACodArt, luego la paleta global de ESE atributo). Las otras variantes
+// prueban el texto contra todos los atributos y una talla "100" heredaba
+// el cuadradito del color basico "100".
+function PintarCeldaSwatchAtributoSiAplica(
+  AConexion: TUniConnection;
+  ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo;
+  const AIdVa, ACodArt: string): Boolean;
+
 // Variante contextual para documentos de articulos. Resuelve primero la
 // asignacion especifica del articulo (color proveedor -> color basico) y usa
 // la paleta global solo como fallback. ATexto puede ser un valor o un SKU.
@@ -528,6 +558,87 @@ begin
      BuscarInfoBasicoEnArticuloContextual(
        AConexion, ACodArt, sTexto, Dict, Info) then
     Result := PintarCeldaConCuadradoColor(ACanvas, AViewInfo, Info, sTexto);
+end;
+
+function IdVaDeNombreAtributo(AConexion: TUniConnection;
+                              const ANombre: string): string;
+var
+  Dict: TDictionary<string, string>;
+begin
+  Result := '';
+  Dict := ObtenerMapaAtributosGlobal(AConexion);
+  if (Dict <> nil) and (Trim(ANombre) <> '') then
+    Dict.TryGetValue(UpperCase(Trim(ANombre)), Result);
+end;
+
+function PintarCeldaSwatchColorDeSkuSiAplica(
+  AConexion: TUniConnection;
+  ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo): Boolean;
+var
+  Info: TInfoBasico;
+  sTexto, sCodArt, sColor: string;
+  Segmentos: TArray<string>;
+  bEncontrado: Boolean;
+begin
+  Result := False;
+  if (ACanvas <> nil) and (AViewInfo <> nil) then
+  begin
+    sTexto := Trim(AViewInfo.Text);
+    if (sTexto = '') and
+       (AViewInfo.GridRecord <> nil) and
+       (AViewInfo.Item <> nil) then
+      sTexto := Trim(VarToStr(
+        AViewInfo.GridRecord.Values[AViewInfo.Item.Index]));
+    if sTexto <> '' then
+    begin
+      bEncontrado := False;
+      if Pos('/', sTexto) > 0 then
+      begin
+        // El color es el primer atributo tras el articulo (orden 1).
+        Segmentos := sTexto.Split(['/']);
+        sCodArt := Trim(Segmentos[0]);
+        sColor := Trim(Segmentos[1]);
+        bEncontrado := (sColor <> '') and
+          (ObtenerInfoBasicoArticulo(
+             AConexion, sCodArt, ID_VA_COLOR, sColor, Info) or
+           ObtenerInfoBasico(AConexion, ID_VA_COLOR, sColor, Info));
+      end;
+      if not bEncontrado then
+        bEncontrado := ObtenerInfoBasico(
+          AConexion, ID_VA_COLOR, sTexto, Info);
+      if bEncontrado then
+        Result := PintarCeldaConCuadradoColor(
+          ACanvas, AViewInfo, Info, sTexto);
+    end;
+  end;
+end;
+
+function PintarCeldaSwatchAtributoSiAplica(
+  AConexion: TUniConnection;
+  ACanvas: TcxCanvas;
+  AViewInfo: TcxGridTableDataCellViewInfo;
+  const AIdVa, ACodArt: string): Boolean;
+var
+  Info: TInfoBasico;
+  sTexto: string;
+begin
+  Result := False;
+  if (ACanvas <> nil) and (AViewInfo <> nil) and (Trim(AIdVa) <> '') then
+  begin
+    sTexto := Trim(AViewInfo.Text);
+    if (sTexto = '') and
+       (AViewInfo.GridRecord <> nil) and
+       (AViewInfo.Item <> nil) then
+      sTexto := Trim(VarToStr(
+        AViewInfo.GridRecord.Values[AViewInfo.Item.Index]));
+    if (sTexto <> '') and
+       (ObtenerInfoBasicoArticulo(
+          AConexion, ACodArt, AIdVa, sTexto, Info) or
+        ObtenerInfoBasico(AConexion, AIdVa, sTexto, Info)) then
+      Result := PintarCeldaConCuadradoColor(
+        ACanvas, AViewInfo, Info, sTexto);
+  end;
 end;
 
 function BuscarInfoBasicoEnArticulo(AConexion: TUniConnection;

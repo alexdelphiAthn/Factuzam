@@ -46,6 +46,7 @@ procedure SeleccionarProveedorDevolucionCompra(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.UITypes,
   Vcl.Dialogs,
   Vcl.Forms,
@@ -75,7 +76,7 @@ begin
      Assigned(AContexto.BusquedaVisual) then
   begin
     if AContexto.Cabecera.IsEmpty then
-      MessageDlg(SErrorDevolucionCompraElegirEmpresaNoSeleccionada,
+      MessageDlg_fza(SErrorDevolucionCompraElegirEmpresaNoSeleccionada,
         mtInformation, [mbOk], 0)
     else
     begin
@@ -106,7 +107,7 @@ begin
      Assigned(AContexto.BusquedaVisual) then
   begin
     if AContexto.Cabecera.IsEmpty then
-      MessageDlg(SErrorDevolucionCompraElegirProveedorNoSeleccionada,
+      MessageDlg_fza(SErrorDevolucionCompraElegirProveedorNoSeleccionada,
         mtInformation, [mbOk], 0)
     else
     begin

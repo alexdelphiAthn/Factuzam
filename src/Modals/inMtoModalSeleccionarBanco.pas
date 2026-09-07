@@ -100,6 +100,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun, inLibMsgFacturas,
   UniDataConfiguracionPantalla;
 
@@ -139,7 +140,7 @@ begin
     if frm.FDatos.IsEmpty then
     begin
       // Sin cuentas activas: se informa y se sigue sin banco asignado.
-      ShowMessage(SInfoEmpresaSinCuentasBancarias);
+      ShowMessage_fza(SInfoEmpresaSinCuentasBancarias);
       frm.FResultado.Aceptado := True;
     end
     else

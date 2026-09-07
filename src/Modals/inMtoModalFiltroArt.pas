@@ -87,6 +87,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
@@ -337,7 +338,7 @@ begin
       Screen.Cursor := crDefault;
     end;
     if n > FUmbral then
-      bSeguir := MessageDlg(
+      bSeguir := MessageDlg_fza(
         Format(SPreguntaSuperarLimiteCargaArticulos,
                [n, FUmbral]),
         mtWarning, [mbYes, mbNo], 0) = mrYes;

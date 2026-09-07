@@ -17,6 +17,7 @@ procedure MostrarAvisoCaducidadCertificados(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils, System.Classes, System.DateUtils, System.UITypes,
   Vcl.Dialogs,
   inLibCertificates, inLibPrincipalCertificadosIntf,
@@ -105,7 +106,7 @@ begin
         end;
       end;
       if Avisos.Count > 0 then
-        MessageDlg(
+        MessageDlg_fza(
           Format(SAvisoCertificadosCaducidad, [Avisos.Text]),
           mtWarning,
           [mbOK],

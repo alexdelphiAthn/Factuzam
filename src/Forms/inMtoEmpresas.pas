@@ -351,6 +351,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibUser,
   inLibShowMto,
@@ -555,13 +556,13 @@ begin
     dmmEmpresas.unqryTablaG.Post;
   sEmpresa := Trim(dsTablaG.DataSet.FieldByName('CODIGO_EMP_EMP').AsString);
   if sEmpresa = '' then
-    ShowMessage(SErrorEmpresaCrearSeriesNoSeleccionada)
+    ShowMessage_fza(SErrorEmpresaCrearSeriesNoSeleccionada)
   else
   begin
     if dsTablaG.DataSet.FieldByName(
          'ESTOKENS_CALENDARIO_NATURAL_EMP').AsString <> 'S' then
     begin
-      ShowMessage(SErrorSerieTokenizadaCalendarioNoNatural);
+      ShowMessage_fza(SErrorSerieTokenizadaCalendarioNoNatural);
     end
     else if TfrmModalSeriesDocumentos.Ejecutar(
       Self,
@@ -596,7 +597,7 @@ begin
       end;
       dmmEmpresas.AsegurarSeriesAbierta;
       dmmEmpresas.unqrySeries.Refresh;
-      ShowMessage(Format(SInfoSeriesEmpresaCreadas,
+      ShowMessage_fza(Format(SInfoSeriesEmpresaCreadas,
                          [iCreadas, iOmitidas]));
     end;
   end;
@@ -651,7 +652,7 @@ begin
   end;
   if sCodigoEmpresa = '' then
   begin
-    ShowMessage(SErrorEmpresaNoSeleccionada);
+    ShowMessage_fza(SErrorEmpresaNoSeleccionada);
   end
   else
   begin
@@ -665,7 +666,7 @@ begin
       dmmEmpresas.unqryTablaG.Open;
       dmmEmpresas.unqryTablaG.Locate(
         'CODIGO_EMP_EMP', oEstado.CodigoEmpresa, []);
-      ShowMessage(Format(SInfoInstalacionSifEmpresaDisponible,
+      ShowMessage_fza(Format(SInfoInstalacionSifEmpresaDisponible,
                          [oEstado.RazonSocial, oEstado.Numero]));
     finally
       btnGenerarInstalacionSif.Enabled := True;
@@ -695,7 +696,7 @@ begin
       sErr := stErr.Text;
       if (sErr <> '') then
       begin
-        ShowMessage(sErr);
+        ShowMessage_fza(sErr);
         EsIBANErr := True;
       end;
     end;
@@ -714,12 +715,12 @@ begin
       sErr := stErr.Text;
       if (sErr <> '') then
       begin
-        ShowMessage(sErr);
+        ShowMessage_fza(sErr);
         EsIBANErr := True;
       end;
     end;
     if not(EsIBANErr) then
-      ShowMessage(SInfoIbanValidado);
+      ShowMessage_fza(SInfoIbanValidado);
   finally
     FreeAndNil(stErr);
   end;

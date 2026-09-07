@@ -102,6 +102,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibGenerarTicketCaja, inMtoGenSearch, Data.DB,
   inLibMsgCaja, inLibMsgComun;
 
@@ -284,14 +285,14 @@ procedure TfrmModalGastoCaja.actAceptarExecute(Sender: TObject);
 begin
   if Trim(btnEmpleado.Text) = '' then
   begin
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorEmpleadoGastoCajaNoIndicado),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     btnEmpleado.SetFocus;
   end
   else if txtImporte.Value <= 0 then
   begin
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorImporteGastoCajaNoValido),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
     txtImporte.SetFocus;

@@ -1769,6 +1769,30 @@ begin
       SInfoRegularizacionInventarioEliminada);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SCaptionEsperaRegularizandoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionEsperaRegularizandoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionEsperaActualizandoInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionEsperaActualizandoInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionEsperaCargandoLineasInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionEsperaCargandoLineasInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionEsperaEliminandoRegularizacionInventario',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionEsperaEliminandoRegularizacionInventario);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SErrorInventarioNoActivo',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -18062,17 +18086,17 @@ begin
     @inLibMsgComun.
       SCaptionEsperaGenerandoHojaCalculo);
   ARegistrar(
-    'inLibMsgVentas.' +
-    'SCaptionSeleccionandoArticuloMovimientosVentas',
-    'src/Lib/inLibMsgVentas.pas',
-    @inLibMsgVentas.
-      SCaptionSeleccionandoArticuloMovimientosVentas);
+    'inLibMsgComun.' +
+    'SCaptionEsperaSeleccionandoArticulo',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionEsperaSeleccionandoArticulo);
   ARegistrar(
-    'inLibMsgVentas.' +
-    'SCaptionExportandoFilasMovimientosVentas',
-    'src/Lib/inLibMsgVentas.pas',
-    @inLibMsgVentas.
-      SCaptionExportandoFilasMovimientosVentas);
+    'inLibMsgComun.' +
+    'SCaptionEsperaExportandoFilas',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionEsperaExportandoFilas);
 end;
 {$WARN SYMBOL_DEPRECATED ON}
 

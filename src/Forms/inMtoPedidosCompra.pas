@@ -390,6 +390,7 @@ function CrearPedidosCompraInyectada(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.StrUtils,
   inLibFiltroUsuario,
   inLibAtributosPaleta,
@@ -507,7 +508,7 @@ begin
       FieldByName('CODIGO_PRV_PEDC').AsString);
   Result := (sPrv <> '') and (sPrv <> '0');
   if not Result then
-    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra,
+    MessageDlg_fza(SErrorProveedorNoSeleccionadoBuscarArticulosPedidoCompra,
       mtInformation, [mbOk], 0);
 end;
 
@@ -528,10 +529,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmPedidosCompra) then
-    MessageDlg(SErrorPedidoCompraNoAbierto,
+    MessageDlg_fza(SErrorPedidoCompraNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra,
+    MessageDlg_fza(SErrorArticuloNoSeleccionadoBuscarSkusPedidoCompra,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -620,7 +621,7 @@ var
   oLineas: TDataSet;
 begin
   if AResultado.Mensaje <> '' then
-    MessageDlg(AResultado.Mensaje, mtWarning, [mbOk], 0);
+    MessageDlg_fza(AResultado.Mensaje, mtWarning, [mbOk], 0);
   if AResultado.Aplicado then
   begin
     if Assigned(FPivote) then
@@ -1035,7 +1036,7 @@ begin
           PersistirPreferenciaPivote;
       end
       else if Sender <> nil then
-        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
     end
     else
     begin
@@ -1130,7 +1131,7 @@ begin
     FValidadorArticulos,
     dmmPedidosCompra.unqryPedidosCompraLineas, 'PEDCLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarPedidoCompraSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarPedidoCompraSinSku,
                         [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -1317,7 +1318,7 @@ begin
   begin
     ds := dmmPedidosCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg(SErrorPedidoCompraNecesarioElegirEmpresa,
+      MessageDlg_fza(SErrorPedidoCompraNecesarioElegirEmpresa,
                  mtInformation, [mbOk], 0)
     else
     begin
@@ -1363,7 +1364,7 @@ begin
     begin
       ds := dmmPedidosCompra.unqryTablaG;
       if ds.IsEmpty then
-        MessageDlg(SErrorPedidoCompraNecesarioElegirProveedor,
+        MessageDlg_fza(SErrorPedidoCompraNecesarioElegirProveedor,
                    mtInformation, [mbOk], 0)
       else
       begin
@@ -1575,20 +1576,20 @@ var
 begin
   if (FPivote = nil) or (not FPivote.Activo) then
   begin
-    MessageDlg(SErrorTallasHorizontalesNecesariasElegirColor,
+    MessageDlg_fza(SErrorTallasHorizontalesNecesariasElegirColor,
                mtInformation, [mbOk], 0);
   end
   else
   begin
     sArt := ArticuloLineaActivaPedidoCompra;
     if sArt = '' then
-      MessageDlg(SErrorArticuloNoSeleccionadoElegirColorPedidoCompra,
+      MessageDlg_fza(SErrorArticuloNoSeleccionadoElegirColorPedidoCompra,
                  mtInformation, [mbOk], 0)
     else
     begin
       CargarBasicosColorArticulo(sArt);
       if Length(FBasicosColor) = 0 then
-        MessageDlg(Format(SErrorArticuloPedidoCompraSinColoresBasicos,
+        MessageDlg_fza(Format(SErrorArticuloPedidoCompraSinColoresBasicos,
                           [sArt]),
                    mtInformation, [mbOk], 0)
       else
@@ -1616,7 +1617,7 @@ begin
             BestFitConSwatch;
           end
           else if sMensaje <> '' then
-            MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+            MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
         end
       end;
     end;
@@ -1818,7 +1819,7 @@ begin
     cbbSERIE_PEDC.Properties.Items);
   if cbbSERIE_PEDC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesPedidoCompra, [sEmpresa]),
+    if MessageDlg_fza(Format(SPreguntaAbrirSeriesPedidoCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       ShowMto(Self.Owner, 'Empresas');
   end;
@@ -1837,7 +1838,7 @@ begin
   if dmmPedidosCompra <> nil then
   begin
     if dmmPedidosCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorPedidoCompraNoActivo)
+      ShowMessage_fza(SErrorPedidoCompraNoActivo)
     else
     begin
       if dmmPedidosCompra.unqryTablaG.State in [dsEdit, dsInsert] then

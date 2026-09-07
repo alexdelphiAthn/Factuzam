@@ -105,7 +105,9 @@ TDJMNorma3414XML = class //el Ordenante paga al Beneficiario
 end;
 
 implementation
-uses uDJMSepa, SysUtils, windows, dialogs;
+uses
+  inLibMensajesVcl,
+  uDJMSepa, SysUtils, windows, dialogs;
 
 resourcestring
  SErrorOrdenanteSepaPagoNoEncontrado =
@@ -320,14 +322,14 @@ do begin
    end;
 if iOrdenanteFound=-1
 then begin
-     ShowMessage(Format(SErrorOrdenanteSepaPagoNoEncontrado,
+     ShowMessage_fza(Format(SErrorOrdenanteSepaPagoNoEncontrado,
        [sIBANOrdenante]));
      Exit;
      end;
 
 if FListOrdenantes[iOrdenanteFound].iPagos=5000
 then begin
-     showmessage(SErrorMaximoPagosOrdenanteSepa);
+     ShowMessage_fza(SErrorMaximoPagosOrdenanteSepa);
      Exit;
      end;
 
@@ -354,7 +356,7 @@ var
 begin
   if FiOrdenantes=10
   then begin
-       ShowMessage(SErrorMaximoOrdenantesSepaPago);
+       ShowMessage_fza(SErrorMaximoOrdenantesSepaPago);
        Exit;
        end;
   //si ya hay uno con esa cuenta, no lo añadimos

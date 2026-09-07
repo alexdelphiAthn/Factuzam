@@ -525,6 +525,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibUser,
   inLibFiltroUsuario,
   inLibGenBusq,
@@ -1043,7 +1044,7 @@ begin
   Resultado.Paginas := FVisorPedidoOriginal.CantidadPaginas;
   cxPageControl1.ActivePage := tsPedidoOriginal;
   cxPageControl1Change(cxPageControl1);
-  ShowMessage(FormatearResultadoImportacionPedidoOcr(Resultado));
+  ShowMessage_fza(FormatearResultadoImportacionPedidoOcr(Resultado));
 end;
 procedure TfrmMtoComprasSesiones.btnImportarPedidoClick(
   Sender: TObject);
@@ -1122,7 +1123,8 @@ begin
         end;
       except
         on E: Exception do
-          ShowMessage(Format(SErrorImportarPedidoSesionCompra, [E.Message]));
+          ShowMessage_fza(
+            Format(SErrorImportarPedidoSesionCompra, [E.Message]));
       end;
     finally
       btnImportarPedido.Enabled := True;
@@ -1463,7 +1465,7 @@ begin
   // desde btnAddLinea / btnNuevoColor como desde el navigator del grid.
   if Dmm.unqryTablaG.IsEmpty then
   begin
-    MessageDlg(SErrorCabeceraSesionAntesLineas,
+    MessageDlg_fza(SErrorCabeceraSesionAntesLineas,
                mtInformation, [mbOk], 0);
     Abort;
   end;
@@ -1724,7 +1726,7 @@ begin
   else
     sKit := Trim(VarToStr(cbbKitProv.EditValue));
   if sKit = '' then
-    MessageDlg(SErrorKitProveedorDesplegableNoSeleccionado,
+    MessageDlg_fza(SErrorKitProveedorDesplegableNoSeleccionado,
                mtInformation, [mbOk], 0)
   else
     FProveedor.AplicarKitALineaActual(sKit);
@@ -1736,7 +1738,7 @@ begin
   // Aplica el kit seleccionado en el grid de la pestana Proveedor sobre
   // la linea con foco del grid de articulos.
   if (not Dmm.unqryPrvKits.Active) or Dmm.unqryPrvKits.IsEmpty then
-    MessageDlg(SErrorProveedorSesionSinKits,
+    MessageDlg_fza(SErrorProveedorSesionSinKits,
                mtInformation, [mbOk], 0)
   else
     FProveedor.AplicarKitALineaActual(
@@ -1768,7 +1770,7 @@ begin
   inherited;
   if Dmm.unqrySesionLin.IsEmpty then
     LogSes('btnDelLineaClick: detail vacio, salida')
-  else if MessageDlg(SPreguntaBorrarLineaSesionCompra,
+  else if MessageDlg_fza(SPreguntaBorrarLineaSesionCompra,
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     LogSes('btnDelLineaClick: cancelado por el usuario')
   else
@@ -1798,15 +1800,15 @@ begin
   if Dmm.unqryTablaG.IsEmpty then
   begin
     LogSes('  cabecera vacia, salida');
-    ShowMessage(SErrorSesionCompraNoActiva);
+    ShowMessage_fza(SErrorSesionCompraNoActiva);
   end
   else if Dmm.unqryTablaG.FieldByName(
     'ESTADO_SES').AsString <> 'CERRADA' then
   begin
     LogSes('  sesion no esta CERRADA, abortar');
-    ShowMessage(SErrorSesionNoCerradaParaReversion);
+    ShowMessage_fza(SErrorSesionNoCerradaParaReversion);
   end
-  else if MessageDlg(SPreguntaRevertirSesionCompra,
+  else if MessageDlg_fza(SPreguntaRevertirSesionCompra,
     mtConfirmation, [mbYes, mbNo], 0) <> mrYes then
     LogSes('  cancelado por el usuario')
   else
@@ -1818,13 +1820,13 @@ begin
         IdentidadSesion.Usuario, sErr) then
       begin
         LogSes('  reversion OK, master.Refresh');
-        ShowMessage(SInfoSesionRevertida);
+        ShowMessage_fza(SInfoSesionRevertida);
         Dmm.unqryTablaG.Refresh;
       end
       else
       begin
         LogSes('  reversion KO: ' + sErr);
-        ShowMessage(Format(SErrorRevertirSesionCompra, [sErr]));
+        ShowMessage_fza(Format(SErrorRevertirSesionCompra, [sErr]));
       end;
     finally
       Screen.Cursor := crDefault;
@@ -1843,7 +1845,7 @@ begin
   if not PuedeImprimir then
     Abort;
   if Dmm.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorSesionActivaImprimirNoDisponible)
+    ShowMessage_fza(SErrorSesionActivaImprimirNoDisponible)
   else
   begin
     // Persistir cualquier edicion pendiente para que el informe la vea.
@@ -1918,7 +1920,7 @@ begin
   // Mismo modal jerarquico que F3 sobre la columna Familia. Operamos
   // sobre la linea con foco; si no hay ninguna, avisamos.
   if Dmm.unqrySesionLin.IsEmpty then
-    MessageDlg(SErrorLineaSesionAsignarFamiliaNoSeleccionada,
+    MessageDlg_fza(SErrorLineaSesionAsignarFamiliaNoSeleccionada,
                mtInformation, [mbOk], 0)
   else
     FModeloPrv.ElegirFamiliaConModal;

@@ -552,7 +552,9 @@ begin
      (AViewInfo.Item is TcxGridDBColumn) and
      (AViewInfo.Item = FColumnaGrupo) then
   begin
-    if PintarCeldaSwatchSiAplica(FConexion, ACanvas, AViewInfo, nil) then
+    // Solo el atributo de color: el pintor generico probaba el texto contra
+    // todos los atributos y una talla podia heredar un color basico.
+    if PintarCeldaSwatchColorDeSkuSiAplica(FConexion, ACanvas, AViewInfo) then
       ADone := True;
   end;
 end;

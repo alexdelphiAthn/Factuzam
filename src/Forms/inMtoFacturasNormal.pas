@@ -58,6 +58,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibFacturae, inLibMsgFacturas, UniDataFacturaeRepositorio;
 
 {$R *.dfm}
@@ -116,20 +117,20 @@ begin
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage(SErrorBorradorVentaMayorNoSeleccionado);
+    ShowMessage_fza(SErrorBorradorVentaMayorNoSeleccionado);
     Abort;
   end;
   if (dsTablaG.DataSet.State = dsInsert) or
      (dsTablaG.DataSet.State = dsEdit) then
   begin
-    ShowMessage(SErrorGuardarAntesEmitirEdoc);
+    ShowMessage_fza(SErrorGuardarAntesEmitirEdoc);
     Abort;
   end;
   if FaltanDatosPersonaFisicaFacturae(dsTablaG.DataSet) then
   begin
     pcPantalla.ActivePage := tsFicha;
     pcCab.ActivePage := tsParametrosEDoc;
-    ShowMessage(SErrorPersonaFisicaEdocSinDatos);
+    ShowMessage_fza(SErrorPersonaFisicaEdocSinDatos);
     if txtNOMBRE_PERSONA_CLIENTE_FACTURA.CanFocus then
       txtNOMBRE_PERSONA_CLIENTE_FACTURA.SetFocus;
     Abort;
@@ -148,7 +149,7 @@ begin
         CrearRepositorioFacturaeUniDAC(ConexionPrincipal),
         ContextoSesion, sSerie, sNumero, oDialogo.FileName);
       dsTablaG.DataSet.Refresh;
-      ShowMessage(Format(SInfoEdocEmitido, [oResultado.Archivo]));
+      ShowMessage_fza(Format(SInfoEdocEmitido, [oResultado.Archivo]));
     end;
   finally
     FreeAndNil(oDialogo);

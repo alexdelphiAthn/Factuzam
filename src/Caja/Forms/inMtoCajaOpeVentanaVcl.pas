@@ -74,6 +74,7 @@ function SolicitarCambioIvaCaja(
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows, System.Math, Vcl.Dialogs, inLibMsgCaja,
   inLibCajaVentanasIntf, inLibFotos, inMtoStockConsulta,
   inMtoModalCambioIva;
@@ -174,7 +175,7 @@ begin
       FContexto.PanelFoto);
     Layout.GuardarGrid('Lineas', FContexto.VistaLineas);
     if Layout.PreguntarYGrabar(SDescripcionPersonalizacionCaja) then
-      ShowMessage(SInfoLayoutCajaGuardado);
+      ShowMessage_fza(SInfoLayoutCajaGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -265,7 +266,7 @@ begin
       Fecha := Trunc(Fecha) + Frac(Hora)
     else
     begin
-      ShowMessage(SErrorHoraCajaNoValida);
+      ShowMessage_fza(SErrorHoraCajaNoValida);
       HoraTexto := '';
     end;
   end
@@ -290,7 +291,7 @@ begin
   if (FContexto.ObtenerEmpresa() = '') or
      (FContexto.ObtenerAlmacen() = '') or
      (FContexto.ObtenerCaja() = '') then
-    ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada)
+    ShowMessage_fza(SErrorUbicacionCajaBuscarOperacionesNoAsignada)
   else
   begin
     Anfitrion := ExigirAnfitrionCaja(Application.MainForm);

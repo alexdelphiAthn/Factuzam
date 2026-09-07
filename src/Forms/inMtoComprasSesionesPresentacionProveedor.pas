@@ -111,6 +111,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Dialogs,
   inLibAtributosPaleta,
   inLibComprasSesionesReglas,
@@ -241,7 +242,7 @@ var
   sCodigo: string;
 begin
   if FEntorno.Datos.unqryTablaG.IsEmpty then
-    MessageDlg(SErrorSesionElegirProveedorNoSeleccionada,
+    MessageDlg_fza(SErrorSesionElegirProveedorNoSeleccionada,
                mtInformation, [mbOk], 0)
   else if FEntorno.BusquedaVisual.EjecutarBusqueda(
     FEntorno.Conexion,
@@ -380,7 +381,7 @@ begin
         FEntorno.AbrirDistribuidor(ACodigoKit);
     end
     else
-      MessageDlg(sResumen, mtWarning, [mbOk], 0);
+      MessageDlg_fza(sResumen, mtWarning, [mbOk], 0);
   end
   else if AplicarKitProveedorALinea(
     FEntorno.Datos,
@@ -404,10 +405,10 @@ begin
                   [ACodigoKit, iLinea]));
     // Aviso solo si alguna talla del kit no caso con el sistema.
     if sResumen <> '' then
-      MessageDlg(sResumen, mtInformation, [mbOk], 0);
+      MessageDlg_fza(sResumen, mtInformation, [mbOk], 0);
   end
   else
-    MessageDlg(sResumen, mtWarning, [mbOk], 0);
+    MessageDlg_fza(sResumen, mtWarning, [mbOk], 0);
 end;
 
 procedure TCoordinadorProveedorSesion.KitDelMenuElegido(ASender: TObject);
@@ -462,11 +463,11 @@ var
 begin
   Result := False;
   if FEntorno.Datos.unqrySesionLin.IsEmpty then
-    MessageDlg(SErrorLineaArticuloSesionNoSeleccionada,
+    MessageDlg_fza(SErrorLineaArticuloSesionNoSeleccionada,
                mtInformation, [mbOk], 0)
   else if (not FEntorno.Datos.unqryPrvKits.Active) or
           FEntorno.Datos.unqryPrvKits.IsEmpty then
-    MessageDlg(SErrorProveedorSesionSinKits,
+    MessageDlg_fza(SErrorProveedorSesionSinKits,
                mtInformation, [mbOk], 0)
   else
   begin
@@ -490,7 +491,7 @@ var
 begin
   Lineas := FEntorno.Datos.unqrySesionLin;
   if Length(FBasicosColor) = 0 then
-    MessageDlg(SErrorColoresBasicosSesionNoDisponibles,
+    MessageDlg_fza(SErrorColoresBasicosSesionNoDisponibles,
                mtInformation, [mbOk], 0)
   else if not Lineas.IsEmpty then
   begin

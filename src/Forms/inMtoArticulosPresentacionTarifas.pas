@@ -76,6 +76,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Dialogs,
   inMtoModalArtTar,
   inMtoModalAddPreciosTar,
@@ -257,12 +258,12 @@ var
   oResultado: TCalcularMargenResult;
 begin
   if (not FTarifas.Active) or FTarifas.IsEmpty then
-    ShowMessage(SErrorPrecioTarifaNoSeleccionado)
+    ShowMessage_fza(SErrorPrecioTarifaNoSeleccionado)
   else
   begin
     oCampoUnico := FTarifas.FindField('CODIGO_UNICO_ARTTAR');
     if (oCampoUnico = nil) or oCampoUnico.IsNull then
-      ShowMessage(SErrorPrecioTarifaNoGuardado)
+      ShowMessage_fza(SErrorPrecioTarifaNoGuardado)
     else
     begin
       iUnico := oCampoUnico.AsInteger;

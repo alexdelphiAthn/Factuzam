@@ -62,6 +62,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inMtoModalRegistrarPago, inLibFiltroUsuario,
   inLibMsgCompras, inLibMsgComun, inLibFusionEfectos,
   UniDataFusionEfectos, inMtoFusionEfectosVcl;
@@ -141,23 +142,23 @@ begin
           q.FieldByName('NUMERO_FACC_EFEC').AsString,
           iEfe, frm.Fecha, frm.Importe, frm.Tipo, frm.Referencia);
         if iRes > 0 then
-          ShowMessage(SInfoEfectoConciliado)
+          ShowMessage_fza(SInfoEfectoConciliado)
         else
-          ShowMessage(SErrorConciliarEfecto);
+          ShowMessage_fza(SErrorConciliarEfecto);
       end;
     finally
       frm.Free;
     end;
   end
   else
-    ShowMessage(SErrorEfectoNoSeleccionado);
+    ShowMessage_fza(SErrorEfectoNoSeleccionado);
 end;
 
 procedure TfrmMtoEfectosCompra.btnFusionarEfectosClick(Sender: TObject);
 begin
   inherited;
   if not Assigned(dmmEfectosCompra) then
-    ShowMessage(SErrorCarteraEfectosNoAbierta)
+    ShowMessage_fza(SErrorCarteraEfectosNoAbierta)
   else
     TCoordinadorFusionEfectosVcl.Ejecutar(
       CrearContextoFusionEfectosCompraVcl(Self));

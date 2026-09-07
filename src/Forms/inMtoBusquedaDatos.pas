@@ -143,6 +143,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
   inLibDocumentosTrabajoPresentacion,
   UniDataConfiguracionPantalla;
@@ -309,13 +310,13 @@ begin
     except
       on E: Exception do
       begin
-        MessageDlg(E.Message, mtError, [mbOK], 0);
+        MessageDlg_fza(E.Message, mtError, [mbOK], 0);
       end;
     end;
   end
   else
   begin
-    MessageDlg(sMensaje, mtInformation, [mbOK], 0);
+    MessageDlg_fza(sMensaje, mtInformation, [mbOK], 0);
   end;
 end;
 
@@ -702,7 +703,7 @@ begin
                                     iVerde, iAzul);
     if not Result then
     begin
-      MessageDlg(SErrorColorPaletaBusquedaInvalido,
+      MessageDlg_fza(SErrorColorPaletaBusquedaInvalido,
         mtWarning, [mbOK], 0);
     end;
   end;

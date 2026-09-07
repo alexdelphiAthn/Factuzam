@@ -42,6 +42,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.UITypes,
   System.Variants,
@@ -85,8 +86,8 @@ var
 begin
   if not Assigned(AContexto.Vista) or
      (AContexto.Vista.Controller.SelectedRecordCount < 2) then
-    ShowMessage(AContexto.MensajeSeleccionInsuficiente)
-  else if MessageDlg(
+    ShowMessage_fza(AContexto.MensajeSeleccionInsuficiente)
+  else if MessageDlg_fza(
             SPreguntaFusionarEfectos,
             mtConfirmation,
             [mbYes, mbNo],
@@ -95,11 +96,11 @@ begin
     aClaves := RecogerClaves(AContexto);
     oResultado := AContexto.CasoUso.Ejecutar(aClaves);
     if oResultado.Cantidad > 0 then
-      ShowMessage(Format(
+      ShowMessage_fza(Format(
         SInfoEfectosConciliados,
         [oResultado.Referencia]))
     else
-      ShowMessage(SErrorFusionarEfectos);
+      ShowMessage_fza(SErrorFusionarEfectos);
   end;
 end;
 

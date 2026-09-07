@@ -61,6 +61,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgConfiguracion;
 
 procedure TfrmMtoModalScriptLog.FormCreate(Sender: TObject);
@@ -109,7 +110,7 @@ begin
   Result := True;
   if FOperacionEnCurso then
   begin
-    Result := MessageDlg(SPreguntaCancelarOperacion,
+    Result := MessageDlg_fza(SPreguntaCancelarOperacion,
                          mtWarning, [mbYes, mbNo], 0) = mrYes;
     if Result then
     begin
@@ -176,7 +177,7 @@ begin
     if dlg.Execute then
     begin
       LogMemo.Lines.SaveToFile(dlg.FileName, TEncoding.UTF8);
-      ShowMessage(Format(SInfoLogGuardado, [dlg.FileName]));
+      ShowMessage_fza(Format(SInfoLogGuardado, [dlg.FileName]));
     end;
   finally
     dlg.Free;

@@ -191,6 +191,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.Generics.Collections, System.StrUtils, System.UITypes,
   Vcl.Clipbrd, Vcl.Dialogs,
   inLibDevExp, inLibMsgComun, inLibMsgConfiguracion,
@@ -1425,7 +1426,7 @@ var
 begin
   if Trim(synConsultaPlan.Lines.Text) = '' then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorIndicarSelectPlanProcesosAuxiliaresBBDD,
       mtInformation,
       [mbOk],
@@ -1447,7 +1448,7 @@ begin
       pcResultadoPlan.ActivePage := tsArbolPlan;
     except
       on E: Exception do
-        MessageDlg(
+        MessageDlg_fza(
           Format(
             SErrorObtenerPlanProcesosAuxiliaresBBDD,
             [sLineBreak, E.Message]),
@@ -1534,7 +1535,7 @@ begin
     finally
       Screen.Cursor := crDefault;
     end;
-    MessageDlg(
+    MessageDlg_fza(
       SInfoProcedimientosRegeneradosProcesosAuxiliaresBBDD,
       mtInformation,
       [mbOk],
@@ -1670,7 +1671,7 @@ begin
     finally
       Screen.Cursor := crDefault;
     end;
-    MessageDlg(
+    MessageDlg_fza(
       SInfoVistasRegeneradasProcesosAuxiliaresBBDD,
       mtInformation,
       [mbOk],
@@ -1685,7 +1686,7 @@ begin
   if Result then
     Result := FAnfitrionMantenimiento.CrearCopiaPreviaScriptSoporte
   else
-    MessageDlg(
+    MessageDlg_fza(
       SErrorServicioCopiaProcesosAuxiliaresBBDD,
       mtError,
       [mbOk],
@@ -1704,7 +1705,7 @@ begin
       SAvisoCopiaPreviaProcesosAuxiliaresBBDD;
   sMensaje := sMensaje + sLineBreak + sLineBreak +
     SConfirmarContinuarProcesosAuxiliaresBBDD;
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     sMensaje,
     mtWarning,
     [mbYes, mbNo],
@@ -1790,7 +1791,7 @@ begin
       finally
         Screen.Cursor := crDefault;
       end;
-      MessageDlg(
+      MessageDlg_fza(
         SInfoOperacionFinalizadaProcesosAuxiliaresBBDD,
         mtInformation,
         [mbOk],
@@ -1804,7 +1805,7 @@ begin
     on E: EModificacionTablaFacturacionProtegida do
     begin
       RegistroLog.RegistrarAviso(E.Message);
-      MessageDlg(E.Message, mtWarning, [mbOK], 0);
+      MessageDlg_fza(E.Message, mtWarning, [mbOK], 0);
     end;
   end;
 end;
@@ -1877,7 +1878,7 @@ begin
       if EsTablaFacturacionProtegida(FNombreContenidoActual) then
         ConfigurarEdicionContenido(False);
       RegistroLog.RegistrarAviso(E.Message);
-      MessageDlg(E.Message, mtWarning, [mbOK], 0);
+      MessageDlg_fza(E.Message, mtWarning, [mbOK], 0);
     end;
   end;
 end;
@@ -1986,7 +1987,7 @@ end;
 procedure TfrmModalProcesosAuxiliaresBBDD.btnPlanMedidoClick(
   Sender: TObject);
 begin
-  if MessageDlg(
+  if MessageDlg_fza(
        Format(
          SConfirmarPlanMedidoProcesosAuxiliaresBBDD,
          [sLineBreak, sLineBreak, sLineBreak, sLineBreak,

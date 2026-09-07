@@ -554,6 +554,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibUser,
   inLibDevExp,
@@ -749,7 +750,7 @@ begin
   // 3. Validamos que haya un esquema de variación asignado
   if (CodArticulo = '') or (TipoVariacion = '') then
   begin
-    ShowMessage(SErrorArticuloSinTipoVariacion);
+    ShowMessage_fza(SErrorArticuloSinTipoVariacion);
     // Mandamos al usuario al combo para que lo elija
     FCbbTipoVariacion.SetFocus;
   end;
@@ -983,7 +984,7 @@ begin
   if Trim(ADescripcionArticulo) <> '' then
     Identificacion := Identificacion + ' - ' +
       Trim(ADescripcionArticulo);
-  Respuesta := MessageDlg(
+  Respuesta := MessageDlg_fza(
     Format(
       SPreguntaDesactivarArticuloPrestaShop,
       [Identificacion]),
@@ -1013,15 +1014,15 @@ begin
     case Resultado.Error of
       egaRevisionPropiedades:
         begin
-          ShowMessage(Format(SAvisoRevisionArticulo, [Resultado.Mensaje]));
+          ShowMessage_fza(Format(SAvisoRevisionArticulo, [Resultado.Mensaje]));
           pcDetail.ActivePage := tsPropiedades;
         end;
       egaGuardadoPropiedades:
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorGuardarPropiedadesArticulo,
           [Resultado.Mensaje]));
       egaGuardadoVariaciones:
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorGuardarVariacionesArticulo,
           [Resultado.Mensaje]));
     end;
@@ -1073,7 +1074,7 @@ begin
   if not PuedeImprimir then
     Abort;
   if (not dsTablaG.Dataset.Active) or dsTablaG.Dataset.IsEmpty then
-    ShowMessage(SErrorArticuloNoSeleccionadoImprimirEtiquetas)
+    ShowMessage_fza(SErrorArticuloNoSeleccionadoImprimirEtiquetas)
   else
   begin
     formulario := TfrmPrintEtiqArt.Create(Application);
@@ -1100,8 +1101,8 @@ begin
   sCodigoArticulo :=
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if sCodigoArticulo = '' then
-    ShowMessage(SErrorArticuloNoSeleccionadoGenerarCodigos)
-  else if MessageDlg(
+    ShowMessage_fza(SErrorArticuloNoSeleccionadoGenerarCodigos)
+  else if MessageDlg_fza(
     Format(SPreguntaGenerarCodigosBarras, ['21']),
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
@@ -1117,13 +1118,13 @@ begin
       Screen.Cursor := crDefault;
     end;
     if not bGenerado then
-      ShowMessage(SErrorArticuloSinSkusActivosGenerarCodigos)
+      ShowMessage_fza(SErrorArticuloSinSkusActivosGenerarCodigos)
     else
     begin
       dmmArticulos.unqryVariacionesArticulos.Close;
       dmmArticulos.unqryVariacionesArticulos.Open;
       ActualizarVisibilidadVariaciones;
-      ShowMessage(Format(
+      ShowMessage_fza(Format(
         SInfoGeneracionCodigosBarras,
         [Resultado.PrincipalesGenerados,
          Resultado.FilasFabricanteCreadas,
@@ -1143,18 +1144,18 @@ begin
   sCodArticulo :=
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString;
   if sCodArticulo = '' then
-    ShowMessage(SErrorArticuloNoSeleccionadoVerificarCodigos)
+    ShowMessage_fza(SErrorArticuloNoSeleccionadoVerificarCodigos)
   else
   begin
     AsegurarSkuArticulo(sCodArticulo);
     oResumen := VerificarCodigosBarrasArticulo(
       FCodigosBarras.ListarCodigosBarras(sCodArticulo));
     if oResumen.Invalidos = 0 then
-      ShowMessage(Format(SInfoVerificacionCodigosBarrasCorrecta,
+      ShowMessage_fza(Format(SInfoVerificacionCodigosBarrasCorrecta,
         [oResumen.Ean13Correctos, oResumen.Ean8Correctos,
          oResumen.Omitidos]))
     else
-      ShowMessage(Format(SAvisoVerificacionCodigosBarras,
+      ShowMessage_fza(Format(SAvisoVerificacionCodigosBarras,
         [oResumen.Ean13Correctos, oResumen.Ean8Correctos,
          oResumen.Invalidos, oResumen.Omitidos,
          oResumen.DetalleErrores]));

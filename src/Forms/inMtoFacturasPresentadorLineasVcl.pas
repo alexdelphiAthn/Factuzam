@@ -149,6 +149,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.Variants, Vcl.Dialogs, cxDropDownEdit, cxTextEdit,
   inLibDevExp,
   inLibFacturas,
@@ -586,7 +587,7 @@ begin
           on E: Exception do
           begin
             Result := False;
-            ShowMessage(Format(SErrorCompletarDatosBorrador, [E.Message]));
+            ShowMessage_fza(Format(SErrorCompletarDatosBorrador, [E.Message]));
           end;
         end;
       end;

@@ -144,6 +144,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   System.IOUtils,
   inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
   inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob,
@@ -256,7 +257,7 @@ begin
   Result := Trim(FEmail.Text) <> '';
   if not Result then
   begin
-    ShowMessage(SErrorEmailFacturaVacio);
+    ShowMessage_fza(SErrorEmailFacturaVacio);
     FEmail.SetFocus;
   end
   else
@@ -264,7 +265,7 @@ begin
     Result := EmailDocumentoValido(FEmail.Text);
     if not Result then
     begin
-      ShowMessage(SErrorEmailFacturaInvalido);
+      ShowMessage_fza(SErrorEmailFacturaInvalido);
       FEmail.SetFocus;
     end;
   end;
@@ -411,10 +412,10 @@ var
 begin
   Result := CorreoTicketsConfigurado(ParametrosApp, sMensaje);
   if not Result then
-    ShowMessage(sMensaje)
+    ShowMessage_fza(sMensaje)
   else if rbActual.Checked and not Assigned(FEnviarCorreo) then
   begin
-    ShowMessage(SErrorServicioCorreoFacturaNoDisponible);
+    ShowMessage_fza(SErrorServicioCorreoFacturaNoDisponible);
     Result := False;
   end;
 end;
@@ -431,7 +432,7 @@ begin
           EjecutarEnvioEmailConfigurado;
       except
         on E: Exception do
-          MessageDlg(
+          MessageDlg_fza(
             SErrorFacturaNoEnviadaCorreo + sLineBreak +
             E.ClassName + ': ' + E.Message,
             mtError,
@@ -497,7 +498,7 @@ begin
     begin
       if Trim(sMensaje) = '' then
         sMensaje := Format(SInfoFacturaEnviadaCorreo, [FEmailEnvio]);
-      MessageDlg(sMensaje, mtInformation, [mbOK], 0);
+      MessageDlg_fza(sMensaje, mtInformation, [mbOK], 0);
     end
     else
     begin
@@ -505,7 +506,7 @@ begin
         sMensaje := SErrorFacturaNoEnviadaCorreo
       else
         sMensaje := SErrorFacturaNoEnviadaCorreo + sLineBreak + sMensaje;
-      MessageDlg(sMensaje, mtError, [mbOK], 0);
+      MessageDlg_fza(sMensaje, mtError, [mbOK], 0);
     end;
   end;
 end;
@@ -522,14 +523,14 @@ begin
       if ExportarPdfPreparado(sRutaPdf, False) then
         EnviarPdfPorCorreo(sRutaPdf)
       else
-        MessageDlg(
+        MessageDlg_fza(
           SErrorPdfTemporalCorreoFactura,
           mtError,
           [mbOK],
           0);
     except
       on E: Exception do
-        MessageDlg(
+        MessageDlg_fza(
           SErrorPdfTemporalCorreoFactura + sLineBreak +
           E.ClassName + ': ' + E.Message,
           mtError,
@@ -589,7 +590,7 @@ begin
       InformarFalloSecundarioEnDepurador(
         'inMtoModalImpFac.NotificarPdfTemporalNoEliminado.Log', E);
   end;
-  MessageDlg(sMensaje, mtWarning, [mbOK], 0);
+  MessageDlg_fza(sMensaje, mtWarning, [mbOK], 0);
 end;
 
 procedure TfrmPrintFac.EliminarPdfTemporalSeguro(const ARutaPdf: string);
@@ -792,7 +793,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage(E.Message);
+      ShowMessage_fza(E.Message);
       Result := False;
     end;
   end;
@@ -808,7 +809,7 @@ begin
   oReferencias := nil;
   bPreparado := Assigned(AAccion);
   if not bPreparado then
-    ShowMessage(SErrorServicioLoteImpresionFacturas);
+    ShowMessage_fza(SErrorServicioLoteImpresionFacturas);
   if bPreparado then
   begin
     Consultar_Formularios(True);
@@ -820,7 +821,7 @@ begin
   begin
     bPreparado := Length(oReferencias) <> 0;
     if not bPreparado then
-      ShowMessage(SErrorFacturasFiltradasVacias);
+      ShowMessage_fza(SErrorFacturasFiltradasVacias);
   end;
   Result := bPreparado;
   if bPreparado then

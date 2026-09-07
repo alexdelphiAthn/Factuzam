@@ -90,6 +90,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos;
 
 resourcestring
@@ -315,7 +316,7 @@ begin
     Layout.GuardarGeometria(Self);
     if Layout.PreguntarYGrabar(
       STituloPersonalizacionImpresionEtiquetasArticulo)
-      then ShowMessage(SInfoLayoutEtiquetasGuardado);
+      then ShowMessage_fza(SInfoLayoutEtiquetasGuardado);
   finally
     FreeAndNil(Layout);
   end;
@@ -348,7 +349,7 @@ var
 begin
   if ObtenerCodigoTarifa = '' then
   begin
-    ShowMessage(SErrorTarifaEtiquetasNoSeleccionada);
+    ShowMessage_fza(SErrorTarifaEtiquetasNoSeleccionada);
     Abort;
   end;
   if Assigned(FCrearDataSetExterno) then

@@ -65,6 +65,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos;
 
 procedure TfrmPrintEtiqPed.FormCreate(Sender: TObject);
@@ -131,7 +132,7 @@ procedure TfrmPrintEtiqPed.preparar_consulta;
 begin
   if ObtenerCodigoTarifa = '' then
   begin
-    ShowMessage(SErrorTarifaEtiquetasNoSeleccionada);
+    ShowMessage_fza(SErrorTarifaEtiquetasNoSeleccionada);
     Abort;
   end;
   DMPedc.CrearDataSetEtiquetasPed(

@@ -55,6 +55,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.UITypes,
   Vcl.Clipbrd,
@@ -74,7 +75,7 @@ begin
     mTexto.SelectAll;
   except
     on E: Exception do
-      MessageDlg(
+      MessageDlg_fza(
         Format(SErrorCopiarTextoPortapapeles, [E.Message]),
         mtWarning,
         [mbOk],

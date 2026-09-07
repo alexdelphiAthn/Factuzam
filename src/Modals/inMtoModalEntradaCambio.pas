@@ -84,6 +84,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibGenerarTicketCaja, inMtoGenSearch, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -200,14 +201,14 @@ procedure TfrmModalEntradaCambio.actAceptarExecute(Sender: TObject);
 begin
   if Trim(btnEmpleado.Text) = '' then
   begin
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorEmpleadoEntradaCambioNoIndicado),
       PChar(STituloAvisoEntradaCambio), MB_OK or MB_ICONWARNING);
     btnEmpleado.SetFocus;
   end
   else if txtImporte.Value <= 0 then
   begin
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorImporteEntradaCambioNoValido),
       PChar(STituloAvisoEntradaCambio), MB_OK or MB_ICONWARNING);
     txtImporte.SetFocus;

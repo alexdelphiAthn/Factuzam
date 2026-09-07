@@ -308,6 +308,7 @@ function CrearAlbaranesCompraInyectada(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.StrUtils,
   inLibFiltroUsuario,
 
@@ -426,7 +427,7 @@ begin
       FieldByName('CODIGO_PRV_ALBC').AsString);
   Result := (sPrv <> '') and (sPrv <> '0');
   if not Result then
-    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulos,
+    MessageDlg_fza(SErrorProveedorNoSeleccionadoBuscarArticulos,
       mtInformation, [mbOk], 0);
 end;
 
@@ -447,10 +448,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmAlbaranesCompra) then
-    MessageDlg(SErrorAlbaranCompraNoAbierto,
+    MessageDlg_fza(SErrorAlbaranCompraNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra,
+    MessageDlg_fza(SErrorArticuloNoSeleccionadoBuscarSkusAlbaranCompra,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -528,7 +529,7 @@ procedure TfrmMtoAlbaranesCompra.PresentarArticuloAlbaranCompra(
   const AResultado: TResultadoAplicacionArticuloCompra);
 begin
   if AResultado.Mensaje <> '' then
-    MessageDlg(AResultado.Mensaje, mtWarning, [mbOk], 0);
+    MessageDlg_fza(AResultado.Mensaje, mtWarning, [mbOk], 0);
   if AResultado.Aplicado and AResultado.RequiereSku and
      ((FPivote = nil) or (not FPivote.Activo)) then
     EnfocarSkuAlbaranCompra(True);
@@ -555,7 +556,7 @@ begin
     cbbSERIE_ALBC.Properties.Items);
   if cbbSERIE_ALBC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesAlbaranCompra, [sEmpresa]),
+    if MessageDlg_fza(Format(SPreguntaAbrirSeriesAlbaranCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       ShowMto(Self.Owner, 'Empresas');
   end;
@@ -782,7 +783,7 @@ begin
   if dmmAlbaranesCompra <> nil then
   begin
     if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorAlbaranCompraSinImpresionActivo)
+      ShowMessage_fza(SErrorAlbaranCompraSinImpresionActivo)
     else
     begin
       if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -819,7 +820,7 @@ begin
   if dmmAlbaranesCompra <> nil then
   begin
     if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorAlbaranCompraSinImpresionActivo)
+      ShowMessage_fza(SErrorAlbaranCompraSinImpresionActivo)
     else
     begin
       if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -858,7 +859,7 @@ begin
   if dmmAlbaranesCompra <> nil then
   begin
     if dmmAlbaranesCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorAlbaranCompraNoActivo)
+      ShowMessage_fza(SErrorAlbaranCompraNoActivo)
     else
     begin
       if dmmAlbaranesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -913,7 +914,7 @@ begin
     FValidadorArticulos,
     dmmAlbaranesCompra.unqryAlbaranesCompraLineas, 'ALBCLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarAlbaranCompraSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarAlbaranCompraSinSku,
                   [sLineasSinSku]),
                   mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -1315,7 +1316,7 @@ begin
   begin
     ds := dmmAlbaranesCompra.unqryTablaG;
     if ds.IsEmpty then
-      MessageDlg(SErrorAlbaranCompraNecesarioElegirEmpresa,
+      MessageDlg_fza(SErrorAlbaranCompraNecesarioElegirEmpresa,
                  mtInformation, [mbOk], 0)
     else if BuscarEmpresaAlbaranCompra(sCodigo) then
     begin
@@ -1352,7 +1353,7 @@ begin
     begin
       ds := dmmAlbaranesCompra.unqryTablaG;
       if ds.IsEmpty then
-        MessageDlg(SErrorAlbaranCompraNecesarioElegirProveedor,
+        MessageDlg_fza(SErrorAlbaranCompraNecesarioElegirProveedor,
                    mtInformation, [mbOk], 0)
       else if BuscarProveedorAlbaranCompra(sCodigo) then
       begin
@@ -1553,20 +1554,20 @@ var
 begin
   if (FPivote = nil) or (not FPivote.Activo) then
   begin
-    MessageDlg(SErrorActivarTallasHorizontalesParaColor,
+    MessageDlg_fza(SErrorActivarTallasHorizontalesParaColor,
                mtInformation, [mbOk], 0);
   end
   else
   begin
     sArt := ArticuloLineaActivaAlbaranCompra;
     if sArt = '' then
-      MessageDlg(SErrorArticuloNoSeleccionadoElegirColor,
+      MessageDlg_fza(SErrorArticuloNoSeleccionadoElegirColor,
                  mtInformation, [mbOk], 0)
     else
     begin
       CargarBasicosColorArticulo(sArt);
       if Length(FBasicosColor) = 0 then
-        MessageDlg(Format(SErrorArticuloSinColoresBasicosActivos, [sArt]),
+        MessageDlg_fza(Format(SErrorArticuloSinColoresBasicosActivos, [sArt]),
                    mtInformation, [mbOk], 0)
       else
       begin
@@ -1590,7 +1591,7 @@ begin
           if FPivote.CambiarColorLineaActiva(sNuevo, sMensaje) then
             FPivote.RecargarYRepublicar
           else if sMensaje <> '' then
-            MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+            MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
         end
       end;
     end;

@@ -25,6 +25,7 @@ implementation
 
 uses
   System.SysUtils, System.StrUtils, Data.DB,
+  inLibCodigosSinBarra,
   UniDataPrestaShopEncolado;
 
 type
@@ -178,7 +179,7 @@ begin
       ' WHERE ID_VA_AV = ''CO'' ' +
       '   AND AV = :av ' +
       ' LIMIT 1';
-    Consulta.ParamByName('av').AsString := AValor;
+    Consulta.ParamByName('av').AsString := SinBarraSku(AValor);
     Consulta.Open;
     Result := not Consulta.IsEmpty;
     if Result then
@@ -229,7 +230,7 @@ begin
       '   USUARIO_MODIF) ' +
       'VALUES (''CO'', :av, :descripcion, :id_atb, ''S'', 0, ' +
       '        NOW(), :usuario, NOW(), :usuario)';
-    Consulta.ParamByName('av').AsString := AValor;
+    Consulta.ParamByName('av').AsString := SinBarraSku(AValor);
     Consulta.ParamByName('descripcion').AsString := ADescripcion;
     Consulta.ParamByName('id_atb').AsInteger := AIdBasico;
     Consulta.ParamByName('usuario').AsString := AUsuario;

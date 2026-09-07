@@ -63,8 +63,9 @@ type
 
 implementation
 
- uses
-      inLibAnfitrionMtoIntf,
+uses
+  inLibMensajesVcl,
+  inLibAnfitrionMtoIntf,
   inLibMsgComun,
       inLibLogIntf,
       inLibRegistroPantallas,
@@ -112,7 +113,7 @@ begin
   if sClave <> '' then
     ShowMto(AOwner, ACall, sClave)
   else if AMensajeVacio <> '' then
-    ShowMessage(AMensajeVacio);
+    ShowMessage_fza(AMensajeVacio);
 end;
 
 // Numero de instancia (2..N) de la pantalla ACall que hay en la
@@ -185,7 +186,7 @@ function ResolverPantallaAccesible(
 begin
   Result := Assigned(AContexto.Pantalla);
   if not Result then
-    ShowMessageFmt(SResWinFNotFnd, [ACall])
+    ShowMessageFmt_fza(SResWinFNotFnd, [ACall])
   else if Assigned(AContexto.Pantalla.mnMenuItem) and
           (not AContexto.Pantalla.mnMenuItem.Visible) then
   begin
@@ -292,7 +293,7 @@ begin
   begin
     AContexto.RegistroLog.RegistrarError(
       'Pantalla sin clase registrada: ' + AContexto.Pantalla.UnitForm);
-    ShowMessageFmt(SClassRttiNotFnd, [AContexto.Pantalla.UnitForm]);
+    ShowMessageFmt_fza(SClassRttiNotFnd, [AContexto.Pantalla.UnitForm]);
   end
   else
   begin
@@ -351,7 +352,7 @@ begin
       AMantenimiento.AbrirTablaPrincipal(True);
       if not AMantenimiento.LocalizarYEnfocar(AContexto.Busqueda) then
       begin
-        ShowMessageFmt(SLocateNotFnd,
+        ShowMessageFmt_fza(SLocateNotFnd,
           [AContexto.Busqueda, AContexto.Pantalla.Caption]);
       end;
     end

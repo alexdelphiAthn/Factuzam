@@ -123,6 +123,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibFormatoDocumento, UniDataFormatoDocumentoRepositorio,
   inLibMsgCompras, inLibMsgVentas,
   inLibVentasPantallaIntf,
@@ -350,7 +351,7 @@ begin
     (Trim(VarToStr(vAlm)) <> '');
   if not bValido then
   begin
-    MessageDlg(SErrorAlmacenPedidoNoSeleccionado,
+    MessageDlg_fza(SErrorAlmacenPedidoNoSeleccionado,
       mtInformation, [mbOk], 0);
     if cbbAlmacen.CanFocus then
       cbbAlmacen.SetFocus;
@@ -367,7 +368,7 @@ begin
     begin
       // Incorporar requiere un albaran destino seleccionado.
       if FAlbaranes.IsEmpty then
-        MessageDlg(SInfoAlbaranesIncorporarNoDisponibles,
+        MessageDlg_fza(SInfoAlbaranesIncorporarNoDisponibles,
           mtInformation, [mbOk], 0)
       else
       begin
@@ -386,7 +387,7 @@ begin
       // El alta de un albaran nuevo requiere serie.
       if Trim(cbbSerieAlb.Text) = '' then
       begin
-        MessageDlg(SErrorSerieAlbaranPedidoNoIndicada,
+        MessageDlg_fza(SErrorSerieAlbaranPedidoNoIndicada,
           mtInformation, [mbOk], 0);
         if cbbSerieAlb.CanFocus then
           cbbSerieAlb.SetFocus;

@@ -9,7 +9,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
-  Font.Name = 'Lucida Sans'
+  Font.Name = 'DejaVu Sans'
   Font.Style = []
   KeyPreview = True
   Position = poScreenCenter
@@ -40,7 +40,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
         Style.Font.Height = -19
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = [fsBold]
         Style.IsFontAssigned = True
         Transparent = True

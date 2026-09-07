@@ -69,6 +69,7 @@ function CrearRecepcionPedidoCompraVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.UITypes,
   System.Variants,
@@ -226,13 +227,13 @@ end;
 procedure TVisualizacionRecepcionPedidoCompraVcl.MostrarAviso(
   const AMensaje: string);
 begin
-  MessageDlg(AMensaje, mtWarning, [mbOk], 0);
+  MessageDlg_fza(AMensaje, mtWarning, [mbOk], 0);
 end;
 
 procedure TVisualizacionRecepcionPedidoCompraVcl.MostrarError(
   const AMensaje: string);
 begin
-  MessageDlg(
+  MessageDlg_fza(
     Format(SErrorCrearAlbaranDesdePedidoCompra, [AMensaje]),
     mtError, [mbOk], 0);
 end;
@@ -337,7 +338,7 @@ var
   Entrada: TEntradaPresentacionRecepcionPedidoCompra;
 begin
   if FCabecera.IsEmpty then
-    ShowMessage(SErrorPedidoCompraNoActivoCrearAlbaran)
+    ShowMessage_fza(SErrorPedidoCompraNoActivoCrearAlbaran)
   else
   begin
     Entrada := CrearEntrada(AUsarCampoCantidades);
@@ -441,14 +442,14 @@ var
 begin
   if not Assigned(FPivote) or not FPivote.Activo or
      not FPivote.Expandido then
-    MessageDlg(SErrorExpandirRecibidosNoActivo,
+    MessageDlg_fza(SErrorExpandirRecibidosNoActivo,
       mtInformation, [mbOk], 0)
   else
   begin
     Celdas := FPivote.RecibirFilaEntera;
     ActualizarTotal(AUsarCampoCantidades);
     if Celdas = 0 then
-      MessageDlg(SInfoTallasPendientesRecibirNoDisponibles,
+      MessageDlg_fza(SInfoTallasPendientesRecibirNoDisponibles,
         mtInformation, [mbOk], 0);
   end;
 end;
@@ -465,7 +466,7 @@ begin
       FBestFit;
     ActualizarTotal(AUsarCampoCantidades);
     if Rellenadas = 0 then
-      MessageDlg(SInfoPedidoCompraSinPendientesRecibir,
+      MessageDlg_fza(SInfoPedidoCompraSinPendientesRecibir,
         mtInformation, [mbOk], 0);
   end;
 end;

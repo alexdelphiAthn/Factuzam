@@ -196,6 +196,7 @@ procedure MostrarMenuCaja(
 implementation
 
 uses
+  inLibMensajesVcl,
   DateUtils,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
   inLibMsgCaja, inLibTraducciones;
@@ -356,7 +357,7 @@ begin
     FCaja    := UbicacionSesion.Caja;
     if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
     begin
-      ShowMessage(SErrorAsignarUbicacionCaja);
+      ShowMessage_fza(SErrorAsignarUbicacionCaja);
       bContinuar := False;
     end
     else
@@ -482,7 +483,7 @@ begin
     if TryStrToTime(sHora, dtHora) then
       ActualizarFechaCaja(DateOf(dtFechaBase) + Frac(dtHora))
     else
-      ShowMessage(SErrorHoraCajaNoValida);
+      ShowMessage_fza(SErrorHoraCajaNoValida);
   end
   else
     ActualizarFechaCaja(Now);
@@ -496,7 +497,7 @@ var
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
-    ShowMessage(SErrorUbicacionCajaBuscarOperacionesNoAsignada);
+    ShowMessage_fza(SErrorUbicacionCajaBuscarOperacionesNoAsignada);
   end
   else
   begin
@@ -570,7 +571,7 @@ begin
   // Si quieres mostrar el resumen del día clickado, descomenta:
   // VentaDia := FVentasCal.GetVentasDia(FFechaCaja);
   // if Assigned(VentaDia) then
-  //   ShowMessage(VentaDia.GetHintText);
+  //   ShowMessage_fza(VentaDia.GetHintText);
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1DblClick(Sender: TObject);
@@ -893,7 +894,7 @@ procedure TfrmMtoMenuCaja.lblArqueoClick(Sender: TObject);
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
   begin
-    ShowMessage(SErrorUbicacionCajaArqueoNoAsignada);
+    ShowMessage_fza(SErrorUbicacionCajaArqueoNoAsignada);
   end
   else
   begin
@@ -936,7 +937,7 @@ var
   frmTraspaso: TfrmMtoOpeTraspaso;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
-    ShowMessage(SErrorUbicacionCajaTraspasoNoAsignada)
+    ShowMessage_fza(SErrorUbicacionCajaTraspasoNoAsignada)
   else
   begin
     frmTraspaso := TfrmMtoOpeTraspaso.Create(

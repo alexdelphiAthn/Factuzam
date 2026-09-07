@@ -132,6 +132,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inMtoModalCargarEfectosRemesa,
   inMtoModalRegistrarPago, inLibMsgCompras, inLibMsgVentas;
 
@@ -208,20 +209,20 @@ function TfrmMtoRemesasCompra.EliminarRemesaActual: Boolean;
 begin
   Result := False;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else if dmmRemesasCompra.RemesaTieneCargo then
-    ShowMessage(SErrorEliminarRemesaCompraConCargo)
-  else if MessageDlg(SPreguntaEliminarRemesaCompra,
+    ShowMessage_fza(SErrorEliminarRemesaCompraConCargo)
+  else if MessageDlg_fza(SPreguntaEliminarRemesaCompra,
           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if dmmRemesasCompra.EliminarRemesa then
     begin
-      ShowMessage(SInfoRemesaCompraEliminada);
+      ShowMessage_fza(SInfoRemesaCompraEliminada);
       ActualizarBancoPago;
       Result := True;
     end
     else
-      ShowMessage(SErrorEliminarRemesaCompra);
+      ShowMessage_fza(SErrorEliminarRemesaCompra);
   end;
 end;
 
@@ -265,9 +266,9 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else if dmmRemesasCompra.RemesaTieneCargo then
-    ShowMessage(SErrorAnadirEfectosRemesaCompraConCargo)
+    ShowMessage_fza(SErrorAnadirEfectosRemesaCompraConCargo)
   else
   begin
     q := dmmRemesasCompra.unqryTablaG;
@@ -293,20 +294,20 @@ procedure TfrmMtoRemesasCompra.btnQuitarEfectoClick(Sender: TObject);
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else if not dmmRemesasCompra.unqryEfectosRemesa.Active then
-    ShowMessage(SErrorEfectosRemesaCompraNoCargados)
+    ShowMessage_fza(SErrorEfectosRemesaCompraNoCargados)
   else if dmmRemesasCompra.unqryEfectosRemesa.IsEmpty then
-    ShowMessage(SErrorEfectoRemesaCompraNoSeleccionado)
+    ShowMessage_fza(SErrorEfectoRemesaCompraNoSeleccionado)
   else if dmmRemesasCompra.RemesaTieneCargo then
-    ShowMessage(SErrorQuitarEfectosRemesaCompraConCargo)
-  else if MessageDlg(SPreguntaQuitarEfectoRemesaCompra,
+    ShowMessage_fza(SErrorQuitarEfectosRemesaCompraConCargo)
+  else if MessageDlg_fza(SPreguntaQuitarEfectoRemesaCompra,
           mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if dmmRemesasCompra.QuitarEfectoActual then
-      ShowMessage(SInfoEfectoRemesaCompraQuitado)
+      ShowMessage_fza(SInfoEfectoRemesaCompraQuitado)
     else
-      ShowMessage(SErrorQuitarEfectoRemesaCompra);
+      ShowMessage_fza(SErrorQuitarEfectoRemesaCompra);
     ActualizarBancoPago;
   end;
 end;
@@ -320,19 +321,19 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else if not BancoRemesaAsignado then
-    ShowMessage(SErrorBancoPagoRemesaNoAsignado)
+    ShowMessage_fza(SErrorBancoPagoRemesaNoAsignado)
   else if not dmmRemesasCompra.unqryEfectosRemesa.Active then
-    ShowMessage(SErrorEfectosRemesaCompraNoCargados)
+    ShowMessage_fza(SErrorEfectosRemesaCompraNoCargados)
   else if dmmRemesasCompra.unqryEfectosRemesa.IsEmpty then
-    ShowMessage(SErrorEfectoRemesaCompraNoSeleccionado)
+    ShowMessage_fza(SErrorEfectoRemesaCompraNoSeleccionado)
   else
   begin
     q := dmmRemesasCompra.unqryEfectosRemesa;
     fPend := q.FieldByName('IMPORTE_PENDIENTE_EFEC').AsFloat;
     if fPend <= 0.0001 then
-      ShowMessage(SErrorEfectoRemesaCompraSinPendiente)
+      ShowMessage_fza(SErrorEfectoRemesaCompraSinPendiente)
     else
     begin
       frm := TfrmModalRegistrarPago.Create(nil);
@@ -344,9 +345,9 @@ begin
           iRes := dmmRemesasCompra.RegistrarPagoEfectoActual(frm.Fecha,
             frm.Importe, frm.Tipo, frm.Referencia);
           if iRes > 0 then
-            ShowMessage(SInfoEfectoRemesaCompraConciliado)
+            ShowMessage_fza(SInfoEfectoRemesaCompraConciliado)
           else
-            ShowMessage(SErrorConciliarEfectoRemesaCompra);
+            ShowMessage_fza(SErrorConciliarEfectoRemesaCompra);
           ActualizarBancoPago;
         end;
       finally
@@ -364,14 +365,14 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else if not BancoRemesaAsignado then
-    ShowMessage(SErrorBancoPagoRemesaNoAsignado)
+    ShowMessage_fza(SErrorBancoPagoRemesaNoAsignado)
   else
   begin
     fPend := dmmRemesasCompra.PendienteRemesa;
     if fPend <= 0.0001 then
-      ShowMessage(SErrorRemesaCompraSinImportePendiente)
+      ShowMessage_fza(SErrorRemesaCompraSinImportePendiente)
     else
     begin
       frm := TfrmModalRegistrarPago.Create(nil);
@@ -382,10 +383,10 @@ begin
           iRes := dmmRemesasCompra.RegistrarPagoRemesa(frm.Fecha,
             frm.Importe, frm.Tipo, frm.Referencia);
           if iRes > 0 then
-            ShowMessage(Format(SInfoEfectosRemesaCompraConciliados,
+            ShowMessage_fza(Format(SInfoEfectosRemesaCompraConciliados,
                                [iRes]))
           else
-            ShowMessage(SErrorConciliarRemesaCompra);
+            ShowMessage_fza(SErrorConciliarRemesaCompra);
           ActualizarBancoPago;
         end;
       finally
@@ -401,19 +402,19 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else
   begin
     sCodigo := VarToStr(cbbBancoPagoRemesa.EditValue);
     if sCodigo = '' then
-      ShowMessage(SErrorBancoPagoNoSeleccionado)
+      ShowMessage_fza(SErrorBancoPagoNoSeleccionado)
     else if dmmRemesasCompra.AsignarBancoRemesa(sCodigo) then
     begin
-      ShowMessage(SInfoBancoPagoRemesaAsignado);
+      ShowMessage_fza(SInfoBancoPagoRemesaAsignado);
       ActualizarBancoPago;
     end
     else
-      ShowMessage(SErrorAsignarBancoPagoRemesa);
+      ShowMessage_fza(SErrorAsignarBancoPagoRemesa);
   end;
 end;
 
@@ -424,7 +425,7 @@ var
 begin
   inherited;
   if not RemesaSeleccionada then
-    ShowMessage(SErrorRemesaCompraNoSeleccionada)
+    ShowMessage_fza(SErrorRemesaCompraNoSeleccionada)
   else
   begin
     sFecha := FormatDateTime('dd/mm/yyyy', Date);
@@ -439,13 +440,13 @@ begin
       if TryStrToDate(sFecha, dFecha) then
       begin
         if dmmRemesasCompra.ActualizarFechaCargo(dFecha) then
-          ShowMessage(SInfoFechaCargoRemesaActualizada)
+          ShowMessage_fza(SInfoFechaCargoRemesaActualizada)
         else
-          ShowMessage(SErrorActualizarFechaCargoRemesa);
+          ShowMessage_fza(SErrorActualizarFechaCargoRemesa);
         ActualizarBancoPago;
       end
       else
-        ShowMessage(SErrorFechaCargoRemesaNoValida);
+        ShowMessage_fza(SErrorFechaCargoRemesaNoValida);
     end;
   end;
 end;

@@ -150,6 +150,7 @@ function ResetearLayout(
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Dialogs,
   inLibMsgComun, inLibMsgConfiguracion,
   cxGridDBDataDefinitions;
@@ -417,7 +418,7 @@ begin
     AFormKey, STextoResetearLayout, sPermisos) then
   begin
     APerfilesEscritura.EliminarPerfil(sPermisos, AFormKey);
-    ShowMessage(SInfoLayoutReseteado);
+    ShowMessage_fza(SInfoLayoutReseteado);
     Result := True;
   end;
 end;

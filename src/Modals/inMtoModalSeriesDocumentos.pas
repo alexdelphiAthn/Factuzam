@@ -73,6 +73,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibCadenas, inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass);
@@ -135,7 +136,7 @@ begin
   sSerieTokenizada := Trim(txtSerieTokenizada.Text);
   if sAlmacen = '' then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorAlmacenSerieTokenizadaNoIndicado,
       mtWarning,
       [mbOk],
@@ -144,7 +145,7 @@ begin
   end
   else if sCaja = '' then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorCajaSerieTokenizadaNoIndicada,
       mtWarning,
       [mbOk],
@@ -153,7 +154,7 @@ begin
   end
   else if sSerieTokenizada = '' then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorSerieDocumentoNoIndicada,
       mtWarning,
       [mbOk],
@@ -162,7 +163,7 @@ begin
   end
   else if not EsSerieTokenizadaValida(sSerieTokenizada) then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       Format(SErrorSerieTokenizadaEmpresa, [sSerieTokenizada]),
       mtWarning,
       [mbOk],

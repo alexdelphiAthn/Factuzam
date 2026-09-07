@@ -47,9 +47,19 @@ function DecidirAccionColumnasInventario(
 // El ancho de una columna de atributo solo crece, nunca encoge.
 function AnchoColumnaAtributoInventario(
   AAnchoTexto, AAnchoActual: Integer): Integer;
-// SKU cerrado: tantos separadores como atributos exige la linea.
+// SKU cerrado: tantos separadores como atributos exige la linea. Con el
+// codigo de articulo se cuentan solo los separadores posteriores a el,
+// porque el propio codigo puede llevar '/' ('2354/A-158').
 function EsSkuCompletoInventario(
-  const ASku: string; ANumeroAtributosRequeridos: Integer): Boolean;
+  const ASku: string; ANumeroAtributosRequeridos: Integer;
+  const ACodigoArticulo: string = ''): Boolean;
+// Valores de atributo que lleva un SKU: lo que sigue al codigo de
+// articulo y su separador ('2354/A-158/375/40' con articulo '2354/A-158'
+// da ['375', '40']). Trocear el SKU entero por '/' partia los codigos de
+// articulo con barra. Sin articulo, o si el SKU no lo lleva de prefijo,
+// se descarta solo el primer tramo.
+function AtributosDesdeSkuInventario(
+  const ACodigoArticulo, ASku: string): TArray<string>;
 // CODIGO_UNIDAD_INVLIN es NOT NULL: nunca puede quedar vacio.
 function SkuEfectivoInventario(
   const ASkuGenerado, ACodigoArticulo: string): string;
@@ -81,6 +91,7 @@ implementation
 
 uses
   System.SysUtils,
+  System.StrUtils,
   inLibMsgArticulos;
 
 type
@@ -181,20 +192,61 @@ begin
     Result := AAnchoTexto + MARGEN_SWATCH_INVENTARIO;
 end;
 
-function EsSkuCompletoInventario(
-  const ASku: string; ANumeroAtributosRequeridos: Integer): Boolean;
+// True si el SKU lleva el codigo de articulo como prefijo; ATramo es lo
+// que sigue al separador (o el SKU entero si no hay prefijo).
+function TramoAtributosSkuInventario(
+  const ACodigoArticulo, ASku: string; out ATramo: string): Boolean;
+begin
+  Result := (ACodigoArticulo <> '') and
+            StartsText(ACodigoArticulo + '/', ASku);
+  if Result then
+    ATramo := Copy(ASku, Length(ACodigoArticulo) + 2, MaxInt)
+  else
+    ATramo := ASku;
+end;
+
+function ContarSeparadoresSku(const ATexto: string): Integer;
 var
   iCaracter: Integer;
+begin
+  Result := 0;
+  for iCaracter := 1 to Length(ATexto) do
+  begin
+    if ATexto[iCaracter] = '/' then
+      Inc(Result);
+  end;
+end;
+
+function EsSkuCompletoInventario(
+  const ASku: string; ANumeroAtributosRequeridos: Integer;
+  const ACodigoArticulo: string): Boolean;
+var
+  sTramo: string;
   iSeparadores: Integer;
 begin
-  iSeparadores := 0;
-  for iCaracter := 1 to Length(ASku) do
-  begin
-    if ASku[iCaracter] = '/' then
-      Inc(iSeparadores);
-  end;
+  iSeparadores := ContarSeparadoresSku(ASku);
+  if TramoAtributosSkuInventario(ACodigoArticulo, ASku, sTramo) then
+    iSeparadores := 1 + ContarSeparadoresSku(sTramo);
   Result := (ANumeroAtributosRequeridos > 0) and
             (iSeparadores = ANumeroAtributosRequeridos);
+end;
+
+function AtributosDesdeSkuInventario(
+  const ACodigoArticulo, ASku: string): TArray<string>;
+var
+  sTramo: string;
+begin
+  SetLength(Result, 0);
+  if TramoAtributosSkuInventario(ACodigoArticulo, ASku, sTramo) then
+  begin
+    if sTramo <> '' then
+      Result := sTramo.Split(['/']);
+  end
+  else if ASku <> '' then
+  begin
+    Result := ASku.Split(['/']);
+    Delete(Result, 0, 1);
+  end;
 end;
 
 function SkuEfectivoInventario(

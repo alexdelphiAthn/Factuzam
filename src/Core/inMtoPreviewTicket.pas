@@ -108,6 +108,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
   System.UITypes, inLibMsgComun,
   inLibMsgFacturas, inLibTraducciones;
@@ -357,7 +358,7 @@ begin
     begin
       if sErrorImpresion <> '' then
       begin
-        MessageDlg(Format(SErrorEnviarTicketImpresora,
+        MessageDlg_fza(Format(SErrorEnviarTicketImpresora,
                           [ANombreImpresora, sErrorImpresion]),
                    mtWarning, [mbOk], 0);
       end;
@@ -1129,7 +1130,7 @@ var
 begin
   ImprimirTicket := False;
   if FComandos = '' then
-    ShowMessage(SAvisoSinComandosESCPOSImpresora);
+    ShowMessage_fza(SAvisoSinComandosESCPOSImpresora);
   if FComandos <> '' then
   begin
     // 1. Mostrar diálogo para elegir la impresora
@@ -1147,11 +1148,11 @@ begin
     // 2. Usar la librería para enviar el ticket de forma nativa
     try
       EnviarComandoRAW(NombreImpresoraElegida, FComandos);
-      ShowMessage(Format(SInfoTicketEnviadoImpresora,
+      ShowMessage_fza(Format(SInfoTicketEnviadoImpresora,
                          [NombreImpresoraElegida]));
     except
       on E: Exception do
-        ShowMessage(Format(SErrorImprimir, [E.Message]));
+        ShowMessage_fza(Format(SErrorImprimir, [E.Message]));
     end;
   end;
 end;
@@ -1207,9 +1208,9 @@ begin
       bPDFGuardado := True;
     end
     else
-      ShowMessage(SAvisoSinComandosESCPOSPDF);
+      ShowMessage_fza(SAvisoSinComandosESCPOSPDF);
     if bPDFGuardado then
-      ShowMessage(Format(SInfoPDFGuardado, [sDestino]));
+      ShowMessage_fza(Format(SInfoPDFGuardado, [sDestino]));
   end;
 end;
 
@@ -1223,7 +1224,7 @@ begin
   if SaveDialog1.Execute then
   begin
     GuardarPNG(SaveDialog1.FileName);
-    ShowMessage(Format(SInfoPNGGuardado, [SaveDialog1.FileName]));
+    ShowMessage_fza(Format(SInfoPNGGuardado, [SaveDialog1.FileName]));
   end;
 end;
 

@@ -116,6 +116,7 @@ function EvaluarSeleccionFotoSesion(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   Vcl.Controls, Vcl.Forms,
   Vcl.Imaging.pngimage,
@@ -472,7 +473,7 @@ end;
 procedure TCoordinadorFotosProvisionalesSesion.PublicarMensaje(
   const AMensaje: string);
 begin
-  ShowMessage(AMensaje);
+  ShowMessage_fza(AMensaje);
 end;
 
 procedure TCoordinadorFotosProvisionalesSesion.EjecutarAccionFoto(

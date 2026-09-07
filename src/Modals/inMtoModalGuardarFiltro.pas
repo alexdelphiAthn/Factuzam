@@ -56,6 +56,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun;
 
 procedure ForceReferenceToClass(C: TClass);
@@ -92,7 +93,7 @@ begin
   inherited;
   if Trim(txtNombre.Text) = '' then
   begin
-    ShowMessage(SErrorNombreFiltroNoIndicado);
+    ShowMessage_fza(SErrorNombreFiltroNoIndicado);
   end
   else
   begin

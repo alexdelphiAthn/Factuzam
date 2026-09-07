@@ -53,6 +53,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.IOUtils,
   inLibGlobalVar, inLibVerifactuInstalacion, inLibParametrosIntf,
   inLibMsgVerifactu, inLibLogIntf,
@@ -420,7 +421,7 @@ begin
   except
     on E: Exception do
     begin
-      ShowMessage(SErrorImprimirDeclaracionResponsable + E.Message);
+      ShowMessage_fza(SErrorImprimirDeclaracionResponsable + E.Message);
     end;
   end;
   btnImprimir.Enabled := True;
@@ -439,10 +440,10 @@ begin
       ConexionPrincipal,
       IdentidadSesion.Usuario, '');
     lblInstalacionEstado.Caption := SCaptionNumeroDisponibleGuardado;
-    ShowMessage(SInfoNumeroInstalacionSifDisponible + oEstado.Numero);
+    ShowMessage_fza(SInfoNumeroInstalacionSifDisponible + oEstado.Numero);
   except
     on E: Exception do
-      ShowMessage(SErrorGenerarNumeroInstalacionSif + E.Message);
+      ShowMessage_fza(SErrorGenerarNumeroInstalacionSif + E.Message);
   end;
   ActualizarInstalacion;
 end;

@@ -95,6 +95,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils, System.Classes, Winapi.Windows, Vcl.Controls, Vcl.Dialogs,
   inLibColumnasDocumento, inLibDocumento, inLibDatasets,
   inLibFiltroUsuario, inLibMsgCompras, inLibMsgComun,
@@ -425,7 +426,7 @@ end;
 procedure TfrmMtoDocumento.CambiarSeriesPrecarga;
 begin
   if CheckOpenDatasets(TdmBase(tdmDataModule)) then
-    ShowMessage(SErrorPrecargaComprasEnEdicion)
+    ShowMessage_fza(SErrorPrecargaComprasEnEdicion)
   else if FPrecargaCompras.CambiarSeries(SeleccionarSeriesPrecarga) then
   begin
     FPrecargaAceptada := True;
@@ -492,7 +493,7 @@ begin
       oValor.sValueText := sSeleccion;
       oPerfilDic.AddOrSetValue(CLAVE_PRECARGA_COMPRAS, oValor);
     end;
-    ShowMessage(SInfoPrecargaComprasGuardada);
+    ShowMessage_fza(SInfoPrecargaComprasGuardada);
   end;
 end;
 

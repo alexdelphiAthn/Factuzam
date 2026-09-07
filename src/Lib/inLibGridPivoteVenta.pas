@@ -112,6 +112,7 @@ function CrearModoEntradaGridPivoteVenta(
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows, System.StrUtils, System.SysUtils, System.Variants,
   System.UITypes,
   Vcl.Dialogs,
@@ -707,7 +708,7 @@ begin
             begin
               bBorrar := (AValor <= 0) and (rEntregada <= 0);
               if bBorrar then
-                bBorrar := MessageDlg(
+                bBorrar := MessageDlg_fza(
                   SPreguntaEliminarLineaSkuCantidadCero,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes;
               if bBorrar then
@@ -766,7 +767,7 @@ begin
       else if ABanda = bpvPedida then
         CrearLineaDesdeCelda(AClave, AValor, sLineaReal)
       else
-        MessageDlg(SInfoLineaPedidoTallaNoExiste,
+        MessageDlg_fza(SInfoLineaPedidoTallaNoExiste,
                    mtInformation, [mbOk], 0);
     finally
       PonerGuardando(False);
@@ -1025,7 +1026,7 @@ begin
         bTieneColor := True;
     FPresentacion.MostrarColorProvisional(bTieneColor);
     if Length(aAtribs) = 0 then
-      ShowMessage(Format(SAvisoArticuloSinAtributos, [ACodArt]))
+      ShowMessage_fza(Format(SAvisoArticuloSinAtributos, [ACodArt]))
     else
     begin
       Result := ACodArt;
@@ -1180,7 +1181,7 @@ begin
       end;
     end
     else
-      ShowMessage(Format(SErrorArticuloSkuNoEncontrado,
+      ShowMessage_fza(Format(SErrorArticuloSkuNoEncontrado,
                          [Trim(AEntrada)]));
   end;
 end;

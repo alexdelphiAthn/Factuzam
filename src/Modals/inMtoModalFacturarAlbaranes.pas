@@ -94,6 +94,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibGenBusq, inLibFormatoDocumento,
   UniDataFormatoDocumentoRepositorio,
   inLibMsgFacturas, inLibMsgVentas,
@@ -219,7 +220,7 @@ begin
   sEmp := Trim(btnEmpresa.Text);
   sPrv := Trim(btnProveedor.Text);
   if (sEmp = '') or (sPrv = '') then
-    ShowMessage(SErrorEmpresaProveedorFacturacionNoIndicados)
+    ShowMessage_fza(SErrorEmpresaProveedorFacturacionNoIndicados)
   else
   begin
     CargarProveedorNombre(sPrv);
@@ -230,7 +231,7 @@ begin
     FDsAlb.DataSet := FConsultaAlbaranes.DataSet;
     CargarFacturasAbiertas(sEmp, sPrv);
     if FConsultaAlbaranes.DataSet.IsEmpty then
-      ShowMessage(SInfoAlbaranesPendientesProveedorNoEncontrados);
+      ShowMessage_fza(SInfoAlbaranesPendientesProveedorNoEncontrados);
   end;
 end;
 
@@ -297,7 +298,7 @@ begin
           FConsultaAlbaranes.DataSet.Active and
           (not FConsultaAlbaranes.DataSet.IsEmpty) then
   begin
-    if MessageDlg(SPreguntaFacturarTodosAlbaranesListados,
+    if MessageDlg_fza(SPreguntaFacturarTodosAlbaranesListados,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       Datos := FConsultaAlbaranes.DataSet;
@@ -352,7 +353,7 @@ begin
     begin
       bSeguir := ResolverFacturaExistente(sSerieAcum, sNumAcum);
       if not bSeguir then
-        ShowMessage(SErrorBorradorAlbaranesExistenteNoSeleccionado);
+        ShowMessage_fza(SErrorBorradorAlbaranesExistenteNoSeleccionado);
     end;
     if bSeguir then
     begin
@@ -380,7 +381,7 @@ begin
       FFacSerie   := sSerieAcum;
       FFacNumero  := sNumAcum;
       FConfirmado := nOk > 0;
-      ShowMessage(Format(SInfoAlbaranesGeneradosEnBorrador,
+      ShowMessage_fza(Format(SInfoAlbaranesGeneradosEnBorrador,
         [nOk, sSerieAcum, sNumAcum, nSkip]));
       if FConfirmado then
         ModalResult := mrOk;

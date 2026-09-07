@@ -91,6 +91,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
@@ -235,7 +236,7 @@ begin
   if SeleccionarVentaActual then
     ModalResult := mrOk
   else
-    Application.MessageBox(
+    MessageBox_fza(
       PChar(SErrorVentaOrigenCajaSinSeleccion),
       PChar(STituloAvisoCaja), MB_OK or MB_ICONWARNING);
 end;

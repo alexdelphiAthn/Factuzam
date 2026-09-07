@@ -769,7 +769,7 @@ begin
      (not FResultadoMovimientos.DataSet.IsEmpty) then
   begin
     oDatos := FResultadoMovimientos.DataSet;
-    Result := Format(SCaptionSeleccionandoArticuloMovimientosVentas,
+    Result := Format(SCaptionEsperaSeleccionandoArticulo,
       [Result, Trim(
         oDatos.FieldByName('CODIGO_ART_ART').AsString + ' ' +
         oDatos.FieldByName('DESCRIPCION_ART').AsString)]);
@@ -808,7 +808,7 @@ begin
     bFinalizado := oExportacion.ProcesarLote(FILAS_POR_LOTE_EXCEL);
     Inc(iLotesExcel);
     ActualizarDetalleEspera(Format(
-      SCaptionExportandoFilasMovimientosVentas,
+      SCaptionEsperaExportandoFilas,
       [FormatFloat('#,##0', EnsureRange(oDatos.RecNo, 0, iNumeroFilas)),
        sTotalFilas]));
   until bFinalizado;

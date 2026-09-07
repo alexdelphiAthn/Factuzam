@@ -101,6 +101,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgCaja;
 
 const
@@ -386,7 +387,7 @@ end;
 
 procedure TfrmModalDesgloseEfectivo.actLimpiarExecute(Sender: TObject);
 begin
-  if Application.MessageBox(
+  if MessageBox_fza(
        PChar(SPreguntaLimpiarDesglose),
        PChar(STituloAvisoCaja),
        MB_YESNO or MB_ICONQUESTION) = IDYES then

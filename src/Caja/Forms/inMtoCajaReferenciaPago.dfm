@@ -9,7 +9,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -14
-  Font.Name = 'Lucida Sans'
+  Font.Name = 'DejaVu Sans'
   Font.Style = []
   KeyPreview = True
   Position = poScreenCenter
@@ -36,7 +36,7 @@
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -17
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
       TabOrder = 0
@@ -69,7 +69,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
         Style.Font.Height = -17
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 3
@@ -84,7 +84,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
         Style.Font.Height = -17
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 4
@@ -106,7 +106,7 @@
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -17
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
       TabOrder = 1
@@ -131,7 +131,7 @@
         Style.Font.Charset = DEFAULT_CHARSET
         Style.Font.Color = clWindowText
         Style.Font.Height = -17
-        Style.Font.Name = 'Lucida Sans'
+        Style.Font.Name = 'DejaVu Sans'
         Style.Font.Style = []
         Style.IsFontAssigned = True
         TabOrder = 2
@@ -216,7 +216,7 @@
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -17
-        Font.Name = 'Lucida Sans'
+        Font.Name = 'DejaVu Sans'
         Font.Style = []
         ParentFont = False
         OnClick = btnGetDivisaClick
@@ -284,7 +284,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -17
-      Font.Name = 'Lucida Sans'
+      Font.Name = 'DejaVu Sans'
       Font.Style = []
       ParentFont = False
       OnClick = btnAceptarClick
@@ -299,7 +299,7 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -17
-      Font.Name = 'Lucida Sans'
+      Font.Name = 'DejaVu Sans'
       Font.Style = []
       ParentFont = False
       OnClick = btnCancelarClick
@@ -313,7 +313,7 @@
       Style.Font.Charset = DEFAULT_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -17
-      Style.Font.Name = 'Lucida Sans'
+      Style.Font.Name = 'DejaVu Sans'
       Style.Font.Style = []
       Style.IsFontAssigned = True
       TabOrder = 2

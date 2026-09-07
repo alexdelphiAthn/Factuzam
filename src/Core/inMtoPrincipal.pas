@@ -368,7 +368,9 @@ type
 
 implementation
 
-uses inLibWin,
+uses
+  inLibMensajesVcl,
+  inLibWin,
   cxGrid,
   inLibDevExp,
   inLibGlobalVar,
@@ -868,7 +870,7 @@ begin
     FFalloCargaPermisosAvisado := True;
     RegistroLog.RegistrarError(
       'No se pudieron cargar los permisos: ' + ADetalle);
-    MessageDlg(Format(SAvisoCargaPermisosRestringidos, [GetLogFolder]),
+    MessageDlg_fza(Format(SAvisoCargaPermisosRestringidos, [GetLogFolder]),
                mtWarning, [mbOK], 0);
   end;
 end;
@@ -978,9 +980,9 @@ begin
   begin
     FreeAndNil(ALogBuffer);
     if AResultado = rcsCancelada then
-      ShowMessage(SOperacionCancelada)
+      ShowMessage_fza(SOperacionCancelada)
     else if AResultado = rcsFallida then
-      ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
+      ShowMessage_fza(Format(SErrorCrearCopiaSeguridad, [AError]));
     if not bReiniciarRestauracion then
       FRutaRestauracionPendiente := '';
   end
@@ -990,18 +992,18 @@ begin
   begin
     FreeAndNil(ALogBuffer);
     if AResultado = rcsCancelada then
-      ShowMessage(SOperacionCancelada)
+      ShowMessage_fza(SOperacionCancelada)
     else if AResultado = rcsCompletada then
-      ShowMessage(SInfoCopiaSeguridadGuardada)
+      ShowMessage_fza(SInfoCopiaSeguridadGuardada)
     else
-      ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
+      ShowMessage_fza(Format(SErrorCrearCopiaSeguridad, [AError]));
   end
   else if ATipo = toaRestauracion then
   begin
     if AResultado = rcsCancelada then
     begin
       FreeAndNil(ALogBuffer);
-      ShowMessage(SAvisoRestauracionCancelada);
+      ShowMessage_fza(SAvisoRestauracionCancelada);
     end
     else
     begin
@@ -1017,9 +1019,9 @@ begin
       end;
       LogForm.Show;
       if AResultado = rcsCompletada then
-        ShowMessage(SScriptEjecutado)
+        ShowMessage_fza(SScriptEjecutado)
       else
-        ShowMessage(Format(SErrorEjecutarScript, [AError]));
+        ShowMessage_fza(Format(SErrorEjecutarScript, [AError]));
     end;
   end;
   if bReiniciarRestauracion then
@@ -1038,8 +1040,8 @@ begin
      FCoordinadorOperaciones.EnCurso then
   begin
     if FCoordinadorOperaciones.CancelacionSolicitada then
-      ShowMessage(SCancelacionSolicitada)
-    else if MessageDlg(
+      ShowMessage_fza(SCancelacionSolicitada)
+    else if MessageDlg_fza(
          SPreguntaCancelarOperacion,
          mtWarning,
          [mbYes, mbNo],
@@ -1106,7 +1108,7 @@ procedure TfrmMtoPrincipal.PrepararReinicioRestauracion;
 begin
   if FRutaRestauracionPendiente <> '' then
   begin
-    ShowMessage(SInfoReinicioRestauracion);
+    ShowMessage_fza(SInfoReinicioRestauracion);
     FReiniciando := True;
     FRelanzarLoginPendiente := True;
     Close;
@@ -1230,7 +1232,7 @@ begin
       RegistroLog.RegistrarError(
         'No se pudo relanzar Factuzam para solicitar el login. Código: ' +
         IntToStr(NativeInt(iResultado)));
-      ShowMessage(Format(
+      ShowMessage_fza(Format(
         SErrorRelanzarFactuzam,
         [NativeInt(iResultado)]));
     end;
@@ -1321,7 +1323,7 @@ begin
     CanClose := True
   else
   begin
-    if MessageDlg(SPreguntaSalirAplicacion,
+    if MessageDlg_fza(SPreguntaSalirAplicacion,
                   mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     begin
       CanClose := False; // Cancela el cierre
@@ -1374,7 +1376,7 @@ begin
   Resultado := AbrirCajonSinVenta(Permisos, ParametrosCaja);
   if not Resultado.Correcto then
   begin
-    MessageDlg(Resultado.Mensaje, mtWarning, [mbOK], 0);
+    MessageDlg_fza(Resultado.Mensaje, mtWarning, [mbOK], 0);
   end;
 end;
 
@@ -1586,7 +1588,7 @@ begin
   if Assigned(FCoordinadorOperaciones) and
      FCoordinadorOperaciones.EnCurso then
   begin
-    ShowMessage(SErrorOperacionRestauracionEnCurso);
+    ShowMessage_fza(SErrorOperacionRestauracionEnCurso);
   end
   else if ContextoSesion.Identidad.EsAdministrador and
      TCoordinadorRestauracionCopiasVcl.Ejecutar(
@@ -1694,7 +1696,7 @@ begin
                             nil,
                             SW_SHOWNORMAL);
   if Resultado <= 32 then
-    ShowMessage(Format(SErrorAbrirDireccion, [AUrl]));
+    ShowMessage_fza(Format(SErrorAbrirDireccion, [AUrl]));
 end;
 
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
@@ -1748,7 +1750,7 @@ begin
   inherited;
   if pcPrincipal.PageCount > 0 then
   begin
-    MessageDlg(
+    MessageDlg_fza(
       SErrorCerrarPantallasCambioArticuloColor,
       mtWarning,
       [mbOK],

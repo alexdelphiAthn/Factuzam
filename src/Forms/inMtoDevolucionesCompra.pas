@@ -337,6 +337,7 @@ function CrearDevolucionesCompraInyectada(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.StrUtils,
   inLibFiltroUsuario,
   inLibGridCantidad,
@@ -444,7 +445,7 @@ begin
     cbbSERIE_DEVC.Properties.Items);
   if cbbSERIE_DEVC.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesDevolucionCompra, [sEmpresa]),
+    if MessageDlg_fza(Format(SPreguntaAbrirSeriesDevolucionCompra, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -958,7 +959,7 @@ begin
             RefrescarTrasBorrado(iFilas > 0);
             if iFilas = 0 then
             begin
-              MessageDlg(
+              MessageDlg_fza(
                 SErrorLineaColorDevolucionNoEncontrada,
                 mtInformation,
                 [mbOk],
@@ -1190,7 +1191,7 @@ begin
             PersistirPreferenciaPivote;
         end
         else if Sender <> nil then
-          MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+          MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
       end
       else
       begin
@@ -1222,7 +1223,7 @@ begin
   if dmmDevolucionesCompra <> nil then
   begin
     if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorDevolucionCompraSinImpresionActiva)
+      ShowMessage_fza(SErrorDevolucionCompraSinImpresionActiva)
     else
     begin
       if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1259,7 +1260,7 @@ begin
   if dmmDevolucionesCompra <> nil then
   begin
     if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorDevolucionCompraSinImpresionActiva)
+      ShowMessage_fza(SErrorDevolucionCompraSinImpresionActiva)
     else
     begin
       if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1298,7 +1299,7 @@ begin
   if dmmDevolucionesCompra <> nil then
   begin
     if dmmDevolucionesCompra.unqryTablaG.IsEmpty then
-      ShowMessage(SErrorDevolucionCompraNoActiva)
+      ShowMessage_fza(SErrorDevolucionCompraNoActiva)
     else
     begin
       if dmmDevolucionesCompra.unqryTablaG.State in [dsEdit, dsInsert] then
@@ -1365,7 +1366,7 @@ begin
         FPivote.Activar;
       end
       else
-        MessageDlg(sMensaje, mtWarning, [mbOk], 0);
+        MessageDlg_fza(sMensaje, mtWarning, [mbOk], 0);
     end;
     if FPivote.Activo then
       FPivote.RecargarYRepublicar;
@@ -1429,7 +1430,7 @@ begin
     FValidadorArticulos,
     dmmDevolucionesCompra.unqryDevolucionesCompraLineas, 'DEVCLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarDevolucionCompraSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarDevolucionCompraSinSku,
                         [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -1829,7 +1830,7 @@ begin
     dsTablaG.DataSet, 'CODIGO_PRV_DEVC');
   Result := (sPrv <> '') and (sPrv <> '0');
   if not Result then
-    MessageDlg(SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion,
+    MessageDlg_fza(SErrorProveedorNoSeleccionadoBuscarArticulosDevolucion,
       mtInformation, [mbOk], 0);
 end;
 
@@ -1850,10 +1851,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmDevolucionesCompra) then
-    MessageDlg(SErrorDevolucionCompraNoAbierta,
+    MessageDlg_fza(SErrorDevolucionCompraNoAbierta,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusDevolucion,
+    MessageDlg_fza(SErrorArticuloNoSeleccionadoBuscarSkusDevolucion,
                mtInformation, [mbOk], 0)
   else
     Result := BuscarSkuArticuloCompra(
@@ -1912,7 +1913,7 @@ begin
           oLineas);
         oResultado := FAplicacionArticulo.Ejecutar(oEntrada);
         if oResultado.Mensaje <> '' then
-          MessageDlg(oResultado.Mensaje, mtWarning, [mbOk], 0);
+          MessageDlg_fza(oResultado.Mensaje, mtWarning, [mbOk], 0);
         if oResultado.Aplicado then
           PresentarResultadoArticuloDevolucion(oResultado, oLineas);
       finally
@@ -2098,7 +2099,7 @@ end;
 procedure TfrmMtoDevolucionesCompra.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg(SPreguntaEliminarLineaDevolucionCompra,
+  if MessageDlg_fza(SPreguntaEliminarLineaDevolucionCompra,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if Assigned(FPivote) and FPivote.Activo then

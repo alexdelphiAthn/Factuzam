@@ -85,6 +85,7 @@ function CrearBusquedaVisualMto: IBusquedaVisual;
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun, UniDataGen, inLibDatasets;
 
 type
@@ -510,7 +511,7 @@ begin
   Result := Resultado.Exito;
   if Result then
   begin
-    ShowMessage(Format(SInfoRegistroBusquedaCreado, [Resultado.Codigo]));
+    ShowMessage_fza(Format(SInfoRegistroBusquedaCreado, [Resultado.Codigo]));
     if Assigned(cxGrdDBTabPrin.DataController.DataSource) and
        cxGrdDBTabPrin.DataController.DataSource.DataSet.Active then
     begin
@@ -525,7 +526,7 @@ begin
   end
   else
   begin
-    ShowMessage(Format(
+    ShowMessage_fza(Format(
       SErrorInsertarRegistroBusqueda,
       [Resultado.Error]));
   end;

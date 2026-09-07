@@ -74,6 +74,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Forms,
   inLibArticulosPresentacion,
   inLibMsgArticulos;
@@ -145,7 +146,7 @@ begin
   sTexto := Format(SPreguntaCrearAtributoBasicoSku,
     [sCodigoGlobal, sCodigoAdHoc]);
   // MB_YESNOCANCEL: Si = global, No = ad-hoc, Cancelar = no crear nada.
-  case Application.MessageBox(
+  case MessageBox_fza(
          PChar(sTexto),
          PChar(STituloCrearAtributoBasico),
          MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1) of
@@ -436,14 +437,14 @@ var
   bConfirmado: Boolean;
 begin
   if not ObtenerColorSkuActual(sCodigoArticulo, sColor) then
-    MessageDlg(SErrorSkuColorNoSeleccionado, mtInformation, [mbOK], 0)
+    MessageDlg_fza(SErrorSkuColorNoSeleccionado, mtInformation, [mbOK], 0)
   else
   begin
     if AActivo = 'S' then
       sInfinitivo := STextoActivarSkusColor
     else
       sInfinitivo := STextoDesactivarSkusColor;
-    bConfirmado := MessageDlg(
+    bConfirmado := MessageDlg_fza(
       Format(SPreguntaCambiarActivoSkusColor, [sInfinitivo, sColor]),
       mtConfirmation, [mbYes, mbNo], 0) = mrYes;
     if bConfirmado and Assigned(FCambiarActivoSkusColor) then
@@ -457,7 +458,7 @@ begin
         sParticipio := STextoSkusColorActivados
       else
         sParticipio := STextoSkusColorDesactivados;
-      MessageDlg(
+      MessageDlg_fza(
         Format(SInfoSkusColorActualizados,
           [iAfectados, sColor, sParticipio]),
         mtInformation, [mbOK], 0);

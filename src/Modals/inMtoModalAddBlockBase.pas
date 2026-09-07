@@ -287,6 +287,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibMsgArticulos, inLibMsgComun,
   UniDataConfiguracionPantalla;
 
@@ -749,7 +750,7 @@ procedure TfrmModalAddBlockBase.btnLimpiarFiltrosClick(Sender: TObject);
 var
   i: Integer;
 begin
-  if MessageDlg(SPreguntaLimpiarFiltrosAddBlock, mtConfirmation,
+  if MessageDlg_fza(SPreguntaLimpiarFiltrosAddBlock, mtConfirmation,
     [mbYes, mbNo], 0) = mrYes then
   begin
     btnQuitarSelFamiliasClick(nil);
@@ -997,20 +998,20 @@ begin
   begin
     if sMensaje <> '' then
     begin
-      ShowMessage(sMensaje);
+      ShowMessage_fza(sMensaje);
     end;
   end
   else if chkSoloConStock.Checked and
           (Length(RecogerCodigosAlmacenesSeleccionados) = 0) then
   begin
-    ShowMessage(SErrorAlmacenesSoloStockAddBlock);
+    ShowMessage_fza(SErrorAlmacenesSoloStockAddBlock);
     pcFiltros.ActivePage := tsAlmacenes;
   end
   else if chkLstAlmacenesVentas.Visible and
           (chkConVenta.Checked or chkFiltrarStockAlmacenVenta.Checked) and
           (Length(RecogerCodigosAlmacenesVentasSeleccionados) = 0) then
   begin
-    ShowMessage(SErrorAlmacenesVentasAddBlock);
+    ShowMessage_fza(SErrorAlmacenesVentasAddBlock);
     pcFiltros.ActivePage := tsVentas;
   end
   else
@@ -1047,7 +1048,7 @@ begin
      (not FDatosPreview.Active) or
      (FDatosPreview.RecordCount = 0) then
   begin
-    if MessageDlg(SPreguntaPrevisualizarAddBlock,
+    if MessageDlg_fza(SPreguntaPrevisualizarAddBlock,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       btnPrevisualizarClick(nil);
@@ -1075,13 +1076,13 @@ begin
     end;
     if pendientes = 0 then
     begin
-      ShowMessage(SInfoArticulosYaCargadosAddBlock);
+      ShowMessage_fza(SInfoArticulosYaCargadosAddBlock);
       bContinuar := False;
     end;
   end;
   if bContinuar then
   begin
-    bContinuar := MessageDlg(TextoConfirmacion(pendientes),
+    bContinuar := MessageDlg_fza(TextoConfirmacion(pendientes),
       mtConfirmation, [mbYes, mbNo], 0) = mrYes;
   end;
   if bContinuar and EjecutarInsercion(numIns, codigos) then
@@ -1089,7 +1090,7 @@ begin
     FBaseResultado.Aceptado         := True;
     FBaseResultado.NumInsertados    := numIns;
     FBaseResultado.ArticulosCodigos := codigos;
-    ShowMessage(TextoExito(numIns));
+    ShowMessage_fza(TextoExito(numIns));
     Self.ModalResult := mrOk;
   end;
 end;

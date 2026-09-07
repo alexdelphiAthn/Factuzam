@@ -108,7 +108,8 @@ begin
     AContexto.Lineas.FieldByName(CAMPO_UNIDAD_LINEA).AsString := sSku;
     if EsSkuCompletoInventario(sSku,
          AContexto.Lineas.FieldByName(
-           CAMPO_NUM_ATRIBUTOS_LINEA).AsInteger) and
+           CAMPO_NUM_ATRIBUTOS_LINEA).AsInteger,
+         AContexto.Lineas.FieldByName(CAMPO_ARTICULO_LINEA).AsString) and
        Assigned(AContexto.RellenarStock) then
       AContexto.RellenarStock(sSku);
   end;

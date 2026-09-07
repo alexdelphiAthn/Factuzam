@@ -108,6 +108,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inLibUser, inLibMsgCompras,
   UniDataComprasPantallaComposicion;
 
@@ -171,7 +172,7 @@ begin
   inherited;
   if not FPersistenciaPlantillas.DataSourcePropiedades.DataSet.IsEmpty then
   begin
-    if MessageDlg(SPreguntaBorrarPropiedadPlantillaCompra,
+    if MessageDlg_fza(SPreguntaBorrarPropiedadPlantillaCompra,
                   mtConfirmation,
                   [mbYes, mbNo],
                   0) = mrYes then
@@ -190,7 +191,7 @@ begin
   inherited;
   if not FPersistenciaPlantillas.DataSourceKits.DataSet.IsEmpty then
   begin
-    if MessageDlg(SPreguntaBorrarKitPlantillaCompra,
+    if MessageDlg_fza(SPreguntaBorrarKitPlantillaCompra,
                   mtConfirmation,
                   [mbYes, mbNo],
                   0) = mrYes then

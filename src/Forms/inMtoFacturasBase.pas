@@ -596,6 +596,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas,
@@ -957,7 +958,7 @@ begin
     oOperacionesVista.Confirmar :=
       function(const APregunta: string): Boolean
       begin
-        Result := MessageDlg(
+        Result := MessageDlg_fza(
           APregunta,
           mtConfirmation,
           [mbYes, mbNo],
@@ -966,12 +967,12 @@ begin
     oOperacionesVista.MostrarInformacion :=
       procedure(const AMensaje: string)
       begin
-        ShowMessage(AMensaje);
+        ShowMessage_fza(AMensaje);
       end;
     oOperacionesVista.MostrarError :=
       procedure(const AMensaje: string)
       begin
-        ShowMessage(AMensaje);
+        ShowMessage_fza(AMensaje);
       end;
     oOperacionesVista.RefrescarFactura :=
       procedure
@@ -1464,7 +1465,7 @@ begin
        'CODIGO_CLI_FAC').AsString = '0' then
     dmmFacturas.GetCodigoAutoCliente;
   dmmFacturas.CrearCliente;
-  ShowMessageFmt(SCliToTbl,
+  ShowMessageFmt_fza(SCliToTbl,
     [dmmFacturas.unqryTablaG.FieldByName('CODIGO_CLI_FAC').AsString]);
 end;
 procedure TfrmMtoFacturasBase.btnUpdateEmpresaClick(Sender: TObject);
@@ -1474,7 +1475,7 @@ begin
        'CODIGO_EMP_FAC').AsString = '0' then
     dmmFacturas.GetCodigoAutoEmpresa;
   dmmFacturas.CrearEmpresa;
-  ShowMessageFmt(SEmpToTbl,
+  ShowMessageFmt_fza(SEmpToTbl,
     [dmmFacturas.unqryTablaG.FieldByName('CODIGO_EMP_FAC').AsString]);
 end;
 procedure TfrmMtoFacturasBase.sbNuevaFacturaClick(Sender: TObject);
@@ -1994,7 +1995,7 @@ begin
      (not dsTablaG.DataSet.Active) or
      dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage(SErrorBorradorListaNoSeleccionado);
+    ShowMessage_fza(SErrorBorradorListaNoSeleccionado);
     Abort;
   end;
   sSerie  := dsTablaG.DataSet.FieldByName(fseriefac).AsString;
@@ -2003,8 +2004,8 @@ begin
     sSerie,
     sNumero);
   if not Validacion.Exito then
-    ShowMessage(Validacion.Mensaje)
-  else if MessageDlg(Format(SPreguntaDevolverBorrador, [sSerie, sNumero]),
+    ShowMessage_fza(Validacion.Mensaje)
+  else if MessageDlg_fza(Format(SPreguntaDevolverBorrador, [sSerie, sNumero]),
                      mtConfirmation, [mbYes, mbNo], 0) =
           mrYes then
   begin
@@ -2014,10 +2015,10 @@ begin
         sNumero,
         IdentidadSesion.Usuario);
       dsTablaG.DataSet.Refresh;
-      ShowMessage(Format(SInfoBorradorReabierto, [sSerie, sNumero]));
+      ShowMessage_fza(Format(SInfoBorradorReabierto, [sSerie, sNumero]));
     except
       on E: EReaperturaBorrador do
-        ShowMessage(E.Message);
+        ShowMessage_fza(E.Message);
     end;
   end;
 end;
@@ -2264,7 +2265,7 @@ begin
     FDependenciasInyeccion.Lineas.Articulos.Validador,
     dmmFacturas.unqryLinFac, 'FACLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarFacturaVentaSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarFacturaVentaSinSku,
                         [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -2302,7 +2303,7 @@ begin
         except
           on E: Exception do
           begin
-            ShowMessage(Format(SErrorCompletarDatosBorrador, [E.Message]));
+            ShowMessage_fza(Format(SErrorCompletarDatosBorrador, [E.Message]));
             bInsertar := False;
           end;
         end;

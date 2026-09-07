@@ -72,6 +72,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos;
 
 procedure TfrmPrintEtiqAlb.FormCreate(Sender: TObject);
@@ -149,7 +150,7 @@ procedure TfrmPrintEtiqAlb.preparar_consulta;
 begin
   if ObtenerCodigoTarifa = '' then
   begin
-    ShowMessage(SErrorTarifaEtiquetasNoSeleccionada);
+    ShowMessage_fza(SErrorTarifaEtiquetasNoSeleccionada);
     Abort;
   end;
   // Generamos el dataset filtrado a los SKUs del albaran (lo crea el

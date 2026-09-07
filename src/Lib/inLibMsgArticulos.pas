@@ -495,6 +495,14 @@ resourcestring
     '¿Continuar?';
   SInfoRegularizacionInventarioEliminada =
     'Regularización eliminada. El inventario vuelve a estar ABIERTO.';
+  SCaptionEsperaRegularizandoInventario =
+    'Regularizando el inventario...';
+  SCaptionEsperaActualizandoInventario =
+    'Actualizando los datos del inventario...';
+  SCaptionEsperaCargandoLineasInventario =
+    'Cargando %d líneas del inventario...';
+  SCaptionEsperaEliminandoRegularizacionInventario =
+    'Eliminando la regularización del inventario...';
   SErrorInventarioNoActivo = 'No hay inventario activo.';
   SErrorInventarioDebeEstarAbierto =
     'El inventario debe estar ABIERTO.';

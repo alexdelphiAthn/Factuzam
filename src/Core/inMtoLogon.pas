@@ -195,7 +195,9 @@ type
 
 implementation
 
-uses  inLibWin,
+uses
+  inLibMensajesVcl,
+  inLibWin,
       inLibConfiguracionIni,
       inLibCredencialUsuarioIni,
       inLibNuevoEquipo,
@@ -295,7 +297,7 @@ function TfrmLogon.ResolverErrorScriptLogon(
 var
   Respuesta: Integer;
 begin
-  Respuesta := MessageDlg(
+  Respuesta := MessageDlg_fza(
     Format(SErrorSentenciaScript, [ASentencia, AError]),
     mtError,
     [mbYes, mbNo],
@@ -351,7 +353,7 @@ begin
         on E: EModificacionTablaFacturacionProtegida do
         begin
           RegistroLog.RegistrarAviso(E.Message);
-          MessageDlg(E.Message, mtWarning, [mbOK], 0);
+          MessageDlg_fza(E.Message, mtWarning, [mbOK], 0);
         end;
       end;
       if bScriptEjecutado then
@@ -360,7 +362,7 @@ begin
           ConfirmarConfiguracionConexionVerificada;
         RegistroLog.RegistrarInformacion(
           'El script se ejecutó exitosamente');
-        ShowMessage(SScriptEjecutado);
+        ShowMessage_fza(SScriptEjecutado);
       end;
     end
     else
@@ -368,7 +370,7 @@ begin
       DescartarConfiguracionConexionPendiente;
       RegistroLog.RegistrarInformacion(
         'El script no fue ejecutado');
-      ShowMessage(SScriptNoEjecutado);
+      ShowMessage_fza(SScriptNoEjecutado);
     end;
   finally
     DescartarConfiguracionConexionPendiente;
@@ -388,7 +390,7 @@ begin
   else
   begin
     FCerrarAplicacion := True;
-    ShowMessage(SErrorOrdenParametrosNuevoEquipo);
+    ShowMessage_fza(SErrorOrdenParametrosNuevoEquipo);
   end;
 end;
 
@@ -558,7 +560,7 @@ begin
       DescartarConfiguracionConexionPendiente;
       RegistroLog.RegistrarError(
         Format(SErrorConexionServidorBBDD, [E.Message]));
-      ShowMessage(Format(SErrorConexionServidorBBDD, [E.Message]));
+      ShowMessage_fza(Format(SErrorConexionServidorBBDD, [E.Message]));
       chkAuto.Checked := False;
       EscribirCadenaIni(
         'UserInfo', 'AutoLogin', 'No', GetUserFolder);
@@ -581,7 +583,7 @@ begin
   begin
     RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
                           CheckResult.FormattedMessage);
-    ShowMessage(Format(SErrorEstructuraBBDD,
+    ShowMessage_fza(Format(SErrorEstructuraBBDD,
                        [CheckResult.FormattedMessage]));
     chkAuto.Checked := False;
     EscribirCadenaIni(
@@ -617,7 +619,7 @@ begin
       RegistroLog.RegistrarError(
         Format(SErrorConexionBBDD,
           [edtNomBD.Text, E.Message]));
-      ShowMessage(Format(SErrorConexionBBDD,
+      ShowMessage_fza(Format(SErrorConexionBBDD,
                          [edtNomBD.Text, E.Message]));
       chkAuto.Checked := False;
       EscribirCadenaIni(
@@ -696,7 +698,7 @@ begin
             end;
           end;
           RegistroLog.RegistrarAviso(E.Message);
-          ShowMessage(E.Message);
+          ShowMessage_fza(E.Message);
           bContinuarPreparacion := False;
         end;
         on E: Exception do
@@ -704,7 +706,7 @@ begin
           RegistroLog.RegistrarError(
             'No se pudo completar el arranque de mantenimiento: ' +
             E.ClassName + ': ' + E.Message);
-          ShowMessage(Format(SErrorPrepararNuevoEquipo, [E.Message]));
+          ShowMessage_fza(Format(SErrorPrepararNuevoEquipo, [E.Message]));
           edtPass.Text := '';
           FCerrarAplicacion := True;
           bContinuarPreparacion := False;
@@ -724,7 +726,7 @@ begin
             RegistroLog.RegistrarError(
               'La contraseña se cambió, pero no se pudieron guardar las ' +
               'preferencias de inicio: ' + E.ClassName + ': ' + E.Message);
-            ShowMessage(Format(
+            ShowMessage_fza(Format(
               SErrorGuardarInicioTrasNuevoEquipo,
               [E.Message]));
           end;
@@ -739,7 +741,7 @@ begin
               RegistroLog.RegistrarAviso(
                 'La contraseña se cambió, pero quedó pendiente retirar la ' +
                 'marca de primera ejecución: ' + E.Message);
-              ShowMessage(Format(
+              ShowMessage_fza(Format(
                 SErrorCompletarNuevoEquipoPendiente,
                 [E.Message]));
             end;
@@ -788,7 +790,7 @@ begin
       begin
         RegistroLog.RegistrarError('Estructura BBDD no válida: ' +
                               CheckResult.FormattedMessage);
-        ShowMessage(Format(SErrorEstructuraBBDD,
+        ShowMessage_fza(Format(SErrorEstructuraBBDD,
                            [CheckResult.FormattedMessage]));
         chkAuto.Checked := False;
         EscribirCadenaIni(
@@ -807,7 +809,7 @@ begin
       RegistroLog.RegistrarError(
         Format(SErrorConexionBBDD,
           [edtNomBD.Text, E.Message]));
-      ShowMessage(Format(SErrorConexionBBDD,
+      ShowMessage_fza(Format(SErrorConexionBBDD,
                          [edtNomBD.Text, E.Message]));
       chkAuto.Checked := False;
       EscribirCadenaIni(
@@ -865,7 +867,7 @@ begin
         FResultadoLicencia.Mensaje := SMensajeLicenciaEstablecida;
         RegistroLog.RegistrarInformacion(
           'Licencia establecida. Código: ' + sCodigo);
-        ShowMessage(Format(SLicenciaEstablecida,
+        ShowMessage_fza(Format(SLicenciaEstablecida,
                            [sCodigo, iNumeroNifs, sRutaIni,
                             Trim(sDetalleNifs)]));
       end
@@ -876,7 +878,7 @@ begin
         FResultadoLicencia.Mensaje := SMensajeLicenciaSinNifEmpresa;
         RegistroLog.RegistrarInformacion(
           'No se establece licencia porque no hay NIF de empresa.');
-        ShowMessage(SLicenciaNoEstablecidaSinNif);
+        ShowMessage_fza(SLicenciaNoEstablecidaSinNif);
       end;
     except
       on E: Exception do
@@ -884,7 +886,7 @@ begin
         FResultadoLicencia.Mensaje := E.Message;
         RegistroLog.RegistrarError(
           'Error estableciendo licencia: ' + E.Message);
-        ShowMessage(Format(SErrorEstablecerLicencia, [E.Message]));
+        ShowMessage_fza(Format(SErrorEstablecerLicencia, [E.Message]));
       end;
     end;
   end
@@ -915,7 +917,7 @@ begin
         RegistroLog.RegistrarAviso('Aplicación en modo DEMO. ' + sMensaje);
         RegistroLog.RegistrarError('Código guardado: ' + sCodigoGuardado +
                               ' Código esperado: ' + sCodigoEsperado);
-        ShowMessage(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
+        ShowMessage_fza(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
       end;
     except
       on E: Exception do
@@ -927,7 +929,7 @@ begin
         RegistroLog.RegistrarError('Error validando licencia: ' + E.Message);
         RegistroLog.RegistrarAviso('Aplicación en modo DEMO por error ' +
                                 'validando licencia.');
-        ShowMessage(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
+        ShowMessage_fza(Format(SModoDemo, [LIMITE_FACTURAS_DEMO_DIA]));
       end;
     end;
   end;
@@ -1236,8 +1238,8 @@ begin
   if FEnOperacionLarga then
   begin
     if FCancelaOperacionSolicitada then
-      ShowMessage(SCancelacionSolicitada)
-    else if MessageDlg(SPreguntaCancelarOperacion,
+      ShowMessage_fza(SCancelacionSolicitada)
+    else if MessageDlg_fza(SPreguntaCancelarOperacion,
                        mtWarning, [mbYes, mbNo], 0) = mrYes then
     begin
       FCancelaOperacionSolicitada := True;
@@ -1304,17 +1306,17 @@ begin
       FConexionLogon,
       FFabricaConexiones));
   if AResultado = rcsCancelada then
-    ShowMessage(SOperacionCancelada)
+    ShowMessage_fza(SOperacionCancelada)
   else if AResultado = rcsCompletada then
   begin
     RegistroLog.RegistrarInformacion(
       edtUser.Text + ' Guardó copia exitosamente');
-    ShowMessage(SCopiaSeguridadGuardada);
+    ShowMessage_fza(SCopiaSeguridadGuardada);
   end
   else
   begin
     RegistroLog.RegistrarError('La copia falló: ' + AError);
-    ShowMessage(Format(SErrorCrearCopiaSeguridad, [AError]));
+    ShowMessage_fza(Format(SErrorCrearCopiaSeguridad, [AError]));
   end;
 end;
 
@@ -1331,7 +1333,7 @@ begin
   begin
     if ALogBuffer <> nil then
       FreeAndNil(ALogBuffer);
-    ShowMessage(SRestauracionCancelada);
+    ShowMessage_fza(SRestauracionCancelada);
   end
   else
   begin
@@ -1347,11 +1349,11 @@ begin
     end;
     LogForm.Show;
     if AResultado = rcsCompletada then
-      ShowMessage(SScriptSuccess)
+      ShowMessage_fza(SScriptSuccess)
     else
     begin
       RegistroLog.RegistrarError('Error en restauración: ' + AError);
-      ShowMessage(Format(SErrorRestaurarCopiaSeguridad, [AError]));
+      ShowMessage_fza(Format(SErrorRestaurarCopiaSeguridad, [AError]));
     end;
   end;
   ReiniciarServiciosLogonTrasRestauracion;
@@ -1448,7 +1450,7 @@ begin
       '.crypt');
     if FileExists(savedialog.FileName) then
     begin
-      iButtonSel := MessageDlg(SPreguntaReemplazarFichero,
+      iButtonSel := MessageDlg_fza(SPreguntaReemplazarFichero,
                                mtCustom, [mbYes, mbNo], 0);
     end;
     if ((iButtonSel = mrYes) or
@@ -1484,7 +1486,7 @@ begin
   begin
     DescartarConfiguracionConexionPendiente;
     RegistroLog.RegistrarError('La copia se canceló');
-    ShowMessage(SCopiaSeguridadCancelada);
+    ShowMessage_fza(SCopiaSeguridadCancelada);
   end;
 end;
 
@@ -1509,7 +1511,7 @@ begin
     True);
   ConfirmarConfiguracionConexionVerificada;
   RegistroLog.RegistrarInformacion(SconnSuccBBDD);
-  ShowMessage(SConnSuccBBDD);
+  ShowMessage_fza(SConnSuccBBDD);
 end;
 
 procedure TfrmLogon.btnSalirClick(Sender: TObject);
@@ -1555,7 +1557,7 @@ begin
           begin
             RegistroLog.RegistrarInformacion(
               'Administrador revalidado para restaurar una copia.');
-            if MessageDlg(
+            if MessageDlg_fza(
                  Format(
                    SPreguntaConfirmarRestauracionAdministrativa,
                    [FRutaRestauracionAdministrativa]),
@@ -1572,7 +1574,7 @@ begin
           begin
             RegistroLog.RegistrarAviso(
               SErrorRestauracionRequiereAdministrador);
-            ShowMessage(SErrorRestauracionRequiereAdministrador);
+            ShowMessage_fza(SErrorRestauracionRequiereAdministrador);
           end;
           ModalResult := mrNone;
         end
@@ -1586,7 +1588,7 @@ begin
               RegistroLog.RegistrarError(
                 'Login correcto, pero falló el guardado de preferencias: ' +
                 E.ClassName + ': ' + E.Message);
-              ShowMessage(Format(
+              ShowMessage_fza(Format(
                 SErrorGuardarPreferenciasInicioSesion,
                 [E.Message]));
             end;
@@ -1609,7 +1611,7 @@ begin
       begin
         RegistroLog.RegistrarAviso(SErrorAuthPass);
         if Sender <> nil then
-          ShowMessage(SErrorAuthPass);
+          ShowMessage_fza(SErrorAuthPass);
         ModalResult := mrNone;
       end;
       ealNoDisponible:
@@ -1617,7 +1619,7 @@ begin
         RegistroLog.RegistrarError(
           'Autenticación no disponible: ' + Resultado.Mensaje);
         if Sender <> nil then
-          ShowMessage(Resultado.Mensaje);
+          ShowMessage_fza(Resultado.Mensaje);
         ModalResult := mrNone;
       end;
       ealError:
@@ -1625,7 +1627,7 @@ begin
         RegistroLog.RegistrarError(
           'Error de autenticación: ' + Resultado.Mensaje);
         if Sender <> nil then
-          ShowMessage(Resultado.Mensaje);
+          ShowMessage_fza(Resultado.Mensaje);
         ModalResult := mrNone;
       end;
     end;
@@ -1643,7 +1645,7 @@ begin
     begin
       RegistroLog.RegistrarError(
         'Fallo en auto-login: ' + E.ClassName + ': ' + E.Message);
-      ShowMessage(Format(SErrorInicioAutomatico, [E.Message]));
+      ShowMessage_fza(Format(SErrorInicioAutomatico, [E.Message]));
       InvalidarResultadoInicioSesion;
       ModalResult := mrNone;
     end;
@@ -1739,7 +1741,7 @@ begin
           chkRememberPassword.Checked := False;
           EscribirCadenaIni(
             'UserInfo', 'RememberPassword', 'No', GetUserFolder);
-          ShowMessage(Format(
+          ShowMessage_fza(Format(
             SErrorGuardarContrasenaUsuario,
             [E.Message]));
         end
@@ -1749,7 +1751,7 @@ begin
           chkRememberPassword.Checked := True;
           EscribirCadenaIni(
             'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
-          ShowMessage(Format(
+          ShowMessage_fza(Format(
             SErrorGuardarContrasenaUsuarioNoRetirada,
             [E.Message, sErrorEliminarCredencial]));
         end;
@@ -1772,7 +1774,7 @@ begin
         chkAuto.Checked := False;
         EscribirCadenaIni(
           'UserInfo', 'RememberPassword', 'Yes', GetUserFolder);
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorEliminarContrasenaUsuario,
           [E.Message]));
       end;

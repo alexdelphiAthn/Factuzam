@@ -67,6 +67,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inLibShowMto, UniDataDestinoFacturaRepositorio,
   inLibMsgVerifactu, inLibVerifactuNoVerifactuExport,
   inLibVerifactuNoVerifactuVerify,
@@ -167,7 +168,7 @@ begin
         CrearRepositorioExportacionNoVerifactuUniDAC(ConexionPrincipal),
         ConexionPrincipal,
         IdentidadSesion.Usuario, oDialogo.FileName, RegistroLog);
-      MessageDlg(Format(SInfoExportacionNoVerifactuGenerada,
+      MessageDlg_fza(Format(SInfoExportacionNoVerifactuGenerada,
         [oResultado.ArchivoEventos, oResultado.ArchivoFacturacion,
          oResultado.Eventos, oResultado.RegistrosFactura]),
         mtInformation, [mbOK], 0);
@@ -202,10 +203,10 @@ begin
       TFile.WriteAllText(sInforme, sResumen + sLineBreak + sLineBreak +
         oResultado.Detalle, TEncoding.UTF8);
       if oResultado.Errores = 0 then
-        MessageDlg(Format(SInfoVerificacionNoVerifactuCorrecta,
+        MessageDlg_fza(Format(SInfoVerificacionNoVerifactuCorrecta,
           [sResumen, sInforme]), mtInformation, [mbOK], 0)
       else
-        MessageDlg(Format(SErrorVerificacionNoVerifactu,
+        MessageDlg_fza(Format(SErrorVerificacionNoVerifactu,
           [sResumen, sInforme]), mtError, [mbOK], 0);
     end;
   finally

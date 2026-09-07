@@ -230,6 +230,7 @@ function CrearDocumentosTrabajoCompraInyectada(
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.ActnList,
   UniDataArticulos, inLibGenBusq, inMtoModalEtiqArt,
   inMtoModalAddBlockDocumentoTrabajo,
@@ -763,20 +764,20 @@ procedure TfrmMtoDocumentosTrabajo.btnArchivarDTRClick(Sender: TObject);
 begin
   if not PuedeAccionMto(apmModificar) then
   begin
-    ShowMessage(SErrorArchivarDocumentoTrabajoNoPermitido);
+    ShowMessage_fza(SErrorArchivarDocumentoTrabajoNoPermitido);
   end
   else if (dmmDocumentosTrabajo = nil) or
           not dmmDocumentosTrabajo.PuedeArchivarDocumentoActual then
   begin
-    ShowMessage(SErrorArchivarDocumentoTrabajoNoPermitido);
+    ShowMessage_fza(SErrorArchivarDocumentoTrabajoNoPermitido);
   end
-  else if MessageDlg(SPreguntaArchivarDocumentoTrabajo,
+  else if MessageDlg_fza(SPreguntaArchivarDocumentoTrabajo,
                      mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if dmmDocumentosTrabajo.ArchivarDocumentoActual then
     begin
       AplicarEstadoAmbito;
-      ShowMessage(SInfoDocumentoTrabajoArchivado);
+      ShowMessage_fza(SInfoDocumentoTrabajoArchivado);
     end;
   end;
 end;
@@ -818,7 +819,7 @@ begin
     dsCabecera := dmmDocumentosTrabajo.unqryTablaG;
     if (not dsCabecera.Active) or dsCabecera.IsEmpty then
     begin
-      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoListado);
+      ShowMessage_fza(SErrorDocumentoTrabajoNoSeleccionadoListado);
     end
     else
     begin
@@ -832,11 +833,11 @@ begin
       end;
       if dsCabecera.FieldByName('ID_DTR').IsNull then
       begin
-        ShowMessage(SErrorDocumentoTrabajoSinGrabarListado);
+        ShowMessage_fza(SErrorDocumentoTrabajoSinGrabarListado);
       end
       else if dmmDocumentosTrabajo.unqryLineas.IsEmpty then
       begin
-        ShowMessage(SErrorDocumentoTrabajoSinLineasListado);
+        ShowMessage_fza(SErrorDocumentoTrabajoSinLineasListado);
       end
       else
       begin
@@ -880,9 +881,9 @@ begin
   begin
     ds := dmmDocumentosTrabajo.unqryTablaG;
     if (not ds.Active) or ds.IsEmpty then
-      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoCargar)
+      ShowMessage_fza(SErrorDocumentoTrabajoNoSeleccionadoCargar)
     else if dmmDocumentosTrabajo.Ambito <> dtaPropios then
-      ShowMessage(SErrorCargarDocumentoTrabajoNoPropietario)
+      ShowMessage_fza(SErrorCargarDocumentoTrabajoNoPropietario)
     else
     begin
       if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
@@ -890,7 +891,7 @@ begin
       if ds.State in dsEditModes then
         ds.Post;
       if ds.FieldByName('ID_DTR').IsNull then
-        ShowMessage(SErrorDocumentoTrabajoSinGrabarCargar)
+        ShowMessage_fza(SErrorDocumentoTrabajoSinGrabarCargar)
       else
       begin
         ADestino.IdDtr := ds.FieldByName('ID_DTR').AsLargeInt;
@@ -968,7 +969,7 @@ begin
     if (not dmmDocumentosTrabajo.unqryTablaG.Active) or
        (dmmDocumentosTrabajo.unqryTablaG.IsEmpty) then
     begin
-      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoCompartir);
+      ShowMessage_fza(SErrorDocumentoTrabajoNoSeleccionadoCompartir);
     end
     else
     begin
@@ -987,11 +988,11 @@ begin
           if dmmDocumentosTrabajo.CompartirDocumentoActual(sDestino,
                                                            sTipo) then
           begin
-            ShowMessage(SInfoDocumentoTrabajoCompartido);
+            ShowMessage_fza(SInfoDocumentoTrabajoCompartido);
           end
           else
           begin
-            ShowMessage(SInfoDocumentoTrabajoYaCompartido);
+            ShowMessage_fza(SInfoDocumentoTrabajoYaCompartido);
           end;
           pcDetalleDTR.ActivePage := tsCompartirDTR;
         end;
@@ -1050,12 +1051,12 @@ begin
       end
       else
       begin
-        ShowMessage(SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas);
+        ShowMessage_fza(SErrorDocumentoTrabajoSinGrabarImprimirEtiquetas);
       end;
     end
     else
     begin
-      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas);
+      ShowMessage_fza(SErrorDocumentoTrabajoNoSeleccionadoImprimirEtiquetas);
     end;
   end;
 end;
@@ -1069,9 +1070,9 @@ begin
   begin
     ds := dmmDocumentosTrabajo.unqryTablaG;
     if (not ds.Active) or ds.IsEmpty then
-      ShowMessage(SErrorDocumentoTrabajoNoSeleccionadoEnviar)
+      ShowMessage_fza(SErrorDocumentoTrabajoNoSeleccionadoEnviar)
     else if not dmmDocumentosTrabajo.PuedeEnviarDocumentoActual then
-      ShowMessage(SErrorEnviarDocumentoTrabajoNoPermitido)
+      ShowMessage_fza(SErrorEnviarDocumentoTrabajoNoPermitido)
     else
     begin
       if dmmDocumentosTrabajo.unqryLineas.State in dsEditModes then
@@ -1087,9 +1088,9 @@ begin
       if ds.State in dsEditModes then
         ds.Post;
       if ds.FieldByName('ID_DTR').IsNull then
-        ShowMessage(SErrorDocumentoTrabajoSinGrabarEnviar)
+        ShowMessage_fza(SErrorDocumentoTrabajoSinGrabarEnviar)
       else if dmmDocumentosTrabajo.unqryLineas.IsEmpty then
-        ShowMessage(SErrorDocumentoTrabajoSinLineasEnviar)
+        ShowMessage_fza(SErrorDocumentoTrabajoSinLineasEnviar)
       else
         Result := ds.FieldByName('ID_DTR').AsLargeInt;
     end;
@@ -1133,7 +1134,7 @@ begin
         sSerie, 'AV', sEmp, IdentidadSesion.Usuario);
       bContinuar := (sNumero <> '') and (sNumero <> '0');
       if not bContinuar then
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorContadorAlbaranDocumentoTrabajo, [sSerie]));
     end;
     if bContinuar then
@@ -1143,7 +1144,7 @@ begin
         IdentidadSesion.Usuario);
       if iLineas > 0 then
         MarcarDocumentoActualEnviado;
-      ShowMessage(Format(SInfoAlbaranDocumentoTrabajoCreado,
+      ShowMessage_fza(Format(SInfoAlbaranDocumentoTrabajoCreado,
         [sSerie, sNumero, iLineas]));
     end;
   end;
@@ -1200,7 +1201,7 @@ begin
       IdentidadSesion.Usuario);
     if (Result = '') or (Result = '0') then
     begin
-      ShowMessage(Format(AMensajeError, [ASerie]));
+      ShowMessage_fza(Format(AMensajeError, [ASerie]));
       Result := '';
     end;
   end;
@@ -1272,7 +1273,7 @@ begin
         end;
         if iLineas > 0 then
           MarcarDocumentoActualEnviado;
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           sMensajeCreado,
           [sSerie, sNumero, iLineas]));
       end;
@@ -1350,11 +1351,11 @@ begin
       // La venta TPV aun esta en memoria y el usuario puede cancelarla.
       // Sin confirmacion persistida no se bloquea el documento como ENVIADO.
       if iMal = 0 then
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SInfoLineasDocumentoTrabajoVolcadasTpv,
           [iOk]))
       else
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SAvisoLineasDocumentoTrabajoNoVolcadasTpv,
           [iOk, iMal]));
     except
@@ -1398,7 +1399,7 @@ begin
   if Result and
      ((AEmpresa = '') or (AAlmacen = '') or (ACaja = '')) then
   begin
-    ShowMessage(SErrorAsignarUbicacionCaja);
+    ShowMessage_fza(SErrorAsignarUbicacionCaja);
     Result := False;
   end;
 end;
@@ -1559,7 +1560,7 @@ begin
         sSerie, 'IN', sEmp, IdentidadSesion.Usuario);
       bContinuar := (sNumero <> '') and (sNumero <> '0');
       if not bContinuar then
-        ShowMessage(Format(
+        ShowMessage_fza(Format(
           SErrorContadorInventarioDocumentoTrabajo, [sSerie]));
     end;
     if bContinuar then
@@ -1569,7 +1570,7 @@ begin
         IdentidadSesion.Usuario);
       if iLineas > 0 then
         MarcarDocumentoActualEnviado;
-      ShowMessage(Format(SInfoInventarioDocumentoTrabajoCreado,
+      ShowMessage_fza(Format(SInfoInventarioDocumentoTrabajoCreado,
         [sSerie, sNumero, sAlm, iLineas]));
     end;
   end;
@@ -1588,7 +1589,7 @@ begin
       idDtr, IdentidadSesion.Usuario);
     if idTarc > 0 then
       MarcarDocumentoActualEnviado;
-    ShowMessage(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
+    ShowMessage_fza(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
       [idTarc]));
   end;
 end;

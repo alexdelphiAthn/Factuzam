@@ -108,6 +108,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibFormatoDocumento, UniDataFormatoDocumentoRepositorio,
   inLibMsgVentas,
   inLibVentasPantallaIntf,
@@ -269,7 +270,7 @@ begin
   begin
     // El almacen es obligatorio: las lineas nuevas necesitan saber de
     // que almacen sale la mercancia (genera los movimientos de salida).
-    MessageDlg(SErrorAlmacenAlbaranNoSeleccionado,
+    MessageDlg_fza(SErrorAlmacenAlbaranNoSeleccionado,
                mtInformation, [mbOk], 0);
     if cbbAlmacen.CanFocus then
       cbbAlmacen.SetFocus;
@@ -280,7 +281,7 @@ begin
     vAlb := cbbAlbaran.EditValue;
     if VarIsNull(vAlb) or VarIsEmpty(vAlb) or (Trim(VarToStr(vAlb)) = '') then
     begin
-      MessageDlg(SErrorAlbaranDestinoNoSeleccionado,
+      MessageDlg_fza(SErrorAlbaranDestinoNoSeleccionado,
                  mtInformation, [mbOk], 0);
       if cbbAlbaran.CanFocus then
         cbbAlbaran.SetFocus;

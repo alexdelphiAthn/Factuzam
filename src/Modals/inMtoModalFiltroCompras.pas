@@ -75,6 +75,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows,
   System.SysUtils, System.Math, System.UITypes, System.Types,
   System.Generics.Collections,
@@ -446,7 +447,7 @@ begin
   Result := FCasillaTodas.Checked or (Length(ASeries) > 0);
   if not Result then
   begin
-    MessageDlg(SSeleccionVaciaCompras, mtWarning, [mbOK], 0);
+    MessageDlg_fza(SSeleccionVaciaCompras, mtWarning, [mbOK], 0);
     ActiveControl := FListaSeries;
   end;
 end;
@@ -497,7 +498,7 @@ begin
     Cantidad := ContarSeleccion(Series);
     MostrarCantidad(Cantidad);
     if Cantidad > UMBRAL_PRECARGA_COMPRAS then
-      Confirmada := MessageDlg(Format(SPreguntaCargaExcesivaCompras,
+      Confirmada := MessageDlg_fza(Format(SPreguntaCargaExcesivaCompras,
         [FormatFloat('#,##0', UMBRAL_PRECARGA_COMPRAS)]),
         mtWarning, [mbYes, mbNo], 0, mbNo) = mrYes;
   end;

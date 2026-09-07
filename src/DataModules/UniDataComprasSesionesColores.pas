@@ -36,6 +36,7 @@ implementation
 
 uses
   System.SysUtils,
+  inLibCodigosSinBarra,
   inLibComprasSesionesReglas,
   inLibMsgCompras;
 
@@ -107,11 +108,11 @@ begin
       '   INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, ' +
       '   USUARIO_MODIF) ' +
       'VALUES (''CO'', :v, :d, ''S'', 0, NOW(), :u, NOW(), :u)';
-  AQuery.ParamByName('v').AsString := AValor;
+  AQuery.ParamByName('v').AsString := SinBarraSku(AValor);
   AQuery.ParamByName('d').AsString := Trim(ADescripcion);
   AQuery.ParamByName('u').AsString := AUsuario;
   AQuery.ExecSQL;
-  oValor := ALecturas.BuscarValorColor(AValor);
+  oValor := ALecturas.BuscarValorColor(SinBarraSku(AValor));
   Result := oValor.IdValor;
 end;
 

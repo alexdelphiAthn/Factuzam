@@ -76,6 +76,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgFacturas, inLibMsgVentas,
   inLibVentasPantallaIntf,
   UniDataVentasPantallaComposicion;
@@ -167,7 +168,7 @@ var
 begin
   if dmmAlbaranes = nil then
   begin
-    ShowMessage(SErrorDataModuleAlbaranesNoAsignado);
+    ShowMessage_fza(SErrorDataModuleAlbaranesNoAsignado);
   end
   else
   begin
@@ -186,7 +187,7 @@ begin
         end;
       end;
       if lst.Count = 0 then
-        ShowMessage(SErrorAlbaranesNoSeleccionados)
+        ShowMessage_fza(SErrorAlbaranesNoSeleccionados)
       else
       begin
         Screen.Cursor := crHourGlass;
@@ -198,7 +199,7 @@ begin
             chkAgruparPorCliente.Checked);
           lblEstado.Caption := Format(SCaptionGeneradosBorradores,
             [generadas]);
-          ShowMessageFmt(SInfoBorradoresGenerados, [generadas]);
+          ShowMessageFmt_fza(SInfoBorradoresGenerados, [generadas]);
           btnBuscarClick(nil);
         finally
           Screen.Cursor := crDefault;

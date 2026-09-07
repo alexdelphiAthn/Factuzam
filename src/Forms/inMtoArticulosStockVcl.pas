@@ -58,6 +58,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows, Vcl.Controls, Vcl.Forms, Vcl.Dialogs;
 
 procedure TContextoStockArticuloVcl.Validar;
@@ -121,7 +122,7 @@ var
   Mensaje: string;
   Reconstruido: Boolean;
 begin
-  if Application.MessageBox(
+  if MessageBox_fza(
        PChar(FContexto.PreguntaReconstruir),
        PChar(FContexto.TituloReconstruir),
        MB_YESNO + MB_ICONQUESTION) = ID_YES then
@@ -141,7 +142,7 @@ begin
         on E: Exception do
         begin
           Reconstruido := False;
-          ShowMessage(Format(FContexto.ErrorReconstruir, [E.Message]));
+          ShowMessage_fza(Format(FContexto.ErrorReconstruir, [E.Message]));
         end;
       end;
     finally
@@ -151,7 +152,7 @@ begin
     begin
       if Mensaje = '' then
         Mensaje := FContexto.InfoReconstruido;
-      ShowMessage(Mensaje);
+      ShowMessage_fza(Mensaje);
     end;
   end;
 end;

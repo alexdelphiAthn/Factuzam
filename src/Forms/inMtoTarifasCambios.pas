@@ -98,6 +98,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoModalCargarSesionTarifa, inLibMsgArticulos;
 
 {$R *.dfm}
@@ -537,7 +538,7 @@ begin
     dsTablaG.DataSet.Post;
   if (not Assigned(dsTablaG.DataSet)) or dsTablaG.DataSet.IsEmpty then
   begin
-    ShowMessage(SErrorSesionTarifaNoSeleccionada);
+    ShowMessage_fza(SErrorSesionTarifaNoSeleccionada);
     Result := False;
   end;
 end;
@@ -567,9 +568,9 @@ begin
   begin
     iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
     if sMensaje <> '' then
-      ShowMessage(sMensaje)
+      ShowMessage_fza(sMensaje)
     else
-      ShowMessage(Format(SInfoLineasSesionTarifaRecalculadas, [iLineas]));
+      ShowMessage_fza(Format(SInfoLineasSesionTarifaRecalculadas, [iLineas]));
   end;
 end;
 
@@ -583,16 +584,16 @@ begin
   begin
     iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
     if sMensaje <> '' then
-      ShowMessage(Format(SErrorCalcularSesionTarifa, [sMensaje]))
-    else if MessageDlg(Format(SPreguntaAplicarSesionTarifa,
+      ShowMessage_fza(Format(SErrorCalcularSesionTarifa, [sMensaje]))
+    else if MessageDlg_fza(Format(SPreguntaAplicarSesionTarifa,
                               [iLineas]),
                        mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       iLineasAplicadas := dmmTarifasCambios.AplicarSesionActual(sMensaje);
       if sMensaje <> '' then
-        ShowMessage(Format(SErrorAplicarSesionTarifa, [sMensaje]))
+        ShowMessage_fza(Format(SErrorAplicarSesionTarifa, [sMensaje]))
       else
-        ShowMessage(Format(SInfoLineasSesionTarifaAplicadas,
+        ShowMessage_fza(Format(SInfoLineasSesionTarifaAplicadas,
                            [iLineasAplicadas]));
     end;
   end;

@@ -59,6 +59,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   System.Variants,
   Vcl.Controls,
@@ -180,7 +181,7 @@ var
   oSolicitud: TSolicitudImportacionPedidos;
 begin
   if AContexto.CasoUso = nil then
-    ShowMessage(SErrorDataModulePedidosNoAsignado)
+    ShowMessage_fza(SErrorDataModulePedidosNoAsignado)
   else
   begin
     oSolicitud := Default(TSolicitudImportacionPedidos);
@@ -205,7 +206,7 @@ begin
     finally
       Screen.Cursor := crDefault;
     end;
-    ShowMessage(Format(
+    ShowMessage_fza(Format(
       SInfoImportacionPedidosFinalizada,
       [oResultado.Importados, oResultado.Errores]));
   end;

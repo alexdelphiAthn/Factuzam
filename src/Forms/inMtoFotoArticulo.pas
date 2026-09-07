@@ -201,6 +201,7 @@ procedure MostrarFotoSesionFlotante(AOwner: TComponent;
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgArticulos, inLibMsgCompras, inLibMsgComun,
   inLibMsgFotos;
 
@@ -988,7 +989,7 @@ begin
   // del grupo": el color es el ultimo segmento del nivel y se elige el PNG
   // de ese color. Los demas PNG (y el temporal) se borran tras integrar.
   if FCodigoArt = '' then
-    ShowMessage(SErrorFotoArticuloNoActivoDescargar)
+    ShowMessage_fza(SErrorFotoArticuloNoActivoDescargar)
   else
   begin
     Screen.Cursor := crHourGlass;
@@ -1002,7 +1003,7 @@ begin
       Screen.Cursor := crDefault;
     end;
     if not bOK then
-      ShowMessage(Format(SErrorDescargarFotosArticulo,
+      ShowMessage_fza(Format(SErrorDescargarFotosArticulo,
                          [FCodigoArt, sMsg]))
     else
     begin
@@ -1028,7 +1029,7 @@ begin
       SetArticuloSku(FCodigoArt, FCodigoSku);
       // Borrar los PNG temporales extraidos (no dejar huerfanos).
       LimpiarDescargaTemporal(archivos);
-      ShowMessage(Format(SInfoFotosArticuloDescargadas,
+      ShowMessage_fza(Format(SInfoFotosArticuloDescargadas,
                          [Length(archivos), FCodigoArt]));
     end;
   end;
@@ -1531,7 +1532,7 @@ begin
   if not FModoSesion then
   begin
     if FCodigoArt = '' then
-      ShowMessage(SErrorFotoArticuloNoActivo)
+      ShowMessage_fza(SErrorFotoArticuloNoActivo)
     else
     begin
       // Sin SKU, el alta pertenece siempre a la galería general del
@@ -1561,7 +1562,7 @@ begin
               dlgAbrirFoto.FileName);
         except
           on E: Exception do
-            ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+            ShowMessage_fza(Format(SErrorGuardarFotoArticulo, [E.Message]));
         end;
       end;
     end;
@@ -1589,7 +1590,7 @@ begin
         oPredeterminada.NombreBase, 1, 0);
     except
       on E: Exception do
-        ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+        ShowMessage_fza(Format(SErrorGuardarFotoArticulo, [E.Message]));
     end;
   end;
 end;
@@ -1602,9 +1603,9 @@ var
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
-    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+    ShowMessage_fza(SErrorLineaSesionSinCodigoArticulo)
   else if (not FModoSesion) and (FCodigoArt = '') then
-    ShowMessage(SErrorFotoArticuloNoActivo)
+    ShowMessage_fza(SErrorFotoArticuloNoActivo)
   else
   begin
     sRutaFoto := '';
@@ -1645,7 +1646,7 @@ begin
         on E: Exception do
         begin
           bGuardada := False;
-          ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+          ShowMessage_fza(Format(SErrorGuardarFotoArticulo, [E.Message]));
         end;
       end;
       if bGuardada then
@@ -1675,12 +1676,12 @@ begin
   inherited;
   sClave := '';
   if FCodigoSku = '' then
-    ShowMessage(SErrorFotoSkuNoActivo)
+    ShowMessage_fza(SErrorFotoSkuNoActivo)
   else
   begin
     sClave := ClaveNivelSeleccionado;
     if sClave = '' then
-      ShowMessage(SErrorNivelAtributosFotoNoSeleccionado)
+      ShowMessage_fza(SErrorNivelAtributosFotoNoSeleccionado)
     else if dlgAbrirFoto.Execute then
     begin
       bGuardada := True;
@@ -1693,7 +1694,7 @@ begin
         on E: Exception do
         begin
           bGuardada := False;
-          ShowMessage(Format(SErrorGuardarFotoArticulo, [E.Message]));
+          ShowMessage_fza(Format(SErrorGuardarFotoArticulo, [E.Message]));
         end;
       end;
       if bGuardada then
@@ -1708,9 +1709,9 @@ var
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
-    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+    ShowMessage_fza(SErrorLineaSesionSinCodigoArticulo)
   else if FUltimaInfo.Encontrada and
-     (MessageDlg(SPreguntaEliminarFotoActual, mtConfirmation,
+     (MessageDlg_fza(SPreguntaEliminarFotoActual, mtConfirmation,
       [mbYes, mbNo], 0) = mrYes) then
   begin
     if FModoSesion and FFotoDefinitivaSesion then
@@ -1757,7 +1758,7 @@ var
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
-    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+    ShowMessage_fza(SErrorLineaSesionSinCodigoArticulo)
   else if FUltimaInfo.Encontrada then
   begin
     if FModoSesion and FFotoDefinitivaSesion then
@@ -1812,7 +1813,7 @@ var
 begin
   inherited;
   if FModoSesion and (FCodigoArtTentativoSesion = '') then
-    ShowMessage(SErrorLineaSesionSinCodigoArticulo)
+    ShowMessage_fza(SErrorLineaSesionSinCodigoArticulo)
   else if FUltimaInfo.Encontrada then
   begin
     if FModoSesion and FFotoDefinitivaSesion then

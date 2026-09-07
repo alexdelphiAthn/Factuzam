@@ -86,6 +86,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.UITypes,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inMtoModalGenImpSave,
@@ -363,7 +364,7 @@ begin
       FreeAndNil(oPerfiles);
       Screen.Cursor := crDefault;
     end;
-    ShowMessage(SInfoPrecargaArticuloGuardada);
+    ShowMessage_fza(SInfoPrecargaArticuloGuardada);
   end;
 end;
 

@@ -69,6 +69,7 @@ procedure GetFormUserProfile(var APerfilDic: TProfileDicc;
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibDir, inLibPerfilesUsuarioValores, inLibMsgConfiguracion;
 
 // Dentro de inLibUser.pas
@@ -161,7 +162,7 @@ begin
     FreeAndNil(oPerfilDicNuevo);
   end;
   //Elapsed := Stopwatch.Elapsed;
-  //ShowMessage(Elapsed.TotalMilliseconds.ToString);
+  //ShowMessage_fza(Elapsed.TotalMilliseconds.ToString);
 end;
 
 procedure GetFormUserProfile(

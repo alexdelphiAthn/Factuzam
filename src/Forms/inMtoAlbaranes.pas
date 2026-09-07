@@ -321,6 +321,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario,
   inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
@@ -387,7 +388,7 @@ begin
     cbbSERIE_ALB.Properties.Items);
   if cbbSERIE_ALB.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesAlbaranVenta, [sEmpresa]),
+    if MessageDlg_fza(Format(SPreguntaAbrirSeriesAlbaranVenta, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -457,10 +458,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmAlbaranes) then
-    MessageDlg(SErrorAlbaranVentaNoAbierto,
+    MessageDlg_fza(SErrorAlbaranVentaNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta,
+    MessageDlg_fza(SErrorArticuloNoSeleccionadoBuscarSkusAlbaranVenta,
                mtInformation, [mbOk], 0)
   else
   begin
@@ -651,7 +652,7 @@ begin
         if Resultado.Preparado then
           CompletarAplicacionArticuloLinea(DataSetLineas, Resultado)
         else if Resultado.Mensaje <> '' then
-          MessageDlg(Resultado.Mensaje, mtWarning, [mbOk], 0);
+          MessageDlg_fza(Resultado.Mensaje, mtWarning, [mbOk], 0);
       finally
         FAplicandoArticulo := False;
       end;
@@ -1158,7 +1159,7 @@ begin
     FContextoVentas.ValidadorArticulos,
     dmmAlbaranes.unqryAlbaranesLineas, 'ALBLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarAlbaranVentaSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarAlbaranVentaSinSku,
                  [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -1495,7 +1496,7 @@ end;
 procedure TfrmMtoAlbaranes.btnBorrarLineaClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg(SPreguntaEliminarLineaAlbaranVenta,
+  if MessageDlg_fza(SPreguntaEliminarLineaAlbaranVenta,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     dmmAlbaranes.unqryAlbaranesLineas.Delete;
 end;
@@ -1516,12 +1517,12 @@ begin
   bContinuar := ds.Active and (ds.RecordCount > 0);
   if not bContinuar then
   begin
-    ShowMessage(SErrorAlbaranVentaSinLineas)
+    ShowMessage_fza(SErrorAlbaranVentaSinLineas)
   end;
   if bContinuar and
      (tvLineasAlbaran.Controller.SelectedRowCount = 0) then
   begin
-    ShowMessage(SAvisoSeleccionarLineasBorradorAlbaran);
+    ShowMessage_fza(SAvisoSeleccionarLineasBorradorAlbaran);
     bContinuar := False;
   end;
   if bContinuar then
@@ -1550,16 +1551,16 @@ begin
         end;
       end;
       if lst.Count = 0 then
-        ShowMessage(SAvisoLineasAlbaranConBorrador)
-      else if MessageDlg(Format(
+        ShowMessage_fza(SAvisoLineasAlbaranConBorrador)
+      else if MessageDlg_fza(Format(
         SPreguntaGenerarBorradorLineasAlbaran, [lst.Count]),
         mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       begin
         if dmmAlbaranes.CrearFacturaDesdeAlbaran(
           sNumFac, sSerFac, lst) then
-          ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
+          ShowMessageFmt_fza(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
         else
-          ShowMessage(SErrorCrearBorradorFactura);
+          ShowMessage_fza(SErrorCrearBorradorFactura);
       end;
     finally
       FreeAndNil(lst);
@@ -1576,15 +1577,15 @@ begin
     dsTablaG.DataSet.Post;
   if not dmmAlbaranes.unqryAlbaranesLineas.Active or
      (dmmAlbaranes.unqryAlbaranesLineas.RecordCount = 0) then
-    ShowMessage(SErrorAlbaranVentaSinLineas)
-  else if MessageDlg(SPreguntaGenerarBorradorTodoAlbaran,
+    ShowMessage_fza(SErrorAlbaranVentaSinLineas)
+  else if MessageDlg_fza(SPreguntaGenerarBorradorTodoAlbaran,
     mtConfirmation, [mbYes, mbNo], 0) = mrYes then
   begin
     if dmmAlbaranes.CrearFacturaDesdeAlbaran(
       sNumFac, sSerFac, nil) then
-      ShowMessageFmt(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
+      ShowMessageFmt_fza(SInfoBorradorFacturaCreado, [sSerFac, sNumFac])
     else
-      ShowMessage(SErrorCrearBorradorFactura);
+      ShowMessage_fza(SErrorCrearBorradorFactura);
   end;
 end;
 
@@ -1649,7 +1650,7 @@ begin
       ShowMto(Self.Owner, sCallFactura, sSerieFac + ',' + sNumeroFac);
     end
     else
-      ShowMessage(SAvisoAlbaranSinBorrador);
+      ShowMessage_fza(SAvisoAlbaranSinBorrador);
   end;
 end;
 

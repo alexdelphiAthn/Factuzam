@@ -29,6 +29,7 @@ procedure ResolverIncidenciaVerifactuVcl(
   const AServicio: IServicioIncidenciaFiscalFactura);
 implementation
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   Vcl.Dialogs,
   inLibFacturasIncidenciaFiscal,
@@ -83,7 +84,7 @@ begin
       sNumero);
     if Resultado.EsCorrecto then
     begin
-      ShowMessage(Resultado.Mensaje);
+      ShowMessage_fza(Resultado.Mensaje);
       AFacturas.Refresh;
       ABoton.Visible := False;
     end;

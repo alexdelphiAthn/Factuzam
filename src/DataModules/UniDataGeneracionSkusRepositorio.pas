@@ -23,6 +23,7 @@ implementation
 
 uses
   System.SysUtils, Data.DB,
+  inLibCodigosSinBarra,
   UniDataPrestaShopEncolado;
 
 const
@@ -354,7 +355,7 @@ begin
     oConsulta.Connection := FConexion;
     oConsulta.SQL.Text := SQL_BUSCAR_VALOR;
     oConsulta.ParamByName('IdVa').AsString := AIdAtributo;
-    oConsulta.ParamByName('Valor').AsString := ANombre;
+    oConsulta.ParamByName('Valor').AsString := SinBarraSku(ANombre);
     oConsulta.Open;
     if not oConsulta.IsEmpty then
     begin
@@ -364,7 +365,7 @@ begin
     begin
       FConexion.ExecSQL(
         SQL_INSERTAR_VALOR,
-        [AIdAtributo, ANombre, AOrden]);
+        [AIdAtributo, SinBarraSku(ANombre), AOrden]);
       oConsulta.Close;
       oConsulta.SQL.Text := SQL_ULTIMO_ID;
       oConsulta.Open;

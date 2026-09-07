@@ -43,6 +43,7 @@ procedure AplicarArticuloPedidoVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.Classes,
   System.SysUtils,
   System.UITypes,
@@ -233,7 +234,7 @@ end;
 procedure MostrarAvisoResolucion(const AMensaje: string);
 begin
   if AMensaje <> '' then
-    MessageDlg(AMensaje, mtWarning, [mbOk], 0);
+    MessageDlg_fza(AMensaje, mtWarning, [mbOk], 0);
 end;
 
 procedure AplicarArticuloPedidoVcl(

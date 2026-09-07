@@ -454,6 +454,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibUser,
   inLibShowMto,
@@ -661,7 +662,7 @@ begin
       sErr := stErr.Text;
       if (sErr <> '') then
       begin
-        ShowMessage(sErr);
+        ShowMessage_fza(sErr);
         EsIBANErr := True;
       end;
     end;
@@ -680,12 +681,12 @@ begin
       sErr := stErr.Text;
       if (sErr <> '') then
       begin
-        ShowMessage(sErr);
+        ShowMessage_fza(sErr);
         EsIBANErr := True;
       end;
     end;
     if not(EsIBANErr) then
-      ShowMessage(SInfoIbanValidado);
+      ShowMessage_fza(SInfoIbanValidado);
   finally
     FreeAndNil(stErr);
   end;

@@ -112,6 +112,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibMsgVentas;
 
 {$R *.dfm}
@@ -125,7 +126,7 @@ var
 begin
   Result := False;
   if not Assigned(ACargaOrigen) then
-    ShowMessage(SErrorServicioCargaOrigenDocumentoTrabajo)
+    ShowMessage_fza(SErrorServicioCargaOrigenDocumentoTrabajo)
   else
   begin
     frm := TfrmModalCargarDocumentoTrabajo.Create(AOwner);
@@ -225,7 +226,7 @@ begin
     FActualizando := False;
   end;
   if FConsultaDocumentos.DataSet.IsEmpty then
-    ShowMessage(SInfoDocumentosOrigenDocumentoTrabajoNoEncontrados)
+    ShowMessage_fza(SInfoDocumentosOrigenDocumentoTrabajoNoEncontrados)
   else
     CargarVistaPrevia;
   ActualizarBotonCargar;
@@ -325,14 +326,14 @@ var
 begin
   inherited;
   if not CrearOrigenSeleccionado(Origen) then
-    ShowMessage(SErrorOrigenDocumentoTrabajoNoSeleccionado)
+    ShowMessage_fza(SErrorOrigenDocumentoTrabajoNoSeleccionado)
   else
   begin
     Resultado := FCargaOrigen.CargarLineas(
       FIdDtr,
       Origen,
       FUsuario);
-    ShowMessage(Format(SInfoCargaOrigenDocumentoTrabajo,
+    ShowMessage_fza(Format(SInfoCargaOrigenDocumentoTrabajo,
       [Resultado.LineasEncontradas, Resultado.LineasInsertadas,
        Resultado.LineasOmitidas, Resultado.TotalUnidades]));
     ModalResult := mrOk;

@@ -24,6 +24,7 @@ function CrearInteraccionDocumentosTrabajoVcl:
 implementation
 
 uses
+  inLibMensajesVcl,
   Winapi.Windows, Vcl.Dialogs, Vcl.Forms,
   inLibMsgVentas;
 
@@ -51,7 +52,7 @@ function TInteraccionDocumentosTrabajoVcl.ElegirDestino:
 var
   Respuesta: Integer;
 begin
-  Respuesta := Application.MessageBox(
+  Respuesta := MessageBox_fza(
     PWideChar(SPreguntaCrearDocumentoTrabajo),
     PWideChar(STituloAgregarDocumentoTrabajo),
     MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON2);
@@ -71,7 +72,7 @@ end;
 
 procedure TInteraccionDocumentosTrabajoVcl.InformarUnidadAgregada;
 begin
-  Application.MessageBox(
+  MessageBox_fza(
     PWideChar(SInfoUnidadAgregadaDocumentoTrabajo),
     PWideChar(STituloDocumentoTrabajo),
     MB_OK + MB_ICONINFORMATION);

@@ -72,6 +72,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   Vcl.Dialogs,
   inLibInventariosAplicacion;
 
@@ -109,7 +110,7 @@ begin
   if not FechaHoraRecuentoInventarioValida(
        dteFechaHora.Date,
        Now) then
-    ShowMessage(FMensajeError)
+    ShowMessage_fza(FMensajeError)
   else
   begin
     FResultado.Aceptado := True;

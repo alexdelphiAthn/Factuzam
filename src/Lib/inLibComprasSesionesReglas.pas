@@ -38,7 +38,9 @@ begin
   for i := 1 to Length(sParcial) do
   begin
     cCaracter := sParcial[i];
-    if cCaracter = ' ' then
+    // La barra es el separador de atributos del SKU: como el espacio,
+    // pasa a guion en vez de perderse ('22/22' -> '22-22').
+    if CharInSet(cCaracter, [' ', '/']) then
       Result := Result + '-'
     else if CharInSet(
       cCaracter, ['A'..'Z', '0'..'9', '-', '_']) then

@@ -1046,6 +1046,7 @@
         <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibDeteccionImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEspera.pas"/>
+        <DCCReference Include="src\Lib\inLibMensajesVcl.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa1914XML.pas"/>
@@ -1544,6 +1545,7 @@
         <DCCReference Include="src\Lib\inLibComprasSesionesMaterializacionIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesLecturasIntf.pas"/>
         <DCCReference Include="src\Lib\inLibComprasSesionesReglas.pas"/>
+        <DCCReference Include="src\Lib\inLibCodigosSinBarra.pas"/>
         <DCCReference Include="src\Lib\inLibPedidoOcr.pas"/>
         <DCCReference Include="src\Lib\inLibArchivosPedidoSesion.pas"/>
         <DCCReference Include="src\Lib\inLibProcesoPedidoOcr.pas"/>

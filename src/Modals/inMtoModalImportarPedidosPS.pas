@@ -75,6 +75,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibImportacionPedidos,
   inLibPrestaShopPedidosAdaptador,
   UniDataImportacionPedidos,
@@ -122,7 +123,7 @@ begin
   Result := LeerConfiguracion(FBaseURL, FApiKey);
   FConfiguracionCargada := Result;
   if not Result then
-    ShowMessage(SConfiguracionPrestaShopIncompleta);
+    ShowMessage_fza(SConfiguracionPrestaShopIncompleta);
 end;
 
 function TfrmModalImportarPedidosPS.ConfiguracionSigueVigente: Boolean;
@@ -132,14 +133,14 @@ var
 begin
   Result := False;
   if not FConfiguracionCargada then
-    ShowMessage(SPrestaShopNoConectado)
+    ShowMessage_fza(SPrestaShopNoConectado)
   else if not LeerConfiguracion(sBaseURLActual, sApiKeyActual) then
-    ShowMessage(SConfiguracionPrestaShopIncompleta)
+    ShowMessage_fza(SConfiguracionPrestaShopIncompleta)
   else if (sBaseURLActual <> FBaseURL) or
           (sApiKeyActual <> FApiKey) then
   begin
     FConfiguracionCargada := False;
-    ShowMessage(SConfiguracionPrestaShopCambiada);
+    ShowMessage_fza(SConfiguracionPrestaShopCambiada);
   end
   else
     Result := True;

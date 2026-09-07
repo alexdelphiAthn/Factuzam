@@ -16,20 +16,29 @@ unit inLibBalanceTallasExcel;
 interface
 
 uses
-  Data.DB, dxSpreadSheet, inLibFotos;
+  Data.DB, dxSpreadSheet, inLibFotos, inLibBalanceExcelComun;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
-  const QDatos: TDataSet; AFotos: TFotosArticulos);
+  const QDatos: TDataSet; AFotos: TFotosArticulos); overload;
+// Con aviso de avance (fila procesada y total) para la ventana de espera.
+procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
+  const QDatos: TDataSet; AFotos: TFotosArticulos;
+  const AProgreso: TProgresoBalanceExcel); overload;
 
 implementation
-
-uses
-  inLibBalanceExcelComun;
 
 procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
   const QDatos: TDataSet; AFotos: TFotosArticulos);
 begin
   ExportarBalanceExcel(ASheetControl, QDatos, AFotos, tbeConTallas);
+end;
+
+procedure ExportarBalanceTallasExcel(ASheetControl: TdxSpreadSheet;
+  const QDatos: TDataSet; AFotos: TFotosArticulos;
+  const AProgreso: TProgresoBalanceExcel);
+begin
+  ExportarBalanceExcel(ASheetControl, QDatos, AFotos, tbeConTallas,
+    AProgreso);
 end;
 
 end.

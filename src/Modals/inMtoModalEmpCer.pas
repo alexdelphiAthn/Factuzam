@@ -59,6 +59,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibMsgComun;
 
 procedure TfrmMtoModalEmpCer.btnAceptarClick(Sender: TObject);
@@ -66,7 +67,7 @@ begin
   inherited;
   if tvCertificados.Controller.FocusedRecord = nil then
   begin
-    ShowMessage(SErrorCertificadoNoSeleccionado);
+    ShowMessage_fza(SErrorCertificadoNoSeleccionado);
   end
   else
   begin

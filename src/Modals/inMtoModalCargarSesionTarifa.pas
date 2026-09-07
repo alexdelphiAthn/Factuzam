@@ -55,6 +55,7 @@ implementation
 {$R *.dfm}
 
 uses
+  inLibMensajesVcl,
   inLibUser, inLibMsgArticulos;
 
 resourcestring
@@ -139,7 +140,7 @@ begin
     except
       on E: Exception do
       begin
-        ShowMessage(SErrorCargarSesionTarifa + E.Message);
+        ShowMessage_fza(SErrorCargarSesionTarifa + E.Message);
       end;
     end;
   end;

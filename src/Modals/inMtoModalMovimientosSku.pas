@@ -78,6 +78,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibShowMto, inLibMsgArticulos;
 
 {$R *.dfm}
@@ -211,9 +212,7 @@ procedure TfrmModalMovimientosSku.btnReconstruirStockClick(
 var
   sMensaje: string;
 begin
-  if MessageBox(
-       Handle,
-       PChar(SPreguntaReconstruirStock),
+  if MessageBox_fza(PChar(SPreguntaReconstruirStock),
        PChar(STituloReconstruirStock),
        MB_YESNO or MB_ICONQUESTION) = IDYES then
   begin
@@ -224,16 +223,12 @@ begin
         FStockReconstruido := True;
         if Trim(sMensaje) = '' then
           sMensaje := SInfoStockReconstruido;
-        MessageBox(
-          Handle,
-          PChar(sMensaje),
+        MessageBox_fza(PChar(sMensaje),
           PChar(STituloReconstruirStock),
           MB_OK or MB_ICONINFORMATION);
       except
         on E: Exception do
-          MessageBox(
-            Handle,
-            PChar(Format(SErrorReconstruirStock, [E.Message])),
+          MessageBox_fza(PChar(Format(SErrorReconstruirStock, [E.Message])),
             PChar(STituloReconstruirStock),
             MB_OK or MB_ICONERROR);
       end;

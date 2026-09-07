@@ -36,6 +36,7 @@ procedure RegistrarPagoFacturaCompraVcl(
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   inLibMsgCompras,
   inMtoModalRegistrarPago, inMtoModalSeleccionarBanco;
@@ -69,16 +70,16 @@ begin
       ARepositorio,
       BancoPreferido);
     if not Banco.Aceptado then
-      ShowMessage(SInfoGeneracionEfectosPagoCancelada)
+      ShowMessage_fza(SInfoGeneracionEfectosPagoCancelada)
     else
     begin
       Resultado := AGenerarEfectos(Banco.CodigoEmpban, Banco.Iban);
       if Resultado > 0 then
-        ShowMessage(Format(SInfoEfectosPagoGenerados, [Resultado]))
+        ShowMessage_fza(Format(SInfoEfectosPagoGenerados, [Resultado]))
       else if Resultado = 0 then
-        ShowMessage(SAvisoEfectosPagoNoGenerados)
+        ShowMessage_fza(SAvisoEfectosPagoNoGenerados)
       else
-        ShowMessage(SErrorGenerarEfectosPagoSinBorrador);
+        ShowMessage_fza(SErrorGenerarEfectosPagoSinBorrador);
     end;
   end;
 end;
@@ -118,16 +119,16 @@ begin
           Formulario.Tipo,
           Formulario.Referencia);
         if Resultado > 0 then
-          ShowMessage(AMensajeConciliado)
+          ShowMessage_fza(AMensajeConciliado)
         else
-          ShowMessage(AMensajeError);
+          ShowMessage_fza(AMensajeError);
       end;
     finally
       Formulario.Free;
     end;
   end
   else
-    ShowMessage(SErrorEfectoCompraNoSeleccionado);
+    ShowMessage_fza(SErrorEfectoCompraNoSeleccionado);
 end;
 
 end.

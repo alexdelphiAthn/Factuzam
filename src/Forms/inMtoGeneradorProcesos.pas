@@ -261,6 +261,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin,
   inLibUser,
   inLibNet,
@@ -409,7 +410,7 @@ begin
       Include(Opciones, ssoBackwards);
     if FEditorActualBusqueda.SearchReplace(
       Dialog.FindText, '', Opciones) = 0 then
-      MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
+      MessageDlg_fza(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
   end;
 end;
 
@@ -431,7 +432,7 @@ begin
       Include(Opciones, ssoReplaceAll);
     if FEditorActualBusqueda.SearchReplace(
       Dialog.FindText, Dialog.ReplaceText, Opciones) = 0 then
-      MessageDlg(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
+      MessageDlg_fza(SInfoTextoNoEncontrado, mtInformation, [mbOK], 0);
   end;
 end;
 
@@ -459,7 +460,7 @@ begin
 
       if dsTablaG.DataSet.RecordCount = 0 then
       begin
-        MessageDlg(Format(SInfoProcesosBusquedaNoEncontrados,
+        MessageDlg_fza(Format(SInfoProcesosBusquedaNoEncontrados,
                           [TextoBuscar]),
                    mtInformation,
                    [mbOK],
@@ -634,7 +635,7 @@ begin
         sScriptCompleto := Trim(syndtEstructura.Lines.Text);
 
         if sScriptCompleto = '' then
-          ShowMessage(SErrorMetadatoSinScript);
+          ShowMessage_fza(SErrorMetadatoSinScript);
         if sScriptCompleto <> '' then
         begin
           // 3. INYECTAMOS EL "OR REPLACE" MÁGICAMENTE
@@ -750,7 +751,7 @@ end;
 procedure TfrmMtoGeneradorProcesos.AvisarEdicionTablaProtegida(
   const ATabla: string);
 begin
-  MessageDlg(
+  MessageDlg_fza(
     Format(
       SErrorModificacionTablaFacturacionProtegida,
       [SOperacionEdicionTablaProtegida, ATabla]),
@@ -922,10 +923,10 @@ begin
   iFilas := AVista.DataController.RecordCount;
   bContinuar := iFilas > 0;
   if not bContinuar then
-    ShowMessage(SErrorDatosCopiarNoDisponibles);
+    ShowMessage_fza(SErrorDatosCopiarNoDisponibles);
   // Aviso para volcados muy grandes al portapapeles
   if ((bContinuar) and (iFilas > 50000)) then
-    bContinuar := MessageDlg(Format(SPreguntaCopiarFilasPortapapeles,
+    bContinuar := MessageDlg_fza(Format(SPreguntaCopiarFilasPortapapeles,
                                     [iFilas]),
                              mtConfirmation, [mbYes, mbNo], 0) = mrYes;
   if bContinuar then
@@ -993,7 +994,7 @@ begin
   MensajeCorto := AResultado.MensajeError;
   if Length(MensajeCorto) > 60 then
     MensajeCorto := Copy(MensajeCorto, 1, 60) + '...';
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     Format(
       SPreguntaIgnorarErrorComandoScript,
       [Format(SNombreComandoScript, [AIndice + 1]), MensajeCorto]),
@@ -1110,7 +1111,7 @@ begin
       begin
         FSqlVistaFija := '';
         cxmResul.Lines.Add('-- [BLOQUEADO] ' + E.Message);
-        MessageDlg(E.Message, mtWarning, [mbOK], 0);
+        MessageDlg_fza(E.Message, mtWarning, [mbOK], 0);
       end;
     end;
   end;

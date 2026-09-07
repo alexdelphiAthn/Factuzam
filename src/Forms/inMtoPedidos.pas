@@ -358,6 +358,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
   inLibShowMto, inLibFiltroUsuario,
@@ -435,7 +436,7 @@ begin
     cbbSERIE_PED.Properties.Items);
   if cbbSERIE_PED.Properties.Items.Count = 0 then
   begin
-    if MessageDlg(Format(SPreguntaAbrirSeriesPedidoVenta, [sEmpresa]),
+    if MessageDlg_fza(Format(SPreguntaAbrirSeriesPedidoVenta, [sEmpresa]),
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     begin
       ShowMto(Self.Owner, 'Empresas');
@@ -504,10 +505,10 @@ begin
   Result := '';
   sArt := Trim(ACodigoArt);
   if not Assigned(dmmPedidos) then
-    MessageDlg(SErrorPedidoVentaNoAbierto,
+    MessageDlg_fza(SErrorPedidoVentaNoAbierto,
                mtInformation, [mbOk], 0)
   else if sArt = '' then
-    MessageDlg(SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta,
+    MessageDlg_fza(SErrorArticuloNoSeleccionadoBuscarSkusPedidoVenta,
                mtInformation, [mbOk], 0)
   else
   begin
@@ -781,7 +782,7 @@ begin
     FContextoVentas.ValidadorArticulos,
     dmmPedidos.unqryPedidosLineas, 'PEDLIN');
   if (sLineasSinSku = '') or
-     (MessageDlg(Format(SPreguntaGrabarPedidoVentaSinSku,
+     (MessageDlg_fza(Format(SPreguntaGrabarPedidoVentaSinSku,
                         [sLineasSinSku]),
                  mtWarning, [mbYes, mbNo], 0) = mrYes) then
   begin
@@ -1039,10 +1040,10 @@ begin
   if not dmmPedidos.ClienteExiste(sCliente) then
   begin
     if (sCliente = '') or (sCliente = '0') then
-      MessageDlg(SErrorClienteNoSeleccionadoPedidoVenta,
+      MessageDlg_fza(SErrorClienteNoSeleccionadoPedidoVenta,
         mtWarning, [mbOk], 0)
     else
-      MessageDlg(Format(SErrorClientePedidoVentaNoExiste, [sCliente]),
+      MessageDlg_fza(Format(SErrorClientePedidoVentaNoExiste, [sCliente]),
         mtWarning, [mbOk], 0);
     pcCab.ActivePage := tsCabecera;
     if btnCODIGO_CLI.CanFocus then
@@ -1579,11 +1580,11 @@ begin
   // refrescar (bug 09/07/26).
   if Assigned(FPivoteBorrarGrupo) then
   begin
-    if MessageDlg(SPreguntaEliminarLineaPedidoVentaConTallas,
+    if MessageDlg_fza(SPreguntaEliminarLineaPedidoVentaConTallas,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
       FPivoteBorrarGrupo.BorrarGrupoActual;
   end
-  else if MessageDlg(SPreguntaEliminarLineaPedidoVenta,
+  else if MessageDlg_fza(SPreguntaEliminarLineaPedidoVenta,
                 mtConfirmation,
                 [mbYes, mbNo],
                 0) = mrYes then
@@ -1653,7 +1654,7 @@ end;
 procedure TfrmMtoPedidos.btnEntregarTodoClick(Sender: TObject);
 begin
   inherited;
-  if MessageDlg(SPreguntaMarcarLineasPendientesAlbaranar,
+  if MessageDlg_fza(SPreguntaMarcarLineasPendientesAlbaranar,
                 mtConfirmation, [mbYes, mbNo], 0) = mrYes then
     RellenarLineasAlEntregarTodo;
 end;
@@ -1748,7 +1749,7 @@ begin
   Result := Assigned(ADataSet) and ADataSet.Active and
     (ADataSet.RecordCount > 0);
   if not Result then
-    ShowMessage(SErrorPedidoVentaSinLineas)
+    ShowMessage_fza(SErrorPedidoVentaSinLineas)
   else
   begin
     sLineasSinSku := LineasSinSkuRequerido(
@@ -1756,7 +1757,7 @@ begin
       ADataSet,
       'PEDLIN');
     if sLineasSinSku <> '' then
-      Result := MessageDlg(
+      Result := MessageDlg_fza(
         Format(SPreguntaCrearAlbaranPedidoVentaSinSku, [sLineasSinSku]),
         mtWarning,
         [mbYes, mbNo],
@@ -1884,7 +1885,7 @@ begin
   begin
     APreparacion := PrepararEntregasAlbaran(ds);
     if not APreparacion.TieneEntregas then
-      ShowMessage(SErrorPedidoVentaSinCantidadAlbaranar)
+      ShowMessage_fza(SErrorPedidoVentaSinCantidadAlbaranar)
     else
     begin
       sSerie := dmmPedidos.unqryTablaG.FieldByName('SERIE_PED').AsString;
@@ -1914,9 +1915,9 @@ begin
             ResultadoModal.CodigoAlmacen);
         end
         else if ResultadoModal.EsExistente then
-          ShowMessage(SErrorAnadirAlbaranDesdePedidoVenta)
+          ShowMessage_fza(SErrorAnadirAlbaranDesdePedidoVenta)
         else
-          ShowMessage(SErrorCrearAlbaranDesdePedidoVenta);
+          ShowMessage_fza(SErrorCrearAlbaranDesdePedidoVenta);
       end;
     end;
   end;
@@ -1934,7 +1935,7 @@ var
 begin
   inherited;
   if not PuedeAccionMto(apmInsertar) then
-    ShowMessage(SErrorPermisoInsertarRegistro)
+    ShowMessage_fza(SErrorPermisoInsertarRegistro)
   else
   begin
     form := TfrmModalImportarPedidosPS.Create(Self);

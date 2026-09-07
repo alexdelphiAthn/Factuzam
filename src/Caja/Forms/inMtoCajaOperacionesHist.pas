@@ -229,6 +229,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibWin, inLibUser, inLibShowMto,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibFotos, inLibFiltroUsuario,
@@ -680,7 +681,7 @@ begin
       begin
         OcultarProgresoCarga;
         Screen.Cursor := cursorPrev;
-        MessageDlg(Format(SAvisoLimiteOperacionesCaja,
+        MessageDlg_fza(Format(SAvisoLimiteOperacionesCaja,
           [FormatFloat('#,##0', nTotal)]), mtWarning, [mbOK], 0);
       end
       else
@@ -1035,7 +1036,7 @@ begin
      (not Assigned(dmmCajaOperacionesHist.unqryTablaG)) or
      (not dmmCajaOperacionesHist.unqryTablaG.Active) or
      dmmCajaOperacionesHist.unqryTablaG.IsEmpty then
-    ShowMessage(SErrorOperacionCajaExportarNoSeleccionada)
+    ShowMessage_fza(SErrorOperacionCajaExportarNoSeleccionada)
   else
   begin
     try
@@ -1726,7 +1727,7 @@ begin
       FreeAndNil(oList);
       Screen.Cursor := crDefault;
     end;
-    ShowMessage(SInfoPrecargaCajaGuardada);
+    ShowMessage_fza(SInfoPrecargaCajaGuardada);
   end;
 end;
 

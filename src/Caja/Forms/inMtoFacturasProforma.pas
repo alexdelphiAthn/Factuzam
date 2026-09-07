@@ -114,6 +114,7 @@ resourcestring
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibFacturasProforma, inMtoModalImpFacturasProforma,
   inLibFormatoMonetario;
 
@@ -354,7 +355,7 @@ begin
   sPregunta := SPreguntaGenerarProformaVenta;
   if AModalidad = mfcTraspaso then
     sPregunta := SPreguntaGenerarFacturaTraspaso;
-  Result := MessageDlg(
+  Result := MessageDlg_fza(
     sPregunta, mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 end;
 
@@ -380,7 +381,7 @@ begin
     sAviso := sAviso + sLineBreak + sLineBreak +
       SInfoIdempotenciaFacturacionCaja + sLineBreak +
       SPreguntaContinuarPeriodoFacturacionCaja;
-    Result := MessageDlg(
+    Result := MessageDlg_fza(
       sAviso, mtWarning, [mbYes, mbNo], 0) = mrYes;
   end;
 end;
@@ -432,7 +433,7 @@ begin
   try
     oResultado := oServicio.Ejecutar(AModalidad, ASolicitud);
     dmmFacturasProforma.RefrescarDocumentos;
-    ShowMessage(TextoResultado(oResultado));
+    ShowMessage_fza(TextoResultado(oResultado));
   finally
     FreeAndNil(oServicio);
   end;
@@ -455,7 +456,7 @@ begin
         EjecutarGeneracion(eModalidad, oSolicitud);
     except
       on E: Exception do
-        ShowMessage(E.Message);
+        ShowMessage_fza(E.Message);
     end;
   finally
     btnGenerar.Enabled := True;
@@ -475,7 +476,7 @@ var
   sTipo      : string;
 begin
   if (not Assigned(dsTablaG.DataSet)) or dsTablaG.DataSet.IsEmpty then
-    ShowMessage(SInfoSeleccionarProformaCaja)
+    ShowMessage_fza(SInfoSeleccionarProformaCaja)
   else
   begin
     sClave := dsTablaG.DataSet.FieldByName(
@@ -483,16 +484,16 @@ begin
     sTipo := dsTablaG.DataSet.FieldByName(
       'TIPO_DOCUMENTO').AsString;
     if SameText(Copy(sClave, 1, 4), 'PER-') then
-      ShowMessage(SInfoPeriodoFacturacionCajaSinDocumento)
+      ShowMessage_fza(SInfoPeriodoFacturacionCajaSinDocumento)
     else if not SameText(sTipo, 'VE') then
-      ShowMessage(SInfoImprimirFacturaTraspaso)
+      ShowMessage_fza(SInfoImprimirFacturaTraspaso)
     else
     begin
       iIdProforma := StrToInt64Def(Copy(sClave, 4, MaxInt), 0);
       if iIdProforma > 0 then
         TfrmPrintFacturasProforma.Mostrar(Self, iIdProforma)
       else
-        ShowMessage(SErrorReferenciaProformaCajaInvalida);
+        ShowMessage_fza(SErrorReferenciaProformaCajaInvalida);
     end;
   end;
 end;

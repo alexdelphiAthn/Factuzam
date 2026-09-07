@@ -66,7 +66,8 @@ type
 implementation
 
 uses
-  System.SysUtils, Data.DB;
+  System.SysUtils, Data.DB,
+  inLibCodigosSinBarra;
 
 const
   SQL_BUSCAR_CODIGO_ACTIVO =
@@ -183,7 +184,7 @@ begin
     try
       oConsulta.SQL.Text := SQL_BUSCAR_VALOR;
       oConsulta.ParamByName('IDVA').AsString := AIdVariacion;
-      oConsulta.ParamByName('VAL').AsString := AValor;
+      oConsulta.ParamByName('VAL').AsString := SinBarraSku(AValor);
       oConsulta.Open;
       if not oConsulta.IsEmpty then
         Result := oConsulta.FieldByName('ID_AV').AsInteger;
@@ -192,7 +193,7 @@ begin
       begin
         oConsulta.SQL.Text := SQL_CREAR_VALOR;
         oConsulta.ParamByName('IDVA').AsString := AIdVariacion;
-        oConsulta.ParamByName('VAL').AsString := AValor;
+        oConsulta.ParamByName('VAL').AsString := SinBarraSku(AValor);
         oConsulta.ParamByName('USR').AsString := AUsuario;
         oConsulta.Execute;
         oConsulta.SQL.Text := SQL_ULTIMO_ID;

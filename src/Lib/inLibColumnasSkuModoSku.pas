@@ -138,6 +138,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   inLibLineaSku, inLibMsgArticulos;
 
 type
@@ -846,9 +847,9 @@ begin
         // talla y color pertenecen al modo detallado.
         sSku := '';
         if R.Mensaje <> '' then
-          ShowMessage(R.Mensaje)
+          ShowMessage_fza(R.Mensaje)
         else
-          ShowMessage(Format(SAvisoArticuloRequiereSku,
+          ShowMessage_fza(Format(SAvisoArticuloRequiereSku,
             [R.CodigoArticulo]));
       end
       else if sSku = '' then

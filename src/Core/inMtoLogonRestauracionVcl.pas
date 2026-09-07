@@ -57,6 +57,7 @@ type
 implementation
 
 uses
+  inLibMensajesVcl,
   System.SysUtils,
   inMtoModalContrasenaCopia,
   inLibDir,
@@ -147,7 +148,7 @@ begin
     end;
   end
   else if AContexto.RutaFichero = '' then
-    ShowMessage(SCargaScriptCancelada);
+    ShowMessage_fza(SCargaScriptCancelada);
 end;
 
 end.
