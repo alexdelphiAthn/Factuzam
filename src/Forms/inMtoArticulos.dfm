@@ -1,19 +1,18 @@
-﻿inherited frmMtoArticulos: TfrmMtoArticulos
+inherited frmMtoArticulos: TfrmMtoArticulos
   Left = 5
   Top = 4
   Caption = 'Articulos'
   ClientHeight = 711
   ClientWidth = 1217
-  StyleElements = [seFont, seClient, seBorder]
+  Font.Name = 'Source Sans 3'
   OnDestroy = FormDestroy
   ExplicitWidth = 1217
   ExplicitHeight = 711
-  TextHeight = 17
+  TextHeight = 18
   inherited pButtonPage: TPanel
     Width = 1077
     Height = 711
     TabOrder = 0
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 1077
     ExplicitHeight = 711
     inherited pcPantalla: TcxPageControl
@@ -24,18 +23,19 @@
       ExplicitHeight = 671
       ClientRectBottom = 667
       ClientRectRight = 1073
+      ClientRectTop = 29
       inherited tsLista: TcxTabSheet
         ExplicitLeft = 4
-        ExplicitTop = 28
+        ExplicitTop = 29
         ExplicitWidth = 1069
-        ExplicitHeight = 639
+        ExplicitHeight = 638
         inherited cxGrdPrincipal: TcxGrid
           Top = 60
           Width = 1069
-          Height = 579
+          Height = 578
           ExplicitTop = 60
           ExplicitWidth = 1069
-          ExplicitHeight = 579
+          ExplicitHeight = 578
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_ARTICULO: TcxGridDBColumn
               Caption = 'C'#243'digo Art'#237'culo'
@@ -219,14 +219,14 @@
               Width = 231
             end
             object lblCodigo: TcxLabel
-              Left = 25
+              Left = 41
               Top = 14
               Caption = 'C'#243'digo'
               TabOrder = 1
               Transparent = True
             end
             object lblNombre: TcxLabel
-              Left = 18
+              Left = 36
               Top = 55
               Caption = 'Nombre'
               TabOrder = 5
@@ -267,6 +267,7 @@
               Top = 95
               DataBinding.DataField = 'CODIGO_FAM_ART'
               DataBinding.DataSource = dsTablaG
+              ParentShowHint = False
               Properties.AllowDropDownWhenReadOnly = False
               Properties.KeyFieldNames = 'CODIGO_FAM_FAM'
               Properties.ListColumns = <
@@ -294,6 +295,7 @@
               Height = 24
               Hint = 'Seleccionar familia en '#225'rbol'
               Caption = '...'
+              ParentShowHint = False
               ShowHint = True
               TabOrder = 7
               OnClick = btnSeleccionarFamiliaClick
@@ -305,12 +307,13 @@
               Height = 24
               Hint = 'Quitar familia'
               Caption = 'X'
+              ParentShowHint = False
               ShowHint = True
               TabOrder = 8
               OnClick = btnQuitarFamiliaClick
             end
             object lblFamilia: TcxLabel
-              Left = 33
+              Left = 40
               Top = 96
               Margins.Left = 4
               Margins.Top = 4
@@ -348,23 +351,25 @@
           Left = 0
           Top = 182
           Width = 1069
-          Height = 457
+          Height = 456
           Align = alClient
           BevelOuter = bvNone
           TabOrder = 2
+          ExplicitHeight = 457
           object pcDetail: TcxPageControl
             Left = 0
             Top = 0
             Width = 1069
-            Height = 457
+            Height = 456
             Align = alClient
             TabOrder = 0
-            Properties.ActivePage = tsLineasFactura
+            Properties.ActivePage = tsGeneral
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 453
+            ExplicitHeight = 457
+            ClientRectBottom = 452
             ClientRectLeft = 4
             ClientRectRight = 1065
-            ClientRectTop = 28
+            ClientRectTop = 29
             object tsGeneral: TcxTabSheet
               Caption = '&1_General'
               ImageIndex = 4
@@ -477,10 +482,6 @@
             object tsSkuMto: TcxTabSheet
               Caption = '&2_SKUs'
               ImageIndex = 6
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlTopSkus: TPanel
                 Left = 0
                 Top = 0
@@ -518,7 +519,7 @@
                 object cxgrdSkuMto: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 940
+                  Width = 881
                   Height = 257
                   Align = alClient
                   TabOrder = 1
@@ -597,13 +598,13 @@
                 Align = alClient
                 Caption = ' Atributos del SKU + Atributo b'#225'sico (helper) '
                 TabOrder = 2
-                Height = 158
+                Height = 156
                 Width = 1061
                 object cxgrdSkuAtributosBasicos: TcxGrid
                   Left = 2
-                  Top = 22
+                  Top = 23
                   Width = 1057
-                  Height = 134
+                  Height = 131
                   Align = alClient
                   PopupMenu = pmColorSkus
                   TabOrder = 0
@@ -761,23 +762,15 @@
             object tsPropiedades: TcxTabSheet
               Caption = '&3_Propiedades'
               ImageIndex = 9
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
             end
             object tsSKUs: TcxTabSheet
               Caption = '&4_CB'
               ImageIndex = 6
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object pnlBotonesCB: TPanel
                 Left = 940
                 Top = 0
                 Width = 121
-                Height = 425
+                Height = 423
                 Align = alRight
                 TabOrder = 0
                 object btnExportarExcelCB: TcxButton
@@ -812,7 +805,7 @@
                 Left = 0
                 Top = 0
                 Width = 940
-                Height = 425
+                Height = 423
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -943,15 +936,11 @@
             object tsTarifas: TcxTabSheet
               Caption = '&5_Tarifas'
               ImageIndex = 1
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdTarifas: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 928
-                Height = 425
+                Height = 423
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1206,7 +1195,7 @@
                 Left = 928
                 Top = 0
                 Width = 133
-                Height = 425
+                Height = 423
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1242,15 +1231,11 @@
             object tsProveedores: TcxTabSheet
               Caption = '&6_Proveedores'
               ImageIndex = 2
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxgrdProveedores: TcxGrid
                 Left = 0
                 Top = 0
-                Width = 940
-                Height = 425
+                Width = 921
+                Height = 423
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -1380,7 +1365,7 @@
                 Left = 921
                 Top = 0
                 Width = 140
-                Height = 425
+                Height = 423
                 Align = alRight
                 TabOrder = 1
                 object btnIraProveedor: TcxButton
@@ -1415,17 +1400,20 @@
             object tsLineasFactura: TcxTabSheet
               Caption = '&7_Lineas de Venta - '
               ImageIndex = 3
+              ExplicitTop = 28
+              ExplicitHeight = 425
               object cxgrdLinFac: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 948
-                Height = 425
+                Height = 423
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
                 Margins.Bottom = 4
                 Align = alClient
                 TabOrder = 0
+                ExplicitHeight = 425
                 object tvLinFac: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
                   Navigator.Buttons.ConfirmDelete = True
@@ -1896,9 +1884,10 @@
                 Left = 948
                 Top = 0
                 Width = 113
-                Height = 425
+                Height = 423
                 Align = alRight
                 TabOrder = 1
+                ExplicitHeight = 425
                 object btnIraFactura: TcxButton
                   Left = 6
                   Top = 16
@@ -1939,15 +1928,11 @@
             object cxTabSheet3: TcxTabSheet
               Caption = '&8_Stock'
               ImageIndex = 7
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrdStock: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 880
-                Height = 425
+                Height = 423
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -2031,7 +2016,7 @@
                 Left = 880
                 Top = 0
                 Width = 181
-                Height = 425
+                Height = 423
                 Align = alRight
                 TabOrder = 1
                 object btnStockExportarExcel: TcxButton
@@ -2066,15 +2051,11 @@
             object tsMovimientos: TcxTabSheet
               Caption = '&9_Movimientos'
               ImageIndex = 8
-              ExplicitLeft = 0
-              ExplicitTop = 0
-              ExplicitWidth = 0
-              ExplicitHeight = 0
               object cxGrdMovimientos: TcxGrid
                 Left = 0
                 Top = 0
                 Width = 940
-                Height = 425
+                Height = 423
                 Margins.Left = 4
                 Margins.Top = 4
                 Margins.Right = 4
@@ -2302,7 +2283,7 @@
                 Left = 940
                 Top = 0
                 Width = 121
-                Height = 425
+                Height = 423
                 Align = alRight
                 TabOrder = 1
                 object btnExportarExcelStock: TcxButton
@@ -2321,7 +2302,7 @@
               ImageIndex = 3
               object pnl3: TPanel
                 Left = 0
-                Top = 346
+                Top = 344
                 Width = 1061
                 Height = 79
                 Align = alBottom
@@ -2468,28 +2449,30 @@
       end
       inherited tsPerfil: TcxTabSheet
         ExplicitLeft = 4
-        ExplicitTop = 28
+        ExplicitTop = 29
         ExplicitWidth = 1069
-        ExplicitHeight = 639
+        ExplicitHeight = 638
         inherited pnlPerfilTop: TPanel
           Width = 1069
-          StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1069
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 25
+            ExplicitHeight = 26
+          end
+          inherited lblTextoaBuscarPerfil: TcxLabel
+            ExplicitWidth = 94
+            ExplicitHeight = 22
           end
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1069
-          Height = 582
-          StyleElements = [seFont, seClient, seBorder]
+          Height = 581
           ExplicitWidth = 1069
-          ExplicitHeight = 582
+          ExplicitHeight = 581
           inherited cxgrdPerfil: TcxGrid
             Width = 1069
-            Height = 582
+            Height = 581
             ExplicitWidth = 1069
-            ExplicitHeight = 582
+            ExplicitHeight = 581
           end
         end
       end
@@ -2497,19 +2480,21 @@
     inherited pnlTopPage: TPanel
       Width = 1077
       TabOrder = 0
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitWidth = 1077
       inherited pnlTopGrid: TPanel
         Width = 1077
-        StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1077
         inherited edtBusqGlobal: TcxTextEdit
           TabOrder = 4
-          ExplicitHeight = 25
+          ExplicitHeight = 26
         end
         inherited nvNavegador: TcxDBNavigator
           Width = 324
           ExplicitWidth = 324
+        end
+        inherited lblTextoaBuscar: TcxLabel
+          ExplicitWidth = 94
+          ExplicitHeight = 22
         end
         inherited rbBBDD: TcxRadioButton
           Top = 3
@@ -2524,24 +2509,27 @@
     Left = 1077
     Height = 711
     TabOrder = 1
-    StyleElements = [seFont, seClient, seBorder]
     ExplicitLeft = 1077
     ExplicitHeight = 711
     inherited pButtonGen: TPanel
       Top = 513
       TabOrder = 2
-      StyleElements = [seFont, seClient, seBorder]
       ExplicitTop = 513
     end
     inherited pButtonBDStat: TPanel
-      StyleElements = [seFont, seClient, seBorder]
       inherited pnStateDataSet: TPanel
         TabOrder = 1
-        StyleElements = [seFont, seClient, seBorder]
+        inherited lblEditMode: TcxLabel
+          ExplicitWidth = 63
+          ExplicitHeight = 22
+        end
       end
       inherited pnlDataSetName: TPanel
         TabOrder = 0
-        StyleElements = [seFont, seClient, seBorder]
+        inherited lblTablaOrigen: TcxLabel
+          ExplicitWidth = 81
+          ExplicitHeight = 22
+        end
       end
     end
     object btnNuevoArticulo: TcxButton

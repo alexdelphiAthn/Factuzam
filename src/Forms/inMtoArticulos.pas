@@ -51,7 +51,7 @@ uses
   inMtoArticulosPresentacionAtributos,
   inMtoArticulosStockVcl,
   inMtoArticulosPresentacionTarifas,
-  inMtoArticulosPresentacionFiltros;
+  inMtoArticulosPresentacionFiltros, dxBarBuiltInMenu;
 
 type
   TfrmMtoArticulos = class(TfrmMtoGen)
