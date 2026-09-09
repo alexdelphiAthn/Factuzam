@@ -1098,7 +1098,8 @@ uses
   inMtoPedidosPresentacionArticuloVcl in 'src\Forms\inMtoPedidosPresentacionArticuloVcl.pas',
   inLibTicketRecordatorio in 'src\Lib\inLibTicketRecordatorio.pas',
   inLibVerifactuDesgloseFiscal in 'src\verifactu\inLibVerifactuDesgloseFiscal.pas',
-  inLibMenuIconos in 'src\Lib\inLibMenuIconos.pas';
+  inLibMenuIconos in 'src\Lib\inLibMenuIconos.pas',
+  inLibMenuBarraIconos in 'src\Lib\inLibMenuBarraIconos.pas';
 
 {$R *.res}
 {$R fondo.res}

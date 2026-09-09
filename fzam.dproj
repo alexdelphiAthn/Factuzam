@@ -1791,6 +1791,7 @@
         <DCCReference Include="src\Lib\inLibTicketRecordatorio.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuDesgloseFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibMenuIconos.pas"/>
+        <DCCReference Include="src\Lib\inLibMenuBarraIconos.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
