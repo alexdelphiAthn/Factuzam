@@ -2,8 +2,8 @@
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
 {    Tipo:       Formulario (flotante, fsStayOnTop)                            }
-{ Version:       0.8.0                                                         }
-{   Fecha:       02/08/2026                                                    }
+{ Version:       0.8.1                                                         }
+{   Fecha:       09/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -24,6 +24,8 @@
 {          almacenes / por colores) y las de fotos relacionadas, mas el        }
 {          TcxGrid compartido.                                                 }
 {                                                                              }
+{    v0.8.1: el Enter del lector (cierre de rafaga o CR tras ETX) entra por    }
+{    OnShortCut, antes que jvEnterTab y que el boton con foco.                 }
 {    v0.8: el formulario queda como capa de vista. El estado explicito vive    }
 {    en TEstadoVistaStockConsulta y el comportamiento en presentadores:        }
 {    entrada por texto y codigo de barras, historial, coincidencias, fotos     }
@@ -137,6 +139,7 @@ type
     FPopMenuStock: TPopupMenu;
     FMenuAgregarDoc: TMenuItem;
     procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure LectorCodigoLeido(Sender: TObject;
               const ACodigo: string);
     procedure PopMenuStockPopup(Sender: TObject);
@@ -300,10 +303,13 @@ begin
   // ESC cierra la ventana; KeyPreview para capturarlo aunque el foco este
   // en el grid o el combo. Tambien sirve al hook del lector de codigo de
   // barras (FormKeyPress / FormKeyDown), que captura la lectura venga de
-  // donde venga el foco.
+  // donde venga el foco. OnShortCut entrega al lector el Enter que cierra
+  // la lectura ANTES de que jvEnterTab lo convierta en Tab o de que el boton
+  // con foco lo tome como clic (FormShortCut).
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
   Self.OnKeyPress := FormKeyPress;
+  Self.OnShortCut := FormShortCut;
   Self.OnResize := FormResize;
   // Coste (ultimo precio de compra del proveedor) solo para quien tenga
   // permiso: TienePermiso devuelve True siempre a admin; al resto, oculto
@@ -484,6 +490,18 @@ end;
 procedure TfrmStockConsulta.FormKeyPress(Sender: TObject; var Key: Char);
 begin
   FDependencias.Lector.KeyPress(Key);
+end;
+
+// OnShortCut se dispara en CN_KEYDOWN, antes que CM_DIALOGKEY (jvEnterTab de
+// TfrmBase convierte Enter en Tab) y que el boton con foco (Enter = clic).
+// Sin esto, con el foco en btnArt o en "Op de Caja" (foco inicial), el Enter
+// que cierra una rafaga del lector o el CR que envia tras ETX no llegaba a
+// FormKeyDown: la lectura se perdia o pulsaba el boton.
+procedure TfrmStockConsulta.FormShortCut(var Msg: TWMKey;
+  var Handled: Boolean);
+begin
+  if FDependencias.Lector.AtajoTeclado(Msg) then
+    Handled := True;
 end;
 
 // Resuelve el codigo SOLO contra codigos de barras y carga el articulo/SKU

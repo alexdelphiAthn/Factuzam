@@ -4,7 +4,10 @@
   consulta de stock y traspasos, para poder incorporarlas a cualquier
   mantenimiento nuevo sin volver a copiar el codigo:
     1) Trama STX(#2) + codigo + ETX(#3): el lector envuelve el codigo. Las
-       teclas se consumen para no ensuciar el control con foco.
+       teclas se consumen para no ensuciar el control con foco. Si el lector
+       remata la trama con un CR, ese Enter tambien se consume (llega en la
+       misma rafaga que el ETX) para que no pulse el boton con foco ni salte
+       de campo.
     2) Por VELOCIDAD de tecleo (codigo de barras + CR, sin STX/ETX): el lector
        teclea en rafaga. Medimos la cadencia (ms entre teclas) con GetTickCount;
        si el Enter llega igual de rapido tras una rafaga lo bastante larga, lo
@@ -16,7 +19,12 @@
   Para incorporarlo a un mantenimiento basta con: crear la instancia en el
   OnCreate, asignar OnCodigoLeido, llamar a KeyDown/KeyPress desde los eventos
   OnKeyDown/OnKeyPress del form (que debe tener KeyPreview := True) y liberar la
-  instancia en el OnDestroy. }
+  instancia en el OnDestroy.
+  El Enter que cierra la lectura conviene entregarlo ademas desde OnShortCut
+  del form (AtajoTeclado): ese evento se dispara en CN_KEYDOWN, ANTES que
+  CM_DIALOGKEY (jvEnterTab convierte Enter en Tab) y que el boton con foco
+  (Enter = clic), que de otro modo se quedan con la tecla sin que OnKeyDown
+  llegue a verla cuando el foco no esta en una rejilla. }
 
 interface
 uses
@@ -51,6 +59,10 @@ type
     FEsperaEco: Boolean;
     FRejillaEditaba: Boolean;
     FCodigoPend: string;
+    // ETX recibido y todavia sin ninguna otra tecla: el siguiente Enter, si
+    // llega en la misma rafaga (hora del mensaje), es el CR del lector.
+    FTramaCerrada: Boolean;
+    FTiempoTrama: Cardinal;
     // --- Eventos
     // ---------------------------------------------------------------
     FOnCodigoLeido: TEventoCodigoLeido;
@@ -62,12 +74,23 @@ type
     procedure RestaurarControl;
     function EsControlRejilla(AControl: TControl): Boolean;
     function EnRejilla: Boolean;
+    function CerrarLecturaConEnter: Boolean;
+  protected
+    // Relojes sustituibles en pruebas: cadencia de tecleo (GetTickCount) y
+    // hora en que Windows encolo la tecla en curso (GetMessageTime).
+    function TiempoActual: Cardinal; virtual;
+    function TiempoMensaje: Cardinal; virtual;
   public
     constructor Create;
     destructor Destroy; override;
     // Se invocan desde OnKeyDown / OnKeyPress del formulario (KeyPreview=True).
     procedure KeyDown(var Key: Word; Shift: TShiftState);
     procedure KeyPress(var Key: Char);
+    // Se invoca desde OnShortCut del formulario. True si el Enter cierra una
+    // lectura (rafaga rapida o CR que el lector envia tras ETX) y se ha
+    // consumido: el form debe marcar Handled para que no llegue a jvEnterTab
+    // ni al control con foco.
+    function AtajoTeclado(var AMensaje: TWMKey): Boolean;
     // True mientras se acumula una trama STX/ETX (lo consulta el form para,
     // p.ej., no relanzar su timer de busqueda incremental).
     property LeyendoTrama: Boolean read FLeyendoTrama;
@@ -105,6 +128,11 @@ uses
 const
   // Mensaje interno para diferir el procesado fuera del KeyPress/KeyDown.
   WM_LECTOR_PROCESAR = WM_USER + 200;
+  // Maximo de ms (hora de mensaje) entre el ETX y el Enter para tratar ese
+  // Enter como el CR con que el lector remata la trama. Se mide con la hora
+  // en que Windows encolo cada tecla, asi que no le afecta lo que tarde el
+  // formulario en procesar el codigo entre medias.
+  MS_CR_TRAS_TRAMA = 300;
 
 constructor TLectorScanner.Create;
 begin
@@ -122,6 +150,16 @@ begin
   if FHandle <> 0 then
     Classes.DeallocateHWnd(FHandle);
   inherited Destroy;
+end;
+
+function TLectorScanner.TiempoActual: Cardinal;
+begin
+  Result := GetTickCount;
+end;
+
+function TLectorScanner.TiempoMensaje: Cardinal;
+begin
+  Result := Cardinal(GetMessageTime);
 end;
 
 // Recibe el mensaje diferido y dispara el procesado de negocio ya fuera del
@@ -184,7 +222,8 @@ begin
 end;
 
 // Acumula la rafaga y la cadencia; la decision final (rafaga + Enter rapido) se
-// toma en KeyDown, para adelantarse al editor del grid y a jvEnterTab.
+// toma en KeyDown / AtajoTeclado, para adelantarse al editor del grid y a
+// jvEnterTab.
 procedure TLectorScanner.KeyPress(var Key: Char);
 var
   ahora, delta: Cardinal;
@@ -193,6 +232,7 @@ begin
   begin
     // Inicio de trama STX: empezamos a acumular y avisamos al form (timers...).
     FLeyendoTrama := True;
+    FTramaCerrada := False;
     FBufferTrama := '';
     FBufferVel := '';
     FEsperaEco := False;
@@ -205,6 +245,9 @@ begin
     if Key = #3 then
     begin
       FLeyendoTrama := False;
+      // El Enter que llegue en la misma rafaga que este ETX es del lector.
+      FTramaCerrada := True;
+      FTiempoTrama := TiempoMensaje;
       Key := #0;
       if Trim(FBufferTrama) <> '' then
       begin
@@ -219,67 +262,106 @@ begin
       Key := #0;
     end;
   end
-  else if FActivo and (not (FOmitirEnRejilla and EnRejilla)) then
+  else
   begin
-    // --- Detector por velocidad de tecleo
-    // -------------------------------------
-    ahora := GetTickCount;
-    delta := ahora - FTick;
-    FTick := ahora;
     if FEnterConsumido and (Key = #13) then
     begin
-      // El #13 del Enter ya consumido en KeyDown: lo tragamos.
+      // El #13 del Enter ya consumido en KeyDown: lo tragamos, este o no
+      // activo el detector por velocidad (tambien cubre el CR tras ETX).
       FEnterConsumido := False;
       Key := #0;
     end
-    else if Key >= ' ' then
+    else
+      FTramaCerrada := False;
+    if FActivo and (not (FOmitirEnRejilla and EnRejilla)) then
     begin
-      if delta <= FUmbralMs then
+      // --- Detector por velocidad de tecleo
+      // -------------------------------------
+      ahora := TiempoActual;
+      delta := ahora - FTick;
+      FTick := ahora;
+      if Key = #0 then
+        // Tecla ya consumida: no altera la rafaga.
+        FEsperaEco := FEsperaEco
+      else if Key >= ' ' then
       begin
-        // Tecla rapida: forma parte de la rafaga del lector.
-        if FConsumirRafaga then
+        if delta <= FUmbralMs then
         begin
-          FBufferVel := FBufferVel + Key;
-          Key := #0;
+          // Tecla rapida: forma parte de la rafaga del lector.
+          if FConsumirRafaga then
+          begin
+            FBufferVel := FBufferVel + Key;
+            Key := #0;
+          end
+          else if FEsperaEco and (Key = FInicioChar) then
+            // Anti-eco: descartamos el reenvio del 1er caracter que hace el
+            // cxGrid al arrancar la edicion de la celda.
+            FEsperaEco := False
+          else
+          begin
+            FEsperaEco := False;
+            FBufferVel := FBufferVel + Key;
+          end;
         end
-        else if FEsperaEco and (Key = FInicioChar) then
-          // Anti-eco: descartamos el reenvio del 1er caracter que hace el
-          // cxGrid al arrancar la edicion de la celda.
-          FEsperaEco := False
         else
         begin
-          FEsperaEco := False;
-          FBufferVel := FBufferVel + Key;
+          // Primer caracter (lento): posible inicio de rafaga.
+          FBufferVel := Key;
+          if FConsumirRafaga then
+            // No se consume (podria ser manual) ni se captura el control.
+            FEsperaEco := False
+          else
+          begin
+            CapturarControl;
+            FInicioChar := Key;
+            FEsperaEco := EsControlRejilla(FControl) and (not FRejillaEditaba);
+          end;
         end;
       end
       else
       begin
-        // Primer caracter (lento): posible inicio de rafaga.
-        FBufferVel := Key;
-        if FConsumirRafaga then
-          // No se consume (podria ser tecleo manual) ni se captura el control.
-          FEsperaEco := False
-        else
-        begin
-          CapturarControl;
-          FInicioChar := Key;
-          FEsperaEco := EsControlRejilla(FControl) and (not FRejillaEditaba);
-        end;
+        FBufferVel := '';
+        FEsperaEco := False;
       end;
-    end
-    else
-    begin
-      FBufferVel := '';
-      FEsperaEco := False;
     end;
   end;
+end;
+
+// Decide si el Enter que acaba de llegar pertenece al lector y, en ese caso,
+// cierra la lectura: CR inmediatamente posterior a una trama STX/ETX (solo se
+// descarta) o rafaga rapida acumulada por el detector de velocidad (se
+// encamina al procesado). True si el Enter debe consumirse.
+function TLectorScanner.CerrarLecturaConEnter: Boolean;
+var
+  delta: Cardinal;
+begin
+  Result := False;
+  if FTramaCerrada then
+  begin
+    FTramaCerrada := False;
+    Result := (TiempoMensaje - FTiempoTrama) <= MS_CR_TRAS_TRAMA;
+  end;
+  if (not Result) and FActivo
+     and (not (FOmitirEnRejilla and EnRejilla)) then
+  begin
+    delta := TiempoActual - FTick;
+    if (Length(FBufferVel) >= FLongitudMinima) and (delta <= FUmbralMs) then
+    begin
+      FCodigoPend := Trim(FBufferVel);
+      FBufferVel := '';
+      if not FConsumirRafaga then
+        RestaurarControl;
+      PostMessage(FHandle, WM_LECTOR_PROCESAR, 0, 0);
+      Result := True;
+    end;
+  end;
+  if Result then
+    FEnterConsumido := True;
 end;
 
 // Cierra el detector por velocidad: si hay rafaga acumulada y el Enter llega
 // igual de rapido, lo tratamos como lectura y lo encaminamos al procesado.
 procedure TLectorScanner.KeyDown(var Key: Word; Shift: TShiftState);
-var
-  delta: Cardinal;
 begin
   // Reseteamos en cada tecla el flag de "Enter ya consumido" (solo vive de
   // forma transitoria entre el VK_RETURN consumido y su #13 de KeyPress).
@@ -290,20 +372,27 @@ begin
     FRejillaEditaba := FOnRejillaEditando()
   else
     FRejillaEditaba := False;
-  if (Key = VK_RETURN) and FActivo
-     and (not (FOmitirEnRejilla and EnRejilla)) then
+  if Key = VK_RETURN then
   begin
-    delta := GetTickCount - FTick;
-    if (Length(FBufferVel) >= FLongitudMinima) and (delta <= FUmbralMs) then
-    begin
-      FCodigoPend := Trim(FBufferVel);
-      FBufferVel := '';
-      FEnterConsumido := True;
+    if CerrarLecturaConEnter then
       Key := 0;
-      if not FConsumirRafaga then
-        RestaurarControl;
-      PostMessage(FHandle, WM_LECTOR_PROCESAR, 0, 0);
-    end;
+  end
+  else
+    FTramaCerrada := False;
+end;
+
+// Misma decision que KeyDown, pero desde OnShortCut (CN_KEYDOWN): el Enter se
+// consume antes de que CM_DIALOGKEY lo convierta en Tab o de que el boton con
+// foco lo tome como clic. Si se consume, Windows no genera el #13 de KeyPress
+// ni el OnKeyDown, asi que no hay doble procesado.
+function TLectorScanner.AtajoTeclado(var AMensaje: TWMKey): Boolean;
+begin
+  Result := False;
+  if AMensaje.CharCode = VK_RETURN then
+  begin
+    Result := CerrarLecturaConEnter;
+    if Result then
+      AMensaje.CharCode := 0;
   end;
 end;
 
