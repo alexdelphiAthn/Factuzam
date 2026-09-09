@@ -1,4 +1,4 @@
-﻿inherited frmMtoInventarios: TfrmMtoInventarios
+inherited frmMtoInventarios: TfrmMtoInventarios
   Caption = 'Mantenimiento de Inventarios'
   ClientHeight = 720
   ClientWidth = 1280
@@ -6,7 +6,7 @@
   OnDestroy = FormDestroy
   ExplicitWidth = 1280
   ExplicitHeight = 720
-  TextHeight = 17
+  TextHeight = 18
   inherited pButtonPage: TPanel
     Width = 1140
     Height = 720
@@ -90,9 +90,9 @@
       end
       inherited tsFicha: TcxTabSheet
         ExplicitLeft = 4
-        ExplicitTop = 28
+        ExplicitTop = 29
         ExplicitWidth = 1132
-        ExplicitHeight = 648
+        ExplicitHeight = 647
         object pnlTopFicha: TPanel
           Left = 0
           Top = 0
@@ -266,23 +266,23 @@
           Left = 0
           Top = 182
           Width = 1132
-          Height = 466
+          Height = 465
           Align = alClient
           TabOrder = 1
           object pcDetail: TcxPageControl
             Left = 1
             Top = 1
             Width = 1130
-            Height = 464
+            Height = 463
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsDetalle
             Properties.CustomButtons.Buttons = <>
             OnChange = pcDetailChange
-            ClientRectBottom = 460
+            ClientRectBottom = 459
             ClientRectLeft = 4
             ClientRectRight = 1126
-            ClientRectTop = 28
+            ClientRectTop = 29
             object tsDetalle: TcxTabSheet
               Caption = '&1. Detalle del inventario'
               ImageIndex = 1
@@ -381,9 +381,9 @@
               end
               object cxgrdLineas: TcxGrid
                 Left = 0
-                Top = 80
+                Top = 52
                 Width = 1122
-                Height = 352
+                Height = 378
                 Align = alClient
                 TabOrder = 1
                 OnEnter = cxgrdLineasEnter
@@ -413,7 +413,6 @@
                       Kind = skSum
                       FieldName = 'TOTAL_COSTE_DIFERENCIA_INVLIN'
                     end>
-                  OptionsBehavior.AlwaysShowEditor = False
                   OptionsBehavior.FocusCellOnTab = True
                   OptionsBehavior.GoToNextCellOnEnter = True
                   OptionsBehavior.FocusCellOnCycle = True
@@ -558,6 +557,7 @@
                   object tvLineasPMP_ACTUAL: TcxGridDBColumn
                     Caption = 'PMP actual'
                     DataBinding.FieldName = 'PRECIO_MEDIO_INVLIN'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     HeaderAlignmentHorz = taRightJustify
                     Options.Editing = False
                     Width = 119
@@ -565,8 +565,7 @@
                   object tvLineasPMP_NUEVO: TcxGridDBColumn
                     Caption = 'PMP nuevo'
                     DataBinding.FieldName = 'PRECIO_MEDIO_NUEVO_INVLIN'
-                    PropertiesClassName = 'TcxTextEditProperties'
-                    Properties.OnValidate = tvLineasUdsFisicasPropertiesValidate
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 128
                   end
@@ -650,7 +649,7 @@
                 Left = 0
                 Top = 50
                 Width = 1001
-                Height = 382
+                Height = 380
                 Align = alClient
                 TabOrder = 1
                 object tvMovs: TcxGridDBTableView
@@ -687,12 +686,14 @@
                   object tvMovsPRECIO: TcxGridDBColumn
                     Caption = 'PMP'
                     DataBinding.FieldName = 'PRECIO_MEDIO_MOV'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 100
                   end
                   object tvMovsCOSTE: TcxGridDBColumn
                     Caption = 'Coste'
                     DataBinding.FieldName = 'COSTE_MOV'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
                     HeaderAlignmentHorz = taRightJustify
                     Width = 110
                   end
@@ -715,7 +716,7 @@
                 Left = 1001
                 Top = 50
                 Width = 121
-                Height = 382
+                Height = 380
                 Align = alRight
                 TabOrder = 2
                 object btnExportarExcel: TcxButton
@@ -891,9 +892,9 @@
       end
       inherited tsPerfil: TcxTabSheet
         ExplicitLeft = 4
-        ExplicitTop = 28
+        ExplicitTop = 29
         ExplicitWidth = 1132
-        ExplicitHeight = 648
+        ExplicitHeight = 647
         inherited pnlPerfilTop: TPanel
           Width = 1132
           StyleElements = [seFont, seClient, seBorder]
@@ -904,7 +905,7 @@
         end
         inherited pnlPerfilDetail: TPanel
           Width = 1132
-          Height = 591
+          Height = 590
           StyleElements = [seFont, seClient, seBorder]
           ExplicitWidth = 1132
           ExplicitHeight = 591
@@ -926,7 +927,7 @@
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 1140
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 25
+          ExplicitHeight = 26
         end
       end
     end
@@ -1000,7 +1001,6 @@
       OnExecute = actIraArticuloExecute
     end
     object actRevalorizarPmp: TAction
-      Caption = ''
       ShortCut = 24658
       OnExecute = actRevalorizarPmpExecute
     end

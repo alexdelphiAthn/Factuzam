@@ -91,6 +91,7 @@ uses
   cxGraphics,
   dxCoreGraphics,
   cxCheckBox,
+  cxCurrencyEdit,
   cxTextEdit,
   inLibInventariosPresentacion;
 
@@ -109,6 +110,18 @@ begin
   Result.Width := AAncho;
   Result.Options.Editing := AEditable;
   Result.HeaderAlignmentHorz := taRightJustify;
+end;
+
+// Importes en euros con dos decimales, como en albaranes y facturas. El
+// formato de edicion va sin simbolo ni separador de miles porque la
+// validacion de la linea convierte el texto con StrToCurrDef.
+procedure ConfigurarColumnaEuros(AColumna: TcxGridDBColumn);
+begin
+  AColumna.PropertiesClass := TcxCurrencyEditProperties;
+  TcxCurrencyEditProperties(AColumna.Properties).DisplayFormat :=
+    '#,##0.00 ' + #8364;
+  TcxCurrencyEditProperties(AColumna.Properties).EditFormat := '0.00';
+  TcxCurrencyEditProperties(AColumna.Properties).DecimalPlaces := 2;
 end;
 
 procedure CrearColumnasDocumentoInventario(
@@ -130,12 +143,12 @@ begin
   oRecuento.PropertiesClass := TcxTextEditProperties;
   TcxTextEditProperties(oRecuento.Properties).OnValidate :=
     AValidarEdicion;
-  CrearColumnaDocumentoInventario(AVista,
-    'PMP actual', 'PRECIO_MEDIO_INVLIN', 85, False);
+  ConfigurarColumnaEuros(CrearColumnaDocumentoInventario(AVista,
+    'PMP actual', 'PRECIO_MEDIO_INVLIN', 85, False));
   oPmp := CrearColumnaDocumentoInventario(AVista,
     'PMP nuevo', 'PRECIO_MEDIO_NUEVO_INVLIN', 85, True);
-  oPmp.PropertiesClass := TcxTextEditProperties;
-  TcxTextEditProperties(oPmp.Properties).OnValidate := AValidarEdicion;
+  ConfigurarColumnaEuros(oPmp);
+  TcxCurrencyEditProperties(oPmp.Properties).OnValidate := AValidarEdicion;
   oPmpCorregido := CrearColumnaDocumentoInventario(AVista,
     'PMP manual', 'ESPRECIO_MEDIO_CORREGIDO_INVLIN', 75, True);
   oPmpCorregido.PropertiesClass := TcxCheckBoxProperties;
@@ -143,8 +156,8 @@ begin
   TcxCheckBoxProperties(oPmpCorregido.Properties).ValueUnchecked := 'N';
   CrearColumnaDocumentoInventario(AVista,
     'Dif. uds.', 'CANTIDAD_DIFERENCIA_INVLIN', 80, False);
-  CrearColumnaDocumentoInventario(AVista,
-    'Dif. coste', 'TOTAL_COSTE_DIFERENCIA_INVLIN', 90, False);
+  ConfigurarColumnaEuros(CrearColumnaDocumentoInventario(AVista,
+    'Dif. coste', 'TOTAL_COSTE_DIFERENCIA_INVLIN', 90, False));
   CrearColumnaDocumentoInventario(AVista,
     'Uds. regul.', 'UDS_REGULARIZADAS', 80, False);
   CrearColumnaDocumentoInventario(AVista,
