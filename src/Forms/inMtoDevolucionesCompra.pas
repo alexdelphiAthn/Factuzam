@@ -49,7 +49,7 @@ uses
   inLibDevolucionesCompraStock,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
-  inLibColumnasSkuIntf,
+  inLibColumnasSkuIntf, inLibLectorDocumento,
   inLibGridPivoteVenta,
   UniDataDevolucionesCompra, cxBlobEdit, dxShellDialogs, System.Actions,
   Vcl.ActnList, cxSplitter, inLibDocumento, inLibDocumentoIntf;
@@ -237,6 +237,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FLectorDocumento: TLectorDocumento;
   protected
     FAplicacionArticulo: IAplicacionArticuloDevolucionCompra;
     FValidadorArticulos: IArticulosValidador;
@@ -247,6 +248,7 @@ type
     FBusquedaProveedores: IBusquedaProveedoresComprasPantalla;
     FBusquedasArticulos: IBusquedasCompraPersistencia;
   private
+    procedure ConfigurarLectorDocumento;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure InicializarGestorYPivote;
@@ -1055,10 +1057,13 @@ begin
     pkFieldName, 'SERIE_DEVC;NUMERO_DEVC');
   tvMovimientosProveedor.DataController.DataSource :=
     dmmDevolucionesCompra.dsMovimientosProveedor;
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoDevolucionesCompra.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FLectorDocumento);
   FAplicacionArticulo := nil;
   FValidadorArticulos := nil;
   FLookupAtributos := nil;
@@ -1760,6 +1765,36 @@ begin
   if Assigned(Columnas.ColCantidad) then
     VincularCantidadGrid(Columnas.ColCantidad,
       Columnas.ColTipoCantidad, UnidadesMedida);
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// abre las lineas y construye el modo) y da de alta la linea dejando otra
+// en blanco con el editor abierto, como en caja.
+procedure TfrmMtoDevolucionesCompra.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcDevolucion, tsLineasDevolucion, cxgrdLineasDevolucion,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmDevolucionesCompra) and
+        CabeceraDocumentoDisponible(dmmDevolucionesCompra.unqryTablaG);
+    end,
+    function: TDataSet
+    begin
+      Result := dmmDevolucionesCompra.unqryDevolucionesCompraLineas;
+    end,
+    ['CODIGO_ART_DEVCLIN', 'CODIGO_UNIDAD_DEVCLIN'],
+    function: IArticulosValidador
+    begin
+      Result := FValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoDevolucionesCompra.ModoEntradaResuelto(const ACodArt, ASku,

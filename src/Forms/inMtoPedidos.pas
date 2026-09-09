@@ -35,7 +35,8 @@ uses
   cxGridBandedTableView, cxGridDBBandedTableView,
   System.Actions, Vcl.ActnList,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibColumnasSkuIntf, inLibGridPivoteVenta, inLibLectorDocumento,
+  inLibArticulosValidadorIntf,
   inLibDocumento, inLibDocumentoIntf,
   inLibVentasPantallaIntf, inLibVentasPantallaCrearAlbaran,
   inLibPedidosVentaPresentacionReglas, inLibArticulosResolverIntf;
@@ -258,12 +259,14 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FLectorDocumento: TLectorDocumento;
     // Capacidades del modo actual (solo el pivote de tallas las
     // implementa). Se descubren UNA vez al montar el modo (patron 5.3)
     // y se limpian en cada teardown ANTES de soltar FModoEntrada.
     FPivoteAlbaranar: IPivoteVentaAlbaranar;
     FPivoteBorrarGrupo: IPivoteVentaBorrarGrupo;
     FContextoVentas: TContextoPedidosVentasPantalla;
+    procedure ConfigurarLectorDocumento;
     procedure SalirEdicionModoEntrada(Sender: TObject);
     procedure WMRevisarEnterAsTabPedido(var Msg: TMessage);
       message WM_REVISAR_ENTER_AS_TAB_PEDIDO;
@@ -389,6 +392,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 destructor TfrmMtoPedidos.Destroy;
 begin
+  FreeAndNil(FLectorDocumento);
   // El modo del contrato se libera ANTES del inherited: su teardown
   // (Desmontar/destructor) toca el view y el dataset de lineas, que
   // deben seguir vivos. Dejarlo a la finalizacion de la interfaz en
@@ -699,6 +703,8 @@ begin
   dmmPedidos.unqryPedidosLineas.AfterPost := unqryLineasAfterPostHook;
   dsTablaG.OnDataChange := dsTablaGDataChangeHook;
   ActualizarLabelPrendas;
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoPedidos.ActualizarLabelPrendas;
@@ -1533,6 +1539,36 @@ begin
     CrearColumnasDocumentoLecturas(
       dmmPedidos.unqryTablaG.Connection).
         ListarNombresAtributosGlobales);
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// abre las lineas y construye el modo) y da de alta la linea dejando otra
+// en blanco con el editor abierto, como en caja.
+procedure TfrmMtoPedidos.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcPedido, tsLineasPedido, cxGrdPedidosLineas,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmPedidos) and
+        CabeceraDocumentoDisponible(dmmPedidos.unqryTablaG);
+    end,
+    function: TDataSet
+    begin
+      Result := dmmPedidos.unqryPedidosLineas;
+    end,
+    ['CODIGO_ART_PEDLIN', 'CODIGO_UNIDAD_PEDLIN', 'CODIGOPRODPS_PEDLIN'],
+    function: IArticulosValidador
+    begin
+      Result := FContextoVentas.ValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoPedidos.ModoEntradaResuelto(const ACodArt, ASku,

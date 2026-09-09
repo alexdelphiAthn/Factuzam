@@ -42,7 +42,7 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
-  inLibColumnasSkuIntf,
+  inLibColumnasSkuIntf, inLibLectorDocumento,
   inLibGridPivoteVenta,
   inLibAplicacionArticuloCompraIntf,
   inLibArticulosAtributosIntf,
@@ -229,6 +229,8 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FLectorDocumento: TLectorDocumento;
+    procedure ConfigurarLectorDocumento;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure CargarBasicosColorArticulo(const ACodigoArt: string);
@@ -577,10 +579,13 @@ begin
   cbbCODIGO_PRV_FACC.Properties.ListSource := dmmFacturasCompra.dsPrvDataFacc;
   cbbCODIGO_ALM_FACC.Properties.ListSource :=
     dmmFacturasCompra.dsAlmacenesFacc;
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoFacturasCompra.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FLectorDocumento);
   FAplicacionArticuloCompra := nil;
   FValidadorArticulos := nil;
   FLookupAtributos := nil;
@@ -1120,6 +1125,36 @@ begin
   TcxCurrencyEditProperties(
     Columnas.ColPrecioCompra.Properties).DisplayFormat :=
     '#,##0.00 €';
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// abre las lineas y construye el modo) y da de alta la linea dejando otra
+// en blanco con el editor abierto, como en caja.
+procedure TfrmMtoFacturasCompra.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcFactura, tsLineasFactura, cxgrdLineasFactura,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmFacturasCompra) and
+        CabeceraDocumentoDisponible(dmmFacturasCompra.unqryTablaG);
+    end,
+    function: TDataSet
+    begin
+      Result := dmmFacturasCompra.unqryFacturasCompraLineas;
+    end,
+    ['CODIGO_ART_FACCLIN', 'CODIGO_UNIDAD_FACCLIN'],
+    function: IArticulosValidador
+    begin
+      Result := FValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoFacturasCompra.ModoEntradaResuelto(const ACodArt, ASku,

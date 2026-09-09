@@ -833,6 +833,7 @@
         <DCCReference Include="src\DataModules\UniDataColumnasSkuServicios.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSkuModoTallas.pas"/>
         <DCCReference Include="src\Lib\inLibLectorScanner.pas"/>
+        <DCCReference Include="src\Lib\inLibLectorDocumento.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaFaseCobro.pas">
             <Form>frmMtoCajaFaseCobro</Form>
         </DCCReference>

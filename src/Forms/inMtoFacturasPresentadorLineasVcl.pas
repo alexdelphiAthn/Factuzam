@@ -103,6 +103,9 @@ type
     procedure ActivarSkuLinea(
       const ACodigoArticulo: string; AEnfocar: Boolean);
     procedure AplicarArticulo(const AEntrada: string);
+    // Lectura de pistola en la presentacion clasica (sin modo de entrada):
+    // True si el editor aplico la entrada a la linea actual.
+    function AplicarEntradaLectura(const AEntrada: string): Boolean;
     procedure AplicarLineaNoCatalogo(const ACodigoArticulo: string);
     procedure AplicarArticuloDesdeEditor(Sender: TObject);
     procedure BuscarArticuloLinea;
@@ -424,6 +427,12 @@ procedure TPresentadorLineasFacturaVcl.AplicarArticulo(
 begin
   if Assigned(FEditor) then
     FEditor.AplicarEntrada(AEntrada);
+end;
+
+function TPresentadorLineasFacturaVcl.AplicarEntradaLectura(
+  const AEntrada: string): Boolean;
+begin
+  Result := Assigned(FEditor) and FEditor.AplicarEntrada(AEntrada).Aplicado;
 end;
 
 procedure TPresentadorLineasFacturaVcl.AplicarLineaNoCatalogo(

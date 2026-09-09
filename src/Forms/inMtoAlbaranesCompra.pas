@@ -41,7 +41,7 @@ uses
   cxGridDBBandedTableView,
   inLibGridTallasInline,
   inLibGridPivoteCompra,
-  inLibColumnasSkuIntf,
+  inLibColumnasSkuIntf, inLibLectorDocumento,
   inLibGridPivoteVenta,
   inLibAplicacionArticuloCompraIntf,
   inLibArticulosAtributosIntf,
@@ -241,6 +241,8 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FLectorDocumento: TLectorDocumento;
+    procedure ConfigurarLectorDocumento;
     procedure CrearColumnasTallas;
     procedure CrearColumnasAtributos;
     procedure CargarBasicosColorArticulo(const ACodigoArt: string);
@@ -656,10 +658,13 @@ begin
   // Reutiliza el lookup unqryPrvDataAlbc, ya cargado para el rotulo.
   cbbCODIGO_PRV_ALBC.Properties.ListSource := dmmAlbaranesCompra.dsPrvDataAlbc;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_ALBC);
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoAlbaranesCompra.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FLectorDocumento);
   pcAlbaran.OnChange := nil;
   FAplicacionArticuloCompra := nil;
   FValidadorArticulos := nil;
@@ -1212,6 +1217,36 @@ begin
   if Assigned(Columnas.ColCantidad) then
     VincularCantidadGrid(Columnas.ColCantidad,
       Columnas.ColTipoCantidad, UnidadesMedida);
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// abre las lineas y construye el modo) y da de alta la linea dejando otra
+// en blanco con el editor abierto, como en caja.
+procedure TfrmMtoAlbaranesCompra.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcAlbaran, tsLineasAlbaran, cxgrdLineasAlbaran,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmAlbaranesCompra) and
+        CabeceraDocumentoDisponible(dmmAlbaranesCompra.unqryTablaG);
+    end,
+    function: TDataSet
+    begin
+      Result := dmmAlbaranesCompra.unqryAlbaranesCompraLineas;
+    end,
+    ['CODIGO_ART_ALBCLIN', 'CODIGO_UNIDAD_ALBCLIN'],
+    function: IArticulosValidador
+    begin
+      Result := FValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoAlbaranesCompra.ModoEntradaResuelto(const ACodArt, ASku,

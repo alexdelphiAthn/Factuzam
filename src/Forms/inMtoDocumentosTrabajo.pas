@@ -33,7 +33,7 @@ uses
   cxDropDownEdit, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, UniDataDocumentosTrabajo,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridTallasInline,
+  inLibColumnasSkuIntf, inLibGridTallasInline, inLibLectorDocumento,
   inLibArticulosAtributosIntf, inLibArticulosValidadorIntf,
   inLibComprasPantallaIntf, inLibDocumentosTrabajo,
   inLibCargaMasivaArticulosPersistenciaIntf,
@@ -162,6 +162,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FLectorDocumento: TLectorDocumento;
   protected
     FLecturasDocumentosTrabajo: ILecturasDocumentosTrabajo;
     FMaterializacionDocumentosTrabajo:
@@ -172,6 +173,7 @@ type
     FCargaMasiva: TServiciosCargaMasivaArticulos;
     FCargaOrigen: ICargaOrigenDocumentosTrabajo;
   private
+    procedure ConfigurarLectorDocumento;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostDTR;
     procedure MostrarColumnasAtributoGlobalesDTR;
@@ -350,10 +352,13 @@ begin
   cxgrdLineasDTR.OnEnter := GridLineasEnterDTR;
   cxgrdLineasDTR.OnExit := GridLineasExitDTR;
   btnListadoDTR.Visible := PuedeExportar;
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 destructor TfrmMtoDocumentosTrabajo.Destroy;
 begin
+  FreeAndNil(FLectorDocumento);
   // El modo se libera antes del inherited porque su desmontaje necesita
   // que el grid y el dataset de lineas sigan vivos.
   if FModoEntrada <> nil then
@@ -610,6 +615,36 @@ begin
   // haya hecho visibles al revisar todas las lineas del documento.
   AplicarNombresAtributosGlobalesDocumento(
     tvLineasDTR, FLecturasDocumentosTrabajo.ListarNombresAtributos);
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter construye el modo) y da
+// de alta la linea dejando otra en blanco con el editor abierto, como en
+// caja. Solo con un documento propio editable.
+procedure TfrmMtoDocumentosTrabajo.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcDetalleDTR, tsLineasDTR, cxgrdLineasDTR,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmDocumentosTrabajo) and
+        dmmDocumentosTrabajo.PuedeEditarDocumentoActual;
+    end,
+    function: TDataSet
+    begin
+      Result := dmmDocumentosTrabajo.unqryLineas;
+    end,
+    ['CODIGO_ART_DTL', 'CODIGO_UNIDAD_DTL'],
+    function: IArticulosValidador
+    begin
+      Result := FValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoDocumentosTrabajo.ModoEntradaResuelto(const ACodArt,

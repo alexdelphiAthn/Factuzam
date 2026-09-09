@@ -180,6 +180,11 @@ type
     procedure Desmontar;
     // Deja el editor de entrada abierto, listo para teclear o escanear.
     procedure MostrarEditor;
+    // Resuelve una entrada (articulo, SKU, codigo de barras o modelo de
+    // proveedor) sobre la linea actual como si se hubiera tecleado en la
+    // celda: escribe la linea y avisa por OnResuelto. True si la escribio.
+    // Lo usa el lector de codigo de barras a nivel de formulario.
+    function ResolverEntrada(const AEntrada: string): Boolean;
   end;
   IFabricaModoEntradaDesglose = interface
     ['{D73BB57F-91D2-4DF2-97C3-8AE68C444995}']

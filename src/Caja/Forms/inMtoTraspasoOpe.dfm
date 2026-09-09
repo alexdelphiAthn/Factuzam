@@ -4,7 +4,6 @@
   ClientWidth = 896
   StyleElements = [seFont, seClient, seBorder]
   OnDestroy = FormDestroy
-  OnKeyPress = FormKeyPress
   OnShow = FormShow
   ExplicitLeft = 3
   ExplicitTop = 3

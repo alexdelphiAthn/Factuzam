@@ -56,7 +56,8 @@ uses
   dxSkinVisualStudio2013Dark, dxSkinVisualStudio2013Light, dxSkinVS2010,
   dxSkinWhiteprint, dxSkinXmas2008Blue,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibColumnasSkuIntf, inLibGridPivoteVenta, inLibLectorDocumento,
+  inLibArticulosValidadorIntf,
   inLibFacturasServiciosIntf,
   inLibFacturasAplicacionIntf,
   inLibComandoImprimirFacturas,
@@ -557,6 +558,7 @@ type
     FModoEntradaSel: TModoColumnasSku;
     FPresentadorCabecera: TPresentadorCabeceraFacturaVcl;
     FPresentadorLineas: TPresentadorLineasFacturaVcl;
+    FLectorDocumento: TLectorDocumento;
     // === CONTRATO DE ENTRADA ColumnSKUcxGrid ===
     // F1 cicla Auto (desglose) -> SKU -> Tallas horizontal con las
     // lineas de la factura a la vista. El Construir hace ClearItems:
@@ -567,6 +569,7 @@ type
     // lineas fiscales no se tocan. Con el modo "Crear/Act Articulo"
     // activo se reconstruye la presentacion CLASICA: el contrato no
     // cubre el alta de articulos inline.
+    procedure ConfigurarLectorDocumento;
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostFactura(AClasico: Boolean);
     procedure cxgrdLineasFacturaEnter(Sender: TObject);
@@ -1431,6 +1434,7 @@ begin
 end;
 destructor TfrmMtoFacturasBase.Destroy;
 begin
+  FreeAndNil(FLectorDocumento);
   // El modo del contrato se libera ANTES del inherited: su teardown
   // (Desmontar/destructor) toca el view y el dataset de lineas, que
   // deben seguir vivos. Si se dejara a la finalizacion de la interfaz,
@@ -1975,6 +1979,8 @@ begin
   dsTablaG.OnDataChange := dsTablaGDataChange;
   PrepararConsultaListadoFacturaVcl(Self);
   FPresentadorCabecera.ActualizarBloqueoEdicion;
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 function TfrmMtoFacturasBase.NombreVistaListado: string;
 begin
@@ -2421,6 +2427,63 @@ begin
     (not FPresentadorLineas.ModoCreacionSolicitado),
     FDependencias.ModoEntrada);
   inherited;
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// deja la primera linea y construye el modo) y da de alta la linea dejando
+// otra en blanco con el editor abierto, como en caja. Con la presentacion
+// CLASICA (crear/actualizar articulos) no hay modo de entrada: aplica la
+// entrada el editor de lineas del presentador.
+procedure TfrmMtoFacturasBase.ConfigurarLectorDocumento;
+var
+  Contexto: TContextoLectorDocumento;
+begin
+  Contexto := Default(TContextoLectorDocumento);
+  Contexto.Formulario := Self;
+  Contexto.Rejilla := cxgrdLineasFactura;
+  Contexto.PuedeLeer :=
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmFacturas) and
+        CabeceraDocumentoDisponible(dmmFacturas.unqryTablaG);
+    end;
+  Contexto.PrepararAlta :=
+    procedure
+    begin
+      pcDetail.ActivePage := tsLineasFactura;
+      if cxgrdLineasFactura.CanFocus then
+        cxgrdLineasFactura.SetFocus;
+    end;
+  Contexto.Lineas :=
+    function: TDataSet
+    begin
+      Result := dmmFacturas.unqryLinFac;
+    end;
+  Contexto.CamposArticulo := ['CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN'];
+  Contexto.Validador :=
+    function: IArticulosValidador
+    begin
+      Result := FDependenciasInyeccion.Lineas.Articulos.Validador;
+    end;
+  Contexto.Resolver :=
+    function(const ACodigo: string): Boolean
+    begin
+      if FModoEntrada <> nil then
+        Result := FModoEntrada.ResolverEntrada(ACodigo)
+      else
+        Result := Assigned(FPresentadorLineas) and
+          FPresentadorLineas.AplicarEntradaLectura(ACodigo);
+    end;
+  Contexto.MostrarEditor :=
+    procedure
+    begin
+      if FModoEntrada <> nil then
+        FModoEntrada.MostrarEditor;
+    end;
+  Contexto.RegistroLog := RegistroLog;
+  FLectorDocumento := TLectorDocumento.Create(Contexto);
 end;
 
 procedure TfrmMtoFacturasBase.ConstruirModoEntrada;

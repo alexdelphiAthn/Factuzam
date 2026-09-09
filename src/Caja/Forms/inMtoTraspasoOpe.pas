@@ -33,7 +33,7 @@ uses
   inLibTraspasoTicket, inLibGridArticulos, inLibArticulosValidadorIntf,
   inLibPermisosIntf, inLibGenBusq, inLibFotos, inLibAtributosPaleta,
   Vcl.Menus, dxCoreGraphics, JvComponentBase, JvEnterTab,
-  cxLocalization, inLibLectorScanner, cxStyles, cxDBData, cxCustomData,
+  cxLocalization, inLibLectorDocumento, cxStyles, cxDBData, cxCustomData,
   cxFilter, cxData, cxDataStorage, cxNavigator, dxDateRanges, cxCalendar,
   dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
   inLibTraspasoOpePersistenciaIntf, inLibArticulosAtributosIntf,
@@ -88,7 +88,6 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
-    procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure btnModoClick(Sender: TObject);
     procedure btnF8Click(Sender: TObject);
     procedure btnF11Click(Sender: TObject);
@@ -132,20 +131,18 @@ type
     FEntradaEmpleadoConsultada: string;
     FCodigoEmpleadoConsultado: string;
     FNombreEmpleadoConsultado: string;
-    // Lectura con pistola a nivel de FORMULARIO (igual que inMtoCajaOpe): la
-    // mecanica (trama STX/ETX + rafaga por velocidad) la lleva TLectorScanner.
-    // En modo "consumir" y pasivo dentro de la rejilla (ahi resuelve la celda
-    // via inLibGridArticulos); el detector por velocidad cubre el foco fuera.
-    FLector: TLectorScanner;
+    // Lectura con pistola a nivel de FORMULARIO (igual que caja): la
+    // deteccion y el alta de la linea las lleva TLectorDocumento, pasivo
+    // dentro de la rejilla para el tecleo (ahi resuelve la celda via
+    // inLibGridArticulos); la trama STX/ETX se captura desde cualquier foco.
+    FLectorDocumento: TLectorDocumento;
     procedure ValidarDependencias;
     procedure AgregarLineaExterna(
       const ALinea: TLineaCargaTraspaso;
       var ANumeroLinea: Integer);
     procedure CargarLineasExternas(
       const ALineas: TLineasCargaTraspaso);
-    procedure LectorCodigoLeido(Sender: TObject; const ACodigo: string);
-    function  LectorEsControlRejilla(AControl: TControl): Boolean;
-    procedure ProcesarLecturaScanner(const ACodigo: string);
+    procedure ConfigurarLectorDocumento;
     function ConsolidarSiExiste(const ASku: string): Boolean;
     procedure ConstruirGrid;
     function CrearCamposGrid: TCamposGridArt;
@@ -402,15 +399,6 @@ begin
   btnCargarVentas.Caption := SCaptionCargarVentasReposicion;
   ValidarDependencias;
   KeyPreview := True;
-  // Detector del lector de codigo de barras (trama STX/ETX + rafaga por
-  // velocidad). Modo "consumir" y pasivo en la rejilla: la lectura en la celda
-  // de articulo la resuelve inLibGridArticulos; el detector por velocidad solo
-  // actua con el foco fuera de la rejilla.
-  FLector := TLectorScanner.Create;
-  FLector.ConsumirRafaga := True;
-  FLector.OmitirEnRejilla := True;
-  FLector.OnCodigoLeido := LectorCodigoLeido;
-  FLector.OnEsControlRejilla := LectorEsControlRejilla;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
   // La entrada detallada es el modo inicial de traspasos. F1 alterna con la
@@ -433,11 +421,14 @@ begin
   ConstruirPanelStock;
   // Elegir una solicitud en el desplegable (modo Atender) la carga sola.
   cboDestino.Properties.OnChange := cboDestinoPropertiesChange;
+  // Lector de codigo de barras a nivel de formulario: necesita la rejilla
+  // ya construida.
+  ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoOpeTraspaso.FormDestroy(Sender: TObject);
 begin
-  FreeAndNil(FLector);
+  FreeAndNil(FLectorDocumento);
   // Evitar callbacks de stock/foto durante el desmontaje.
   if Assigned(FNavDs) then
     FNavDs.OnDataChange := nil;
@@ -1308,7 +1299,8 @@ begin
   FModo := AModo;
   // El lector no tiene destino funcional en reposicion ni al atender. Evita
   // que el tecleo rapido en fechas o combos se confunda con una rafaga.
-  FLector.Activo := ModoPermiteCargaManual;
+  if Assigned(FLectorDocumento) then
+    FLectorDocumento.Activo := ModoPermiteCargaManual;
   FReposicionCargada := False;
   FDatos.PrepararNuevo(AModo, FEmpresa, FAlmacen, FCaja, FFecha);
   txtOrigen.Text := FAlmacen;
@@ -1542,53 +1534,58 @@ begin
   end;
 end;
 
-procedure TfrmMtoOpeTraspaso.FormKeyPress(Sender: TObject; var Key: Char);
-begin
-  // Toda la deteccion (trama STX/ETX + rafaga por velocidad) la lleva el
-  // lector; el codigo leido llega luego por OnCodigoLeido.
-  FLector.KeyPress(Key);
-end;
-
-procedure TfrmMtoOpeTraspaso.LectorCodigoLeido(Sender: TObject;
-  const ACodigo: string);
-begin
-  ProcesarLecturaScanner(ACodigo);
-end;
-
-// El lector permanece pasivo si el foco esta en la rejilla de lineas (ahi la
-// lectura la resuelve inLibGridArticulos a nivel de celda).
-function TfrmMtoOpeTraspaso.LectorEsControlRejilla(AControl: TControl): Boolean;
+// Lector de codigo de barras a nivel de formulario (TLectorDocumento): al
+// leer, deja una linea en blanco, la resuelve con el modo de entrada (la
+// consolidacion de SKU repetido sigue en GridResuelto, punto comun de todas
+// las vias) y salta a otra linea en blanco con el editor abierto, como en
+// caja. Pasivo dentro de la rejilla para el tecleo: ahi resuelve la celda.
+procedure TfrmMtoOpeTraspaso.ConfigurarLectorDocumento;
 var
-  C: TControl;
+  Contexto: TContextoLectorDocumento;
 begin
-  Result := False;
-  C := AControl;
-  while (C <> nil) and (not Result) do
-  begin
-    if C = FGrid then
-      Result := True;
-    C := C.Parent;
-  end;
-end;
-
-procedure TfrmMtoOpeTraspaso.ProcesarLecturaScanner(const ACodigo: string);
-begin
-  // Alta por lectura de pistola con framing STX/ETX. La consolidacion (sumar
-  // si la SKU ya esta) la hace GridResuelto, que es el punto comun para todas
-  // las vias de resolucion (celda Codigo+CR, STX/ETX o teclado).
-  if ModoPermiteCargaManual and (Trim(ACodigo) <> '') and
-     Assigned(FDatos) and
-     Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active then
-  begin
-    AsegurarLineaNueva;
-    FDatos.cdsLineas.Last;
-    ResolverEntradaModo(Trim(ACodigo));
-    // Dejamos el grid enfocado y el editor de articulo abierto para encadenar
-    // lecturas sin tener que pulsar Enter (el grid queda en modo edicion).
-    if (FGrid <> nil) and FGrid.CanFocus then
-      FGrid.SetFocus;
-    MostrarEditorModo;
-  end;
+  Contexto := Default(TContextoLectorDocumento);
+  Contexto.Formulario := Self;
+  Contexto.Rejilla := FGrid;
+  Contexto.PuedeLeer :=
+    function: Boolean
+    begin
+      Result := ModoPermiteCargaManual and Assigned(FDatos) and
+        Assigned(FDatos.cdsLineas) and FDatos.cdsLineas.Active;
+    end;
+  Contexto.Lineas :=
+    function: TDataSet
+    begin
+      Result := FDatos.cdsLineas;
+    end;
+  Contexto.CamposArticulo := ['CODIGO_UNIDAD'];
+  Contexto.Validador :=
+    function: IArticulosValidador
+    begin
+      Result := FValidadorArticulos;
+    end;
+  Contexto.Resolver :=
+    function(const ACodigo: string): Boolean
+    begin
+      Result := ResolverEntradaModo(ACodigo);
+    end;
+  // Traspasos mantiene su linea en blanco posteada (sustituye a la
+  // NewItemRow), asi que aporta su propia preparacion de linea.
+  Contexto.PrepararLinea :=
+    procedure
+    begin
+      AsegurarLineaNueva;
+      FDatos.cdsLineas.Last;
+    end;
+  Contexto.MostrarEditor :=
+    procedure
+    begin
+      if Assigned(FGrid) and FGrid.CanFocus then
+        FGrid.SetFocus;
+      MostrarEditorModo;
+    end;
+  Contexto.RegistroLog := RegistroLog;
+  FLectorDocumento := TLectorDocumento.Create(Contexto);
+  FLectorDocumento.Activo := ModoPermiteCargaManual;
 end;
 
 function TfrmMtoOpeTraspaso.ConsolidarSiExiste(const ASku: string): Boolean;
@@ -2678,9 +2675,8 @@ end;
 
 procedure TfrmMtoOpeTraspaso.KeyDown(var Key: Word; Shift: TShiftState);
 begin
-  // El lector cierra la lectura por velocidad (rafaga + Enter rapido) y consume
-  // el VK_RETURN si procede, antes de la gestion de teclas de funcion.
-  FLector.KeyDown(Key, Shift);
+  // El Enter del lector ya se consumio en OnShortCut (TLectorDocumento); el
+  // resto del detector corre en OnKeyDown, encadenado via inherited.
   case Key of
     VK_F1:
       if Shift = [] then

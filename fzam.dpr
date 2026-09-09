@@ -430,6 +430,7 @@ uses
   UniDataColumnasSkuServicios in 'src\DataModules\UniDataColumnasSkuServicios.pas',
   inLibColumnasSkuModoTallas in 'src\Lib\inLibColumnasSkuModoTallas.pas',
   inLibLectorScanner in 'src\Lib\inLibLectorScanner.pas',
+  inLibLectorDocumento in 'src\Lib\inLibLectorDocumento.pas',
   inMtoCajaFaseCobro in 'src\Caja\Forms\inMtoCajaFaseCobro.pas' {frmMtoCajaFaseCobro},
   inMtoCajaFormasPago in 'src\Caja\Forms\inMtoCajaFormasPago.pas' {frmMtoCajaFormasPago},
   UniDataCajaFormasPago in 'src\Caja\DataModules\UniDataCajaFormasPago.pas' {dmCajaFormasPago: TdmCajaFormasPago},

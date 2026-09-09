@@ -34,7 +34,7 @@ uses
   cxDBLabel, cxButtonEdit, System.Generics.Collections,
   cxGridBandedTableView, cxGridDBBandedTableView, UniDataAlbaranes,
   System.Actions, Vcl.ActnList,
-  inLibColumnasSkuIntf, inLibGridTallasInline,
+  inLibColumnasSkuIntf, inLibGridTallasInline, inLibLectorDocumento,
   inLibDocumento, inLibDocumentoIntf,
   inLibEntradaAlbaranVentaPersistenciaIntf,
   inLibVentasPantallaIntf,
@@ -245,6 +245,8 @@ type
     FModoEntrada: IModoEntradaGrid;
     FColsModoConstruido: Boolean;
     FContextoVentas: TContextoAlbaranesVentasPantalla;
+    FLectorDocumento: TLectorDocumento;
+    procedure ConfigurarLectorDocumento;
     procedure SalirEdicionModoEntrada(Sender: TObject);
     procedure WMRevisarEnterAsTabAlbaran(var Msg: TMessage);
       message WM_REVISAR_ENTER_AS_TAB_ALBARAN;
@@ -350,6 +352,7 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 
 destructor TfrmMtoAlbaranes.Destroy;
 begin
+  FreeAndNil(FLectorDocumento);
   // El modo debe soltar sus eventos mientras el grid y el dataset existen.
   if FModoEntrada <> nil then
   begin
@@ -658,6 +661,36 @@ begin
       end;
     end;
   end;
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// abre las lineas y construye el modo) y da de alta la linea dejando otra
+// en blanco con el editor abierto, como en caja.
+procedure TfrmMtoAlbaranes.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcAlbaran, tsLineasAlbaran, cxgrdLineasAlbaran,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmAlbaranes) and
+        CabeceraDocumentoDisponible(dmmAlbaranes.unqryTablaG);
+    end,
+    function: TDataSet
+    begin
+      Result := dmmAlbaranes.unqryAlbaranesLineas;
+    end,
+    ['CODIGO_ART_ALBLIN', 'CODIGO_UNIDAD_ALBLIN'],
+    function: IArticulosValidador
+    begin
+      Result := FContextoVentas.ValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoAlbaranes.ModoEntradaResuelto(const ACodArt, ASku,
@@ -1010,6 +1043,8 @@ begin
   // entrar en el grid se veian las columnas del dfm.
   if dmmAlbaranes.unqryAlbaranesLineas.Active then
     ConstruirModoEntrada;
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoAlbaranes.ActualizarLabelPrendas;

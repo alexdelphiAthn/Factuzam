@@ -187,6 +187,8 @@ resourcestring
   SErrorArticuloEntradaNoEncontrado =
     'No se encontró "%s" como artículo, SKU, código de barras ni modelo de ' +
     'proveedor.';
+  SErrorLineasDocumentoNoEditables =
+    'Las líneas de este documento no admiten cambios.';
   SAvisoArticuloRequiereSku =
     'El artículo "%s" tiene SKUs (talla/color). Indica un SKU concreto ' +
     'antes de continuar.';

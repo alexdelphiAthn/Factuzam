@@ -50,7 +50,8 @@ uses
   dxGDIPlusClasses, cxImage, Vcl.Imaging.pngimage,
   inLibContextoSesionIntf, inLibParametrosIntf, inLibShowMto,
   inLibConexionesIntf,
-  inLibLicenciaAplicacion, inLibAnfitrionMtoIntf,
+  inLibLicenciaAplicacion,
+  inLibAnfitrionMtoIntf,
   inLibCajaVentanasIntf, inLibPermisosIntf,
   inLibCopiasSeguridadIntf,
   inLibArranqueAplicacion,
@@ -62,8 +63,11 @@ uses
   inMtoMantenimientosInyeccionRaiz,
   inMtoCajaInyeccionRaiz,
   inMtoConfiguracionInyeccionRaiz,
-  inMtoPrincipalPresentacionInicio, System.ImageList,
-  Vcl.ImgList, Vcl.VirtualImageList, Vcl.BaseImageCollection,
+  inMtoPrincipalPresentacionInicio,
+  System.ImageList,
+  Vcl.ImgList,
+  Vcl.VirtualImageList,
+  Vcl.BaseImageCollection,
   Vcl.ImageCollection;
 
 const
@@ -352,6 +356,7 @@ type
     // cualquier ventana si hay impresora de tickets asignada y Ctrl+U abre
     // la consulta de stock; Ctrl+E abre la consulta de articulos similares.
     procedure AppMessage(var Msg: TMsg; var Handled: Boolean);
+    procedure PrincipalKeyPress(Sender: TObject; var Key: Char);
     procedure AbrirCajonDesdePresentacion;
   public
     { Public declarations }
@@ -578,6 +583,9 @@ begin
   vilPestanas.AutoFill := True;
   vilPestanas.SetSize(TAMANO_ICONO_PESTANA, TAMANO_ICONO_PESTANA);
   pcPrincipal.Images := vilPestanas;
+  // KeyPreview: las teclas de las pestanas embebidas llegan aqui y se
+  // reenvian al formulario de la pestana activa (PrincipalKeyPress).
+  OnKeyPress := PrincipalKeyPress;
 end;
 
 function TfrmMtoPrincipal.GetParametrosAppEdicion: IParametrosEdicion;
@@ -1539,6 +1547,25 @@ begin
   end;
 end;
 
+// KeyPreview del principal: la VCL entrega el OnKeyPress de los controles
+// de una pestana embebida a la ventana superior (este formulario), no al
+// formulario de la pestana. Se le reenvia para que su OnKeyPress (p. ej. el
+// lector de codigo de barras) vea la tecla antes que el control con foco.
+// Solo cuando el foco esta dentro de esa pestana: el resto de teclas del
+// principal (menu, barra) no son suyas.
+procedure TfrmMtoPrincipal.PrincipalKeyPress(Sender: TObject;
+  var Key: Char);
+var
+  FormularioPestana: TCustomForm;
+  ControlActivo: TWinControl;
+begin
+  FormularioPestana := FormularioPestanaActiva(pcPrincipal);
+  ControlActivo := Screen.ActiveControl;
+  if (FormularioPestana is TfrmBase) and Assigned(ControlActivo) and
+     FormularioPestana.ContainsControl(ControlActivo) then
+    TfrmBase(FormularioPestana).PrevisualizarTeclaEmbebida(Key);
+end;
+
 function TfrmMtoPrincipal.IsShortCut(var Message: TWMKey): Boolean;
 var
   FormularioActivo: TCustomForm;
@@ -1603,9 +1630,11 @@ begin
     Result := EjecutarAtajoFormulario(FormularioActivo, Message)
   else
   begin
+    // El formulario de la pestana no es la ventana superior: la VCL no
+    // consulta su IsShortCut (OnShortCut, menu y TActionList) por si sola.
     FormularioPestana := FormularioPestanaActiva(pcPrincipal);
     if Assigned(FormularioPestana) then
-      Result := EjecutarAtajoFormulario(FormularioPestana, Message);
+      Result := FormularioPestana.IsShortCut(Message);
     if not Result then
       Result := inherited IsShortCut(Message);
   end;

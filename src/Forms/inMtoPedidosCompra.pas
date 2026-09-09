@@ -45,7 +45,7 @@ uses
   inLibGridTallasInline,
   inLibGridPivoteCompra,
   // Contrato de entrada de articulos ColumnSKUcxGrid (src\Lib).
-  inLibColumnasSkuIntf, inLibGridPivoteVenta,
+  inLibColumnasSkuIntf, inLibGridPivoteVenta, inLibLectorDocumento,
   inLibArticulosAtributosIntf,
   inLibArticulosValidadorIntf,
   inLibAplicacionArticuloCompraIntf,
@@ -346,6 +346,7 @@ type
     FModoEntrada: IModoEntradaGrid;
     FModoEntradaSel: TModoColumnasSku;
     FColsModoConstruido: Boolean;
+    FLectorDocumento: TLectorDocumento;
     // Guarda de reentrada del rebuild: el Desempaquetar/Post de la
     // construccion recalcula totales de cabecera y dispara
     // dsTablaGDataChangeHook, que sin esta guarda relanzaba
@@ -358,6 +359,7 @@ type
     // tormenta de SQL por cada click (10/07/26).
     FPedidoModoActual: string;
     FTemporizadorAnchosInline: TTimer;
+    procedure ConfigurarLectorDocumento;
     procedure SalirEdicionModoEntrada(Sender: TObject);
     procedure WMRevisarEnterAsTabPedidoCompra(var Msg: TMessage);
       message WM_REVISAR_ENTER_AS_TAB_PEDIDO_COMPRA;
@@ -768,6 +770,7 @@ procedure TfrmMtoPedidosCompra.FormDestroy(Sender: TObject);
 var
   bHuboCambios: Boolean;
 begin
+  FreeAndNil(FLectorDocumento);
   if Assigned(FTemporizadorAnchosInline) then
     FTemporizadorAnchosInline.Enabled := False;
   FRecepcionVcl := nil;
@@ -858,6 +861,8 @@ begin
   cbbCODIGO_ALM_PEDC.Properties.ListSource :=
     dmmPedidosCompra.dsAlmacenesPedc;
   DesactivarEnterAsTabEnCombo(cbbCODIGO_ALM_PEDC);
+  if FLectorDocumento = nil then
+    ConfigurarLectorDocumento;
 end;
 
 procedure TfrmMtoPedidosCompra.CrearColumnasTallas;
@@ -2119,6 +2124,36 @@ begin
     else
       AjustarAnchosTallasPedidoCompra(tvLineasPedido, CANT_TALLAS_MAX);
   end;
+end;
+
+// Lector de codigo de barras a nivel de formulario: al leer, activa la
+// pestana de lineas, enfoca la rejilla (su OnEnter persiste la cabecera,
+// abre las lineas y construye el modo) y da de alta la linea dejando otra
+// en blanco con el editor abierto, como en caja.
+procedure TfrmMtoPedidosCompra.ConfigurarLectorDocumento;
+begin
+  FLectorDocumento := CrearLectorDocumentoGrid(
+    Self, pcPedido, tsLineasPedido, cxgrdLineasPedido,
+    function: Boolean
+    begin
+      Result := (pcPantalla.ActivePage = tsFicha) and
+        Assigned(dmmPedidosCompra) and
+        CabeceraDocumentoDisponible(dmmPedidosCompra.unqryTablaG);
+    end,
+    function: TDataSet
+    begin
+      Result := dmmPedidosCompra.unqryPedidosCompraLineas;
+    end,
+    ['CODIGO_ART_PEDCLIN', 'CODIGO_UNIDAD_PEDCLIN'],
+    function: IArticulosValidador
+    begin
+      Result := FValidadorArticulos;
+    end,
+    function: IModoEntradaGrid
+    begin
+      Result := FModoEntrada;
+    end,
+    RegistroLog);
 end;
 
 procedure TfrmMtoPedidosCompra.ModoEntradaResuelto(const ACodArt, ASku,
