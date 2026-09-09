@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -1790,6 +1790,7 @@
         <DCCReference Include="src\Forms\inMtoPedidosPresentacionArticuloVcl.pas"/>
         <DCCReference Include="src\Lib\inLibTicketRecordatorio.pas"/>
         <DCCReference Include="src\verifactu\inLibVerifactuDesgloseFiscal.pas"/>
+        <DCCReference Include="src\Lib\inLibMenuIconos.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -1825,6 +1826,12 @@
                 <DeployFile LocalName="..\..\Fast Reports\VCL\2026.1.7\Sources\Sources\FastCore\VCL\Sources\frVer.inc" Configuration="Release" Class="ProjectFile"/>
                 <DeployFile LocalName="Win32\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
+                <DeployFile LocalName="Win32\Release\fzam.exe" Configuration="Release" Class="ProjectOutput">
+                    <Platform Name="Win32">
+                        <RemoteName>fzam.exe</RemoteName>
+                        <Overwrite>true</Overwrite>
+                    </Platform>
+                </DeployFile>
                 <DeployFile LocalName="Win64\Debug\fzam.exe" Configuration="Debug" Class="ProjectOutput"/>
                 <DeployFile LocalName="Win64\Release\fzam.exe" Configuration="Release" Class="ProjectOutput"/>
                 <DeployFile LocalName="icon-128.png" Configuration="Debug" Class="UWP_DelphiLogo150"/>

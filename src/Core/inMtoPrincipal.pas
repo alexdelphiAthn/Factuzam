@@ -62,7 +62,9 @@ uses
   inMtoMantenimientosInyeccionRaiz,
   inMtoCajaInyeccionRaiz,
   inMtoConfiguracionInyeccionRaiz,
-  inMtoPrincipalPresentacionInicio;
+  inMtoPrincipalPresentacionInicio, dxBarBuiltInMenu, System.ImageList,
+  Vcl.ImgList, Vcl.VirtualImageList, Vcl.BaseImageCollection,
+  Vcl.ImageCollection;
 
 const
   WM_REINICIAR_RESTAURACION = WM_USER + 121;
@@ -135,6 +137,8 @@ type
     CargarEfectosVenta1: TMenuItem;
     mnuTPVListados: TMenuItem;
     mnuListadoOperacionesVenta: TMenuItem;
+    icoMenu: TImageCollection;
+    vilMenu: TVirtualImageList;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -378,7 +382,7 @@ uses
   inLibTraduccionesFastReport,
   inLibMonitorSQLIntf,
   inLibMonitorSQLLog,
-
+  inLibMenuIconos,
   inLibPerfilesUsuarioIntf,
   inLibFiltrosGuardadosIntf,
   inLibRegistroPantallas,
@@ -548,6 +552,15 @@ end;
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 begin
   inherited;
+  icoMenu.Images.Clear;
+  CargarIconosDesdeRecursos(icoMenu, jvMnMenuPrin.Items);
+
+  vilMenu.ImageCollection := icoMenu;
+  vilMenu.AutoFill := True;
+  vilMenu.SetSize(16, 16);
+
+  jvMnMenuPrin.Images := vilMenu;
+  AsignarIconosMenu(jvMnMenuPrin.Items, icoMenu);
 end;
 
 function TfrmMtoPrincipal.GetParametrosAppEdicion: IParametrosEdicion;

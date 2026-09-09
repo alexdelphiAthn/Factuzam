@@ -1,4 +1,4 @@
-﻿inherited frmMtoGen: TfrmMtoGen
+inherited frmMtoGen: TfrmMtoGen
   BorderStyle = bsNone
   Caption = 'Ventana Gen'#233'rica'
   ClientHeight = 558
@@ -7,13 +7,12 @@
   Font.Charset = ANSI_CHARSET
   Font.Pitch = fpDefault
   Font.Quality = fqDefault
-  StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   ExplicitWidth = 1091
   ExplicitHeight = 558
-  TextHeight = 17
+  TextHeight = 18
   object pButtonPage: TPanel [0]
     Left = 0
     Top = 0
@@ -40,7 +39,7 @@
       ClientRectBottom = 516
       ClientRectLeft = 2
       ClientRectRight = 949
-      ClientRectTop = 27
+      ClientRectTop = 28
       object tsLista: TcxTabSheet
         Caption = '&Lista'
         ImageIndex = 0
@@ -124,8 +123,8 @@
         Caption = 'Perfil'
         ImageIndex = 2
         TabVisible = False
-        ExplicitTop = 29
-        ExplicitHeight = 487
+        ExplicitTop = 27
+        ExplicitHeight = 489
         object pnlPerfilTop: TPanel
           Left = 0
           Top = 0
@@ -179,7 +178,7 @@
           Left = 0
           Top = 57
           Width = 947
-          Height = 432
+          Height = 431
           Align = alClient
           BevelOuter = bvNone
           Caption = 'pnlPerfilDetail'
@@ -311,12 +310,12 @@
           Margins.Top = 5
           Margins.Right = 5
           Margins.Bottom = 5
-          Flat = True
           Caption = #9662
+          Flat = True
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -337,7 +336,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -393,7 +392,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -449,7 +448,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -502,7 +501,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -542,7 +541,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
@@ -561,7 +560,7 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -15
-          Font.Name = 'Source Sans 3'
+          Font.Name = 'DejaVu Sans'
           Font.Pitch = fpFixed
           Font.Style = []
           Font.Quality = fqClearType
