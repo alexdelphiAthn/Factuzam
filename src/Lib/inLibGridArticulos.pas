@@ -86,6 +86,7 @@ type
     FMostrarCodigoPadre: Boolean;
     FOpcionesAtributo: array[1..5] of TArray<string>;
     FArticuloOpcionesAtributo: array[1..5] of string;
+    FGlifoSwatch: TGlifoSwatchCombo;
     FValidador: IArticulosValidador;
     FLookup: IArticulosAtributosLookup;
     FBusqueda: TBusquedaGridArticulos;
@@ -212,6 +213,8 @@ type
     function BuscarValorCombo(AOrden: Integer; const AValor: string;
       out AValorCanonico: string): Boolean;
     function ObtenerOrdenEditorCombo(AControl: TcxControl): Integer;
+    function ResolverColorEditor(AEditor: TcxComboBox;
+      const ATexto: string; out AInfo: TInfoBasico): Boolean;
     function ObtenerInfoColorCombo(AOrden: Integer; const ATexto: string;
       out AInfo: TInfoBasico): Boolean;
     procedure ProgramarConfirmacionCombo(AOrden: Integer;
@@ -392,6 +395,7 @@ constructor TGridArticulosLineas.Create(
 begin
   inherited Create;
   FConn := AConn;
+  FGlifoSwatch := TGlifoSwatchCombo.Create(ResolverColorEditor, nil);
   FContextoSesion := AContextoSesion;
   FRegistroLog := ARegistroLog;
   FMostrarCodigoPadre := AMostrarCodigoPadre;
@@ -442,6 +446,7 @@ end;
 destructor TGridArticulosLineas.Destroy;
 begin
   Desmontar;
+  FreeAndNil(FGlifoSwatch);
   FreeAndNil(FTimerVisibilidad);
   FreeAndNil(FTimerAvanceArticulo);
   FreeAndNil(FTimerEnterAsTab);
@@ -827,6 +832,10 @@ begin
           FColAtributo[iAtributo].Properties).OnPopup := nil;
         TcxComboBoxProperties(
           FColAtributo[iAtributo].Properties).OnCloseUp := nil;
+        TcxComboBoxProperties(
+          FColAtributo[iAtributo].Properties).OnChange := nil;
+        TcxComboBoxProperties(
+          FColAtributo[iAtributo].Properties).OnButtonClick := nil;
       end;
       SetLength(FOpcionesAtributo[iAtributo], 0);
       FArticuloOpcionesAtributo[iAtributo] := '';
@@ -1028,6 +1037,7 @@ begin
     CargarOpcionesCombo(AOrden, Articulo);
     CopiarOpcionesCombo(AOrden, Combo.ActiveProperties.Items);
     Combo.SelectAll;
+    FGlifoSwatch.PrepararEditor(Combo, ValorActual);
     if (Articulo <> '') and (Trim(ValorActual) = '') then
       Combo.OnEnter := AtributoEnter
     else
@@ -1244,6 +1254,14 @@ begin
   end;
 end;
 
+function TGridArticulosLineas.ResolverColorEditor(
+  AEditor: TcxComboBox; const ATexto: string;
+  out AInfo: TInfoBasico): Boolean;
+begin
+  Result := ObtenerInfoColorCombo(
+    ObtenerOrdenEditorCombo(AEditor), ATexto, AInfo);
+end;
+
 procedure TGridArticulosLineas.AtributoComboDrawItem(
   AControl: TcxCustomComboBox; ACanvas: TcxCanvas;
   AIndex: Integer; const ARect: TRect; AState: TOwnerDrawState);
@@ -1252,11 +1270,9 @@ var
   Info: TInfoBasico;
   Texto: string;
 begin
-  // Con lsFixedList DevExpress pinta con este evento la lista, la caja de
-  // texto del editor en linea y, via TcxInplaceComboBoxCustomDrawHelper,
-  // las celdas sin editar cuyo valor este en Items. Esas celdas las
-  // resuelve el OnCustomDrawCell del host con el articulo de su fila:
-  // aqui solo llevan cuadradito el editor y su lista (linea en curso).
+  // Con lsEditFixedList este evento solo pinta la lista. Solo se busca
+  // color para el editor en linea: las celdas sin editar las resuelve
+  // el OnCustomDrawCell del host con su fila.
   if (AControl <> nil) and (ACanvas <> nil) and
      (AIndex >= 0) and
      (AIndex < AControl.ActiveProperties.Items.Count) then
@@ -1302,6 +1318,8 @@ begin
         ProgramarConfirmacionCombo(Orden, ValorCanonico);
     end;
   end;
+  // El texto ya refleja la opcion elegida en la lista.
+  FGlifoSwatch.ActualizarEditor(AControl);
 end;
 
 procedure TGridArticulosLineas.AtributoComboCloseUp(Sender: TObject);
@@ -1599,13 +1617,9 @@ begin
     begin
       Col.PropertiesClass := TcxComboBoxProperties;
       PropiedadesCombo := TcxComboBoxProperties(Col.Properties);
-      // Seleccion cerrada con lista fija. Con IncrementalFiltering el
-      // desplegable lleva su propia caja de busqueda: lo tecleado filtra
-      // las opciones. Con lsFixedList DevExpress pinta la caja de texto
-      // del editor con OnDrawItem, asi el cuadradito de color se ve
-      // tambien mientras se edita (con lsEditFixedList solo salia en la
-      // celda al abandonarla).
-      PropiedadesCombo.DropDownListStyle := lsFixedList;
+      // Seleccion cerrada: el texto escrito sirve solo para filtrar. El
+      // cuadradito en edicion lo pone el boton-glifo (TGlifoSwatchCombo).
+      PropiedadesCombo.DropDownListStyle := lsEditFixedList;
       PropiedadesCombo.DropDownRows := 15;
       PropiedadesCombo.ImmediateDropDownWhenKeyPressed := True;
       PropiedadesCombo.ImmediatePost := False;
@@ -1623,6 +1637,7 @@ begin
       PropiedadesCombo.OnInitPopup := AtributoComboInitPopup;
       PropiedadesCombo.OnPopup := AtributoComboPopup;
       PropiedadesCombo.OnCloseUp := AtributoComboCloseUp;
+      FGlifoSwatch.ConfigurarBoton(PropiedadesCombo);
     end
     else
     begin
@@ -1713,6 +1728,10 @@ begin
           if FUsarCombosAtributos then
             CargarOpcionesCombo(i, ACodArt);
           Col.Caption := Atribs[i - 1].NombreAtributo;
+          if FUsarCombosAtributos then
+            FGlifoSwatch.MostrarBoton(
+              Col.Properties,
+              EsAtributoConPaleta(FConn, Atribs[i - 1].NombreAtributo));
           Col.Options.Editing := True;
           if CdsEditando then
             FCds.FieldByName(FCampos.AttrNombre[i]).AsString :=
@@ -1721,7 +1740,10 @@ begin
         else
         begin
           if FUsarCombosAtributos then
+          begin
             CargarOpcionesCombo(i, '');
+            FGlifoSwatch.MostrarBoton(Col.Properties, False);
+          end;
           if CdsEditando then
           begin
             FCds.FieldByName(FCampos.AttrNombre[i]).AsString := '';

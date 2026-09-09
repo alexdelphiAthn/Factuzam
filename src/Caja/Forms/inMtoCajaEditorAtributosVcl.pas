@@ -12,7 +12,7 @@ uses
   Vcl.Forms, Vcl.Graphics, Vcl.StdCtrls, cxControls, cxEdit, cxDropDownEdit,
   cxGraphics, cxGridDBTableView, Uni,
   UniDataCaja, inLibParametrosIntf, inLibArticulosAtributosIntf,
-  inLibLogIntf, inLibAtributosPaletaIntf,
+  inLibLogIntf, inLibAtributosPaletaIntf, inLibAtributosPaleta,
   inMtoCajaOpePresentacionVcl;
 
 type
@@ -49,11 +49,16 @@ type
     FOrdenPendiente: Integer;
     FValorPendiente: string;
     FOpciones: array[1..5] of TArray<string>;
+    // Cuadradito de color del editor en linea (boton-glifo).
+    FGlifoSwatch: TGlifoSwatchCombo;
     function BuscarValorValido(AOrden: Integer;
       const AValor: string; out AValorCanonico: string): Boolean;
     function ObtenerOrdenEditor(AControl: TcxControl): Integer;
+    function ObtenerIdVaEditor(AControl: TcxControl): string;
     function EsEditorEnLinea(AControl: TcxControl): Boolean;
     function ObtenerInfoColorOpcion(AControl: TcxControl;
+      const ATexto: string; out AInfo: TInfoBasico): Boolean;
+    function ObtenerColorEditor(AEditor: TcxComboBox;
       const ATexto: string; out AInfo: TInfoBasico): Boolean;
     procedure ProgramarConfirmacion(AOrden: Integer;
       const AValor: string);
@@ -63,6 +68,7 @@ type
   public
     constructor Create(
       const AContexto: TContextoAtributosEditorLineasCajaVcl);
+    destructor Destroy; override;
     procedure IniciarMedicionPopup;
     procedure CargarOpciones(AOrden: Integer;
       const AArticulo: string;
@@ -70,6 +76,12 @@ type
     procedure DibujarOpcion(AControl: TcxCustomComboBox;
       ACanvas: TcxCanvas; AIndex: Integer; const ARect: TRect;
       AState: TOwnerDrawState);
+    procedure ConfigurarBotonSwatch(APropiedades: TcxComboBoxProperties);
+    procedure AjustarBotonSwatch(APropiedades: TcxComboBoxProperties;
+      const ANombreAtributo: string);
+    procedure PrepararSwatchEditor(AEditor: TcxCustomEdit;
+      const AValor: string);
+    procedure ActualizarSwatchEditor(Sender: TObject);
     procedure CerrarPopup(AControl: TcxControl;
       AReason: TcxEditCloseUpReason);
     procedure AbrirPopupEnEntrada(Sender: TObject);
@@ -87,7 +99,7 @@ uses
   inLibMensajesVcl,
   Winapi.Windows, System.SysUtils,
   System.Generics.Collections, Data.DB, Vcl.Dialogs,
-  cxGridTableView, inLibAtributosPaleta,
+  cxGridTableView,
   inLibCajaVentaOperacion, inLibCajaOpePresentacion,
   inLibCajaOpePresentacionIntf, inLibMsgCaja;
 
@@ -96,6 +108,15 @@ constructor TSelectorAtributosEditorLineasCajaVcl.Create(
 begin
   inherited Create;
   FContexto := AContexto;
+  // Al pulsar el cuadradito se abre la lista como con la flecha.
+  FGlifoSwatch := TGlifoSwatchCombo.Create(
+    ObtenerColorEditor, SeleccionarAtributo);
+end;
+
+destructor TSelectorAtributosEditorLineasCajaVcl.Destroy;
+begin
+  FreeAndNil(FGlifoSwatch);
+  inherited;
 end;
 
 procedure TSelectorAtributosEditorLineasCajaVcl.IniciarMedicionPopup;
@@ -197,48 +218,52 @@ begin
      AControl);
 end;
 
-function TSelectorAtributosEditorLineasCajaVcl.ObtenerInfoColorOpcion(
-  AControl: TcxControl; const ATexto: string;
-  out AInfo: TInfoBasico): Boolean;
+// ID_VA (CO, TAL...) del atributo que edita AControl: por el nombre del
+// atributo de la linea en curso o, si aun no esta, por el caption de la
+// columna enfocada.
+function TSelectorAtributosEditorLineasCajaVcl.ObtenerIdVaEditor(
+  AControl: TcxControl): string;
 var
-  Articulo: string;
   Columna: TcxGridColumn;
-  IdValorAtributo: string;
-  Mapa: TDictionary<string, string>;
   NombreAtributo: string;
   Orden: Integer;
 begin
-  AInfo := Default(TInfoBasico);
   Orden := ObtenerOrdenEditor(AControl);
-  Articulo := '';
   NombreAtributo := '';
   if (Orden >= Low(FOpciones)) and
      (Orden <= High(FOpciones)) and
      FContexto.DatosCaja.cdsLineas.Active and
      not FContexto.DatosCaja.cdsLineas.IsEmpty then
-  begin
-    Articulo := FContexto.DatosCaja.cdsLineas.FieldByName(
-      'CODIGO_ART_FACLIN').AsString;
     NombreAtributo := FContexto.DatosCaja.cdsLineas.FieldByName(
       'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
-  end;
   if Trim(NombreAtributo) = '' then
   begin
     Columna := FContexto.VistaLineas.Controller.FocusedColumn;
     if (Columna <> nil) and (Columna.Tag = Orden) then
       NombreAtributo := Columna.Caption;
   end;
-  IdValorAtributo := '';
-  Mapa := ObtenerMapaAtributosGlobal(FContexto.Conexion);
-  if Mapa <> nil then
-    Mapa.TryGetValue(
-      UpperCase(Trim(NombreAtributo)),
-      IdValorAtributo);
+  Result := IdVaDeNombreAtributo(FContexto.Conexion, NombreAtributo);
+end;
+
+function TSelectorAtributosEditorLineasCajaVcl.ObtenerInfoColorOpcion(
+  AControl: TcxControl; const ATexto: string;
+  out AInfo: TInfoBasico): Boolean;
+var
+  Articulo: string;
+  IdValorAtributo: string;
+begin
+  AInfo := Default(TInfoBasico);
+  Articulo := '';
+  if FContexto.DatosCaja.cdsLineas.Active and
+     not FContexto.DatosCaja.cdsLineas.IsEmpty then
+    Articulo := FContexto.DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString;
+  IdValorAtributo := ObtenerIdVaEditor(AControl);
   // Igual que la celda (PintarCeldaSwatchAtributoSiAplica): primero la
   // asignacion del articulo y, si no la hay, la paleta global del
   // atributo. Sin este segundo paso los basicos usados tal cual (CAMEL,
   // NEGRO...) salian sin cuadradito en la lista.
-  Result := (Trim(IdValorAtributo) <> '') and
+  Result := (Trim(IdValorAtributo) <> '') and (Trim(ATexto) <> '') and
     (ObtenerInfoBasicoArticulo(
        FContexto.Conexion,
        Articulo,
@@ -260,11 +285,13 @@ var
   Info: TInfoBasico;
   Texto: string;
 begin
-  // Con lsFixedList DevExpress pinta con este evento la lista, la caja
-  // de texto del editor en linea y, via TcxInplaceComboBoxCustomDrawHelper,
-  // las celdas sin editar cuyo valor este en Items. Esas celdas ya las
-  // resuelve el OnCustomDrawCell del grid con el articulo de su fila:
-  // aqui solo llevan cuadradito el editor y su lista (linea en curso).
+  // Con lsEditFixedList este evento solo pinta la lista desplegable; el
+  // cuadradito del editor lo pone su boton-glifo (TGlifoSwatchCombo).
+  // Si algun dia se pasa a lsFixedList, DevExpress lo usaria tambien
+  // para la caja de texto y, via TcxInplaceComboBoxCustomDrawHelper,
+  // para las celdas sin editar: por eso solo se busca color para el
+  // editor en linea (las celdas las resuelve OnCustomDrawCell con su
+  // fila).
   if (AControl <> nil) and (ACanvas <> nil) and
      (AIndex >= 0) and
      (AIndex < AControl.ActiveProperties.Items.Count) then
@@ -276,6 +303,45 @@ begin
     PintarOpcionComboConSwatch(
       ACanvas, ARect, AState, Texto, HayColor, Info);
   end;
+end;
+
+procedure TSelectorAtributosEditorLineasCajaVcl.ConfigurarBotonSwatch(
+  APropiedades: TcxComboBoxProperties);
+begin
+  // Boton-glifo con el cuadradito a la izquierda del texto; el editor
+  // sigue siendo de texto con autocompletado. Nace oculto y
+  // AjustarBotonSwatch lo muestra solo en el atributo con paleta.
+  FGlifoSwatch.ConfigurarBoton(APropiedades);
+end;
+
+procedure TSelectorAtributosEditorLineasCajaVcl.AjustarBotonSwatch(
+  APropiedades: TcxComboBoxProperties; const ANombreAtributo: string);
+begin
+  // Se decide sobre las propiedades de la columna al montar los
+  // atributos del articulo, nunca sobre el editor activo.
+  FGlifoSwatch.MostrarBoton(
+    APropiedades,
+    EsAtributoConPaleta(FContexto.Conexion, ANombreAtributo));
+end;
+
+procedure TSelectorAtributosEditorLineasCajaVcl.PrepararSwatchEditor(
+  AEditor: TcxCustomEdit; const AValor: string);
+begin
+  // OnInitEdit: color del valor actual de la celda.
+  FGlifoSwatch.PrepararEditor(AEditor, AValor);
+end;
+
+procedure TSelectorAtributosEditorLineasCajaVcl.ActualizarSwatchEditor(
+  Sender: TObject);
+begin
+  FGlifoSwatch.ActualizarEditor(Sender);
+end;
+
+function TSelectorAtributosEditorLineasCajaVcl.ObtenerColorEditor(
+  AEditor: TcxComboBox; const ATexto: string;
+  out AInfo: TInfoBasico): Boolean;
+begin
+  Result := ObtenerInfoColorOpcion(AEditor, ATexto, AInfo);
 end;
 
 procedure TSelectorAtributosEditorLineasCajaVcl.CerrarPopup(
@@ -310,6 +376,8 @@ begin
         ProgramarConfirmacion(Orden, ValorCanonico);
     end;
   end;
+  // El texto ya refleja la opcion elegida en la lista.
+  ActualizarSwatchEditor(AControl);
 end;
 
 procedure TSelectorAtributosEditorLineasCajaVcl.AbrirPopupEnEntrada(

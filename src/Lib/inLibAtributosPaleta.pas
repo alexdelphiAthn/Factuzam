@@ -22,7 +22,7 @@ uses
   System.Types, System.Generics.Collections, Data.DB,
   Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   Uni,
-  cxGraphics,
+  cxGraphics, cxEdit, cxDropDownEdit,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes,
   inLibAtributosPaletaIntf;
 
@@ -90,6 +90,14 @@ function PintarCeldaConTextoColor(ACanvas: TcxCanvas;
                                   AViewInfo: TcxGridTableDataCellViewInfo;
                                   const AInfo: TInfoBasico): Boolean;
 
+// Pinta solo el cuadradito de AInfo centrado en ARect, con lado ALado o
+// el que quepa. El fondo lo pone quien llama. Lo usan la lista del combo
+// (PintarOpcionComboConSwatch) y el boton-glifo del editor de Caja.
+procedure PintarSwatchEnCanvas(ACanvas: TcxCanvas;
+                               const ARect: TRect;
+                               const AInfo: TInfoBasico;
+                               ALado: Integer);
+
 // Pinta una opcion de un TcxComboBox desde OnDrawItem: cuadradito de
 // paleta delante del texto si AHayColor, o solo el texto con el mismo
 // margen. Con DropDownListStyle = lsFixedList DevExpress usa el mismo
@@ -155,6 +163,52 @@ const
 // diccionario global, o '' si no existe.
 function IdVaDeNombreAtributo(AConexion: TUniConnection;
                               const ANombre: string): string;
+
+// True si ANombre es el atributo de color, el unico con paleta (HEX).
+function EsAtributoConPaleta(AConexion: TUniConnection;
+                             const ANombre: string): Boolean;
+
+type
+  // Color de paleta para el texto actual de un editor de atributo. Lo
+  // aporta el host, que sabe el articulo y el atributo de la columna.
+  TResolverColorEditor = function(AEditor: TcxComboBox;
+    const ATexto: string; out AInfo: TInfoBasico): Boolean of object;
+
+  // Cuadradito de color dentro de un TcxComboBox en linea que sigue
+  // admitiendo teclear (lsEditFixedList). DevExpress solo pinta la caja
+  // de texto con OnDrawItem en lsFixedList, asi que el hueco lo reserva
+  // un boton transparente a la izquierda del texto y lo pinta esta clase
+  // desde OnDrawButton del ViewInfo del editor. Al teclear no se toca
+  // ninguna propiedad del editor (PropertiesChanged resincronizaria el
+  // texto y perderia lo escrito): solo se guarda el color y se repinta.
+  // Uso: ConfigurarBoton al crear la columna, MostrarBoton al asignarle
+  // el atributo, PrepararEditor en OnInitEdit y ActualizarEditor al
+  // cerrar la lista. OnChange y OnButtonClick del combo quedan
+  // enganchados por ConfigurarBoton.
+  TGlifoSwatchCombo = class
+  private
+    FAlPulsar: TcxEditButtonClickEvent;
+    FIndiceBoton: Integer;
+    FResolver: TResolverColorEditor;
+    FSwatch: TInfoBasico;
+    procedure Actualizar(AEditor: TcxComboBox; const ATexto: string);
+    procedure CambiarTexto(Sender: TObject);
+    procedure DibujarBoton(Sender: TcxEditButtonViewInfo;
+      ACanvas: TcxCanvas; var AHandled: Boolean);
+    procedure PulsarBoton(Sender: TObject; AButtonIndex: Integer);
+  public
+    // AAlPulsar: que hacer al pulsar el cuadradito; nil = abrir la lista.
+    constructor Create(const AResolver: TResolverColorEditor;
+      const AAlPulsar: TcxEditButtonClickEvent);
+    class function IndiceBoton(
+      APropiedades: TcxCustomEditProperties): Integer;
+    procedure ConfigurarBoton(APropiedades: TcxComboBoxProperties);
+    procedure MostrarBoton(APropiedades: TcxCustomEditProperties;
+      AVisible: Boolean);
+    procedure PrepararEditor(AEditor: TcxCustomEdit;
+      const AValor: string);
+    procedure ActualizarEditor(AEditor: TObject);
+  end;
 
 // Para celdas cuyo texto es "ARTICULO/COLOR[/TALLA...]" (rejillas de
 // stock) o directamente un color: pinta el cuadradito del COLOR (primero
@@ -455,6 +509,42 @@ begin
   end;
 end;
 
+procedure PintarSwatchEnCanvas(ACanvas: TcxCanvas;
+                               const ARect: TRect;
+                               const AInfo: TInfoBasico;
+                               ALado: Integer);
+const
+  LADO_MINIMO = 6;
+var
+  iLado: Integer;
+  Cuadrado: TRect;
+begin
+  if (ACanvas <> nil) and AInfo.EsValido then
+  begin
+    iLado := ALado;
+    if iLado > ARect.Width then
+      iLado := ARect.Width;
+    if iLado > ARect.Height then
+      iLado := ARect.Height;
+    if iLado < LADO_MINIMO then
+      iLado := LADO_MINIMO;
+    Cuadrado.Left := ARect.Left + (ARect.Width - iLado) div 2;
+    Cuadrado.Top := ARect.Top + (ARect.Height - iLado) div 2;
+    Cuadrado.Right := Cuadrado.Left + iLado;
+    Cuadrado.Bottom := Cuadrado.Top + iLado;
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := AInfo.Color;
+    ACanvas.FillRect(Cuadrado);
+    // Borde con el pen: FrameRect usa el brush y en colores claros como
+    // BLANCO desapareceria.
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.Pen.Color := clBlack;
+    ACanvas.Pen.Width := 1;
+    ACanvas.Rectangle(Cuadrado);
+    ACanvas.Brush.Style := bsSolid;
+  end;
+end;
+
 procedure PintarOpcionComboConSwatch(ACanvas: TcxCanvas;
                                      const ARect: TRect;
                                      AState: TOwnerDrawState;
@@ -509,14 +599,7 @@ begin
                        iTop,
                        ARect.Left + iMargen + iLado,
                        iTop + iLado);
-      ACanvas.Brush.Color := AInfo.Color;
-      ACanvas.FillRect(Cuadrado);
-      // Borde con el pen: FrameRect usa el brush y en colores claros
-      // como BLANCO desapareceria.
-      ACanvas.Brush.Style := bsClear;
-      ACanvas.Pen.Color := clBlack;
-      ACanvas.Pen.Width := 1;
-      ACanvas.Rectangle(Cuadrado);
+      PintarSwatchEnCanvas(ACanvas, Cuadrado, AInfo, iLado);
       TxtRect.Left := Cuadrado.Right + iHueco;
     end;
     ACanvas.Brush.Style := bsClear;
@@ -675,6 +758,154 @@ begin
     if Result then
       Result := PintarCeldaConCuadradoColor(
         ACanvas, AViewInfo, Info, sTexto);
+  end;
+end;
+
+function EsAtributoConPaleta(AConexion: TUniConnection;
+                             const ANombre: string): Boolean;
+begin
+  Result := SameText(
+    IdVaDeNombreAtributo(AConexion, ANombre), ID_VA_COLOR);
+end;
+
+{ TGlifoSwatchCombo }
+
+const
+  ETIQUETA_BOTON_SWATCH = 7301;
+  ANCHO_BOTON_SWATCH = 22;
+  LADO_SWATCH_EDITOR = 14;
+
+constructor TGlifoSwatchCombo.Create(
+  const AResolver: TResolverColorEditor;
+  const AAlPulsar: TcxEditButtonClickEvent);
+begin
+  inherited Create;
+  FResolver := AResolver;
+  FAlPulsar := AAlPulsar;
+  FIndiceBoton := -1;
+end;
+
+class function TGlifoSwatchCombo.IndiceBoton(
+  APropiedades: TcxCustomEditProperties): Integer;
+var
+  I: Integer;
+begin
+  Result := -1;
+  if APropiedades <> nil then
+    for I := 0 to APropiedades.Buttons.Count - 1 do
+      if (Result < 0) and
+         (APropiedades.Buttons[I].Tag = ETIQUETA_BOTON_SWATCH) then
+        Result := I;
+end;
+
+procedure TGlifoSwatchCombo.ConfigurarBoton(
+  APropiedades: TcxComboBoxProperties);
+var
+  Boton: TcxEditButton;
+begin
+  // Transparente y sin resalte: solo reserva el hueco. Nace oculto y
+  // MostrarBoton lo ensena en el atributo con paleta.
+  if (APropiedades <> nil) and (IndiceBoton(APropiedades) < 0) then
+  begin
+    Boton := APropiedades.Buttons.Add;
+    Boton.Kind := bkGlyph;
+    Boton.Mode := TcxEditButtonMode.Glyph;
+    Boton.Transparent := True;
+    Boton.LeftAlignment := True;
+    Boton.HotTrackMode := TcxEditButtonHotTrackMode.None;
+    Boton.Width := ANCHO_BOTON_SWATCH;
+    Boton.Tag := ETIQUETA_BOTON_SWATCH;
+    Boton.Visible := False;
+    APropiedades.OnButtonClick := PulsarBoton;
+    APropiedades.OnChange := CambiarTexto;
+  end;
+end;
+
+procedure TGlifoSwatchCombo.MostrarBoton(
+  APropiedades: TcxCustomEditProperties; AVisible: Boolean);
+var
+  Indice: Integer;
+begin
+  // Sobre las propiedades de la columna, nunca sobre el editor activo.
+  Indice := IndiceBoton(APropiedades);
+  if (Indice >= 0) and
+     (APropiedades.Buttons[Indice].Visible <> AVisible) then
+    APropiedades.Buttons[Indice].Visible := AVisible;
+end;
+
+procedure TGlifoSwatchCombo.PrepararEditor(AEditor: TcxCustomEdit;
+  const AValor: string);
+var
+  Combo: TcxComboBox;
+begin
+  // OnInitEdit: el editor ya tiene copiadas las propiedades de la columna.
+  FIndiceBoton := -1;
+  FSwatch := Default(TInfoBasico);
+  if AEditor is TcxComboBox then
+  begin
+    Combo := TcxComboBox(AEditor);
+    FIndiceBoton := IndiceBoton(Combo.Properties);
+    Combo.ViewInfo.OnDrawButton := DibujarBoton;
+    Actualizar(Combo, AValor);
+  end;
+end;
+
+procedure TGlifoSwatchCombo.Actualizar(AEditor: TcxComboBox;
+  const ATexto: string);
+var
+  Info: TInfoBasico;
+begin
+  // Con lsEditFixedList el texto ya llega autocompletado con la opcion
+  // ("N" -> "NEGRO"). Solo se repinta el editor si cambia el color.
+  Info := Default(TInfoBasico);
+  if (FIndiceBoton >= 0) and Assigned(FResolver) then
+    FResolver(AEditor, Trim(ATexto), Info);
+  if (Info.EsValido <> FSwatch.EsValido) or
+     (Info.Color <> FSwatch.Color) then
+  begin
+    FSwatch := Info;
+    AEditor.Invalidate;
+  end;
+end;
+
+procedure TGlifoSwatchCombo.ActualizarEditor(AEditor: TObject);
+begin
+  if AEditor is TcxComboBox then
+    Actualizar(TcxComboBox(AEditor), TcxComboBox(AEditor).Text);
+end;
+
+procedure TGlifoSwatchCombo.CambiarTexto(Sender: TObject);
+begin
+  ActualizarEditor(Sender);
+end;
+
+procedure TGlifoSwatchCombo.DibujarBoton(Sender: TcxEditButtonViewInfo;
+  ACanvas: TcxCanvas; var AHandled: Boolean);
+begin
+  // DevExpress llama con ACanvas = nil solo para saber si el boton se
+  // pinta a medida. El fondo del editor ya esta: solo va el cuadradito.
+  if (Sender <> nil) and (FIndiceBoton >= 0) and
+     (Sender.ButtonIndex = FIndiceBoton) then
+  begin
+    AHandled := True;
+    if (ACanvas <> nil) and FSwatch.EsValido then
+      PintarSwatchEnCanvas(
+        ACanvas, Sender.Bounds, FSwatch, LADO_SWATCH_EDITOR);
+  end;
+end;
+
+procedure TGlifoSwatchCombo.PulsarBoton(Sender: TObject;
+  AButtonIndex: Integer);
+begin
+  // Clic sobre el cuadradito: abre la lista igual que la flecha, salvo
+  // que el host prefiera otra cosa.
+  if (Sender is TcxComboBox) and (AButtonIndex >= 0) and
+     (AButtonIndex = IndiceBoton(TcxComboBox(Sender).Properties)) then
+  begin
+    if Assigned(FAlPulsar) then
+      FAlPulsar(Sender, AButtonIndex)
+    else
+      TcxComboBox(Sender).DroppedDown := True;
   end;
 end;
 

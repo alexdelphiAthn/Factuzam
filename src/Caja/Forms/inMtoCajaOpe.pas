@@ -2084,12 +2084,11 @@ begin
       Columna.Width := 80;
       Columna.PropertiesClass := TcxComboBoxProperties;
       Propiedades := TcxComboBoxProperties(Columna.Properties);
-      // Seleccion cerrada con lista fija: teclear salta a la opcion que
-      // empieza por lo escrito. Con lsFixedList DevExpress pinta la caja
-      // de texto del editor con OnDrawItem, asi el cuadradito de color
-      // se ve tambien mientras se edita (con lsEditFixedList solo salia
-      // en la celda al abandonarla).
-      Propiedades.DropDownListStyle := lsFixedList;
+      // Seleccion cerrada, pero se puede teclear: el texto se autocompleta
+      // con la opcion que empieza por lo escrito. El cuadradito de color
+      // del editor lo pone el boton-glifo (ConfigurarBotonSwatch): con
+      // lsEditFixedList DevExpress no deja pintar la caja de texto.
+      Propiedades.DropDownListStyle := lsEditFixedList;
       Propiedades.DropDownRows := 15;
       Propiedades.ImmediateDropDownWhenKeyPressed := True;
       Propiedades.ImmediatePost := False;
@@ -2105,6 +2104,8 @@ begin
       Propiedades.OnDrawItem := FSelectorAtributos.DibujarOpcion;
       Propiedades.OnInitPopup := FControles.AlAbrirComboAtributo;
       Propiedades.OnCloseUp := FControles.AlCerrarComboAtributo;
+      // Boton-glifo con el cuadradito; engancha OnChange y OnButtonClick.
+      FSelectorAtributos.ConfigurarBotonSwatch(Propiedades);
       Columna.Index := IndiceBase + I;
     end;
   finally
@@ -2359,8 +2360,7 @@ begin
   // Estilo Excel: al entrar en una celda, teclear sustituye su contenido.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
-  // El combo es de lista fija: teclear salta a la opcion que empieza
-  // por lo escrito.
+  // El combo es de seleccion fija, aunque admite escribir para filtrar.
   // Si la celda esta vacia se abre despues de que cxGrid lo haya parentado.
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin
@@ -2379,6 +2379,8 @@ begin
         Combo.OnEnter := FSelectorAtributos.AbrirPopupEnEntrada
       else
         Combo.OnEnter := nil;
+      FSelectorAtributos.PrepararSwatchEditor(
+        Combo, ValorAtributoActual);
     end;
   end;
   if AItem = tvArticulo then
@@ -2725,6 +2727,8 @@ begin
               AArticulo,
               Propiedades);
             Columna.Caption := NombresAtributos[I - 1];
+            FSelectorAtributos.AjustarBotonSwatch(
+              Propiedades, NombresAtributos[I - 1]);
             Columna.Visible := True;
             Columna.Options.Editing := True;
             if DatosCaja.cdsLineas.Active and
@@ -2744,6 +2748,7 @@ begin
             Columna.Visible := False;
             Columna.Options.Editing := False;
             Columna.Caption := '-';
+            FSelectorAtributos.AjustarBotonSwatch(Propiedades, '');
           end;
         end;
       end;
