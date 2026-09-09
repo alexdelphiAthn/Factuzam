@@ -26,7 +26,7 @@ uses
   cxEdit, dxSkinsForm, cxStyles, cxClasses, Vcl.ExtCtrls, cxLabel,
   Vcl.Menus, cxPC, cxTextEdit, cxMemo, inMtoFrmBase,
   cxLocalization, Vcl.Buttons,
-  inLibUnitForm, JvMenus,
+  inLibUnitForm, JvMenus, inLibMenuBarraIconos,
   System.UITypes, Uni, dxShellDialogs, dxSkinsCore, dxSkinBlue,
   JvComponentBase, JvEnterTab, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
   dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
@@ -289,6 +289,7 @@ type
     FInyeccionConfiguracion: TInyeccionConfiguracionRaiz;
     FCoordinadorOperaciones: ICasoUsoCopiasSeguridad;
     FPresentacionInicio: TPresentacionInicioPrincipal;
+    FPainterMenu: TJvMenuBarIconPainter;
     // Handlers de aplicacion (OnException/OnIdle/OnMessage) registrados via
     // TApplicationEvents: una asignacion directa Application.OnX queda
     // anulada en cuanto cualquier form crea su propio TApplicationEvents
@@ -552,13 +553,16 @@ end;
 procedure TfrmMtoPrincipal.FormCreate(Sender: TObject);
 begin
   inherited;
+  // Painter propio: JVCL no dibuja iconos en los items de la barra.
+  // Asignar ItemPainter ya pone Style := msItemPainter.
+  FPainterMenu := TJvMenuBarIconPainter.Create(Self);
+  jvMnMenuPrin.ItemPainter := FPainterMenu;
+
   icoMenu.Images.Clear;
   CargarIconosDesdeRecursos(icoMenu, jvMnMenuPrin.Items);
-
   vilMenu.ImageCollection := icoMenu;
   vilMenu.AutoFill := True;
   vilMenu.SetSize(16, 16);
-
   jvMnMenuPrin.Images := vilMenu;
   AsignarIconosMenu(jvMnMenuPrin.Items, icoMenu);
 end;
