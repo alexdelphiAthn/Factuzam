@@ -34,7 +34,8 @@ uses
   inMtoFrmBase, inLibFacturas, inLibFaseCobro, inLibCajaTipos,
   inLibFaseCobroPersistenciaIntf,
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage,
-  inLibInformesCajaPersistenciaIntf, inLibCajaPantallaInyeccion;
+  inLibInformesCajaPersistenciaIntf, inLibCajaPantallaInyeccion,
+  JvComponentBase, JvEnterTab, cxLocalization;
 
 type
   TTipoImpresionTicket = inLibCajaTipos.TTipoImpresionVenta;

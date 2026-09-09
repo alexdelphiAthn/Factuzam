@@ -1,23 +1,17 @@
-﻿inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
-  Left = 0
-  Top = 0
+inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
   BorderIcons = []
   BorderStyle = bsDialog
   Caption = 'Fase de cobro'
   ClientHeight = 680
   ClientWidth = 834
-  Color = clBtnFace
-  Font.Charset = DEFAULT_CHARSET
-  Font.Color = clWindowText
   Font.Height = -16
-  Font.Name = 'DejaVu Sans'
-  Font.Style = []
   Position = poScreenCenter
-  OnCreate = FormCreate
   OnDestroy = FormDestroy
   OnShow = FormShow
-  TextHeight = 18
-  object pnlPrincipal: TPanel
+  ExplicitWidth = 846
+  ExplicitHeight = 718
+  TextHeight = 20
+  object pnlPrincipal: TPanel [0]
     Left = 65
     Top = 0
     Width = 769
@@ -27,8 +21,8 @@
     Color = clCream
     ParentBackground = False
     TabOrder = 0
-    ExplicitWidth = 767
-    ExplicitHeight = 672
+    ExplicitWidth = 765
+    ExplicitHeight = 679
     object pnlIzquierdo: TPanel
       Left = 0
       Top = 0
@@ -39,13 +33,15 @@
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = -23
-      Font.Name = 'DejaVu Sans'
+      Font.Name = 'Source Sans 3'
+      Font.Pitch = fpFixed
       Font.Style = [fsBold]
+      Font.Quality = fqClearTypeNatural
       ParentBackground = False
       ParentFont = False
       TabOrder = 0
-      ExplicitWidth = 519
-      ExplicitHeight = 672
+      ExplicitWidth = 517
+      ExplicitHeight = 679
       object pnlContenedor: TPanel
         Left = 0
         Top = 0
@@ -53,8 +49,8 @@
         Height = 680
         Align = alClient
         TabOrder = 0
-        ExplicitWidth = 519
-        ExplicitHeight = 672
+        ExplicitWidth = 517
+        ExplicitHeight = 679
         object pnlTotales: TPanel
           Left = 6
           Top = 0
@@ -71,8 +67,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 0
           end
@@ -84,8 +82,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 1
           end
@@ -97,8 +97,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 2
           end
@@ -110,8 +112,10 @@
             Style.Font.Charset = ANSI_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 3
           end
@@ -209,8 +213,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 0
           end
@@ -222,8 +228,10 @@
             Style.Font.Charset = ANSI_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 1
           end
@@ -268,8 +276,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 0
           end
@@ -281,8 +291,10 @@
             Style.Font.Charset = ANSI_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 1
           end
@@ -384,8 +396,8 @@
           BevelOuter = bvNone
           ParentBackground = False
           TabOrder = 4
-          ExplicitTop = 591
-          ExplicitWidth = 517
+          ExplicitTop = 598
+          ExplicitWidth = 515
           object lblPendienteCobroAlt: TcxLabel
             Left = 15
             Top = 43
@@ -395,8 +407,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 0
           end
@@ -421,8 +435,10 @@
             Style.Font.Charset = DEFAULT_CHARSET
             Style.Font.Color = clNavy
             Style.Font.Height = -23
-            Style.Font.Name = 'DejaVu Sans'
+            Style.Font.Name = 'Source Sans 3'
+            Style.Font.Pitch = fpFixed
             Style.Font.Style = [fsBold]
+            Style.Font.Quality = fqClearTypeNatural
             Style.IsFontAssigned = True
             TabOrder = 2
           end
@@ -451,8 +467,8 @@
       Color = clCream
       ParentBackground = False
       TabOrder = 1
-      ExplicitLeft = 519
-      ExplicitHeight = 672
+      ExplicitLeft = 517
+      ExplicitHeight = 679
       object pnlBotones: TPanel
         Left = 0
         Top = 0
@@ -463,12 +479,14 @@
         Font.Charset = DEFAULT_CHARSET
         Font.Color = clWindowText
         Font.Height = -23
-        Font.Name = 'DejaVu Sans'
+        Font.Name = 'Source Sans 3'
+        Font.Pitch = fpFixed
         Font.Style = []
+        Font.Quality = fqClearTypeNatural
         ParentBackground = False
         ParentFont = False
         TabOrder = 0
-        ExplicitHeight = 476
+        ExplicitHeight = 483
         object btnSinTicket: TcxButton
           Left = 89
           Top = 0
@@ -486,8 +504,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnSinTicketClick
         end
@@ -507,8 +527,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnSinTicketClick
         end
@@ -529,8 +551,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnConTicketClick
         end
@@ -550,8 +574,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnConTicketClick
         end
@@ -572,8 +598,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnSinPreciosClick
         end
@@ -593,8 +621,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnSinPreciosClick
         end
@@ -615,8 +645,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnDepositoClick
         end
@@ -636,8 +668,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnF7Click
         end
@@ -656,8 +690,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnFacturaClick
         end
@@ -677,8 +713,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnFacturaClick
         end
@@ -698,8 +736,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnF6Click
         end
@@ -720,8 +760,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnBuscarValeClick
         end
@@ -742,8 +784,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnF2: TcxButton
@@ -762,8 +806,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
         end
         object btnBuscarT: TcxButton
@@ -783,8 +829,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnBuscarTClick
         end
@@ -804,8 +852,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnF3Click
         end
@@ -825,8 +875,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clWindowText
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnAtrasClick
         end
@@ -845,8 +897,10 @@
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clNavy
           Font.Height = -23
-          Font.Name = 'DejaVu Sans'
+          Font.Name = 'Source Sans 3'
+          Font.Pitch = fpFixed
           Font.Style = [fsBold, fsUnderline]
+          Font.Quality = fqClearTypeNatural
           ParentFont = False
           OnClick = btnESCClick
         end
@@ -860,7 +914,7 @@
         BevelOuter = bvNone
         ParentBackground = False
         TabOrder = 1
-        ExplicitTop = 476
+        ExplicitTop = 483
         object imgEnviarEmail: TImage
           Left = 31
           Top = 153
@@ -877,8 +931,10 @@
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clNavy
           Style.Font.Height = -27
-          Style.Font.Name = 'DejaVu Sans'
+          Style.Font.Name = 'Source Sans 3'
+          Style.Font.Pitch = fpFixed
           Style.Font.Style = []
+          Style.Font.Quality = fqClearTypeNatural
           Style.IsFontAssigned = True
           TabOrder = 0
         end
@@ -895,8 +951,10 @@
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clWindowText
           Style.Font.Height = -23
-          Style.Font.Name = 'DejaVu Sans'
+          Style.Font.Name = 'Source Sans 3'
+          Style.Font.Pitch = fpFixed
           Style.Font.Style = []
+          Style.Font.Quality = fqClearTypeNatural
           Style.IsFontAssigned = True
           TabOrder = 1
           Text = '00000000'
@@ -909,8 +967,10 @@
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clWindowText
           Style.Font.Height = -23
-          Style.Font.Name = 'DejaVu Sans'
+          Style.Font.Name = 'Source Sans 3'
+          Style.Font.Pitch = fpFixed
           Style.Font.Style = []
+          Style.Font.Quality = fqClearTypeNatural
           Style.IsFontAssigned = True
           TabOrder = 2
           Text = 'cbbSERIE_FAC'
@@ -925,8 +985,10 @@
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clNavy
           Style.Font.Height = -17
-          Style.Font.Name = 'DejaVu Sans'
+          Style.Font.Name = 'Source Sans 3'
+          Style.Font.Pitch = fpFixed
           Style.Font.Style = []
+          Style.Font.Quality = fqClearTypeNatural
           Style.IsFontAssigned = True
           TabOrder = 3
           Transparent = True
@@ -934,14 +996,14 @@
       end
     end
   end
-  object pnlLogoLeft: TPanel
+  object pnlLogoLeft: TPanel [1]
     Left = 0
     Top = 0
     Width = 65
     Height = 680
     Align = alLeft
     TabOrder = 1
-    ExplicitHeight = 672
+    ExplicitHeight = 679
     object cxImage1: TcxImage
       Left = -1
       Top = 141
