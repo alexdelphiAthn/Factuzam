@@ -56,7 +56,8 @@ type
       AOwner: TComponent;
       const APermisos: IPermisosAplicacion): ITraspasoCaja;
     procedure MostrarHistoricoSolicitudesTraspaso(
-      const ATitulo: string);
+      const ATitulo: string;
+      AIconoPestana: Integer = -1);
     procedure MostrarMenu(const APermisos: IPermisosAplicacion);
     procedure MostrarParametros;
     procedure MostrarInformeOperacionesVenta;
@@ -236,7 +237,8 @@ begin
 end;
 
 procedure TInyeccionCajaRaiz.MostrarHistoricoSolicitudesTraspaso(
-  const ATitulo: string);
+  const ATitulo: string;
+  AIconoPestana: Integer);
 const
   CLAVE_HISTORICO = 'CajaSolicitudesTraspasoHist';
 var
@@ -271,7 +273,8 @@ begin
       Mantenimiento,
       ATitulo,
       CLAVE_HISTORICO,
-      True);
+      True,
+      AIconoPestana);
     Mantenimiento.AbrirTablaPrincipal(False);
   end;
 end;

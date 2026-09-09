@@ -58,7 +58,7 @@ uses
   inLibGestorGuiasGridMto, inLibGestorTareasMto,
   inLibGestorArticulosMto, inLibInteraccionDatosIntf,
   inLibMtoGenAplicacionIntf,
-  inMtoGenPresentacionFiltrosVcl, dxBarBuiltInMenu;
+  inMtoGenPresentacionFiltrosVcl;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);

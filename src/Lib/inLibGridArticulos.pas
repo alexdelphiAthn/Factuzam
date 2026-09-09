@@ -1233,59 +1233,42 @@ begin
     if Mapa <> nil then
       Mapa.TryGetValue(
         UpperCase(Trim(NombreAtributo)), IdValorAtributo);
-    Result := ObtenerInfoBasicoArticulo(
-      FConn, Articulo, IdValorAtributo, ATexto, AInfo);
+    // Igual que la celda (PintarCeldaSwatchAtributoSiAplica): primero
+    // la asignacion del articulo y, si no la hay, la paleta global del
+    // atributo. Sin este segundo paso los basicos usados tal cual
+    // (NEGRO, MARRON...) salian sin cuadradito en la lista.
+    Result := (Trim(IdValorAtributo) <> '') and
+      (ObtenerInfoBasicoArticulo(
+         FConn, Articulo, IdValorAtributo, ATexto, AInfo) or
+       ObtenerInfoBasico(FConn, IdValorAtributo, ATexto, AInfo));
   end;
 end;
 
 procedure TGridArticulosLineas.AtributoComboDrawItem(
   AControl: TcxCustomComboBox; ACanvas: TcxCanvas;
   AIndex: Integer; const ARect: TRect; AState: TOwnerDrawState);
-const
-  HUECO_TEXTO = 8;
-  LADO = 12;
-  MARGEN_IZQUIERDO = 6;
 var
   HayColor: Boolean;
   Info: TInfoBasico;
-  RectanguloColor: TRect;
-  RectanguloTexto: TRect;
   Texto: string;
-  TopColor: Integer;
 begin
+  // Con lsFixedList DevExpress pinta con este evento la lista, la caja de
+  // texto del editor en linea y, via TcxInplaceComboBoxCustomDrawHelper,
+  // las celdas sin editar cuyo valor este en Items. Esas celdas las
+  // resuelve el OnCustomDrawCell del host con el articulo de su fila:
+  // aqui solo llevan cuadradito el editor y su lista (linea en curso).
   if (AControl <> nil) and (ACanvas <> nil) and
      (AIndex >= 0) and
      (AIndex < AControl.ActiveProperties.Items.Count) then
   begin
     Texto := AControl.ActiveProperties.Items[AIndex];
-    ACanvas.FillRect(ARect);
-    HayColor := ObtenerInfoColorCombo(
-      ObtenerOrdenEditorCombo(AControl), Texto, Info);
-    RectanguloTexto := Rect(
-      ARect.Left + MARGEN_IZQUIERDO,
-      ARect.Top, ARect.Right, ARect.Bottom);
-    if HayColor then
-    begin
-      TopColor := ARect.Top;
-      if ARect.Height > LADO then
-        TopColor := ARect.Top + (ARect.Height - LADO) div 2;
-      RectanguloColor := Rect(
-        ARect.Left + MARGEN_IZQUIERDO, TopColor,
-        ARect.Left + MARGEN_IZQUIERDO + LADO, TopColor + LADO);
-      ACanvas.Brush.Style := bsSolid;
-      ACanvas.Brush.Color := Info.Color;
-      ACanvas.FillRect(RectanguloColor);
-      ACanvas.Brush.Style := bsClear;
-      ACanvas.Pen.Color := clBlack;
-      ACanvas.Pen.Width := 1;
-      ACanvas.Rectangle(RectanguloColor);
-      RectanguloTexto.Left := RectanguloColor.Right + HUECO_TEXTO;
-    end;
-    ACanvas.Brush.Style := bsClear;
-    ACanvas.DrawText(
-      Texto, RectanguloTexto,
-      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
-    ACanvas.Brush.Style := bsSolid;
+    Info := Default(TInfoBasico);
+    HayColor := Assigned(FView) and
+      (FView.Controller.EditingController.Edit = AControl) and
+      ObtenerInfoColorCombo(
+        ObtenerOrdenEditorCombo(AControl), Texto, Info);
+    PintarOpcionComboConSwatch(
+      ACanvas, ARect, AState, Texto, HayColor, Info);
   end;
 end;
 
@@ -1616,8 +1599,13 @@ begin
     begin
       Col.PropertiesClass := TcxComboBoxProperties;
       PropiedadesCombo := TcxComboBoxProperties(Col.Properties);
-      // Seleccion cerrada: el texto escrito sirve solo para filtrar.
-      PropiedadesCombo.DropDownListStyle := lsEditFixedList;
+      // Seleccion cerrada con lista fija. Con IncrementalFiltering el
+      // desplegable lleva su propia caja de busqueda: lo tecleado filtra
+      // las opciones. Con lsFixedList DevExpress pinta la caja de texto
+      // del editor con OnDrawItem, asi el cuadradito de color se ve
+      // tambien mientras se edita (con lsEditFixedList solo salia en la
+      // celda al abandonarla).
+      PropiedadesCombo.DropDownListStyle := lsFixedList;
       PropiedadesCombo.DropDownRows := 15;
       PropiedadesCombo.ImmediateDropDownWhenKeyPressed := True;
       PropiedadesCombo.ImmediatePost := False;

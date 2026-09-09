@@ -41,11 +41,14 @@ type
 
     constructor Create(APageControl: TcxPageControl); reintroduce;
     destructor Destroy; override;
+    // AIconoPestana: indice, en las Images del cxPageControl, del
+    // icono que se dibuja en la pestania; -1 = sin icono.
     procedure EmbedForm(AForm: TForm;
                          const AMantenimiento: IMantenimientoEmbebido;
                          const ATitle: string;
                          const AClave: string = '';
-                         ASelect: Boolean = True);
+                         ASelect: Boolean = True;
+                         AIconoPestana: Integer = -1);
     function FindFormByCaption(const ATitle: string): TForm;
     // Ventana registrada con esa clave; nil si no hay ninguna.
     function FormPorClave(const AClave: string): TForm;
@@ -91,7 +94,8 @@ procedure TEmbeddedFormManager.EmbedForm(AForm: TForm;
                                            IMantenimientoEmbebido;
                                          const ATitle: string;
                                          const AClave: string = '';
-                                         ASelect: Boolean = True);
+                                         ASelect: Boolean = True;
+                                         AIconoPestana: Integer = -1);
 var
   NewTab: TcxTabSheet;
 begin
@@ -104,6 +108,7 @@ begin
     NewTab := TcxTabSheet.Create(FPageControl);
     NewTab.PageControl := FPageControl;
     NewTab.Caption := ATitle + ' ';
+    NewTab.ImageIndex := AIconoPestana;
     AForm.Parent := NewTab;
     AForm.SetBounds(0, 0, NewTab.ClientWidth, NewTab.ClientHeight);
     AForm.Align := alClient;

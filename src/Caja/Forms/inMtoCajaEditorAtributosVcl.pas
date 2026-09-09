@@ -12,7 +12,8 @@ uses
   Vcl.Forms, Vcl.Graphics, Vcl.StdCtrls, cxControls, cxEdit, cxDropDownEdit,
   cxGraphics, cxGridDBTableView, Uni,
   UniDataCaja, inLibParametrosIntf, inLibArticulosAtributosIntf,
-  inLibLogIntf, inMtoCajaOpePresentacionVcl;
+  inLibLogIntf, inLibAtributosPaletaIntf,
+  inMtoCajaOpePresentacionVcl;
 
 type
   TAccionSkuEditorCajaVcl = reference to procedure(const ASku: string);
@@ -51,6 +52,9 @@ type
     function BuscarValorValido(AOrden: Integer;
       const AValor: string; out AValorCanonico: string): Boolean;
     function ObtenerOrdenEditor(AControl: TcxControl): Integer;
+    function EsEditorEnLinea(AControl: TcxControl): Boolean;
+    function ObtenerInfoColorOpcion(AControl: TcxControl;
+      const ATexto: string; out AInfo: TInfoBasico): Boolean;
     procedure ProgramarConfirmacion(AOrden: Integer;
       const AValor: string);
     procedure RegistrarValor(AOrden: Integer;
@@ -185,100 +189,92 @@ begin
   end;
 end;
 
-procedure TSelectorAtributosEditorLineasCajaVcl.DibujarOpcion(
-  AControl: TcxCustomComboBox; ACanvas: TcxCanvas;
-  AIndex: Integer; const ARect: TRect; AState: TOwnerDrawState);
-const
-  LADO = 12;
-  MARGEN_IZQUIERDO = 6;
-  HUECO_TEXTO = 8;
+function TSelectorAtributosEditorLineasCajaVcl.EsEditorEnLinea(
+  AControl: TcxControl): Boolean;
+begin
+  Result := (AControl <> nil) and
+    (FContexto.VistaLineas.Controller.EditingController.Edit =
+     AControl);
+end;
+
+function TSelectorAtributosEditorLineasCajaVcl.ObtenerInfoColorOpcion(
+  AControl: TcxControl; const ATexto: string;
+  out AInfo: TInfoBasico): Boolean;
 var
   Articulo: string;
   Columna: TcxGridColumn;
-  HayColor: Boolean;
   IdValorAtributo: string;
-  Info: TInfoBasico;
   Mapa: TDictionary<string, string>;
   NombreAtributo: string;
   Orden: Integer;
-  RectanguloColor: TRect;
-  RectanguloTexto: TRect;
-  Texto: string;
-  TopColor: Integer;
 begin
+  AInfo := Default(TInfoBasico);
+  Orden := ObtenerOrdenEditor(AControl);
+  Articulo := '';
+  NombreAtributo := '';
+  if (Orden >= Low(FOpciones)) and
+     (Orden <= High(FOpciones)) and
+     FContexto.DatosCaja.cdsLineas.Active and
+     not FContexto.DatosCaja.cdsLineas.IsEmpty then
+  begin
+    Articulo := FContexto.DatosCaja.cdsLineas.FieldByName(
+      'CODIGO_ART_FACLIN').AsString;
+    NombreAtributo := FContexto.DatosCaja.cdsLineas.FieldByName(
+      'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
+  end;
+  if Trim(NombreAtributo) = '' then
+  begin
+    Columna := FContexto.VistaLineas.Controller.FocusedColumn;
+    if (Columna <> nil) and (Columna.Tag = Orden) then
+      NombreAtributo := Columna.Caption;
+  end;
+  IdValorAtributo := '';
+  Mapa := ObtenerMapaAtributosGlobal(FContexto.Conexion);
+  if Mapa <> nil then
+    Mapa.TryGetValue(
+      UpperCase(Trim(NombreAtributo)),
+      IdValorAtributo);
+  // Igual que la celda (PintarCeldaSwatchAtributoSiAplica): primero la
+  // asignacion del articulo y, si no la hay, la paleta global del
+  // atributo. Sin este segundo paso los basicos usados tal cual (CAMEL,
+  // NEGRO...) salian sin cuadradito en la lista.
+  Result := (Trim(IdValorAtributo) <> '') and
+    (ObtenerInfoBasicoArticulo(
+       FContexto.Conexion,
+       Articulo,
+       IdValorAtributo,
+       ATexto,
+       AInfo) or
+     ObtenerInfoBasico(
+       FContexto.Conexion,
+       IdValorAtributo,
+       ATexto,
+       AInfo));
+end;
+
+procedure TSelectorAtributosEditorLineasCajaVcl.DibujarOpcion(
+  AControl: TcxCustomComboBox; ACanvas: TcxCanvas;
+  AIndex: Integer; const ARect: TRect; AState: TOwnerDrawState);
+var
+  HayColor: Boolean;
+  Info: TInfoBasico;
+  Texto: string;
+begin
+  // Con lsFixedList DevExpress pinta con este evento la lista, la caja
+  // de texto del editor en linea y, via TcxInplaceComboBoxCustomDrawHelper,
+  // las celdas sin editar cuyo valor este en Items. Esas celdas ya las
+  // resuelve el OnCustomDrawCell del grid con el articulo de su fila:
+  // aqui solo llevan cuadradito el editor y su lista (linea en curso).
   if (AControl <> nil) and (ACanvas <> nil) and
      (AIndex >= 0) and
      (AIndex < AControl.ActiveProperties.Items.Count) then
   begin
     Texto := AControl.ActiveProperties.Items[AIndex];
-    ACanvas.FillRect(ARect);
-    Orden := ObtenerOrdenEditor(AControl);
-    Articulo := '';
-    NombreAtributo := '';
-    if (Orden >= Low(FOpciones)) and
-       (Orden <= High(FOpciones)) and
-       FContexto.DatosCaja.cdsLineas.Active and
-       not FContexto.DatosCaja.cdsLineas.IsEmpty then
-    begin
-      Articulo := FContexto.DatosCaja.cdsLineas.FieldByName(
-        'CODIGO_ART_FACLIN').AsString;
-      NombreAtributo := FContexto.DatosCaja.cdsLineas.FieldByName(
-        'ATTR' + IntToStr(Orden) + '_NOMBRE').AsString;
-    end;
-    if Trim(NombreAtributo) = '' then
-    begin
-      Columna := FContexto.VistaLineas.Controller.FocusedColumn;
-      if (Columna <> nil) and (Columna.Tag = Orden) then
-        NombreAtributo := Columna.Caption;
-    end;
-    IdValorAtributo := '';
-    Mapa := ObtenerMapaAtributosGlobal(FContexto.Conexion);
-    if Mapa <> nil then
-      Mapa.TryGetValue(
-        UpperCase(Trim(NombreAtributo)),
-        IdValorAtributo);
     Info := Default(TInfoBasico);
-    HayColor := ObtenerInfoBasicoArticulo(
-      FContexto.Conexion,
-      Articulo,
-      IdValorAtributo,
-      Texto,
-      Info);
-    if HayColor then
-    begin
-      TopColor := ARect.Top;
-      if ARect.Height > LADO then
-        TopColor := ARect.Top + (ARect.Height - LADO) div 2;
-      RectanguloColor := Rect(
-        ARect.Left + MARGEN_IZQUIERDO,
-        TopColor,
-        ARect.Left + MARGEN_IZQUIERDO + LADO,
-        TopColor + LADO);
-      ACanvas.Brush.Style := bsSolid;
-      ACanvas.Brush.Color := Info.Color;
-      ACanvas.FillRect(RectanguloColor);
-      ACanvas.Brush.Style := bsClear;
-      ACanvas.Pen.Color := clBlack;
-      ACanvas.Pen.Width := 1;
-      ACanvas.Rectangle(RectanguloColor);
-      RectanguloTexto := Rect(
-        RectanguloColor.Right + HUECO_TEXTO,
-        ARect.Top,
-        ARect.Right,
-        ARect.Bottom);
-    end
-    else
-      RectanguloTexto := Rect(
-        ARect.Left + MARGEN_IZQUIERDO,
-        ARect.Top,
-        ARect.Right,
-        ARect.Bottom);
-    ACanvas.Brush.Style := bsClear;
-    ACanvas.DrawText(
-      Texto,
-      RectanguloTexto,
-      DT_SINGLELINE or DT_VCENTER or DT_LEFT or DT_END_ELLIPSIS);
-    ACanvas.Brush.Style := bsSolid;
+    HayColor := EsEditorEnLinea(AControl) and
+      ObtenerInfoColorOpcion(AControl, Texto, Info);
+    PintarOpcionComboConSwatch(
+      ACanvas, ARect, AState, Texto, HayColor, Info);
   end;
 end;
 

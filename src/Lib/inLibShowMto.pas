@@ -280,6 +280,17 @@ begin
   end;
 end;
 
+// Icono de la pestania: el del item de menu que abre la pantalla. Su
+// ImageIndex apunta a la coleccion de iconos del principal, la misma
+// que replica la lista de imagenes del marco de pestanias (ver
+// TfrmMtoPrincipal.FormCreate). -1 si no hay item o no tiene icono.
+function IconoPestanaPantalla(const APantalla: TfzaForm): Integer;
+begin
+  Result := -1;
+  if Assigned(APantalla) and Assigned(APantalla.mnMenuItem) then
+    Result := APantalla.mnMenuItem.ImageIndex;
+end;
+
 function CrearMantenimiento(
   const AContexto: TContextoAperturaPantalla;
   var ADestino: TDestinoAperturaPantalla): IMantenimientoEmbebido;
@@ -312,7 +323,8 @@ begin
     try
       AContexto.Gestor.EmbedForm(
         ADestino.Formulario, Result, ADestino.Titulo,
-        ADestino.Clave, True);
+        ADestino.Clave, True,
+        IconoPestanaPantalla(AContexto.Pantalla));
     finally
       if bBusquedaTemporal then
         Result.DesactivarModoBusqueda;

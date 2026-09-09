@@ -90,6 +90,20 @@ function PintarCeldaConTextoColor(ACanvas: TcxCanvas;
                                   AViewInfo: TcxGridTableDataCellViewInfo;
                                   const AInfo: TInfoBasico): Boolean;
 
+// Pinta una opcion de un TcxComboBox desde OnDrawItem: cuadradito de
+// paleta delante del texto si AHayColor, o solo el texto con el mismo
+// margen. Con DropDownListStyle = lsFixedList DevExpress usa el mismo
+// evento para la caja de texto del editor (odComboBoxEdit en AState), y
+// asi el color se ve tambien mientras se edita. Usa el fondo y la fuente
+// que trae ACanvas (seleccion y foco ya aplicados) y deja el pincel como
+// estaba.
+procedure PintarOpcionComboConSwatch(ACanvas: TcxCanvas;
+                                     const ARect: TRect;
+                                     AState: TOwnerDrawState;
+                                     const ATexto: string;
+                                     AHayColor: Boolean;
+                                     const AInfo: TInfoBasico);
+
 // Rellena ADict con NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO para todos los
 // atributos del articulo padre. Pensado para grids de stock que no conocen
 // a priori el ID_VA de cada columna.
@@ -438,6 +452,79 @@ begin
   ACanvas.Brush.Style := bsSolid;
 
     Result := True;
+  end;
+end;
+
+procedure PintarOpcionComboConSwatch(ACanvas: TcxCanvas;
+                                     const ARect: TRect;
+                                     AState: TOwnerDrawState;
+                                     const ATexto: string;
+                                     AHayColor: Boolean;
+                                     const AInfo: TInfoBasico);
+const
+  // Caja de texto del editor: misma geometria que la celda del grid
+  // (PintarCeldaConCuadradoColor) para que no salte al entrar a editar.
+  LADO_EDITOR   = 16;
+  MARGEN_EDITOR = 4;
+  HUECO_EDITOR  = 4;
+  // Opciones de la lista desplegable: cuadradito algo menor.
+  LADO_LISTA    = 12;
+  MARGEN_LISTA  = 6;
+  HUECO_LISTA   = 8;
+  LADO_MINIMO   = 6;
+var
+  iLado, iMargen, iHueco, iTop: Integer;
+  ColorFondo: TColor;
+  Cuadrado, TxtRect: TRect;
+begin
+  if ACanvas <> nil then
+  begin
+    if odComboBoxEdit in AState then
+    begin
+      iLado := LADO_EDITOR;
+      iMargen := MARGEN_EDITOR;
+      iHueco := HUECO_EDITOR;
+    end
+    else
+    begin
+      iLado := LADO_LISTA;
+      iMargen := MARGEN_LISTA;
+      iHueco := HUECO_LISTA;
+    end;
+    if iLado > ARect.Height - 2 then
+      iLado := ARect.Height - 2;
+    if iLado < LADO_MINIMO then
+      iLado := LADO_MINIMO;
+    ColorFondo := ACanvas.Brush.Color;
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.FillRect(ARect);
+    TxtRect := ARect;
+    TxtRect.Left := ARect.Left + iMargen;
+    if AHayColor and AInfo.EsValido then
+    begin
+      iTop := ARect.Top;
+      if ARect.Height > iLado then
+        iTop := ARect.Top + (ARect.Height - iLado) div 2;
+      Cuadrado := Rect(ARect.Left + iMargen,
+                       iTop,
+                       ARect.Left + iMargen + iLado,
+                       iTop + iLado);
+      ACanvas.Brush.Color := AInfo.Color;
+      ACanvas.FillRect(Cuadrado);
+      // Borde con el pen: FrameRect usa el brush y en colores claros
+      // como BLANCO desapareceria.
+      ACanvas.Brush.Style := bsClear;
+      ACanvas.Pen.Color := clBlack;
+      ACanvas.Pen.Width := 1;
+      ACanvas.Rectangle(Cuadrado);
+      TxtRect.Left := Cuadrado.Right + iHueco;
+    end;
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.DrawText(ATexto, TxtRect,
+                     DT_SINGLELINE or DT_VCENTER or DT_LEFT or
+                     DT_END_ELLIPSIS);
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := ColorFondo;
   end;
 end;
 

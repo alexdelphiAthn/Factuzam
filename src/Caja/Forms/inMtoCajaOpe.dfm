@@ -9,9 +9,9 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
   OnKeyDown = FormKeyDown
   OnKeyPress = FormKeyPress
   OnShow = FormShow
-  ExplicitWidth = 1365
-  ExplicitHeight = 443
-  TextHeight = 23
+  ExplicitWidth = 1371
+  ExplicitHeight = 452
+  TextHeight = 21
   object pnlUp: TPanel [0]
     Left = 0
     Top = 0
@@ -19,7 +19,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 89
     Align = alTop
     TabOrder = 0
-    ExplicitWidth = 1349
     DesignSize = (
       1353
       89)
@@ -203,7 +202,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       TabOrder = 9
       Transparent = True
       Visible = False
-      ExplicitLeft = 1104
       Height = 77
       Width = 229
       AnchorX = 1223
@@ -217,8 +215,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
     Height = 316
     Align = alClient
     TabOrder = 1
-    ExplicitWidth = 1349
-    ExplicitHeight = 315
     object pnlAccionesIzq: TPanel
       Left = 1
       Top = 217
@@ -226,8 +222,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Height = 98
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 216
-      ExplicitWidth = 1347
       object pnlTotal: TPanel
         Left = 940
         Top = 1
@@ -236,7 +230,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alRight
         BevelOuter = bvNone
         TabOrder = 0
-        ExplicitLeft = 936
         object lblTotal: TcxLabel
           Left = 0
           Top = 0
@@ -275,7 +268,6 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
         Align = alClient
         BevelOuter = bvNone
         TabOrder = 1
-        ExplicitWidth = 935
         object btnF12: TcxButton
           Left = 10
           Top = 6
@@ -785,7 +777,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       object splOpe: TcxSplitter
         Left = 1
         Top = 91
-        Width = 1349
+        Width = 8
         Height = 8
         HotZoneClassName = 'TcxMediaPlayer8Style'
         AlignSplitter = salBottom

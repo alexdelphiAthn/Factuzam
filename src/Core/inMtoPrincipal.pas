@@ -62,12 +62,15 @@ uses
   inMtoMantenimientosInyeccionRaiz,
   inMtoCajaInyeccionRaiz,
   inMtoConfiguracionInyeccionRaiz,
-  inMtoPrincipalPresentacionInicio, dxBarBuiltInMenu, System.ImageList,
+  inMtoPrincipalPresentacionInicio, System.ImageList,
   Vcl.ImgList, Vcl.VirtualImageList, Vcl.BaseImageCollection,
   Vcl.ImageCollection;
 
 const
   WM_REINICIAR_RESTAURACION = WM_USER + 121;
+  // Lado, en pixeles a 96 ppp, del icono de las pestanias del marco
+  // principal (el menu usa 16).
+  TAMANO_ICONO_PESTANA = 32;
 
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
@@ -139,6 +142,7 @@ type
     mnuListadoOperacionesVenta: TMenuItem;
     icoMenu: TImageCollection;
     vilMenu: TVirtualImageList;
+    vilPestanas: TVirtualImageList;
     procedure mnuMenuCajaClick(Sender: TObject);
     procedure mnuInvocarLoginClick(Sender: TObject);
     procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
@@ -565,6 +569,15 @@ begin
   vilMenu.SetSize(16, 16);
   jvMnMenuPrin.Images := vilMenu;
   AsignarIconosMenu(jvMnMenuPrin.Items, icoMenu);
+
+  // Pestanias del marco principal: el mismo juego de iconos que el
+  // menu, pero mas grande. AutoFill replica la coleccion en el mismo
+  // orden en las dos listas, asi que el ImageIndex de un item de menu
+  // vale tal cual para la pestania que abre (inLibShowMto).
+  vilPestanas.ImageCollection := icoMenu;
+  vilPestanas.AutoFill := True;
+  vilPestanas.SetSize(TAMANO_ICONO_PESTANA, TAMANO_ICONO_PESTANA);
+  pcPrincipal.Images := vilPestanas;
 end;
 
 function TfrmMtoPrincipal.GetParametrosAppEdicion: IParametrosEdicion;
@@ -1824,7 +1837,8 @@ begin
   inherited;
   if mnuCajaSolicitudesTraspasoHist.Visible then
     FInyeccionCaja.MostrarHistoricoSolicitudesTraspaso(
-      mnuCajaSolicitudesTraspasoHist.Caption);
+      mnuCajaSolicitudesTraspasoHist.Caption,
+      mnuCajaSolicitudesTraspasoHist.ImageIndex);
 end;
 
 procedure TfrmMtoPrincipal.CargarEfectosVenta1Click(Sender: TObject);

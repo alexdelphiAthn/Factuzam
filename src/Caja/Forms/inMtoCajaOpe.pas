@@ -2084,8 +2084,12 @@ begin
       Columna.Width := 80;
       Columna.PropertiesClass := TcxComboBoxProperties;
       Propiedades := TcxComboBoxProperties(Columna.Properties);
-      // Es una seleccion cerrada. El texto escrito solo filtra opciones.
-      Propiedades.DropDownListStyle := lsEditFixedList;
+      // Seleccion cerrada con lista fija: teclear salta a la opcion que
+      // empieza por lo escrito. Con lsFixedList DevExpress pinta la caja
+      // de texto del editor con OnDrawItem, asi el cuadradito de color
+      // se ve tambien mientras se edita (con lsEditFixedList solo salia
+      // en la celda al abandonarla).
+      Propiedades.DropDownListStyle := lsFixedList;
       Propiedades.DropDownRows := 15;
       Propiedades.ImmediateDropDownWhenKeyPressed := True;
       Propiedades.ImmediatePost := False;
@@ -2355,7 +2359,8 @@ begin
   // Estilo Excel: al entrar en una celda, teclear sustituye su contenido.
   if AEdit is TcxCustomTextEdit then
     TcxCustomTextEdit(AEdit).SelectAll;
-  // El combo es de seleccion fija, aunque admite escribir para filtrar.
+  // El combo es de lista fija: teclear salta a la opcion que empieza
+  // por lo escrito.
   // Si la celda esta vacia se abre despues de que cxGrid lo haya parentado.
   if (AItem.Tag >= 1) and (AItem.Tag <= 5) then
   begin

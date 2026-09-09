@@ -344,7 +344,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
         Properties.ScrollBars = ssVertical
         TabOrder = 0
         Visible = False
-        ExplicitWidth = 1114
         Height = 69
         Width = 1118
       end
@@ -887,6 +886,11 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   object vilMenu: TVirtualImageList
     Images = <>
     Left = 624
+    Top = 280
+  end
+  object vilPestanas: TVirtualImageList
+    Images = <>
+    Left = 696
     Top = 280
   end
 end
