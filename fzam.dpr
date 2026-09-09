@@ -1868,9 +1868,9 @@ begin
       ResultadoLicenciaInicial) then
     begin
     // Fuente global para toda la aplicacion
-    Application.DefaultFont.Name   := 'DejaVu Sans';
+    Application.DefaultFont.Name   := 'Source Sans 3';
     Application.DefaultFont.Height := -15;
-    Screen.MenuFont.Name := 'DejaVu Sans';
+    Screen.MenuFont.Name := 'Source Sans 3';
     Screen.MenuFont.Size := 11;
     Application.CreateForm(TfrmMtoPrincipal, Principal);
     Principal.AsignarRegistroLog(RegistroLogAplicacion);

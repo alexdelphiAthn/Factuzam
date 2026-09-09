@@ -95,8 +95,6 @@ type
     procedure btnSubirScriptClick(Sender: TObject);
     procedure btnCopiaSeguridadClick(Sender: TObject);
     procedure btnRecoverClick(Sender: TObject);
-    procedure edtPassBDExit(Sender: TObject);
-    procedure edtPortBDPropertiesChange(Sender: TObject);
     procedure GetIniValues;
   private
     FProgressPanel: TPanel;
@@ -1656,14 +1654,6 @@ procedure TfrmLogon.InvalidarResultadoInicioSesion;
 begin
   FResultadoInicioSesion :=
     TResultadoInicioSesion.CrearNoAutenticado;
-end;
-
-procedure TfrmLogon.edtPassBDExit(Sender: TObject);
-begin
-end;
-
-procedure TfrmLogon.edtPortBDPropertiesChange(Sender: TObject);
-begin
 end;
 
 procedure TfrmLogon.FormKeyDown(Sender: TObject; var Key: Word;

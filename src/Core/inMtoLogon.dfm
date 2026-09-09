@@ -1,4 +1,4 @@
-﻿object frmLogon: TfrmLogon
+object frmLogon: TfrmLogon
   Left = 0
   Top = 0
   BorderIcons = []
@@ -10,7 +10,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
-  Font.Name = 'DejaVu Sans'
+  Font.Name = 'Source Sans 3'
   Font.Style = []
   KeyPreview = True
   Position = poScreenCenter
@@ -18,7 +18,7 @@
   OnCloseQuery = FormCloseQuery
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
-  TextHeight = 21
+  TextHeight = 18
   object pnlMain: TPanel
     Left = 0
     Top = 0
@@ -26,7 +26,8 @@
     Height = 430
     Align = alClient
     TabOrder = 0
-    ExplicitWidth = 706
+    ExplicitWidth = 700
+    ExplicitHeight = 429
     object pnlLogin: TPanel
       Left = 14
       Top = 24
@@ -39,9 +40,9 @@
         AutoSize = False
         Caption = 'Usuario'
         TabOrder = 4
+        Transparent = True
         Height = 21
         Width = 312
-        Transparent = True
       end
       object lblContrasena: TcxLabel
         Left = 7
@@ -49,9 +50,9 @@
         AutoSize = False
         Caption = 'Contrase'#241'a'
         TabOrder = 5
+        Transparent = True
         Height = 21
         Width = 335
-        Transparent = True
       end
       object edtUser: TcxTextEdit
         Left = 7
@@ -96,7 +97,7 @@
         OnClick = btnAceptarClick
       end
       object btnSalir: TButton
-        Left = 3
+        Left = 6
         Top = 11
         Width = 141
         Height = 30
@@ -135,9 +136,9 @@
       AutoSize = False
       Caption = 'Configuraci'#243'n BBDD'
       TabOrder = 9
+      Transparent = True
       Height = 24
       Width = 358
-      Transparent = True
     end
     object lblHostBBDD: TcxLabel
       Left = 24
@@ -145,9 +146,9 @@
       AutoSize = False
       Caption = 'Host:'
       TabOrder = 10
+      Transparent = True
       Height = 21
       Width = 312
-      Transparent = True
     end
     object lblPortHost: TcxLabel
       Left = 264
@@ -155,9 +156,9 @@
       AutoSize = False
       Caption = 'Puerto:'
       TabOrder = 11
+      Transparent = True
       Height = 21
       Width = 72
-      Transparent = True
     end
     object lblNomBBDD: TcxLabel
       Left = 24
@@ -165,9 +166,9 @@
       AutoSize = False
       Caption = 'Nombre BD:'
       TabOrder = 12
+      Transparent = True
       Height = 21
       Width = 312
-      Transparent = True
     end
     object lblUserBBDD: TcxLabel
       Left = 24
@@ -175,9 +176,9 @@
       AutoSize = False
       Caption = 'Usuario:'
       TabOrder = 13
+      Transparent = True
       Height = 21
       Width = 312
-      Transparent = True
     end
     object edtHostName: TcxTextEdit
       Left = 24
