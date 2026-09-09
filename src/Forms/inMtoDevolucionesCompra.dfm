@@ -286,7 +286,7 @@
                 Style.Font.Charset = ANSI_CHARSET
                 Style.Font.Color = clWindowText
                 Style.Font.Height = -15
-                Style.Font.Name = 'DejaVu Sans'
+                Style.Font.Name = 'Source Sans 3'
                 Style.Font.Style = [fsBold]
                 Style.IsFontAssigned = True
                 TabOrder = 16

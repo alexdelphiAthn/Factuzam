@@ -9,7 +9,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
-  Font.Name = 'DejaVu Sans'
+  Font.Name = 'Source Sans 3'
   Font.Style = []
   OnCreate = FormCreate
   TextHeight = 15

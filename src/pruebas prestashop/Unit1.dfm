@@ -8,7 +8,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
-  Font.Name = 'DejaVu Sans'
+  Font.Name = 'Source Sans 3'
   Font.Style = []
   TextHeight = 13
   object spl1: TSplitter
@@ -161,7 +161,7 @@
               TitleFont.Charset = DEFAULT_CHARSET
               TitleFont.Color = clWindowText
               TitleFont.Height = -15
-              TitleFont.Name = 'DejaVu Sans'
+              TitleFont.Name = 'Source Sans 3'
               TitleFont.Style = []
             end
           end
@@ -178,7 +178,7 @@
               TitleFont.Charset = DEFAULT_CHARSET
               TitleFont.Color = clWindowText
               TitleFont.Height = -15
-              TitleFont.Name = 'DejaVu Sans'
+              TitleFont.Name = 'Source Sans 3'
               TitleFont.Style = []
             end
           end
@@ -195,7 +195,7 @@
               TitleFont.Charset = DEFAULT_CHARSET
               TitleFont.Color = clWindowText
               TitleFont.Height = -15
-              TitleFont.Name = 'DejaVu Sans'
+              TitleFont.Name = 'Source Sans 3'
               TitleFont.Style = []
             end
           end

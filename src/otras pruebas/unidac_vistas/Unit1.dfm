@@ -8,7 +8,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
-  Font.Name = 'DejaVu Sans'
+  Font.Name = 'Source Sans 3'
   Font.Style = []
   TextHeight = 15
   object cxGrid1: TcxGrid

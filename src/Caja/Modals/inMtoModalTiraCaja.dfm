@@ -9,7 +9,7 @@
   Font.Charset = DEFAULT_CHARSET
   Font.Color = clWindowText
   Font.Height = -15
-  Font.Name = 'DejaVu Sans'
+  Font.Name = 'Source Sans 3'
   Font.Style = []
   Position = poScreenCenter
   OnCreate = FormCreate
@@ -21,7 +21,7 @@
     Style.Font.Charset = DEFAULT_CHARSET
     Style.Font.Color = clWindowText
     Style.Font.Height = -19
-    Style.Font.Name = 'DejaVu Sans'
+    Style.Font.Name = 'Source Sans 3'
     Style.Font.Style = [fsBold]
     Style.IsFontAssigned = True
     Transparent = True

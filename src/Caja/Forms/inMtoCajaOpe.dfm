@@ -80,7 +80,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -14
-      Style.Font.Name = 'DejaVu Sans'
+      Style.Font.Name = 'Source Sans 3'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
       Style.Font.Quality = fqClearTypeNatural
@@ -100,7 +100,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -14
-      Style.Font.Name = 'DejaVu Sans'
+      Style.Font.Name = 'Source Sans 3'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
       Style.Font.Quality = fqClearTypeNatural
@@ -117,7 +117,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Style.Font.Charset = ANSI_CHARSET
       Style.Font.Color = clWindowText
       Style.Font.Height = -13
-      Style.Font.Name = 'DejaVu Sans'
+      Style.Font.Name = 'Source Sans 3'
       Style.Font.Pitch = fpFixed
       Style.Font.Style = []
       Style.Font.Quality = fqClearTypeNatural
@@ -822,7 +822,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clNavy
       Font.Height = -12
-      Font.Name = 'DejaVu Sans'
+      Font.Name = 'Source Sans 3'
       Font.Style = [fsBold]
     end
     object styImporte: TcxStyle
@@ -830,7 +830,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clOlive
       Font.Height = -12
-      Font.Name = 'DejaVu Sans'
+      Font.Name = 'Source Sans 3'
       Font.Style = []
     end
     object styCabecera: TcxStyle
@@ -839,7 +839,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       Font.Charset = DEFAULT_CHARSET
       Font.Color = clWindowText
       Font.Height = 20
-      Font.Name = 'DejaVu Sans'
+      Font.Name = 'Source Sans 3'
       Font.Style = [fsBold]
       TextColor = clDefault
     end
