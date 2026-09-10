@@ -237,6 +237,13 @@ type
     // global (Ctrl+U, capturado en inMtoPrincipal). Por defecto vacio; los
     // formularios con articulo activo lo sobreescriben.
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); virtual;
+    // KeyPreview prestado: en las pantallas embebidas en pestanas del
+    // principal la VCL entrega el OnKeyPress de los controles a la
+    // ventana superior, no a este formulario. inMtoPrincipal se lo
+    // reenvia aqui para que su propio OnKeyPress (p. ej. el lector de
+    // codigo de barras de inLibLectorDocumento) vea la tecla antes que
+    // el control con foco.
+    procedure PrevisualizarTeclaEmbebida(var Key: Char); virtual;
     property Permisos: IPermisosAplicacion read GetPermisos;
     property Conexiones: IServicioConexiones read GetConexiones;
     property AuditoriaDatos: IServicioAuditoriaDatos
@@ -1267,6 +1274,16 @@ begin
   // Por defecto un formulario no aporta articulo en foco para Ctrl+U.
   ACodArt := '';
   ACodSku := '';
+end;
+
+procedure TfrmBase.PrevisualizarTeclaEmbebida(var Key: Char);
+begin
+  // Solo si el formulario pidio previsualizar teclas: como ventana
+  // propia la VCL tampoco le daria OnKeyPress con KeyPreview
+  // desactivado, y el reenvio de la pestana no debe cambiar ese
+  // criterio. Key := #0 en el manejador consume la tecla.
+  if KeyPreview and Assigned(OnKeyPress) then
+    OnKeyPress(Self, Key);
 end;
 
 {
