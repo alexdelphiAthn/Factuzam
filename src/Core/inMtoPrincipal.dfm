@@ -9,8 +9,8 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
-  ExplicitWidth = 1132
-  ExplicitHeight = 591
+  ExplicitWidth = 1138
+  ExplicitHeight = 605
   TextHeight = 18
   object Panel1: TPanel [0]
     Left = 0
@@ -20,8 +20,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     Align = alClient
     BevelOuter = bvNone
     TabOrder = 0
-    ExplicitWidth = 1116
-    ExplicitHeight = 513
     DesignSize = (
       1120
       514)
@@ -332,8 +330,6 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
       Height = 71
       Align = alBottom
       TabOrder = 1
-      ExplicitTop = 442
-      ExplicitWidth = 1116
       object cxMemo1: TcxMemo
         Left = 1
         Top = 1
