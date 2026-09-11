@@ -59,6 +59,11 @@ procedure TdmFacturasProforma.DataModuleCreate(Sender: TObject);
 begin
   inherited;
   unqryEmpresas := TUniQuery.Create(Self);
+  // Hereda la conexión que TdmBase.DoCreate ya dejó en unqryTablaG antes de
+  // tocar SpecificOptions: UniDAC valida cada opción contra el proveedor de
+  // la conexión y sin ella lanza "Connection is not defined". Más tarde
+  // ReasignarConexion la sustituye por la conexión propia del Mto.
+  unqryEmpresas.Connection := unqryTablaG.Connection;
   dsEmpresas := TDataSource.Create(Self);
   dsEmpresas.DataSet := unqryEmpresas;
   ConfigurarConsultas;
@@ -91,7 +96,8 @@ begin
     ' ORDER BY ORDEN_EMP, RAZON_SOCIAL_EMP';
   // Catálogo pequeño: se materializa antes de que el historial abra en
   // segundo plano, evitando un fetch pendiente sobre la misma conexión.
-  unqryEmpresas.SpecificOptions.Values['FetchAll'] := 'True';
+  if Assigned(unqryEmpresas.Connection) then
+    unqryEmpresas.SpecificOptions.Values['FetchAll'] := 'True';
   unqryEmpresas.ReadOnly := True;
 end;
 
