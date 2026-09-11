@@ -99,7 +99,7 @@
   object unqryTarifasArticulos: TUniQuery
     KeyFields = 'CODIGO_UNICO_ARTTAR'
     SQLInsert.Strings = (
-      'INSERT INTO FZA_articulos_tarifas'
+      'INSERT INTO fza_articulos_tarifas'
       
         '  (CODIGO_ART_ARTTAR, CODIGO_UNICO_ARTTAR, CODIGO_UNIDAD_ARTTAR,' +
         ' CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, PRECI' +
@@ -114,11 +114,11 @@
         'R, :FECHA_DESDE_ARTTAR, :FECHA_HASTA_ARTTAR, :INSTANTE_MODIF, :I' +
         'NSTANTE_ALTA, :USUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM FZA_articulos_tarifas'
+      'DELETE FROM fza_articulos_tarifas'
       'WHERE'
       '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR')
     SQLUpdate.Strings = (
-      'UPDATE FZA_articulos_tarifas'
+      'UPDATE fza_articulos_tarifas'
       'SET'
       
         '  CODIGO_ART_ARTTAR = :CODIGO_ART_ARTTAR, CODIGO_UNICO_ARTTAR = ' +
@@ -139,7 +139,7 @@
         'TAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, P' +
         'RECIO_FINAL_ARTTAR, PRECIO_DTO_ARTTAR, PORCENTAJE_DTO_ARTTAR, FE' +
         'CHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_A' +
-        'LTA, USUARIO_ALTA, USUARIO_MODIF FROM FZA_articulos_tarifas'
+        'LTA, USUARIO_ALTA, USUARIO_MODIF FROM fza_articulos_tarifas'
       'WHERE'
       '  CODIGO_UNICO_ARTTAR = :Old_CODIGO_UNICO_ARTTAR'
       'FOR UPDATE')
@@ -149,11 +149,11 @@
         'TAR, CODIGO_TAR_ARTTAR, ESACTIVO_ARTTAR, PRECIO_SALIDA_ARTTAR, P' +
         'RECIO_FINAL_ARTTAR, PRECIO_DTO_ARTTAR, PORCENTAJE_DTO_ARTTAR, FE' +
         'CHA_DESDE_ARTTAR, FECHA_HASTA_ARTTAR, INSTANTE_MODIF, INSTANTE_A' +
-        'LTA, USUARIO_ALTA, USUARIO_MODIF FROM FZA_articulos_tarifas'
+        'LTA, USUARIO_ALTA, USUARIO_MODIF FROM fza_articulos_tarifas'
       'WHERE'
       '  CODIGO_UNICO_ARTTAR = :CODIGO_UNICO_ARTTAR')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM FZA_articulos_tarifas')
+      'SELECT COUNT(*) FROM fza_articulos_tarifas')
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'

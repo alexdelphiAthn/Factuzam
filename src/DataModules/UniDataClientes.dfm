@@ -243,7 +243,7 @@
   end
   object unqryFacturasClientes: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO FZA_FACTURAS'
+      'INSERT INTO fza_facturas'
       
         '  (NUMERO_FAC, SERIE_FAC, FECHA_FAC, CODIGO_EMP_FAC, RAZON_SOCIA' +
         'L_EMPRESA_FAC, NIF_EMPRESA_FAC, MOVIL_EMPRESA_FAC, EMAIL_EMPRESA' +
@@ -307,11 +307,11 @@
         'AC, :ESFECHADEENTREGA_FAC, :INSTANTE_MODIF, :INSTANTE_ALTA, :USU' +
         'ARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM FZA_FACTURAS'
+      'DELETE FROM fza_facturas'
       'WHERE'
       '  NUMERO_FAC = :Old_NUMERO_FAC AND SERIE_FAC = :Old_SERIE_FAC')
     SQLUpdate.Strings = (
-      'UPDATE FZA_FACTURAS'
+      'UPDATE fza_facturas'
       'SET'
       
         '  NUMERO_FAC = :NUMERO_FAC, SERIE_FAC = :SERIE_FAC, FECHA_FAC = ' +
@@ -405,7 +405,7 @@
         'TO_LEGAL_EMPRESA_FAC, DOCUMENTO_FAC, COMENTARIOS_FAC, CONTADOR_L' +
         'INEAS_FAC, ESCREARARTICULOS_FAC, ESDESCRIPCIONES_AMP_FAC, ESFECH' +
         'ADEENTREGA_FAC, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USU' +
-        'ARIO_MODIF FROM FZA_FACTURAS'
+        'ARIO_MODIF FROM fza_facturas'
       'WHERE'
       '  NUMERO_FAC = :Old_NUMERO_FAC AND SERIE_FAC = :Old_SERIE_FAC'
       'FOR UPDATE')
@@ -439,11 +439,11 @@
         'TO_LEGAL_EMPRESA_FAC, DOCUMENTO_FAC, COMENTARIOS_FAC, CONTADOR_L' +
         'INEAS_FAC, ESCREARARTICULOS_FAC, ESDESCRIPCIONES_AMP_FAC, ESFECH' +
         'ADEENTREGA_FAC, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USU' +
-        'ARIO_MODIF FROM FZA_FACTURAS'
+        'ARIO_MODIF FROM fza_facturas'
       'WHERE'
       '  NUMERO_FAC = :NUMERO_FAC AND SERIE_FAC = :SERIE_FAC')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM FZA_FACTURAS')
+      'SELECT COUNT(*) FROM fza_facturas')
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_fac_busquedas')
@@ -460,7 +460,7 @@
   end
   object unqryFacturasLineasClientes: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO FZA_FACTURAS_LINEAS'
+      'INSERT INTO fza_facturas_lineas'
       
         '  (NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN, CODIGO_ART' +
         '_FACLIN, CODIGO_FAM_FACLIN, NOMBRE_FAM_FACLIN, PRECIO_ULT_COMPRA' +
@@ -486,13 +486,13 @@
         'LIN, :TOTAL_FAC_SIVA_FACLIN, :INSTANTE_MODIF, :INSTANTE_ALTA, :U' +
         'SUARIO_ALTA, :USUARIO_MODIF)')
     SQLDelete.Strings = (
-      'DELETE FROM FZA_FACTURAS_LINEAS'
+      'DELETE FROM fza_facturas_lineas'
       'WHERE'
       
         '  NUMERO_FAC_FACLIN = :Old_NUMERO_FAC_FACLIN AND SERIE_FAC_FACLI' +
         'N = :Old_SERIE_FAC_FACLIN AND LINEA_FACLIN = :Old_LINEA_FACLIN')
     SQLUpdate.Strings = (
-      'UPDATE FZA_FACTURAS_LINEAS'
+      'UPDATE fza_facturas_lineas'
       'SET'
       
         '  NUMERO_FAC_FACLIN = :NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN = :SE' +
@@ -532,7 +532,7 @@
         'CLIN, PRECIO_VENTA_SIVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
         'PRECIO_VENTA_CIVA_ARTICULO_FACLIN, TOTAL_FACLIN, TOTAL_FAC_SIVA_' +
         'FACLIN, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MOD' +
-        'IF FROM FZA_FACTURAS_LINEAS'
+        'IF FROM fza_facturas_lineas'
       'WHERE'
       
         '  NUMERO_FAC_FACLIN = :Old_NUMERO_FAC_FACLIN AND SERIE_FAC_FACLI' +
@@ -550,20 +550,20 @@
         'CLIN, PRECIO_VENTA_SIVA_ARTICULO_FACLIN, PORCENTAJE_IVA_FACLIN, ' +
         'PRECIO_VENTA_CIVA_ARTICULO_FACLIN, TOTAL_FACLIN, TOTAL_FAC_SIVA_' +
         'FACLIN, INSTANTE_MODIF, INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MOD' +
-        'IF FROM FZA_FACTURAS_LINEAS'
+        'IF FROM fza_facturas_lineas'
       'WHERE'
       
         '  NUMERO_FAC_FACLIN = :NUMERO_FAC_FACLIN AND SERIE_FAC_FACLIN = ' +
         ':SERIE_FAC_FACLIN AND LINEA_FACLIN = :LINEA_FACLIN')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM FZA_FACTURAS_LINEAS')
+      'SELECT COUNT(*) FROM fza_facturas_lineas')
     Connection = dmConn.conUni
     SQL.Strings = (
       'select *'
       'from vi_fac_lin_busquedas l'
       'inner join vi_fac_busquedas f'
-      'on l.NUMERO_FAC_FACLIN = F.NUMERO_FAC'
-      'AND l.SERIE_FAC_FACLIN = F.SERIE_FAC'
+      'on l.NUMERO_FAC_FACLIN = f.NUMERO_FAC'
+      'AND l.SERIE_FAC_FACLIN = f.SERIE_FAC'
       '')
     MasterFields = 'CODIGO_CLI_CLI'
     DetailFields = 'CODIGO_CLI_FAC'

@@ -463,7 +463,7 @@
   end
   object unqryPreviewSkus: TUniQuery
     SQL.Strings = (
-      'SELECT * FROM VI_SES_PREVIEW_SKUS'
+      'SELECT * FROM vi_ses_preview_skus'
       'WHERE SERIE = :SERIE_SES'
       '  AND NUMERO = :NUMERO_SES'
       'ORDER BY CODIGO_ALM, LINEA, ID_FILA, ID_AV_PIVOT')
@@ -546,7 +546,7 @@
     SQL.Strings = (
       'SELECT R.CODIGO_ALM, A.NOMBRE_ALM_ALM,'
       '       R.NUM_SKUS, R.UNIDADES_TOTAL'
-      '  FROM VI_SES_RESUMEN_ALMACEN R'
+      '  FROM vi_ses_resumen_almacen R'
       '  LEFT JOIN fza_almacenes A'
       '    ON A.CODIGO_ALM_ALM = R.CODIGO_ALM'
       ' WHERE R.SERIE  = :SERIE_SES'

@@ -77,7 +77,7 @@ begin
   FConsultaFactura.Close;
   FConsultaFactura.Params.Clear;
   FConsultaFactura.SQL.Text :=
-    'SELECT * FROM vi_FACTURAS_print ' +
+    'SELECT * FROM vi_facturas_print ' +
     'WHERE NUMERO_FAC = :numfac AND SERIE_FAC = :serie';
   FConsultaFactura.Params.ParamByName('numfac').Value := ACriterios.Numero;
   FConsultaFactura.Params.ParamByName('serie').Value := ACriterios.Serie;
@@ -109,7 +109,7 @@ begin
   FConsultaFactura.Close;
   FConsultaFactura.Params.Clear;
   FConsultaFactura.SQL.Text :=
-    'SELECT * FROM VI_FACTURAS_PRINT ' +
+    'SELECT * FROM vi_facturas_print ' +
     'WHERE FECHA_FAC >= :fecha_ini AND FECHA_FAC <= :fecha_fin ' +
     'ORDER BY NUMERO_FAC';
   FConsultaFactura.Params.ParamByName('fecha_ini').Value :=
@@ -129,7 +129,7 @@ begin
     SQLCamposOperacionCaja +
     'FROM fza_facturas_lineas L ' +
     SQLJoinOperacionCaja +
-    'INNER JOIN vi_FACTURAS_print F ' +
+    'INNER JOIN vi_facturas_print F ' +
     'ON F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
     'AND F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
     'WHERE F.FECHA_FAC >= :fecha_ini ' +

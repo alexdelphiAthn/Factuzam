@@ -464,7 +464,7 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT *'
-      'from VI_FACTURAS_PRINT'
+      'from vi_facturas_print'
       'where SERIE_FAC = '#39'ANA/2023'#39' '
       'AND NUMERO_FAC = '#39'000003'#39
       'order by NUMERO_FAC Asc')
@@ -473,7 +473,7 @@
   end
   object unqryLinFacPrint: TUniQuery
     SQLInsert.Strings = (
-      'INSERT INTO `fza_FACTURAS_LINEAS`'
+      'INSERT INTO `fza_facturas_lineas`'
       
         '  (`SERIE_FAC_FACLIN`, `NUMERO_FAC_FACLIN`, `LINEA_LINEA`, `CODI' +
         'GO_ARTICULO_LINEA`, `DESCRIPCION_ARTICULO_LINEA`, `ZONA`, `PRECI' +
@@ -486,14 +486,14 @@
         ':`PRECIOVENTA_ARTICULO_LINEA`, :`CANTIDAD_LINEA`, :`SUM_TOTAL_LI' +
         'NEA`, :`ODONTOLOGO`)')
     SQLDelete.Strings = (
-      'DELETE FROM `fza_FACTURAS_LINEAS`'
+      'DELETE FROM `fza_facturas_lineas`'
       'WHERE'
       
         '  `SERIE_FAC_FACLIN` = :`Old_SERIE_FAC_FACLIN` AND `NUMERO_FAC_F' +
         'ACLIN` = :`Old_NUMERO_FAC_FACLIN` AND `LINEA_LINEA` = :`Old_LINE' +
         'A_LINEA`')
     SQLUpdate.Strings = (
-      'UPDATE `fza_FACTURAS_LINEAS`'
+      'UPDATE `fza_facturas_lineas`'
       'SET'
       
         '  `SERIE_FAC_FACLIN` = :`SERIE_FAC_FACLIN`, `NUMERO_FAC_FACLIN` ' +
@@ -509,7 +509,7 @@
         'ACLIN` = :`Old_NUMERO_FAC_FACLIN` AND `LINEA_LINEA` = :`Old_LINE' +
         'A_LINEA`')
     SQLLock.Strings = (
-      'SELECT * FROM fza_FACTURAS_LINEAS'
+      'SELECT * FROM fza_facturas_lineas'
       'WHERE'
       
         '  `SERIE_FAC_FACLIN` = :`Old_SERIE_FAC_FACLIN` AND `NUMERO_FAC_F' +
@@ -521,17 +521,17 @@
         'SELECT `SERIE_FAC_FACLIN`, `NUMERO_FAC_FACLIN`, `LINEA_LINEA`, `' +
         'CODIGO_ARTICULO_LINEA`, `DESCRIPCION_ARTICULO_LINEA`, `ZONA`, `P' +
         'RECIOVENTA_ARTICULO_LINEA`, `CANTIDAD_LINEA`, `SUM_TOTAL_LINEA`,' +
-        ' `ODONTOLOGO` FROM `fza_FACTURAS_LINEAS`'
+        ' `ODONTOLOGO` FROM `fza_facturas_lineas`'
       'WHERE'
       
         '  `SERIE_FAC_FACLIN` = :`SERIE_FAC_FACLIN` AND `NUMERO_FAC_FACLI' +
         'N` = :`NUMERO_FAC_FACLIN` AND `LINEA_LINEA` = :`LINEA_LINEA`')
     SQLRecCount.Strings = (
-      'SELECT COUNT(*) FROM fza_FACTURAS_LINEAS')
+      'SELECT COUNT(*) FROM fza_facturas_lineas')
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT *'
-      ' FROM vi_FACTURAS_LINEAS_print'
+      ' FROM vi_facturas_lineas_print'
       'WHERE NUMERO_FAC_FACLIN = :NUMERO_FAC'
       '  AND SERIE_FAC_FACLIN = :SERIE_FAC'
       'ORDER BY LINEA_FACLIN;')
@@ -558,7 +558,7 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT DISTINCT SERIE_CON, DEFAULT_CON'
-      'FROM fza_CONTADORES'
+      'FROM fza_contadores'
       'WHERE TIPO_DOC_CON='#39'FC'#39' AND ESACTIVO_CON = '#39'S'#39
       'ORDER BY DEFAULT_CON DESC')
     Left = 435
@@ -788,7 +788,7 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT *'
-      'FROM vi_FACTURAS_LINEAS'
+      'FROM vi_facturas_lineas'
       'where NUMERO_FAC_FACLIN = :NUMERO_FAC'
       'AND SERIE_FAC_FACLIN = :SERIE_FAC'
       'order by NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, LINEA_FACLIN ASC')
@@ -1487,7 +1487,7 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * '
-      'FROM VI_IVAS'
+      'FROM vi_ivas'
       '')
     Left = 537
     Top = 115
@@ -1564,7 +1564,7 @@
       'SELECT COUNT(*) FROM fza_clientes')
     Connection = dmConn.conUni
     SQL.Strings = (
-      'SELECT * FROM VI_EMP_BUSQUEDAS')
+      'SELECT * FROM vi_emp_busquedas')
     Left = 106
     Top = 429
   end
@@ -1701,7 +1701,7 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'SELECT * '
-      'FROM FZA_IVAS_TIPOS'
+      'FROM fza_ivas_tipos'
       '')
     Left = 767
     Top = 141

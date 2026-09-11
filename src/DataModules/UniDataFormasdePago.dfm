@@ -71,8 +71,8 @@
       'select *'
       'from vi_fac_lin_busquedas l'
       'inner join vi_fac_busquedas f'
-      'on l.NUMERO_FAC_FACLIN = F.NUMERO_FAC'
-      'AND l.SERIE_FAC_FACLIN = F.SERIE_FAC'
+      'on l.NUMERO_FAC_FACLIN = f.NUMERO_FAC'
+      'AND l.SERIE_FAC_FACLIN = f.SERIE_FAC'
       '')
     MasterFields = 'CODIGO_FP_FP'
     DetailFields = 'FORMA_PAGO_FAC'

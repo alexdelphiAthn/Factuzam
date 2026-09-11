@@ -56,7 +56,7 @@ const
   );
 
   REQUIRED_VIEWS: array[0..0] of string = (
-    'VI_USUARIOS'
+    'vi_usuarios'
   );
 
 implementation
