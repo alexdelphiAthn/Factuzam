@@ -14,7 +14,7 @@
     Left = 0
     Top = 0
     Width = 1180
-    Height = 145
+    Height = 190
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 0
@@ -57,55 +57,73 @@
       Height = 55
       Width = 260
     end
-    object lblPorcentaje: TcxLabel
+    object rgBase: TcxRadioGroup
       Left = 294
+      Top = 78
+      Caption = ''
+      Properties.Columns = 2
+      Properties.Items = <
+        item
+          Caption = ''
+        end
+        item
+          Caption = ''
+        end>
+      Properties.OnEditValueChanged = ConfiguracionPropertiesChange
+      ItemIndex = 0
+      TabOrder = 1
+      Height = 55
+      Width = 330
+    end
+    object lblPorcentaje: TcxLabel
+      Left = 642
       Top = 96
       Caption = ''
       Transparent = True
     end
     object curPorcentaje: TcxCurrencyEdit
-      Left = 395
+      Left = 743
       Top = 92
       Properties.DecimalPlaces = 2
       Properties.DisplayFormat = '0.00 %'
       Properties.OnChange = ConfiguracionPropertiesChange
-      TabOrder = 1
+      TabOrder = 2
       Width = 110
     end
     object btnSimular: TcxButton
-      Left = 523
-      Top = 87
+      Left = 16
+      Top = 141
       Width = 140
       Height = 36
       Caption = ''
       Default = True
-      TabOrder = 2
+      TabOrder = 3
       OnClick = btnSimularClick
     end
     object btnSeleccionarTodo: TcxButton
-      Left = 681
-      Top = 87
+      Left = 174
+      Top = 141
       Width = 175
       Height = 36
       Caption = ''
-      TabOrder = 3
+      TabOrder = 4
       OnClick = btnSeleccionarTodoClick
     end
     object btnSeleccionarNinguno: TcxButton
-      Left = 874
-      Top = 87
+      Left = 367
+      Top = 141
       Width = 190
       Height = 36
       Caption = ''
-      TabOrder = 4
+      TabOrder = 5
       OnClick = btnSeleccionarNingunoClick
     end
   end
   object cxgrdSimulacion: TcxGrid [1]
     Left = 0
-    Top = 145
+    Top = 190
     Width = 1180
-    Height = 405
+    Height = 360
     Align = alClient
     TabOrder = 1
     object tvSimulacion: TcxGridDBTableView
@@ -201,6 +219,16 @@
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
+    object btnImprimir: TcxButton
+      Left = 20
+      Top = 10
+      Width = 240
+      Height = 40
+      Caption = ''
+      Enabled = False
+      TabOrder = 2
+      OnClick = btnImprimirClick
+    end
     object btnCancelar: TcxButton
       Left = 320
       Top = 10

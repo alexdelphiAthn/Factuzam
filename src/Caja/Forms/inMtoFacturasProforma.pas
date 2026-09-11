@@ -67,9 +67,13 @@ type
       AModalidad: TModalidadFacturacionCaja;
       const ASolicitud: TSolicitudFacturacionCaja
     ): TRevisionPeriodoFacturacionCaja;
+    function ValorarTraspasos(
+      const ASolicitud: TSolicitudFacturacionCaja;
+      out AValoracion: TValoracionTraspasos): Boolean;
     procedure EjecutarGeneracion(
       AModalidad: TModalidadFacturacionCaja;
-      const ASolicitud: TSolicitudFacturacionCaja);
+      const ASolicitud: TSolicitudFacturacionCaja;
+      const AValoracion: TValoracionTraspasos);
     procedure ImprimirSeleccion;
     procedure btnGenerarClick(Sender: TObject);
     procedure btnRefrescarClick(Sender: TObject);
@@ -110,13 +114,35 @@ resourcestring
     'Las operaciones e ítems ya vinculados no volverán a facturarse.';
   SPreguntaContinuarPeriodoFacturacionCaja =
     '¿Desea revisar igualmente las operaciones pendientes y continuar?';
+  STituloValoracionTraspasos =
+    'Valoración de los traspasos a facturar';
+  STextoValoracionTraspasos =
+    'Los traspasos no pueden facturarse al precio de compra. Elige la base ' +
+    '(PMP de la empresa emisora o precio de última compra), indica el ' +
+    'porcentaje y simula: las líneas marcadas se facturarán al precio ' +
+    'simulado y el resto a su precio base. Si cancelas no se genera ' +
+    'ninguna factura.';
+  SCaptionGenerarConPreciosValorados =
+    'Generar facturas con estos precios';
+  SCaptionUnidadesValoracionTraspasos = 'Unidades';
+  SCaptionPrecioBaseValoracionTraspasos = 'PMP empresa';
+  SCaptionPrecioValoradoValoracionTraspasos = 'Precio valorado';
+  STituloInformeValoracionTraspasos =
+    'Valoración simulada de traspasos';
+  SFormatoIdentificacionValoracionTraspasos =
+    'Traspasos de %s a %s del %s al %s';
+  SInfoValoracionTraspasosCancelada =
+    'Generación cancelada: no se ha facturado ningún traspaso.';
 
 implementation
 
 uses
   inLibMensajesVcl,
   inLibFacturasProforma, inMtoModalImpFacturasProforma,
-  inLibFormatoMonetario;
+  inLibFormatoMonetario,
+  inLibFacturasProformaValoracion,
+  inLibInformeSimulacionValoracion,
+  inMtoModalRevalorizacionInventario;
 
 {$R *.dfm}
 
@@ -421,9 +447,68 @@ begin
   end;
 end;
 
+function TfrmMtoFacturasProforma.ValorarTraspasos(
+  const ASolicitud: TSolicitudFacturacionCaja;
+  out AValoracion: TValoracionTraspasos): Boolean;
+var
+  oLineas   : TLineasTraspasoPendientes;
+  oOpciones : TOpcionesRevalorizacionInventario;
+  oResultado: TResultadoRevalorizacionInventario;
+  oServicio : TFacturadorOperacionesCaja;
+begin
+  AValoracion := nil;
+  oServicio := TFacturadorOperacionesCaja.Create(
+    dmmFacturasProforma.CrearRepositorio(ParametrosApp));
+  try
+    Screen.Cursor := crHourGlass;
+    try
+      oLineas := oServicio.ObtenerLineasTraspasoPendientes(ASolicitud);
+    finally
+      Screen.Cursor := crDefault;
+    end;
+  finally
+    FreeAndNil(oServicio);
+  end;
+  // Sin líneas pendientes la generación sigue y registra el periodo como
+  // SIN_DOCUMENTOS, igual que antes.
+  Result := Length(oLineas) = 0;
+  if not Result then
+  begin
+    oOpciones := Default(TOpcionesRevalorizacionInventario);
+    oOpciones.Titulo := STituloValoracionTraspasos;
+    oOpciones.Explicacion := STextoValoracionTraspasos;
+    oOpciones.CaptionAceptar := SCaptionGenerarConPreciosValorados;
+    oOpciones.CaptionUnidades := SCaptionUnidadesValoracionTraspasos;
+    oOpciones.CaptionPrecioActual := SCaptionPrecioBaseValoracionTraspasos;
+    oOpciones.CaptionPrecioSimulado :=
+      SCaptionPrecioValoradoValoracionTraspasos;
+    oOpciones.TituloInforme := STituloInformeValoracionTraspasos;
+    oOpciones.CaptionPrecioMedioInforme :=
+      SCaptionColPrecioMedioEmpresaInformeValoracion;
+    oOpciones.OcultarUnidadesFinales := True;
+    oOpciones.PreseleccionarTodas := True;
+    oResultado := TfrmModalRevalorizacionInventario.Ejecutar(
+      Self,
+      ConvertirLineasTraspasoARevalorizacion(oLineas),
+      Format(SFormatoIdentificacionValoracionTraspasos,
+        [ASolicitud.CodigoEmpresaOrigen,
+         ASolicitud.CodigoEmpresaDestino,
+         FormatDateTime('dd/mm/yyyy', ASolicitud.FechaDesde),
+         FormatDateTime('dd/mm/yyyy', ASolicitud.FechaHasta)]),
+      oOpciones);
+    Result := oResultado.Aceptado;
+    if Result then
+      AValoracion := ConstruirValoracionTraspasos(
+        oLineas, oResultado.Simulacion)
+    else
+      ShowMessage_fza(SInfoValoracionTraspasosCancelada);
+  end;
+end;
+
 procedure TfrmMtoFacturasProforma.EjecutarGeneracion(
   AModalidad: TModalidadFacturacionCaja;
-  const ASolicitud: TSolicitudFacturacionCaja);
+  const ASolicitud: TSolicitudFacturacionCaja;
+  const AValoracion: TValoracionTraspasos);
 var
   oResultado: TResultadoFacturacionCaja;
   oServicio : TFacturadorOperacionesCaja;
@@ -431,7 +516,7 @@ begin
   oServicio := TFacturadorOperacionesCaja.Create(
     dmmFacturasProforma.CrearRepositorio(ParametrosApp));
   try
-    oResultado := oServicio.Ejecutar(AModalidad, ASolicitud);
+    oResultado := oServicio.Ejecutar(AModalidad, ASolicitud, AValoracion);
     dmmFacturasProforma.RefrescarDocumentos;
     ShowMessage_fza(TextoResultado(oResultado));
   finally
@@ -441,9 +526,10 @@ end;
 
 procedure TfrmMtoFacturasProforma.btnGenerarClick(Sender: TObject);
 var
-  eModalidad: TModalidadFacturacionCaja;
-  oRevision : TRevisionPeriodoFacturacionCaja;
-  oSolicitud: TSolicitudFacturacionCaja;
+  eModalidad : TModalidadFacturacionCaja;
+  oRevision  : TRevisionPeriodoFacturacionCaja;
+  oSolicitud : TSolicitudFacturacionCaja;
+  oValoracion: TValoracionTraspasos;
 begin
   eModalidad := ObtenerModalidad;
   oSolicitud := PrepararSolicitud;
@@ -453,7 +539,14 @@ begin
       oRevision := RevisarPeriodo(eModalidad, oSolicitud);
       if ConfirmarRevisionPeriodo(oRevision) and
          ConfirmarGeneracion(eModalidad) then
-        EjecutarGeneracion(eModalidad, oSolicitud);
+      begin
+        oValoracion := nil;
+        // Los traspasos se valoran (margen sobre PMP o última compra) en el
+        // mismo modal que inventarios antes de facturarlos.
+        if (eModalidad <> mfcTraspaso) or
+           ValorarTraspasos(oSolicitud, oValoracion) then
+          EjecutarGeneracion(eModalidad, oSolicitud, oValoracion);
+      end;
     except
       on E: Exception do
         ShowMessage_fza(E.Message);

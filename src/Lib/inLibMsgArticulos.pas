@@ -667,6 +667,16 @@ resourcestring
   SInfoRevalorizacionInventarioPreparada =
     'Se han preparado %d PMP nuevos con las cifras comprobadas. Revisa el ' +
     'resultado y pulsa Regularizar para trasladarlos al Kardex.';
+  SCaptionBaseRevalorizacionInventario = 'Base del cálculo';
+  SCaptionBasePrecioMedioRevalorizacionInventario = 'PMP';
+  SCaptionBaseUltimaCompraRevalorizacionInventario = 'Última compra';
+  SCaptionImprimirRevalorizacionInventario = 'Imprimir listado';
+  STituloInformeRevalorizacionInventario =
+    'Valoración simulada del inventario';
+  SFormatoOperacionRevalorizacionInventario = '%s un %s %% sobre %s';
+  SAvisoSinUltimaCompraRevalorizacionInventario =
+    '%d líneas no tienen precio de última compra; en ellas se ha usado el ' +
+    'PMP como base.';
   SAvisoLimiteRegistrosMovimientosAlmacen =
     'La selección cargaría %s registros, demasiados para mostrarlos de una ' +
     'vez.' + sLineBreak +

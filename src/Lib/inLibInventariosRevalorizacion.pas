@@ -2,15 +2,17 @@
 {                                                                              }
 {  Módulo:       inLibInventariosRevalorizacion                                }
 {    Tipo:       Librería                                                      }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       30/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       11/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
 {    Calcula la simulación de apreciación o depreciación del PMP de las líneas }
-{    de un inventario, sin VCL, datasets ni persistencia.                      }
+{    de un inventario, sin VCL, datasets ni persistencia. La base del cálculo  }
+{    es el PMP o el precio de última compra; cuando una línea no tiene última  }
+{    compra se usa su PMP y se cuenta en el resumen.                           }
 {******************************************************************************}
 unit inLibInventariosRevalorizacion;
 
@@ -20,6 +22,11 @@ type
   TTipoRevalorizacionInventario = (
     triApreciacion,
     triDepreciacion
+  );
+
+  TBaseRevalorizacionInventario = (
+    briPrecioMedio,
+    briUltimaCompra
   );
 
   TLineaBaseRevalorizacionInventario = record
@@ -32,6 +39,11 @@ type
     PrecioMedioActual: Currency;
     PrecioMedioNuevoAnterior: Currency;
     EsPrecioMedioCorregido: Boolean;
+    // Identificador opaco del llamador (p. ej. el número de movimiento);
+    // no se muestra y permite enlazar la simulación con su origen.
+    Clave: string;
+    // Precio de la última compra del SKU o del artículo; 0 si no consta.
+    PrecioUltimaCompra: Currency;
   end;
 
   TLineasBaseRevalorizacionInventario =
@@ -44,6 +56,10 @@ type
     ValorNuevo: Currency;
     DiferenciaUnidades: Currency;
     DiferenciaValor: Currency;
+    // Precio al que se aplicó el porcentaje.
+    PrecioBase: Currency;
+    // True si se pidió la última compra y la línea no la tiene (usa el PMP).
+    SinUltimaCompra: Boolean;
   end;
 
   TLineasSimulacionRevalorizacionInventario =
@@ -53,6 +69,7 @@ type
     NumeroLineas: Integer;
     LineasConDiferenciaUnidades: Integer;
     LineasConPrecioCorregido: Integer;
+    LineasSinUltimaCompra: Integer;
     CantidadTeorica: Currency;
     CantidadFisica: Currency;
     ValorAnterior: Currency;
@@ -63,6 +80,7 @@ type
   TSimulacionRevalorizacionInventario = record
     Tipo: TTipoRevalorizacionInventario;
     Porcentaje: Currency;
+    BaseCalculo: TBaseRevalorizacionInventario;
     Lineas: TLineasSimulacionRevalorizacionInventario;
     Resumen: TResumenSimulacionRevalorizacionInventario;
   end;
@@ -74,10 +92,20 @@ function CalcularPrecioMedioRevalorizado(
   APrecioMedioActual: Currency;
   ATipo: TTipoRevalorizacionInventario;
   APorcentaje: Currency): Currency;
+function PrecioBaseRevalorizacion(
+  const ALinea: TLineaBaseRevalorizacionInventario;
+  ABase: TBaseRevalorizacionInventario;
+  out ASinUltimaCompra: Boolean): Currency;
 function SimularRevalorizacionInventario(
   const ALineas: TLineasBaseRevalorizacionInventario;
   ATipo: TTipoRevalorizacionInventario;
-  APorcentaje: Currency): TSimulacionRevalorizacionInventario;
+  APorcentaje: Currency): TSimulacionRevalorizacionInventario; overload;
+function SimularRevalorizacionInventario(
+  const ALineas: TLineasBaseRevalorizacionInventario;
+  ATipo: TTipoRevalorizacionInventario;
+  APorcentaje: Currency;
+  ABase: TBaseRevalorizacionInventario):
+  TSimulacionRevalorizacionInventario; overload;
 
 implementation
 
@@ -112,14 +140,37 @@ begin
     Extended(APrecioMedioActual) * Factor, -4));
 end;
 
+function PrecioBaseRevalorizacion(
+  const ALinea: TLineaBaseRevalorizacionInventario;
+  ABase: TBaseRevalorizacionInventario;
+  out ASinUltimaCompra: Boolean): Currency;
+begin
+  ASinUltimaCompra := False;
+  Result := ALinea.PrecioMedioActual;
+  if ABase = briUltimaCompra then
+  begin
+    if ALinea.PrecioUltimaCompra > 0 then
+      Result := ALinea.PrecioUltimaCompra
+    else
+      ASinUltimaCompra := True;
+  end;
+end;
+
 function CrearLineaSimulada(
   const ALinea: TLineaBaseRevalorizacionInventario;
   ATipo: TTipoRevalorizacionInventario;
-  APorcentaje: Currency): TLineaSimulacionRevalorizacionInventario;
+  APorcentaje: Currency;
+  ABase: TBaseRevalorizacionInventario):
+  TLineaSimulacionRevalorizacionInventario;
+var
+  SinUltimaCompra: Boolean;
 begin
   Result.Base := ALinea;
+  Result.PrecioBase := PrecioBaseRevalorizacion(
+    ALinea, ABase, SinUltimaCompra);
+  Result.SinUltimaCompra := SinUltimaCompra;
   Result.PrecioMedioNuevo := CalcularPrecioMedioRevalorizado(
-    ALinea.PrecioMedioActual, ATipo, APorcentaje);
+    Result.PrecioBase, ATipo, APorcentaje);
   Result.ValorAnterior :=
     ALinea.CantidadTeorica * ALinea.PrecioMedioActual;
   Result.ValorNuevo :=
@@ -148,12 +199,25 @@ begin
     Inc(AResumen.LineasConDiferenciaUnidades);
   if ALinea.Base.EsPrecioMedioCorregido then
     Inc(AResumen.LineasConPrecioCorregido);
+  if ALinea.SinUltimaCompra then
+    Inc(AResumen.LineasSinUltimaCompra);
 end;
 
 function SimularRevalorizacionInventario(
   const ALineas: TLineasBaseRevalorizacionInventario;
   ATipo: TTipoRevalorizacionInventario;
   APorcentaje: Currency): TSimulacionRevalorizacionInventario;
+begin
+  Result := SimularRevalorizacionInventario(
+    ALineas, ATipo, APorcentaje, briPrecioMedio);
+end;
+
+function SimularRevalorizacionInventario(
+  const ALineas: TLineasBaseRevalorizacionInventario;
+  ATipo: TTipoRevalorizacionInventario;
+  APorcentaje: Currency;
+  ABase: TBaseRevalorizacionInventario):
+  TSimulacionRevalorizacionInventario;
 var
   iLinea: Integer;
 begin
@@ -162,11 +226,12 @@ begin
   Result := Default(TSimulacionRevalorizacionInventario);
   Result.Tipo := ATipo;
   Result.Porcentaje := APorcentaje;
+  Result.BaseCalculo := ABase;
   SetLength(Result.Lineas, Length(ALineas));
   for iLinea := 0 to High(ALineas) do
   begin
     Result.Lineas[iLinea] := CrearLineaSimulada(
-      ALineas[iLinea], ATipo, APorcentaje);
+      ALineas[iLinea], ATipo, APorcentaje, ABase);
     AcumularLineaEnResumen(
       Result.Lineas[iLinea], Result.Resumen);
   end;

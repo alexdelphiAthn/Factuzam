@@ -40,12 +40,30 @@ uses
   cxLabel,
   cxRadioGroup,
   inLibInventariosRevalorizacion,
+  inLibInformeSimulacionValoracion,
   inMtoFrmBase;
 
 type
   TResultadoRevalorizacionInventario = record
     Aceptado: Boolean;
     Simulacion: TSimulacionRevalorizacionInventario;
+  end;
+
+  // Textos y comportamiento opcionales para reutilizar el modal fuera de
+  // inventarios (traspasos). Los campos vacíos conservan los textos de
+  // inventarios.
+  TOpcionesRevalorizacionInventario = record
+    Titulo: string;
+    Explicacion: string;
+    CaptionAceptar: string;
+    CaptionUnidades: string;
+    CaptionPrecioActual: string;
+    CaptionPrecioSimulado: string;
+    // Título y cabecera de la columna PMP del listado impreso.
+    TituloInforme: string;
+    CaptionPrecioMedioInforme: string;
+    OcultarUnidadesFinales: Boolean;
+    PreseleccionarTodas: Boolean;
   end;
 
   TfrmModalRevalorizacionInventario = class(TfrmBase)
@@ -55,6 +73,7 @@ type
     rgTipo: TcxRadioGroup;
     lblPorcentaje: TcxLabel;
     curPorcentaje: TcxCurrencyEdit;
+    rgBase: TcxRadioGroup;
     btnSimular: TcxButton;
     btnSeleccionarTodo: TcxButton;
     btnSeleccionarNinguno: TcxButton;
@@ -72,6 +91,7 @@ type
     lblAvisos: TcxLabel;
     pnlBotones: TPanel;
     btnCancelar: TcxButton;
+    btnImprimir: TcxButton;
     btnPreparar: TcxButton;
     cdsSimulacion: TClientDataSet;
     dsSimulacion: TDataSource;
@@ -81,15 +101,22 @@ type
     procedure btnSeleccionarNingunoClick(Sender: TObject);
     procedure btnCancelarClick(Sender: TObject);
     procedure btnPrepararClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
     procedure ConfiguracionPropertiesChange(Sender: TObject);
     procedure cdsSimulacionAfterPost(DataSet: TDataSet);
   private
     FActualizando: Boolean;
     FColumnaIndiceBase: TcxGridDBColumn;
+    FColumnaUnidadesAnteriores: TcxGridDBColumn;
+    FColumnaUnidadesFinales: TcxGridDBColumn;
+    FColumnaPrecioAnterior: TcxGridDBColumn;
+    FColumnaPrecioSimulado: TcxGridDBColumn;
+    FOpciones: TOpcionesRevalorizacionInventario;
     FLineasBase: TLineasBaseRevalorizacionInventario;
     FResultado: TResultadoRevalorizacionInventario;
     FUltimaSimulacion: TSimulacionRevalorizacionInventario;
     procedure AplicarTextos;
+    procedure AplicarOpciones;
     procedure CrearEstructura;
     procedure CrearColumnas;
     procedure CargarLineas;
@@ -99,6 +126,10 @@ type
     procedure LimpiarResumen;
     procedure InvalidarSimulacion;
     function TipoSeleccionado: TTipoRevalorizacionInventario;
+    function BaseSeleccionada: TBaseRevalorizacionInventario;
+    function TextoOperacion(
+      const ASimulacion: TSimulacionRevalorizacionInventario): string;
+    function DatosInforme: TDatosInformeSimulacionValoracion;
     function RecogerLineasSeleccionadas:
       TLineasBaseRevalorizacionInventario;
     function CalcularSimulacion: Boolean;
@@ -111,7 +142,13 @@ type
       AOwner: TComponent;
       const ALineas: TLineasBaseRevalorizacionInventario;
       const AIdentificacionInventario: string):
-      TResultadoRevalorizacionInventario;
+      TResultadoRevalorizacionInventario; overload;
+    class function Ejecutar(
+      AOwner: TComponent;
+      const ALineas: TLineasBaseRevalorizacionInventario;
+      const AIdentificacionInventario: string;
+      const AOpciones: TOpcionesRevalorizacionInventario):
+      TResultadoRevalorizacionInventario; overload;
   end;
 
 implementation
@@ -129,7 +166,8 @@ uses
   cxLookAndFeels,
   cxStyles,
   inLibMsgArticulos,
-  inLibMsgComun;
+  inLibMsgComun,
+  inMtoModalImpSimulacionValoracion;
 
 {$R *.dfm}
 
@@ -153,12 +191,28 @@ class function TfrmModalRevalorizacionInventario.Ejecutar(
   const ALineas: TLineasBaseRevalorizacionInventario;
   const AIdentificacionInventario: string):
   TResultadoRevalorizacionInventario;
+begin
+  Result := Ejecutar(
+    AOwner,
+    ALineas,
+    AIdentificacionInventario,
+    Default(TOpcionesRevalorizacionInventario));
+end;
+
+class function TfrmModalRevalorizacionInventario.Ejecutar(
+  AOwner: TComponent;
+  const ALineas: TLineasBaseRevalorizacionInventario;
+  const AIdentificacionInventario: string;
+  const AOpciones: TOpcionesRevalorizacionInventario):
+  TResultadoRevalorizacionInventario;
 var
   Formulario: TfrmModalRevalorizacionInventario;
 begin
   Result := Default(TResultadoRevalorizacionInventario);
   Formulario := TfrmModalRevalorizacionInventario.Create(AOwner);
   try
+    Formulario.FOpciones := AOpciones;
+    Formulario.AplicarOpciones;
     Formulario.FLineasBase := Copy(ALineas, 0, Length(ALineas));
     Formulario.lblInventario.Caption := AIdentificacionInventario;
     Formulario.CargarLineas;
@@ -179,6 +233,7 @@ begin
   CrearEstructura;
   CrearColumnas;
   rgTipo.ItemIndex := 0;
+  rgBase.ItemIndex := 0;
   curPorcentaje.Value := 10;
   InvalidarSimulacion;
 end;
@@ -198,6 +253,12 @@ begin
     SCaptionSeleccionarNingunoRevalorizacionInventario;
   btnPreparar.Caption := SCaptionPrepararPmpRevalorizacionInventario;
   btnCancelar.Caption := SCaptionCancelarEsc;
+  rgBase.Caption := SCaptionBaseRevalorizacionInventario;
+  rgBase.Properties.Items[0].Caption :=
+    SCaptionBasePrecioMedioRevalorizacionInventario;
+  rgBase.Properties.Items[1].Caption :=
+    SCaptionBaseUltimaCompraRevalorizacionInventario;
+  btnImprimir.Caption := SCaptionImprimirRevalorizacionInventario;
   lblTotalAnterior.Caption :=
     SCaptionTotalAnteriorRevalorizacionInventario;
   lblTotalSimulado.Caption :=
@@ -212,7 +273,7 @@ begin
   cdsSimulacion.FieldDefs.Clear;
   cdsSimulacion.FieldDefs.Add(CAMPO_APLICAR, ftBoolean);
   cdsSimulacion.FieldDefs.Add(CAMPO_INDICE_BASE, ftInteger);
-  cdsSimulacion.FieldDefs.Add(CAMPO_LINEA, ftWideString, 8);
+  cdsSimulacion.FieldDefs.Add(CAMPO_LINEA, ftWideString, 30);
   cdsSimulacion.FieldDefs.Add(CAMPO_ARTICULO, ftWideString, 50);
   cdsSimulacion.FieldDefs.Add(CAMPO_SKU, ftWideString, 100);
   cdsSimulacion.FieldDefs.Add(CAMPO_DESCRIPCION, ftWideString, 250);
@@ -305,6 +366,7 @@ begin
     95,
     False);
   ConfigurarColumnaMonetaria(Columna, '#,##0.####');
+  FColumnaUnidadesAnteriores := Columna;
   Columna := CrearColumna(
     tvSimulacion,
     CAMPO_CANTIDAD_FISICA,
@@ -312,6 +374,7 @@ begin
     95,
     False);
   ConfigurarColumnaMonetaria(Columna, '#,##0.####');
+  FColumnaUnidadesFinales := Columna;
   Columna := CrearColumna(
     tvSimulacion,
     CAMPO_PMP_ANTERIOR,
@@ -319,6 +382,7 @@ begin
     95,
     False);
   ConfigurarColumnaMonetaria(Columna, '#,##0.0000');
+  FColumnaPrecioAnterior := Columna;
   Columna := CrearColumna(
     tvSimulacion,
     CAMPO_PMP_SIMULADO,
@@ -326,6 +390,7 @@ begin
     100,
     False);
   ConfigurarColumnaMonetaria(Columna, '#,##0.0000');
+  FColumnaPrecioSimulado := Columna;
   Columna := CrearColumna(
     tvSimulacion,
     CAMPO_VALOR_ANTERIOR,
@@ -360,7 +425,8 @@ begin
     for iLinea := 0 to High(FLineasBase) do
     begin
       cdsSimulacion.Append;
-      cdsSimulacion.FieldByName(CAMPO_APLICAR).AsBoolean := False;
+      cdsSimulacion.FieldByName(CAMPO_APLICAR).AsBoolean :=
+        FOpciones.PreseleccionarTodas;
       cdsSimulacion.FieldByName(CAMPO_INDICE_BASE).AsInteger := iLinea;
       cdsSimulacion.FieldByName(CAMPO_LINEA).AsString :=
         FLineasBase[iLinea].Linea;
@@ -506,6 +572,7 @@ begin
       FUltimaSimulacion :=
         Default(TSimulacionRevalorizacionInventario);
       btnPreparar.Enabled := False;
+      btnImprimir.Enabled := False;
       lblAvisos.Style.Font.Color := clWindowText;
       lblAvisos.Caption :=
         SInfoSimulacionPendienteRevalorizacionInventario;
@@ -574,9 +641,11 @@ begin
       FUltimaSimulacion := SimularRevalorizacionInventario(
         LineasSeleccionadas,
         Tipo,
-        Porcentaje);
+        Porcentaje,
+        BaseSeleccionada);
       MostrarSimulacion(FUltimaSimulacion);
       btnPreparar.Enabled := True;
+      btnImprimir.Enabled := True;
       Result := True;
     end;
   end;
@@ -644,6 +713,10 @@ begin
       Avisos.Add(Format(
         SAvisoPmpCorregidosRevalorizacionInventario,
         [AResumen.LineasConPrecioCorregido]));
+    if AResumen.LineasSinUltimaCompra > 0 then
+      Avisos.Add(Format(
+        SAvisoSinUltimaCompraRevalorizacionInventario,
+        [AResumen.LineasSinUltimaCompra]));
     lblAvisos.Style.Font.Color := clMaroon;
     lblAvisos.Caption := Trim(Avisos.Text);
   finally
@@ -691,6 +764,78 @@ procedure TfrmModalRevalorizacionInventario.ConfiguracionPropertiesChange(
   Sender: TObject);
 begin
   InvalidarSimulacion;
+end;
+
+procedure TfrmModalRevalorizacionInventario.AplicarOpciones;
+begin
+  if FOpciones.Titulo <> '' then
+    Caption := FOpciones.Titulo;
+  if FOpciones.Explicacion <> '' then
+    lblExplicacion.Caption := FOpciones.Explicacion;
+  if FOpciones.CaptionAceptar <> '' then
+    btnPreparar.Caption := FOpciones.CaptionAceptar;
+  if FOpciones.CaptionUnidades <> '' then
+    FColumnaUnidadesAnteriores.Caption := FOpciones.CaptionUnidades;
+  if FOpciones.CaptionPrecioActual <> '' then
+    FColumnaPrecioAnterior.Caption := FOpciones.CaptionPrecioActual;
+  if FOpciones.CaptionPrecioSimulado <> '' then
+    FColumnaPrecioSimulado.Caption := FOpciones.CaptionPrecioSimulado;
+  FColumnaUnidadesFinales.Visible := not FOpciones.OcultarUnidadesFinales;
+end;
+
+function TfrmModalRevalorizacionInventario.BaseSeleccionada:
+  TBaseRevalorizacionInventario;
+begin
+  Result := briPrecioMedio;
+  if rgBase.ItemIndex = 1 then
+    Result := briUltimaCompra;
+end;
+
+function TfrmModalRevalorizacionInventario.TextoOperacion(
+  const ASimulacion: TSimulacionRevalorizacionInventario): string;
+var
+  sBase: string;
+  sTipo: string;
+begin
+  if ASimulacion.Tipo = triApreciacion then
+    sTipo := SCaptionApreciarInventario
+  else
+    sTipo := SCaptionDepreciarInventario;
+  if ASimulacion.BaseCalculo = briUltimaCompra then
+    sBase := SCaptionBaseUltimaCompraRevalorizacionInventario
+  else
+    sBase := SCaptionBasePrecioMedioRevalorizacionInventario;
+  Result := Format(
+    SFormatoOperacionRevalorizacionInventario,
+    [sTipo, FormatFloat('0.00', ASimulacion.Porcentaje), sBase]);
+end;
+
+function TfrmModalRevalorizacionInventario.DatosInforme:
+  TDatosInformeSimulacionValoracion;
+begin
+  Result := ConstruirDatosInformeSimulacionValoracion(
+    FLineasBase, FUltimaSimulacion);
+  if FOpciones.TituloInforme <> '' then
+    Result.Titulo := FOpciones.TituloInforme
+  else
+    Result.Titulo := STituloInformeRevalorizacionInventario;
+  Result.Identificacion := lblInventario.Caption;
+  Result.Operacion := TextoOperacion(FUltimaSimulacion);
+  if FOpciones.CaptionPrecioMedioInforme <> '' then
+    Result.CaptionPrecioMedio := FOpciones.CaptionPrecioMedioInforme
+  else
+    Result.CaptionPrecioMedio :=
+      SCaptionColPrecioMedioAlmacenInformeValoracion;
+  Result.Fecha := Now;
+end;
+
+procedure TfrmModalRevalorizacionInventario.btnImprimirClick(
+  Sender: TObject);
+begin
+  if Length(FUltimaSimulacion.Lineas) = 0 then
+    ShowMessage_fza(SInfoSimulacionPendienteRevalorizacionInventario)
+  else
+    TfrmPrintSimulacionValoracion.Mostrar(Self, DatosInforme);
 end;
 
 procedure TfrmModalRevalorizacionInventario.cdsSimulacionAfterPost(

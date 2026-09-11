@@ -2179,6 +2179,34 @@ begin
     ARegistrar,
     'SInfoRevalorizacionInventarioPreparada',
     @inLibMsgArticulos.SInfoRevalorizacionInventarioPreparada);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionBaseRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionBaseRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionBasePrecioMedioRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionBasePrecioMedioRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionBaseUltimaCompraRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionBaseUltimaCompraRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SCaptionImprimirRevalorizacionInventario',
+    @inLibMsgArticulos.SCaptionImprimirRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'STituloInformeRevalorizacionInventario',
+    @inLibMsgArticulos.STituloInformeRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SFormatoOperacionRevalorizacionInventario',
+    @inLibMsgArticulos.SFormatoOperacionRevalorizacionInventario);
+  RegistrarTextoArticulo(
+    ARegistrar,
+    'SAvisoSinUltimaCompraRevalorizacionInventario',
+    @inLibMsgArticulos.SAvisoSinUltimaCompraRevalorizacionInventario);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SAvisoLimiteRegistrosMovimientosAlmacen',

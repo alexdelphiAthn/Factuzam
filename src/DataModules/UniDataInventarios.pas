@@ -1441,11 +1441,74 @@ begin
   end;
 end;
 
+// Última compra por SKU (y por artículo como respaldo) de las líneas
+// guardadas del inventario: coste del SKU y, si no consta, el del proveedor
+// principal. Las claves son 'S:' + SKU y 'A:' + artículo.
+function CargarUltimasComprasInventario(
+  AConexion: TUniConnection;
+  const AEmpresa, AAlmacen, ASerie, ANumero: string):
+  TDictionary<string, Currency>;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := TDictionary<string, Currency>.Create;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'SELECT DISTINCT L.CODIGO_UNIDAD_INVLIN AS SKU, ' +
+      '       L.CODIGO_ART_INVLIN AS ARTICULO, ' +
+      '       (SELECT C.PRECIO_ULT_COMPRA_SKUC ' +
+      '          FROM fza_articulos_skus_costes C ' +
+      '         WHERE C.CODIGO_UNIDAD_SKU_SKUC = L.CODIGO_UNIDAD_INVLIN) ' +
+      '         AS ULTIMA_COMPRA_SKU, ' +
+      '       (SELECT MAX(AP.PRECIO_ULT_COMPRA_AP) ' +
+      '          FROM fza_articulos_proveedores AP ' +
+      '         WHERE AP.CODIGO_ART_AP = L.CODIGO_ART_INVLIN ' +
+      '           AND AP.ESPROVEEDORPRINCIPAL_AP = ''S'') ' +
+      '         AS ULTIMA_COMPRA_ARTICULO ' +
+      '  FROM fza_inventarios_lineas L ' +
+      ' WHERE L.CODIGO_EMP_INVLIN = :EMPRESA ' +
+      '   AND L.CODIGO_ALM_INVLIN = :ALMACEN ' +
+      '   AND L.SERIE_INV_INVLIN = :SERIE ' +
+      '   AND L.NUMERO_INV_INVLIN = :NUMERO';
+    oConsulta.ParamByName('EMPRESA').AsString := AEmpresa;
+    oConsulta.ParamByName('ALMACEN').AsString := AAlmacen;
+    oConsulta.ParamByName('SERIE').AsString := ASerie;
+    oConsulta.ParamByName('NUMERO').AsString := ANumero;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      if not oConsulta.FieldByName('ULTIMA_COMPRA_SKU').IsNull then
+        Result.AddOrSetValue(
+          'S:' + oConsulta.FieldByName('SKU').AsString,
+          oConsulta.FieldByName('ULTIMA_COMPRA_SKU').AsCurrency);
+      if not oConsulta.FieldByName('ULTIMA_COMPRA_ARTICULO').IsNull then
+        Result.AddOrSetValue(
+          'A:' + oConsulta.FieldByName('ARTICULO').AsString,
+          oConsulta.FieldByName('ULTIMA_COMPRA_ARTICULO').AsCurrency);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function UltimaCompraLinea(
+  AUltimasCompras: TDictionary<string, Currency>;
+  const ASku, AArticulo: string): Currency;
+begin
+  if not AUltimasCompras.TryGetValue('S:' + ASku, Result) then
+    if not AUltimasCompras.TryGetValue('A:' + AArticulo, Result) then
+      Result := 0;
+end;
+
 function TdmInventarios.PrepararLineasRevalorizacion:
   TLineasBaseRevalorizacionInventario;
 var
   iLinea: Integer;
   Marcador: TBookmark;
+  UltimasCompras: TDictionary<string, Currency>;
 begin
   SetLength(Result, 0);
   if GetEstadoInventario <> 'ABIERTO' then
@@ -1455,6 +1518,8 @@ begin
   if cdsLineas.IsEmpty then
     raise Exception.Create(SErrorLineasInventarioNoAbiertas);
 
+  UltimasCompras := CargarUltimasComprasInventario(
+    ConexionPrincipal, FCodigoEmpresa, FCodigoAlmacen, FSerie, FNumero);
   Marcador := cdsLineas.GetBookmark;
   cdsLineas.DisableControls;
   try
@@ -1465,6 +1530,11 @@ begin
     begin
       Result[iLinea].Linea :=
         cdsLineas.FieldByName('LINEA_INVLIN').AsString;
+      Result[iLinea].Clave := Result[iLinea].Linea;
+      Result[iLinea].PrecioUltimaCompra := UltimaCompraLinea(
+        UltimasCompras,
+        cdsLineas.FieldByName('CODIGO_UNIDAD_INVLIN').AsString,
+        cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString);
       Result[iLinea].CodigoArticulo :=
         cdsLineas.FieldByName('CODIGO_ART_INVLIN').AsString;
       Result[iLinea].CodigoUnidad :=
@@ -1493,6 +1563,7 @@ begin
       cdsLineas.GotoBookmark(Marcador);
     cdsLineas.FreeBookmark(Marcador);
     cdsLineas.EnableControls;
+    FreeAndNil(UltimasCompras);
   end;
 end;
 
