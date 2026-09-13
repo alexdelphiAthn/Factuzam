@@ -270,21 +270,21 @@
                   Top = 203
                   DataBinding.DataField = 'POBLACION_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 7
+                  TabOrder = 9
                   Width = 322
                 end
                 object lblPoblacion: TcxLabel
                   Left = 15
                   Top = 207
                   Caption = 'Poblaci'#243'n'
-                  TabOrder = 8
+                  TabOrder = 10
                   Transparent = True
                 end
                 object lblProvincia: TcxLabel
                   Left = 21
                   Top = 245
                   Caption = 'Provincia'
-                  TabOrder = 10
+                  TabOrder = 12
                   Transparent = True
                 end
                 object txtPROVINCIA_EMPRESA: TcxDBTextEdit
@@ -292,7 +292,7 @@
                   Top = 240
                   DataBinding.DataField = 'PROVINCIA_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 9
+                  TabOrder = 11
                   Width = 322
                 end
                 object chkRegimenEspecial: TcxDBCheckBox
@@ -305,7 +305,7 @@
                   Properties.ValueUnchecked = 'N'
                   Properties.OnChange = chkAplicaRetencionesPropertiesChange
                   Style.TransparentBorder = False
-                  TabOrder = 11
+                  TabOrder = 20
                   Transparent = True
                 end
                 object txtCODIGO_POSTAL_EMP: TcxDBTextEdit
@@ -313,21 +313,21 @@
                   Top = 166
                   DataBinding.DataField = 'CODIGO_POSTAL_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 12
+                  TabOrder = 7
                   Width = 322
                 end
                 object lblCodPostal: TcxLabel
                   Left = 6
                   Top = 171
                   Caption = 'C'#243'd Postal'
-                  TabOrder = 13
+                  TabOrder = 8
                   Transparent = True
                 end
                 object lblIBAN: TcxLabel
                   Left = 57
                   Top = 310
                   Caption = 'IBAN'
-                  TabOrder = 14
+                  TabOrder = 18
                   Transparent = True
                 end
                 object txtIBAN_EMPRESA: TcxDBMaskEdit
@@ -337,7 +337,7 @@
                   DataBinding.DataSource = dsTablaG
                   Properties.IgnoreMaskBlank = True
                   Properties.EditMask = 'aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa'
-                  TabOrder = 15
+                  TabOrder = 17
                   Width = 369
                 end
                 object btnValidar: TcxButton
@@ -346,14 +346,14 @@
                   Width = 98
                   Height = 27
                   Caption = 'Vali&dar'
-                  TabOrder = 16
+                  TabOrder = 19
                   OnClick = btnValidarClick
                 end
                 object lblProvincia1: TcxLabel
                   Left = 23
                   Top = 278
                   Caption = 'Pa'#237's'
-                  TabOrder = 17
+                  TabOrder = 16
                   Transparent = True
                 end
                 object txtNOMBRE_PAIS_EMPRESA: TcxDBTextEdit
@@ -361,7 +361,7 @@
                   Top = 273
                   DataBinding.DataField = 'NOMBRE_PAI_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 18
+                  TabOrder = 14
                   Visible = False
                   Width = 254
                 end
@@ -372,7 +372,7 @@
                   DataBinding.DataSource = dsTablaG
                   Enabled = False
                   Properties.OnChange = txtCODIGO_PAIS_EMPRESAPropertiesChange
-                  TabOrder = 19
+                  TabOrder = 13
                   Width = 73
                 end
                 object cbbPaises: TcxDBLookupComboBox
@@ -389,7 +389,7 @@
                   Properties.ListOptions.CaseInsensitive = True
                   Properties.ListOptions.ShowHeader = False
                   Properties.ListSource = dmEmpresas.dsPaises
-                  TabOrder = 20
+                  TabOrder = 15
                   Width = 203
                 end
                 object chkRecargoEquivalenciaCompras: TcxDBCheckBox
