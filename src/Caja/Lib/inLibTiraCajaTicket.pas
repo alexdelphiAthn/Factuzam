@@ -447,7 +447,7 @@ begin
      and (Trim(sSerie) <> '') and (Trim(sNumFac) <> '') then
   begin
     sQR := ConstruirUrlQR(AParametrosApp, sNif, sSerie, sNumFac,
-      dFechaFac, dLiquido);
+      dFechaFac, AOperacion.ImporteVerifactu);
     if sQR <> '' then
     begin
       ATicket.Alinear(alCentro);

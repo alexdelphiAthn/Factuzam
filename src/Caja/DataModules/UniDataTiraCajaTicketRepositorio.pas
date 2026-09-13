@@ -167,6 +167,7 @@ begin
     'o.NUMERO_FAC_OPCAJA, o.IMPORTE_TOTAL_OPCAJA, ' +
     'o.CONCEPTO_GASTO_INGRESO_OPCAJA, ' +
     'o.CODIGO_ALM_CONTRA_OPCAJA, ' +
+    'f.TOTAL_BASES_FAC, f.TOTAL_IMPUESTOS_FAC, ' +
     'f.TOTAL_LIQUIDO_FAC, f.FECHA_FAC, f.NIF_EMPRESA_FAC, ' +
     'COALESCE(e.FORMATO_DOCUMENTO_EMP, ' +
     '''Serie.NroDocumento'') AS FORMATO_DOCUMENTO_EMP, ' +
@@ -319,6 +320,7 @@ begin
     'NUMERO_OPERACION_OPCAJA,FECHA_OPERACION_OPCAJA,' +
     'SERIE_FAC_OPCAJA,NUMERO_FAC_OPCAJA,IMPORTE_TOTAL_OPCAJA,' +
     'CONCEPTO_GASTO_INGRESO_OPCAJA,CODIGO_ALM_CONTRA_OPCAJA,' +
+    'TOTAL_BASES_FAC,TOTAL_IMPUESTOS_FAC,' +
     'TOTAL_LIQUIDO_FAC,FECHA_FAC,NIF_EMPRESA_FAC,' +
     'FORMATO_DOCUMENTO_EMP,GRUPO');
   Result[6] := DefinicionSql(
@@ -737,6 +739,9 @@ begin
         oLinea.AlmacenContrapartida :=
           oQuery.FieldByName(
             'CODIGO_ALM_CONTRA_OPCAJA').AsString;
+        oLinea.ImporteVerifactu :=
+          oQuery.FieldByName('TOTAL_BASES_FAC').AsCurrency +
+          oQuery.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
         oLinea.TotalLiquido :=
           oQuery.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency;
         oLinea.FechaFactura :=

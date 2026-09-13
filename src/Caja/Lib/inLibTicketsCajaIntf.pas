@@ -71,6 +71,7 @@ type
     NifEmpresaFactura: string;
     FechaFactura: TDateTime;
     TotalLiquido: Currency;
+    ImporteVerifactu: Currency;
     RazonSocialEmpresa: string;
     DireccionEmpresa: string;
     CodigoPostalEmpresa: string;

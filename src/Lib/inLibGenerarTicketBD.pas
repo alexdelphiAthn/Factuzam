@@ -519,7 +519,7 @@ begin
       FCabecera.SerieFactura,
       FCabecera.NumeroFactura,
       FCabecera.FechaFactura,
-      FCabecera.TotalLiquido);
+      FCabecera.ImporteVerifactu);
 end;
 
 procedure TGeneradorTicketVenta.EscribirQr;

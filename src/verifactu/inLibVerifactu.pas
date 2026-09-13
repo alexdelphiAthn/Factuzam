@@ -106,7 +106,7 @@ function GenerarQRPngVerifactu(const AUrl: string;
 // FastReport: rellena el TfrxPictureView llamado 'qrverifactu' con el
 // QR tributario de la factura del registro activo de su banda (campos
 // NIF_EMPRESA_FAC, SERIE_FAC, NUMERO_FAC, FECHA_FAC,
-// TOTAL_LIQUIDO_FAC). Encadenar desde TfrxReport.OnBeforePrint.
+// TOTAL_BASES_FAC, TOTAL_IMPUESTOS_FAC). Encadenar desde TfrxReport.OnBeforePrint.
 procedure SustituirQRVerifactuEnReport(
   const AParametrosApp: IParametrosAplicacion;
   Component: TfrxReportComponent);
@@ -501,7 +501,8 @@ begin
             (ADataSet.FindField('SERIE_FAC') <> nil) and
             (ADataSet.FindField('NUMERO_FAC') <> nil) and
             (ADataSet.FindField('FECHA_FAC') <> nil) and
-            (ADataSet.FindField('TOTAL_LIQUIDO_FAC') <> nil);
+            (ADataSet.FindField('TOTAL_BASES_FAC') <> nil) and
+            (ADataSet.FindField('TOTAL_IMPUESTOS_FAC') <> nil);
 end;
 
 // Dataset de cabecera de factura para un objeto del report: primero la
@@ -859,7 +860,8 @@ begin
               ADataSet.FieldByName('SERIE_FAC').AsString,
               ADataSet.FieldByName('NUMERO_FAC').AsString,
               ADataSet.FieldByName('FECHA_FAC').AsDateTime,
-              ADataSet.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+              ADataSet.FieldByName('TOTAL_BASES_FAC').AsCurrency +
+              ADataSet.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency);
   if sUrl = '' then
     APic.Picture.Assign(nil)
   else

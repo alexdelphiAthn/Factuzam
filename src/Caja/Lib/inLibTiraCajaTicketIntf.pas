@@ -72,6 +72,7 @@ type
     ConceptoGastoIngreso: string;
     AlmacenContrapartida: string;
     TotalLiquido: Currency;
+    ImporteVerifactu: Currency;
     FechaFactura: TDateTime;
     NifEmpresaFactura: string;
     FormatoDocumento: string;

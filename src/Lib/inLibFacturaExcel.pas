@@ -145,7 +145,8 @@ begin
   if Result then
     Result := FMaster.FindField('FECHA_FAC') <> nil;
   if Result then
-    Result := FMaster.FindField('TOTAL_LIQUIDO_FAC') <> nil;
+    Result := (FMaster.FindField('TOTAL_BASES_FAC') <> nil) and
+      (FMaster.FindField('TOTAL_IMPUESTOS_FAC') <> nil);
   if Result then
     Result := Trim(CampoTexto('NUMERO_FAC')) <> '';
 end;
@@ -222,7 +223,8 @@ begin
       CampoTexto('SERIE_FAC'),
       CampoTexto('NUMERO_FAC'),
       FMaster.FieldByName('FECHA_FAC').AsDateTime,
-      FMaster.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency);
+      FMaster.FieldByName('TOTAL_BASES_FAC').AsCurrency +
+      FMaster.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency);
     aPng := GenerarQRPngVerifactu(sUrl);
     if Length(aPng) > 0 then
     begin

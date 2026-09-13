@@ -314,7 +314,7 @@ begin
     '        f.FECHA_FAC, f.TIPO_FAC, f.TIPO_RECTIFICATIVA_FAC, ' +
     '        f.TIPO_FACTURA_VERIFACTU_FAC, ' +
     '        f.NIF_CLIENTE_FAC, f.RAZON_SOCIAL_CLIENTE_FAC, ' +
-    '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_LIQUIDO_FAC, ' +
+    '        f.TOTAL_IMPUESTOS_FAC, f.TOTAL_BASES_FAC, ' +
     '        f.TOTAL_RETENCION_FAC, ' +
     '        f.PORCENTAJE_IVAN_FAC, f.TOTAL_BASEI_IVAN_FAC, ' +
     '        f.TOTAL_IVAN_FAC, f.PORCENTAJE_REN_FAC, f.TOTAL_REN_FAC, ' +
@@ -409,8 +409,8 @@ begin
     AQry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
   // Verifactu comunica el bruto de IVA, antes de descontar la retención.
   ADatos.ImporteTotal :=
-    AQry.FieldByName('TOTAL_LIQUIDO_FAC').AsCurrency +
-    AQry.FieldByName('TOTAL_RETENCION_FAC').AsCurrency;
+    AQry.FieldByName('TOTAL_BASES_FAC').AsCurrency +
+    AQry.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency;
   ADatos.SerialCert :=
     Trim(AQry.FieldByName('CODIGO_CERTIFICADO_EMP').AsString);
   ADatos.TitularCert :=

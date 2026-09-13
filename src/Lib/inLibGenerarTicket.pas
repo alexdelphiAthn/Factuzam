@@ -227,7 +227,7 @@ begin
       FDatosCobro.TotalesFactura.Cabecera.FieldByName(
         'NUMERO_FAC').AsString,
       FCabecera.Fecha,
-      FCabecera.TotalLiquido);
+      FCabecera.TotalBases + FCabecera.TotalImpuestos);
 end;
 
 procedure TImpresorTicketVenta.PrepararDatos;
