@@ -101,11 +101,8 @@ begin
     frm.dsAlmacenes.DataSet := frm.FRepositorio.Almacenes;
     frm.dsCajas.DataSet := frm.FRepositorio.Cajas;
     frm.FRepositorio.AbrirAlmacenes(AEmpresa);
-    if not frm.FRepositorio.Almacenes.IsEmpty then
-    begin
-      frm.cbbAlmacen.EditValue := frm.FRepositorio.Almacenes.FieldByName(
-        'CODIGO_ALM_ALM').AsString;
-    end;
+    frm.cbbAlmacen.EditValue := Null;
+    frm.CargarCajas;
     if frm.ShowModal = mrOk then
     begin
       AAlmacen := frm.FAlmacen;
@@ -135,24 +132,8 @@ begin
   sCaja := Trim(VarToStr(cbbCaja.EditValue));
   sSerieTokenizada := Trim(txtSerieTokenizada.Text);
   if sAlmacen = '' then
-  begin
-    MessageDlg_fza(
-      SErrorAlmacenSerieTokenizadaNoIndicado,
-      mtWarning,
-      [mbOk],
-      0);
-    cbbAlmacen.SetFocus;
-  end
-  else if sCaja = '' then
-  begin
-    MessageDlg_fza(
-      SErrorCajaSerieTokenizadaNoIndicada,
-      mtWarning,
-      [mbOk],
-      0);
-    cbbCaja.SetFocus;
-  end
-  else if sSerieTokenizada = '' then
+    sCaja := '';
+  if sSerieTokenizada = '' then
   begin
     MessageDlg_fza(
       SErrorSerieDocumentoNoIndicada,
@@ -186,15 +167,9 @@ begin
   sAlmacen := Trim(VarToStr(cbbAlmacen.EditValue));
   cbbCaja.EditValue := Null;
   FRepositorio.Cajas.Close;
+  cbbCaja.Enabled := sAlmacen <> '';
   if sAlmacen <> '' then
-  begin
     FRepositorio.AbrirCajas(sAlmacen);
-    if not FRepositorio.Cajas.IsEmpty then
-    begin
-      cbbCaja.EditValue := FRepositorio.Cajas.FieldByName(
-        'CODIGO_CAJA_ALMCAJ').AsString;
-    end;
-  end;
 end;
 
 procedure TfrmModalSeriesDocumentos.cbbAlmacenPropertiesEditValueChanged(

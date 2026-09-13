@@ -2,14 +2,14 @@
   BorderStyle = bsDialog
   Caption = 'Añadir serie a todos'
   ClientHeight = 250
-  ClientWidth = 430
+  ClientWidth = 500
   Position = poScreenCenter
   OnCreate = FormCreate
   TextHeight = 19
   object pnlPrincipal: TPanel [0]
     Left = 0
     Top = 0
-    Width = 430
+    Width = 500
     Height = 200
     Align = alClient
     BevelOuter = bvNone
@@ -18,7 +18,7 @@
     object lblTitulo: TcxLabel
       Left = 16
       Top = 10
-      Caption = 'Serie para todos los documentos de una ubicaci'#243'n'
+      Caption = 'Series de empresa (ubicaci'#243'n opcional)'
       Style.TextColor = clNavy
       Style.Font.Size = 10
       Style.Font.Style = [fsBold]
@@ -28,12 +28,12 @@
     object lblAlmacen: TcxLabel
       Left = 16
       Top = 46
-      Caption = 'Almac'#233'n'
+      Caption = 'Almac'#233'n (opcional)'
       TabOrder = 7
       Transparent = True
     end
     object cbbAlmacen: TcxLookupComboBox
-      Left = 130
+      Left = 180
       Top = 44
       Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
       Properties.ListColumns = <
@@ -50,17 +50,17 @@
       Properties.ListSource = dsAlmacenes
       Properties.OnEditValueChanged = cbbAlmacenPropertiesEditValueChanged
       TabOrder = 0
-      Width = 280
+      Width = 300
     end
     object lblCaja: TcxLabel
       Left = 16
       Top = 82
-      Caption = 'Caja'
+      Caption = 'Caja (opcional)'
       TabOrder = 8
       Transparent = True
     end
     object cbbCaja: TcxLookupComboBox
-      Left = 130
+      Left = 180
       Top = 80
       Properties.KeyFieldNames = 'CODIGO_CAJA_ALMCAJ'
       Properties.ListColumns = <
@@ -76,17 +76,17 @@
       Properties.ListOptions.ShowHeader = False
       Properties.ListSource = dsCajas
       TabOrder = 1
-      Width = 280
+      Width = 300
     end
     object lblSerieTokenizada: TcxLabel
       Left = 16
       Top = 118
-      Caption = 'Serie tokenizada base'
+      Caption = 'Serie base'
       TabOrder = 9
       Transparent = True
     end
     object txtSerieTokenizada: TcxTextEdit
-      Left = 130
+      Left = 180
       Top = 116
       Properties.MaxLength = 11
       TabOrder = 2
@@ -116,14 +116,14 @@
   object pnlBotones: TPanel [1]
     Left = 0
     Top = 200
-    Width = 430
+    Width = 500
     Height = 50
     Align = alBottom
     BevelOuter = bvNone
     ParentBackground = False
     TabOrder = 1
     object btnAceptar: TcxButton
-      Left = 148
+      Left = 218
       Top = 8
       Width = 130
       Height = 35
@@ -132,7 +132,7 @@
       TabOrder = 0
     end
     object btnCancelar: TcxButton
-      Left = 286
+      Left = 356
       Top = 8
       Width = 130
       Height = 35
