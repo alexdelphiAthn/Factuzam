@@ -5,12 +5,13 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
   Menu = jvMnMenuPrin
   Position = poScreenCenter
   WindowState = wsMaximized
+  StyleElements = [seFont, seClient, seBorder]
   OnActivate = FormActivate
   OnClose = FormClose
   OnCloseQuery = FormCloseQuery
   OnShow = FormShow
-  ExplicitWidth = 1138
-  ExplicitHeight = 605
+  ExplicitWidth = 1136
+  ExplicitHeight = 597
   TextHeight = 18
   object Panel1: TPanel [0]
     Left = 0

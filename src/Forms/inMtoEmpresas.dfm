@@ -1,4 +1,4 @@
-﻿inherited frmMtoEmpresas: TfrmMtoEmpresas
+inherited frmMtoEmpresas: TfrmMtoEmpresas
   Left = 5
   Top = 4
   Margins.Left = 0
@@ -11,7 +11,7 @@
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 1085
   ExplicitHeight = 715
-  TextHeight = 17
+  TextHeight = 18
   inherited pButtonPage: TPanel
     Width = 945
     Height = 715
@@ -25,18 +25,18 @@
       TabOrder = 1
       ExplicitWidth = 945
       ExplicitHeight = 675
-      ClientRectBottom = 671
-      ClientRectRight = 941
+      ClientRectBottom = 673
+      ClientRectRight = 943
       inherited tsLista: TcxTabSheet
-        ExplicitLeft = 4
+        ExplicitLeft = 2
         ExplicitTop = 28
-        ExplicitWidth = 937
-        ExplicitHeight = 643
+        ExplicitWidth = 941
+        ExplicitHeight = 645
         inherited cxGrdPrincipal: TcxGrid
-          Width = 937
-          Height = 643
-          ExplicitWidth = 937
-          ExplicitHeight = 643
+          Width = 941
+          Height = 645
+          ExplicitWidth = 941
+          ExplicitHeight = 645
           inherited cxGrdDBTabPrin: TcxGridDBTableView
             object cxgrdbclmnGrdDBTabPrinCODIGO_EMPRESA: TcxGridDBColumn
               Caption = 'C'#243'digo'
@@ -166,14 +166,14 @@
       end
       inherited tsFicha: TcxTabSheet
         OnEnter = tsFichaEnter
-        ExplicitLeft = 4
+        ExplicitLeft = 2
         ExplicitTop = 28
-        ExplicitWidth = 937
-        ExplicitHeight = 643
+        ExplicitWidth = 941
+        ExplicitHeight = 645
         object pnlFichaDetail: TPanel
           Left = 0
-          Top = 186
-          Width = 937
+          Top = 188
+          Width = 941
           Height = 457
           Align = alClient
           BevelOuter = bvNone
@@ -181,22 +181,22 @@
           object pcPestana: TcxPageControl
             Left = 0
             Top = 0
-            Width = 937
+            Width = 941
             Height = 457
             Align = alClient
             TabOrder = 0
             Properties.ActivePage = tsMasDatos
             Properties.CustomButtons.Buttons = <>
-            ClientRectBottom = 453
-            ClientRectLeft = 4
-            ClientRectRight = 933
+            ClientRectBottom = 455
+            ClientRectLeft = 2
+            ClientRectRight = 939
             ClientRectTop = 28
             object tsMasDatos: TcxTabSheet
               Caption = '&1_M'#225's Datos'
               ImageIndex = 0
               DesignSize = (
-                929
-                425)
+                937
+                427)
               object cxgrpbxIdentificacion: TcxGroupBox
                 AlignWithMargins = True
                 Left = 19
@@ -210,13 +210,13 @@
                 PanelStyle.WordWrap = True
                 TabOrder = 0
                 Transparent = True
-                Height = 419
-                Width = 701
+                Height = 421
+                Width = 709
                 object lblMovil: TcxLabel
                   Left = 51
                   Top = 25
                   Caption = 'M'#243'vil'
-                  TabOrder = 1
+                  TabOrder = 12
                   Transparent = True
                 end
                 object txtMOVIL_EMPRESA: TcxDBTextEdit
@@ -228,17 +228,17 @@
                   Width = 322
                 end
                 object lblEmail: TcxLabel
-                  Left = 51
+                  Left = 49
                   Top = 63
                   Caption = 'Email'
-                  TabOrder = 3
+                  TabOrder = 13
                   Transparent = True
                 end
                 object lblDireccion: TcxLabel
-                  Left = 17
+                  Left = 26
                   Top = 98
                   Caption = 'Direcci'#243'n'
-                  TabOrder = 5
+                  TabOrder = 14
                   Transparent = True
                 end
                 object txtDIRECCION1_EMPRESA: TcxDBTextEdit
@@ -246,7 +246,7 @@
                   Top = 94
                   DataBinding.DataField = 'DIRECCION1_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 4
+                  TabOrder = 2
                   Width = 322
                 end
                 object txtEMAIL_EMPRESA: TcxDBTextEdit
@@ -254,7 +254,7 @@
                   Top = 59
                   DataBinding.DataField = 'EMAIL_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 2
+                  TabOrder = 1
                   Width = 322
                 end
                 object txtDIRECCION2_EMPRESA: TcxDBTextEdit
@@ -262,7 +262,7 @@
                   Top = 132
                   DataBinding.DataField = 'DIRECCION2_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 6
+                  TabOrder = 3
                   Width = 322
                 end
                 object txtPOBLACION_EMPRESA: TcxDBTextEdit
@@ -270,21 +270,21 @@
                   Top = 203
                   DataBinding.DataField = 'POBLACION_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 9
+                  TabOrder = 5
                   Width = 322
                 end
                 object lblPoblacion: TcxLabel
-                  Left = 15
+                  Left = 22
                   Top = 207
                   Caption = 'Poblaci'#243'n'
-                  TabOrder = 10
+                  TabOrder = 16
                   Transparent = True
                 end
                 object lblProvincia: TcxLabel
-                  Left = 21
+                  Left = 26
                   Top = 245
                   Caption = 'Provincia'
-                  TabOrder = 12
+                  TabOrder = 17
                   Transparent = True
                 end
                 object txtPROVINCIA_EMPRESA: TcxDBTextEdit
@@ -292,7 +292,7 @@
                   Top = 240
                   DataBinding.DataField = 'PROVINCIA_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 11
+                  TabOrder = 6
                   Width = 322
                 end
                 object chkRegimenEspecial: TcxDBCheckBox
@@ -305,7 +305,7 @@
                   Properties.ValueUnchecked = 'N'
                   Properties.OnChange = chkAplicaRetencionesPropertiesChange
                   Style.TransparentBorder = False
-                  TabOrder = 20
+                  TabOrder = 10
                   Transparent = True
                 end
                 object txtCODIGO_POSTAL_EMP: TcxDBTextEdit
@@ -313,21 +313,21 @@
                   Top = 166
                   DataBinding.DataField = 'CODIGO_POSTAL_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 7
+                  TabOrder = 4
                   Width = 322
                 end
                 object lblCodPostal: TcxLabel
-                  Left = 6
+                  Left = 18
                   Top = 171
                   Caption = 'C'#243'd Postal'
-                  TabOrder = 8
+                  TabOrder = 15
                   Transparent = True
                 end
                 object lblIBAN: TcxLabel
                   Left = 57
                   Top = 310
                   Caption = 'IBAN'
-                  TabOrder = 18
+                  TabOrder = 21
                   Transparent = True
                 end
                 object txtIBAN_EMPRESA: TcxDBMaskEdit
@@ -337,7 +337,7 @@
                   DataBinding.DataSource = dsTablaG
                   Properties.IgnoreMaskBlank = True
                   Properties.EditMask = 'aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa'
-                  TabOrder = 17
+                  TabOrder = 8
                   Width = 369
                 end
                 object btnValidar: TcxButton
@@ -346,14 +346,14 @@
                   Width = 98
                   Height = 27
                   Caption = 'Vali&dar'
-                  TabOrder = 19
+                  TabOrder = 9
                   OnClick = btnValidarClick
                 end
                 object lblProvincia1: TcxLabel
-                  Left = 23
+                  Left = 60
                   Top = 278
                   Caption = 'Pa'#237's'
-                  TabOrder = 16
+                  TabOrder = 20
                   Transparent = True
                 end
                 object txtNOMBRE_PAIS_EMPRESA: TcxDBTextEdit
@@ -361,19 +361,19 @@
                   Top = 273
                   DataBinding.DataField = 'NOMBRE_PAI_EMP'
                   DataBinding.DataSource = dsTablaG
-                  TabOrder = 14
+                  TabOrder = 19
                   Visible = False
                   Width = 254
                 end
                 object txtCODIGO_PAIS_EMPRESA: TcxDBTextEdit
-                  Left = 97
+                  Left = 106
                   Top = 273
                   DataBinding.DataField = 'CODIGO_PAI_EMP'
                   DataBinding.DataSource = dsTablaG
                   Enabled = False
                   Properties.OnChange = txtCODIGO_PAIS_EMPRESAPropertiesChange
-                  TabOrder = 13
-                  Width = 73
+                  TabOrder = 18
+                  Width = 64
                 end
                 object cbbPaises: TcxDBLookupComboBox
                   Left = 187
@@ -389,7 +389,7 @@
                   Properties.ListOptions.CaseInsensitive = True
                   Properties.ListOptions.ShowHeader = False
                   Properties.ListSource = dmEmpresas.dsPaises
-                  TabOrder = 15
+                  TabOrder = 7
                   Width = 203
                 end
                 object chkRecargoEquivalenciaCompras: TcxDBCheckBox
@@ -401,7 +401,7 @@
                   Properties.ValueChecked = 'S'
                   Properties.ValueUnchecked = 'N'
                   Style.TransparentBorder = False
-                  TabOrder = 21
+                  TabOrder = 11
                   Transparent = True
                 end
               end
@@ -410,10 +410,10 @@
               Caption = '&2_Retenciones'
               ImageIndex = 2
               object pnlRetenOpts: TPanel
-                Left = 819
+                Left = 827
                 Top = 0
                 Width = 110
-                Height = 425
+                Height = 427
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -430,16 +430,16 @@
               object pnlRetencionesCli: TPanel
                 Left = 0
                 Top = 0
-                Width = 819
-                Height = 425
+                Width = 827
+                Height = 427
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxgrdRetenciones: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 819
-                  Height = 425
+                  Width = 827
+                  Height = 427
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -548,15 +548,15 @@
               object pnlFactura: TPanel
                 Left = 0
                 Top = 0
-                Width = 929
-                Height = 425
+                Width = 937
+                Height = 427
                 Align = alClient
                 TabOrder = 0
                 object cxgrdEmpresasFacturas: TcxGrid
                   Left = 1
                   Top = 1
-                  Width = 810
-                  Height = 423
+                  Width = 818
+                  Height = 425
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1118,10 +1118,10 @@
                   end
                 end
                 object pnlFacturaOpts: TPanel
-                  Left = 811
+                  Left = 819
                   Top = 1
                   Width = 117
-                  Height = 423
+                  Height = 425
                   Align = alRight
                   TabOrder = 1
                   object btnIraFactura: TcxButton
@@ -1167,10 +1167,10 @@
               Caption = '&4_Series'
               ImageIndex = 4
               object pnlSeriesOpts: TPanel
-                Left = 811
+                Left = 819
                 Top = 0
                 Width = 118
-                Height = 425
+                Height = 427
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1197,16 +1197,16 @@
               object pnlSeriesCli: TPanel
                 Left = 0
                 Top = 0
-                Width = 811
-                Height = 425
+                Width = 819
+                Height = 427
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
                 object cxGrdSeries: TcxGrid
                   Left = 0
                   Top = 0
-                  Width = 811
-                  Height = 425
+                  Width = 819
+                  Height = 427
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1303,10 +1303,10 @@
             object tsBancos: TcxTabSheet
               Caption = '&7_Bancos'
               object pnlBancosOpts: TPanel
-                Left = 803
+                Left = 811
                 Top = 0
                 Width = 126
-                Height = 425
+                Height = 427
                 Align = alRight
                 BevelOuter = bvNone
                 TabOrder = 1
@@ -1324,7 +1324,7 @@
                 Left = 0
                 Top = 0
                 Width = 811
-                Height = 425
+                Height = 427
                 Align = alClient
                 BevelOuter = bvNone
                 TabOrder = 0
@@ -1332,7 +1332,7 @@
                   Left = 0
                   Top = 0
                   Width = 811
-                  Height = 425
+                  Height = 427
                   Margins.Left = 4
                   Margins.Top = 4
                   Margins.Right = 4
@@ -1412,8 +1412,8 @@
               Caption = '&5_Pie Ticket Caja'
               ImageIndex = 5
               DesignSize = (
-                929
-                425)
+                937
+                427)
               object lblPieTicketCaja1: TcxLabel
                 Left = 31
                 Top = 31
@@ -1429,7 +1429,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.MaxLength = 42
                 TabOrder = 1
-                Width = 560
+                Width = 568
               end
               object lblPieTicketCaja2: TcxLabel
                 Left = 31
@@ -1446,7 +1446,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.MaxLength = 42
                 TabOrder = 3
-                Width = 560
+                Width = 568
               end
               object lblPieTicketCaja3: TcxLabel
                 Left = 31
@@ -1463,7 +1463,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.MaxLength = 42
                 TabOrder = 5
-                Width = 560
+                Width = 568
               end
               object lblPieTicketCaja4: TcxLabel
                 Left = 31
@@ -1480,7 +1480,7 @@
                 DataBinding.DataSource = dsTablaG
                 Properties.MaxLength = 42
                 TabOrder = 7
-                Width = 560
+                Width = 568
               end
             end
             object tsOtros: TcxTabSheet
@@ -1489,20 +1489,20 @@
               object scrOtros: TScrollBox
                 Left = 0
                 Top = 0
-                Width = 929
-                Height = 425
+                Width = 937
+                Height = 427
                 HorzScrollBar.Visible = False
                 VertScrollBar.Tracking = True
                 Align = alClient
                 BorderStyle = bsNone
                 TabOrder = 0
                 DesignSize = (
-                  929
-                  425)
+                  937
+                  427)
                 object pnlUserInstantBottom: TPanel
                   Left = 0
                   Top = 342
-                  Width = 929
+                  Width = 937
                   Height = 79
                   Anchors = [akLeft, akTop, akRight]
                   TabOrder = 4
@@ -1808,8 +1808,8 @@
         object spltFicha: TcxSplitter
           Left = 0
           Top = 178
-          Width = 937
-          Height = 8
+          Width = 941
+          Height = 10
           HotZoneClassName = 'TcxMediaPlayer9Style'
           AlignSplitter = salTop
           Control = pnlFichaDetail
@@ -1817,13 +1817,13 @@
         object pnlFichaCab: TPanel
           Left = 0
           Top = 0
-          Width = 937
+          Width = 941
           Height = 178
           Align = alTop
           BevelOuter = bvNone
           TabOrder = 0
           DesignSize = (
-            937
+            941
             178)
           object cxgrpbxFiscalidad: TcxGroupBox
             AlignWithMargins = True
@@ -1855,7 +1855,7 @@
               Left = 317
               Top = 17
               Caption = 'Nif'
-              TabOrder = 2
+              TabOrder = 8
               Transparent = True
             end
             object txtNIF_EMPRESA: TcxDBTextEdit
@@ -1863,14 +1863,14 @@
               Top = 15
               DataBinding.DataField = 'NIF_EMP'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 3
+              TabOrder = 2
               Width = 161
             end
             object lblNombre: TcxLabel
               Left = 24
               Top = 59
               Caption = 'Raz'#243'n Social'
-              TabOrder = 4
+              TabOrder = 9
               Transparent = True
             end
             object txtRAZONSOCIAL_EMPRESA: TcxDBTextEdit
@@ -1878,7 +1878,7 @@
               Top = 55
               DataBinding.DataField = 'RAZON_SOCIAL_EMP'
               DataBinding.DataSource = dsTablaG
-              TabOrder = 5
+              TabOrder = 3
               Width = 367
             end
             object chkActivo: TcxDBCheckBox
@@ -1890,7 +1890,7 @@
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               Style.TransparentBorder = False
-              TabOrder = 6
+              TabOrder = 5
               Transparent = True
             end
             object chkAplicaRetenciones: TcxDBCheckBox
@@ -1903,11 +1903,11 @@
               Properties.ValueUnchecked = 'N'
               Properties.OnChange = chkAplicaRetencionesPropertiesChange
               Style.TransparentBorder = False
-              TabOrder = 7
+              TabOrder = 6
               Transparent = True
             end
             object lblCanalIVA: TcxLabel
-              Left = 180
+              Left = 197
               Top = 93
               Margins.Left = 4
               Margins.Top = 4
@@ -1915,7 +1915,7 @@
               Margins.Bottom = 4
               Caption = 'Canal de IVA'
               Properties.Alignment.Horz = taRightJustify
-              TabOrder = 8
+              TabOrder = 10
               Transparent = True
               AnchorX = 279
             end
@@ -1931,48 +1931,47 @@
                 end>
               Properties.ListOptions.ShowHeader = False
               Properties.ValidateOnEnter = False
-              TabOrder = 9
+              TabOrder = 4
               Width = 333
             end
             object chkESTOKENS_CALENDARIO_NATURAL_EMP: TcxDBCheckBox
-              Left = 552
-              Top = 88
+              Left = 528
+              Top = 128
               Caption = 'Hacer coincidir calendario natural con tokens'
               DataBinding.DataField = 'ESTOKENS_CALENDARIO_NATURAL_EMP'
               DataBinding.DataSource = dsTablaG
               Properties.ValueChecked = 'S'
               Properties.ValueUnchecked = 'N'
               Style.TransparentBorder = False
-              TabOrder = 10
+              TabOrder = 7
               Transparent = True
             end
           end
         end
       end
       inherited tsPerfil: TcxTabSheet
-        ExplicitLeft = 4
-        ExplicitTop = 28
-        ExplicitWidth = 937
-        ExplicitHeight = 643
+        ExplicitLeft = 2
+        ExplicitWidth = 941
+        ExplicitHeight = 645
         inherited pnlPerfilTop: TPanel
-          Width = 937
+          Width = 941
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 937
+          ExplicitWidth = 941
           inherited edtPerfilBusq: TcxTextEdit
-            ExplicitHeight = 25
+            ExplicitHeight = 26
           end
         end
         inherited pnlPerfilDetail: TPanel
-          Width = 937
-          Height = 586
+          Width = 941
+          Height = 588
           StyleElements = [seFont, seClient, seBorder]
-          ExplicitWidth = 937
-          ExplicitHeight = 586
+          ExplicitWidth = 941
+          ExplicitHeight = 588
           inherited cxgrdPerfil: TcxGrid
-            Width = 937
-            Height = 586
-            ExplicitWidth = 937
-            ExplicitHeight = 586
+            Width = 941
+            Height = 588
+            ExplicitWidth = 941
+            ExplicitHeight = 588
           end
         end
       end
@@ -1987,11 +1986,11 @@
         StyleElements = [seFont, seClient, seBorder]
         ExplicitWidth = 945
         inherited edtBusqGlobal: TcxTextEdit
-          ExplicitHeight = 25
+          ExplicitHeight = 26
         end
         inherited nvNavegador: TcxDBNavigator
-          Width = 296
-          ExplicitWidth = 296
+          Width = 240
+          ExplicitWidth = 240
         end
         inherited lblTextoaBuscar: TcxLabel
           TabOrder = 4
