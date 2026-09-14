@@ -12,7 +12,7 @@
 {    Cuadros de mensaje propios de la aplicación: ShowMessage_fza,             }
 {    ShowMessageFmt_fza, MessageDlg_fza y MessageBox_fza. Construyen el        }
 {    diálogo clásico de la VCL (CreateMessageDialog) con la fuente             }
-{    corporativa DejaVu Sans en lugar del TaskDialog del sistema, y            }
+{    corporativa Source Sans 3 en lugar del TaskDialog del sistema, y          }
 {    conservan los parámetros y resultados de las funciones originales:        }
 {    mrXxx en MessageDlg_fza e IDXXX con indicadores MB_* en MessageBox_fza.   }
 {******************************************************************************}
@@ -24,7 +24,7 @@ uses
   Winapi.Windows, System.UITypes;
 
 const
-  NOMBRE_FUENTE_MENSAJES = 'DejaVu Sans';
+  NOMBRE_FUENTE_MENSAJES = 'Source Sans 3';
   TAMANO_FUENTE_MENSAJES = 9;
   // Tipo de MessageBox que Winapi.Windows no declara.
   MB_CANCELTRYCONTINUE = $00000006;

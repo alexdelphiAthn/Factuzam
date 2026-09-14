@@ -202,7 +202,7 @@ begin
   Height     := 400;
   Position   := poOwnerFormCenter;
   BorderStyle:= bsDialog;
-  Font.name := 'DejaVu Sans';
+  Font.name := 'Source Sans 3';
   FListBox := TListBox.Create(Self);
   FListBox.Parent      := pnlBody;
   FListBox.Align       := alClient;
@@ -995,7 +995,7 @@ begin
   Height      := 460;
   Position    := poOwnerFormCenter;
   BorderStyle := bsDialog;
-  Font.Name   := 'DejaVu Sans';
+  Font.Name   := 'Source Sans 3';
   FScroll := TScrollBox.Create(Self);
   FScroll.Parent      := pnlBody;
   FScroll.Align       := alClient;

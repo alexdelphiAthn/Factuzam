@@ -3,7 +3,7 @@
   "bomFormat": "CycloneDX",
   "specVersion": "1.7",
   "serialNumber": "urn:uuid:1d7f1b09-b618-4530-bc58-e0cf4c294fd2",
-  "version": 4,
+  "version": 5,
   "metadata": {
     "timestamp": "2026-08-25T18:40:15.839Z",
     "tools": {
@@ -59476,29 +59476,29 @@
     },
     {
       "type": "library",
-      "bom-ref": "urn:factuzam:component:dejavu:dejavu-sans:2.37",
+      "bom-ref": "urn:factuzam:component:adobe:source-sans-3:3.052",
       "supplier": {
-        "name": "DejaVu fonts team",
+        "name": "Adobe",
         "url": [
-          "https://dejavu-fonts.github.io/"
+          "https://github.com/adobe-fonts/source-sans"
         ]
       },
-      "publisher": "DejaVu fonts team",
-      "group": "dejavu",
-      "name": "DejaVu Sans",
-      "version": "2.37",
-      "description": "Familia tipografica TrueType de terceros prevista para distribuirse con Factuzam. Incluye las caras Book, Bold, Oblique y Bold Oblique.",
+      "publisher": "Adobe",
+      "group": "adobe",
+      "name": "Source Sans 3",
+      "version": "3.052",
+      "description": "Familia tipografica TrueType de terceros distribuida con Factuzam. Incluye las caras Regular, Bold, Italic y Bold Italic.",
       "isExternal": false,
       "scope": "required",
       "licenses": [
         {
           "license": {
-            "name": "DejaVu Fonts License (Bitstream Vera Fonts Copyright y Arev Fonts Copyright)",
-            "url": "https://dejavu-fonts.github.io/License.html"
+            "id": "OFL-1.1",
+            "url": "https://openfontlicense.org"
           }
         }
       ],
-      "copyright": "Copyright (c) 2003 by Bitstream, Inc. All Rights Reserved. Copyright (c) 2006 by Tavmjong Bah. All Rights Reserved. DejaVu changes are in public domain.",
+      "copyright": "Copyright 2010-2020 Adobe (http://www.adobe.com/), with Reserved Font Name 'Source'. All Rights Reserved. Source is a trademark of Adobe in the United States and/or other countries.",
       "modified": false,
       "properties": [
         {
@@ -59507,7 +59507,7 @@
         },
         {
           "name": "factuzam:aggregate:sha256",
-          "value": "F6BD7B4A9FFB996BA87057818BB2E3EC79883E43227A1ED220CC86D84923A382"
+          "value": "3694F1D2C5F785B0FC4F561595D8C0E775E4917E6D71FC74478724A14702507B"
         },
         {
           "name": "factuzam:aggregate-digest-format",
@@ -59523,15 +59523,15 @@
         },
         {
           "name": "factuzam:third-party:origin",
-          "value": "https://dejavu-fonts.github.io/"
+          "value": "https://github.com/adobe-fonts/source-sans"
         },
         {
           "name": "factuzam:sbom:entry-provenance",
-          "value": "manual entry added 2026-09-05; not produced by the Pascal Analyzer run of 2026-08-25"
+          "value": "manual entry added 2026-09-14; replaces DejaVu Sans 2.37, which the application no longer references; not produced by the Pascal Analyzer run of 2026-08-25"
         },
         {
           "name": "factuzam:distribution:status",
-          "value": "bundled since 2026-09-07 in the NSIS demo installer; the four TTF faces are installed into the Windows font folder"
+          "value": "bundled since 2026-09-14 in the NSIS demo installer; the four TTF faces are installed into the Windows font folder"
         },
         {
           "name": "factuzam:distribution:mechanism",
@@ -59539,41 +59539,45 @@
         },
         {
           "name": "factuzam:distribution:license-notice",
-          "value": "LICENCIA_DejaVu.txt installed next to the application"
+          "value": "LICENCIA SOURCESANS3.txt installed next to the application"
         },
         {
           "name": "factuzam:distribution:source",
-          "value": "empaquetador/fuentes, generada por scripts/preparar_fuentes_instalador.py"
+          "value": "empaquetador/fuentes, comprobada por scripts/preparar_fuentes_instalador.py"
         },
         {
-          "name": "factuzam:dejavu:artifact",
-          "value": "fonts/DejaVuSans-Bold.ttf|SHA-256|E6476C1B80502924294EED40894C5B18E06C181444CA953E5334262DF9C27724"
+          "name": "factuzam:source-sans-3:artifact",
+          "value": "fonts/SourceSans3-Bold.ttf|SHA-256|7109021766E915ECD9721E28D11DFC732D57AFFDA49E4CA15BB6D1529ADD7FDD"
         },
         {
-          "name": "factuzam:dejavu:artifact",
-          "value": "fonts/DejaVuSans-BoldOblique.ttf|SHA-256|EB436DCA0C2594B73D8B603B892E374FDFD8D885D25FFB4F18DF4C4C0B49E50F"
+          "name": "factuzam:source-sans-3:artifact",
+          "value": "fonts/SourceSans3-BoldItalic.ttf|SHA-256|B66029C11E09452EAA321ABE93883970BC0F3EACC347A1C9D5828DB9D379CBB0"
         },
         {
-          "name": "factuzam:dejavu:artifact",
-          "value": "fonts/DejaVuSans-Oblique.ttf|SHA-256|4AF75FA16EE6D3AD43E1ECEC41862C24954AF26A55C6BB1EBB27BD486A50F5F4"
+          "name": "factuzam:source-sans-3:artifact",
+          "value": "fonts/SourceSans3-Italic.ttf|SHA-256|F17FACAA9ED293BB38526DB3638E240510B7393C37FFA70E5C48F39575DE44AB"
         },
         {
-          "name": "factuzam:dejavu:artifact",
-          "value": "fonts/DejaVuSans.ttf|SHA-256|7DA195A74C55BEF988D0D48F9508BD5D849425C1770DBA5D7BFC6CE9ED848954"
+          "name": "factuzam:source-sans-3:artifact",
+          "value": "fonts/SourceSans3-Regular.ttf|SHA-256|393FB5B878CEED04AEBC34B097E853AE5138C51D0C34B496CE8E2B47E0D0B94A"
         }
       ],
       "externalReferences": [
         {
-          "url": "https://dejavu-fonts.github.io/",
+          "url": "https://github.com/adobe-fonts/source-sans",
           "type": "website"
         },
         {
-          "url": "https://dejavu-fonts.github.io/License.html",
+          "url": "https://openfontlicense.org",
           "type": "license"
         },
         {
-          "url": "https://github.com/dejavu-fonts/dejavu-fonts",
+          "url": "https://github.com/adobe-fonts/source-sans",
           "type": "vcs"
+        },
+        {
+          "url": "https://fonts.google.com/specimen/Source+Sans+3",
+          "type": "distribution"
         }
       ]
     }
@@ -87011,7 +87015,7 @@
       ]
     },
     {
-      "ref": "urn:factuzam:component:dejavu:dejavu-sans:2.37",
+      "ref": "urn:factuzam:component:adobe:source-sans-3:3.052",
       "dependsOn": []
     }
   ],
@@ -89596,7 +89600,7 @@
         "998",
         "999",
         "urn:factuzam:application:fzam",
-        "urn:factuzam:component:dejavu:dejavu-sans:2.37",
+        "urn:factuzam:component:adobe:source-sans-3:3.052",
         "urn:factuzam:component:devart:dac:15.0.1.0:win64",
         "urn:factuzam:component:devart:unidac:12.0.1.0:win64"
       ]
