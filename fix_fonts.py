@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sustituye todas las fuentes del proyecto Factuzam por 'Lucida Sans' -17,
+Sustituye todas las fuentes del proyecto Factuzam por 'Source Sans 3' -17,
 excepto componentes monoespaciados (editores SQL, incidencias, errores)
 que se unifican a 'Consolas'.
 """
@@ -8,7 +8,7 @@ import os
 import re
 import sys
 
-FUENTE_DESTINO = 'Lucida Sans'
+FUENTE_DESTINO = 'Source Sans 3'
 ALTURA_DESTINO = -17
 TAMANO_DESTINO = 13  # equivalente a Height -17 a 96 DPI
 FUENTE_MONO = 'Consolas'
@@ -88,7 +88,7 @@ def procesar_dfm(ruta):
                 lineas[i] = linea
                 cambios += 1
             continue
-        # Font.Name -> Lucida Sans
+        # Font.Name -> Source Sans 3
         if 'Font.Name' in linea and "= '" in linea:
             linea = re.sub(
                 r"(Font\.Name\s*=\s*)'[^']+'",
