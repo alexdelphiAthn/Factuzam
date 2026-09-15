@@ -1020,6 +1020,16 @@
       TabOrder = 7
       OnClick = btnEnviarEmailClick
     end
+    object btnCorregirPago: TcxButton
+      Left = 12
+      Top = 39
+      Width = 204
+      Height = 28
+      Caption = 'Corregir forma de pago'
+      Enabled = False
+      TabOrder = 8
+      OnClick = btnCorregirPagoClick
+    end
   end
   object tmrBusqueda: TTimer
     Enabled = False

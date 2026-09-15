@@ -87,7 +87,8 @@ uses
   inMtoTraspasoSolicitudesHist,
   inMtoDepositosCliente,
   inMtoUsuarios,
-  inMtoModalImpOperacionesVenta;
+  inMtoModalImpOperacionesVenta,
+  UniDataCorreccionPago;
 
 procedure NormalizarOwnerPantallaCaja(
   AOwnerSolicitado: TComponent;
@@ -202,6 +203,9 @@ var
 begin
   Caja := Componer('frmConsultaOpe');
   Dependencias := Default(TDependenciasConsultaOperacionesCaja);
+  Dependencias.CorreccionPagos := TCorreccionPagoUniDAC.Create(
+    FComposicion.Conexiones.ConexionPrincipal, APermisos,
+    FComposicion.ContextoSesion.Identidad.Usuario);
   Dependencias.Facturas :=
     Caja.Consultas.CrearRepositorioConsultaFacturas;
   Dependencias.VentasCalendario :=

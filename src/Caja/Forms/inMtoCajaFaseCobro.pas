@@ -66,7 +66,6 @@ type
     pnlDerecho: TPanel;
     dsFormasPago: TDataSource;
     txtTotalPagar: TcxCurrencyEdit;
-    btnAplicarTotal: TcxButton;
     txtPendienteCobro: TcxCurrencyEdit;
     txtCantidadLineas: TcxTextEdit;
     txtBrutoLineas: TcxCurrencyEdit;
@@ -145,12 +144,11 @@ type
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
     procedure btnAtrasClick(Sender: TObject);
-    procedure txtPorcenDtoGlobalPropertiesEditValueChanged(Sender: TObject);
-    procedure txtTotalPagarPropertiesEditValueChanged(Sender: TObject);
+    procedure txtPorcenDtoGlobalPropertiesChange(Sender: TObject);
+    procedure txtTotalPagarPropertiesChange(Sender: TObject);
     procedure txtTotalPagarPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption;
       var Error: Boolean);
-    procedure btnAplicarTotalClick(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure actSalirExecute(Sender: TObject);
     procedure btnESCClick(Sender: TObject);
@@ -187,6 +185,7 @@ type
     FMemTablePagos: TVirtualTable;
     FActualizandoVale: Boolean;
     FActualizandoDescuento: Boolean;
+    FEditorDescuentoActual: TcxCurrencyEdit;
     FEmailEnvio: string;
     FActualizandoEmail: Boolean;
     FCodigoEmpresa: string;
@@ -1114,22 +1113,22 @@ procedure TfrmMtoCajaFaseCobro.ActualizarImportesDescuento;
 begin
   FActualizandoDescuento := True;
   try
-    txtPorcenDtoGlobal.Value := FDatosCobro.PorcentajeDescuentoGlobal;
+    if FEditorDescuentoActual <> txtPorcenDtoGlobal then
+      txtPorcenDtoGlobal.Value := FDatosCobro.PorcentajeDescuentoGlobal;
     txtDtoGlobal.Value := FDatosCobro.ImporteDescuentoGlobal;
-    txtTotalPagar.Value := FDatosCobro.ImporteTotalPagar;
+    if FEditorDescuentoActual <> txtTotalPagar then
+      txtTotalPagar.Value := FDatosCobro.ImporteTotalPagar;
   finally
     FActualizandoDescuento := False;
   end;
   txtPorcenDtoGlobal.Enabled := PuedeAplicarDescuentoGlobal;
   txtTotalPagar.Properties.ReadOnly := not PuedeAplicarDescuentoGlobal;
-  btnAplicarTotal.Enabled := PuedeAplicarDescuentoGlobal;
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarModoDevolucion;
 begin
   txtPorcenDtoGlobal.Enabled := False;
   txtTotalPagar.Properties.ReadOnly := True;
-  btnAplicarTotal.Enabled := False;
   txtValeEmitido.Properties.ReadOnly := False;
   txtValeEmitido.Style.Color := clWindow;
   lblPendienteCobroAlt.Caption := SCaptionPendienteDevolver;
@@ -1343,23 +1342,25 @@ begin
   btnSinTicketClick(Sender);
 end;
 
-procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesEditValueChanged(
+procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesChange(
   Sender: TObject);
 var
-  Edit: TcxCustomEdit;
+  Valor: Variant;
 begin
   if not FActualizandoDescuento and PuedeAplicarDescuentoGlobal then
   begin
-    FActualizandoDescuento := True;
-    try
-      if Sender is TcxCustomEdit then
+    Valor := txtPorcenDtoGlobal.EditingValue;
+    if VarIsNumeric(Valor) then
+    begin
+      if (Valor >= 0) and (Valor <= 100) then
       begin
-        Edit := TcxCustomEdit(Sender);
-        Edit.PostEditValue;
+        FEditorDescuentoActual := txtPorcenDtoGlobal;
+        try
+          FDatosCobro.AplicarDescuentoGlobal(Valor);
+        finally
+          FEditorDescuentoActual := nil;
+        end;
       end;
-      FDatosCobro.AplicarDescuentoGlobal(txtPorcenDtoGlobal.Value);
-    finally
-      FActualizandoDescuento := False;
     end;
   end;
 end;
@@ -1389,26 +1390,30 @@ begin
   end;
 end;
 
-procedure TfrmMtoCajaFaseCobro.txtTotalPagarPropertiesEditValueChanged(
+procedure TfrmMtoCajaFaseCobro.txtTotalPagarPropertiesChange(
   Sender: TObject);
 var
   Resultado: TResultadoValidacion;
+  Valor: Variant;
 begin
   if not FActualizandoDescuento and PuedeAplicarDescuentoGlobal then
   begin
-    Resultado := FDatosCobro.AplicarTotalPagar(
-      txtTotalPagar.Value, PuedeAplicarDescuentoGlobal);
-    if not Resultado.Valido then
+    Valor := txtTotalPagar.EditingValue;
+    if VarIsNumeric(Valor) then
     begin
-      ActualizarImportesDescuento;
-      MessageDlg_fza(Resultado.Mensaje, mtError, [mbOK], 0);
+      Resultado := FDatosCobro.ValidarTotalPagar(
+        Valor, PuedeAplicarDescuentoGlobal);
+      if Resultado.Valido then
+      begin
+        FEditorDescuentoActual := txtTotalPagar;
+        try
+          FDatosCobro.AplicarTotalPagar(Valor, PuedeAplicarDescuentoGlobal);
+        finally
+          FEditorDescuentoActual := nil;
+        end;
+      end;
     end;
   end;
-end;
-
-procedure TfrmMtoCajaFaseCobro.btnAplicarTotalClick(Sender: TObject);
-begin
-  ConfirmarEditoresDescuento;
 end;
 
 end.

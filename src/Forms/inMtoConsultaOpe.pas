@@ -35,7 +35,7 @@ uses
   inLibEmisionFiscalIntf, inLibGenerarTicketIntf,
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
   inLibVentasCalendarioIntf, inLibPermisosIntf,
-  inLibCajaPantallaInyeccion;
+  inLibCajaPantallaInyeccion, inLibCorreccionPagoIntf;
 
 type
   TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
@@ -95,6 +95,7 @@ type
     btnFacturarTicket: TButton;
     btnRectificar: TButton;
     btnEnviarEmail: TcxButton;
+    btnCorregirPago: TcxButton;
     colMovColor: TcxGridDBColumn;
     colMovTalla: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
@@ -116,6 +117,7 @@ type
     procedure btnDevolverAbonarClick(Sender: TObject);
     procedure btnRectificarClick(Sender: TObject);
     procedure btnEnviarEmailClick(Sender: TObject);
+    procedure btnCorregirPagoClick(Sender: TObject);
     procedure cxViewMovCustomDrawCell(Sender: TcxCustomGridTableView;
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
       var ADone: Boolean);
@@ -130,6 +132,8 @@ type
     FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
     FRepositoriosTicketsCaja: TRepositoriosTicketsCaja;
     FLecturasImpresionTicket: ILecturasImpresionTicket;
+    FCorreccionPagos: ICorreccionPago;
+    procedure CorregirPago;
     procedure ValidarDependencias;
     // Factura de la operación seleccionada (pestaña Factura)
     procedure NotificarMensajeDesdeDM(
@@ -196,7 +200,8 @@ uses
      inLibVerifactu, inMtoModalFacturarTicket,
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibAtributosPaleta, inLibMsgComun,
-  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas;
+  inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
+  inMtoModalCorregirPago;
 
 resourcestring
   STituloPersonalizacionConsultaOperaciones =
@@ -231,6 +236,7 @@ begin
   FRepositorioTraspasoTicket := ADependencias.TraspasoTicket;
   FRepositoriosTicketsCaja := ADependencias.Tickets;
   FLecturasImpresionTicket := ADependencias.LecturasTicket;
+  FCorreccionPagos := ADependencias.CorreccionPagos;
   inherited Create(AOwner, APermisos);
 end;
 
@@ -244,6 +250,7 @@ begin
   Dependencias.TraspasoTicket := FRepositorioTraspasoTicket;
   Dependencias.Tickets := FRepositoriosTicketsCaja;
   Dependencias.LecturasTicket := FLecturasImpresionTicket;
+  Dependencias.CorreccionPagos := FCorreccionPagos;
   Dependencias.Validar;
 end;
 
@@ -312,6 +319,7 @@ end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
+  FCorreccionPagos := nil;
   FLecturasImpresionTicket := nil;
   FRepositoriosTicketsCaja.Impresion := nil;
   FRepositoriosTicketsCaja.Recordatorios := nil;
@@ -530,6 +538,35 @@ begin
     end;
   end;
   Result := (Trim(ASerie) <> '') and (Trim(ANumero) <> '');
+end;
+
+procedure TfrmConsultaOpe.CorregirPago;
+var
+  Operacion: TOperacionCorreccionPago;
+begin
+  if FdmConsulta.qryMaestro.Active and
+     not FdmConsulta.qryMaestro.IsEmpty then
+  begin
+    Operacion.Empresa := FdmConsulta.qryMaestro.FieldByName(
+      'CODIGO_EMP_OPCAJA').AsString;
+    Operacion.Almacen := FdmConsulta.qryMaestro.FieldByName(
+      'CODIGO_ALM_OPCAJA').AsString;
+    Operacion.Caja := FdmConsulta.qryMaestro.FieldByName(
+      'CODIGO_CAJA_OPCAJA').AsString;
+    Operacion.Numero := FdmConsulta.qryMaestro.FieldByName(
+      'NUMERO_OPERACION_OPCAJA').AsString;
+    if TfrmModalCorregirPago.Ejecutar(Self, FCorreccionPagos, Operacion) then
+    begin
+      FdmConsulta.CerrarPestanasHijas;
+      FdmConsulta.RefrescarPestanasHijas;
+      pcHijos.ActivePage := tsPagos;
+    end;
+  end;
+end;
+
+procedure TfrmConsultaOpe.btnCorregirPagoClick(Sender: TObject);
+begin
+  CorregirPago;
 end;
 
 procedure TfrmConsultaOpe.ActivarOperacionCaja(
@@ -993,6 +1030,9 @@ begin
     or FdmConsulta.EsTraspaso;
   btnReimprimirOtros.Enabled := btnReimprimir.Enabled;
   btnEnviarEmail.Enabled := btnReimprimir.Enabled;
+  btnCorregirPago.Caption := SCaptionCorregirPago;
+  btnCorregirPago.Enabled := FdmConsulta.TienePagos and
+    FCorreccionPagos.Permitida;
 end;
 
 // -----------------------------------------------------------------------------

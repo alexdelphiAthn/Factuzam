@@ -149,24 +149,25 @@ begin
   Result := EjecutarResumen(
     ' SELECT p.CODIGO_FP_CFP AS FP, ' +
     '        COUNT(*) AS UDS, ' +
-    '        COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO), 0) AS NETO ' +
+    '        COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO - ' +
+    '          p.IMPORTE_CAMBIO_PAGO), 0) AS NETO ' +
     '   FROM fza_caja_pagos p ' +
-    '   JOIN fza_caja_operaciones o ' +
-    '     ON o.CODIGO_EMP_OPCAJA = p.CODIGO_EMP_PAGO ' +
+    '  WHERE p.CODIGO_EMP_PAGO = :pEMPRESA ' +
+    '    AND p.CODIGO_ALM_PAGO = :pALMACEN ' +
+    '    AND p.CODIGO_CAJA_PAGO = :pCAJA ' +
+    '    AND EXISTS (SELECT 1 FROM fza_caja_operaciones o ' +
+    '  WHERE o.CODIGO_EMP_OPCAJA = p.CODIGO_EMP_PAGO ' +
     '    AND o.CODIGO_ALM_OPCAJA = p.CODIGO_ALM_PAGO ' +
     '    AND o.CODIGO_CAJA_OPCAJA = p.CODIGO_CAJA_PAGO ' +
     '    AND o.NUMERO_OPERACION_OPCAJA = ' +
     '        p.NUMERO_OPERACION_PAGO ' +
-    '  WHERE p.CODIGO_EMP_PAGO = :pEMPRESA ' +
-    '    AND p.CODIGO_ALM_PAGO = :pALMACEN ' +
-    '    AND p.CODIGO_CAJA_PAGO = :pCAJA ' +
     '    AND o.FECHA_OPERACION_OPCAJA >= :pFDESDE ' +
     '    AND o.FECHA_OPERACION_OPCAJA <= :pFHASTA ' +
     SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA') +
-    '  GROUP BY p.CODIGO_FP_CFP ' +
+    ') GROUP BY p.CODIGO_FP_CFP ' +
     '  ORDER BY p.CODIGO_FP_CFP',
     ASolicitud);
 end;

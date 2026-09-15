@@ -438,6 +438,46 @@ resourcestring
     'No se pudo encolar el cierre de caja %s para su publicación web.';
   SErrorRepositorioVentasWsNoAsignado =
     'La publicación web está activa, pero no se asignó su repositorio.';
+  SCaptionCorregirPago = 'Corregir forma de pago';
+  SCaptionCorreccionPagoCobro = 'Cobro que se corrige:';
+  SCaptionCorreccionPagoMedio = 'Forma de pago correcta:';
+  SCaptionCorreccionPagoReferencia = 'Referencia del cobro correcto:';
+  SCaptionCorreccionPagoReferenciaObligatoria =
+    'Referencia del cobro correcto (obligatoria):';
+  SCaptionCorreccionPagoMotivo = 'Motivo de la corrección (obligatorio):';
+  SCaptionCorreccionPagoCancelar = 'Cancelar';
+  SItemCorreccionPago = '%s / línea %d - %s - %.2f EUR';
+  SResumenCorreccionPago =
+    'Se compensarán %.2f EUR de %s y se registrarán %.2f EUR ' +
+    'en la forma correcta. El cobro original se conserva en el histórico.';
+  SDetalleCorreccionPago = 'Corrección %s del cobro línea %d: %s';
+  SAvisoCorreccionPagoSinCobros =
+    'No hay cobros disponibles para esta corrección. Se admiten cobros ' +
+    'positivos en euros; vales, deuda, divisas y cripto requieren ' +
+    'su procedimiento específico.';
+  SErrorCorreccionPagoPermiso =
+    'No tiene permiso para modificar el histórico de cobros.';
+  SErrorCorreccionPagoEsquema =
+    'Falta aplicar la actualización 20260915_correccion_forma_pago.sql.';
+  SErrorCorreccionPagoSeleccion =
+    'Seleccione un cobro positivo disponible y la forma de pago correcta.';
+  SErrorCorreccionPagoMotivo =
+    'Indique un motivo de entre 1 y 180 caracteres.';
+  SErrorCorreccionPagoReferencia =
+    'Indique la referencia requerida, con un máximo de 255 caracteres.';
+  SErrorCorreccionPagoArqueo =
+    'El cobro pertenece a un arqueo cerrado. Revise el cierre antes ' +
+    'de corregir la forma de pago.';
+  SErrorCorreccionPagoYaCorregido =
+    'Este cobro ya fue corregido. Actualice la consulta y seleccione ' +
+    'el último cobro vigente.';
+  SErrorCorreccionPagoMismoMedio =
+    'La forma de pago correcta debe ser distinta de la original.';
+  SErrorCorreccionPagoMedio =
+    'Seleccione un medio activo en euros. Los vales, la deuda, las ' +
+    'divisas y las criptomonedas requieren su procedimiento específico.';
+  SErrorCorreccionPagoTransaccion =
+    'Termine la operación en curso antes de corregir un cobro.';
 implementation
 
 end.

@@ -1233,6 +1233,12 @@
             <Form>dmConsultaOpe</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Caja\Lib\inLibCorreccionPagoIntf.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataCorreccionPago.pas"/>
+        <DCCReference Include="src\Caja\Modals\inMtoModalCorregirPago.pas">
+            <Form>frmModalCorregirPago</Form>
+            <FormType>dfm</FormType>
+        </DCCReference>
         <DCCReference Include="src\Forms\inMtoConsultaOpe.pas">
             <Form>frmConsultaOpe</Form>
         </DCCReference>

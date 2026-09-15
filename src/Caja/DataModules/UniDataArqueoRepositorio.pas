@@ -218,16 +218,15 @@ begin
     'SELECT fp.CODIGO_FP_CFP AS CODIGO, ' +
     'fp.DESCRIPCION_FORMA_PAGO_CFP AS DESCRIPCION, ' +
     'fp.ESABRE_CAJON_FORMA_PAGO_CFP AS ESCAJON, ' +
-    'COALESCE(SUM(CASE ' +
-    'WHEN o.NUMERO_OPERACION_OPCAJA IS NOT NULL ' +
-    'THEN p.IMPORTE_ENTREGADO_PAGO ELSE 0 END), 0) AS IMPORTE ' +
+    'COALESCE(SUM(p.IMPORTE_ENTREGADO_PAGO - ' +
+    'p.IMPORTE_CAMBIO_PAGO), 0) AS IMPORTE ' +
     'FROM fza_caja_formas_pago fp LEFT JOIN fza_caja_pagos p ' +
     'ON p.CODIGO_FP_CFP = fp.CODIGO_FP_CFP ' +
     'AND p.CODIGO_EMP_PAGO = :pEMPRESA ' +
     'AND p.CODIGO_ALM_PAGO = :pALMACEN ' +
     'AND p.CODIGO_CAJA_PAGO = :pCAJA ' +
-    'LEFT JOIN fza_caja_operaciones o ' +
-    'ON o.CODIGO_EMP_OPCAJA = p.CODIGO_EMP_PAGO ' +
+    'AND EXISTS (SELECT 1 FROM fza_caja_operaciones o ' +
+    'WHERE o.CODIGO_EMP_OPCAJA = p.CODIGO_EMP_PAGO ' +
     'AND o.CODIGO_ALM_OPCAJA = p.CODIGO_ALM_PAGO ' +
     'AND o.CODIGO_CAJA_OPCAJA = p.CODIGO_CAJA_PAGO ' +
     'AND o.NUMERO_OPERACION_OPCAJA = p.NUMERO_OPERACION_PAGO ' +
@@ -237,7 +236,7 @@ begin
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA') +
-    'WHERE fp.ESACTIVO_FORMA_PAGO_CFP = ''S'' ' +
+    ') WHERE fp.ESACTIVO_FORMA_PAGO_CFP = ''S'' ' +
     'GROUP BY fp.CODIGO_FP_CFP, fp.DESCRIPCION_FORMA_PAGO_CFP, ' +
     'fp.ESABRE_CAJON_FORMA_PAGO_CFP ' +
     'ORDER BY ESCAJON DESC, fp.CODIGO_FP_CFP';
@@ -724,14 +723,9 @@ begin
       // Partimos de TODAS las formas de pago activas y LEFT JOIN a los
       // pagos del periodo. Asi las que no tuvieron movimiento aparecen
       // con importe 0 y el usuario puede rellenar el recuento.
-      // El rango de fechas filtra la operacion (o) en el ON del LEFT JOIN,
-      // nunca en un WHERE: un WHERE sobre o.FECHA convertiria el LEFT JOIN
-      // en INNER y se perderian las formas sin movimiento. Por eso el
-      // importe se acumula con SUM(CASE WHEN o.NUMERO... IS NOT NULL ...):
-      // suma el pago SOLO cuando su operacion cae dentro del rango. Un
-      // SUM(p.IMPORTE_ENTREGADO_PAGO) directo acumulaba TODOS los pagos
-      // historicos de la caja (el LEFT JOIN conserva la fila de p aunque
-      // o sea NULL) y disparaba Efectivo/Otros/Saldo a cifras de millones.
+      // EXISTS filtra por fecha sin multiplicar el pago cuando una
+      // operación tiene varias filas. El LEFT JOIN conserva los medios
+      // sin movimiento. Se suma el neto, incluido el cambio compensado.
       oDefinicion := DefinicionesSql[7];
       EjecutarLecturaSqlConFallback(
         oDefinicion,
