@@ -85,6 +85,8 @@ type
     dsAlmacenesFac:      TDataSource;
     unqryEfectosVenta:   TUniQuery;
     dsEfectosVenta:      TDataSource;
+    unqryPagosCajaFac:   TUniQuery;
+    dsPagosCajaFac:      TDataSource;
     unstrdprcInsertarMovFac: TUniStoredProc;
     procedure DataModuleCreate(Sender: TObject);
     procedure DataModuleDestroy(Sender: TObject);
@@ -215,6 +217,10 @@ public
     procedure AsegurarConsolidacionAbierta;
     procedure AsegurarErroresAbierta;
     procedure AsegurarMovimientosFacAbierta;
+    // Pagos con los que se liquido la operacion de caja de la
+    // factura. Solo la abre la pantalla de simplificadas: una
+    // factura normal se cobra con recibos, no en el TPV.
+    procedure AsegurarPagosCajaFacAbierta;
     // Estampa la cuenta de la empresa (ingreso) elegida en los recibos de
     // la factura (serie/numero) despues de generarlos.
     procedure EstamparBancoRecibos(const ASerie, ANumero,
@@ -760,6 +766,35 @@ begin
   unqryEfectosVenta.DetailFields := 'NUMERO_FAC_EFV;SERIE_FAC_EFV';
   dsEfectosVenta := TDataSource.Create(Self);
   dsEfectosVenta.DataSet := unqryEfectosVenta;
+  // Los pagos cuelgan de la operacion de caja, no de la
+  // factura: la cabecera guarda a que caja y operacion
+  // pertenece. Los parametros se llaman igual que los campos
+  // del maestro para que RellenarParamsDesdeMaestro los case.
+  unqryPagosCajaFac := TUniQuery.Create(Self);
+  unqryPagosCajaFac.Connection := ConexionPrincipal;
+  unqryPagosCajaFac.SQL.Text :=
+    'SELECT p.CODIGO_EMP_PAGO, p.CODIGO_ALM_PAGO, ' +
+    '       p.CODIGO_CAJA_PAGO, p.SERIE_OPERACION_PAGO, ' +
+    '       p.NUMERO_OPERACION_PAGO, ' +
+    '       p.NUMERO_LINEA_PAGO, p.CODIGO_FP_CFP, ' +
+    '       fp.DESCRIPCION_FORMA_PAGO_CFP, ' +
+    '       p.IMPORTE_ENTREGADO_PAGO, p.IMPORTE_CAMBIO_PAGO, ' +
+    '       p.CODIGO_DIVISA_PAGO, p.IMPORTE_DIVISA_PAGO, ' +
+    '       p.REFERENCIA_FACPAG, p.OBSERVACIONES_PAGO ' +
+    '  FROM fza_caja_pagos p ' +
+    '  LEFT JOIN fza_caja_formas_pago fp ' +
+    '    ON fp.CODIGO_FP_CFP = p.CODIGO_FP_CFP ' +
+    ' WHERE p.CODIGO_EMP_PAGO       = :CODIGO_EMP_FAC ' +
+    '   AND p.CODIGO_ALM_PAGO       = :CODIGO_ALM_FAC ' +
+    '   AND p.CODIGO_CAJA_PAGO      = :CODIGO_CAJA_FAC ' +
+    '   AND p.NUMERO_OPERACION_PAGO = :NUMERO_OPERACION_FAC ' +
+    ' ORDER BY p.NUMERO_LINEA_PAGO';
+  unqryPagosCajaFac.MasterFields :=
+    'CODIGO_EMP_FAC;CODIGO_ALM_FAC;CODIGO_CAJA_FAC;' +
+    'NUMERO_OPERACION_FAC';
+  unqryPagosCajaFac.ReadOnly := True;
+  dsPagosCajaFac := TDataSource.Create(Self);
+  dsPagosCajaFac.DataSet := unqryPagosCajaFac;
   // Los MasterSource de los detalles los cablea el form via
   // AsignarMaestroCabecera (el DM ya no busca dsTablaG en el form).
 end;
@@ -773,6 +808,7 @@ begin
   unqryConsolidacion.MasterSource := ADataSource;
   unqryErrores.MasterSource := ADataSource;
   unqryMovimientosFac.MasterSource := ADataSource;
+  unqryPagosCajaFac.MasterSource := ADataSource;
 end;
 
 function TdmFacturas.FacturaPermiteRecalcularLineas: Boolean;
@@ -1055,6 +1091,30 @@ begin
       begin
         RegistroLog.RegistrarRendimiento('Facturas.Lazy',
           'unqryErrores ERROR=' + E.Message, swQ.ElapsedMilliseconds);
+        raise;
+      end;
+    end;
+  end;
+end;
+
+procedure TdmFacturas.AsegurarPagosCajaFacAbierta;
+var swQ: TStopwatch;
+begin
+  if not unqryPagosCajaFac.Active then
+  begin
+    swQ := TStopwatch.StartNew;
+    try
+      RellenarParamsDesdeMaestro(unqryPagosCajaFac);
+      unqryPagosCajaFac.Open;
+      RegistroLog.RegistrarRendimiento(
+        'Facturas.Lazy', 'unqryPagosCajaFac OK',
+        swQ.ElapsedMilliseconds);
+    except
+      on E: Exception do
+      begin
+        RegistroLog.RegistrarRendimiento('Facturas.Lazy',
+          'unqryPagosCajaFac ERROR=' + E.Message,
+          swQ.ElapsedMilliseconds);
         raise;
       end;
     end;

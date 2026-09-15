@@ -2429,6 +2429,15 @@
                   TabOrder = 13
                   Width = 126
                 end
+                object btnIrAVerifactu: TcxButton
+                  Left = 900
+                  Top = 424
+                  Width = 130
+                  Height = 34
+                  Caption = 'Ir a Verifactu'
+                  TabOrder = 20
+                  OnClick = btnIrAVerifactuClick
+                end
                 object btnVerifactuAnular: TcxButton
                   Left = 859
                   Top = 53

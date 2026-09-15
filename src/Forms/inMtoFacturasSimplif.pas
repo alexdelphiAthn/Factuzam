@@ -50,6 +50,25 @@ type
     ccbFiltroAnyo: TcxCheckComboBox;
     lblFiltroAlmacen: TcxLabel;
     ccbFiltroAlmacen: TcxCheckComboBox;
+    // Pestana propia: una factura de caja no lleva recibos, lleva
+    // los pagos con los que se liquido la operacion del TPV.
+    tsPagosCaja: TcxTabSheet;
+    pnlRightPagosCaja: TPanel;
+    btnIrAPagosCaja: TcxButton;
+    pnlBodyPagosCaja: TPanel;
+    cxgrdPagosCaja: TcxGrid;
+    tvPagosCaja: TcxGridDBTableView;
+    cxgrdlvlPagosCaja: TcxGridLevel;
+    colPagoLinea: TcxGridDBColumn;
+    colPagoFormaPago: TcxGridDBColumn;
+    colPagoDescripcion: TcxGridDBColumn;
+    colPagoEntregado: TcxGridDBColumn;
+    colPagoCambio: TcxGridDBColumn;
+    colPagoDivisa: TcxGridDBColumn;
+    colPagoImporteDivisa: TcxGridDBColumn;
+    colPagoReferencia: TcxGridDBColumn;
+    colPagoObservaciones: TcxGridDBColumn;
+    procedure btnIrAPagosCajaClick(Sender: TObject);
     procedure btnToggleFiltrosClick(Sender: TObject);
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
     procedure ccbFiltroAlmacenPropertiesCloseUp(Sender: TObject);
@@ -57,6 +76,9 @@ type
   private
     // Guarda contra reentrada mientras inicializamos los combos.
     FFiltrosCargando: Boolean;
+    // El base engancha pcDetail.OnChange en CrearTablaPrincipal;
+    // aqui se encadena para abrir ademas los pagos de caja.
+    FCambioDetalleBase: TNotifyEvent;
     // La carga inicial con barra de progreso se hace una sola vez.
     FCargaInicialHecha: Boolean;
     // Evita reentradas si la UI dispara eventos durante la apertura.
@@ -78,6 +100,8 @@ type
     procedure MostrarProgresoCarga(const AMax: Integer);
     procedure ActualizarProgresoCarga(const APos, AMax: Integer);
     procedure OcultarProgresoCarga;
+    procedure PrepararPestanaPagosCaja;
+    procedure CambioDetalleConPagosCaja(Sender: TObject);
   public
     function NombreVistaListado: string; override;
     function TipoFacturaFiltro: string; override;
@@ -94,7 +118,7 @@ implementation
 
 uses
   inLibMensajesVcl,
-  inLibUser, inLibMsgComun, inLibMsgFacturas,
+  inLibUser, inLibMsgComun, inLibMsgFacturas, inLibShowMto,
   UniDataVentasPantallaComposicion;
 
 {$R *.dfm}
@@ -144,6 +168,51 @@ begin
   CargarAlmacenesFiltro;
   LeerFiltrosPerfil;
   FRepositorioListado.ConfigurarListado(RecogerFiltros);
+  PrepararPestanaPagosCaja;
+end;
+
+procedure TfrmMtoFacturasSimplif.PrepararPestanaPagosCaja;
+begin
+  // El origen de datos se crea en el modulo de datos, asi que
+  // no puede venir puesto desde el DFM.
+  tvPagosCaja.DataController.DataSource :=
+    dmmFacturas.dsPagosCajaFac;
+  FCambioDetalleBase := pcDetail.OnChange;
+  pcDetail.OnChange := CambioDetalleConPagosCaja;
+end;
+
+procedure TfrmMtoFacturasSimplif.CambioDetalleConPagosCaja(
+  Sender: TObject);
+begin
+  if Assigned(FCambioDetalleBase) then
+    FCambioDetalleBase(Sender);
+  if pcDetail.ActivePage = tsPagosCaja then
+    dmmFacturas.AsegurarPagosCajaFacAbierta;
+end;
+
+procedure TfrmMtoFacturasSimplif.btnIrAPagosCajaClick(
+  Sender: TObject);
+var
+  oPagos: TDataSet;
+  sClave: string;
+begin
+  // El historico localiza por su clave completa, seis campos
+  // separados por comas y en este orden. Con un solo valor no
+  // encuentra nada.
+  oPagos := dmmFacturas.unqryPagosCajaFac;
+  if (not oPagos.Active) or oPagos.IsEmpty then
+  begin
+    ShowMessage_fza(SAvisoSinPagosCajaFactura);
+    Abort;
+  end;
+  sClave :=
+    oPagos.FieldByName('CODIGO_EMP_PAGO').AsString + ',' +
+    oPagos.FieldByName('CODIGO_ALM_PAGO').AsString + ',' +
+    oPagos.FieldByName('CODIGO_CAJA_PAGO').AsString + ',' +
+    oPagos.FieldByName('SERIE_OPERACION_PAGO').AsString + ',' +
+    oPagos.FieldByName('NUMERO_OPERACION_PAGO').AsString + ',' +
+    oPagos.FieldByName('NUMERO_LINEA_PAGO').AsString;
+  ShowMto(Self.Owner, 'CajaPagosHist', sClave);
 end;
 
 procedure TfrmMtoFacturasSimplif.ResetForm;

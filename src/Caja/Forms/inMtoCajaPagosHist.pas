@@ -33,6 +33,7 @@ uses
   inLibCajaPantallaInyeccion,
   cxCheckBox, cxCheckComboBox,
   cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
+  cxDBEdit, cxCurrencyEdit, UniDataCajaPagosHist,
   Vcl.AppEvnts, JvComponentBase, JvEnterTab, dxShellDialogs;
 
 type
@@ -46,6 +47,87 @@ type
     cxGrdDBTabPrinFECHA_PAGO: TcxGridDBColumn;
     cxGrdDBTabPrinCODIGO_FORMAP: TcxGridDBColumn;
     cxGrdDBTabPrinCODIGO_DIVISA_PAGO: TcxGridDBColumn;
+    cxGrdDBTabPrinDESCRIPCION_FORMAP: TcxGridDBColumn;
+    lblFpCodigo: TcxLabel;
+    edtFpCodigo: TcxDBTextEdit;
+    lblFpDescripcion: TcxLabel;
+    edtFpDescripcion: TcxDBTextEdit;
+    lblReferencia: TcxLabel;
+    edtReferencia: TcxDBTextEdit;
+    lblFechaPago: TcxLabel;
+    edtFechaPago: TcxDBTextEdit;
+    lblEntregado: TcxLabel;
+    edtEntregado: TcxDBCurrencyEdit;
+    lblCambio: TcxLabel;
+    edtCambio: TcxDBCurrencyEdit;
+    lblDivisa: TcxLabel;
+    edtDivisa: TcxDBTextEdit;
+    lblImporteDivisa: TcxLabel;
+    edtImporteDivisa: TcxDBTextEdit;
+    lblFactor: TcxLabel;
+    edtFactor: TcxDBTextEdit;
+    lblRedBlockchain: TcxLabel;
+    edtRedBlockchain: TcxDBTextEdit;
+    lblObservaciones: TcxLabel;
+    edtObservaciones: TcxDBTextEdit;
+    lblUsuarioAlta: TcxLabel;
+    edtUsuarioAlta: TcxDBTextEdit;
+    lblInstanteAlta: TcxLabel;
+    edtInstanteAlta: TcxDBTextEdit;
+    lblInstanteModif: TcxLabel;
+    edtInstanteModif: TcxDBTextEdit;
+    tsFichaPago: TcxTabSheet;
+    lblOpNumero: TcxLabel;
+    edtOpNumero: TcxDBTextEdit;
+    lblOpSerie: TcxLabel;
+    edtOpSerie: TcxDBTextEdit;
+    lblOpTipo: TcxLabel;
+    edtOpTipo: TcxDBTextEdit;
+    lblOpEmpleado: TcxLabel;
+    edtOpEmpleado: TcxDBTextEdit;
+    lblOpCliente: TcxLabel;
+    edtOpCliente: TcxDBTextEdit;
+    lblOpImporte: TcxLabel;
+    edtOpImporte: TcxDBCurrencyEdit;
+    lblOpArqueo: TcxLabel;
+    edtOpArqueo: TcxDBTextEdit;
+    lblOpSerieOrigen: TcxLabel;
+    edtOpSerieOrigen: TcxDBTextEdit;
+    lblOpNumeroOrigen: TcxLabel;
+    edtOpNumeroOrigen: TcxDBTextEdit;
+    lblOpMotivo: TcxLabel;
+    edtOpMotivo: TcxDBTextEdit;
+    btnIrAOperacion: TcxButton;
+    tsFichaOperacion: TcxTabSheet;
+    colFacSerie: TcxGridDBColumn;
+    colFacNumero: TcxGridDBColumn;
+    colFacFecha: TcxGridDBColumn;
+    colFacTipo: TcxGridDBColumn;
+    colFacFase: TcxGridDBColumn;
+    colFacConsolidada: TcxGridDBColumn;
+    colFacCliente: TcxGridDBColumn;
+    colFacBases: TcxGridDBColumn;
+    colFacImpuestos: TcxGridDBColumn;
+    colFacTotal: TcxGridDBColumn;
+    colLinNumero: TcxGridDBColumn;
+    colLinArticulo: TcxGridDBColumn;
+    colLinDescripcion: TcxGridDBColumn;
+    colLinVariacion: TcxGridDBColumn;
+    colLinTipoCant: TcxGridDBColumn;
+    colLinCantidad: TcxGridDBColumn;
+    colLinPrecio: TcxGridDBColumn;
+    colLinPrecioIva: TcxGridDBColumn;
+    colLinTotal: TcxGridDBColumn;
+    cxgrdFichaFactura: TcxGrid;
+    lvlFichaFactura: TcxGridLevel;
+    lvlFichaFacturaLineas: TcxGridLevel;
+    tvFichaFactura: TcxGridDBTableView;
+    tvFichaFacturaLineas: TcxGridDBTableView;
+    pnlFichaFacturaBotones: TPanel;
+    btnIrAFactura: TcxButton;
+    tsFichaFactura: TcxTabSheet;
+    pcFichaDetalle: TcxPageControl;
+    pnlFichaCabecera: TPanel;
     cxGrdDBTabPrinRED_BLOCKCHAIN: TcxGridDBColumn;
     cxGrdDBTabPrinFACTOR_CAMBIO_PAGO: TcxGridDBColumn;
     cxGrdDBTabPrinIMPORTE_DIVISA_PAGO: TcxGridDBColumn;
@@ -69,7 +151,11 @@ type
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
     procedure btnCargarPagosClick(Sender: TObject);
     procedure btnGuardarPrecargaCajaClick(Sender: TObject);
+    procedure btnIrAOperacionClick(Sender: TObject);
+    procedure btnIrAFacturaClick(Sender: TObject);
+    procedure pcFichaDetalleChange(Sender: TObject);
   private
+    dmmCajaPagosHist: TdmCajaPagosHist;
     FFiltrosCargando: Boolean;
     FCargaInicialHecha: Boolean;
     FRepositorioPersistencia: IRepositorioCajaPagosHist;
@@ -100,7 +186,7 @@ uses
   inLibMensajesVcl,
   inLibWin, inLibUser,
   inMtoModalGenImpSave, inMtoModalImpPagos, inLibFiltroUsuario,
-  inLibMsgCaja, inLibMsgComun;
+  inLibMsgCaja, inLibMsgComun, inLibShowMto;
 
 {$R *.dfm}
 
@@ -144,6 +230,14 @@ end;
 procedure TfrmMtoCajaPagosHist.CrearTablaPrincipal;
 begin
   inherited;
+  dmmCajaPagosHist := tdmDataModule as TdmCajaPagosHist;
+  // Las consultas de la factura se crean en codigo, asi que el DFM
+  // no puede apuntarlas: se enlazan aqui.
+  dmmCajaPagosHist.PrepararConsultasFactura(dsTablaG);
+  tvFichaFactura.DataController.DataSource :=
+    dmmCajaPagosHist.dsFacturaPago;
+  tvFichaFacturaLineas.DataController.DataSource :=
+    dmmCajaPagosHist.dsLineasFacturaPago;
   FDependenciasInyeccion.Validar;
   FRepositorioPersistencia :=
     FDependenciasInyeccion.CrearPersistencia(dsTablaG.DataSet);
@@ -386,19 +480,64 @@ end;
 
 procedure TfrmMtoCajaPagosHist.AplicarLayoutInstanciaBusqueda;
 begin
-  tsLista.TabVisible := True;
-  tsFicha.TabVisible := False;
+  // Antes esta pantalla no tenia ficha y la instancia de busqueda se
+  // quedaba en el listado. Ahora la tiene, asi que se comporta como
+  // el resto: quien llega buscando un pago aterriza en su ficha.
+  inherited;
   tsPerfil.TabVisible := False;
-  pcPantalla.ActivePage := tsLista;
-  edtBusqGlobal.Visible := False;
-  lblTextoaBuscar.Visible := False;
-  rbBBDD.Visible := False;
-  rbGrid.Visible := False;
-  sbExportExcel.Visible := False;
-  sbGrabarGrid.Visible := False;
-  sbResetGrid.Visible := False;
-  sbBestFit.Visible := False;
+  // El panel de filtros de carga no aplica: el filtro ya viene dado.
   pnlFiltrosCaja.Visible := False;
+end;
+
+procedure TfrmMtoCajaPagosHist.pcFichaDetalleChange(Sender: TObject);
+begin
+  // La factura y sus lineas se leen al entrar en su pestana, no
+  // antes: son dos consultas mas por cada pago que se visita.
+  if (pcFichaDetalle.ActivePage = tsFichaFactura) and
+     Assigned(dmmCajaPagosHist) then
+  begin
+    dmmCajaPagosHist.AsegurarFacturaPagoAbierta;
+  end;
+end;
+
+procedure TfrmMtoCajaPagosHist.btnIrAOperacionClick(Sender: TObject);
+var
+  oPago: TDataSet;
+  sClave: string;
+begin
+  // El historico de operaciones localiza por empresa, almacen, caja y
+  // numero de operacion, en ese orden y separados por comas.
+  oPago := dsTablaG.DataSet;
+  sClave := '';
+  if (oPago <> nil) and oPago.Active and (not oPago.IsEmpty) then
+    sClave :=
+      Trim(oPago.FieldByName('CODIGO_EMP_PAGO').AsString) + ',' +
+      Trim(oPago.FieldByName('CODIGO_ALM_PAGO').AsString) + ',' +
+      Trim(oPago.FieldByName('CODIGO_CAJA_PAGO').AsString) + ',' +
+      Trim(oPago.FieldByName('NUMERO_OPERACION_PAGO').AsString);
+  // Sin clave, ShowMto abre el listado sin situarse en ninguna fila.
+  ShowMto(Self.Owner, 'CajaOperacionesHist', sClave);
+end;
+
+procedure TfrmMtoCajaPagosHist.btnIrAFacturaClick(Sender: TObject);
+var
+  oPago: TDataSet;
+  sSerie: string;
+  sNumero: string;
+begin
+  oPago := dsTablaG.DataSet;
+  sSerie := '';
+  sNumero := '';
+  if (oPago <> nil) and oPago.Active and (not oPago.IsEmpty) then
+  begin
+    sSerie := Trim(oPago.FieldByName('SERIE_FAC_PAGO').AsString);
+    sNumero := Trim(oPago.FieldByName('NUMERO_FAC_PAGO').AsString);
+  end;
+  // La pantalla de simplificadas espera numero y serie, en ese orden.
+  if (sSerie <> '') and (sNumero <> '') then
+    ShowMto(Self.Owner, 'FacturasSimplif', sNumero + ',' + sSerie)
+  else
+    ShowMto(Self.Owner, 'FacturasSimplif');
 end;
 
 initialization

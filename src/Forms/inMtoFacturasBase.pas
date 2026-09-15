@@ -443,6 +443,7 @@ type
     chkESVENTA_ACTIVO_FIJO_FACTURA: TcxDBCheckBox;
     btnGenerarRecibos2: TcxButton;
     btnVerifactuAnular: TcxButton;
+    btnIrAVerifactu: TcxButton;
     btnVerifactuFacturar: TcxButton;
     btnVolverBorrador: TcxButton;
     btnVerifactuResolverIncidencia: TcxButton;
@@ -504,6 +505,7 @@ type
     procedure chkCrearArticulosPropertiesChange(Sender: TObject);
     procedure btnExportarLineasClick(Sender: TObject);
     procedure btnVerifactuAnularClick(Sender: TObject);
+    procedure btnIrAVerifactuClick(Sender: TObject);
     procedure btnVerifactuResolverIncidenciaClick(Sender: TObject);
     procedure btnVerifactuFacturarClick(Sender: TObject);
     procedure btnExportarRecibosClick(Sender: TObject);
@@ -625,7 +627,7 @@ uses
   inLibColumnasSku, inLibColumnasDocumento,
   UniDataArticulosValidadorRepositorio,
   UniDataGen,
-  inLibPresentacionDocumento;
+  inLibPresentacionDocumento, Winapi.ShellAPI;
 
 resourcestring
   STituloBuscarClientesBorradoresFactura =
@@ -2028,6 +2030,31 @@ begin
     end;
   end;
 end;
+procedure TfrmMtoFacturasBase.btnIrAVerifactuClick(Sender: TObject);
+var
+  oConsolidacion: TDataSet;
+  sUrl: string;
+begin
+  sUrl := '';
+  if Assigned(dmmFacturas) and
+     Assigned(dmmFacturas.unqryConsolidacion) and
+     dmmFacturas.unqryConsolidacion.Active and
+     (not dmmFacturas.unqryConsolidacion.IsEmpty) then
+  begin
+    oConsolidacion := dmmFacturas.unqryConsolidacion;
+    sUrl := Trim(
+      oConsolidacion.FieldByName('VERIFACTU_URL_FACCON').AsString);
+  end;
+  // Solo se abre una direccion web. El valor viene de la BBDD y
+  // ShellExecute lanzaria cualquier otra cosa que se le pusiera.
+  if (sUrl <> '') and
+     (StartsText('http://', sUrl) or StartsText('https://', sUrl)) then
+    ShellExecute(Handle, 'open', PChar(sUrl), nil, nil, SW_SHOWNORMAL)
+  else
+    MessageDlg_fza(
+      SInfoVerifactuUrlNoDisponible, mtInformation, [mbOk], 0);
+end;
+
 procedure TfrmMtoFacturasBase.btnVerifactuAnularClick(Sender: TObject);
 begin
   // Anulación fiscal de la factura activa según modo Verifactu.

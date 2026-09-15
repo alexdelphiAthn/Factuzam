@@ -241,6 +241,11 @@ resourcestring
     'total, y que no tenga efectos cobrados o remesados.';
   SErrorGenerarEfectosCobroSinBorrador =
     'No hay borrador activo o no se pudieron generar efectos.';
+  SInfoVerifactuUrlNoDisponible =
+    'Esta factura todavía no tiene la dirección de validación de '
+    + 'Verifactu.';
+  SAvisoSinPagosCajaFactura =
+    'Este borrador no tiene pagos de caja registrados.';
   SAvisoBorradorPendienteImpresionFiscal =
     'El borrador está pendiente: use el botón Consolidar antes de ' +
     'imprimirlo en este modo fiscal.';
