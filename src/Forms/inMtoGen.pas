@@ -28,7 +28,7 @@ uses
   dxSkinsForm, cxCustomData, cxFilter, cxData, cxDataStorage, dxDateRanges,
   Data.DB, cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGridDBDataDefinitions, cxGrid, dxmdaset,
-  cxTextEdit, dxBevel,
+  cxTextEdit, dxBevel, cxImage,
   inLibDevExp, cxGridExportLink, inLibUser, System.UITypes, System.Types,
   inLibPerfilesUsuarioIntf, inLibAnfitrionMtoIntf, Uni, inLibDir,
   inLibDatasets,
@@ -71,6 +71,7 @@ type
     pButtonGen: TPanel;
     pnStateDataSet: TPanel;
     lblEditMode: TcxLabel;
+    imgIconoPantalla: TcxImage;
     pcPantalla: TcxPageControl;
     tsLista: TcxTabSheet;
     tsFicha: TcxTabSheet;
@@ -185,6 +186,7 @@ type
     FInteraccionFiltros: TInteraccionFiltrosMtoVcl;
     procedure InicializarMantenimiento;
     procedure AjustarBarraLateral;
+    procedure CargarIconoPantalla;
     procedure ConfigurarModoBusqueda;
     function GetConexionTrabajo: TUniConnection;
     function AplicacionCerrando: Boolean;
@@ -294,7 +296,7 @@ uses
      inMtoGenPresentacionPerfilesVcl,
      System.Diagnostics,    // TStopwatch para cronometrar carga inicial
      System.TypInfo, inLibDiag,
-  inLibMsgComun, inLibMsgConfiguracion;
+  inLibMsgComun, inLibMsgConfiguracion, inLibMenuIconos;
 
 function TfrmMtoGen.GetConexionTrabajo: TUniConnection;
 begin
@@ -1448,9 +1450,33 @@ begin
   msProcesarPerfiles := swTramo.ElapsedMilliseconds;
   ConfigurarModoBusqueda;
   AjustarBarraLateral;
+  CargarIconoPantalla;
   RegistroLog.RegistrarRendimiento(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
+end;
+
+procedure TfrmMtoGen.CargarIconoPantalla;
+var
+  oProveedor: IProveedorMenuPantallas;
+  oRegistro: TfzaWinF;
+  oPantalla: TfzaForm;
+  sCall: string;
+begin
+  imgIconoPantalla.Visible := False;
+  imgIconoPantalla.Picture.Assign(nil);
+  if Supports(Owner, IProveedorMenuPantallas, oProveedor) then
+  begin
+    oRegistro := oProveedor.RegistroPantallas;
+    sCall := ResolverCallPantallaPorJerarquia(FAnfitrionMto, ClassType);
+    if Assigned(oRegistro) and (sCall <> '') then
+    begin
+      oPantalla := oRegistro.GetElement(sCall);
+      if Assigned(oPantalla) and Assigned(oPantalla.mnMenuItem) then
+        imgIconoPantalla.Visible := CargarIconoMenuMaximaResolucion(
+          oPantalla.mnMenuItem.Name, imgIconoPantalla.Picture);
+    end;
+  end;
 end;
 
 // La barra heredada se diseno con 140 px. Varias pantallas anaden botones

@@ -647,6 +647,29 @@ inherited frmMtoGen: TfrmMtoGen
       Constraints.MinWidth = 123
       ParentBackground = False
       TabOrder = 0
+      object imgIconoPantalla: TcxImage
+        AlignWithMargins = True
+        Left = 8
+        Top = 54
+        Margins.Left = 8
+        Margins.Top = 8
+        Margins.Right = 8
+        Margins.Bottom = 8
+        Align = alClient
+        Properties.FitMode = ifmProportionalStretch
+        Properties.PopupMenuLayout.MenuItems = []
+        Properties.ReadOnly = True
+        Properties.ShowFocusRect = False
+        Style.BorderStyle = ebsNone
+        StyleFocused.BorderStyle = ebsNone
+        StyleHot.BorderStyle = ebsNone
+        TabOrder = 2
+        TabStop = False
+        Transparent = True
+        Visible = False
+        Height = 48
+        Width = 124
+      end
       object pnStateDataSet: TPanel
         Left = 0
         Top = 21

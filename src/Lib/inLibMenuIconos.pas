@@ -17,7 +17,8 @@ unit inLibMenuIconos;
 interface
 
 uses
-  System.Classes, System.SysUtils, Vcl.Menus, Vcl.ImageCollection;
+  System.Classes, System.SysUtils, Vcl.Menus, Vcl.ImageCollection,
+  Vcl.Graphics;
 
 const
   /// Tamanos disponibles de cada icono, de menor a mayor.
@@ -28,6 +29,11 @@ const
 /// numero de iconos cargados.
 function CargarIconosDesdeRecursos(ACollection: TImageCollection;
   AItems: TMenuItem): Integer;
+
+// Carga el PNG de mayor resolucion del item directamente del ejecutable.
+// Si no existe, deja la imagen vacia y devuelve False.
+function CargarIconoMenuMaximaResolucion(const ANombreItem: string;
+  AImagen: TPicture): Boolean;
 
 /// Variante que lee los PNG de disco: <ADir>\16x16\*.png, 24x24, etc.
 //function CargarIconosDesdeCarpeta(ACollection: TImageCollection;
@@ -41,11 +47,77 @@ function AsignarIconosMenu(AItems: TMenuItem;
 implementation
 
 uses
-  Winapi.Windows, System.IOUtils, System.Types;
+  Winapi.Windows, System.IOUtils, System.Types,
+  dxGDIPlusClasses, dxGDIPlusApi;
+
+type
+  // Conserva el PNG original y suaviza cada dibujo al tamano del control.
+  // TPngImage amplifica los escalones al estirarse en pantallas con DPI alto.
+  TIconoMenuPNG = class(TdxPNGImage)
+  protected
+    procedure Draw(ACanvas: TCanvas; const ARect: TRect); override;
+  end;
+
+procedure TIconoMenuPNG.Draw(ACanvas: TCanvas; const ARect: TRect);
+var
+  oLienzo: TdxGPCustomPaintCanvas;
+begin
+  if not Empty and (ARect.Width > 0) and (ARect.Height > 0) then
+  begin
+    oLienzo := TdxGPCustomPaintCanvas.Create;
+    try
+      oLienzo.BeginPaint(ACanvas.Handle, ARect);
+      try
+        oLienzo.InterpolationMode := imHighQualityBicubic;
+        oLienzo.PixelOffsetMode := PixelOffsetModeHalf;
+        StretchDraw(oLienzo, ARect, ClientRect, nil);
+      finally
+        oLienzo.EndPaint;
+      end;
+    finally
+      oLienzo.Free;
+    end;
+  end;
+end;
 
 function ExisteRecurso(const ANombre: string): Boolean;
 begin
   Result := FindResource(HInstance, PChar(ANombre), RT_RCDATA) <> 0;
+end;
+
+function CargarIconoMenuMaximaResolucion(const ANombreItem: string;
+  AImagen: TPicture): Boolean;
+var
+  iTamano: Integer;
+  sRecurso: string;
+  oFlujo: TResourceStream;
+  oPng: TIconoMenuPNG;
+begin
+  Result := False;
+  AImagen.Assign(nil);
+  iTamano := High(TAMANOS_ICONO);
+  while (iTamano >= Low(TAMANOS_ICONO)) and not Result do
+  begin
+    sRecurso := UpperCase(ANombreItem) + '_' +
+      IntToStr(TAMANOS_ICONO[iTamano]);
+    if ExisteRecurso(sRecurso) then
+    begin
+      oFlujo := TResourceStream.Create(HInstance, sRecurso, RT_RCDATA);
+      try
+        oPng := TIconoMenuPNG.Create;
+        try
+          oPng.LoadFromStream(oFlujo);
+          AImagen.Assign(oPng);
+          Result := True;
+        finally
+          oPng.Free;
+        end;
+      finally
+        oFlujo.Free;
+      end;
+    end;
+    Dec(iTamano);
+  end;
 end;
 
 function CargarIconosDesdeRecursos(ACollection: TImageCollection;

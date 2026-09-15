@@ -94,6 +94,7 @@ var
 begin
   Formulario := TfrmPrintDocsProveedor.Create(AOwner);
   try
+    Formulario.NombreIconoMenu := 'mnuListadoDocsProveedor';
     Formulario.ShowModal;
   finally
     FreeAndNil(Formulario);
@@ -106,6 +107,7 @@ var
 begin
   Formulario := TfrmPrintEfectosPago.Create(AOwner);
   try
+    Formulario.NombreIconoMenu := 'mnuListadoEfectosPago';
     Formulario.ShowModal;
   finally
     FreeAndNil(Formulario);
@@ -157,6 +159,7 @@ var
 begin
   Formulario := TfrmPrintBalanceTallas.Create(Application);
   try
+    Formulario.NombreIconoMenu := 'mnuBalanceAlmacenHorizontal';
     Formulario.ShowModal;
   finally
     FreeAndNil(Formulario);
@@ -169,6 +172,7 @@ var
 begin
   Formulario := TfrmPrintBalanceSinTallas.Create(Application);
   try
+    Formulario.NombreIconoMenu := 'mnuBalanceAlmacenSinTallas';
     Formulario.ShowModal;
   finally
     FreeAndNil(Formulario);
@@ -181,6 +185,7 @@ var
 begin
   Formulario := TfrmPrintMovVentasArt.Create(Application);
   try
+    Formulario.NombreIconoMenu := 'mnuMovVentasArt';
     Formulario.ShowModal;
   finally
     FreeAndNil(Formulario);

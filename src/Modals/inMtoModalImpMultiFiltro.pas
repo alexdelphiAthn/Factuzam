@@ -46,7 +46,7 @@ uses
   cxEdit, cxLabel, cxTextEdit, cxMaskEdit, cxDropDownEdit, cxCalendar,
   cxPC, cxCheckListBox, cxCheckBox, cxCustomListBox, cxClasses,
   cxTL, cxTLData, cxInplaceContainer,
-  cxButtons, cxSpinEdit, dxSkinsCore, dxSkinsForm;
+  cxButtons, cxSpinEdit, cxImage, dxSkinsCore, dxSkinsForm;
 
 type
   TFiltroReport = (frFechas, frAlmacenes, frFamilias, frProveedores,
@@ -100,8 +100,10 @@ type
     FclbAgrup       : TcxCheckListBox;
     FseNivelFam     : TcxSpinEdit;
     FRepositorioFiltros: IRepositorioInformeMultiFiltro;
+    FNombreIconoMenu: string;
     procedure CrearUIFiltros;
     procedure CrearTabFechas;
+    procedure CrearIconoInforme;
     function  CrearTabFiltro(const ACaption: string): TFiltroChecklist;
     procedure CargarFiltro(AFc: TFiltroChecklist;
       const AOpciones: TOpcionesInformeMultiFiltro);
@@ -171,6 +173,9 @@ type
     function CSVArticulos  : string;
     function FechaDesde    : TDateTime;
     function FechaHasta    : TDateTime;
+    // La apertura del informe indica su opcion de menu antes de ShowModal.
+    property NombreIconoMenu: string
+      read FNombreIconoMenu write FNombreIconoMenu;
   end;
 
 implementation
@@ -178,7 +183,8 @@ implementation
 {$R *.dfm}
 
 uses
-  System.DateUtils, inLibMsgComun, UniDataInformeMultiFiltroRepositorio;
+  System.DateUtils, inLibMsgComun, UniDataInformeMultiFiltroRepositorio,
+  inLibMenuIconos;
 
 resourcestring
   SCaptionFamiliaFiltroInforme = 'Familia';
@@ -264,8 +270,46 @@ begin
     FfcTemporadas := CrearTabFiltro(SCaptionTemporadasFiltroInforme);
   if frArticulos in fs then
     FfcArticulos := CrearTabFiltro(SCaptionArticulosFiltroInforme);
+  CrearIconoInforme;
   if FpcFiltros.PageCount > 0 then
     FpcFiltros.ActivePageIndex := 0;
+end;
+
+procedure TfrmPrintMultiFiltro.CrearIconoInforme;
+const
+  TAMANO_ICONO_96_DPI = 48;
+  POSICION_VERTICAL_96_DPI = 224;
+var
+  oIcono: TcxImage;
+  iTamano: Integer;
+  iIzquierda: Integer;
+  iArriba: Integer;
+begin
+  if Assigned(FtsFechas) and (FNombreIconoMenu <> '') then
+  begin
+    iTamano := MulDiv(TAMANO_ICONO_96_DPI, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    iIzquierda := FdteHasta.Left + (FdteHasta.Width - iTamano) div 2;
+    // Debajo de los filtros, dejando sitio a las opciones de cada informe.
+    iArriba := MulDiv(POSICION_VERTICAL_96_DPI, CurrentPPI,
+      USER_DEFAULT_SCREEN_DPI);
+    oIcono := TcxImage.Create(Self);
+    oIcono.Name := 'imgIconoInforme';
+    oIcono.Visible := False;
+    oIcono.Parent := FtsFechas;
+    oIcono.SetBounds(iIzquierda, iArriba, iTamano, iTamano);
+    oIcono.Properties.FitMode := ifmProportionalStretch;
+    oIcono.Properties.PopupMenuLayout.MenuItems := [];
+    oIcono.Properties.ReadOnly := True;
+    oIcono.Properties.ShowFocusRect := False;
+    oIcono.Style.BorderStyle := ebsNone;
+    oIcono.StyleFocused.BorderStyle := ebsNone;
+    oIcono.StyleHot.BorderStyle := ebsNone;
+    oIcono.TabStop := False;
+    oIcono.Transparent := True;
+    oIcono.Visible := CargarIconoMenuMaximaResolucion(
+      FNombreIconoMenu, oIcono.Picture);
+  end;
 end;
 
 procedure TfrmPrintMultiFiltro.CrearTabFechas;
