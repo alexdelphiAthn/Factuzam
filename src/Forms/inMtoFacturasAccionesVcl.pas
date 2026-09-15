@@ -585,27 +585,17 @@ procedure ImprimirFacturaVcl(
   const AGuardarPendiente: TGuardarPendienteFacturaVcl;
   const AObtenerFiltradas: TObtenerFacturasFiltradasVcl);
 var
-  bPuedeUsarActual: Boolean;
   oCoordinador: TCoordinadorImpresionFacturaVcl;
   oFormulario: TfrmPrintFac;
-  sFase: string;
 begin
   if not APuedeImprimir then
     Abort;
   if SinVerifactuActivo(AParametros) and
      Assigned(AGuardarPendiente) then
     AGuardarPendiente();
-  sFase := ACabecera.FieldByName(ffasefac).AsString;
-  bPuedeUsarActual :=
-    not (
-      ((sFase = '') or SameText(sFase, 'BORRADOR')) and
-      (ACabecera.FieldByName(fescon).AsString <> 'S') and
-      (ModoVerifactu(AParametros) <> mvSinVerifactu));
-  if not bPuedeUsarActual and not Assigned(AObtenerFiltradas) then
-  begin
-    ShowMessage_fza(SAvisoBorradorPendienteImpresionFiscal);
-    Abort;
-  end;
+  // El borrador sin consolidar ya se puede ver e imprimir: mientras
+  // no este emitido el informe se titula FACTURA PROFORMA, asi que el
+  // papel no se puede confundir con una factura entregable.
 
   oCoordinador := TCoordinadorImpresionFacturaVcl.Create(
     AOwnerSesion,
@@ -620,7 +610,7 @@ begin
   try
     oFormulario := TfrmPrintFac.Create(oCoordinador.FOwnerFormulario);
     try
-      oCoordinador.ConfigurarFormulario(oFormulario, bPuedeUsarActual);
+      oCoordinador.ConfigurarFormulario(oFormulario, True);
       oFormulario.ShowModal;
     finally
       oFormulario.Free;

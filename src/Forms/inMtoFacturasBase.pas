@@ -38,7 +38,7 @@ uses
   dxScrollbarAnnotations, dxCore, cxRadioGroup, System.Actions, Vcl.ActnList,
   Vcl.ActnMan, Vcl.StdStyleActnCtrls, Vcl.AppEvnts,
   JvComponentBase, JvEnterTab, UniDataFacturas, dxShellDialogs, JvBaseDlg,
-  JvCalc, dxDateTimeWheelPicker, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
+  dxDateTimeWheelPicker, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
   dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
   dxSkinGlassOceans, dxSkinHighContrast, dxSkiniMaginary, dxSkinLilian,
@@ -370,7 +370,6 @@ type
     ctbCODIGO_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn;
     ctbRAZONSOCIAL_PROVEEDOR_FACTURA_LINEA: TcxGridDBColumn;
     ctbPRECIO_ULT_COMPRA_FACTURA_LINEA: TcxGridDBColumn;
-    jvcalcAux: TJvCalculator;
     btnCalculator: TcxButton;
     txtNOMBRE_PAIS_CLIENTE_FACTURA: TcxDBTextEdit;
     txtNOMBRE_PAIS_EMPRESA_FACTURA: TcxDBTextEdit;
@@ -600,6 +599,7 @@ implementation
 
 uses
   inLibMensajesVcl,
+  inLibCalculadoraVcl,
   inLibWin,
   inLibMsgComun, inLibMsgFacturas,
   inLibMsgVentas,
@@ -1573,7 +1573,7 @@ end;
 procedure TfrmMtoFacturasBase.btnCalculatorClick(Sender: TObject);
 begin
   inherited;
-  jvcalcAux.Execute;
+  MostrarCalculadora(Self);
 end;
 
 procedure TfrmMtoFacturasBase.btnCODIGO_CLIENTEKeyUp(

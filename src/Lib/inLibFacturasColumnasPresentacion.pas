@@ -70,7 +70,7 @@ uses
   cxDataStorage, cxDropDownEdit, cxEdit,
   cxGridCustomTableView, cxGridTableView, cxGridDBDataDefinitions,
   cxLookupEdit, cxDBLookupComboBox, cxLookupDBGrid, cxMemo, cxSpinEdit,
-  inLibGridCantidad, inLibFormatoMonetario;
+  inLibGridCantidad, inLibFormatoMonetario, inLibMsgArticulos;
 
 function NuevaColumna(
   AVista: TcxGridDBTableView;
@@ -230,7 +230,7 @@ begin
   begin
     AColumnas.TipoCantidad := NuevaColumna(
       AConfiguracion.Vista,
-      '',
+      SCaptionColTipoCantidad,
       'TIPO_CANTIDAD_ARTICULO_FACLIN',
       20,
       False);

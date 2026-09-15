@@ -19,6 +19,9 @@ uses
   JclDebug,
   JclHookExcept,
   inLibDevExp in 'src\Lib\inLibDevExp.pas',
+  inLibFuenteFastReport in 'src\Lib\inLibFuenteFastReport.pas',
+  inLibTipoCantidad in 'src\Lib\inLibTipoCantidad.pas',
+  inLibCalculadoraVcl in 'src\Lib\inLibCalculadoraVcl.pas',
   inLibHojaCalculoIntf in 'src\Lib\inLibHojaCalculoIntf.pas',
   inLibHojaCalculoUtil in 'src\Lib\inLibHojaCalculoUtil.pas',
   inLibHojaCalculoDevEx in 'src\Lib\inLibHojaCalculoDevEx.pas',
@@ -1283,6 +1286,9 @@ begin
     Application.DefaultFont.Height := -15;
     Screen.MenuFont.Name := 'Source Sans 3';
     Screen.MenuFont.Size := 11;
+    // La interfaz propia de FastReport (vista preliminar,
+    // dialogos y disenador) trae 'Tahoma' fija en sus DFM.
+    TFuenteFastReport.Activar;
     Application.CreateForm(TfrmMtoPrincipal, Principal);
   Principal.AsignarRegistroLog(RegistroLogAplicacion);
     Principal.InicializarAplicacion(

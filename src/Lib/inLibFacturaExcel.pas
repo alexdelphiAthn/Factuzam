@@ -131,6 +131,11 @@ begin
     else if SameText(CampoTexto('TIPO_FAC'), 'RECTIFICATIVA') then
       Result := 'FACTURA RECTIFICATIVA';
   end;
+  // Mientras el borrador no este consolidado no es una factura
+  // emitida: sale como proforma, igual que en el informe.
+  if not SinVerifactuActivo(FParametrosApp) and
+     EsFacturaPendienteConsolidar(FMaster) then
+    Result := 'FACTURA PROFORMA';
 end;
 
 function TExportadorFacturaDevExpress.PuedeIncrustarQR: Boolean;

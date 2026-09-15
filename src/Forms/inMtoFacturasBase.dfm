@@ -3907,10 +3907,4 @@
     Left = 1104
     Top = 72
   end
-  object jvcalcAux: TJvCalculator
-    Ctl3D = False
-    Title = 'Calculadora'
-    Left = 464
-    Top = 496
-  end
 end

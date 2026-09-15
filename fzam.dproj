@@ -1048,6 +1048,9 @@
         <DCCReference Include="src\Lib\inLibDeteccionImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEspera.pas"/>
         <DCCReference Include="src\Lib\inLibMensajesVcl.pas"/>
+        <DCCReference Include="src\Lib\inLibFuenteFastReport.pas"/>
+        <DCCReference Include="src\Lib\inLibTipoCantidad.pas"/>
+        <DCCReference Include="src\Lib\inLibCalculadoraVcl.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa1914XML.pas"/>

@@ -120,6 +120,9 @@ procedure AsegurarQRVerifactuEnReport(AReport: TfrxReport);
 // ('FACTURA') al tipo del registro activo: FACTURA SIMPLIFICADA /
 // FACTURA RECTIFICATIVA / FACTURA. Encadenar desde OnBeforePrint.
 // Requiere que el dataset de cabecera lleve TIPO_FAC.
+// True mientras la factura siga siendo un borrador sin consolidar: lo
+// que se imprima o se exporte todavia no es una factura emitida.
+function EsFacturaPendienteConsolidar(ADataSet: TDataSet): Boolean;
 procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
 // FastReport: vía fiable. En esta versión el OnBeforePrint NO llega a
 // los objetos sueltos de las bandas estáticas (cabecera/pie/título de
@@ -881,7 +884,31 @@ end;
 
 // Ajusta el memo de título 'FACTURA' al tipo del dataset (SIMPLIFICADA
 // / RECTIFICATIVA / normal). Solo actúa sobre el memo de título.
-procedure AjustarTituloMemo(AMemo: TfrxMemoView; ADataSet: TDataSet);
+// True mientras la factura siga siendo un borrador sin consolidar: lo
+// que se imprima todavia no es una factura emitida.
+function EsFacturaPendienteConsolidar(ADataSet: TDataSet): Boolean;
+var
+  sFase: string;
+begin
+  Result := False;
+  if (ADataSet <> nil) and ADataSet.Active and
+     (ADataSet.FindField('FASE_FAC') <> nil) and
+     (ADataSet.FindField('ESCONSOLIDADA_FAC') <> nil) then
+  begin
+    sFase := UpperCase(Trim(
+      ADataSet.FieldByName('FASE_FAC').AsString));
+    Result := ((sFase = '') or (sFase = 'BORRADOR')) and
+      not SameText(
+        Trim(ADataSet.FieldByName('ESCONSOLIDADA_FAC').AsString),
+        'S');
+  end;
+end;
+
+// AComoProforma titula el documento como proforma. Un borrador que aun no
+// esta registrado no puede salir del programa llamandose factura: quien lo
+// recibiera lo tomaria por un documento entregable.
+procedure AjustarTituloMemo(AMemo: TfrxMemoView; ADataSet: TDataSet;
+  AComoProforma: Boolean);
 var
   sTexto: string;
   sTipo:  string;
@@ -889,12 +916,15 @@ begin
   sTexto := UpperCase(Trim(AMemo.Text));
   if ((sTexto = 'FACTURA') or
       (sTexto = 'FACTURA SIMPLIFICADA') or
-      (sTexto = 'FACTURA RECTIFICATIVA')) and
+      (sTexto = 'FACTURA RECTIFICATIVA') or
+      (sTexto = 'FACTURA PROFORMA')) and
      (ADataSet <> nil) and
      (ADataSet.FindField('TIPO_FAC') <> nil) then
   begin
     sTipo := UpperCase(Trim(ADataSet.FieldByName('TIPO_FAC').AsString));
-    if sTipo = 'SIMPLIFICADA' then
+    if AComoProforma then
+      AMemo.Text := 'FACTURA PROFORMA'
+    else if sTipo = 'SIMPLIFICADA' then
       AMemo.Text := 'FACTURA SIMPLIFICADA'
     else if sTipo = 'RECTIFICATIVA' then
       AMemo.Text := 'FACTURA RECTIFICATIVA'
@@ -1026,7 +1056,8 @@ procedure SustituirTituloFacturaEnReport(Component: TfrxReportComponent);
 begin
   if Component is TfrxMemoView then
     AjustarTituloMemo(TfrxMemoView(Component),
-                      DataSetFacturaDeReport(Component));
+                      DataSetFacturaDeReport(Component),
+                      False);
 end;
 
 // Recorre recursivamente los hijos de una banda aplicando el QR y el
@@ -1034,7 +1065,8 @@ end;
 procedure AplicarVerifactuARama(
   const AParametrosApp: IParametrosAplicacion;
   AComp: TfrxComponent;
-  ADataSet: TDataSet);
+  ADataSet: TDataSet;
+  AComoProforma: Boolean);
 var
   i:    Integer;
   oPic: TfrxPictureView;
@@ -1060,12 +1092,14 @@ begin
       end;
     end;
     if AComp is TfrxMemoView then
-      AjustarTituloMemo(TfrxMemoView(AComp), ADataSet);
+      AjustarTituloMemo(
+        TfrxMemoView(AComp), ADataSet, AComoProforma);
     for i := 0 to AComp.Objects.Count - 1 do
       AplicarVerifactuARama(
         AParametrosApp,
         TfrxComponent(AComp.Objects[i]),
-        ADataSet);
+        ADataSet,
+        AComoProforma);
   end;
 end;
 
@@ -1079,7 +1113,12 @@ begin
   begin
     oDataSet := DataSetFacturaDeReport(Component);
     if TieneCamposFactura(oDataSet) then
-      AplicarVerifactuARama(AParametrosApp, Component, oDataSet);
+      AplicarVerifactuARama(
+        AParametrosApp,
+        Component,
+        oDataSet,
+        not SinVerifactuActivo(AParametrosApp) and
+          EsFacturaPendienteConsolidar(oDataSet));
   end;
 end;
 
@@ -1091,11 +1130,14 @@ procedure AplicarVerifactuEnReportDirecto(
 var
   i:    Integer;
   oObj: TfrxComponent;
+  bProforma: Boolean;
 begin
   // Relleno directo, sin esperar a OnBeforePrint. Para una sola factura
   // (vista previa / impresión / PDF) el QR y el título salen por defecto.
   if (AReport <> nil) and TieneCamposFactura(ADataSet) then
   begin
+    bProforma := not SinVerifactuActivo(AParametrosApp) and
+      EsFacturaPendienteConsolidar(ADataSet);
     // El QR por nombre (FindObject recorre todo el informe; más fiable
     // que la jerarquía Objects para un objeto recién cargado)
     oObj := AReport.FindObject('qrverifactu');
@@ -1111,7 +1153,8 @@ begin
         AplicarVerifactuARama(
           AParametrosApp,
           TfrxReportPage(AReport.Pages[i]),
-          ADataSet);
+          ADataSet,
+          bProforma);
     end;
   end;
 end;
@@ -1128,9 +1171,12 @@ var
   oQr:    TfrxPictureView;
   i:      Integer;
   dLado:  Extended;
+  bProforma: Boolean;
 begin
   if (AReport <> nil) and TieneCamposFactura(ADataSet) then
   begin
+    bProforma := not SinVerifactuActivo(AParametrosApp) and
+      EsFacturaPendienteConsolidar(ADataSet);
     oPage := nil;
     for i := 0 to AReport.PagesCount - 1 do
     begin
@@ -1172,7 +1218,8 @@ begin
         AplicarVerifactuARama(
           AParametrosApp,
           TfrxReportPage(AReport.Pages[i]),
-          ADataSet);
+          ADataSet,
+          bProforma);
     end;
   end;
 end;

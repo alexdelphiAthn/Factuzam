@@ -33,7 +33,7 @@ implementation
 uses
   System.Classes, System.SysUtils, System.Variants, System.Math, Data.DB,
   Vcl.ExtCtrls, cxGridCustomTableView, cxGridTableView, cxSpinEdit,
-  inLibMsgArticulos;
+  inLibMsgArticulos, inLibTipoCantidad;
 
 type
   TVisibilidadTipoCantidad = class;
@@ -69,16 +69,6 @@ type
     procedure GetDisplayText(Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord; var AText: string);
   end;
-
-function EsTipoCantidadPredeterminado(const AValor: string): Boolean;
-var
-  sValor: string;
-begin
-  sValor := Trim(AValor);
-  Result := (sValor = '') or SameText(sValor, 'Uds') or
-            SameText(sValor, 'Ud') or SameText(sValor, 'Unidad') or
-            SameText(sValor, 'Unidades') or SameText(sValor, 'Cantidad');
-end;
 
 procedure TEnlaceTipoCantidad.ActiveChanged;
 begin

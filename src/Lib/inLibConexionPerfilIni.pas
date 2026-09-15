@@ -9,8 +9,10 @@
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Resuelve el perfil de conexión desde el INI y la credencial desde el     }
-{    almacén seguro de Windows, conservando lectura del formato AES legado.    }
+{    Resuelve el perfil de conexión y su credencial desde el INI, cifrada    }
+{    con AES. El almacén de credenciales de Windows solo se lee, para        }
+{    recuperar instalaciones anteriores: guarda por usuario de Windows y     }
+{    su contenido no se puede copiar a otro equipo ni a otro usuario.       }
 {******************************************************************************}
 unit inLibConexionPerfilIni;
 
@@ -249,35 +251,34 @@ begin
     else
       Result.ReferenciaCredencial := sReferenciaConfigurada;
     ValidarReferenciaCredencial(Result.ReferenciaCredencial);
-    if not LeerCredencialConexionWindows(
-             Result.ReferenciaCredencial,
-             Result.Credencial) then
+    // El propio perfil es la fuente principal de la credencial: asi
+    // se puede aprovisionar un equipo o un usuario copiando el INI. El
+    // almacén de Windows solo se lee para recuperar instalaciones
+    // anteriores; la siguiente escritura la lleva al perfil.
+    sClaveLegada := Trim(oIni.ReadString(
+      'ConnData', 'PasswordEn', ''));
+    if sClaveLegada <> '' then
     begin
-      if bMigrarReferenciaPredeterminada and
-         not SameText(
-           Result.ReferenciaCredencial,
-           sReferenciaLegada) and
-         LeerCredencialConexionWindows(
-           sReferenciaLegada,
-           Result.Credencial) then
-      begin
-        Result.ReferenciaCredencialAnterior :=
-          sReferenciaLegada;
-        Result.ProcedeDeFormatoLegado := True;
-      end
-      else
-      begin
-        sClaveLegada := oIni.ReadString(
-          'ConnData', 'PasswordEn', '');
-        if sClaveLegada <> '' then
-        begin
-          Result.Credencial := DescifrarAES(sClaveLegada);
-          if Result.Credencial = '' then
-            raise EConvertError.Create(
-              SErrorCredencialLegadaInvalida);
-          Result.ProcedeDeFormatoLegado := True;
-        end;
-      end;
+      Result.Credencial := DescifrarAES(sClaveLegada);
+      if Result.Credencial = '' then
+        raise EConvertError.Create(
+          SErrorCredencialLegadaInvalida);
+    end
+    else if LeerCredencialConexionWindows(
+              Result.ReferenciaCredencial,
+              Result.Credencial) then
+      Result.ProcedeDeFormatoLegado := True
+    else if bMigrarReferenciaPredeterminada and
+            not SameText(
+              Result.ReferenciaCredencial,
+              sReferenciaLegada) and
+            LeerCredencialConexionWindows(
+              sReferenciaLegada,
+              Result.Credencial) then
+    begin
+      Result.ReferenciaCredencialAnterior :=
+        sReferenciaLegada;
+      Result.ProcedeDeFormatoLegado := True;
     end;
     if not ValidarPerfilConexion(Result.Perfil, sMotivo) then
       raise EArgumentException.Create(
@@ -301,10 +302,6 @@ begin
     raise EArgumentException.Create(
       Format(SErrorPerfilConexionNoValido, [sMotivo]));
   ValidarReferenciaCredencial(AConfiguracion.ReferenciaCredencial);
-  GuardarCredencialConexionWindows(
-    AConfiguracion.ReferenciaCredencial,
-    AConfiguracion.Perfil.Usuario,
-    AConfiguracion.Credencial);
   oIni := TIniFile.Create(ARutaIni);
   try
     oIni.WriteString(
@@ -363,10 +360,25 @@ begin
       'ConnData',
       'CredentialRef',
       AConfiguracion.ReferenciaCredencial);
-    oIni.DeleteKey('ConnData', 'PasswordEn');
-    if oIni.ValueExists('ConnData', 'PasswordEn') then
-      raise EInOutError.Create(
-        SErrorEliminarCredencialLegadaIni);
+    // Una credencial vacía no se cifra: al releerla daría un
+    // texto vacío y el perfil quedaría ilegible.
+    if AConfiguracion.Credencial <> '' then
+    begin
+      oIni.WriteString(
+        'ConnData',
+        'PasswordEn',
+        CifrarAES(AConfiguracion.Credencial));
+      if oIni.ReadString('ConnData', 'PasswordEn', '') = '' then
+        raise EInOutError.Create(
+          SErrorGuardarCredencialIni);
+    end
+    else
+    begin
+      oIni.DeleteKey('ConnData', 'PasswordEn');
+      if oIni.ValueExists('ConnData', 'PasswordEn') then
+        raise EInOutError.Create(
+          SErrorEliminarCredencialLegadaIni);
+    end;
   finally
     oIni.Free;
   end;

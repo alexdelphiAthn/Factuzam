@@ -950,7 +950,7 @@ resourcestring
   SCaptionColSku = 'SKU';
   SCaptionColArticulo = 'Artículo';
   SCaptionColArticuloSku = 'Artículo / SKU';
-  SCaptionColTipoCantidad = 'Tipo';
+  SCaptionColTipoCantidad = 'TipoCant';
   SCaptionColCantidad = 'Cantidad';
   SCaptionColTallaN = 'Talla %d';
   SCaptionColDescripcion = 'Descripción';

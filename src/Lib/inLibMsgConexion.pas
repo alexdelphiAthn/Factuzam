@@ -46,6 +46,8 @@ resourcestring
     'No se pudo eliminar la credencial de conexión (error %d).';
   SErrorEliminarCredencialLegadaIni =
     'No se pudo retirar la credencial legada del perfil de conexión.';
+  SErrorGuardarCredencialIni =
+    'No se pudo guardar la credencial en el perfil de conexión.';
   SValidacionMotorBBDD =
     'El motor de base de datos no es válido';
   SValidacionIdPerfilConexion =

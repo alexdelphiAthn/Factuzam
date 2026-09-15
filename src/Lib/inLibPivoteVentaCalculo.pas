@@ -19,7 +19,7 @@ unit inLibPivoteVentaCalculo;
 interface
 
 uses
-  System.SysUtils;
+  System.SysUtils, inLibTipoCantidad;
 
 type
   // Banda visual de un grupo del pivote: Pedido / A albaranar /
@@ -146,13 +146,8 @@ end;
 
 function EsTipoCantidadPredeterminadoPivote(
   const AValor: string): Boolean;
-var
-  sValor: string;
 begin
-  sValor := Trim(AValor);
-  Result := (sValor = '') or SameText(sValor, 'Uds') or
-            SameText(sValor, 'Ud') or SameText(sValor, 'Unidad') or
-            SameText(sValor, 'Unidades') or SameText(sValor, 'Cantidad');
+  Result := EsTipoCantidadPredeterminado(AValor);
 end;
 
 function TextoBandaPivoteVenta(ABanda: TBandaPivoteVenta;
