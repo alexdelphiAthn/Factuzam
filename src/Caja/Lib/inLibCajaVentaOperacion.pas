@@ -67,6 +67,15 @@ function ResolverEmpleadoNuevaOperacionVenta(
   ARellenarEmpleadoDefecto: Boolean;
   const AEmpleadoDefecto: string): string;
 
+// Sin empleado por linea el vendedor no se puede tocar linea a linea: el
+// de la cabecera manda sobre toda la venta, asi que al cambiarlo hay que
+// estamparlo en las lineas ya metidas. Cierra antes la linea pendiente
+// (la que no tiene articulo se cancela, la demas se graba), deja el
+// cursor donde quedase tras cerrarla y devuelve cuantas lineas cambia.
+function PropagarVendedorATodasLasLineas(
+  ALineas: TDataSet;
+  const AVendedor: string): Integer;
+
 // Retira la linea rechazada por una validacion de SKU: la insercion se
 // cancela; la edicion se cancela y la fila se borra.
 procedure EliminarLineaVentaPorValidacion(ALineas: TDataSet);
@@ -262,6 +271,59 @@ begin
   Result := Trim(AUltimoEmpleado);
   if (Result = '') and ARellenarEmpleadoDefecto then
     Result := Trim(AEmpleadoDefecto);
+end;
+
+function PropagarVendedorATodasLasLineas(
+  ALineas: TDataSet;
+  const AVendedor: string): Integer;
+var
+  Campo: TField;
+  Marcador: TBookmark;
+begin
+  Result := 0;
+  if Assigned(ALineas) and ALineas.Active then
+  begin
+    Campo := ALineas.FindField('CODIGO_VENDEDOR_FACLIN');
+    if Assigned(Campo) then
+    begin
+      // Linea a medio meter: la que no tiene articulo se cancela para
+      // evitar el Abort de BeforePost; la que ya lo tiene se graba.
+      if ALineas.State in [dsInsert, dsEdit] then
+      begin
+        if Trim(ALineas.FieldByName(
+             'CODIGO_ART_FACLIN').AsString) = '' then
+          ALineas.Cancel
+        else
+          ALineas.Post;
+      end;
+      // Con los controles desconectados el Post de cada linea no dispara
+      // el recalculo de la rejilla: aqui solo cambia el vendedor.
+      ALineas.DisableControls;
+      try
+        Marcador := ALineas.GetBookmark;
+        try
+          ALineas.First;
+          while not ALineas.Eof do
+          begin
+            if Campo.AsString <> AVendedor then
+            begin
+              ALineas.Edit;
+              Campo.AsString := AVendedor;
+              ALineas.Post;
+              Inc(Result);
+            end;
+            ALineas.Next;
+          end;
+          if ALineas.BookmarkValid(Marcador) then
+            ALineas.GotoBookmark(Marcador);
+        finally
+          ALineas.FreeBookmark(Marcador);
+        end;
+      finally
+        ALineas.EnableControls;
+      end;
+    end;
+  end;
 end;
 
 procedure EliminarLineaVentaPorValidacion(ALineas: TDataSet);

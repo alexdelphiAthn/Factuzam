@@ -152,6 +152,10 @@ type
     // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
     procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
+  private
+    // Conexion por la que salen la transaccion, los bloqueos y las
+    // lecturas de la operacion: la misma que usan los datasets.
+    function ConexionEscritura: TUniConnection;
   end;
 
 implementation
@@ -175,6 +179,21 @@ uses
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+function TdmPedidosCompra.ConexionEscritura: TUniConnection;
+begin
+  // Cada ventana de mantenimiento crea su propia conexion y reasigna a
+  // ella los datasets (TdmBase.ReasignarConexion). La transaccion, los
+  // SELECT ... FOR UPDATE y las lecturas de la operacion tienen que ir
+  // por esa misma conexion: si salen por la conexion compartida, el
+  // UPDATE del dataset acaba esperando un bloqueo que retiene el propio
+  // programa desde otra conexion (MariaDB 1205, lock wait timeout).
+  Result := nil;
+  if Assigned(unqryTablaG) then
+    Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
 
 procedure TdmPedidosCompra.ConfigurarSqlInsertCabecera;
 const
@@ -538,7 +557,7 @@ begin
   inherited;
   FieldByName('NUMERO_PEDC').AsString := '0';
     sSerie := ObtenerSerieDefecto(
-      ConexionPrincipal,
+      ConexionEscritura,
       UbicacionSesion.Empresa,
       CrearConfiguracionDocumento(
         tdPedido, sdCompra).TipoContador);
@@ -566,10 +585,10 @@ begin
     if FindField('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC') <> nil then
       FieldByName('ESIVA_EXENTO_INTRACOMUNITARIO_PEDC').AsString := 'N';
     AplicarRecargoComprasEmpresa(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+      CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
       'CODIGO_EMP_PEDC', 'ESIVA_RECARGO_COMPRAS_PEDC');
   AplicarPorcentajesIvaCompra(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
     'PEDC');
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_PEDC').AsString);
@@ -661,7 +680,7 @@ begin
      (unqryTablaG.FieldByName('NUMERO_PEDC').AsString = '') then
     GetCodigoAutoPedidoCompra;
   AplicarPorcentajesIvaCompra(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
     'PEDC');
   CalcularTotalesPedidoCompra;
 end;
@@ -684,7 +703,7 @@ begin
       FReorganizacionPendiente := True
     else
       CrearPendientesPedidoCompraUniDAC(
-        ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+        ConexionEscritura).GenerarPdteRecibirDesdePedido(
           sSerie, sNumero, IdentidadSesion.Usuario);
   end;
 end;
@@ -710,12 +729,12 @@ begin
       Abort;
     end;
     CrearPendientesPedidoCompraUniDAC(
-      ConexionPrincipal).BorrarPdteRecibirDesdePedido(
+      ConexionEscritura).BorrarPdteRecibirDesdePedido(
         sSerie, sNumero);
     // Borrar lineas asociadas para evitar registros huerfanos.
     q := TUniQuery.Create(nil);
     try
-      q.Connection := ConexionPrincipal;
+      q.Connection := ConexionEscritura;
       q.SQL.Text :=
         'DELETE FROM fza_pedidos_compra_lineas ' +
         ' WHERE SERIE_PEDC_PEDCLIN  = :s ' +
@@ -819,7 +838,7 @@ begin
   end;
   AsignarNumeroLineaPedidoCompra(DataSet);
   // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  NormalizarArticuloSkuEnDataSet(ConexionEscritura,
       unqryPedidosCompraLineas, 'CODIGO_ART_PEDCLIN',
       'CODIGO_UNIDAD_PEDCLIN');
     if (FindField('CANTIDAD_PEDCLIN') <> nil) and
@@ -858,7 +877,7 @@ begin
         unqrySkusPedc.Close;
       end;
     end;
-  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionEscritura),
     unqryTablaG,
     unqryPedidosCompraLineas, 'PEDC', 'PEDCLIN', 'TOTAL_PEDCLIN');
   end;
@@ -878,7 +897,7 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PEDC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionEscritura),
           LIN_PEDIDOS_COMPRA, sSerie,
           sNumero, sLinea)) then
     begin
@@ -889,7 +908,7 @@ begin
       if DataSet.FindField('SERIE_PEDC_PEDCLIN') <> nil then
         DataSet.FieldByName('SERIE_PEDC_PEDCLIN').AsString := sSerie;
       iNuevaLinea := GetSiguienteLineaDocLibre(
-        CrearContadorLineasDocumento(ConexionPrincipal),
+        CrearContadorLineasDocumento(ConexionEscritura),
         CONT_PEDIDOS_COMPRA, LIN_PEDIDOS_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
@@ -929,7 +948,7 @@ begin
         FReorganizacionPendiente := True
       else
         CrearPendientesPedidoCompraUniDAC(
-          ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+          ConexionEscritura).GenerarPdteRecibirDesdePedido(
             sSerie, sNumero, IdentidadSesion.Usuario);
     end;
   end;
@@ -959,7 +978,7 @@ begin
     // el desmontaje cuenta sus unidades pero no puede reconstruirlas.
     oQry := TUniQuery.Create(nil);
     try
-      oQry.Connection := ConexionPrincipal;
+      oQry.Connection := ConexionEscritura;
       oQry.SQL.Text :=
         'DELETE FROM fza_pedidos_compra_celdas ' +
         ' WHERE SERIE_PEDC_PEDCCEL = :s ' +
@@ -974,7 +993,7 @@ begin
       FreeAndNil(oQry);
     end;
     CrearPendientesPedidoCompraUniDAC(
-      ConexionPrincipal).BorrarPdteRecibirDesdePedido(
+      ConexionEscritura).BorrarPdteRecibirDesdePedido(
         sSerie, sNumero, sLinea);
   end;
 end;
@@ -1017,7 +1036,7 @@ begin
     begin
       oQry := TUniQuery.Create(nil);
       try
-        oQry.Connection := ConexionPrincipal;
+        oQry.Connection := ConexionEscritura;
         oQry.SQL.Text :=
           'DELETE C ' +
           '  FROM fza_pedidos_compra_celdas C ' +
@@ -1092,7 +1111,7 @@ begin
       oLv.Items.Clear;
       oQry := TUniQuery.Create(nil);
       try
-        oQry.Connection := ConexionPrincipal;
+        oQry.Connection := ConexionEscritura;
         oQry.SQL.Text :=
           'SELECT X.COD, COALESCE(A.NOMBRE_ALM_ALM, X.COD) AS NOM ' +
           '  FROM ( ' +
@@ -1151,7 +1170,7 @@ begin
   sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := ConexionPrincipal;
+    oQry.Connection := ConexionEscritura;
     oQry.SQL.Text :=
       'SELECT DISTINCT L.CODIGO_UNIDAD_PEDCLIN ' +
       '  FROM fza_pedidos_compra_lineas L ' +
@@ -1267,7 +1286,7 @@ var
 begin
   oConsulta := TUniQuery.Create(nil);
   try
-    oConsulta.Connection := ConexionPrincipal;
+    oConsulta.Connection := ConexionEscritura;
     sAlmacenes := ObtenerAlmacenesSql(AAlmacenesCsv);
     ConfigurarConsultaCantidadCeldas(oConsulta, sAlmacenes);
     AnadirConsultaCantidadLineas(oConsulta, sAlmacenes);
@@ -1548,7 +1567,7 @@ begin
       FCalculandoTotales := True;
       try
         CalcularTotalesDocumentoCompra(
-          CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+          CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
           unqryPedidosCompraLineas, 'PEDC', 'TOTAL_PEDCLIN',
           'TIPO_IVA_ARTICULO_PEDCLIN', 'PORCENTAJE_IVA_PEDCLIN');
         // La vista calcula prendas al abrir; se actualizan en cliente.
@@ -1608,7 +1627,7 @@ begin
         sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
         if (sSerie <> '') and (sNumero <> '') then
           CrearPendientesPedidoCompraUniDAC(
-            ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+            ConexionEscritura).GenerarPdteRecibirDesdePedido(
               sSerie, sNumero, IdentidadSesion.Usuario);
       end;
     end;
@@ -1639,7 +1658,7 @@ begin
     sNumero := unqryTablaG.FieldByName('NUMERO_PEDC').AsString;
     if (sSerie <> '') and (sNumero <> '') then
       CrearPendientesPedidoCompraUniDAC(
-        ConexionPrincipal).GenerarPdteRecibirDesdePedido(
+        ConexionEscritura).GenerarPdteRecibirDesdePedido(
           sSerie, sNumero, IdentidadSesion.Usuario);
   end;
 end;
@@ -1653,7 +1672,7 @@ begin
   begin
     q := TUniQuery.Create(nil);
     try
-      q.Connection := ConexionPrincipal;
+      q.Connection := ConexionEscritura;
       // El cruce de LINEA va en NUMERICO: la celda guarda '10' (el
       // parametro entra como entero) y la linea '0010'; como texto
       // nunca casaban, TODA linea con SKU contaba como sin pivotar y

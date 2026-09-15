@@ -388,11 +388,6 @@ uses
 
 {$R *.dfm}
 
-resourcestring
-  SNombreArchivoInventario = 'Inventario_%s_%s';
-  SFiltroArchivoImportacionInventario =
-    'Archivos Excel (*.xlsx;*.xls)|*.xlsx;*.xls|' +
-    'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Todos|*.*';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 

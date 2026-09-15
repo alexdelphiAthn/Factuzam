@@ -214,6 +214,12 @@ procedure TFactuzamNormalizer.InitDefaults;
   end;
 
 begin
+  AddSuf('fza_presupuestos', 'PRE');
+  AddSuf('fza_presupuestos_lineas', 'PRELIN');
+  AddSuf('fza_presupuestos_celdas', 'PRECEL');
+  AddOwn('fza_presupuestos', ['PRESUPUESTO']);
+  AddOwn('fza_presupuestos_lineas', ['LINEA_PRESUPUESTO']);
+  AddOwn('fza_presupuestos_celdas', ['CELDA_PRESUPUESTO']);
   // ========== Sufijos de tabla ==========
   AddSuf('fza_almacenes',                       'ALM');
   AddSuf('fza_almacenes_cajas',                 'ALMCAJ');

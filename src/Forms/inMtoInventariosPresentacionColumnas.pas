@@ -18,6 +18,7 @@ unit inMtoInventariosPresentacionColumnas;
 interface
 
 uses
+  inLibMsgArticulos,
   Vcl.Graphics,
   Vcl.Controls,
   Data.DB,
@@ -134,34 +135,37 @@ var
   oRecuento: TcxGridDBColumn;
 begin
   oDescripcion := CrearColumnaDocumentoInventario(AVista,
-    'Descripción', 'DESCRIPCION_ARTICULO_INVLIN', 200, False);
+    SCaptionDescripcionColumnaInventario, 'DESCRIPCION_ARTICULO_INVLIN',
+      200, False);
   oDescripcion.HeaderAlignmentHorz := taLeftJustify;
   CrearColumnaDocumentoInventario(AVista,
-    'Uds. teóricas', 'CANTIDAD_TEORICA_INVLIN', 90, False);
+    SCaptionUnidadesTeoricasInventario, 'CANTIDAD_TEORICA_INVLIN', 90, False);
   oRecuento := CrearColumnaDocumentoInventario(AVista,
-    'Recuento', 'CANTIDAD_FISICA_INVLIN', 90, True);
+    SCaptionRecuentoInventario, 'CANTIDAD_FISICA_INVLIN', 90, True);
   oRecuento.PropertiesClass := TcxTextEditProperties;
   TcxTextEditProperties(oRecuento.Properties).OnValidate :=
     AValidarEdicion;
   ConfigurarColumnaEuros(CrearColumnaDocumentoInventario(AVista,
-    'PMP actual', 'PRECIO_MEDIO_INVLIN', 85, False));
+    SCaptionPmpActualInventario, 'PRECIO_MEDIO_INVLIN', 85, False));
   oPmp := CrearColumnaDocumentoInventario(AVista,
-    'PMP nuevo', 'PRECIO_MEDIO_NUEVO_INVLIN', 85, True);
+    SCaptionPmpNuevoInventario, 'PRECIO_MEDIO_NUEVO_INVLIN', 85, True);
   ConfigurarColumnaEuros(oPmp);
   TcxCurrencyEditProperties(oPmp.Properties).OnValidate := AValidarEdicion;
   oPmpCorregido := CrearColumnaDocumentoInventario(AVista,
-    'PMP manual', 'ESPRECIO_MEDIO_CORREGIDO_INVLIN', 75, True);
+    SCaptionPmpManualInventario, 'ESPRECIO_MEDIO_CORREGIDO_INVLIN', 75, True);
   oPmpCorregido.PropertiesClass := TcxCheckBoxProperties;
   TcxCheckBoxProperties(oPmpCorregido.Properties).ValueChecked := 'S';
   TcxCheckBoxProperties(oPmpCorregido.Properties).ValueUnchecked := 'N';
   CrearColumnaDocumentoInventario(AVista,
-    'Dif. uds.', 'CANTIDAD_DIFERENCIA_INVLIN', 80, False);
+    SCaptionDiferenciaUnidadesInventario, 'CANTIDAD_DIFERENCIA_INVLIN', 80,
+      False);
   ConfigurarColumnaEuros(CrearColumnaDocumentoInventario(AVista,
-    'Dif. coste', 'TOTAL_COSTE_DIFERENCIA_INVLIN', 90, False));
+    SCaptionDiferenciaCosteInventario, 'TOTAL_COSTE_DIFERENCIA_INVLIN', 90,
+      False));
   CrearColumnaDocumentoInventario(AVista,
-    'Uds. regul.', 'UDS_REGULARIZADAS', 80, False);
+    SCaptionUnidadesRegularizadasInventario, 'UDS_REGULARIZADAS', 80, False);
   CrearColumnaDocumentoInventario(AVista,
-    'Hora recuento', 'FECHA_RECUENTO_INVLIN', 120, False);
+    SCaptionHoraRecuentoInventario, 'FECHA_RECUENTO_INVLIN', 120, False);
 end;
 
 constructor TGestorColumnasAtributosInventario.Create(

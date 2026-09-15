@@ -1474,6 +1474,15 @@
       TabOrder = 2
       OnClick = btnCrearAlbaranClick
     end
+    object btnImprimir: TcxButton
+      Left = 7
+      Top = 354
+      Width = 121
+      Height = 26
+      Caption = 'Imprimir pedido'
+      TabOrder = 4
+      OnClick = btnImprimirClick
+    end
     object btnPegatinas: TcxButton
       Left = 7
       Top = 322

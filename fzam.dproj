@@ -171,6 +171,15 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="src\Lib\inLibMsgPresupuestos.pas" />
+        <DCCReference Include="src\Forms\inMtoPresupuestos.pas" />
+        <DCCReference Include="src\DataModules\UniDataPresupuestos.pas" />
+        <DCCReference Include="src\DataModules\UniDataPresupuestosSql.pas" />
+        <DCCReference Include="src\DataModules\UniDataPresupuestosConversion.pas" />
+        <DCCReference Include="src\Lib\inLibInformeDocumento.pas"/>
+        <DCCReference Include="src\Lib\inLibPresupuestosIntf.pas" />
+        <DCCReference Include="src\DataModules\UniDataInformeDocumento.pas" />
+        <DCCReference Include="src\Modals\inMtoModalImpDocumento.pas" />
         <DCCReference Include="src\vcl37\Vcl.Consts.pas"/>
         <DCCReference Include="src\vcl\Vcl.Consts.pas"/>
         <DCCReference Include="src\Lib\inLibDevExp.pas"/>

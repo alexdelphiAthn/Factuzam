@@ -88,9 +88,6 @@ uses
   inLibMensajesVcl,
   inLibUser, inLibMsgArticulos;
 
-resourcestring
-  SCaptionExcluirArticulosYaEnInventario =
-    'Excluir articulos ya en el inventario';
 
 class function TfrmModalAddBlockInventario.Ejecutar(
   AOwner: TComponent;

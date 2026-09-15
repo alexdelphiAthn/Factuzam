@@ -191,6 +191,7 @@ type
     Panel1: TPanel;
     btnIraalbaran: TcxButton;
 
+    btnImprimir: TcxButton;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnNuevoClick(Sender: TObject);
@@ -198,6 +199,7 @@ type
     procedure btnTallasHorizontalClick(Sender: TObject);
     procedure btnAtributosColumnaClick(Sender: TObject);
     procedure btnCrearAlbaranClick(Sender: TObject);
+    procedure btnImprimirClick(Sender: TObject);
     procedure btnPegatinasClick(Sender: TObject);
     procedure btnExpandirRecibidosClick(Sender: TObject);
     procedure btnRecibirFilaEnteraClick(Sender: TObject);
@@ -392,6 +394,7 @@ function CrearPedidosCompraInyectada(
 implementation
 
 uses
+  inMtoModalImpDocumento,
   inLibMensajesVcl,
   System.StrUtils,
   inLibFiltroUsuario,
@@ -2189,6 +2192,16 @@ begin
     FRecepcionVcl.LimitarCampo(Sender, FColsModoConstruido);
 end;
 
+
+procedure TfrmMtoPedidosCompra.btnImprimirClick(Sender: TObject);
+begin
+  inherited;
+  if PuedeImprimir and Assigned(dmmPedidosCompra) then
+  begin
+    TfrmPrintDocumento.Ejecutar(Self, tdPedido, sdCompra,
+      dmmPedidosCompra.unqryTablaG, dmmPedidosCompra.unqryPedidosCompraLineas);
+  end;
+end;
 
 initialization
   RegistrarPantalla(TfrmMtoPedidosCompra);

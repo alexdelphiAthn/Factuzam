@@ -19,7 +19,11 @@ type
   TEntradaTotalesCobro = record
     ImporteBruto: Currency;
     DescuentoLineal: Currency;
+    UsarTotalFactura: Boolean;
+    TotalFactura: Currency;
     PorcentajeDescuento: Currency;
+    DescuentoPorImporte: Boolean;
+    ImporteDescuentoFijado: Currency;
     ImporteDejarCuenta: Currency;
     ImporteValeEmitido: Currency;
     TotalEntregado: Currency;
@@ -62,6 +66,9 @@ type
       const AEntrada: TEntradaTotalesCobro;
       var AResultado: TResultadoTotalesCobro); static;
   public
+    class function CalcularDescuentoParaTotal(
+      ABase, ATotal: Currency;
+      out APorcentaje, ADescuento: Currency): Boolean; static;
     class function CalcularTotales(
       const AEntrada: TEntradaTotalesCobro): TResultadoTotalesCobro; static;
   end;
@@ -102,9 +109,24 @@ class function TCalculadorFaseCobro.CalcularDescuento(
   ABase, APorcentaje: Currency): Currency;
 begin
   if Abs(APorcentaje) > 0.001 then
-    Result := ABase * (APorcentaje / 100)
+    Result := SimpleRoundTo(ABase * (APorcentaje / 100), -2)
   else
     Result := 0;
+end;
+
+class function TCalculadorFaseCobro.CalcularDescuentoParaTotal(
+  ABase, ATotal: Currency;
+  out APorcentaje, ADescuento: Currency): Boolean;
+begin
+  ABase := SimpleRoundTo(ABase, -2);
+  APorcentaje := 0;
+  ADescuento := 0;
+  Result := (ABase > 0) and (ATotal >= 0) and (ATotal <= ABase);
+  if Result then
+  begin
+    ADescuento := ABase - SimpleRoundTo(ATotal, -2);
+    APorcentaje := (ADescuento / ABase) * 100;
+  end;
 end;
 
 class procedure TCalculadorFaseCobro.CalcularDevolucion(
@@ -179,10 +201,15 @@ var
   dBase: Currency;
 begin
   Result := Default(TResultadoTotalesCobro);
-  dBase := AEntrada.ImporteBruto - AEntrada.DescuentoLineal;
-  Result.ImporteDescuentoGlobal := CalcularDescuento(
-    dBase,
-    AEntrada.PorcentajeDescuento);
+  dBase := SimpleRoundTo(
+    AEntrada.ImporteBruto - AEntrada.DescuentoLineal, -2);
+  if AEntrada.UsarTotalFactura then
+    dBase := SimpleRoundTo(AEntrada.TotalFactura, -2);
+  if AEntrada.DescuentoPorImporte then
+    Result.ImporteDescuentoGlobal := AEntrada.ImporteDescuentoFijado
+  else
+    Result.ImporteDescuentoGlobal := CalcularDescuento(
+      dBase, AEntrada.PorcentajeDescuento);
   Result.ImporteTotalPagar := dBase - Result.ImporteDescuentoGlobal;
   Result.ImporteValeRecogido := AEntrada.TotalValesRecogidos;
   Result.ImporteValeEmitido := AEntrada.ImporteValeEmitido;

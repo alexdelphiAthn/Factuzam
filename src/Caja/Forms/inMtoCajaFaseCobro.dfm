@@ -157,10 +157,22 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.DisplayFormat = '#,##0.00 '#8364
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
+            Properties.OnEditValueChanged = txtTotalPagarPropertiesEditValueChanged
+            Properties.OnValidate = txtTotalPagarPropertiesValidate
             Style.BorderStyle = ebsOffice11
             Style.Color = clWhite
             TabOrder = 10
             Width = 171
+          end
+          object btnAplicarTotal: TcxButton
+            Left = 243
+            Top = 139
+            Width = 86
+            Height = 36
+            Caption = 'Aplicar'
+            Enabled = False
+            TabOrder = 11
+            OnClick = btnAplicarTotalClick
           end
           object txtDtoGlobal: TcxCurrencyEdit
             Left = 334
@@ -189,6 +201,8 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = ',0.00 %'
             Properties.EditFormat = ',0.00 %'
+            Properties.MinValue = 0.000000000000000000
+            Properties.MaxValue = 100.000000000000000000
             Properties.ReadOnly = False
             Properties.OnEditValueChanged = txtPorcenDtoGlobalPropertiesEditValueChanged
             Style.BorderStyle = ebsOffice11

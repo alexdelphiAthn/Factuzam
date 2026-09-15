@@ -54,6 +54,16 @@ const
     ColContador: 'CONTADOR_LINEAS_PED';
     ColSerieHdr: 'SERIE_PED';
     ColNumeroHdr: 'NUMERO_PED');
+  CONT_PRESUPUESTOS: TInfoContadorLineas = (
+    TablaHdr: 'fza_presupuestos';
+    ColContador: 'CONTADOR_LINEAS_PRE';
+    ColSerieHdr: 'SERIE_PRE';
+    ColNumeroHdr: 'NUMERO_PRE');
+  LIN_PRESUPUESTOS: TInfoLineasDoc = (
+    TablaLin: 'fza_presupuestos_lineas';
+    ColSerieLin: 'SERIE_PRE_PRELIN';
+    ColNumeroLin: 'NUMERO_PRE_PRELIN';
+    ColLinea: 'LINEA_PRELIN');
   CONT_ALBARANES: TInfoContadorLineas = (
     TablaHdr: 'fza_albaranes';
     ColContador: 'CONTADOR_LINEAS_ALB';

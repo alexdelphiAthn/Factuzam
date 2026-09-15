@@ -248,6 +248,7 @@ type
     Listados1: TMenuItem;
     mnuLisVentas: TMenuItem;
     mnuPedidosVenta: TMenuItem;
+    mnuPresupuestosVenta: TMenuItem;
     mnuAlbaranesVenta: TMenuItem;
     procedure CargarEfectosVenta1Click(Sender: TObject);
     procedure Sesiones1Click(Sender: TObject);

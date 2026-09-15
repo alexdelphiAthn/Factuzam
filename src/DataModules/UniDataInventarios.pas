@@ -291,6 +291,10 @@ type
     // AsegurarDesempaquetadoAtributos cuando el toggle "Ver atributos en
     // columnas" esta activo (con barra de progreso si hay >150 lineas).
     procedure DesempaquetarAtributosDesdeSku;
+  private
+    // Conexion por la que salen la transaccion, los bloqueos y las
+    // lecturas de la operacion: la misma que usan los datasets.
+    function ConexionEscritura: TUniConnection;
   end;
 
 implementation
@@ -316,6 +320,21 @@ uses
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 { TdmInventarios }
+
+function TdmInventarios.ConexionEscritura: TUniConnection;
+begin
+  // Cada ventana de mantenimiento crea su propia conexion y reasigna a
+  // ella los datasets (TdmBase.ReasignarConexion). La transaccion, los
+  // SELECT ... FOR UPDATE y las lecturas de la operacion tienen que ir
+  // por esa misma conexion: si salen por la conexion compartida, el
+  // UPDATE del dataset acaba esperando un bloqueo que retiene el propio
+  // programa desde otra conexion (MariaDB 1205, lock wait timeout).
+  Result := nil;
+  if Assigned(unqryTablaG) then
+    Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
 
 procedure TdmInventarios.CargarLineasInventario(
   ASoloSiCambiaClave: Boolean);
@@ -742,7 +761,7 @@ begin
   Result := '';
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT EMPSER ' +
       '  FROM vi_empresas_series ' +
@@ -770,7 +789,7 @@ begin
   begin
     sp := TUniStoredProc.Create(nil);
     try
-      sp.Connection := ConexionPrincipal;
+      sp.Connection := ConexionEscritura;
       sp.StoredProcName := 'PRC_GET_NEXT_CONT_FACT_SERIE';
       sp.Params.Clear;
       sp.Params.CreateParam(ftString, 'pserie', ptInput);
@@ -822,13 +841,13 @@ begin
      (Trim(FSerie) = '') or (Trim(FNumero) = '') or
      (Trim(FNumero) = '0') then
     raise Exception.Create(SErrorCabeceraInventarioSinGrabarParaReserva);
-  bTransPropia := not ConexionPrincipal.InTransaction;
+  bTransPropia := not ConexionEscritura.InTransaction;
   if bTransPropia then
-    ConexionPrincipal.StartTransaction;
+    ConexionEscritura.StartTransaction;
   qry := TUniQuery.Create(nil);
   try
     try
-      qry.Connection := ConexionPrincipal;
+      qry.Connection := ConexionEscritura;
       qry.SQL.Text :=
         'SELECT IFNULL(CAST(NULLIF(CAST(CONTADOR_LINEAS_INV ' +
         'AS CHAR), '''') AS UNSIGNED), 0) AS NV ' +
@@ -862,12 +881,12 @@ begin
       qry.ExecSQL;
       if qry.RowsAffected = 0 then
         raise Exception.Create(SErrorActualizarContadorLineasInventario);
-      if bTransPropia and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Commit;
+      if bTransPropia and ConexionEscritura.InTransaction then
+        ConexionEscritura.Commit;
       Result := Format('%.4d', [iNuevaLinea]);
     except
-      if bTransPropia and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Rollback;
+      if bTransPropia and ConexionEscritura.InTransaction then
+        ConexionEscritura.Rollback;
       raise;
     end;
   finally
@@ -1400,7 +1419,7 @@ var
 begin
   oConsulta := TUniQuery.Create(nil);
   try
-    oConsulta.Connection := ConexionPrincipal;
+    oConsulta.Connection := ConexionEscritura;
     oConsulta.SQL.Text :=
       'SELECT ESTADO_INV ' +
       '  FROM fza_inventarios ' +
@@ -1519,7 +1538,7 @@ begin
     raise Exception.Create(SErrorLineasInventarioNoAbiertas);
 
   UltimasCompras := CargarUltimasComprasInventario(
-    ConexionPrincipal, FCodigoEmpresa, FCodigoAlmacen, FSerie, FNumero);
+    ConexionEscritura, FCodigoEmpresa, FCodigoAlmacen, FSerie, FNumero);
   Marcador := cdsLineas.GetBookmark;
   cdsLineas.DisableControls;
   try
@@ -1778,7 +1797,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1844,7 +1863,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1909,7 +1928,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -1974,7 +1993,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT s.CODIGO_UNIDAD_SKU, s.CODIGO_ART_SKU, ' +
       '       a.DESCRIPCION_ART, ' +
@@ -2052,7 +2071,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT DISTINCT m.CODIGO_UNIDAD_MOV AS CODIGO_UNIDAD_SKU, ' +
       '       m.CODIGO_ART_MOV    AS CODIGO_ART_SKU, ' +
@@ -2128,7 +2147,7 @@ begin
   begin
     qry := TUniQuery.Create(nil);
     try
-      qry.Connection := ConexionPrincipal;
+      qry.Connection := ConexionEscritura;
       qry.SQL.Text := 'SELECT 1 FROM fza_articulos_skus ' +
                       ' WHERE CODIGO_UNIDAD_SKU = :SKU LIMIT 1';
       qry.ParamByName('SKU').AsString := ASku;
@@ -2154,7 +2173,7 @@ begin
   // hay ninguno, de fza_articulos.TIPO_VARIACION_ART.
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
 
     // 1) Insertar la cabecera del SKU.
     qry.SQL.Text :=
@@ -2288,9 +2307,9 @@ begin
     raise EInvalidOpException.Create(
       SErrorImportacionInventarioYaIniciada);
   FTransaccionImportacionLineas :=
-    not ConexionPrincipal.InTransaction;
+    not ConexionEscritura.InTransaction;
   if FTransaccionImportacionLineas then
-    ConexionPrincipal.StartTransaction;
+    ConexionEscritura.StartTransaction;
   FAplicacionLineasDiferida := True;
 end;
 
@@ -2300,12 +2319,12 @@ begin
     ComprobarErroresAplicacionLineas(
       cdsLineas.ApplyUpdates(0));
     if FTransaccionImportacionLineas and
-       ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Commit;
+       ConexionEscritura.InTransaction then
+      ConexionEscritura.Commit;
   except
     if FTransaccionImportacionLineas and
-       ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Rollback;
+       ConexionEscritura.InTransaction then
+      ConexionEscritura.Rollback;
     FAplicacionLineasDiferida := False;
     FTransaccionImportacionLineas := False;
     raise;
@@ -2321,8 +2340,8 @@ begin
       cdsLineas.Cancel;
     cdsLineas.CancelUpdates;
     if FTransaccionImportacionLineas and
-       ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Rollback;
+       ConexionEscritura.InTransaction then
+      ConexionEscritura.Rollback;
   finally
     FAplicacionLineasDiferida := False;
     FTransaccionImportacionLineas := False;
@@ -2429,7 +2448,7 @@ begin
 
   qry := TUniQuery.Create(nil);
   try
-    qry.Connection := ConexionPrincipal;
+    qry.Connection := ConexionEscritura;
     qry.SQL.Text :=
       'SELECT s.CODIGO_ART_SKU, a.DESCRIPCION_ART ' +
       '  FROM fza_articulos_skus s ' +

@@ -2980,6 +2980,13 @@ begin
       DatosCaja.cdsCabecera.FieldByName(
         'CODIGO_CAJERO_FAC').AsString :=
         Empleado.Codigo;
+      // Sin la columna de empleado por linea no hay forma de corregir el
+      // vendedor linea a linea, asi que el de la cabecera manda: el
+      // cambio se estampa en todas las lineas que ya tenga la venta.
+      if not ParametrosCaja.GetBool('vgerShowEmpleadoLinea', True) then
+        PropagarVendedorATodasLasLineas(
+          DatosCaja.cdsLineas,
+          Empleado.Codigo);
       Error := False;
       ErrorText := '';
     end

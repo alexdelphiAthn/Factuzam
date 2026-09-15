@@ -139,6 +139,15 @@ begin
   AConfiguracion.MueveStock := False;
 end;
 
+procedure ConfigurarPresupuesto(
+  var AConfiguracion: TConfiguracionDocumento);
+begin
+  if AConfiguracion.Sentido <> sdVenta then
+    raise EArgumentException.Create('El presupuesto pertenece a ventas.');
+  ConfigurarIdentidad(AConfiguracion, 'presupuesto',
+    'fza_presupuestos', 'fza_presupuestos_lineas', 'PRE', 'PRELIN', 'PV');
+end;
+
 procedure ConfigurarFactura(
   var AConfiguracion: TConfiguracionDocumento);
 begin
@@ -211,6 +220,8 @@ begin
       ConfigurarFactura(Result);
     tdDevolucion:
       ConfigurarDevolucion(Result);
+    tdPresupuesto:
+      ConfigurarPresupuesto(Result);
   end;
   Result.DocumentoConArticulo := Result.NombreSingular;
   Result.CampoPivoteCabecera :=

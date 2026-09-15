@@ -329,6 +329,12 @@ resourcestring
   SCaptionPendienteDevolver = 'Pendiente de devolver';
   SHintSinDescuentoGlobalDeposito =
     'No se puede aplicar descuento global con líneas de depósito';
+  SErrorAjusteTotalNoPermitido =
+    'No está permitido ajustar el total mediante un descuento.';
+  SErrorTotalCobroFueraRango =
+    'El total a pagar debe estar entre 0 y %m.';
+  SErrorDescuentoPrecisionLinea =
+    'No se puede repartir ese importe con la cantidad de esta línea.';
   SCaptionPendienteCobro = 'Pendiente de cobro';
   SCaptionEmpresaAlmacenCaja = 'Empresa %s - Almacén %s - Caja %s';
   STituloOperacionNCajaReal = 'Operación %d - (Caja Real %s)';

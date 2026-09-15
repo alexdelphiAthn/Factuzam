@@ -331,13 +331,13 @@ function HintCeldaInventario(const ACampo: string): string;
 begin
   Result := '';
   if ACampo = 'CANTIDAD_TEORICA_INVLIN' then
-    Result := 'Stock que el sistema cree que hay en el almacén'
+    Result := SHintStockTeoricoInventario
   else if ACampo = 'CANTIDAD_FISICA_INVLIN' then
-    Result := 'Lo que realmente has contado'
+    Result := SHintRecuentoInventario
   else if ACampo = 'PRECIO_MEDIO_NUEVO_INVLIN' then
-    Result := 'Precio Medio que tendrá el SKU tras aplicar el inventario'
+    Result := SHintPmpNuevoInventario
   else if ACampo = 'UDS_REGULARIZADAS' then
-    Result := 'Solo se rellena cuando el inventario está APLICADO';
+    Result := SHintUnidadesRegularizadasInventario;
 end;
 
 end.

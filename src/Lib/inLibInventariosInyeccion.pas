@@ -16,6 +16,7 @@ unit inLibInventariosInyeccion;
 interface
 
 uses
+  inLibMsgArticulos,
   inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf,
   inLibColumnasSkuIntf,
@@ -58,23 +59,6 @@ implementation
 uses
   System.SysUtils;
 
-resourcestring
-  SErrorResolucionValidacionInventariosNoDisponible =
-    'No se proporcionó la resolución y validación de artículos de inventario.';
-  SErrorAtributosInventariosNoDisponibles =
-    'No se proporcionó la lectura de atributos de artículos de inventario.';
-  SErrorAtributosGlobalesInventariosNoDisponibles =
-    'No se proporcionaron los nombres globales de atributos de inventario.';
-  SErrorColumnasSkuInventariosNoDisponibles =
-    'No se proporcionaron los servicios de columnas SKU de inventario.';
-  SErrorBusquedasInventariosNoDisponibles =
-    'No se proporcionaron las búsquedas de inventario.';
-  SErrorRecuentoRemotoInventariosNoDisponible =
-    'No se proporcionó el repositorio de recuento remoto de inventario.';
-  SErrorInventarioNubeNoDisponible =
-    'No se proporcionó la persistencia del inventario en la nube.';
-  SErrorCargaMasivaInventarioNoDisponible =
-    'No se proporcionó la carga masiva de artículos de inventario.';
 
 procedure TDependenciasArticulosInventarios.Validar;
 begin

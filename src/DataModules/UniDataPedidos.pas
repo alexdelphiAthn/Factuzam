@@ -138,6 +138,10 @@ type
                                      ALinea: string);
     // Devuelve el siguiente contador (PRC_GET_NEXT_CONT) del tipo indicado.
     function ObtenerContador(const sTipo: string): string;
+  private
+    // Conexion por la que salen la transaccion, los bloqueos y las
+    // lecturas de la operacion: la misma que usan los datasets.
+    function ConexionEscritura: TUniConnection;
   end;
 
 implementation
@@ -270,6 +274,21 @@ begin
 end;
 
 { TdmPedidos }
+
+function TdmPedidos.ConexionEscritura: TUniConnection;
+begin
+  // Cada ventana de mantenimiento crea su propia conexion y reasigna a
+  // ella los datasets (TdmBase.ReasignarConexion). La transaccion, los
+  // SELECT ... FOR UPDATE y las lecturas de la operacion tienen que ir
+  // por esa misma conexion: si salen por la conexion compartida, el
+  // UPDATE del dataset acaba esperando un bloqueo que retiene el propio
+  // programa desde otra conexion (MariaDB 1205, lock wait timeout).
+  Result := nil;
+  if Assigned(unqryTablaG) then
+    Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
 
 procedure TdmPedidos.DataModuleCreate(Sender: TObject);
 begin
@@ -511,7 +530,7 @@ begin
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='PE'
     // (mismo criterio que compras); fallback historico 'A1'
     sSerie := ObtenerSerieDefecto(
-      ConexionPrincipal,
+      ConexionEscritura,
       UbicacionSesion.Empresa,
       CrearConfiguracionDocumento(
         tdPedido, sdVenta).TipoContador);
@@ -540,7 +559,7 @@ begin
      (unqryTablaG.FieldByName('NUMERO_PED').AsString = '') then
     GetCodigoAutoPedido;
   AplicarPorcentajesIvaVenta(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG, 'PED');
   CalcularTotalesPedido;
 end;
 
@@ -572,7 +591,7 @@ begin
   RestarPdteServirPedido(sSerie, sNumero, '');
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionEscritura;
     q.SQL.Text :=
       'DELETE FROM fza_pedidos_lineas ' +
       ' WHERE SERIE_PED_PEDLIN  = :s ' +
@@ -671,11 +690,11 @@ begin
     raise Exception.Create(SErrorLineaPedidoSinArticulo);
   end;
   AsignarNumeroLineaPedido(DataSet);
-  NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryPedidosLineas,
+  NormalizarArticuloSkuEnDataSet(ConexionEscritura, unqryPedidosLineas,
     'CODIGO_ART_PEDLIN', 'CODIGOPRODPS_PEDLIN', 'CODBAR_ART_PEDLIN');
   RecalcularEntregasLinea;
   AplicarEstadoLineaAntesDeGuardar(DataSet);
-  PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionPrincipal),
+  PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionEscritura),
     unqryTablaG,
     unqryPedidosLineas, 'PED', 'PEDLIN', 'TOTAL_PEDLIN');
   AplicarAuditoriaLineaAntesDeGuardar(DataSet);
@@ -733,7 +752,7 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_PED').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionEscritura),
           LIN_PEDIDOS, sSerie, sNumero,
           sLinea)) then
     begin
@@ -744,7 +763,7 @@ begin
       if DataSet.FindField('SERIE_PED_PEDLIN') <> nil then
         DataSet.FieldByName('SERIE_PED_PEDLIN').AsString := sSerie;
       iNuevaLinea := GetSiguienteLineaDocLibre(
-        CrearContadorLineasDocumento(ConexionPrincipal),
+        CrearContadorLineasDocumento(ConexionEscritura),
         CONT_PEDIDOS, LIN_PEDIDOS, sSerie, sNumero);
       // El helper ya persiste CONTADOR_LINEAS_PED en BBDD dentro de su
       // propia transaccion. NO se toca unqryTablaG: el Edit anterior
@@ -798,7 +817,7 @@ begin
     end;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := ConexionPrincipal;
+      q.Connection := ConexionEscritura;
       q.SQL.Text :=
         'UPDATE fza_articulos_stockactual STK ' +
         'JOIN ( ' +
@@ -940,7 +959,7 @@ begin
     FCalculandoTotales := True;
     try
       CalcularTotalesDocumentoVenta(
-        CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+        CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
         unqryPedidosLineas, 'PED', 'TOTAL_PEDLIN',
         'TIPO_IVA_ARTICULO_PEDLIN', 'PORCENTAJE_IVA_PEDLIN');
     finally
@@ -1097,7 +1116,7 @@ begin
     if (sNumero = '') or (sNumero = '0') then
     begin
       sSerie := ObtenerSerieDefecto(
-        ConexionPrincipal,
+        ConexionEscritura,
         AEmpresa,
         CrearConfiguracionDocumento(
           tdPedido, sdVenta).TipoContador);
@@ -1204,7 +1223,7 @@ begin
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
   ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
   AplicarPorcentajesIvaVenta(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.ActualizarImpuestosTarifaCabecera(
@@ -1290,7 +1309,7 @@ begin
     FindField('FORMA_PAGO_PED').AsString :=
       Trim(DataSet.FindField('CODIGO_FP_CLI').AsString);
   AplicarPorcentajesIvaVenta(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'PED');
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG, 'PED');
 end;
 
 procedure TdmPedidos.CopiarFormaPagoPedidoAAlbaran(const ASeriePed,
@@ -1302,7 +1321,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionEscritura;
     q.SQL.Text :=
       'UPDATE fza_albaranes A ' +
       '  JOIN fza_pedidos P ' +
@@ -1356,9 +1375,9 @@ begin
       unqryTablaG.FieldByName('SERIE_PED').AsString;
     Contexto.CodigoAlmacen := ACodigoAlmacen;
     Contexto.Usuario := IdentidadSesion.Usuario;
-    bTransPropia := not ConexionPrincipal.InTransaction;
+    bTransPropia := not ConexionEscritura.InTransaction;
     if bTransPropia then
-      ConexionPrincipal.StartTransaction;
+      ConexionEscritura.StartTransaction;
     try
       if Trim(AAlbExistenteNum) <> '' then
       begin
@@ -1384,10 +1403,10 @@ begin
         unstrdprcCrearAlbaranLinea, Contexto, aLineas);
       EjecutarFinAlbaranPedido(unstrdprcCrearAlbaranFin, Contexto);
       if bTransPropia then
-        ConexionPrincipal.Commit;
+        ConexionEscritura.Commit;
     except
       if bTransPropia then
-        ConexionPrincipal.Rollback;
+        ConexionEscritura.Rollback;
       raise;
     end;
     unqryPedidosLineas.Close;
@@ -1405,7 +1424,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionEscritura;
     q.SQL.Text := 'SELECT 1 FROM fza_pedidos WHERE IDPS_PED = :id LIMIT 1';
     q.ParamByName('id').AsString := sIdPS;
     q.Open;
@@ -1452,7 +1471,7 @@ begin
   sEmail := aOrder.custMail;
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionEscritura;
     // 1) Buscar por NIF
     if sNif <> '' then
     begin
@@ -1561,11 +1580,11 @@ begin
       sDesc := 'Articulo PrestaShop ' + Result;
     q := TUniQuery.Create(nil);
     try
-      q.Connection := ConexionPrincipal;
+      q.Connection := ConexionEscritura;
       // Las 3 altas (articulo + SKU + barras) deben ser atomicas entre si
-      bTx := not ConexionPrincipal.InTransaction;
+      bTx := not ConexionEscritura.InTransaction;
       if bTx then
-        ConexionPrincipal.StartTransaction;
+        ConexionEscritura.StartTransaction;
       try
         // Articulo padre (ESVARIACION_ART = 'N', IVA Normal por defecto)
         q.SQL.Text :=
@@ -1603,10 +1622,10 @@ begin
           q.Execute;
         end;
         if bTx then
-          ConexionPrincipal.Commit;
+          ConexionEscritura.Commit;
       except
-        if bTx and ConexionPrincipal.InTransaction then
-          ConexionPrincipal.Rollback;
+        if bTx and ConexionEscritura.InTransaction then
+          ConexionEscritura.Rollback;
         raise;
       end;
     finally
@@ -1659,7 +1678,7 @@ begin
     end;
     sCodigoCli := ResolverCodigoCliente(aOrder);
     oValidador := TRepositorioArticulosValidador.Create(
-      ConexionPrincipal);
+      ConexionEscritura);
     SetLength(aCodArt, aOrder.LineasPedido.Count);
     for i := 0 to aOrder.LineasPedido.Count - 1 do
       aCodArt[i] := ResolverCodigoArticulo(
@@ -1675,7 +1694,7 @@ begin
     oEntrada.Almacen := sAlmacen;
     oEntrada.CodigosArticulo := aCodArt;
     oEscrituras := TPedidosPrestaShopEscrituras.Create(
-      ConexionPrincipal,
+      ConexionEscritura,
       IdentidadSesion.Usuario,
       RegistroLog);
     try

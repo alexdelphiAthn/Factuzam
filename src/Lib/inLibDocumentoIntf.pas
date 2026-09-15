@@ -20,7 +20,8 @@ type
     tdAlbaran,
     tdPedido,
     tdFactura,
-    tdDevolucion
+    tdDevolucion,
+    tdPresupuesto
   );
 
   TSentidoDocumento = (

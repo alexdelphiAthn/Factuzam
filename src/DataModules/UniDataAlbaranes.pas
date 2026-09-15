@@ -109,6 +109,9 @@ type
     // puramente descriptivo que NO debe disparar la logica fiscal ni
     // la sincronizacion de movimientos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    // Conexion por la que salen la transaccion, los bloqueos y las
+    // lecturas de la operacion: la misma que usan los datasets.
+    function ConexionEscritura: TUniConnection;
     procedure EjecutarCrearFacturaInicio(const ANumeroAlbaran,
       ASerieAlbaran: string; out ANumeroFactura, ASerieFactura: string);
     procedure EjecutarCrearFacturaLinea(const ANumeroFactura,
@@ -430,7 +433,7 @@ begin
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='AV'
     // (mismo criterio que compras); fallback historico 'A1'
     sSerie := ObtenerSerieDefecto(
-      ConexionPrincipal,
+      ConexionEscritura,
       UbicacionSesion.Empresa,
       CrearConfiguracionDocumento(
         tdAlbaran, sdVenta).TipoContador);
@@ -472,7 +475,7 @@ begin
      (unqryTablaG.FieldByName('NUMERO_ALB').AsString = '') then
     GetCodigoAutoAlbaran;
   AplicarPorcentajesIvaVenta(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG, 'ALB');
   CalcularTotalesAlbaran;
 end;
 
@@ -795,14 +798,14 @@ begin
   AsignarNumeroLineaAlbaran(DataSet);
   SincronizarAlmacenLinea(DataSet);
   // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  NormalizarArticuloSkuEnDataSet(ConexionEscritura,
       unqryAlbaranesLineas, 'CODIGO_ART_ALBLIN',
       'CODIGO_UNIDAD_ALBLIN');
     NormalizarCamposOpcionalesLinea(DataSet);
     if (FindField('CANTIDAD_ALBLIN') <> nil) and
        (FindField('PRECIO_VENTA_SIVA_ARTICULO_ALBLIN') <> nil) and
        (FindField('TOTAL_ALBLIN') <> nil) then
-      PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionPrincipal),
+      PrepararLineaFiscalVenta(CrearLecturasImpuestos(ConexionEscritura),
         unqryTablaG,
         unqryAlbaranesLineas, 'ALB', 'ALBLIN', 'TOTAL_ALBLIN');
 
@@ -855,7 +858,7 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_ALB').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionEscritura),
           LIN_ALBARANES, sSerie, sNumero,
           sLinea)) then
     begin
@@ -866,7 +869,7 @@ begin
       if DataSet.FindField('SERIE_ALB_ALBLIN') <> nil then
         DataSet.FieldByName('SERIE_ALB_ALBLIN').AsString := sSerie;
       iNuevaLinea := GetSiguienteLineaDocLibre(
-        CrearContadorLineasDocumento(ConexionPrincipal),
+        CrearContadorLineasDocumento(ConexionEscritura),
         CONT_ALBARANES, LIN_ALBARANES, sSerie, sNumero);
       // El helper ya persiste CONTADOR_LINEAS_ALB en BBDD dentro de su
       // propia transaccion. NO se toca unqryTablaG (leccion de
@@ -1088,24 +1091,39 @@ begin
   end;
 end;
 
+function TdmAlbaranes.ConexionEscritura: TUniConnection;
+begin
+  // Cada ventana de mantenimiento crea su propia conexion y reasigna a
+  // ella los datasets (TdmBase.ReasignarConexion). La transaccion, los
+  // SELECT ... FOR UPDATE y las lecturas de la operacion tienen que ir
+  // por esa misma conexion: si salen por ConexionPrincipal, el UPDATE
+  // del dataset acaba esperando un bloqueo que retiene el propio
+  // programa desde otra conexion (MariaDB 1205, lock wait timeout).
+  Result := nil;
+  if Assigned(unqryTablaG) then
+    Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
+
 procedure TdmAlbaranes.ProcesarCabeceraPosteada;
 var
   bTransaccionPropia: Boolean;
 begin
-  bTransaccionPropia := not ConexionPrincipal.InTransaction;
+  bTransaccionPropia := not ConexionEscritura.InTransaction;
   if bTransaccionPropia then
-    ConexionPrincipal.StartTransaction;
+    ConexionEscritura.StartTransaction;
   try
     SincronizarAlmacenLineasCabecera;
     SincronizarMovimientosSalida;
-    if bTransaccionPropia and ConexionPrincipal.InTransaction then
+    if bTransaccionPropia and ConexionEscritura.InTransaction then
     begin
-      ConexionPrincipal.Commit;
+      ConexionEscritura.Commit;
       SolicitarProcesadoPrestaShop;
     end;
   except
-    if bTransaccionPropia and ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Rollback;
+    if bTransaccionPropia and ConexionEscritura.InTransaction then
+      ConexionEscritura.Rollback;
     raise;
   end;
 end;
@@ -1114,9 +1132,9 @@ procedure TdmAlbaranes.ProcesarLineasPosteadas;
 var
   bTransaccionPropia: Boolean;
 begin
-  bTransaccionPropia := not ConexionPrincipal.InTransaction;
+  bTransaccionPropia := not ConexionEscritura.InTransaction;
   if bTransaccionPropia then
-    ConexionPrincipal.StartTransaction;
+    ConexionEscritura.StartTransaction;
   try
     CalcularTotalesAlbaran;
     // Si el calculo cambia la cabecera, su AfterPost sincroniza los
@@ -1126,14 +1144,14 @@ begin
       unqryTablaG.Post
     else
       SincronizarMovimientosSalida;
-    if bTransaccionPropia and ConexionPrincipal.InTransaction then
+    if bTransaccionPropia and ConexionEscritura.InTransaction then
     begin
-      ConexionPrincipal.Commit;
+      ConexionEscritura.Commit;
       SolicitarProcesadoPrestaShop;
     end;
   except
-    if bTransaccionPropia and ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Rollback;
+    if bTransaccionPropia and ConexionEscritura.InTransaction then
+      ConexionEscritura.Rollback;
     raise;
   end;
 end;
@@ -1229,7 +1247,7 @@ begin
     if (sNumero = '') or (sNumero = '0') then
     begin
       sSerie := ObtenerSerieDefecto(
-        ConexionPrincipal,
+        ConexionEscritura,
         AEmpresa,
         CrearConfiguracionDocumento(
           tdAlbaran, sdVenta).TipoContador);
@@ -1327,7 +1345,7 @@ begin
   // Cubre las dos rutas: codigo tecleado (BuscarEmpresa) y modal.
   ProponerSerieEmpresa(DataSet.FindField('CODIGO_EMP_EMP').AsString);
   AplicarPorcentajesIvaVenta(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG, 'ALB');
 end;
 
 procedure TdmAlbaranes.ActualizarImpuestosTarifaCabecera(
@@ -1404,7 +1422,7 @@ begin
   FindField('TARIFA_ARTICULO_CLIENTE_ALB').AsString := sTarifa;
   ActualizarImpuestosTarifaCabecera(sTarifa);
   AplicarPorcentajesIvaVenta(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG, 'ALB');
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG, 'ALB');
 end;
 
 procedure TdmAlbaranes.NegarMovimientosFacturaDesdeAlbaran(
@@ -1414,7 +1432,7 @@ var
 begin
   qryFactura := TUniQuery.Create(nil);
   try
-    qryFactura.Connection := ConexionPrincipal;
+    qryFactura.Connection := ConexionEscritura;
     qryFactura.SQL.Text :=
       'UPDATE fza_facturas ' +
       '   SET ESMUEVE_STOCK_FAC = ''N'', ' +
@@ -1536,9 +1554,9 @@ begin
   sSerieAlb  := unqryTablaG.FieldByName('SERIE_ALB').AsString;
   bUsarTodas := (aLineas = nil) or (aLineas.Count = 0);
 
-  bTransPropia := not ConexionPrincipal.InTransaction;
+  bTransPropia := not ConexionEscritura.InTransaction;
   if bTransPropia then
-    ConexionPrincipal.StartTransaction;
+    ConexionEscritura.StartTransaction;
   try
 
   // 1) Cabecera de la factura
@@ -1588,11 +1606,11 @@ begin
   EjecutarCrearFacturaFin(
     sNumeroFac, sSerieFac, sNumeroAlb, sSerieAlb);
 
-    if bTransPropia and ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Commit;
+    if bTransPropia and ConexionEscritura.InTransaction then
+      ConexionEscritura.Commit;
   except
-    if bTransPropia and ConexionPrincipal.InTransaction then
-      ConexionPrincipal.Rollback;
+    if bTransPropia and ConexionEscritura.InTransaction then
+      ConexionEscritura.Rollback;
     raise;
   end;
 
@@ -1624,10 +1642,10 @@ begin
     qLin := TUniQuery.Create(nil);
     try
       PrepararConsultasFacturacionAlbaranes(
-        ConexionPrincipal, qCli, qLin);
-      bTransPropia := not ConexionPrincipal.InTransaction;
+        ConexionEscritura, qCli, qLin);
+      bTransPropia := not ConexionEscritura.InTransaction;
       if bTransPropia then
-        ConexionPrincipal.StartTransaction;
+        ConexionEscritura.StartTransaction;
       try
         sCliActual := '';
         sNumFacActual := '';
@@ -1667,11 +1685,11 @@ begin
             EjecutarCrearFacturaFin(sNumFac, sSerFac, sNum, sSer);
           end;
         end;
-        if bTransPropia and ConexionPrincipal.InTransaction then
-          ConexionPrincipal.Commit;
+        if bTransPropia and ConexionEscritura.InTransaction then
+          ConexionEscritura.Commit;
       except
-        if bTransPropia and ConexionPrincipal.InTransaction then
-          ConexionPrincipal.Rollback;
+        if bTransPropia and ConexionEscritura.InTransaction then
+          ConexionEscritura.Rollback;
         raise;
       end;
     finally

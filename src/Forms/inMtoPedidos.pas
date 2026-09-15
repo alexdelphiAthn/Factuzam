@@ -361,6 +361,7 @@ type
 implementation
 
 uses
+  inMtoModalImpDocumento,
   inLibMensajesVcl,
   inMtoModalImportarPedidosPS, inLibGridCantidad,
   inMtoModalSelAlmacenAlbaran, inMtoModalDocsCreados, inLibGenBusq,
@@ -1989,10 +1990,13 @@ end;
 procedure TfrmMtoPedidos.btnImprimirClick(Sender: TObject);
 begin
   inherited;
-  if not PuedeImprimir then
-    Abort;
-  // Hook FastReport
+  if PuedeImprimir and Assigned(dmmPedidos) then
+  begin
+    TfrmPrintDocumento.Ejecutar(Self, tdPedido, sdVenta,
+      dmmPedidos.unqryTablaG, dmmPedidos.unqryPedidosLineas);
+  end;
 end;
+
 
 // "Ir a documento" (Ctrl+May+A) desde la pestania Albaranes del pedido:
 // abre la ficha del albaran de venta seleccionado en la rejilla. Solo

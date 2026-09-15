@@ -918,8 +918,8 @@ resourcestring
     '%d articulos coinciden con el filtro';
   SCaptionInventarioDestino = 'Inventario destino: %s / %s / %s / %s';
   STituloAnadirBloqueInventario =
-    'A~adir Bloque - Carga masiva en Inventario';
-  STituloAnadirBloqueTarifa = 'A~adir Bloque - Carga masiva en Tarifa';
+    'Añadir Bloque - Carga masiva en Inventario';
+  STituloAnadirBloqueTarifa = 'Añadir Bloque - Carga masiva en Tarifa';
   SHintQuitarPropiedad = 'Quitar propiedad %s';
   SCaptionPorColorSku = 'Por color/SKU…';
   SCaptionPorColor = 'Por color…';
@@ -962,6 +962,132 @@ resourcestring
   SCaptionCargandoMovimientos = 'Cargando movimientos...';
   SCaptionCargandoMovimientosProgreso =
     'Cargando movimientos: %s / %s';
+  STituloBuscarArticulosInventario = 'Búsqueda de Artículos';
+  STituloBuscarSkusInventario = 'Búsqueda de SKUs';
+  SCaptionCodigoBusquedaInventario = 'Código';
+  SCaptionDescripcionBusquedaInventario = 'Descripción';
+  SCaptionFamiliaBusquedaInventario = 'Familia';
+  SCaptionTemporadaBusquedaInventario = 'Temporada';
+  SCaptionProveedorBusquedaInventario = 'Proveedor';
+  SCaptionReferenciaProveedorBusquedaInventario = 'Ref. proveedor';
+  SCaptionPrecioCompraBusquedaInventario = 'P. compra';
+  SCaptionPrecioVentaBusquedaInventario = 'P. venta';
+  SCaptionTipoCantidadBusquedaInventario = 'Tipo cant.';
+  SCaptionSkuBusquedaInventario = 'SKU';
+  SCaptionArticuloBusquedaInventario = 'Artículo';
+  SCaptionAtributosBusquedaInventario = 'Atributos';
+  SCaptionStockBusquedaInventario = 'Stock';
+  SCaptionPrecioMedioBusquedaInventario = 'PMP';
+
+  SFiltroArchivoImportacionRecuentoInventario =
+    'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|' +
+    'Todos (*.*)|*.*';
+
+  SNombreArchivoInventario = 'Inventario_%s_%s';
+  SFiltroArchivoImportacionInventario =
+    'Archivos Excel (*.xlsx;*.xls)|*.xlsx;*.xls|' +
+    'Archivos CSV (*.csv;*.txt)|*.csv;*.txt|Todos|*.*';
+
+  SCaptionExcluirArticulosYaEnInventario =
+    'Excluir artículos ya en el inventario';
+
+  SNombreArchivoSimulacionValoracion = 'Valoracion_simulada';
+
+  SErrorResolucionValidacionInventariosNoDisponible =
+    'No se proporcionó la resolución y validación de artículos de inventario.';
+  SErrorAtributosInventariosNoDisponibles =
+    'No se proporcionó la lectura de atributos de artículos de inventario.';
+  SErrorAtributosGlobalesInventariosNoDisponibles =
+    'No se proporcionaron los nombres globales de atributos de inventario.';
+  SErrorColumnasSkuInventariosNoDisponibles =
+    'No se proporcionaron los servicios de columnas SKU de inventario.';
+  SErrorBusquedasInventariosNoDisponibles =
+    'No se proporcionaron las búsquedas de inventario.';
+  SErrorRecuentoRemotoInventariosNoDisponible =
+    'No se proporcionó el repositorio de recuento remoto de inventario.';
+  SErrorInventarioNubeNoDisponible =
+    'No se proporcionó la persistencia del inventario en la nube.';
+  SErrorCargaMasivaInventarioNoDisponible =
+    'No se proporcionó la carga masiva de artículos de inventario.';
+
+  // Traducciones de inventarios y documentos (D34).
+  SCaptionDescripcionColumnaInventario =
+    'Descripción';
+  SCaptionUnidadesTeoricasInventario =
+    'Uds. teóricas';
+  SCaptionRecuentoInventario =
+    'Recuento';
+  SCaptionPmpActualInventario =
+    'PMP actual';
+  SCaptionPmpNuevoInventario =
+    'PMP nuevo';
+  SCaptionPmpManualInventario =
+    'PMP manual';
+  SCaptionDiferenciaUnidadesInventario =
+    'Dif. uds.';
+  SCaptionDiferenciaCosteInventario =
+    'Dif. coste';
+  SCaptionUnidadesRegularizadasInventario =
+    'Uds. regul.';
+  SCaptionHoraRecuentoInventario =
+    'Hora recuento';
+  SHintStockTeoricoInventario =
+    'Stock que el sistema cree que hay en el almacén';
+  SHintRecuentoInventario =
+    'Lo que realmente has contado';
+  SHintPmpNuevoInventario =
+    'Precio Medio que tendrá el SKU tras aplicar el inventario';
+  SHintUnidadesRegularizadasInventario =
+    'Solo se rellena cuando el inventario está APLICADO';
+  SCaptionFechaRecuentoExcelInventario =
+    'Fecha y hora recuento';
+  STituloExcelInventario =
+    'INVENTARIO';
+  SNombreHojaExcelInventario =
+    'Inventario';
+  SCaptionEmpresaExcelInventario =
+    'Empresa:';
+  SCaptionAlmacenExcelInventario =
+    'Almacén:';
+  SCaptionSerieExcelInventario =
+    'Serie:';
+  SCaptionNumeroExcelInventario =
+    'Número:';
+  SCaptionFechaExcelInventario =
+    'Fecha:';
+  SCaptionEstadoExcelInventario =
+    'Estado:';
+  SCaptionDescripcionExcelInventario =
+    'Descripción:';
+  SCaptionLineaExcelInventario =
+    'Línea';
+  SCaptionArticuloExcelInventario =
+    'Artículo';
+  SCaptionDescripcionColExcelInventario =
+    'Descripción';
+  SCaptionLoteExcelInventario =
+    'Lote';
+  SCaptionCaducidadExcelInventario =
+    'Caducidad';
+  SCaptionTeoricasExcelInventario =
+    'Uds. teór.';
+  SCaptionFisicasExcelInventario =
+    'Uds. físicas';
+  SCaptionDiferenciaExcelInventario =
+    'Diferencia';
+  SCaptionPmpActualExcelInventario =
+    'PMP actual';
+  SCaptionPmpNuevoExcelInventario =
+    'PMP nuevo';
+  SCaptionCosteExcelInventario =
+    'Dif. coste';
+  SCaptionTotalesExcelInventario =
+    'TOTALES';
+  SErrorHojaInventarioVacia =
+    'La hoja está vacía o no tiene datos.';
+  SInfoLineasLeidasExcelInventario =
+    'Leídas %d líneas (%d vacías ignoradas).';
+
 implementation
 
 end.

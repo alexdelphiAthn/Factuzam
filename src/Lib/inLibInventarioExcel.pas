@@ -21,6 +21,7 @@ unit inLibInventarioExcel;
 interface
 
 uses
+  inLibMsgArticulos,
   DB, System.SysUtils, System.Classes,
   dxSpreadSheet, dxSpreadSheetCore, cxGraphics, Vcl.Graphics,
   dxSpreadSheetTypes, dxSpreadSheetGraphics, dxCoreGraphics,
@@ -90,7 +91,6 @@ const
   FMT_EUR = '#,##0.00" '#$20AC'"';
   MAX_FILA_CABECERA_IMPORTACION = 20;
   MAX_COLUMNA_CABECERA_IMPORTACION = 20;
-  CABECERA_FECHA_RECUENTO = 'Fecha y hora recuento';
   ID_COLUMNA_FECHA_RECUENTO = 'FECHA_RECUENTO_INVLIN';
   COL_LINEA = 0;
   COL_ART   = 1;
@@ -117,27 +117,27 @@ procedure EscribirCabeceraInventario(
   var AFila: Integer);
 begin
   AFila := 1;
-  W(AHoja, AFila, 0, 'INVENTARIO', True);
+  W(AHoja, AFila, 0, STituloExcelInventario, True);
   AHoja.Cells[AFila, 0].Style.Font.Size := 16;
   Inc(AFila, 2);
-  W(AHoja, AFila, 0, 'Empresa:', True);
+  W(AHoja, AFila, 0, SCaptionEmpresaExcelInventario, True);
   W(AHoja, AFila, 1, AMaestro.FieldByName('CODIGO_EMP_INV').AsString);
-  W(AHoja, AFila, 3, 'Almacen:', True);
+  W(AHoja, AFila, 3, SCaptionAlmacenExcelInventario, True);
   W(AHoja, AFila, 4, AMaestro.FieldByName('CODIGO_ALM_INV').AsString);
   Inc(AFila);
-  W(AHoja, AFila, 0, 'Serie:', True);
+  W(AHoja, AFila, 0, SCaptionSerieExcelInventario, True);
   W(AHoja, AFila, 1, AMaestro.FieldByName('SERIE_INV').AsString);
-  W(AHoja, AFila, 3, 'Numero:', True);
+  W(AHoja, AFila, 3, SCaptionNumeroExcelInventario, True);
   W(AHoja, AFila, 4, AMaestro.FieldByName('NUMERO_INV').AsString);
   Inc(AFila);
-  W(AHoja, AFila, 0, 'Fecha:', True);
+  W(AHoja, AFila, 0, SCaptionFechaExcelInventario, True);
   W(AHoja, AFila, 1, AMaestro.FieldByName('FECHA_INV').AsString);
-  W(AHoja, AFila, 3, 'Estado:', True);
+  W(AHoja, AFila, 3, SCaptionEstadoExcelInventario, True);
   W(AHoja, AFila, 4, AMaestro.FieldByName('ESTADO_INV').AsString);
   if AMaestro.FindField('DESCRIPCION_INV') <> nil then
   begin
     Inc(AFila);
-    W(AHoja, AFila, 0, 'Descripcion:', True);
+    W(AHoja, AFila, 0, SCaptionDescripcionExcelInventario, True);
     W(AHoja, AFila, 1,
       AMaestro.FieldByName('DESCRIPCION_INV').AsString);
     Merge(AHoja, AFila, 1, 5, 1);
@@ -151,20 +151,22 @@ var
   iColumna: Integer;
 begin
   Inc(AFila, 2);
-  W(AHoja, AFila, COL_LINEA, 'Linea', True, ssahCenter);
-  W(AHoja, AFila, COL_ART, 'Articulo', True, ssahCenter);
+  W(AHoja, AFila, COL_LINEA, SCaptionLineaExcelInventario, True, ssahCenter);
+  W(AHoja, AFila, COL_ART, SCaptionArticuloExcelInventario, True, ssahCenter);
   W(AHoja, AFila, COL_SKU, 'SKU', True, ssahCenter);
-  W(AHoja, AFila, COL_DESC, 'Descripcion', True, ssahCenter);
-  W(AHoja, AFila, COL_LOTE, 'Lote', True, ssahCenter);
-  W(AHoja, AFila, COL_CADUC, 'Caducidad', True, ssahCenter);
-  W(AHoja, AFila, COL_TEOR, 'Uds. Teor.', True, ssahRight);
-  W(AHoja, AFila, COL_FISIC, 'Uds. Fisicas', True, ssahRight);
-  W(AHoja, AFila, COL_DIF, 'Diferencia', True, ssahRight);
-  W(AHoja, AFila, COL_PMP, 'PMP Actual', True, ssahRight);
-  W(AHoja, AFila, COL_PMPN, 'PMP Nuevo', True, ssahRight);
-  W(AHoja, AFila, COL_COSTE, 'Dif. Coste', True, ssahRight);
+  W(AHoja, AFila, COL_DESC, SCaptionDescripcionColExcelInventario, True,
+    ssahCenter);
+  W(AHoja, AFila, COL_LOTE, SCaptionLoteExcelInventario, True, ssahCenter);
+  W(AHoja, AFila, COL_CADUC, SCaptionCaducidadExcelInventario, True,
+    ssahCenter);
+  W(AHoja, AFila, COL_TEOR, SCaptionTeoricasExcelInventario, True, ssahRight);
+  W(AHoja, AFila, COL_FISIC, SCaptionFisicasExcelInventario, True, ssahRight);
+  W(AHoja, AFila, COL_DIF, SCaptionDiferenciaExcelInventario, True, ssahRight);
+  W(AHoja, AFila, COL_PMP, SCaptionPmpActualExcelInventario, True, ssahRight);
+  W(AHoja, AFila, COL_PMPN, SCaptionPmpNuevoExcelInventario, True, ssahRight);
+  W(AHoja, AFila, COL_COSTE, SCaptionCosteExcelInventario, True, ssahRight);
   W(AHoja, AFila, COL_FECHA_RECUENTO,
-    CABECERA_FECHA_RECUENTO + ' [' +
+    SCaptionFechaRecuentoExcelInventario + ' [' +
       ID_COLUMNA_FECHA_RECUENTO + ']',
     True,
     ssahCenter);
@@ -273,7 +275,7 @@ begin
   if AFilaFinal >= AFilaInicial then
   begin
     Inc(AFila);
-    W(AHoja, AFila, COL_DESC, 'TOTALES', True, ssahRight);
+    W(AHoja, AFila, COL_DESC, SCaptionTotalesExcelInventario, True, ssahRight);
     WFormula(AHoja, AFila, COL_TEOR,
       '=SUM(' + GetRef(AFilaInicial, COL_TEOR) + ':' +
       GetRef(AFilaFinal, COL_TEOR) + ')', '0');
@@ -328,7 +330,7 @@ var
 begin
   ASheetControl.ClearAll;
   oHoja := ASheetControl.AddSheet(
-    'Inventario',
+    SNombreHojaExcelInventario,
     TdxSpreadSheetTableView) as TdxSpreadSheetTableView;
   oHoja.BeginUpdate;
   try
@@ -403,7 +405,13 @@ end;
 
 function EsCabeceraCantidadInventario(const ATexto: string): Boolean;
 begin
-  Result := (ATexto = 'CANTIDAD') or
+  Result := (Pos('[CANTIDAD_FISICA_INVLIN]', ATexto) > 0) or
+    (ATexto = AnsiUpperCase(SCaptionFisicasExcelInventario)) or
+    (ATexto = 'UDS. FÍSICAS') or
+    (ATexto = 'UTS. FÍSIQUES') or
+    (ATexto = 'PHYSICAL QTY') or
+    (ATexto = '实盘数量') or
+    (ATexto = 'CANTIDAD') or
     (ATexto = 'UDS') or
     (ATexto = 'UDS. FISICAS') or
     (ATexto = 'FISICAS') or
@@ -412,7 +420,12 @@ end;
 
 function EsCabeceraPmpInventario(const ATexto: string): Boolean;
 begin
-  Result := (ATexto = 'PMP NUEVO') or
+  Result := (Pos('[PRECIO_MEDIO_NUEVO_INVLIN]', ATexto) > 0) or
+    (ATexto = AnsiUpperCase(SCaptionPmpNuevoExcelInventario)) or
+    (ATexto = 'PMP NOU') or
+    (ATexto = 'NEW PMP') or
+    (ATexto = '新 PMP') or
+    (ATexto = 'PMP NUEVO') or
     (ATexto = 'PMP_NUEVO') or
     (ATexto = 'PRECIO_MEDIO_NUEVO') or
     (ATexto = 'PMP');
@@ -422,8 +435,8 @@ function EsCabeceraFechaRecuentoInventario(
   const ATexto: string): Boolean;
 begin
   Result := (Pos(ID_COLUMNA_FECHA_RECUENTO, ATexto) > 0) or
-    (ATexto = UpperCase(
-      CABECERA_FECHA_RECUENTO)) or
+    (ATexto = AnsiUpperCase(
+      SCaptionFechaRecuentoExcelInventario)) or
     (ATexto = 'FECHA Y HORA RECUENTO') or
     (ATexto = 'FECHA Y HORA DE RECUENTO') or
     (ATexto = 'FECHA/HORA RECUENTO') or
@@ -440,7 +453,12 @@ end;
 
 function EsCabeceraLineaInventario(const ATexto: string): Boolean;
 begin
-  Result := (ATexto = 'LINEA') or (ATexto = 'LÍNEA') or
+  Result := (Pos('[LINEA_INVLIN]', ATexto) > 0) or
+    (ATexto = AnsiUpperCase(SCaptionLineaExcelInventario)) or
+    (ATexto = 'LÍNIA') or
+    (ATexto = 'LINE') or
+    (ATexto = '行') or
+    (ATexto = 'LINEA') or (ATexto = 'LÍNEA') or
     (ATexto = 'LINEA INVENTARIO') or
     (ATexto = 'LINEA_INVLIN');
 end;
@@ -461,7 +479,7 @@ begin
   Result.FilaInicio := AFila + 1;
   for Columna := 0 to MAX_COLUMNA_CABECERA_IMPORTACION do
   begin
-    Cabecera := UpperCase(
+    Cabecera := AnsiUpperCase(
       TextoCeldaImportacionInventario(ALector, AFila, Columna));
     if EsCabeceraLineaInventario(Cabecera) then
       Result.Linea := Columna
@@ -511,15 +529,35 @@ function ElementoIdentidadInventarioExcel(
 var
   Etiqueta: string;
 begin
-  Etiqueta := UpperCase(Trim(ATexto));
+  Etiqueta := AnsiUpperCase(Trim(ATexto));
   Result := eiieNinguno;
-  if Etiqueta = 'EMPRESA:' then
+  if (Etiqueta = AnsiUpperCase(SCaptionEmpresaExcelInventario)) or
+    (Etiqueta = 'COMPANY:') or
+    (Etiqueta = '公司:') or
+    (Etiqueta = 'EMPRESA:') or
+    (Pos('[CODIGO_EMP_INV]', Etiqueta) > 0) then
     Result := eiieEmpresa
-  else if Etiqueta = 'ALMACEN:' then
+  else if (Etiqueta = AnsiUpperCase(SCaptionAlmacenExcelInventario)) or
+    (Etiqueta = 'ALMACÉN:') or
+    (Etiqueta = 'MAGATZEM:') or
+    (Etiqueta = 'WAREHOUSE:') or
+    (Etiqueta = '仓库:') or
+    (Etiqueta = 'ALMACEN:') or
+    (Pos('[CODIGO_ALM_INV]', Etiqueta) > 0) then
     Result := eiieAlmacen
-  else if Etiqueta = 'SERIE:' then
+  else if (Etiqueta = AnsiUpperCase(SCaptionSerieExcelInventario)) or
+    (Etiqueta = 'SÈRIE:') or
+    (Etiqueta = 'SERIES:') or
+    (Etiqueta = '系列:') or
+    (Etiqueta = 'SERIE:') or
+    (Pos('[SERIE_INV]', Etiqueta) > 0) then
     Result := eiieSerie
-  else if Etiqueta = 'NUMERO:' then
+  else if (Etiqueta = AnsiUpperCase(SCaptionNumeroExcelInventario)) or
+    (Etiqueta = 'NÚMERO:') or
+    (Etiqueta = 'NUMBER:') or
+    (Etiqueta = '编号:') or
+    (Etiqueta = 'NUMERO:') or
+    (Pos('[NUMERO_INV]', Etiqueta) > 0) then
     Result := eiieNumero;
 end;
 
@@ -952,7 +990,7 @@ begin
     Columnas.FilaCabecera,
     AIdentidad);
   if ALector.UltimaFila < Columnas.FilaInicio then
-    AMsg := 'La hoja está vacía o no tiene datos.'
+    AMsg := SErrorHojaInventarioVacia
   else
   begin
     LineasLeidas := 0;
@@ -978,7 +1016,7 @@ begin
       ALista.Clear;
     end
     else
-      AMsg := Format('Leidas %d lineas (%d vacias ignoradas).',
+      AMsg := Format(SInfoLineasLeidasExcelInventario,
         [LineasLeidas, LineasVacias]);
   end;
 end;

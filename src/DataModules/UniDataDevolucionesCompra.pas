@@ -120,6 +120,10 @@ type
     // El form empuja su dsTablaG; el DM ya no usa GetOwnerForm.
     procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure AbrirDetalles; override;
+  private
+    // Conexion por la que salen la transaccion, los bloqueos y las
+    // lecturas de la operacion: la misma que usan los datasets.
+    function ConexionEscritura: TUniConnection;
   end;
 
 implementation
@@ -141,6 +145,21 @@ uses
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+function TdmDevolucionesCompra.ConexionEscritura: TUniConnection;
+begin
+  // Cada ventana de mantenimiento crea su propia conexion y reasigna a
+  // ella los datasets (TdmBase.ReasignarConexion). La transaccion, los
+  // SELECT ... FOR UPDATE y las lecturas de la operacion tienen que ir
+  // por esa misma conexion: si salen por la conexion compartida, el
+  // UPDATE del dataset acaba esperando un bloqueo que retiene el propio
+  // programa desde otra conexion (MariaDB 1205, lock wait timeout).
+  Result := nil;
+  if Assigned(unqryTablaG) then
+    Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
 
 procedure TdmDevolucionesCompra.DataModuleCreate(Sender: TObject);
 begin
@@ -281,7 +300,7 @@ begin
   FieldByName('NUMERO_DEVC').AsString := '0';
     // Serie por defecto: buscar en fza_empresas_series para TIPO_DOC='DC'
     sSerie := ObtenerSerieDefecto(
-      ConexionPrincipal,
+      ConexionEscritura,
       UbicacionSesion.Empresa,
       CrearConfiguracionDocumento(
         tdDevolucion, sdCompra).TipoContador);
@@ -307,10 +326,10 @@ begin
     if FindField('ESPIVOTE_HORIZONTAL_DEVC') <> nil then
       FieldByName('ESPIVOTE_HORIZONTAL_DEVC').AsString := 'N';
     AplicarRecargoComprasEmpresa(
-      CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+      CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
       'CODIGO_EMP_DEVC', 'ESIVA_RECARGO_COMPRAS_DEVC');
   AplicarPorcentajesIvaCompra(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
     'DEVC');
   RefrescarAlmacenes(
     DataSet.FieldByName('CODIGO_EMP_DEVC').AsString);
@@ -340,7 +359,7 @@ begin
      (unqryTablaG.FieldByName('NUMERO_DEVC').AsString = '') then
     GetCodigoAutoDevolucionCompra;
   AplicarPorcentajesIvaCompra(
-    CrearLecturasImpuestos(ConexionPrincipal), unqryTablaG,
+    CrearLecturasImpuestos(ConexionEscritura), unqryTablaG,
     'DEVC');
   CalcularTotalesDevolucionCompra;
 end;
@@ -498,7 +517,7 @@ begin
   end;
   AsignarNumeroLineaDevolucionCompra(DataSet);
   // Acepta articulo, SKU, codigo de barras o referencia de proveedor.
-  NormalizarArticuloSkuEnDataSet(ConexionPrincipal,
+  NormalizarArticuloSkuEnDataSet(ConexionEscritura,
       unqryDevolucionesCompraLineas, 'CODIGO_ART_DEVCLIN',
       'CODIGO_UNIDAD_DEVCLIN');
     if (Trim(FieldByName('NUMERO_DEVC_DEVCLIN').AsString) = '') or
@@ -545,7 +564,7 @@ begin
         unqrySkusDevc.Close;
       end;
     end;
-  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionPrincipal),
+  PrepararLineaFiscalCompra(CrearLecturasImpuestos(ConexionEscritura),
     unqryTablaG,
     unqryDevolucionesCompraLineas, 'DEVC', 'DEVCLIN', 'TOTAL_DEVCLIN');
   end;
@@ -566,7 +585,7 @@ begin
     sSerie  := Trim(unqryTablaG.FieldByName('SERIE_DEVC').AsString);
     if (sLinea = '') or (StrToIntDef(sLinea, 0) = 0) or
        ((DataSet.State = dsInsert) and
-        LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+        LineaDocExiste(CrearContadorLineasDocumento(ConexionEscritura),
           LIN_DEVOLUCIONES_COMPRA, sSerie,
           sNumero, sLinea)) then
     begin
@@ -577,7 +596,7 @@ begin
       if DataSet.FindField('SERIE_DEVC_DEVCLIN') <> nil then
         DataSet.FieldByName('SERIE_DEVC_DEVCLIN').AsString := sSerie;
       iNuevaLinea := GetSiguienteLineaDocLibre(
-        CrearContadorLineasDocumento(ConexionPrincipal),
+        CrearContadorLineasDocumento(ConexionEscritura),
         CONT_DEVOLUCIONES_COMPRA, LIN_DEVOLUCIONES_COMPRA, sSerie, sNumero);
       if iNuevaLinea = 0 then
       begin
@@ -741,7 +760,7 @@ var
 begin
   q := TUniQuery.Create(nil);
   try
-    q.Connection := ConexionPrincipal;
+    q.Connection := ConexionEscritura;
     q.SQL.Text :=
       'SELECT 1 ' +
       '  FROM INFORMATION_SCHEMA.COLUMNS ' +
@@ -831,7 +850,7 @@ begin
       oLv.Items.Clear;
       oQry := TUniQuery.Create(nil);
       try
-        oQry.Connection := ConexionPrincipal;
+        oQry.Connection := ConexionEscritura;
         oQry.SQL.Text :=
           'SELECT DISTINCT L.CODIGO_ALMACEN_DEVCLIN AS COD, ' +
           '       COALESCE(A.NOMBRE_ALM_ALM, ' +
@@ -898,7 +917,7 @@ begin
   Result := '';
   oQry := TUniQuery.Create(nil);
   try
-    oQry.Connection := ConexionPrincipal;
+    oQry.Connection := ConexionEscritura;
     oQry.SQL.Text :=
       'SELECT DISTINCT CODIGO_UNIDAD_DEVCLIN ' +
       '  FROM fza_devoluciones_compra_lineas ' +

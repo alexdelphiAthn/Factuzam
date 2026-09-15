@@ -18,6 +18,7 @@ unit inMtoModalImpSimulacionValoracion;
 interface
 
 uses
+  inLibMsgArticulos,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Classes,
   System.Variants, Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs,
   Vcl.Menus, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.ComCtrls, Data.DB,
@@ -63,8 +64,6 @@ uses
   inLibInformeSimulacionValoracionExcel,
   inLibMsgComun;
 
-resourcestring
-  SNombreArchivoSimulacionValoracion = 'Valoracion_simulada';
 
 const
   CAMPO_TITULO = 'TITULO';

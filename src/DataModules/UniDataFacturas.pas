@@ -258,6 +258,10 @@ public
       read FOnLinFacEstado write FOnLinFacEstado;
     property TipoFacturaDefecto: string
       read FTipoFacturaDefecto write FTipoFacturaDefecto;
+  private
+    // Conexion por la que salen la transaccion, los bloqueos y las
+    // lecturas de la operacion: la misma que usan los datasets.
+    function ConexionEscritura: TUniConnection;
   end;
 implementation
 
@@ -295,6 +299,21 @@ begin
 end;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
+
+function TdmFacturas.ConexionEscritura: TUniConnection;
+begin
+  // Cada ventana de mantenimiento crea su propia conexion y reasigna a
+  // ella los datasets (TdmBase.ReasignarConexion). La transaccion, los
+  // SELECT ... FOR UPDATE y las lecturas de la operacion tienen que ir
+  // por esa misma conexion: si salen por la conexion compartida, el
+  // UPDATE del dataset acaba esperando un bloqueo que retiene el propio
+  // programa desde otra conexion (MariaDB 1205, lock wait timeout).
+  Result := nil;
+  if Assigned(unqryTablaG) then
+    Result := unqryTablaG.Connection;
+  if not Assigned(Result) then
+    Result := ConexionPrincipal;
+end;
 
 procedure TdmFacturas.ConfigurarServicios(
   const AServicios: TServiciosFactura);
@@ -431,7 +450,7 @@ begin
   begin
     unqrySol := TUniQuery.Create(nil);
     try
-      unqrySol.Connection := ConexionPrincipal;
+      unqrySol.Connection := ConexionEscritura;
       unqrySol.SQL.Text :=
         'SELECT S.SUBTIPO_EMPSER ' +
         '  FROM fza_empresas_series S ' +
@@ -503,7 +522,7 @@ begin
     ) then
   begin
     unqrySol := TUniQuery.Create(Self);
-    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.Connection := ConexionEscritura;
     unqrySol.SQL.Text := 'SELECT EMPRESA_DEFECTO_USU ' +
                         '  FROM fza_usuarios ' +
                         ' WHERE USUARIO_USU = :Usuario ';
@@ -523,7 +542,7 @@ procedure TdmFacturas.CrearTablaSeries(sEmpresa,
                                        sCliente:string;
                                        dtFecha:TDateTime);
 begin
-  unqrySeriesEditCombo.Connection := ConexionPrincipal;
+  unqrySeriesEditCombo.Connection := ConexionEscritura;
   unqrySeriesEditCombo.SQL.Text :=
                 'SELECT SERIE_CON_CLI AS SERIE_CON ' +
                 '  FROM vi_clientes                              ' +
@@ -560,7 +579,7 @@ end;
 
 procedure TdmFacturas.AsignarIVA(s:string; unqryT:TUniQuery);
 begin
-  CargarConfiguracionIvaFactura(Self, ConexionPrincipal, s,
+  CargarConfiguracionIvaFactura(Self, ConexionEscritura, s,
     unqryT.FieldByName('FECHA_FAC').AsDateTime, unqryT);
 end;
 
@@ -570,7 +589,7 @@ var
 begin
   unqrySol := TUniQuery.Create(Self);
   try
-    unqrySol.Connection := ConexionPrincipal;
+    unqrySol.Connection := ConexionEscritura;
     unqrySol.SQL.Text := 'SELECT * ' +
                          '  FROM fza_clientes ' +
                          ' WHERE CODIGO_CLI_CLI = :cliente';
@@ -626,7 +645,7 @@ end;
 
 procedure TdmFacturas.CalcularRetencionesEmpresa;
 begin
-  AplicarRetencionEmpresaFactura(Self, ConexionPrincipal, unqryTablaG);
+  AplicarRetencionEmpresaFactura(Self, ConexionEscritura, unqryTablaG);
 end;
 
 procedure TdmFacturas.MarcarRecalculoFacturaPendiente;
@@ -1205,7 +1224,7 @@ begin
   sResul := '';
   qryIVAAG := TUniQuery.Create(Self);
   try
-    qryIVAAG.Connection := ConexionPrincipal;
+    qryIVAAG.Connection := ConexionEscritura;
     qryIVAAG.SQL.Text := 'SELECT IVA_IVAGRP ' +
                         '  FROM vi_ivas_empresa ' +
                         ' WHERE ESIVAAGRICOLA_IVA_IVAGRP = :pAGRICOLA ' +
@@ -1343,7 +1362,7 @@ begin
 //      ExecProc;
       unqryTablaG.FindField('CODIGO_CLI_FAC').AsString :=
                                                  ObtenerSiguienteContador(
-                                                   ConexionPrincipal,
+                                                   ConexionEscritura,
                                                    'CL',
                                                    IdentidadSesion.Usuario);
 //    end;
@@ -1447,7 +1466,7 @@ begin
 //      ExecProc;
       unqryTablaG.FindField('CODIGO_EMP_FAC').AsString :=
                                                  ObtenerSiguienteContador(
-                                                   ConexionPrincipal,
+                                                   ConexionEscritura,
                                                    'EM',
                                                    IdentidadSesion.Usuario);
 //    end;
@@ -1487,20 +1506,20 @@ procedure TdmFacturas.ProcesarFacturaPosteada(ADataSet: TDataSet);
 var
   bTransaccionPropia: Boolean;
 begin
-  bTransaccionPropia := not ConexionPrincipal.InTransaction;
+  bTransaccionPropia := not ConexionEscritura.InTransaction;
   if bTransaccionPropia then
-    ConexionPrincipal.StartTransaction;
+    ConexionEscritura.StartTransaction;
   try
     try
       // El DFM es anterior a estos campos; se persisten expresamente.
       GuardarOpcionMovimientosFactura(ADataSet);
       NotificarResultadoOperacion(CalcularFactura);
       GuardarParametrosEDocFactura(ADataSet);
-      if bTransaccionPropia and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Commit;
+      if bTransaccionPropia and ConexionEscritura.InTransaction then
+        ConexionEscritura.Commit;
     except
-      if bTransaccionPropia and ConexionPrincipal.InTransaction then
-        ConexionPrincipal.Rollback;
+      if bTransaccionPropia and ConexionEscritura.InTransaction then
+        ConexionEscritura.Rollback;
       raise;
     end;
   finally
@@ -1527,7 +1546,7 @@ var
 begin
   inherited;
   AplicarValoresPorDefecto(
-    ConexionPrincipal,
+    ConexionEscritura,
     unqryLinFac,
     'fza_facturas_lineas');
   // Los modos comunes sincronizan estos campos al resolver el SKU. Esta
@@ -1572,7 +1591,7 @@ begin
   begin
   // Salvaguarda si la linea llega con un SKU/codigo de barras sin pasar
   // por el editor de articulo del formulario.
-  NormalizarArticuloSkuEnDataSet(ConexionPrincipal, unqryLinFac,
+  NormalizarArticuloSkuEnDataSet(ConexionEscritura, unqryLinFac,
     'CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN');
   if FieldByName(fdesart).AsString = '' then
   begin
@@ -1585,12 +1604,12 @@ begin
   if (sNumLin = '0') or
      (sNumLin = '') or
      ((DataSet.State = dsInsert) and
-      LineaDocExiste(CrearContadorLineasDocumento(ConexionPrincipal),
+      LineaDocExiste(CrearContadorLineasDocumento(ConexionEscritura),
         LIN_FACTURAS, sSerie, sNumero,
         sNumLin)) then
   begin
     iNuevaLinea := GetSiguienteLineaDocLibreSiguiente(
-      CrearContadorLineasDocumento(ConexionPrincipal),
+      CrearContadorLineasDocumento(ConexionEscritura),
       CONT_FACTURAS, LIN_FACTURAS, sSerie, sNumero);
     if iNuevaLinea > 0 then
       sNuevoNroLinea := Format('%.3d', [iNuevaLinea])
@@ -1677,7 +1696,7 @@ procedure TdmFacturas.unqryTablaGAfterInsert(DataSet: TDataSet);
   end;
 begin
   inherited;
-    AplicarValoresPorDefecto(ConexionPrincipal, unqryTablaG, 'fza_facturas');
+    AplicarValoresPorDefecto(ConexionEscritura, unqryTablaG, 'fza_facturas');
 //    FieldByName('NUMERO_FAC').AsString := '0';
 //    FieldByName('CODIGO_CLI_FAC').AsString := '0';
 //    FieldByName('CODIGO_EMP_FAC').AsString := '0';
@@ -1897,7 +1916,7 @@ begin
        ParametrosApp.Licencia.Comprobada and Datos.TieneFecha then
     begin
       ValidarLimiteDemoFacturas(
-        ConexionPrincipal, ParametrosApp.Licencia.Estado, Datos.Fecha);
+        ConexionEscritura, ParametrosApp.Licencia.Estado, Datos.Fecha);
     end;
     if Datos.Numero = '0' then
       GetCodigoAutoFactura;

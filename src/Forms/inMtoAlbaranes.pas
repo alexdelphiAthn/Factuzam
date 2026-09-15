@@ -323,6 +323,7 @@ type
 implementation
 
 uses
+  inMtoModalImpDocumento,
   inLibMensajesVcl,
   inMtoModalFacturarAlbaranesFechas, inLibGridCantidad,
   inLibGenBusq, inLibShowMto, inLibFiltroUsuario,
@@ -1643,10 +1644,13 @@ end;
 procedure TfrmMtoAlbaranes.btnImprimirClick(Sender: TObject);
 begin
   inherited;
-  if not PuedeImprimir then
-    Abort;
-  // Hook FastReport: cargar fxdsPrintAlb / fxdstPrintLinAlb y mostrar.
+  if PuedeImprimir and Assigned(dmmAlbaranes) then
+  begin
+    TfrmPrintDocumento.Ejecutar(Self, tdAlbaran, sdVenta,
+      dmmAlbaranes.unqryTablaG, dmmAlbaranes.unqryAlbaranesLineas);
+  end;
 end;
+
 
 // "Ir a documento" (Ctrl+May+A): salta al pedido de venta del que nace
 // el albaran (SERIE_PED_ALB / NUMERO_PED_ALB). Si el albaran se creo a

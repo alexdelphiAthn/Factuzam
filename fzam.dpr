@@ -3,6 +3,15 @@
 { SPDX-License-Identifier: MPL-2.0 }
 { Copyright (c) Alejandro Laorden Hidalgo. }
 uses
+  inLibMsgPresupuestos in 'src\Lib\inLibMsgPresupuestos.pas',
+  inMtoPresupuestos in 'src\Forms\inMtoPresupuestos.pas',
+  UniDataPresupuestos in 'src\DataModules\UniDataPresupuestos.pas',
+  UniDataPresupuestosSql in 'src\DataModules\UniDataPresupuestosSql.pas',
+  UniDataPresupuestosConversion in 'src\DataModules\UniDataPresupuestosConversion.pas',
+  inLibInformeDocumento in 'src\Lib\inLibInformeDocumento.pas',
+  inLibPresupuestosIntf in 'src\Lib\inLibPresupuestosIntf.pas',
+  UniDataInformeDocumento in 'src\DataModules\UniDataInformeDocumento.pas',
+  inMtoModalImpDocumento in 'src\Modals\inMtoModalImpDocumento.pas',
   Winapi.Windows,
   Forms,
   MidasLib,

@@ -18,6 +18,7 @@ unit inMtoInventariosPresentacionBusquedas;
 interface
 
 uses
+  inLibMsgArticulos,
   Vcl.Forms,
   inLibGenBusq,
   inLibInventariosAplicacionIntf;
@@ -37,23 +38,6 @@ implementation
 uses
   Data.DB;
 
-resourcestring
-  STituloBuscarArticulosInventario = 'Búsqueda de Artículos';
-  STituloBuscarSkusInventario = 'Búsqueda de SKUs';
-  SCaptionCodigoBusquedaInventario = 'Código';
-  SCaptionDescripcionBusquedaInventario = 'Descripción';
-  SCaptionFamiliaBusquedaInventario = 'Familia';
-  SCaptionTemporadaBusquedaInventario = 'Temporada';
-  SCaptionProveedorBusquedaInventario = 'Proveedor';
-  SCaptionReferenciaProveedorBusquedaInventario = 'Ref. proveedor';
-  SCaptionPrecioCompraBusquedaInventario = 'P. compra';
-  SCaptionPrecioVentaBusquedaInventario = 'P. venta';
-  SCaptionTipoCantidadBusquedaInventario = 'Tipo cant.';
-  SCaptionSkuBusquedaInventario = 'SKU';
-  SCaptionArticuloBusquedaInventario = 'Artículo';
-  SCaptionAtributosBusquedaInventario = 'Atributos';
-  SCaptionStockBusquedaInventario = 'Stock';
-  SCaptionPrecioMedioBusquedaInventario = 'PMP';
 
 // Fija DisplayLabel y formato de un campo para que la grilla generica
 // muestre cabeceras legibles sin layout guardado.

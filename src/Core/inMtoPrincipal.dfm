@@ -1,4 +1,4 @@
-inherited frmMtoPrincipal: TfrmMtoPrincipal
+﻿inherited frmMtoPrincipal: TfrmMtoPrincipal
   Caption = 'Fzam'
   ClientHeight = 533
   ClientWidth = 1120
@@ -576,6 +576,10 @@ inherited frmMtoPrincipal: TfrmMtoPrincipal
     end
     object Ventas1: TMenuItem
       Caption = 'Ventas Mayor'
+      object mnuPresupuestosVenta: TMenuItem
+        Caption = 'Presupuestos'
+        OnClick = MenuGenericoClick
+      end
       object mnuPedidosVenta: TMenuItem
         Caption = '&Pedidos'
         ShortCut = 49232

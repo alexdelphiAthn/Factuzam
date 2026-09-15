@@ -18,6 +18,7 @@ unit inMtoInventariosImportacionVcl;
 interface
 
 uses
+  inLibMsgArticulos,
   System.Classes,
   System.SysUtils,
   Data.DB,
@@ -108,10 +109,6 @@ uses
   inLibInventariosAplicacion,
   inMtoModalScriptLog;
 
-resourcestring
-  SFiltroArchivoImportacionRecuentoInventario =
-    'Excel (*.xlsx)|*.xlsx|CSV (*.csv;*.txt)|*.csv;*.txt|' +
-    'Todos (*.*)|*.*';
 
 constructor TImportadorRecuentoInventarioVcl.Create(
   APropietario: TComponent;

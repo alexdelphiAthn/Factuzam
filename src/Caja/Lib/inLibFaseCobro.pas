@@ -107,8 +107,11 @@ type
     FCodigoValeEmitido:String;
     FImporteBruto: Currency;
     FImporteDescuentoLineal: Currency;
+    FImporteAntesDescuento: Currency;
     FPorcentajeDescuentoGlobal: Currency;
     FImporteDescuentoGlobal: Currency;
+    FDescuentoPorImporte: Boolean;
+    FImporteDescuentoFijado: Currency;
     FImporteTotalPagar: Currency;
     FImporteEntregado: Currency;
     FImportePendiente: Currency;
@@ -152,6 +155,10 @@ type
     procedure AplicarDescuentoGlobal(APorcentaje: Currency); overload;
     procedure AplicarDescuentoGlobal(APorcentaje: Currency;
                                      AImporte: Currency); overload;
+    function ValidarTotalPagar(ATotal: Currency;
+      APermiteDescuento: Boolean): TResultadoValidacion;
+    function AplicarTotalPagar(ATotal: Currency;
+      APermiteDescuento: Boolean): TResultadoValidacion;
     function PuedeDejarEnCuenta: Boolean;
     function EstablecerDejarEnCuenta(AImporte: Currency): TResultadoValidacion;
     function PuedeEmitirVale: Boolean;
@@ -164,6 +171,7 @@ type
     procedure Recalcular;
     property ImporteBruto: Currency read FImporteBruto;
     property ImporteDescuentoLineal: Currency read FImporteDescuentoLineal;
+    property ImporteAntesDescuento: Currency read FImporteAntesDescuento;
     property PorcentajeDescuentoGlobal: Currency
       read FPorcentajeDescuentoGlobal;
     property ImporteDescuentoGlobal: Currency read FImporteDescuentoGlobal;
@@ -194,7 +202,7 @@ type
 implementation
 
 uses
-  Vcl.Dialogs, System.UITypes;
+  Vcl.Dialogs, System.UITypes, inLibMsgCaja;
 
 resourcestring
   SErrorDejarCuentaSinClienteAsignado =
@@ -312,11 +320,13 @@ begin
   begin
     FImporteBruto := ATotales.Totales.TotalBruto;
     FImporteDescuentoLineal := ATotales.Totales.TotalDescuentosLineas;
+    FImporteAntesDescuento := ATotales.Totales.TotalLiquido;
   end
   else
   begin
     FImporteBruto := 0;
     FImporteDescuentoLineal := 0;
+    FImporteAntesDescuento := 0;
   end;
   Recalcular;
 end;
@@ -397,6 +407,7 @@ end;
 
 procedure TDatosFaseCobro.AplicarDescuentoGlobal(APorcentaje: Currency);
 begin
+  FDescuentoPorImporte := False;
   FPorcentajeDescuentoGlobal := APorcentaje;
   Recalcular;
 end;
@@ -404,9 +415,44 @@ end;
 procedure TDatosFaseCobro.AplicarDescuentoGlobal(APorcentaje,
                                                  AImporte: Currency);
 begin
+  FDescuentoPorImporte := True;
   FPorcentajeDescuentoGlobal := APorcentaje;
-  FImporteDescuentoGlobal := AImporte;
+  FImporteDescuentoFijado := AImporte;
   Recalcular;
+end;
+
+function TDatosFaseCobro.ValidarTotalPagar(ATotal: Currency;
+  APermiteDescuento: Boolean): TResultadoValidacion;
+var
+  Porcentaje: Currency;
+  Descuento: Currency;
+begin
+  if not APermiteDescuento then
+    Result := TResultadoValidacion.Error(SErrorAjusteTotalNoPermitido)
+  else if not TCalculadorFaseCobro.CalcularDescuentoParaTotal(
+    FImporteAntesDescuento, ATotal,
+    Porcentaje, Descuento) then
+    Result := TResultadoValidacion.Error(Format(
+      SErrorTotalCobroFueraRango,
+      [FImporteAntesDescuento]))
+  else
+    Result := TResultadoValidacion.Ok;
+end;
+
+function TDatosFaseCobro.AplicarTotalPagar(ATotal: Currency;
+  APermiteDescuento: Boolean): TResultadoValidacion;
+var
+  Porcentaje: Currency;
+  Descuento: Currency;
+begin
+  Result := ValidarTotalPagar(ATotal, APermiteDescuento);
+  if Result.Valido then
+  begin
+    TCalculadorFaseCobro.CalcularDescuentoParaTotal(
+      FImporteAntesDescuento, ATotal,
+      Porcentaje, Descuento);
+    AplicarDescuentoGlobal(Porcentaje, Descuento);
+  end;
 end;
 
 function TDatosFaseCobro.PuedeDejarEnCuenta: Boolean;
@@ -556,7 +602,11 @@ begin
   Result := Default(TEntradaTotalesCobro);
   Result.ImporteBruto := FImporteBruto;
   Result.DescuentoLineal := FImporteDescuentoLineal;
+  Result.UsarTotalFactura := True;
+  Result.TotalFactura := FImporteAntesDescuento;
   Result.PorcentajeDescuento := FPorcentajeDescuentoGlobal;
+  Result.DescuentoPorImporte := FDescuentoPorImporte;
+  Result.ImporteDescuentoFijado := FImporteDescuentoFijado;
   Result.ImporteDejarCuenta := FImporteDejarCuenta;
   Result.ImporteValeEmitido := FImporteValeEmitido;
   FMemTablePagos.DisableControls;
@@ -662,14 +712,16 @@ begin
 end;
 
 procedure TDatosFaseCobro.InicializarTotalesPorDefecto;
+var
+  Entrada: TEntradaTotalesCobro;
 begin
-  FImporteDescuentoGlobal := 0;
-  FImporteTotalPagar := FImporteBruto - FImporteDescuentoLineal;
-  FImporteEntregado := 0;
-  FImportePendiente := FImporteTotalPagar;
-  FImporteCambio := 0;
-  FImporteValeRecogido := 0;
-  FImporteValeEmitido := 0;
+  Entrada := Default(TEntradaTotalesCobro);
+  Entrada.UsarTotalFactura := True;
+  Entrada.TotalFactura := FImporteAntesDescuento;
+  Entrada.PorcentajeDescuento := FPorcentajeDescuentoGlobal;
+  Entrada.DescuentoPorImporte := FDescuentoPorImporte;
+  Entrada.ImporteDescuentoFijado := FImporteDescuentoFijado;
+  AplicarResultadoTotales(TCalculadorFaseCobro.CalcularTotales(Entrada));
 
   if Assigned(FOnRecalculado) then
     FOnRecalculado(Self);
