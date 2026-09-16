@@ -177,6 +177,21 @@ type
       const ATransporteHistorial:
         ITransportePrestaShopConHistorial;
       const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
+    procedure EnviarTrabajoReclamado(
+      AIdCola: Int64;
+      const AToken: string;
+      const ACliente: IClienteCatalogoPrestaInstantanea;
+      const AClienteAlta: IClienteCatalogoAltaPresta;
+      const ATransporteHistorial:
+        ITransportePrestaShopConHistorial;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      var ATrabajo: TTrabajoArticuloPrestaShop);
+    function TratarErrorTrabajo(
+      const ATrabajo: TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionGlobalPrestaShop;
+      AIdCola: Int64;
+      const AToken: string;
+      E: Exception): Boolean;
     procedure ProcesarLinea(
       const ATrabajo: TTrabajoArticuloPrestaShop;
       const ALinea: TLineaArticuloPrestaShop;
@@ -1088,6 +1103,120 @@ begin
   end;
 end;
 
+// Envio de un trabajo ya reclamado: lee, decide si toca tocar la web y
+// cierra la fila como enviada.
+procedure THiloPrestaShopCola.EnviarTrabajoReclamado(
+  AIdCola: Int64;
+  const AToken: string;
+  const ACliente: IClienteCatalogoPrestaInstantanea;
+  const AClienteAlta: IClienteCatalogoAltaPresta;
+  const ATransporteHistorial:
+    ITransportePrestaShopConHistorial;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  var ATrabajo: TTrabajoArticuloPrestaShop);
+var
+  oContextoHistorial: TContextoTransportePrestaShop;
+begin
+  ComprobarCierreSeguro;
+  ATrabajo := FRepositorio.LeerTrabajo(
+    AIdCola,
+    AToken,
+    AConfiguracion.Cola);
+  if ATrabajo.IdCola = 0 then
+    ATrabajo.IdCola := AIdCola;
+  ATrabajo.Token := AToken;
+  if ATrabajo.CodigoArticulo = '' then
+    raise EInvalidOpException.Create(
+      STrabajoPrestaShopNoReclamado);
+  oContextoHistorial := Default(TContextoTransportePrestaShop);
+  oContextoHistorial.IdCola := ATrabajo.IdCola;
+  oContextoHistorial.IdReclamacion := ATrabajo.Token;
+  oContextoHistorial.VersionReclamada :=
+    ATrabajo.VersionReclamada;
+  oContextoHistorial.NumeroIntento := ATrabajo.Intentos + 1;
+  oContextoHistorial.Usuario := FUsuario;
+  oContextoHistorial.OrdenOperacion := 0;
+  ATransporteHistorial.EstablecerContexto(
+    oContextoHistorial);
+  if ((ATrabajo.AccionVisibilidad = avpDesactivar) and
+      (not ATrabajo.EstaEnWeb)) or
+     (ATrabajo.EstaEnWeb and
+      ((ATrabajo.AccionVisibilidad = avpActivar) or
+       AConfiguracion.CrearArticulos or
+       (AConfiguracion.SincronizarStockPrecios and
+        ((ATrabajo.TienePrecio and
+          ATrabajo.TienePrecioProducto) or
+         ATrabajo.TieneStock)))) then
+  begin
+    AsegurarLease(ATrabajo);
+    if not SigueVigente(AConfiguracion) then
+      raise EInvalidOpException.Create(
+        'La configuración PrestaShop cambió durante el envío');
+    if ATrabajo.AccionVisibilidad = avpDesactivar then
+      ProcesarDesactivacion(ATrabajo, ACliente)
+    else
+      ProcesarArticulo(
+        ATrabajo,
+        ACliente,
+        AClienteAlta,
+        AConfiguracion);
+  end;
+  ComprobarCierreSeguro;
+  FRepositorio.MarcarEnviada(
+    ATrabajo.IdCola,
+    ATrabajo.Token,
+    FUsuario,
+    ATrabajo.TieneProximoCambioPrecio,
+    ATrabajo.ProximoCambioPrecio);
+end;
+
+// Reparto del fallo: liberar la reclamacion, anotarlo como incidencia
+// terminal o dejarlo para otro intento. False detiene el ciclo.
+function THiloPrestaShopCola.TratarErrorTrabajo(
+  const ATrabajo: TTrabajoArticuloPrestaShop;
+  const AConfiguracion: TConfiguracionGlobalPrestaShop;
+  AIdCola: Int64;
+  const AToken: string;
+  E: Exception): Boolean;
+begin
+  Result := True;
+  if FControlTrabajo.DebeLiberarTrabajo or
+     (E is ECierreForzadoPrestaShop) then
+    LiberarTrabajoActual(AIdCola, AToken)
+  else if not ColaActiva then
+  begin
+    LiberarTrabajoActual(AIdCola, AToken);
+    Result := False;
+  end
+  else if E is EAltaArticuloPrestaLocal then
+    GuardarIncidenciaTerminal(
+      ATrabajo,
+      AConfiguracion,
+      E.Message)
+  else if E is EConfiguracionPrestaInvalida then
+    GuardarIncidenciaTerminal(
+      ATrabajo,
+      AConfiguracion,
+      E.Message)
+  else if E is ERecursoPrestaNoEncontrado then
+    GuardarRecursoNoEncontrado(
+      ATrabajo,
+      AConfiguracion,
+      ERecursoPrestaNoEncontrado(E))
+  else if E is ERecursoPrestaAmbiguo then
+    GuardarRecursoAmbiguo(
+      ATrabajo,
+      AConfiguracion,
+      ERecursoPrestaAmbiguo(E))
+  else if E is EConexionHttpTemporal then
+  begin
+    GuardarSinConexion(ATrabajo, AConfiguracion, E.Message);
+    Result := False;
+  end
+  else
+    GuardarError(ATrabajo, AConfiguracion, E.Message);
+end;
+
 function THiloPrestaShopCola.ProcesarFila(
   AIdCola: Int64;
   const ACliente: IClienteCatalogoPrestaInstantanea;
@@ -1096,7 +1225,6 @@ function THiloPrestaShopCola.ProcesarFila(
     ITransportePrestaShopConHistorial;
   const AConfiguracion: TConfiguracionGlobalPrestaShop): Boolean;
 var
-  oContextoHistorial: TContextoTransportePrestaShop;
   oTrabajo: TTrabajoArticuloPrestaShop;
   sToken: string;
 begin
@@ -1116,96 +1244,22 @@ begin
         oTrabajo.Token := sToken;
         try
           try
-            ComprobarCierreSeguro;
-            oTrabajo := FRepositorio.LeerTrabajo(
+            EnviarTrabajoReclamado(
               AIdCola,
               sToken,
-              AConfiguracion.Cola);
-            if oTrabajo.IdCola = 0 then
-              oTrabajo.IdCola := AIdCola;
-            oTrabajo.Token := sToken;
-            if oTrabajo.CodigoArticulo = '' then
-              raise EInvalidOpException.Create(
-                STrabajoPrestaShopNoReclamado);
-            oContextoHistorial := Default(TContextoTransportePrestaShop);
-            oContextoHistorial.IdCola := oTrabajo.IdCola;
-            oContextoHistorial.IdReclamacion := oTrabajo.Token;
-            oContextoHistorial.VersionReclamada :=
-              oTrabajo.VersionReclamada;
-            oContextoHistorial.NumeroIntento := oTrabajo.Intentos + 1;
-            oContextoHistorial.Usuario := FUsuario;
-            oContextoHistorial.OrdenOperacion := 0;
-            ATransporteHistorial.EstablecerContexto(
-              oContextoHistorial);
-            if ((oTrabajo.AccionVisibilidad = avpDesactivar) and
-                (not oTrabajo.EstaEnWeb)) or
-               (oTrabajo.EstaEnWeb and
-                ((oTrabajo.AccionVisibilidad = avpActivar) or
-                 AConfiguracion.CrearArticulos or
-                 (AConfiguracion.SincronizarStockPrecios and
-                  ((oTrabajo.TienePrecio and
-                    oTrabajo.TienePrecioProducto) or
-                   oTrabajo.TieneStock)))) then
-            begin
-              AsegurarLease(oTrabajo);
-              if not SigueVigente(AConfiguracion) then
-                raise EInvalidOpException.Create(
-                  'La configuración PrestaShop cambió durante el envío');
-              if oTrabajo.AccionVisibilidad = avpDesactivar then
-                ProcesarDesactivacion(oTrabajo, ACliente)
-              else
-                ProcesarArticulo(
-                  oTrabajo,
-                  ACliente,
-                  AClienteAlta,
-                  AConfiguracion);
-            end;
-            ComprobarCierreSeguro;
-            FRepositorio.MarcarEnviada(
-              oTrabajo.IdCola,
-              oTrabajo.Token,
-              FUsuario,
-              oTrabajo.TieneProximoCambioPrecio,
-              oTrabajo.ProximoCambioPrecio);
+              ACliente,
+              AClienteAlta,
+              ATransporteHistorial,
+              AConfiguracion,
+              oTrabajo);
           except
             on E: Exception do
-            begin
-              if FControlTrabajo.DebeLiberarTrabajo or
-                 (E is ECierreForzadoPrestaShop) then
-                LiberarTrabajoActual(AIdCola, sToken)
-              else if not ColaActiva then
-              begin
-                LiberarTrabajoActual(AIdCola, sToken);
-                Result := False;
-              end
-              else if E is EAltaArticuloPrestaLocal then
-                GuardarIncidenciaTerminal(
-                  oTrabajo,
-                  AConfiguracion,
-                  E.Message)
-              else if E is EConfiguracionPrestaInvalida then
-                GuardarIncidenciaTerminal(
-                  oTrabajo,
-                  AConfiguracion,
-                  E.Message)
-              else if E is ERecursoPrestaNoEncontrado then
-                GuardarRecursoNoEncontrado(
-                  oTrabajo,
-                  AConfiguracion,
-                  ERecursoPrestaNoEncontrado(E))
-              else if E is ERecursoPrestaAmbiguo then
-                GuardarRecursoAmbiguo(
-                  oTrabajo,
-                  AConfiguracion,
-                  ERecursoPrestaAmbiguo(E))
-              else if E is EConexionHttpTemporal then
-              begin
-                GuardarSinConexion(oTrabajo, AConfiguracion, E.Message);
-                Result := False;
-              end
-              else
-                GuardarError(oTrabajo, AConfiguracion, E.Message);
-            end;
+              Result := TratarErrorTrabajo(
+                oTrabajo,
+                AConfiguracion,
+                AIdCola,
+                sToken,
+                E);
           end;
         finally
           ATransporteHistorial.LimpiarContexto;

@@ -42,6 +42,8 @@ type
   private
     { Private declarations }
     procedure AjustarControles;
+    procedure CMDialogKey(var AMensaje: TCMDialogKey);
+      message CM_DIALOGKEY;
   public
     sFicha:string;
     class function SolicitarNueva(
@@ -60,39 +62,49 @@ uses
 
 procedure TfrmModalGenPass.AjustarControles;
 var
-  iAnchoBotones: Integer;
-  iAnchoEtiqueta: Integer;
   iMargen: Integer;
   iSeparacion: Integer;
-  iSeparacionBotones: Integer;
+  iSuperior: Integer;
+
+  procedure ColocarCampo(AEtiqueta: TcxLabel; AEditor: TcxTextEdit);
+  begin
+    AEtiqueta.AutoSize := False;
+    AEtiqueta.SetBounds(iMargen, iSuperior,
+      ClientWidth - 2 * iMargen,
+      MulDiv(24, CurrentPPI, USER_DEFAULT_SCREEN_DPI));
+    AEditor.SetBounds(iMargen,
+      AEtiqueta.Top + AEtiqueta.Height + iSeparacion,
+      ClientWidth - 2 * iMargen, AEditor.Height);
+    iSuperior := AEditor.Top + AEditor.Height + 2 * iSeparacion;
+  end;
+
 begin
   iMargen := MulDiv(24, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
-  iSeparacion := MulDiv(12, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
-  iAnchoEtiqueta := lbl1.Width;
-  if lbl2.Width > iAnchoEtiqueta then
-    iAnchoEtiqueta := lbl2.Width;
-  if lbl3.Width > iAnchoEtiqueta then
-    iAnchoEtiqueta := lbl3.Width;
+  iSeparacion := MulDiv(8, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  ClientWidth := MulDiv(440, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  iSuperior := iMargen;
+  ColocarCampo(lbl1, edtUsuario);
+  ColocarCampo(lbl2, edtPassword);
+  ColocarCampo(lbl3, edtPasswordCon);
+  btnGuardar.Top := iSuperior + iSeparacion;
+  btnGuardar.Height := MulDiv(32, CurrentPPI, USER_DEFAULT_SCREEN_DPI);
+  btnGuardar.Left := ClientWidth - iMargen - btnGuardar.Width;
+  btnCancelar.Top := btnGuardar.Top;
+  btnCancelar.Height := btnGuardar.Height;
+  btnCancelar.Left := btnGuardar.Left -
+    2 * iSeparacion - btnCancelar.Width;
+  ClientHeight := btnGuardar.Top + btnGuardar.Height + iMargen;
+end;
 
-  iSeparacionBotones := btnGuardar.Left -
-    (btnCancelar.Left + btnCancelar.Width);
-  if iSeparacionBotones < iSeparacion then
-    iSeparacionBotones := iSeparacion;
-  iAnchoBotones := btnCancelar.Width + iSeparacionBotones +
-    btnGuardar.Width;
-
-  edtUsuario.Left := iMargen + iAnchoEtiqueta + iSeparacion;
-  edtPassword.Left := edtUsuario.Left;
-  edtPasswordCon.Left := edtUsuario.Left;
-  lbl1.Left := edtUsuario.Left - iSeparacion - lbl1.Width;
-  lbl2.Left := edtUsuario.Left - iSeparacion - lbl2.Width;
-  lbl3.Left := edtUsuario.Left - iSeparacion - lbl3.Width;
-  ClientWidth := edtUsuario.Left + edtUsuario.Width + iMargen;
-  if ClientWidth < iAnchoBotones + (2 * iMargen) then
-    ClientWidth := iAnchoBotones + (2 * iMargen);
-  btnCancelar.Left := (ClientWidth - iAnchoBotones) div 2;
-  btnGuardar.Left := btnCancelar.Left + btnCancelar.Width +
-    iSeparacionBotones;
+procedure TfrmModalGenPass.CMDialogKey(var AMensaje: TCMDialogKey);
+begin
+  if (AMensaje.CharCode = VK_RETURN) and edtPassword.Focused then
+  begin
+    edtPasswordCon.SetFocus;
+    AMensaje.Result := 1;
+  end
+  else
+    inherited;
 end;
 
 procedure TfrmModalGenPass.btnCancelarClick(Sender: TObject);

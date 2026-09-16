@@ -197,6 +197,9 @@ type
     procedure AjustarCamposDerivadosCabecera;
     procedure ValidarCambioProveedorFormulaCodigo;
     procedure CalcularTotalesLineaActual;
+    procedure PrepararLineaSesionParaPost(DataSet: TDataSet);
+    procedure NormalizarClasificacionLineaSesion;
+    procedure MarcarDuplicadoLineaSesion;
     procedure PersistirTotalesSesion;
     function FormulaCodigoArticuloSesion: string;
     procedure CargarValoresFormulaCodigoArticulo(
@@ -1304,15 +1307,13 @@ begin
     FieldByName('ID_AC_PIVOT_SESLIN').AsInteger := FTallajeDefectoActual;
 end;
 
-procedure TdmComprasSesiones.unqrySesionLinBeforePost(DataSet: TDataSet);
+// Lo primero al confirmar una linea: dejar el SKU sin barras y
+// descartar el hueco nuevo que el usuario no llego a rellenar.
+procedure TdmComprasSesiones.PrepararLineaSesionParaPost(
+  DataSet: TDataSet);
 var
-  bExiste : Boolean;
   bLineaVacia: Boolean;
-  sDescr  : string;
-  sFamilia: string;
-  sTecla  : string;
 begin
-  inherited;
   LogSes(Format(
     'DM.unqrySesionLinBeforePost: state=%d, LINEA=%d, COD_TENT=%s, FAM=%s',
                 [Ord(unqrySesionLin.State),
@@ -1350,6 +1351,15 @@ begin
       end);
     Abort;
   end;
+end;
+
+// Codigo tentativo, familia, tipo de articulo, tipo de IVA y color
+// del proveedor: todo lo que la linea deduce de si misma.
+procedure TdmComprasSesiones.NormalizarClasificacionLineaSesion;
+var
+  sFamilia: string;
+  sTecla: string;
+begin
   sTecla := Trim(unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString);
   sFamilia := Trim(unqrySesionLin.FieldByName(
@@ -1385,6 +1395,16 @@ begin
     unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString :=
       inLibComprasSesionesReglas.SanearColorSku(
         unqrySesionLin.FieldByName('COLOR_TEXTO_SESLIN').AsString);
+end;
+
+// Marca la linea como duplicada y propone reusar el articulo que ya
+// existe, salvo que el usuario ya haya decidido otra cosa.
+procedure TdmComprasSesiones.MarcarDuplicadoLineaSesion;
+var
+  bExiste: Boolean;
+  sDescr: string;
+  sTecla: string;
+begin
   sTecla := Trim(unqrySesionLin.FieldByName(
     'CODIGO_ART_TENTATIVO_SESLIN').AsString);
   if SameText(
@@ -1424,6 +1444,14 @@ begin
       unqrySesionLin.FieldByName('ESDUPLICADO_SESLIN').AsString :=
         'N';
   end;
+end;
+
+procedure TdmComprasSesiones.unqrySesionLinBeforePost(DataSet: TDataSet);
+begin
+  inherited;
+  PrepararLineaSesionParaPost(DataSet);
+  NormalizarClasificacionLineaSesion;
+  MarcarDuplicadoLineaSesion;
   if not FImportacionMasiva then
     CalcularTotalesLineaActual;
   unqrySesionLin.FieldByName('USUARIO_MODIF').AsString :=

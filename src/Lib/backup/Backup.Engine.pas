@@ -34,6 +34,22 @@ type
   TProgresoRestauracionBackupEvent = procedure(
     APosicion, ATotal, ASentencias: Integer) of object;
 
+  // Rasgos de una sentencia del volcado. Se calculan una sola vez y
+  // viajan a los pasos que deciden con ellos.
+  TRasgosSentenciaSql = record
+    Clasificada: string;
+    ActivacionIndices: Boolean;
+    Confirmacion: Boolean;
+    ControlIndicesVersionado: Boolean;
+    CreacionIndice: Boolean;
+    CreacionSavepoint: Boolean;
+    InicioTabla: Boolean;
+    InsercionDatos: Boolean;
+    LiberacionSavepoint: Boolean;
+    Reversion: Boolean;
+    ReversionParcial: Boolean;
+  end;
+
   TEjecutorRestauracionSQL = class
   private
     FPersistencia: IPersistenciaRestauracionBackup;
@@ -81,6 +97,15 @@ type
     function ProcesarContenidoNormal(
       const ALinea: string; var AIndice: Integer): Boolean;
     procedure EjecutarSentenciaActual;
+    function ClasificarSentencia(
+      const ASentencia: string): TRasgosSentenciaSql;
+    procedure PrepararIndicesDiferidos(
+      const ARasgos: TRasgosSentenciaSql);
+    procedure ActualizarSavepoints(
+      const ARasgos: TRasgosSentenciaSql);
+    procedure RegistrarSentenciaEjecutada(
+      const ARasgos: TRasgosSentenciaSql;
+      const ASentencia: string);
     procedure EjecutarEnPersistencia(
       const ASentencia: string;
       AContabilizar: Boolean = True);
@@ -949,22 +974,139 @@ begin
   end;
 end;
 
-procedure TEjecutorRestauracionSQL.EjecutarSentenciaActual;
+function TEjecutorRestauracionSQL.ClasificarSentencia(
+  const ASentencia: string): TRasgosSentenciaSql;
+begin
+  Result.Clasificada :=
+    QuitarComentariosInicialesNoEjecutables(ASentencia);
+  Result.InsercionDatos := EsInsercionDatos(Result.Clasificada);
+  Result.CreacionIndice :=
+    EsCreacionIndiceSecundario(Result.Clasificada);
+  Result.ActivacionIndices := EsActivacionIndices(Result.Clasificada);
+  Result.ControlIndicesVersionado :=
+    EsControlIndicesVersionado(Result.Clasificada);
+  Result.InicioTabla := EsInicioDefinicionTabla(Result.Clasificada);
+  Result.Confirmacion := EsConfirmacionTransaccion(Result.Clasificada);
+  Result.Reversion := EsReversionTransaccion(Result.Clasificada);
+  Result.ReversionParcial := EsReversionParcial(Result.Clasificada);
+  Result.CreacionSavepoint := EsCreacionSavepoint(Result.Clasificada);
+  Result.LiberacionSavepoint :=
+    EsLiberacionSavepoint(Result.Clasificada);
+end;
+
+// Antes de ejecutar: cierra los datos pendientes y vuelca los indices
+// diferidos si toca, para que la sentencia entre con la tabla lista.
+procedure TEjecutorRestauracionSQL.PrepararIndicesDiferidos(
+  const ARasgos: TRasgosSentenciaSql);
+begin
+  if FEsCopiaFactuzam and not ARasgos.InsercionDatos then
+  begin
+    if not ARasgos.Confirmacion and
+       not ARasgos.Reversion and
+       not ARasgos.ReversionParcial and
+       not ARasgos.CreacionSavepoint and
+       not ARasgos.LiberacionSavepoint then
+      ConfirmarDatosPendientes(True);
+    if Assigned(FIndicesDiferidos) and
+       (FIndicesDiferidos.Count > 0) and
+       (ARasgos.InicioTabla or
+         (FHayDatosParaIndicesDiferidos and
+          not ARasgos.ActivacionIndices and
+          not ARasgos.Confirmacion and
+          not ARasgos.Reversion and
+          not ARasgos.ReversionParcial and
+          not ARasgos.CreacionSavepoint and
+          not ARasgos.LiberacionSavepoint and
+          (not Assigned(FSavepointsActivos) or
+           (FSavepointsActivos.Count = 0)))) then
+    begin
+      EjecutarIndicesDiferidos;
+    end;
+  end;
+end;
+
+// Despues de ejecutar: lleva la cuenta de los savepoints vivos.
+procedure TEjecutorRestauracionSQL.ActualizarSavepoints(
+  const ARasgos: TRasgosSentenciaSql);
 var
-  bActivacionIndices: Boolean;
-  bConfirmacion: Boolean;
-  bControlIndicesVersionado: Boolean;
-  bCreacionSavepoint: Boolean;
-  bCreacionIndice: Boolean;
-  bInicioTabla: Boolean;
-  bInsercionDatos: Boolean;
-  bReversion: Boolean;
-  bReversionParcial: Boolean;
-  bLiberacionSavepoint: Boolean;
   iSavepoint: Integer;
   sNombreSavepoint: string;
+begin
+  if ARasgos.Confirmacion or ARasgos.Reversion then
+  begin
+    FBytesDatosSinConfirmar := 0;
+    FTransaccionConSavepoints := False;
+    if Assigned(FSavepointsActivos) then
+      FSavepointsActivos.Clear;
+  end;
+  if ARasgos.CreacionSavepoint and Assigned(FSavepointsActivos) then
+  begin
+    sNombreSavepoint := ExtraerNombreSavepoint(
+      ARasgos.Clasificada,
+      'SAVEPOINT');
+    iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
+    if iSavepoint >= 0 then
+      FSavepointsActivos.Delete(iSavepoint);
+    FSavepointsActivos.Add(sNombreSavepoint);
+    FTransaccionConSavepoints := True;
+  end;
+  if ARasgos.LiberacionSavepoint and Assigned(FSavepointsActivos) then
+  begin
+    sNombreSavepoint := ExtraerNombreSavepoint(
+      ARasgos.Clasificada,
+      'RELEASE SAVEPOINT');
+    iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
+    if iSavepoint >= 0 then
+      FSavepointsActivos.Delete(iSavepoint);
+  end;
+  if ARasgos.ReversionParcial and Assigned(FSavepointsActivos) then
+  begin
+    sNombreSavepoint :=
+      ExtraerNombreReversionParcial(ARasgos.Clasificada);
+    iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
+    if iSavepoint >= 0 then
+    begin
+      while FSavepointsActivos.Count > iSavepoint + 1 do
+        FSavepointsActivos.Delete(FSavepointsActivos.Count - 1);
+    end;
+  end;
+end;
+
+// Despues de ejecutar: anota lo insertado y vuelca los indices
+// diferidos cuando la transaccion ya no los bloquea.
+procedure TEjecutorRestauracionSQL.RegistrarSentenciaEjecutada(
+  const ARasgos: TRasgosSentenciaSql;
+  const ASentencia: string);
+begin
+  if ARasgos.InicioTabla then
+    FDatosDesdeDefinicionTabla := False;
+  if FEsCopiaFactuzam and ARasgos.InsercionDatos then
+  begin
+    FDatosDesdeDefinicionTabla := True;
+    if Assigned(FIndicesDiferidos) and
+       (FIndicesDiferidos.Count > 0) then
+    begin
+      FHayDatosParaIndicesDiferidos := True;
+    end;
+    Inc(
+      FBytesDatosSinConfirmar,
+      TEncoding.UTF8.GetByteCount(ASentencia));
+    ConfirmarDatosPendientes(False);
+  end;
+  if FEsCopiaFactuzam and
+     (ARasgos.ActivacionIndices or ARasgos.Confirmacion or
+      ARasgos.Reversion) and
+     Assigned(FIndicesDiferidos) and
+     (FIndicesDiferidos.Count > 0) then
+  begin
+    EjecutarIndicesDiferidos;
+  end;
+end;
+
+procedure TEjecutorRestauracionSQL.EjecutarSentenciaActual;
+var
+  oRasgos: TRasgosSentenciaSql;
   sSentencia: string;
-  sSentenciaClasificada: string;
 begin
   sSentencia := Trim(FSentencia.ToString);
   FSentencia.Clear;
@@ -976,134 +1118,37 @@ begin
   end;
   if FTieneContenidoEjecutable and (sSentencia <> '') then
   begin
-    sSentenciaClasificada :=
-      QuitarComentariosInicialesNoEjecutables(sSentencia);
-    bInsercionDatos := EsInsercionDatos(sSentenciaClasificada);
-    bCreacionIndice :=
-      EsCreacionIndiceSecundario(sSentenciaClasificada);
-    bActivacionIndices :=
-      EsActivacionIndices(sSentenciaClasificada);
-    bControlIndicesVersionado :=
-      EsControlIndicesVersionado(sSentenciaClasificada);
-    bInicioTabla := EsInicioDefinicionTabla(sSentenciaClasificada);
-    bConfirmacion :=
-      EsConfirmacionTransaccion(sSentenciaClasificada);
-    bReversion := EsReversionTransaccion(sSentenciaClasificada);
-    bReversionParcial := EsReversionParcial(sSentenciaClasificada);
-    bCreacionSavepoint := EsCreacionSavepoint(sSentenciaClasificada);
-    bLiberacionSavepoint :=
-      EsLiberacionSavepoint(sSentenciaClasificada);
+    oRasgos := ClasificarSentencia(sSentencia);
     if FEsCopiaFactuzam and
-       EsComentarioEjecutableInicial(sSentenciaClasificada) and
-       not bControlIndicesVersionado then
+       EsComentarioEjecutableInicial(oRasgos.Clasificada) and
+       not oRasgos.ControlIndicesVersionado then
     begin
       raise EInvalidOperation.Create(
         SErrorCopiaSqlComentarioEjecutableNoAdmitido);
     end;
-    if FEsCopiaFactuzam and bCreacionIndice and
+    if FEsCopiaFactuzam and oRasgos.CreacionIndice and
        not FDatosDesdeDefinicionTabla then
     begin
       FIndicesDiferidos.Add(sSentencia);
     end
     else
     begin
-      if FEsCopiaFactuzam and not bInsercionDatos then
-      begin
-        if not bConfirmacion and
-           not bReversion and
-           not bReversionParcial and
-           not bCreacionSavepoint and
-           not bLiberacionSavepoint then
-          ConfirmarDatosPendientes(True);
-        if Assigned(FIndicesDiferidos) and
-           (FIndicesDiferidos.Count > 0) and
-           (bInicioTabla or
-             (FHayDatosParaIndicesDiferidos and
-              not bActivacionIndices and
-              not bConfirmacion and
-              not bReversion and
-              not bReversionParcial and
-              not bCreacionSavepoint and
-              not bLiberacionSavepoint and
-              (not Assigned(FSavepointsActivos) or
-               (FSavepointsActivos.Count = 0)))) then
-        begin
-          EjecutarIndicesDiferidos;
-        end;
-      end;
-      if FEsCopiaFactuzam and bConfirmacion and
-         (SameText('COMMIT', Trim(sSentenciaClasificada)) or
-          SameText('COMMIT WORK', Trim(sSentenciaClasificada))) then
+      PrepararIndicesDiferidos(oRasgos);
+      if FEsCopiaFactuzam and oRasgos.Confirmacion and
+         (SameText('COMMIT', Trim(oRasgos.Clasificada)) or
+          SameText('COMMIT WORK', Trim(oRasgos.Clasificada))) then
       begin
         sSentencia := CONFIRMACION_TRANSACCION_SEGURA;
       end;
-      if FEsCopiaFactuzam and bReversion and
-         (SameText('ROLLBACK', Trim(sSentenciaClasificada)) or
-          SameText('ROLLBACK WORK', Trim(sSentenciaClasificada))) then
+      if FEsCopiaFactuzam and oRasgos.Reversion and
+         (SameText('ROLLBACK', Trim(oRasgos.Clasificada)) or
+          SameText('ROLLBACK WORK', Trim(oRasgos.Clasificada))) then
       begin
         sSentencia := REVERSION_TRANSACCION_SEGURA;
       end;
       EjecutarEnPersistencia(sSentencia);
-      if bConfirmacion or bReversion then
-      begin
-        FBytesDatosSinConfirmar := 0;
-        FTransaccionConSavepoints := False;
-        if Assigned(FSavepointsActivos) then
-          FSavepointsActivos.Clear;
-      end;
-      if bCreacionSavepoint and Assigned(FSavepointsActivos) then
-      begin
-        sNombreSavepoint := ExtraerNombreSavepoint(
-          sSentenciaClasificada,
-          'SAVEPOINT');
-        iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
-        if iSavepoint >= 0 then
-          FSavepointsActivos.Delete(iSavepoint);
-        FSavepointsActivos.Add(sNombreSavepoint);
-        FTransaccionConSavepoints := True;
-      end;
-      if bLiberacionSavepoint and Assigned(FSavepointsActivos) then
-      begin
-        sNombreSavepoint := ExtraerNombreSavepoint(
-          sSentenciaClasificada,
-          'RELEASE SAVEPOINT');
-        iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
-        if iSavepoint >= 0 then
-          FSavepointsActivos.Delete(iSavepoint);
-      end;
-      if bReversionParcial and Assigned(FSavepointsActivos) then
-      begin
-        sNombreSavepoint :=
-          ExtraerNombreReversionParcial(sSentenciaClasificada);
-        iSavepoint := FSavepointsActivos.IndexOf(sNombreSavepoint);
-        if iSavepoint >= 0 then
-        begin
-          while FSavepointsActivos.Count > iSavepoint + 1 do
-            FSavepointsActivos.Delete(FSavepointsActivos.Count - 1);
-        end;
-      end;
-      if bInicioTabla then
-        FDatosDesdeDefinicionTabla := False;
-      if FEsCopiaFactuzam and bInsercionDatos then
-      begin
-        FDatosDesdeDefinicionTabla := True;
-        if Assigned(FIndicesDiferidos) and
-           (FIndicesDiferidos.Count > 0) then
-        begin
-          FHayDatosParaIndicesDiferidos := True;
-        end;
-        Inc(
-          FBytesDatosSinConfirmar,
-          TEncoding.UTF8.GetByteCount(sSentencia));
-        ConfirmarDatosPendientes(False);
-      end;
-      if FEsCopiaFactuzam and
-         (bActivacionIndices or bConfirmacion or bReversion) and
-         Assigned(FIndicesDiferidos) and
-         (FIndicesDiferidos.Count > 0) then
-      begin
-        EjecutarIndicesDiferidos;
-      end;
+      ActualizarSavepoints(oRasgos);
+      RegistrarSentenciaEjecutada(oRasgos, sSentencia);
     end;
   end;
   FTieneContenidoEjecutable := False;

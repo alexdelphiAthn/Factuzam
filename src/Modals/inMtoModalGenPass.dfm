@@ -1,71 +1,85 @@
 ﻿inherited frmModalGenPass: TfrmModalGenPass
+  ActiveControl = edtPassword
   BorderIcons = []
-  BorderStyle = bsSingle
+  BorderStyle = bsDialog
   Caption = 'Establecer Password Usuario'
-  ClientHeight = 194
-  ClientWidth = 425
+  ClientHeight = 322
+  ClientWidth = 440
   Position = poMainFormCenter
   OnClose = FormClose
-  ExplicitWidth = 441
-  ExplicitHeight = 233
+  ExplicitWidth = 456
+  ExplicitHeight = 361
   TextHeight = 19
   object edtUsuario: TcxTextEdit [0]
-    Left = 163
-    Top = 24
+    Left = 24
+    Top = 56
     Enabled = False
     TabOrder = 0
-    Width = 238
+    Width = 392
   end
   object lbl1: TcxLabel [1]
-    Left = 21
-    Top = 25
+    Left = 24
+    Top = 24
+    AutoSize = False
     Caption = 'Nombre usuario'
+    FocusControl = edtUsuario
     Transparent = True
+    Height = 24
+    Width = 392
   end
   object edtPassword: TcxTextEdit [2]
-    Left = 163
-    Top = 64
+    Left = 24
+    Top = 131
     Properties.EchoMode = eemPassword
-    Properties.PasswordChar = #10026
+    Properties.PasswordChar = #9679
     Properties.MaxLength = 128
     TabOrder = 2
-    Width = 238
+    Width = 392
   end
   object lbl2: TcxLabel [3]
-    Left = 61
-    Top = 65
+    Left = 24
+    Top = 99
+    AutoSize = False
     Caption = 'Contrase'#241'a'
+    FocusControl = edtPassword
     Transparent = True
+    Height = 24
+    Width = 392
   end
   object edtPasswordCon: TcxTextEdit [4]
-    Left = 163
-    Top = 104
+    Left = 24
+    Top = 206
     Properties.EchoMode = eemPassword
     Properties.PasswordChar = #9679
     Properties.MaxLength = 128
     TabOrder = 4
-    Width = 238
+    Width = 392
   end
   object lbl3: TcxLabel [5]
-    Left = 3
-    Top = 105
+    Left = 24
+    Top = 174
+    AutoSize = False
     Caption = 'Repita Contrase'#241'a'
+    FocusControl = edtPasswordCon
     Transparent = True
+    Height = 24
+    Width = 392
   end
   object btnGuardar: TcxButton [6]
-    Left = 256
-    Top = 146
+    Left = 271
+    Top = 266
     Width = 145
-    Height = 25
+    Height = 32
     Caption = '&Guardar'
     TabOrder = 6
     OnClick = btnGuardarClick
   end
   object btnCancelar: TcxButton [7]
-    Left = 42
-    Top = 146
+    Left = 118
+    Top = 266
     Width = 137
-    Height = 25
+    Height = 32
+    Cancel = True
     Caption = '&Cancelar'
     TabOrder = 7
     OnClick = btnCancelarClick

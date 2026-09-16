@@ -65,6 +65,22 @@ type
                                      const AEtiqOrigen: string; AOrigen: Double;
                                      const AEtiqDestino: string;
                                      ADestino: Double);
+    // Los tres pasos de la solicitud: encabezado, cuerpo de lineas y
+    // cierre con la salida a impresora o vista previa.
+    class procedure ImprimirCabeceraSolicitud(
+      ATicket: TTicketTermico;
+      const ACabecera: TSolicitudTraspasoTicket;
+      const ASerie, ANumero: string;
+      AEsReposicion, ADuplicado: Boolean);
+    class procedure ImprimirLineasSolicitud(
+      ATicket: TTicketTermico;
+      const ALineas: TArray<TLineaSolicitudTraspasoTicket>;
+      AEsReposicion: Boolean);
+    class procedure CerrarSolicitud(
+      const APreview: IPreviewTicket;
+      ATicket: TTicketTermico;
+      const ASerie, ANumero, AImpresora: string;
+      AEsReposicion, ADuplicado: Boolean);
   public
     // Imprime/previsualiza el ticket de una solicitud de traspaso ya grabada.
     class procedure ImprimirSolicitud(
@@ -305,6 +321,172 @@ begin
   ATicket.TextoColumnas(AEtiqDestino, FormatFloat('0.###', ADestino));
 end;
 
+class procedure TTraspasoTicket.ImprimirCabeceraSolicitud(
+  ATicket: TTicketTermico;
+  const ACabecera: TSolicitudTraspasoTicket;
+  const ASerie, ANumero: string;
+  AEsReposicion, ADuplicado: Boolean);
+var
+  sVentasDesde, sVentasHasta: string;
+begin
+  ATicket.Inicializar;
+  ATicket.ConfigurarEspanol;
+  ATicket.Alinear(alCentro);
+  ATicket.Negrita(True);
+  if AEsReposicion then
+    ATicket.EscribirLinea(STicketReposicionAutomatica)
+  else
+    ATicket.EscribirLinea(STicketSolicitudTraspaso);
+  ATicket.EscribirLinea(ASerie + '/' + ANumero);
+  ATicket.Negrita(False);
+  if ADuplicado then
+  begin
+    ATicket.Negrita(True);
+    ATicket.EscribirLinea(STicketDuplicado);
+    ATicket.Negrita(False);
+  end;
+  ATicket.SaltarLineas(1);
+  ATicket.Alinear(alIzquierda);
+  ATicket.TextoColumnas(STicketOrigen, ACabecera.Origen);
+  ATicket.TextoColumnas(STicketDestino, ACabecera.Destino);
+  ATicket.TextoColumnas(STicketEmpleado, ACabecera.Empleado);
+  if AEsReposicion then
+  begin
+    sVentasDesde := '';
+    if ACabecera.InstanteVentasDesde > 0 then
+      sVentasDesde := FormatDateTime(
+        'dd/mm/yyyy hh:nn',
+        ACabecera.InstanteVentasDesde);
+    sVentasHasta := '';
+    if ACabecera.InstanteVentasHasta > 0 then
+      sVentasHasta := FormatDateTime(
+        'dd/mm/yyyy hh:nn',
+        ACabecera.InstanteVentasHasta);
+    ATicket.TextoColumnas(
+      STicketVentasDesde,
+      sVentasDesde);
+    ATicket.TextoColumnas(
+      STicketVentasHasta,
+      sVentasHasta);
+  end
+  else
+    ATicket.TextoColumnas(STicketEstado, ACabecera.Estado);
+  ATicket.TextoColumnas(
+    STicketFecha,
+    FormatDateTime('dd/mm/yyyy', ACabecera.Fecha));
+  ATicket.LineaSeparadora('-');
+end;
+
+class procedure TTraspasoTicket.ImprimirLineasSolicitud(
+  ATicket: TTicketTermico;
+  const ALineas: TArray<TLineaSolicitudTraspasoTicket>;
+  AEsReposicion: Boolean);
+var
+  FormatoReposicion: TFormatoReposicion;
+  sClaveProveedor, sClaveProveedorAnterior: string;
+  sEtiquetaUnidades, sProveedor, sRotuloProveedor: string;
+  iLinea: Integer;
+begin
+  if AEsReposicion then
+  begin
+    FormatoReposicion := CrearFormatoReposicion(ALineas);
+    ImprimirCabeceraReposicion(
+      ATicket,
+      FormatoReposicion);
+  end
+  else
+  begin
+    ATicket.EscribirLinea(STicketArticulos);
+    ATicket.LineaSeparadora('-');
+  end;
+  if AEsReposicion then
+    sEtiquetaUnidades := STicketAPedir
+  else
+    sEtiquetaUnidades := STicketUnidadesPedidas;
+  sClaveProveedorAnterior := '';
+  iLinea := 0;
+  while iLinea < Length(ALineas) do
+  begin
+    if AEsReposicion then
+    begin
+      sProveedor := Trim(ALineas[iLinea].Proveedor);
+      sClaveProveedor :=
+        UpperCase(Trim(ALineas[iLinea].CodigoProveedor));
+      if sClaveProveedor = '' then
+      begin
+        if sProveedor = '' then
+          sClaveProveedor := #1
+        else
+          sClaveProveedor := #2 + UpperCase(sProveedor);
+      end
+      else
+        sClaveProveedor := #3 + sClaveProveedor;
+      if sClaveProveedor <> sClaveProveedorAnterior then
+      begin
+        if iLinea > 0 then
+          ATicket.LineaSeparadora('-');
+        if sProveedor = '' then
+          sProveedor := STicketSinProveedor;
+        sRotuloProveedor := STicketProveedor + ' ' + sProveedor;
+        if Length(sRotuloProveedor) > N_CHAR_LIN then
+          sRotuloProveedor := Copy(
+            sRotuloProveedor,
+            1,
+            N_CHAR_LIN);
+        ATicket.Negrita(True);
+        ATicket.EscribirLinea(sRotuloProveedor);
+        ATicket.Negrita(False);
+        sClaveProveedorAnterior := sClaveProveedor;
+      end;
+    end;
+    if AEsReposicion then
+      ImprimirLineaReposicion(
+        ATicket,
+        ALineas[iLinea],
+        FormatoReposicion)
+    else
+      // Solicitud: nada se ha movido aun, el stock es la disponibilidad
+      // actual en cada almacen (no lleva "tras traspaso").
+      ImprimirLineaSku(ATicket,
+        ALineas[iLinea].Sku,
+        ALineas[iLinea].Descripcion,
+        sEtiquetaUnidades,
+        ALineas[iLinea].CantidadPedida,
+        STicketStockOrigen,
+        ALineas[iLinea].StockOrigen,
+        STicketStockDestino,
+        ALineas[iLinea].StockDestino);
+    Inc(iLinea);
+  end;
+end;
+
+class procedure TTraspasoTicket.CerrarSolicitud(
+  const APreview: IPreviewTicket;
+  ATicket: TTicketTermico;
+  const ASerie, ANumero, AImpresora: string;
+  AEsReposicion, ADuplicado: Boolean);
+var
+  ComandosESC, RutaPDF, sPrefijoPDF: string;
+begin
+  ATicket.LineaSeparadora('-');
+  ATicket.Alinear(alCentro);
+  ATicket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
+  ATicket.SaltarLineas(2);
+  ATicket.CortarPapel;
+  // Vista previa (DEBUG) o impresion real
+  ComandosESC := ATicket.ObtenerComandos;
+  if AEsReposicion then
+    sPrefijoPDF := 'Reposicion'
+  else
+    sPrefijoPDF := 'SolTraspaso';
+  if ADuplicado then
+    sPrefijoPDF := sPrefijoPDF + '_Duplicado';
+  RutaPDF := GetUserFolderTickets + sPrefijoPDF + '_' +
+    ASerie + '_' + ANumero + '.pdf';
+  ImprimirOPrevisualizarTicket(APreview, ATicket, ComandosESC, RutaPDF,
+                               AImpresora);
+end;
+
 class procedure TTraspasoTicket.ImprimirSolicitud(
                                      const APreview: IPreviewTicket;
                                      const ARepositorio:
@@ -316,13 +498,8 @@ var
   Ticket: TTicketTermico;
   Cabecera: TSolicitudTraspasoTicket;
   Lineas: TArray<TLineaSolicitudTraspasoTicket>;
-  FormatoReposicion: TFormatoReposicion;
   bEsReposicion: Boolean;
-  ComandosESC, RutaPDF, sClaveProveedor: string;
-  sClaveProveedorAnterior, sEtiquetaUnidades: string;
-  sImpresora, sPrefijoPDF, sProveedor: string;
-  sRotuloProveedor, sVentasDesde, sVentasHasta: string;
-  iLinea: Integer;
+  sImpresora: string;
 begin
   if Assigned(ARepositorio) then
   begin
@@ -342,148 +519,30 @@ begin
         'AUTO');
       Ticket := TTicketTermico.Create(sImpresora);
       try
-        Ticket.Inicializar;
-        Ticket.ConfigurarEspanol;
-        Ticket.Alinear(alCentro);
-        Ticket.Negrita(True);
-        if bEsReposicion then
-          Ticket.EscribirLinea(STicketReposicionAutomatica)
-        else
-          Ticket.EscribirLinea(STicketSolicitudTraspaso);
-        Ticket.EscribirLinea(ASerie + '/' + ANumero);
-        Ticket.Negrita(False);
-        if ADuplicado then
-        begin
-          Ticket.Negrita(True);
-          Ticket.EscribirLinea(STicketDuplicado);
-          Ticket.Negrita(False);
-        end;
-        Ticket.SaltarLineas(1);
-        Ticket.Alinear(alIzquierda);
-        Ticket.TextoColumnas(STicketOrigen, Cabecera.Origen);
-        Ticket.TextoColumnas(STicketDestino, Cabecera.Destino);
-        Ticket.TextoColumnas(STicketEmpleado, Cabecera.Empleado);
-        if bEsReposicion then
-        begin
-          sVentasDesde := '';
-          if Cabecera.InstanteVentasDesde > 0 then
-            sVentasDesde := FormatDateTime(
-              'dd/mm/yyyy hh:nn',
-              Cabecera.InstanteVentasDesde);
-          sVentasHasta := '';
-          if Cabecera.InstanteVentasHasta > 0 then
-            sVentasHasta := FormatDateTime(
-              'dd/mm/yyyy hh:nn',
-              Cabecera.InstanteVentasHasta);
-          Ticket.TextoColumnas(
-            STicketVentasDesde,
-            sVentasDesde);
-          Ticket.TextoColumnas(
-            STicketVentasHasta,
-            sVentasHasta);
-        end
-        else
-          Ticket.TextoColumnas(STicketEstado, Cabecera.Estado);
-        Ticket.TextoColumnas(
-          STicketFecha,
-          FormatDateTime('dd/mm/yyyy', Cabecera.Fecha));
-        Ticket.LineaSeparadora('-');
+        ImprimirCabeceraSolicitud(
+          Ticket,
+          Cabecera,
+          ASerie,
+          ANumero,
+          bEsReposicion,
+          ADuplicado);
         // Lineas: por SKU, descripcion del articulo (denormalizada en la
-        // propia linea, igual que en los movimientos), cantidad pedida y stock
-        // disponible en origen y destino.
+        // propia linea, igual que en los movimientos), cantidad pedida y
+        // stock disponible en origen y destino.
         Lineas := ARepositorio.ListarLineasSolicitud(
           ANumero,
           ASerie,
           Cabecera.Origen,
           Cabecera.Destino);
-        if bEsReposicion then
-        begin
-          FormatoReposicion := CrearFormatoReposicion(Lineas);
-          ImprimirCabeceraReposicion(
-            Ticket,
-            FormatoReposicion);
-        end
-        else
-        begin
-          Ticket.EscribirLinea(STicketArticulos);
-          Ticket.LineaSeparadora('-');
-        end;
-        if bEsReposicion then
-          sEtiquetaUnidades := STicketAPedir
-        else
-          sEtiquetaUnidades := STicketUnidadesPedidas;
-        sClaveProveedorAnterior := '';
-        iLinea := 0;
-        while iLinea < Length(Lineas) do
-        begin
-          if bEsReposicion then
-          begin
-            sProveedor := Trim(Lineas[iLinea].Proveedor);
-            sClaveProveedor :=
-              UpperCase(Trim(Lineas[iLinea].CodigoProveedor));
-            if sClaveProveedor = '' then
-            begin
-              if sProveedor = '' then
-                sClaveProveedor := #1
-              else
-                sClaveProveedor := #2 + UpperCase(sProveedor);
-            end
-            else
-              sClaveProveedor := #3 + sClaveProveedor;
-            if sClaveProveedor <> sClaveProveedorAnterior then
-            begin
-              if iLinea > 0 then
-                Ticket.LineaSeparadora('-');
-              if sProveedor = '' then
-                sProveedor := STicketSinProveedor;
-              sRotuloProveedor := STicketProveedor + ' ' + sProveedor;
-              if Length(sRotuloProveedor) > N_CHAR_LIN then
-                sRotuloProveedor := Copy(
-                  sRotuloProveedor,
-                  1,
-                  N_CHAR_LIN);
-              Ticket.Negrita(True);
-              Ticket.EscribirLinea(sRotuloProveedor);
-              Ticket.Negrita(False);
-              sClaveProveedorAnterior := sClaveProveedor;
-            end;
-          end;
-          if bEsReposicion then
-            ImprimirLineaReposicion(
-              Ticket,
-              Lineas[iLinea],
-              FormatoReposicion)
-          else
-            // Solicitud: nada se ha movido aun, el stock es la disponibilidad
-            // actual en cada almacen (no lleva "tras traspaso").
-            ImprimirLineaSku(Ticket,
-              Lineas[iLinea].Sku,
-              Lineas[iLinea].Descripcion,
-              sEtiquetaUnidades,
-              Lineas[iLinea].CantidadPedida,
-              STicketStockOrigen,
-              Lineas[iLinea].StockOrigen,
-              STicketStockDestino,
-              Lineas[iLinea].StockDestino);
-          Inc(iLinea);
-        end;
-        Ticket.LineaSeparadora('-');
-        Ticket.Alinear(alCentro);
-        Ticket.EscribirLinea(FormatDateTime('dd/mm/yyyy hh:nn:ss', Now));
-        Ticket.SaltarLineas(2);
-        Ticket.CortarPapel;
-        // Vista previa (DEBUG) o impresion real
-        ComandosESC := Ticket.ObtenerComandos;
-        if bEsReposicion then
-          sPrefijoPDF := 'Reposicion'
-        else
-          sPrefijoPDF := 'SolTraspaso';
-        if ADuplicado then
-          sPrefijoPDF := sPrefijoPDF + '_Duplicado';
-        RutaPDF := GetUserFolderTickets + sPrefijoPDF + '_' +
-          ASerie + '_' + ANumero + '.pdf';
-        ImprimirOPrevisualizarTicket(APreview, Ticket, ComandosESC, RutaPDF,
-                                     sImpresora);
+        ImprimirLineasSolicitud(Ticket, Lineas, bEsReposicion);
+        CerrarSolicitud(
+          APreview,
+          Ticket,
+          ASerie,
+          ANumero,
+          sImpresora,
+          bEsReposicion,
+          ADuplicado);
       finally
         FreeAndNil(Ticket);
       end;

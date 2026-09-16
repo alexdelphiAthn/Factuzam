@@ -403,6 +403,7 @@ begin
   inherited;
   if tdmDataModule <> nil then
   begin
+    FGuardianBorrado.ComprobarPermisoGrabar(dsTablaG.State);
     if FCasoUsoGuardado = nil then
       FCasoUsoGuardado := CrearCasoUsoGuardadoMtoGenUniDAC(
         ConexionTrabajo);

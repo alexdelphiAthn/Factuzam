@@ -57,6 +57,12 @@ type
     class function SqlCierreResumenFormasPago: string; static;
     class function SqlCierreResumenEmpleados: string; static;
     class function SqlCierreResumenSeries: string; static;
+    class function SqlVentaLineas: string; static;
+    class function ConstruirVenta(
+      const AParametrosApp: IParametrosAplicacion;
+      AConn: TUniConnection;
+      AIdCola: Int64;
+      const ASerie, ANumero: string): TJSONObject; static;
   public
     class function ConstruirEvento(
       const AParametrosApp: IParametrosAplicacion;
@@ -727,6 +733,179 @@ begin
   end;
 end;
 
+// Lineas de la venta con temporada, familia, proveedor y almacen ya
+// resueltos: el webservice los proyecta tal cual.
+class function TVentasWsJson.SqlVentaLineas: string;
+begin
+  Result :=
+      ' SELECT L.*, ' +
+    '   (SELECT COALESCE(V.PV, P.VALOR_LIBRE_ARTPROP) ' +
+    '      FROM fza_articulos_propiedades P ' +
+    '      LEFT JOIN fza_propiedades_valores V ' +
+    '             ON V.ID_PV_ARTPROP = P.ID_PV_ARTPROP ' +
+    '     WHERE P.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
+    '       AND P.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    '       AND P.CODIGO_UNIDAD_ARTPROP IN ( ' +
+    '             IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ' +
+    '             SUBSTRING_INDEX( ' +
+    '               IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ''/'', 2), ' +
+    '             '''') ' +
+    '     ORDER BY LENGTH(P.CODIGO_UNIDAD_ARTPROP) DESC, ' +
+    '              P.CODIGO_UNIDAD_ARTPROP DESC ' +
+    '     LIMIT 1) AS TEMPORADA_CALC, ' +
+    '   COALESCE(NULLIF(TRIM(L.CODIGO_FAM_FACLIN), ''''), ' +
+    '     A.CODIGO_FAM_ART, '''') AS CODIGO_FAM_CALC, ' +
+    '   COALESCE(NULLIF(L.NOMBRE_FAM_FACLIN, ''''), ' +
+    '     NULLIF(FAM.NOMBRE_FAM_FAM, ''''), ' +
+    '     NULLIF(FAM.DESCRIPCION_FAM, ''''), ' +
+    '     NULLIF(TRIM(L.CODIGO_FAM_FACLIN), ''''), ' +
+    '     A.CODIGO_FAM_ART, '''') AS NOMBRE_FAM_CALC, ' +
+    '   COALESCE(NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
+    '     AP.CODIGO_PRV_AP, '''') AS CODIGO_PRV_CALC, ' +
+    '   COALESCE(' +
+    '     NULLIF(L.RAZON_SOCIAL_PROVEEDOR_FACLIN, ''''), ' +
+    '     NULLIF(PRV.RAZON_SOCIAL_PRV, ''''), ' +
+    '     NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
+    '     AP.CODIGO_PRV_AP, '''') AS NOMBRE_PRV_CALC, ' +
+    '   COALESCE(NULLIF(L.CODIGO_ALM_FACLIN, ''''), ' +
+    '     F.CODIGO_ALM_FAC, '''') AS CODIGO_ALM_CALC, ' +
+    '   COALESCE(NULLIF(ALM.NOMBRE_ALM_ALM, ''''), ' +
+    '     NULLIF(L.CODIGO_ALM_FACLIN, ''''), ' +
+    '     F.CODIGO_ALM_FAC, '''') AS NOMBRE_ALM_CALC ' +
+    ' FROM fza_facturas_lineas L ' +
+    ' LEFT JOIN fza_facturas F ' +
+    '   ON F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
+    '  AND F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
+    ' LEFT JOIN fza_articulos A ' +
+    '   ON A.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
+    ' LEFT JOIN fza_articulos_familias FAM ' +
+    '   ON FAM.CODIGO_FAM_FAM = COALESCE(' +
+    '     NULLIF(TRIM(L.CODIGO_FAM_FACLIN), ''''), ' +
+    '     A.CODIGO_FAM_ART) ' +
+    ' LEFT JOIN fza_articulos_proveedores AP ' +
+    '   ON AP.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
+    '  AND AP.CODIGO_PRV_AP = COALESCE(' +
+    '    NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
+    '    (SELECT APX.CODIGO_PRV_AP ' +
+    '       FROM fza_articulos_proveedores APX ' +
+    '      WHERE APX.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
+    '      ORDER BY CASE ' +
+    '        WHEN APX.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '        THEN 0 ELSE 1 END, ' +
+    '        APX.FECHA_VALIDEZ_AP DESC, APX.CODIGO_PRV_AP ' +
+    '      LIMIT 1)) ' +
+    ' LEFT JOIN fza_proveedores PRV ' +
+    '   ON PRV.CODIGO_PRV_PRV = COALESCE(' +
+    '     NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
+    '     AP.CODIGO_PRV_AP) ' +
+    ' LEFT JOIN fza_almacenes ALM ' +
+    '   ON ALM.CODIGO_ALM_ALM = COALESCE(' +
+    '     NULLIF(L.CODIGO_ALM_FACLIN, ''''), ' +
+    '     F.CODIGO_ALM_FAC) ' +
+    ' WHERE L.SERIE_FAC_FACLIN = :SERIE ' +
+    '   AND L.NUMERO_FAC_FACLIN = :NUMERO ' +
+    ' ORDER BY L.LINEA_FACLIN';
+end;
+
+// Cuerpo de la venta: cabecera, lineas, cobros, movimientos, bloque
+// fiscal y adjuntos.
+class function TVentasWsJson.ConstruirVenta(
+  const AParametrosApp: IParametrosAplicacion;
+  AConn: TUniConnection;
+  AIdCola: Int64;
+  const ASerie, ANumero: string): TJSONObject;
+var
+  oFiscal: TJSONObject;
+begin
+  Result := TJSONObject.Create;
+  try
+      Result.AddPair('cabecera',
+        ConstruirCabecera(AConn, ASerie, ANumero));
+      // La temporada no vive en la linea: es una propiedad del articulo. Se
+      // resuelve del nivel mas concreto al mas general (sku, color, articulo)
+      // y viaja como TEMPORADA_CALC, que es lo que proyecta el webservice.
+      Result.AddPair('lineas', ConstruirArray(
+        AConn, SqlVentaLineas, ASerie, ANumero));
+    Result.AddPair('pagos_factura', ConstruirArray(AConn,
+      ' SELECT * FROM fza_facturas_pagos ' +
+      ' WHERE SERIE_FAC_FACPAG = :SERIE ' +
+      '   AND NUMERO_FAC_FACPAG = :NUMERO ' +
+      ' ORDER BY LINEA_FACPAG', ASerie, ANumero));
+    Result.AddPair('recibos', ConstruirArray(AConn,
+      ' SELECT * FROM fza_recibos ' +
+      ' WHERE SERIE_FAC_REC = :SERIE ' +
+      '   AND NUMERO_FAC_REC = :NUMERO ' +
+      ' ORDER BY NUMERO_PLAZO_REC', ASerie, ANumero));
+    Result.AddPair('efectos_venta', ConstruirArray(AConn,
+      ' SELECT * FROM fza_efectos_venta ' +
+      ' WHERE SERIE_FAC_EFV = :SERIE ' +
+      '   AND NUMERO_FAC_EFV = :NUMERO ' +
+      ' ORDER BY NUMERO_EFV', ASerie, ANumero));
+    Result.AddPair('pagos_caja', ConstruirArray(AConn,
+      ' SELECT P.* FROM fza_caja_pagos P ' +
+      ' INNER JOIN fza_facturas F ' +
+      '   ON F.CODIGO_EMP_FAC = P.CODIGO_EMP_PAGO ' +
+      '  AND F.CODIGO_ALM_FAC = P.CODIGO_ALM_PAGO ' +
+      '  AND F.CODIGO_CAJA_FAC = P.CODIGO_CAJA_PAGO ' +
+      '  AND F.SERIE_FAC = P.SERIE_OPERACION_PAGO ' +
+      '  AND F.NUMERO_OPERACION_FAC = P.NUMERO_OPERACION_PAGO ' +
+      ' WHERE F.SERIE_FAC = :SERIE AND F.NUMERO_FAC = :NUMERO ' +
+      ' ORDER BY P.NUMERO_LINEA_PAGO', ASerie, ANumero));
+    Result.AddPair('operaciones_caja', ConstruirArray(AConn,
+      ' SELECT O.* FROM fza_caja_operaciones O ' +
+      ' WHERE O.SERIE_FAC_OPCAJA = :SERIE ' +
+      '   AND O.NUMERO_FAC_OPCAJA = :NUMERO ' +
+      ' ORDER BY O.ID_OPCAJA', ASerie, ANumero));
+    Result.AddPair('movimientos_almacen', ConstruirArray(AConn,
+      ' SELECT * FROM fza_movimientos_almacen ' +
+      ' WHERE SERIE_DOC_MOV = :SERIE AND NUMERO_DOC_MOV = :NUMERO ' +
+      ' ORDER BY NUMERO_MOV', ASerie, ANumero));
+    Result.AddPair('vales', ConstruirArray(AConn,
+      ' SELECT * FROM fza_caja_vales ' +
+      ' WHERE (SERIE_FAC_EMI_VL = :SERIE ' +
+      '        AND NUMERO_FAC_EMI_VL = :NUMERO) ' +
+      '    OR (SERIE_FAC_RED_VL = :SERIE ' +
+      '        AND NUMERO_FAC_RED_VL = :NUMERO) ' +
+      ' ORDER BY CODIGO_VL', ASerie, ANumero));
+    Result.AddPair('depositos', ConstruirArray(AConn,
+      ' SELECT DISTINCT D.* FROM fza_depositos_cliente D ' +
+      ' INNER JOIN fza_caja_operaciones O ' +
+      '   ON O.ID_DEPOSITO_OPCAJA = D.ID_DEPOSITO_DEP ' +
+      ' WHERE O.SERIE_FAC_OPCAJA = :SERIE ' +
+      '   AND O.NUMERO_FAC_OPCAJA = :NUMERO ' +
+      ' ORDER BY D.ID_DEPOSITO_DEP', ASerie, ANumero));
+    Result.AddPair('relaciones', ConstruirArray(AConn,
+      ' SELECT * FROM fza_facturas_relaciones ' +
+      ' WHERE (SERIE_FAC_FACREL = :SERIE ' +
+      '        AND NUMERO_FAC_FACREL = :NUMERO) ' +
+      '    OR (SERIE_FAC_ORIGEN_FACREL = :SERIE ' +
+      '        AND NUMERO_FAC_ORIGEN_FACREL = :NUMERO) ' +
+      ' ORDER BY ID_FACREL', ASerie, ANumero));
+    oFiscal := TJSONObject.Create;
+    Result.AddPair('fiscal', oFiscal);
+    oFiscal.AddPair('cola', ConstruirArray(AConn,
+      ' SELECT * FROM fza_verifactu_cola ' +
+      ' WHERE SERIE_FAC_VFCOLA = :SERIE ' +
+      '   AND NUMERO_FAC_VFCOLA = :NUMERO ' +
+      ' ORDER BY ID_VFCOLA', ASerie, ANumero));
+    oFiscal.AddPair('consolidaciones', ConstruirArray(AConn,
+      ' SELECT * FROM fza_facturas_consolidaciones ' +
+      ' WHERE SERIE_FAC_FACCON = :SERIE ' +
+      '   AND NUMERO_FAC_FACCON = :NUMERO ' +
+      ' ORDER BY ID_FACCON', ASerie, ANumero));
+    oFiscal.AddPair('eventos', ConstruirArray(AConn,
+      ' SELECT * FROM fza_verifactu_eventos ' +
+      ' WHERE SERIE_FAC_LOG = :SERIE AND NUMERO_FAC_LOG = :NUMERO ' +
+      ' ORDER BY ID_LOG', ASerie, ANumero));
+    Result.AddPair('documentos', ConstruirDocumentos(AConn, AIdCola));
+    Result.AddPair('fotos',
+      ConstruirFotos(AParametrosApp, AConn, ASerie, ANumero));
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
 class function TVentasWsJson.ConstruirEvento(
   const AParametrosApp: IParametrosAplicacion;
   const AVersionApp: string;
@@ -735,10 +914,8 @@ class function TVentasWsJson.ConstruirEvento(
   ASerie, ANumero: string): string;
 var
   oDocumento: TJSONObject;
-  oFiscal: TJSONObject;
   oOrigen: TJSONObject;
   oRaiz: TJSONObject;
-  oVenta: TJSONObject;
   sReferencia: string;
 begin
   oRaiz := TJSONObject.Create;
@@ -764,157 +941,8 @@ begin
       oRaiz.AddPair('cierre',
         ConstruirCierre(AConn, AEmpresa, ANumero))
     else
-    begin
-      oVenta := TJSONObject.Create;
-      oRaiz.AddPair('venta', oVenta);
-      oVenta.AddPair('cabecera',
-        ConstruirCabecera(AConn, ASerie, ANumero));
-      // La temporada no vive en la linea: es una propiedad del articulo. Se
-      // resuelve del nivel mas concreto al mas general (sku, color, articulo)
-      // y viaja como TEMPORADA_CALC, que es lo que proyecta el webservice.
-      oVenta.AddPair('lineas', ConstruirArray(AConn,
-        ' SELECT L.*, ' +
-      '   (SELECT COALESCE(V.PV, P.VALOR_LIBRE_ARTPROP) ' +
-      '      FROM fza_articulos_propiedades P ' +
-      '      LEFT JOIN fza_propiedades_valores V ' +
-      '             ON V.ID_PV_ARTPROP = P.ID_PV_ARTPROP ' +
-      '     WHERE P.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
-      '       AND P.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
-      '       AND P.CODIGO_UNIDAD_ARTPROP IN ( ' +
-      '             IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ' +
-      '             SUBSTRING_INDEX( ' +
-      '               IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ''/'', 2), ' +
-      '             '''') ' +
-      '     ORDER BY LENGTH(P.CODIGO_UNIDAD_ARTPROP) DESC, ' +
-      '              P.CODIGO_UNIDAD_ARTPROP DESC ' +
-      '     LIMIT 1) AS TEMPORADA_CALC, ' +
-      '   COALESCE(NULLIF(TRIM(L.CODIGO_FAM_FACLIN), ''''), ' +
-      '     A.CODIGO_FAM_ART, '''') AS CODIGO_FAM_CALC, ' +
-      '   COALESCE(NULLIF(L.NOMBRE_FAM_FACLIN, ''''), ' +
-      '     NULLIF(FAM.NOMBRE_FAM_FAM, ''''), ' +
-      '     NULLIF(FAM.DESCRIPCION_FAM, ''''), ' +
-      '     NULLIF(TRIM(L.CODIGO_FAM_FACLIN), ''''), ' +
-      '     A.CODIGO_FAM_ART, '''') AS NOMBRE_FAM_CALC, ' +
-      '   COALESCE(NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
-      '     AP.CODIGO_PRV_AP, '''') AS CODIGO_PRV_CALC, ' +
-      '   COALESCE(' +
-      '     NULLIF(L.RAZON_SOCIAL_PROVEEDOR_FACLIN, ''''), ' +
-      '     NULLIF(PRV.RAZON_SOCIAL_PRV, ''''), ' +
-      '     NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
-      '     AP.CODIGO_PRV_AP, '''') AS NOMBRE_PRV_CALC, ' +
-      '   COALESCE(NULLIF(L.CODIGO_ALM_FACLIN, ''''), ' +
-      '     F.CODIGO_ALM_FAC, '''') AS CODIGO_ALM_CALC, ' +
-      '   COALESCE(NULLIF(ALM.NOMBRE_ALM_ALM, ''''), ' +
-      '     NULLIF(L.CODIGO_ALM_FACLIN, ''''), ' +
-      '     F.CODIGO_ALM_FAC, '''') AS NOMBRE_ALM_CALC ' +
-      ' FROM fza_facturas_lineas L ' +
-      ' LEFT JOIN fza_facturas F ' +
-      '   ON F.SERIE_FAC = L.SERIE_FAC_FACLIN ' +
-      '  AND F.NUMERO_FAC = L.NUMERO_FAC_FACLIN ' +
-      ' LEFT JOIN fza_articulos A ' +
-      '   ON A.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
-      ' LEFT JOIN fza_articulos_familias FAM ' +
-      '   ON FAM.CODIGO_FAM_FAM = COALESCE(' +
-      '     NULLIF(TRIM(L.CODIGO_FAM_FACLIN), ''''), ' +
-      '     A.CODIGO_FAM_ART) ' +
-      ' LEFT JOIN fza_articulos_proveedores AP ' +
-      '   ON AP.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
-      '  AND AP.CODIGO_PRV_AP = COALESCE(' +
-      '    NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
-      '    (SELECT APX.CODIGO_PRV_AP ' +
-      '       FROM fza_articulos_proveedores APX ' +
-      '      WHERE APX.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
-      '      ORDER BY CASE ' +
-      '        WHEN APX.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
-      '        THEN 0 ELSE 1 END, ' +
-      '        APX.FECHA_VALIDEZ_AP DESC, APX.CODIGO_PRV_AP ' +
-      '      LIMIT 1)) ' +
-      ' LEFT JOIN fza_proveedores PRV ' +
-      '   ON PRV.CODIGO_PRV_PRV = COALESCE(' +
-      '     NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
-      '     AP.CODIGO_PRV_AP) ' +
-      ' LEFT JOIN fza_almacenes ALM ' +
-      '   ON ALM.CODIGO_ALM_ALM = COALESCE(' +
-      '     NULLIF(L.CODIGO_ALM_FACLIN, ''''), ' +
-      '     F.CODIGO_ALM_FAC) ' +
-      ' WHERE L.SERIE_FAC_FACLIN = :SERIE ' +
-      '   AND L.NUMERO_FAC_FACLIN = :NUMERO ' +
-      ' ORDER BY L.LINEA_FACLIN', ASerie, ANumero));
-    oVenta.AddPair('pagos_factura', ConstruirArray(AConn,
-      ' SELECT * FROM fza_facturas_pagos ' +
-      ' WHERE SERIE_FAC_FACPAG = :SERIE ' +
-      '   AND NUMERO_FAC_FACPAG = :NUMERO ' +
-      ' ORDER BY LINEA_FACPAG', ASerie, ANumero));
-    oVenta.AddPair('recibos', ConstruirArray(AConn,
-      ' SELECT * FROM fza_recibos ' +
-      ' WHERE SERIE_FAC_REC = :SERIE ' +
-      '   AND NUMERO_FAC_REC = :NUMERO ' +
-      ' ORDER BY NUMERO_PLAZO_REC', ASerie, ANumero));
-    oVenta.AddPair('efectos_venta', ConstruirArray(AConn,
-      ' SELECT * FROM fza_efectos_venta ' +
-      ' WHERE SERIE_FAC_EFV = :SERIE ' +
-      '   AND NUMERO_FAC_EFV = :NUMERO ' +
-      ' ORDER BY NUMERO_EFV', ASerie, ANumero));
-    oVenta.AddPair('pagos_caja', ConstruirArray(AConn,
-      ' SELECT P.* FROM fza_caja_pagos P ' +
-      ' INNER JOIN fza_facturas F ' +
-      '   ON F.CODIGO_EMP_FAC = P.CODIGO_EMP_PAGO ' +
-      '  AND F.CODIGO_ALM_FAC = P.CODIGO_ALM_PAGO ' +
-      '  AND F.CODIGO_CAJA_FAC = P.CODIGO_CAJA_PAGO ' +
-      '  AND F.SERIE_FAC = P.SERIE_OPERACION_PAGO ' +
-      '  AND F.NUMERO_OPERACION_FAC = P.NUMERO_OPERACION_PAGO ' +
-      ' WHERE F.SERIE_FAC = :SERIE AND F.NUMERO_FAC = :NUMERO ' +
-      ' ORDER BY P.NUMERO_LINEA_PAGO', ASerie, ANumero));
-    oVenta.AddPair('operaciones_caja', ConstruirArray(AConn,
-      ' SELECT O.* FROM fza_caja_operaciones O ' +
-      ' WHERE O.SERIE_FAC_OPCAJA = :SERIE ' +
-      '   AND O.NUMERO_FAC_OPCAJA = :NUMERO ' +
-      ' ORDER BY O.ID_OPCAJA', ASerie, ANumero));
-    oVenta.AddPair('movimientos_almacen', ConstruirArray(AConn,
-      ' SELECT * FROM fza_movimientos_almacen ' +
-      ' WHERE SERIE_DOC_MOV = :SERIE AND NUMERO_DOC_MOV = :NUMERO ' +
-      ' ORDER BY NUMERO_MOV', ASerie, ANumero));
-    oVenta.AddPair('vales', ConstruirArray(AConn,
-      ' SELECT * FROM fza_caja_vales ' +
-      ' WHERE (SERIE_FAC_EMI_VL = :SERIE ' +
-      '        AND NUMERO_FAC_EMI_VL = :NUMERO) ' +
-      '    OR (SERIE_FAC_RED_VL = :SERIE ' +
-      '        AND NUMERO_FAC_RED_VL = :NUMERO) ' +
-      ' ORDER BY CODIGO_VL', ASerie, ANumero));
-    oVenta.AddPair('depositos', ConstruirArray(AConn,
-      ' SELECT DISTINCT D.* FROM fza_depositos_cliente D ' +
-      ' INNER JOIN fza_caja_operaciones O ' +
-      '   ON O.ID_DEPOSITO_OPCAJA = D.ID_DEPOSITO_DEP ' +
-      ' WHERE O.SERIE_FAC_OPCAJA = :SERIE ' +
-      '   AND O.NUMERO_FAC_OPCAJA = :NUMERO ' +
-      ' ORDER BY D.ID_DEPOSITO_DEP', ASerie, ANumero));
-    oVenta.AddPair('relaciones', ConstruirArray(AConn,
-      ' SELECT * FROM fza_facturas_relaciones ' +
-      ' WHERE (SERIE_FAC_FACREL = :SERIE ' +
-      '        AND NUMERO_FAC_FACREL = :NUMERO) ' +
-      '    OR (SERIE_FAC_ORIGEN_FACREL = :SERIE ' +
-      '        AND NUMERO_FAC_ORIGEN_FACREL = :NUMERO) ' +
-      ' ORDER BY ID_FACREL', ASerie, ANumero));
-    oFiscal := TJSONObject.Create;
-    oVenta.AddPair('fiscal', oFiscal);
-    oFiscal.AddPair('cola', ConstruirArray(AConn,
-      ' SELECT * FROM fza_verifactu_cola ' +
-      ' WHERE SERIE_FAC_VFCOLA = :SERIE ' +
-      '   AND NUMERO_FAC_VFCOLA = :NUMERO ' +
-      ' ORDER BY ID_VFCOLA', ASerie, ANumero));
-    oFiscal.AddPair('consolidaciones', ConstruirArray(AConn,
-      ' SELECT * FROM fza_facturas_consolidaciones ' +
-      ' WHERE SERIE_FAC_FACCON = :SERIE ' +
-      '   AND NUMERO_FAC_FACCON = :NUMERO ' +
-      ' ORDER BY ID_FACCON', ASerie, ANumero));
-    oFiscal.AddPair('eventos', ConstruirArray(AConn,
-      ' SELECT * FROM fza_verifactu_eventos ' +
-      ' WHERE SERIE_FAC_LOG = :SERIE AND NUMERO_FAC_LOG = :NUMERO ' +
-      ' ORDER BY ID_LOG', ASerie, ANumero));
-    oVenta.AddPair('documentos', ConstruirDocumentos(AConn, AIdCola));
-    oVenta.AddPair('fotos',
-      ConstruirFotos(AParametrosApp, AConn, ASerie, ANumero));
-    end;
+      oRaiz.AddPair('venta', ConstruirVenta(
+        AParametrosApp, AConn, AIdCola, ASerie, ANumero));
     Result := oRaiz.ToJSON;
   finally
     FreeAndNil(oRaiz);

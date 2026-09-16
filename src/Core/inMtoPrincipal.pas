@@ -287,6 +287,7 @@ type
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
     FReiniciando: Boolean;
+    FNivelModalCierrePendiente: Integer;
     FRelanzarLoginPendiente: Boolean;
     FRutaRestauracionPendiente: string;
     FFalloCargaPermisosAvisado: Boolean;
@@ -348,6 +349,7 @@ type
     function ConsultarDecisionCierrePrestaShop:
       TDecisionCierrePrestaShop;
     procedure RelanzarLoginSiPendiente;
+    function PosponerCierrePorModal: Boolean;
     procedure SolicitarCancelarOperacionEnCurso;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     function GetParametrosAppEdicion: IParametrosEdicion;
@@ -1346,11 +1348,41 @@ begin
   end;
 end;
 
+function TfrmMtoPrincipal.PosponerCierrePorModal: Boolean;
+var
+  FormularioModal: TCustomForm;
+begin
+  Result := Application.ModalLevel > 0;
+  if Result then
+  begin
+    FormularioModal := Screen.FocusedForm;
+    if Assigned(FormularioModal) and
+       (fsModal in FormularioModal.FormState) then
+    begin
+      // ShowModal debe retornar y liberar el formulario antes de destruir
+      // los servicios de sesion que todavia conserva el modal.
+      FormularioModal.Close;
+      FNivelModalCierrePendiente := Application.ModalLevel;
+      PostMessage(Handle, WM_CLOSE, 0, 0);
+    end;
+  end;
+end;
+
 procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
   var CanClose: Boolean);
+var
+  CierreConfirmado: Boolean;
+  ModalCerrado: Boolean;
 begin
   inherited;
-  if Assigned(FCoordinadorOperaciones) and
+  CierreConfirmado := FNivelModalCierrePendiente > 0;
+  ModalCerrado := not CierreConfirmado or
+    (Application.ModalLevel < FNivelModalCierrePendiente);
+  FNivelModalCierrePendiente := 0;
+  // Si el modal veto su cierre, se cancela tambien la salida pendiente.
+  if not ModalCerrado then
+    CanClose := False
+  else if Assigned(FCoordinadorOperaciones) and
      FCoordinadorOperaciones.EnCurso then
   begin
     CanClose := False;
@@ -1358,7 +1390,7 @@ begin
   end
   // Cierre por reinicio de sesión ('Invocar login'): omite sólo la pregunta
   // general. La protección de una fila PrestaShop activa se aplica después.
-  else if (FReiniciando) then
+  else if FReiniciando or CierreConfirmado then
     CanClose := True
   else
   begin
@@ -1382,7 +1414,10 @@ begin
         Result := ConsultarDecisionCierrePrestaShop;
       end);
   end;
-  if (not CanClose) and FRelanzarLoginPendiente then
+  if CanClose then
+    CanClose := not PosponerCierrePorModal;
+  if (not CanClose) and (FNivelModalCierrePendiente = 0) and
+     FRelanzarLoginPendiente then
   begin
     FRelanzarLoginPendiente := False;
     FReiniciando := False;

@@ -64,6 +64,7 @@ type
       AContarHijosActivos: TContarHijosActivosMto;
       ADescripcionHijos: TDescripcionHijosMto);
     procedure Instalar;
+    procedure ComprobarPermisoGrabar(AEstado: TDataSetState);
   end;
 
 implementation
@@ -117,9 +118,12 @@ begin
       // tambien si esta presente.
       if Assigned(FNavegador) then
         FNavegador.Buttons.ConfirmDelete := False;
-      if Assigned(FVistaPrincipal) and
-         Assigned(FVistaPrincipal.Navigator) then
-        FVistaPrincipal.Navigator.Buttons.ConfirmDelete := False;
+      if Assigned(FVistaPrincipal) then
+      begin
+        FVistaPrincipal.OptionsData.DeletingConfirmation := False;
+        if Assigned(FVistaPrincipal.Navigator) then
+          FVistaPrincipal.Navigator.Buttons.ConfirmDelete := False;
+      end;
       FInstalado := True;
     end;
   end;
@@ -148,22 +152,26 @@ begin
     FBeforeEditOrig(DataSet);
 end;
 
-procedure TGestorGuardianBorradoMto.AntesDeGrabar(DataSet: TDataSet);
+procedure TGestorGuardianBorradoMto.ComprobarPermisoGrabar(
+  AEstado: TDataSetState);
 var
   bPermitido: Boolean;
 begin
   bPermitido :=
     FDesactivandoPorBorrado or
-    ((DataSet.State = dsInsert) and
-     FPuedeAccion(apmInsertar)) or
-    ((DataSet.State = dsEdit) and
-     FPuedeAccion(apmModificar));
+    ((AEstado = dsInsert) and FPuedeAccion(apmInsertar)) or
+    ((AEstado in [dsEdit, dsBrowse]) and FPuedeAccion(apmModificar));
   if not bPermitido then
   begin
     ShowMessage_fza(SErrorPermisoGuardarRegistro);
     Abort;
-  end
-  else if Assigned(FBeforePostOrig) then
+  end;
+end;
+
+procedure TGestorGuardianBorradoMto.AntesDeGrabar(DataSet: TDataSet);
+begin
+  ComprobarPermisoGrabar(DataSet.State);
+  if Assigned(FBeforePostOrig) then
     FBeforePostOrig(DataSet);
 end;
 
