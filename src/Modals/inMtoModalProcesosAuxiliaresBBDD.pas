@@ -22,7 +22,7 @@ uses
   cxEdit, cxFilter, cxGraphics, cxGrid, cxGridCustomTableView,
   cxGridCustomView, cxGridDBTableView, cxGridLevel, cxGridTableView,
   cxLabel, cxLookAndFeelPainters, cxLookAndFeels, cxNavigator, cxPC,
-  cxRadioGroup, cxStyles, cxCustomListBox, cxListBox,
+  cxRadioGroup, cxStyles, cxCustomListBox, cxListBox, cxTextEdit,
   cxInplaceContainer, cxTL, cxTLData, SynEdit,
   SynEditHighlighter, SynHighlighterSQL,
   inMtoFrmBase, inLibAnfitrionMtoIntf, inLibMetadatosBBDDIntf,
@@ -61,12 +61,14 @@ type
     pnlSelector: TPanel;
     pnlCuerpo: TPanel;
     pnlLista: TPanel;
+    pnlBusqueda: TPanel;
     pnlListaPie: TPanel;
     pnlAcciones: TPanel;
     pnlContenidoBotones: TPanel;
     pnlBotonera: TPanel;
     splLista: TSplitter;
     rgTipoObjeto: TcxRadioGroup;
+    edtBusqueda: TcxTextEdit;
     lstObjetos: TcxListBox;
     lstOtrasAcciones: TcxListBox;
     pcDetalle: TcxPageControl;
@@ -101,6 +103,7 @@ type
     btnCerrar: TcxButton;
     lblSelector: TcxLabel;
     lblSeleccion: TcxLabel;
+    lblBusqueda: TcxLabel;
     lblAcciones: TcxLabel;
     lblAyuda: TcxLabel;
     FDataModule: TdmMetadatosBBDD;
@@ -121,6 +124,9 @@ type
     procedure RefrescarMetadatos;
     procedure CargarObjetos;
     procedure CargarObjetosConSeleccion(
+      const ASeleccionados: TArray<string>;
+      const AObjetoActivo: string);
+    procedure FiltrarObjetosConSeleccion(
       const ASeleccionados: TArray<string>;
       const AObjetoActivo: string);
     procedure CargarEstructuraSeleccionada;
@@ -163,6 +169,9 @@ type
     function OtraAccionSeleccionada(
       out AAccion: TTipoOtraAccionAuxiliar): Boolean;
     procedure rgTipoObjetoChange(Sender: TObject);
+    procedure edtBusquedaChange(Sender: TObject);
+    procedure lstObjetosMouseDown(Sender: TObject; Button: TMouseButton;
+      Shift: TShiftState; X, Y: Integer);
     procedure lstObjetosClick(Sender: TObject);
     procedure lstObjetosDblClick(Sender: TObject);
     procedure btnVerMetadatosClick(Sender: TObject);
@@ -212,6 +221,9 @@ resourcestring
     '&Procedimientos almacenados';
   SCaptionObjetosDisponiblesProcesosAuxiliaresBBDD =
     'Objetos disponibles';
+  SCaptionBuscarObjetosProcesosAuxiliaresBBDD = '&Buscar por nombre:';
+  SAyudaBuscarObjetosProcesosAuxiliaresBBDD =
+    'Busque por cualquier parte del nombre; por ejemplo, fac.';
   SAyudaSeleccionProcesosAuxiliaresBBDD =
     'Use Ctrl o Mayús para seleccionar varios objetos.';
   SCaptionMetadatosSqlProcesosAuxiliaresBBDD = '&Metadatos SQL';
@@ -480,12 +492,31 @@ begin
   pnlLista.Align := alLeft;
   pnlLista.Width := 310;
   pnlLista.BevelOuter := bvNone;
+  pnlBusqueda := TPanel.Create(Self);
+  pnlBusqueda.Parent := pnlLista;
+  pnlBusqueda.Align := alTop;
+  pnlBusqueda.Height := 88;
+  pnlBusqueda.BevelOuter := bvNone;
   lblSeleccion := TcxLabel.Create(Self);
-  lblSeleccion.Parent := pnlLista;
+  lblSeleccion.Parent := pnlBusqueda;
   lblSeleccion.Align := alTop;
   lblSeleccion.Height := 28;
   lblSeleccion.Caption := SCaptionObjetosDisponiblesProcesosAuxiliaresBBDD;
   lblSeleccion.Transparent := True;
+  lblBusqueda := TcxLabel.Create(Self);
+  lblBusqueda.Parent := pnlBusqueda;
+  lblBusqueda.SetBounds(0, 28, pnlBusqueda.Width, 24);
+  lblBusqueda.Anchors := [akLeft, akTop, akRight];
+  lblBusqueda.Caption := SCaptionBuscarObjetosProcesosAuxiliaresBBDD;
+  lblBusqueda.Transparent := True;
+  edtBusqueda := TcxTextEdit.Create(Self);
+  edtBusqueda.Parent := pnlBusqueda;
+  edtBusqueda.SetBounds(0, 52, pnlBusqueda.Width, 28);
+  edtBusqueda.Anchors := [akLeft, akTop, akRight];
+  edtBusqueda.Hint := SAyudaBuscarObjetosProcesosAuxiliaresBBDD;
+  edtBusqueda.ShowHint := True;
+  edtBusqueda.Properties.OnChange := edtBusquedaChange;
+  lblBusqueda.FocusControl := edtBusqueda;
   pnlListaPie := TPanel.Create(Self);
   pnlListaPie.Parent := pnlLista;
   pnlListaPie.Align := alBottom;
@@ -503,6 +534,7 @@ begin
   lstObjetos.Align := alClient;
   lstObjetos.MultiSelect := True;
   lstObjetos.ExtendedSelect := True;
+  lstObjetos.OnMouseDown := lstObjetosMouseDown;
   lstObjetos.OnClick := lstObjetosClick;
   lstObjetos.OnDblClick := lstObjetosDblClick;
   splLista := TSplitter.Create(Self);
@@ -785,15 +817,24 @@ end;
 procedure TfrmModalProcesosAuxiliaresBBDD.CargarObjetosConSeleccion(
   const ASeleccionados: TArray<string>;
   const AObjetoActivo: string);
+begin
+  CerrarContenidoActual;
+  FCatalogo.CargarObjetos(TipoObjetoActivo);
+  FiltrarObjetosConSeleccion(ASeleccionados, AObjetoActivo);
+end;
+
+procedure TfrmModalProcesosAuxiliaresBBDD.FiltrarObjetosConSeleccion(
+  const ASeleccionados: TArray<string>;
+  const AObjetoActivo: string);
 var
   bSeleccionado: Boolean;
   i: Integer;
   iPrimeroSeleccionado: Integer;
   j: Integer;
+  sBusqueda: string;
   sNombre: string;
 begin
-  CerrarContenidoActual;
-  FCatalogo.CargarObjetos(TipoObjetoActivo);
+  sBusqueda := Trim(edtBusqueda.Text);
   lstObjetos.Items.BeginUpdate;
   FDataModule.unqryMetadatos.DisableControls;
   try
@@ -803,7 +844,8 @@ begin
     begin
       sNombre := FDataModule.unqryMetadatos.FieldByName(
         'NOMBRE_META_META').AsString;
-      lstObjetos.Items.Add(sNombre);
+      if (sBusqueda = '') or ContainsText(sNombre, sBusqueda) then
+        lstObjetos.Items.Add(sNombre);
       FDataModule.unqryMetadatos.Next;
     end;
   finally
@@ -1816,11 +1858,40 @@ begin
   CargarObjetos;
 end;
 
+procedure TfrmModalProcesosAuxiliaresBBDD.edtBusquedaChange(
+  Sender: TObject);
+var
+  aSeleccionados: TArray<string>;
+  sObjetoActivo: string;
+begin
+  if Assigned(FDataModule) and FDataModule.unqryMetadatos.Active then
+  begin
+    aSeleccionados := ObjetosSeleccionados;
+    ObjetoActivo(sObjetoActivo);
+    CerrarContenidoActual;
+    FiltrarObjetosConSeleccion(aSeleccionados, sObjetoActivo);
+  end;
+end;
+
+procedure TfrmModalProcesosAuxiliaresBBDD.lstObjetosMouseDown(
+  Sender: TObject; Button: TMouseButton; Shift: TShiftState; X, Y: Integer);
+begin
+  if (Button = mbLeft) and lstObjetos.CanFocus and
+     not lstObjetos.Focused then
+    lstObjetos.SetFocus;
+end;
+
 procedure TfrmModalProcesosAuxiliaresBBDD.lstObjetosClick(
   Sender: TObject);
 begin
-  ActualizarListaOtrasAcciones;
-  CargarEstructuraSeleccionada;
+  try
+    ActualizarListaOtrasAcciones;
+    CargarEstructuraSeleccionada;
+  finally
+    // La vista SQL puede tomar el foco al actualizar los detalles.
+    if lstObjetos.CanFocus then
+      lstObjetos.SetFocus;
+  end;
 end;
 
 procedure TfrmModalProcesosAuxiliaresBBDD.lstObjetosDblClick(
