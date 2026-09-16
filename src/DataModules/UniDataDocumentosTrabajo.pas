@@ -94,6 +94,7 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses
+  inLibLineaSku,
   System.Generics.Collections, System.Variants,
   UniDataArticulos, inLibDocumentosTrabajoEstados,
   inLibMsgArticulos, inLibMsgVentas;
@@ -1288,67 +1289,10 @@ begin
 end;
 
 procedure TdmDocumentosTrabajo.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
   if unqryLineas.Active and (not unqryLineas.IsEmpty) and
      PuedeEditarDocumentoActual then
-  begin
-    Bm := unqryLineas.GetBookmark;
-    unqryLineas.DisableControls;
-    try
-      unqryLineas.First;
-      while not unqryLineas.Eof do
-      begin
-        Sku := unqryLineas.FieldByName('CODIGO_UNIDAD_DTL').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          // Idempotente POR COMPARACION (mismo arreglo que pedidos):
-          // saltar solo si todos los ATTR coinciden con el troceo del
-          // SKU; el criterio "ATTR1 relleno" dejaba lineas a medias.
-          bCambia := unqryLineas.FieldByName(
-            'NUM_ATRIBUTOS_DTL').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryLineas.FieldByName('ATTR' + IntToStr(i) +
-                 '_VALOR_DTL').AsString) <> sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryLineas.Edit;
-            unqryLineas.FieldByName('NUM_ATRIBUTOS_DTL').AsInteger :=
-              Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryLineas.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_DTL').AsString := Partes[i]
-              else
-                unqryLineas.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_DTL').AsString := '';
-            end;
-            unqryLineas.Post;
-          end;
-        end;
-        unqryLineas.Next;
-      end;
-      if unqryLineas.BookmarkValid(Bm) then
-        unqryLineas.GotoBookmark(Bm);
-    finally
-      unqryLineas.EnableControls;
-      unqryLineas.FreeBookmark(Bm);
-    end;
-  end;
+    DesempaquetarAtributosLineasSku(unqryLineas, 'DTL');
 end;
 
 procedure TdmDocumentosTrabajo.unqryCompartidosAfterInsert(DataSet: TDataSet);

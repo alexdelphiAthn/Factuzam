@@ -147,6 +147,7 @@ type
 implementation
 
 uses
+  inLibLineaSku,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
@@ -1324,12 +1325,6 @@ end;
 // Idempotente POR COMPARACION (mismo criterio que pedidos de compra):
 // solo edita la linea si algun ATTR o el numero de atributos difiere.
 procedure TdmAlbaranesCompra.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
   if unqryAlbaranesCompraLineas.Active and
      (not unqryAlbaranesCompraLineas.IsEmpty) and
@@ -1337,58 +1332,12 @@ begin
      (unqryAlbaranesCompraLineas.FindField('NUM_ATRIBUTOS_ALBCLIN') <> nil) and
      (not unqryAlbaranesCompraLineas.ReadOnly) then
   begin
-    Bm := unqryAlbaranesCompraLineas.GetBookmark;
-    unqryAlbaranesCompraLineas.DisableControls;
-    // Posts descriptivos: silencia la logica fiscal y de movimientos
-    // en BeforePost / CalcularTotales / SincronizarMovimientos.
+    // Evita recálculos fiscales y movimientos durante los Post descriptivos.
     FDesempaquetandoAtributos := True;
     try
-      unqryAlbaranesCompraLineas.First;
-      while not unqryAlbaranesCompraLineas.Eof do
-      begin
-        Sku := unqryAlbaranesCompraLineas.FieldByName(
-          'CODIGO_UNIDAD_ALBCLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          bCambia := unqryAlbaranesCompraLineas.FieldByName(
-            'NUM_ATRIBUTOS_ALBCLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryAlbaranesCompraLineas.FieldByName('ATTR' +
-                 IntToStr(i) + '_VALOR_ALBCLIN').AsString) <>
-               sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryAlbaranesCompraLineas.Edit;
-            unqryAlbaranesCompraLineas.FieldByName(
-              'NUM_ATRIBUTOS_ALBCLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryAlbaranesCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_ALBCLIN').AsString := Partes[i]
-              else
-                unqryAlbaranesCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_ALBCLIN').AsString := '';
-            end;
-            unqryAlbaranesCompraLineas.Post;
-          end;
-        end;
-        unqryAlbaranesCompraLineas.Next;
-      end;
-      if unqryAlbaranesCompraLineas.BookmarkValid(Bm) then
-        unqryAlbaranesCompraLineas.GotoBookmark(Bm);
+      DesempaquetarAtributosLineasSku(unqryAlbaranesCompraLineas, 'ALBCLIN');
     finally
       FDesempaquetandoAtributos := False;
-      unqryAlbaranesCompraLineas.EnableControls;
-      unqryAlbaranesCompraLineas.FreeBookmark(Bm);
     end;
   end;
 end;

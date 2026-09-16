@@ -56,14 +56,13 @@ uses
   inLibAtributosPaleta,
   inLibGestorFiltrosMto, inLibGestorPerfilesMto,
   inLibGestorGuiasGridMto, inLibGestorTareasMto,
+  inLibGestorGuardianBorradoMto,
   inLibGestorArticulosMto, inLibInteraccionDatosIntf,
   inLibMtoGenAplicacionIntf,
   inMtoGenPresentacionFiltrosVcl;
 type
   TcxPageControlPropertiesAccess = class(TcxPageControlProperties);
   THackWinControl = class(TWinControl);
-  // Resultado del dialogo de borrado: cancelar, desactivar o borrar igual.
-  TAccionBorrado = (abContinuar, abDesactivar, abCancelar);
   TfrmMtoGen = class(TfrmBase, IMantenimientoEmbebido)
     pButtonPage: TPanel;
     pButtonRightBar: TPanel;
@@ -172,12 +171,7 @@ type
   private
     FConn: TUniConnection;
     FCasoUsoGuardado: ICasoUsoGuardadoMtoGen;
-    FBeforeInsertOrig: TDataSetNotifyEvent;
-    FBeforeEditOrig: TDataSetNotifyEvent;
-    FBeforePostOrig: TDataSetNotifyEvent;
-    FBeforeDeleteOrig: TDataSetNotifyEvent;
-    FGuardianBorradoInstalado: Boolean;
-    FDesactivandoPorBorrado: Boolean;
+    FGuardianBorrado: TGestorGuardianBorradoMto;
     FGestorFiltros: TGestorFiltrosMto;
     FGestorPerfiles: TGestorPerfilesMto;
     FGestorGuias: TGestorGuiasGridMto;
@@ -201,11 +195,6 @@ type
     procedure NavegadorButtonClick(Sender: TObject;
                                    AButtonIndex: Integer;
                                    var ADone: Boolean);
-    procedure InstalarGuardianBorrado;
-    procedure GuardianBeforeInsert(DataSet: TDataSet);
-    procedure GuardianBeforeEdit(DataSet: TDataSet);
-    procedure GuardianBeforePost(DataSet: TDataSet);
-    procedure GuardianBeforeDelete(DataSet: TDataSet);
     procedure OcultarComponentesPorTexto(
       const AFragmentos: array of string);
     procedure CancelarTareasActivas;
@@ -217,7 +206,6 @@ type
     procedure MostrarStockArticulo(const ACodArt, ACodSku: string);
     procedure ResetearGridPerfil(
       const ANombreGrid, ANombreFormulario, APermisos: string);
-    function PreguntarAccionBorrado: TAccionBorrado;
     function FocoEnEditorTexto: Boolean;
     function PuedeCambiarRegistroPorTecla: Boolean;
     procedure MoverFocoGridBloque(AAvanzar: Boolean);
@@ -635,7 +623,7 @@ var
     end;
   end;
 begin
-    InstalarGuardianBorrado;
+    FGuardianBorrado.Instalar;
     FocusControl := FindNextFocusableControl(tsFicha);
     if Assigned(FocusControl) then
     begin
@@ -644,118 +632,6 @@ begin
         FocusControl.SetFocus;
       end;
     end;
-end;
-
-procedure TfrmMtoGen.InstalarGuardianBorrado;
-var
-  ds: TDataSet;
-begin
-  if not FGuardianBorradoInstalado then
-  begin
-    ds := dsTablaG.DataSet;
-    if ds <> nil then
-    begin
-  // Encadenamos los handlers originales del data module.
-  FBeforeInsertOrig := ds.BeforeInsert;
-  FBeforeEditOrig := ds.BeforeEdit;
-  FBeforePostOrig := ds.BeforePost;
-  FBeforeDeleteOrig := ds.BeforeDelete;
-  ds.BeforeInsert := GuardianBeforeInsert;
-  ds.BeforeEdit := GuardianBeforeEdit;
-  ds.BeforePost := GuardianBeforePost;
-  ds.BeforeDelete := GuardianBeforeDelete;
-  // Desactivamos el dialogo nativo de confirmacion del navegador para no
-  // mostrar dos popups en cascada (el nativo y el nuestro). El cxGrid del
-  // listado tiene su propio mini navegador; lo cubrimos tambien si esta
-  // presente.
-  if Assigned(nvNavegador) then
-    nvNavegador.Buttons.ConfirmDelete := False;
-  if Assigned(cxGrdDBTabPrin) and Assigned(cxGrdDBTabPrin.Navigator) then
-    cxGrdDBTabPrin.Navigator.Buttons.ConfirmDelete := False;
-  FGuardianBorradoInstalado := True;
-    end;
-  end;
-end;
-
-procedure TfrmMtoGen.GuardianBeforeInsert(DataSet: TDataSet);
-begin
-  if not PuedeAccionMto(apmInsertar) then
-  begin
-    ShowMessage_fza(SErrorPermisoInsertarRegistro);
-    Abort;
-  end
-  else if Assigned(FBeforeInsertOrig) then
-    FBeforeInsertOrig(DataSet);
-end;
-
-procedure TfrmMtoGen.GuardianBeforeEdit(DataSet: TDataSet);
-begin
-  if (not FDesactivandoPorBorrado) and
-     (not PuedeAccionMto(apmModificar)) then
-  begin
-    ShowMessage_fza(SErrorPermisoModificarRegistro);
-    Abort;
-  end
-  else if Assigned(FBeforeEditOrig) then
-    FBeforeEditOrig(DataSet);
-end;
-
-procedure TfrmMtoGen.GuardianBeforePost(DataSet: TDataSet);
-var
-  bPermitido: Boolean;
-begin
-  bPermitido :=
-    FDesactivandoPorBorrado or
-    ((DataSet.State = dsInsert) and
-     PuedeAccionMto(apmInsertar)) or
-    ((DataSet.State = dsEdit) and
-     PuedeAccionMto(apmModificar));
-  if not bPermitido then
-  begin
-    ShowMessage_fza(SErrorPermisoGuardarRegistro);
-    Abort;
-  end
-  else if Assigned(FBeforePostOrig) then
-    FBeforePostOrig(DataSet);
-end;
-
-procedure TfrmMtoGen.GuardianBeforeDelete(DataSet: TDataSet);
-var
-  sCampoActivo: string;
-begin
-  if not PuedeAccionMto(apmBorrar) then
-  begin
-    ShowMessage_fza(SErrorPermisoBorrarRegistro);
-    Abort;
-  end
-  else
-  begin
-    case PreguntarAccionBorrado of
-      abCancelar:
-        Abort;
-      abDesactivar:
-        begin
-          sCampoActivo := NombreCampoESACTIVO;
-          if (sCampoActivo <> '') and
-             (DataSet.FindField(sCampoActivo) <> nil) then
-          begin
-            FDesactivandoPorBorrado := True;
-            try
-              if not (DataSet.State in [dsEdit, dsInsert]) then
-                DataSet.Edit;
-              DataSet.FieldByName(sCampoActivo).AsString := 'N';
-              DataSet.Post;
-            finally
-              FDesactivandoPorBorrado := False;
-            end;
-          end;
-          Abort;
-        end;
-      abContinuar:
-        if Assigned(FBeforeDeleteOrig) then
-          FBeforeDeleteOrig(DataSet);
-    end;
-  end;
 end;
 
 procedure TfrmMtoGen.OcultarComponentesPorTexto(
@@ -851,9 +727,6 @@ begin
       ABusq);
 end;
 
-// La primera pulsacion de cierre desde la ficha vuelve a la lista; el
-// gestor de ventanas pregunta por esta interfaz en vez de conocer la
-// clase (antes ese if vivia en inLibFormManager con un cast directo).
 // Precarga opcional antes del primer Open. Sin precarga no hay nada
 // que preparar y la apertura sigue adelante.
 function TfrmMtoGen.PrepararPrecarga(
@@ -862,6 +735,9 @@ begin
   Result := True;
 end;
 
+// La primera pulsacion de cierre desde la ficha vuelve a la lista; el
+// gestor de ventanas pregunta por esta interfaz en vez de conocer la
+// clase (antes ese if vivia en inLibFormManager con un cast directo).
 function TfrmMtoGen.InterceptarCierre: Boolean;
 begin
   Result := False;
@@ -1077,7 +953,7 @@ procedure TfrmMtoGen.AplicarPermisosPantalla;
 var
   sCall: string;
 begin
-  InstalarGuardianBorrado;
+  FGuardianBorrado.Instalar;
   // CALL de la pantalla (Clientes, Articulos...). Los Mtos sin registro
   // en fza_winforms (p.ej. cajas de busqueda) no tienen CALL: todo activo.
   sCall := '';
@@ -1219,7 +1095,7 @@ begin
               '[ReactivarControlesTrasAbrir] ' + Self.Name + ': ' + E.Message);
         end;
       FGestorPerfiles.RestaurarFoco(cxGrdDBTabPrin);
-      InstalarGuardianBorrado;
+      FGuardianBorrado.Instalar;
       TrasPrecargaAsync;
       end;
       end;
@@ -1265,7 +1141,7 @@ begin
         unqry, Self.Name, RegistroLog);
       FGestorGuias.Aplicar(unqry);
       FGestorPerfiles.RestaurarFoco(cxGrdDBTabPrin);
-      InstalarGuardianBorrado;
+      FGuardianBorrado.Instalar;
       RegistroLog.RegistrarRendimiento('Carga/sync', Self.Name + ' | OK',
         sw.ElapsedMilliseconds);
     except
@@ -1334,7 +1210,13 @@ begin
     end;
   end;
   if (tdmDataModule <> nil) then
+  begin
     FreeAndNil(tdmDataModule);
+    // El guardian engancha los eventos del dataset del data module: se
+    // libera despues que el, nunca antes. Si el data module se deja sin
+    // liberar (tareas vivas), el guardian se queda con el.
+    FreeAndNil(FGuardianBorrado);
+  end;
   // Liberar la conexion propia DESPUES del data module: las queries del
   // data module aun referencian FConn durante su destrucion para los Close
   // implicitos. Si soltamos antes, AVs garantizados.
@@ -1432,6 +1314,10 @@ begin
     DataSourcesParaFoto, FotoArticuloVisible,
     OcultarFotoArticulo, MostrarFotoArticulo,
     VincularFotoArticulo, MostrarStockArticulo);
+  FGuardianBorrado := TGestorGuardianBorradoMto.Create(
+    dsTablaG, nvNavegador, cxGrdDBTabPrin,
+    PuedeAccionMto, NombreCampoESACTIVO,
+    ContarHijosActivos, DescripcionHijos);
   FGestorGuias := TGestorGuiasGridMto.Create(
     Self, cxgrdPrincipal, cxGrdDBTabPrin,
     InformesGuiasCache, ObtenerConsultaGuias,
@@ -1728,79 +1614,15 @@ end;
 
 procedure TfrmMtoGen.actEliminarRegistroExecute(Sender: TObject);
 begin
-  // El guardian BeforeDelete (GuardianBeforeDelete) hace la pregunta y, segun
-  // la respuesta, aborta, desactiva o continua con el delete original. No
-  // duplicamos aqui la logica para que el flujo sea identico cuando el
-  // usuario pulsa el boton de borrar del navegador (que llama directamente
-  // a DataSet.Delete sin pasar por esta accion).
+  // El guardian de borrado (TGestorGuardianBorradoMto) hace la pregunta
+  // y, segun la respuesta, aborta, desactiva o continua con el delete
+  // original. No duplicamos aqui la logica para que el flujo sea
+  // identico cuando el usuario pulsa el boton de borrar del navegador
+  // (que llama directamente a DataSet.Delete sin pasar por esta accion).
   if Assigned(dsTablaG.DataSet) and dsTablaG.DataSet.Active and
      not dsTablaG.DataSet.IsEmpty and
      PuedeAccionMto(apmBorrar) then
     dsTablaG.DataSet.Delete;
-end;
-
-function TfrmMtoGen.PreguntarAccionBorrado: TAccionBorrado;
-var
-  sCampoActivo, sDescHijos, sMsg: string;
-  iHijos: Integer;
-  bDesactivable: Boolean;
-  iResp: Integer;
-begin
-  sCampoActivo := NombreCampoESACTIVO;
-  bDesactivable := (sCampoActivo <> '') and
-                   Assigned(dsTablaG.DataSet) and
-                   (dsTablaG.DataSet.FindField(sCampoActivo) <> nil);
-  // Si el registro ya esta desactivado, no ofrecemos "desactivar" otra vez:
-  // el usuario tendra solo Borrar/Cancelar.
-  if bDesactivable and
-     SameText(dsTablaG.DataSet.FieldByName(sCampoActivo).AsString, 'N') then
-    bDesactivable := False;
-  iHijos := ContarHijosActivos;
-  sDescHijos := DescripcionHijos;
-  if sDescHijos = '' then
-    sDescHijos := SDescripcionHijosGenerica;
-  // Caso 1: tabla no desactivable y sin hijos -> confirmacion simple Si/No.
-  if (not bDesactivable) and (iHijos = 0) then
-  begin
-    if MessageBox_fza(
-        PChar(SPreguntaEliminarRegistro),
-        PChar(STituloConfirmarEliminacion),
-        MB_YESNO + MB_ICONWARNING) = ID_YES then
-      Result := abContinuar
-    else
-      Result := abCancelar;
-  end
-  // Caso 2: tabla no desactivable pero tiene hijos -> avisar y Si/No.
-  else if not bDesactivable then
-  begin
-    sMsg := Format(SPreguntaEliminarRegistroConHijos,
-                   [iHijos, sDescHijos]);
-    if MessageBox_fza(PChar(sMsg),
-        PChar(STituloConfirmarEliminacion),
-        MB_YESNO + MB_ICONWARNING + MB_DEFBUTTON2) = ID_YES then
-      Result := abContinuar
-    else
-      Result := abCancelar;
-  end
-  // Caso 3 y 4: tabla desactivable, con o sin hijos.
-  else
-  begin
-    if iHijos > 0 then
-      sMsg := Format(SAvisoDesactivarRegistroConHijos,
-                     [iHijos, sDescHijos])
-    else
-      sMsg := SAvisoDesactivarRegistroSinHijos;
-    sMsg := sMsg + STextoOpcionesBorradoRegistro;
-    iResp := MessageBox_fza(PChar(sMsg),
-               PChar(STituloConfirmarEliminacion),
-               MB_YESNOCANCEL + MB_ICONQUESTION + MB_DEFBUTTON1);
-    case iResp of
-      ID_YES: Result := abDesactivar;
-      ID_NO: Result := abContinuar;
-    else
-      Result := abCancelar;
-    end;
-  end;
 end;
 
 procedure TfrmMtoGen.actRegistroAnteriorExecute(Sender: TObject);

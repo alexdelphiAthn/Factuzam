@@ -186,6 +186,7 @@ uses
   inLibFiltroUsuario in 'src\Lib\inLibFiltroUsuario.pas',
   inLibGestorFiltrosMto in 'src\Lib\inLibGestorFiltrosMto.pas',
   inLibGestorPerfilesMto in 'src\Lib\inLibGestorPerfilesMto.pas',
+  inLibGestorGuardianBorradoMto in 'src\Lib\inLibGestorGuardianBorradoMto.pas',
   inLibGestorGuiasGridMto in 'src\Lib\inLibGestorGuiasGridMto.pas',
   inLibGestorTareasMto in 'src\Lib\inLibGestorTareasMto.pas',
   inLibGestorArticulosMto in 'src\Lib\inLibGestorArticulosMto.pas',

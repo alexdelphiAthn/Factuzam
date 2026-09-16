@@ -147,6 +147,7 @@ type
 implementation
 
 uses
+  inLibLineaSku,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
@@ -1068,12 +1069,6 @@ end;
 // Idempotente POR COMPARACION (mismo criterio que albaranes de compra):
 // solo edita la linea si algun ATTR o el numero de atributos difiere.
 procedure TdmFacturasCompra.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
   if unqryFacturasCompraLineas.Active and
      (not unqryFacturasCompraLineas.IsEmpty) and
@@ -1082,57 +1077,12 @@ begin
         'NUM_ATRIBUTOS_FACCLIN') <> nil) and
      (not unqryFacturasCompraLineas.ReadOnly) then
   begin
-    Bm := unqryFacturasCompraLineas.GetBookmark;
-    unqryFacturasCompraLineas.DisableControls;
-    // Posts descriptivos: silencia la logica fiscal y de movimientos.
+    // Evita recálculos fiscales y movimientos durante los Post descriptivos.
     FDesempaquetandoAtributos := True;
     try
-      unqryFacturasCompraLineas.First;
-      while not unqryFacturasCompraLineas.Eof do
-      begin
-        Sku := unqryFacturasCompraLineas.FieldByName(
-          'CODIGO_UNIDAD_FACCLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          bCambia := unqryFacturasCompraLineas.FieldByName(
-            'NUM_ATRIBUTOS_FACCLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryFacturasCompraLineas.FieldByName('ATTR' +
-                 IntToStr(i) + '_VALOR_FACCLIN').AsString) <>
-               sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryFacturasCompraLineas.Edit;
-            unqryFacturasCompraLineas.FieldByName(
-              'NUM_ATRIBUTOS_FACCLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryFacturasCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_FACCLIN').AsString := Partes[i]
-              else
-                unqryFacturasCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_FACCLIN').AsString := '';
-            end;
-            unqryFacturasCompraLineas.Post;
-          end;
-        end;
-        unqryFacturasCompraLineas.Next;
-      end;
-      if unqryFacturasCompraLineas.BookmarkValid(Bm) then
-        unqryFacturasCompraLineas.GotoBookmark(Bm);
+      DesempaquetarAtributosLineasSku(unqryFacturasCompraLineas, 'FACCLIN');
     finally
       FDesempaquetandoAtributos := False;
-      unqryFacturasCompraLineas.EnableControls;
-      unqryFacturasCompraLineas.FreeBookmark(Bm);
     end;
   end;
 end;

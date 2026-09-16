@@ -46,7 +46,6 @@ function CrearSolicitudEmpresaDesdeFactura(
   const AUsuario: string): TSolicitudEmpresaFactura;
 procedure CopiarConfiguracionIvaFactura(
   AOrigen, ADestino: TDataSet);
-procedure DesempaquetarAtributosFactura(ADataSet: TDataSet);
 function CrearDatosValidacionCabeceraFactura(
   AFactura: TDataSet): TDatosValidacionCabeceraFactura;
 
@@ -425,78 +424,6 @@ begin
     'ESIVAAGRICOLA_IVA_IVAGRP', 'ESIVAAGRICOLA_ZONA_IVA_FAC');
   CopiarCadena(AOrigen, ADestino,
     'PALABRA_REPORTS_IVA_IVAGRP', 'PALABRA_REPORTS_ZONA_IVA_FAC');
-end;
-
-function DebeSincronizarAtributos(
-  ADataSet: TDataSet;
-  const APartes: TArray<string>): Boolean;
-var
-  i: Integer;
-  sEsperado: string;
-begin
-  Result := ADataSet.FieldByName(
-    'NUM_ATRIBUTOS_FACLIN').AsInteger <> Length(APartes) - 1;
-  for i := 1 to 5 do
-  begin
-    if i < Length(APartes) then
-      sEsperado := APartes[i]
-    else
-      sEsperado := '';
-    if Trim(ADataSet.FieldByName('ATTR' + IntToStr(i) +
-       '_VALOR_FACLIN').AsString) <> sEsperado then
-      Result := True;
-  end;
-end;
-
-procedure SincronizarAtributosLinea(
-  ADataSet: TDataSet;
-  const APartes: TArray<string>);
-var
-  i: Integer;
-begin
-  ADataSet.Edit;
-  ADataSet.FieldByName('NUM_ATRIBUTOS_FACLIN').AsInteger :=
-    Length(APartes) - 1;
-  for i := 1 to 5 do
-  begin
-    if i < Length(APartes) then
-      ADataSet.FieldByName('ATTR' + IntToStr(i) +
-        '_VALOR_FACLIN').AsString := APartes[i]
-    else
-      ADataSet.FieldByName('ATTR' + IntToStr(i) +
-        '_VALOR_FACLIN').AsString := '';
-  end;
-  ADataSet.Post;
-end;
-
-procedure DesempaquetarAtributosFactura(ADataSet: TDataSet);
-var
-  aPartes: TArray<string>;
-  oMarcador: TBookmark;
-  sSku: string;
-begin
-  if ADataSet.Active and not ADataSet.IsEmpty then
-  begin
-    oMarcador := ADataSet.GetBookmark;
-    ADataSet.DisableControls;
-    try
-      ADataSet.First;
-      while not ADataSet.Eof do
-      begin
-        sSku := ADataSet.FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
-        aPartes := sSku.Split(['/']);
-        if (Length(aPartes) > 1) and
-           DebeSincronizarAtributos(ADataSet, aPartes) then
-          SincronizarAtributosLinea(ADataSet, aPartes);
-        ADataSet.Next;
-      end;
-      if ADataSet.BookmarkValid(oMarcador) then
-        ADataSet.GotoBookmark(oMarcador);
-    finally
-      ADataSet.EnableControls;
-      ADataSet.FreeBookmark(oMarcador);
-    end;
-  end;
 end;
 
 function CrearDatosValidacionCabeceraFactura(

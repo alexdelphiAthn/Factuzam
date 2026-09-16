@@ -129,6 +129,7 @@ type
 implementation
 
 uses
+  inLibLineaSku,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics, System.UITypes,
   UniDataAperturaConsultas,
@@ -958,12 +959,6 @@ end;
 // Si la BBDD aun no tiene las columnas ATTR (script en DESARROLLOS EN
 // CURSO/ColumnSKUcxGrid), el FindField las detecta y no hace nada.
 procedure TdmDevolucionesCompra.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
   if unqryDevolucionesCompraLineas.Active and
      (not unqryDevolucionesCompraLineas.IsEmpty) and
@@ -973,57 +968,12 @@ begin
         'NUM_ATRIBUTOS_DEVCLIN') <> nil) and
      (not unqryDevolucionesCompraLineas.ReadOnly) then
   begin
-    Bm := unqryDevolucionesCompraLineas.GetBookmark;
-    unqryDevolucionesCompraLineas.DisableControls;
-    // Posts descriptivos: silencia la logica fiscal y de movimientos.
+    // Evita recálculos fiscales y movimientos durante los Post descriptivos.
     FDesempaquetandoAtributos := True;
     try
-      unqryDevolucionesCompraLineas.First;
-      while not unqryDevolucionesCompraLineas.Eof do
-      begin
-        Sku := unqryDevolucionesCompraLineas.FieldByName(
-          'CODIGO_UNIDAD_DEVCLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          bCambia := unqryDevolucionesCompraLineas.FieldByName(
-            'NUM_ATRIBUTOS_DEVCLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryDevolucionesCompraLineas.FieldByName('ATTR' +
-                 IntToStr(i) + '_VALOR_DEVCLIN').AsString) <>
-               sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryDevolucionesCompraLineas.Edit;
-            unqryDevolucionesCompraLineas.FieldByName(
-              'NUM_ATRIBUTOS_DEVCLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryDevolucionesCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_DEVCLIN').AsString := Partes[i]
-              else
-                unqryDevolucionesCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_DEVCLIN').AsString := '';
-            end;
-            unqryDevolucionesCompraLineas.Post;
-          end;
-        end;
-        unqryDevolucionesCompraLineas.Next;
-      end;
-      if unqryDevolucionesCompraLineas.BookmarkValid(Bm) then
-        unqryDevolucionesCompraLineas.GotoBookmark(Bm);
+      DesempaquetarAtributosLineasSku(unqryDevolucionesCompraLineas, 'DEVCLIN');
     finally
       FDesempaquetandoAtributos := False;
-      unqryDevolucionesCompraLineas.EnableControls;
-      unqryDevolucionesCompraLineas.FreeBookmark(Bm);
     end;
   end;
 end;

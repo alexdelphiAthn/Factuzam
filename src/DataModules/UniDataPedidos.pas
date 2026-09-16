@@ -147,6 +147,7 @@ type
 implementation
 
 uses
+  inLibLineaSku,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics, System.UITypes,
   UniDataAperturaConsultas,
@@ -431,7 +432,7 @@ end;
 
 procedure TdmPedidos.DesempaquetarAtributosLineas;
 begin
-  DesempaquetarAtributosPedidoVenta(unqryPedidosLineas);
+  DesempaquetarAtributosLineasSku(unqryPedidosLineas, 'PEDLIN');
 end;
 
 procedure TdmPedidos.DataModuleDestroy(Sender: TObject);

@@ -266,6 +266,7 @@ public
 implementation
 
 uses
+  inLibLineaSku,
   UniDataValoresAutomaticosRepositorio,
 
   System.Diagnostics,
@@ -1338,7 +1339,7 @@ begin
     if bReadOnlyLineas then
       unqryLinFac.ReadOnly := False;
     try
-      DesempaquetarAtributosFactura(unqryLinFac);
+      DesempaquetarAtributosLineasSku(unqryLinFac, 'FACLIN');
     finally
       unqryLinFac.ReadOnly := bReadOnlyLineas;
       FDesempaquetandoAtributos := False;

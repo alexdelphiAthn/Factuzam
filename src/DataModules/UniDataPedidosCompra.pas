@@ -161,6 +161,7 @@ type
 implementation
 
 uses
+  inLibLineaSku,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   inLibContadorLineas, inLibDatasets,
   UniDataContadorLineasRepositorio,
@@ -1480,12 +1481,6 @@ begin
 end;
 
 procedure TdmPedidosCompra.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
   if unqryPedidosCompraLineas.Active and
      (not unqryPedidosCompraLineas.IsEmpty) and
@@ -1493,59 +1488,12 @@ begin
      (unqryPedidosCompraLineas.FindField('NUM_ATRIBUTOS_PEDCLIN') <> nil) and
      (not unqryPedidosCompraLineas.ReadOnly) then
   begin
-    Bm := unqryPedidosCompraLineas.GetBookmark;
-    unqryPedidosCompraLineas.DisableControls;
-    // Posts descriptivos: silencia la logica fiscal en BeforePost y
-    // CalcularTotales.
+    // Evita recálculos fiscales y movimientos durante los Post descriptivos.
     FDesempaquetandoAtributos := True;
     try
-      unqryPedidosCompraLineas.First;
-      while not unqryPedidosCompraLineas.Eof do
-      begin
-        Sku := unqryPedidosCompraLineas.FieldByName(
-          'CODIGO_UNIDAD_PEDCLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          // Idempotente POR COMPARACION (mismo criterio que ventas).
-          bCambia := unqryPedidosCompraLineas.FieldByName(
-            'NUM_ATRIBUTOS_PEDCLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryPedidosCompraLineas.FieldByName('ATTR' +
-                 IntToStr(i) + '_VALOR_PEDCLIN').AsString) <>
-               sEsperado then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryPedidosCompraLineas.Edit;
-            unqryPedidosCompraLineas.FieldByName(
-              'NUM_ATRIBUTOS_PEDCLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryPedidosCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_PEDCLIN').AsString := Partes[i]
-              else
-                unqryPedidosCompraLineas.FieldByName('ATTR' +
-                  IntToStr(i) + '_VALOR_PEDCLIN').AsString := '';
-            end;
-            unqryPedidosCompraLineas.Post;
-          end;
-        end;
-        unqryPedidosCompraLineas.Next;
-      end;
-      if unqryPedidosCompraLineas.BookmarkValid(Bm) then
-        unqryPedidosCompraLineas.GotoBookmark(Bm);
+      DesempaquetarAtributosLineasSku(unqryPedidosCompraLineas, 'PEDCLIN');
     finally
       FDesempaquetandoAtributos := False;
-      unqryPedidosCompraLineas.EnableControls;
-      unqryPedidosCompraLineas.FreeBookmark(Bm);
     end;
   end;
 end;

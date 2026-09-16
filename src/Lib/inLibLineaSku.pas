@@ -9,7 +9,7 @@
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
 {  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
-{    Sincroniza el SKU y sus atributos descompuestos en la línea actual.       }
+{    Sincroniza el SKU y sus atributos en las líneas de documentos.           }
 {******************************************************************************}
 unit inLibLineaSku;
 
@@ -23,6 +23,11 @@ procedure SincronizarCamposLineaSku(
   const ACampos: TCamposColumnasSku;
   const ACodigoArticulo, ACodigoSku: string;
   const ALookup: IArticulosAtributosLookup);
+
+// Actualiza solo las líneas cuyos atributos difieren del SKU.
+// El llamador controla permisos de edición y efectos de los eventos Post.
+procedure DesempaquetarAtributosLineasSku(
+  ADataSet: TDataSet; const ASufijo: string);
 
 implementation
 
@@ -92,6 +97,69 @@ begin
         sNombre := Trim(aAtributos[i - 1].NombreAtributo);
       PonerTexto(ADataSet, ACampos.AttrValor[i], sValor);
       PonerTexto(ADataSet, ACampos.AttrNombre[i], sNombre);
+    end;
+  end;
+end;
+
+procedure DesempaquetarAtributosLineasSku(
+  ADataSet: TDataSet; const ASufijo: string);
+var
+  aPartes: TArray<string>;
+  oMarcador: TBookmark;
+  sSku, sEsperado, sCampoNumero: string;
+  aCamposValor: array[1..5] of string;
+  aValores: array[1..5] of string;
+  i: Integer;
+  bCambia: Boolean;
+begin
+  if ADataSet.Active and (not ADataSet.IsEmpty) then
+  begin
+    sCampoNumero := 'NUM_ATRIBUTOS_' + ASufijo;
+    for i := 1 to 5 do
+      aCamposValor[i] := 'ATTR' + IntToStr(i) + '_VALOR_' + ASufijo;
+    oMarcador := ADataSet.GetBookmark;
+    ADataSet.DisableControls;
+    try
+      ADataSet.First;
+      while not ADataSet.Eof do
+      begin
+        sSku := ADataSet.FieldByName('CODIGO_UNIDAD_' + ASufijo).AsString;
+        aPartes := sSku.Split(['/']);
+        if Length(aPartes) > 1 then
+        begin
+          bCambia := ADataSet.FieldByName(sCampoNumero).AsInteger <>
+            Length(aPartes) - 1;
+          for i := 1 to 5 do
+          begin
+            if i < Length(aPartes) then
+              sEsperado := aPartes[i]
+            else
+              sEsperado := '';
+            aValores[i] := sEsperado;
+            if Trim(ADataSet.FieldByName(aCamposValor[i]).AsString) <>
+               sEsperado then
+              bCambia := True;
+          end;
+          if bCambia then
+          begin
+            ADataSet.Edit;
+            ADataSet.FieldByName(sCampoNumero).AsInteger :=
+              Length(aPartes) - 1;
+            for i := 1 to 5 do
+              ADataSet.FieldByName(aCamposValor[i]).AsString := aValores[i];
+            ADataSet.Post;
+          end;
+        end;
+        ADataSet.Next;
+      end;
+      if ADataSet.BookmarkValid(oMarcador) then
+        ADataSet.GotoBookmark(oMarcador);
+    finally
+      try
+        ADataSet.EnableControls;
+      finally
+        ADataSet.FreeBookmark(oMarcador);
+      end;
     end;
   end;
 end;

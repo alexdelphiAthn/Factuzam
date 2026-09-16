@@ -140,6 +140,7 @@ type
 implementation
 
 uses
+  inLibLineaSku,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
   System.Diagnostics,
   UniDataAperturaConsultas,
@@ -887,69 +888,17 @@ begin
 end;
 
 procedure TdmAlbaranes.DesempaquetarAtributosLineas;
-var
-  Partes: TArray<string>;
-  Sku, sEsperado: string;
-  i: Integer;
-  Bm: TBookmark;
-  bCambia: Boolean;
 begin
   if unqryAlbaranesLineas.Active and
      (not unqryAlbaranesLineas.IsEmpty) and
      (unqryAlbaranesLineas.FindField('ATTR1_VALOR_ALBLIN') <> nil) then
   begin
-    Bm := unqryAlbaranesLineas.GetBookmark;
-    unqryAlbaranesLineas.DisableControls;
-    // Posts descriptivos: silencia la logica fiscal y de movimientos
-    // en BeforePost / AfterPost.
+    // Evita recálculos fiscales y movimientos durante los Post descriptivos.
     FDesempaquetandoAtributos := True;
     try
-      unqryAlbaranesLineas.First;
-      while not unqryAlbaranesLineas.Eof do
-      begin
-        Sku := unqryAlbaranesLineas.FieldByName(
-          'CODIGO_UNIDAD_ALBLIN').AsString;
-        Partes := Sku.Split(['/']);
-        if Length(Partes) > 1 then
-        begin
-          bCambia := unqryAlbaranesLineas.FieldByName(
-            'NUM_ATRIBUTOS_ALBLIN').AsInteger <> Length(Partes) - 1;
-          for i := 1 to 5 do
-          begin
-            if i < Length(Partes) then
-              sEsperado := Partes[i]
-            else
-              sEsperado := '';
-            if Trim(unqryAlbaranesLineas.FieldByName('ATTR' +
-                 IntToStr(i) + '_VALOR_ALBLIN').AsString) <> sEsperado
-            then
-              bCambia := True;
-          end;
-          if bCambia then
-          begin
-            unqryAlbaranesLineas.Edit;
-            unqryAlbaranesLineas.FieldByName(
-              'NUM_ATRIBUTOS_ALBLIN').AsInteger := Length(Partes) - 1;
-            for i := 1 to 5 do
-            begin
-              if i < Length(Partes) then
-                unqryAlbaranesLineas.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_ALBLIN').AsString := Partes[i]
-              else
-                unqryAlbaranesLineas.FieldByName('ATTR' + IntToStr(i) +
-                  '_VALOR_ALBLIN').AsString := '';
-            end;
-            unqryAlbaranesLineas.Post;
-          end;
-        end;
-        unqryAlbaranesLineas.Next;
-      end;
-      if unqryAlbaranesLineas.BookmarkValid(Bm) then
-        unqryAlbaranesLineas.GotoBookmark(Bm);
+      DesempaquetarAtributosLineasSku(unqryAlbaranesLineas, 'ALBLIN');
     finally
       FDesempaquetandoAtributos := False;
-      unqryAlbaranesLineas.EnableControls;
-      unqryAlbaranesLineas.FreeBookmark(Bm);
     end;
   end;
 end;
