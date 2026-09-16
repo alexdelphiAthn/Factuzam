@@ -241,22 +241,23 @@ var
 begin
   SetLength(Result, 0);
   oPrincipal := Resolver(ACodigoArticulo, ACodigoSku);
-  if not oPrincipal.Encontrada then
-    Exit;
-  aMetadatos := FRepositorio.BuscarFotosColeccion(
-    ACodigoArticulo, oPrincipal.ClaveResuelta);
-  SetLength(Result, Length(aMetadatos));
-  for iFoto := 0 to High(aMetadatos) do
+  if oPrincipal.Encontrada then
   begin
-    Result[iFoto].Clear;
-    Result[iFoto].Encontrada := True;
-    Result[iFoto].Origen := oPrincipal.Origen;
-    Result[iFoto].CodigoArt := ACodigoArticulo;
-    Result[iFoto].CodigoSku := ACodigoSku;
-    Result[iFoto].ClaveResuelta := aMetadatos[iFoto].CodigoUnidad;
-    Result[iFoto].Orden := aMetadatos[iFoto].Orden;
-    Result[iFoto].NombreBase := aMetadatos[iFoto].Nombre;
-    Result[iFoto].ExtensionOrigen := aMetadatos[iFoto].Extension;
+    aMetadatos := FRepositorio.BuscarFotosColeccion(
+      ACodigoArticulo, oPrincipal.ClaveResuelta);
+    SetLength(Result, Length(aMetadatos));
+    for iFoto := 0 to High(aMetadatos) do
+    begin
+      Result[iFoto].Clear;
+      Result[iFoto].Encontrada := True;
+      Result[iFoto].Origen := oPrincipal.Origen;
+      Result[iFoto].CodigoArt := ACodigoArticulo;
+      Result[iFoto].CodigoSku := ACodigoSku;
+      Result[iFoto].ClaveResuelta := aMetadatos[iFoto].CodigoUnidad;
+      Result[iFoto].Orden := aMetadatos[iFoto].Orden;
+      Result[iFoto].NombreBase := aMetadatos[iFoto].Nombre;
+      Result[iFoto].ExtensionOrigen := aMetadatos[iFoto].Extension;
+    end;
   end;
 end;
 

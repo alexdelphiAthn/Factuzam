@@ -22,7 +22,7 @@ uses
   inLibPrecargaCompras;
 
 type
-  TfrmMtoDocumento = class(TfrmMtoGen, IMantenimientoConPrecarga)
+  TfrmMtoDocumento = class(TfrmMtoGen)
   private
     FConfiguracionDocumento: TConfiguracionDocumento;
     FEstrategiaDocumento: IEstrategiaDocumento;
@@ -88,7 +88,7 @@ type
     function DataSourcesParaFoto: TArray<TDataSource>; override;
     function SqlRestriccionUsuario: string; override;
     function PrepararPrecarga(
-      ARol: TRolAperturaMantenimiento): Boolean;
+      ARol: TRolAperturaMantenimiento): Boolean; override;
     procedure PrepararBusquedaExterna(const ABusq: string); override;
   end;
 

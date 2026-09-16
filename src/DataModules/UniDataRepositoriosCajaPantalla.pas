@@ -148,7 +148,7 @@ function TRepositoriosCajaPantallaUniDAC.CrearPersistenciaArqueoCaja(
   AEnviarVentasWs: Boolean): IArqueoPersistencia;
 var
   ConexionArqueo: TUniConnection;
-  RepositorioVentasWs: IRepositorioVentasWsCola;
+  RepositorioVentasWs: IAltaVentasWsCola;
 begin
   ConexionArqueo := Conexion(AConexion);
   RepositorioVentasWs := nil;

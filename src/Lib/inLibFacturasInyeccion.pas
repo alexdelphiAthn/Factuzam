@@ -162,6 +162,7 @@ begin
   Articulos.Liberar;
   ColumnasSku.Busqueda := nil;
   ColumnasSku.Paleta := nil;
+  ColumnasSku.PaletaAnclada := nil;
   ColumnasSku.PersistenciaTallas := nil;
   ColumnasSku.ModoDesglose := nil;
   AtributosGlobales := nil;

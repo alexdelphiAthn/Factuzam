@@ -30,7 +30,7 @@ type
     FParametrosCaja: IParametrosCaja;
     FContextoSesion: IContextoSesionAplicacion;
     FRepositorioPdf: IRepositorioPdfFactura;
-    FRepositorioVentasWs: IRepositorioVentasWsCola;
+    FRepositorioVentasWs: IAltaVentasWsCola;
     FRegistroLog: IRegistroLog;
     procedure ArchivarPdf(
       const ARutaPdf: string;
@@ -46,7 +46,7 @@ type
       const AParametrosCaja: IParametrosCaja;
       const AContextoSesion: IContextoSesionAplicacion;
       const ARepositorioPdf: IRepositorioPdfFactura;
-      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      const ARepositorioVentasWs: IAltaVentasWsCola;
       const ARegistroLog: IRegistroLog = nil);
     function Ejecutar(
       const ASolicitud: TSolicitudCierreVenta
@@ -65,7 +65,7 @@ constructor TCasoUsoCierreVentaCaja.Create(
   const AParametrosCaja: IParametrosCaja;
   const AContextoSesion: IContextoSesionAplicacion;
   const ARepositorioPdf: IRepositorioPdfFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   const ARegistroLog: IRegistroLog);
 begin
   inherited Create;

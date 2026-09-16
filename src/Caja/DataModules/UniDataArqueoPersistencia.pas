@@ -24,7 +24,7 @@ uses
 
 function CrearPersistenciaArqueo(
   AConexion: TUniConnection;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola = nil;
+  const ARepositorioVentasWs: IAltaVentasWsCola = nil;
   AEnviarVentasWs: Boolean = False): IArqueoPersistencia;
 
 implementation
@@ -176,11 +176,11 @@ type
   private
     FConexion: TUniConnection;
     FEnviarVentasWs: Boolean;
-    FRepositorioVentasWs: IRepositorioVentasWsCola;
+    FRepositorioVentasWs: IAltaVentasWsCola;
   public
     constructor Create(
       AConexion: TUniConnection;
-      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      const ARepositorioVentasWs: IAltaVentasWsCola;
       AEnviarVentasWs: Boolean);
     procedure GrabarArqueo(
       const AArqueo: TArqueoCaja;
@@ -194,7 +194,7 @@ type
   private
     FConexion: TUniConnection;
     FEnviarVentasWs: Boolean;
-    FRepositorioVentasWs: IRepositorioVentasWsCola;
+    FRepositorioVentasWs: IAltaVentasWsCola;
     FArqueo: TArqueoCaja;
     FLineasRecuento: TArray<TArqueoRecuentoLinea>;
     FTotalRecuento: Currency;
@@ -221,7 +221,7 @@ type
   public
     constructor Create(
       AConexion: TUniConnection;
-      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      const ARepositorioVentasWs: IAltaVentasWsCola;
       AEnviarVentasWs: Boolean;
       const AArqueo: TArqueoCaja;
       const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
@@ -280,7 +280,7 @@ end;
 { --------------------------------------------------------------------------- }
 constructor TGrabacionArqueo.Create(
   AConexion: TUniConnection;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   AEnviarVentasWs: Boolean;
   const AArqueo: TArqueoCaja;
   const ALineasRecuento: TArray<TArqueoRecuentoLinea>;
@@ -602,7 +602,7 @@ end;
 
 constructor TPersistenciaArqueoUniDAC.Create(
   AConexion: TUniConnection;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   AEnviarVentasWs: Boolean);
 begin
   if AEnviarVentasWs and not Assigned(ARepositorioVentasWs) then
@@ -639,7 +639,7 @@ end;
 
 function CrearPersistenciaArqueo(
   AConexion: TUniConnection;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   AEnviarVentasWs: Boolean): IArqueoPersistencia;
 begin
   Result := TPersistenciaArqueoUniDAC.Create(

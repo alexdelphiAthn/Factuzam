@@ -105,6 +105,7 @@ var
   iError: Cardinal;
   hReserva: THandle;
   sRutaReserva: string;
+  bReservado: Boolean;
 begin
   iIndice := 0;
   for iFoto := 0 to High(AMetadatos) do
@@ -114,29 +115,35 @@ begin
     if iIndiceFoto > iIndice then
       iIndice := iIndiceFoto;
   end;
-  while True do
+  bReservado := False;
+  while not bReservado do
   begin
     Inc(iIndice);
     Result := FAlmacenamiento.ComponerNombre(AClave, iIndice);
-    if ExisteAlgunaCopia(Result) then
-      Continue;
-    sRutaReserva := RutaReservaNombre(Result);
-    if sRutaReserva = '' then
-      raise Exception.Create(SErrorDirectorioFotosNoConfigurado);
-    if not ForceDirectories(ExtractFilePath(sRutaReserva)) then
-      RaiseLastOSError;
-    hReserva := Winapi.Windows.CreateFile(
-      PChar(sRutaReserva), GENERIC_WRITE, 0, nil, CREATE_NEW,
-      FILE_ATTRIBUTE_TEMPORARY, 0);
-    if hReserva <> INVALID_HANDLE_VALUE then
+    // Si el nombre ya esta ocupado se prueba con el indice siguiente.
+    if not ExisteAlgunaCopia(Result) then
     begin
-      CloseHandle(hReserva);
-      Exit;
+      sRutaReserva := RutaReservaNombre(Result);
+      if sRutaReserva = '' then
+        raise Exception.Create(SErrorDirectorioFotosNoConfigurado);
+      if not ForceDirectories(ExtractFilePath(sRutaReserva)) then
+        RaiseLastOSError;
+      hReserva := Winapi.Windows.CreateFile(
+        PChar(sRutaReserva), GENERIC_WRITE, 0, nil, CREATE_NEW,
+        FILE_ATTRIBUTE_TEMPORARY, 0);
+      if hReserva <> INVALID_HANDLE_VALUE then
+      begin
+        CloseHandle(hReserva);
+        bReservado := True;
+      end
+      else
+      begin
+        iError := GetLastError;
+        if (iError <> ERROR_FILE_EXISTS) and
+           (iError <> ERROR_ALREADY_EXISTS) then
+          RaiseLastOSError(iError);
+      end;
     end;
-    iError := GetLastError;
-    if (iError <> ERROR_FILE_EXISTS) and
-       (iError <> ERROR_ALREADY_EXISTS) then
-      RaiseLastOSError(iError);
   end;
 end;
 

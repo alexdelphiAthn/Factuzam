@@ -106,7 +106,8 @@ function GenerarQRPngVerifactu(const AUrl: string;
 // FastReport: rellena el TfrxPictureView llamado 'qrverifactu' con el
 // QR tributario de la factura del registro activo de su banda (campos
 // NIF_EMPRESA_FAC, SERIE_FAC, NUMERO_FAC, FECHA_FAC,
-// TOTAL_BASES_FAC, TOTAL_IMPUESTOS_FAC). Encadenar desde TfrxReport.OnBeforePrint.
+// TOTAL_BASES_FAC, TOTAL_IMPUESTOS_FAC). Encadenar desde
+// TfrxReport.OnBeforePrint.
 procedure SustituirQRVerifactuEnReport(
   const AParametrosApp: IParametrosAplicacion;
   Component: TfrxReportComponent);

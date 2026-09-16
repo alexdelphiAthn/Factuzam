@@ -33,13 +33,13 @@ type
   TSesionVentasWsUniDAC = class(TInterfacedObject, ISesionVentasWs)
   private
     FConexion: TUniConnection;
-    FRepositorio: IRepositorioVentasWsCola;
+    FRepositorio: IDespachoVentasWsCola;
     FJson: IVentasWsJson;
     FRegistradorIntentos: IRegistradorIntentosVentasWsCola;
   public
     constructor Create(const AConexiones: IServicioConexiones);
     destructor Destroy; override;
-    function GetRepositorio: IRepositorioVentasWsCola;
+    function GetRepositorio: IDespachoVentasWsCola;
     function GetJson: IVentasWsJson;
     function GetRegistradorIntentos:
       IRegistradorIntentosVentasWsCola;
@@ -78,7 +78,7 @@ begin
 end;
 
 function TSesionVentasWsUniDAC.GetRepositorio:
-  IRepositorioVentasWsCola;
+  IDespachoVentasWsCola;
 begin
   Result := FRepositorio;
 end;

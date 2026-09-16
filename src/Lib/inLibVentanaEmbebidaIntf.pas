@@ -24,14 +24,6 @@ type
     ramListaAdicional
   );
 
-  // Contrato opcional: se consulta antes del primer Open, ya embebido.
-  // Cancelar la precarga impide abrir la lista sin el filtro elegido.
-  IMantenimientoConPrecarga = interface
-    ['{E99426A4-E942-45F4-A63E-EE0E75317E26}']
-    function PrepararPrecarga(
-      ARol: TRolAperturaMantenimiento): Boolean;
-  end;
-
   // Ventana embebida en el marco principal.
   IVentanaEmbebida = interface
     ['{782AB710-5D2A-4C5D-9523-A686807D5078}']
@@ -60,6 +52,10 @@ type
     // SOLO si se buscó y no se encontró (el llamante avisa entonces);
     // True si se encontró o si no procedía buscar.
     function LocalizarYEnfocar(const ABusq: string): Boolean;
+    // Se consulta antes del primer Open, ya embebido. Devolver
+    // False cancela la apertura (lista sin el filtro elegido).
+    function PrepararPrecarga(
+      ARol: TRolAperturaMantenimiento): Boolean;
   end;
 
 // La instancia 1 se reserva a busqueda; las listas empiezan por la 2.
@@ -67,14 +63,8 @@ type
 function RolAperturaMantenimiento(
   ABusqueda: Boolean;
   ANumeroInstancia: Integer): TRolAperturaMantenimiento;
-function PrepararPrecargaMantenimiento(
-  const AMantenimiento: IMantenimientoEmbebido;
-  ARol: TRolAperturaMantenimiento): Boolean;
 
 implementation
-
-uses
-  System.SysUtils;
 
 function RolAperturaMantenimiento(
   ABusqueda: Boolean;
@@ -86,17 +76,6 @@ begin
     Result := ramListaAdicional
   else
     Result := ramPrimeraLista;
-end;
-
-function PrepararPrecargaMantenimiento(
-  const AMantenimiento: IMantenimientoEmbebido;
-  ARol: TRolAperturaMantenimiento): Boolean;
-var
-  oPrecarga: IMantenimientoConPrecarga;
-begin
-  Result := True;
-  if Supports(AMantenimiento, IMantenimientoConPrecarga, oPrecarga) then
-    Result := oPrecarga.PrepararPrecarga(ARol);
 end;
 
 end.

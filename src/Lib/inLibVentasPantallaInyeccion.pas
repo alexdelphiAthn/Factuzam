@@ -199,6 +199,7 @@ begin
   AContexto.AtributosArticulos := nil;
   AContexto.ColumnasSku.Busqueda := nil;
   AContexto.ColumnasSku.Paleta := nil;
+  AContexto.ColumnasSku.PaletaAnclada := nil;
   AContexto.ColumnasSku.PersistenciaTallas := nil;
   AContexto.ColumnasSku.ModoDesglose := nil;
   AContexto.EntradaArticulos := nil;
@@ -212,6 +213,7 @@ begin
   AContexto.AtributosArticulos := nil;
   AContexto.ColumnasSku.Busqueda := nil;
   AContexto.ColumnasSku.Paleta := nil;
+  AContexto.ColumnasSku.PaletaAnclada := nil;
   AContexto.ColumnasSku.PersistenciaTallas := nil;
   AContexto.ColumnasSku.ModoDesglose := nil;
   AContexto.EntradaArticulos := nil;

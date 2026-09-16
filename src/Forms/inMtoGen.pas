@@ -228,6 +228,7 @@ type
       const AMensaje: string): Boolean;
   protected
     FAnfitrionMto: IAnfitrionMantenimiento;
+    FProveedorMenu: IProveedorMenuPantallas;
     property ConexionTrabajo: TUniConnection read GetConexionTrabajo;
     function PermitirNavegacionTeclas: Boolean; virtual;
     procedure BloquearTabPorOcupado(Bloquear: Boolean);
@@ -260,6 +261,8 @@ type
     procedure DesactivarModoBusqueda;
     procedure AbrirTablaPrincipal(ASincrono: Boolean);
     function LocalizarYEnfocar(const ABusq: string): Boolean;
+    function PrepararPrecarga(
+      ARol: TRolAperturaMantenimiento): Boolean; virtual;
     procedure AplicarLayoutInstanciaBusqueda; virtual;
     procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); virtual;
     procedure ResolverArtSkuStock(out ACodArt, ACodSku: string); override;
@@ -851,6 +854,14 @@ end;
 // La primera pulsacion de cierre desde la ficha vuelve a la lista; el
 // gestor de ventanas pregunta por esta interfaz en vez de conocer la
 // clase (antes ese if vivia en inLibFormManager con un cast directo).
+// Precarga opcional antes del primer Open. Sin precarga no hay nada
+// que preparar y la apertura sigue adelante.
+function TfrmMtoGen.PrepararPrecarga(
+  ARol: TRolAperturaMantenimiento): Boolean;
+begin
+  Result := True;
+end;
+
 function TfrmMtoGen.InterceptarCierre: Boolean;
 begin
   Result := False;
@@ -1409,6 +1420,11 @@ begin
   if not Supports(Self.Owner, IAnfitrionMantenimiento, FAnfitrionMto) then
     RegistroLog.RegistrarInformacion(
       'Sin anfitrion de mantenimiento (standalone): ' + Self.ClassName);
+  // El proveedor del menu se descubre aqui por el mismo motivo: las
+  // pantallas usan el campo y no localizan el servicio por su cuenta.
+  if not Supports(Self.Owner, IProveedorMenuPantallas,
+                  FProveedorMenu) then
+    FProveedorMenu := nil;
   FGestorTareas := TGestorTareasMto.Create(
     Self, AplicacionCerrando, RegistroLog);
   FGestorArticulos := TGestorArticulosMto.Create(
@@ -1458,16 +1474,15 @@ end;
 
 procedure TfrmMtoGen.CargarIconoPantalla;
 var
-  oProveedor: IProveedorMenuPantallas;
   oRegistro: TfzaWinF;
   oPantalla: TfzaForm;
   sCall: string;
 begin
   imgIconoPantalla.Visible := False;
   imgIconoPantalla.Picture.Assign(nil);
-  if Supports(Owner, IProveedorMenuPantallas, oProveedor) then
+  if Assigned(FProveedorMenu) then
   begin
-    oRegistro := oProveedor.RegistroPantallas;
+    oRegistro := FProveedorMenu.RegistroPantallas;
     sCall := ResolverCallPantallaPorJerarquia(FAnfitrionMto, ClassType);
     if Assigned(oRegistro) and (sCall <> '') then
     begin

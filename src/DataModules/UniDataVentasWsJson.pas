@@ -50,6 +50,13 @@ type
       const AParametrosApp: IParametrosAplicacion;
       AConn: TUniConnection;
       const ASerie, ANumero: string): TJSONArray; static;
+    class function SqlCierreRecuento: string; static;
+    class function SqlCierreResumenTemporadas: string; static;
+    class function SqlCierreResumenFamilias: string; static;
+    class function SqlCierreResumenProveedores: string; static;
+    class function SqlCierreResumenFormasPago: string; static;
+    class function SqlCierreResumenEmpleados: string; static;
+    class function SqlCierreResumenSeries: string; static;
   public
     class function ConstruirEvento(
       const AParametrosApp: IParametrosAplicacion;
@@ -290,6 +297,226 @@ begin
   end;
 end;
 
+// Recuento de efectivo y formas de pago del arqueo.
+class function TVentasWsJson.SqlCierreRecuento: string;
+begin
+  Result :=
+    ' SELECT R.* ' +
+    ' FROM fza_caja_arqueos_recuento R ' +
+    ' INNER JOIN fza_caja_arqueos A ' +
+    '   ON A.CODIGO_ARQ = R.CODIGO_ARQ_ARQR ' +
+    ' WHERE A.CODIGO_EMP_ARQ = :EMPRESA ' +
+    '   AND R.CODIGO_ARQ_ARQR = :CODIGO ' +
+    ' ORDER BY R.ESCAJON_ARQR DESC, R.CODIGO_FP_CFP_ARQR';
+end;
+
+// Unidades y neto por temporada del articulo.
+class function TVentasWsJson.SqlCierreResumenTemporadas: string;
+begin
+  Result :=
+    ' SELECT COALESCE(NULLIF((SELECT COALESCE(PV.PV, ' +
+    '     P.VALOR_LIBRE_ARTPROP) ' +
+    '   FROM fza_articulos_propiedades P ' +
+    '   LEFT JOIN fza_propiedades_valores PV ' +
+    '     ON PV.ID_PV_ARTPROP = P.ID_PV_ARTPROP ' +
+    '   WHERE P.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
+    '     AND P.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
+    '     AND P.CODIGO_UNIDAD_ARTPROP IN ( ' +
+    '       IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ' +
+    '       SUBSTRING_INDEX(' +
+    '         IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ''/'', 2), ' +
+    '       '''') ' +
+    '   ORDER BY LENGTH(P.CODIGO_UNIDAD_ARTPROP) DESC, ' +
+    '     P.CODIGO_UNIDAD_ARTPROP DESC ' +
+    '   LIMIT 1), ''''), ''(sin temporada)'') AS TEMPORADA, ' +
+    '   COALESCE(SUM(L.CANTIDAD_FACLIN), 0) AS UNIDADES, ' +
+    '   COALESCE(SUM(L.TOTAL_FACLIN), 0) AS NETO ' +
+    ' FROM (SELECT DISTINCT ' +
+    '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
+    '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
+    '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
+    '   FROM fza_caja_operaciones O ' +
+    '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
+    '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
+    '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
+    ' INNER JOIN fza_facturas_lineas L ' +
+    '   ON L.CODIGO_EMP_FACLIN = D.EMPRESA ' +
+    '  AND L.SERIE_FAC_FACLIN = D.SERIE ' +
+    '  AND L.NUMERO_FAC_FACLIN = D.NUMERO ' +
+    ' GROUP BY TEMPORADA ORDER BY TEMPORADA';
+end;
+
+// Unidades y neto por familia de articulo.
+class function TVentasWsJson.SqlCierreResumenFamilias: string;
+begin
+  Result :=
+    ' SELECT COALESCE(NULLIF(L.CODIGO_FAM_FACLIN, ''''), ' +
+    '   A.CODIGO_FAM_ART, '''') AS CODIGO_FAMILIA, ' +
+    '   COALESCE(NULLIF(L.NOMBRE_FAM_FACLIN, ''''), ' +
+    '   NULLIF(F.DESCRIPCION_FAM, ''''), ' +
+    '   NULLIF(F.NOMBRE_FAM_FAM, ''''), ' +
+    '   ''(sin familia)'') AS FAMILIA, ' +
+    '   COALESCE(SUM(L.CANTIDAD_FACLIN), 0) AS UNIDADES, ' +
+    '   COALESCE(SUM(L.TOTAL_FACLIN), 0) AS NETO ' +
+    ' FROM (SELECT DISTINCT ' +
+    '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
+    '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
+    '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
+    '   FROM fza_caja_operaciones O ' +
+    '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
+    '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
+    '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
+    ' INNER JOIN fza_facturas_lineas L ' +
+    '   ON L.CODIGO_EMP_FACLIN = D.EMPRESA ' +
+    '  AND L.SERIE_FAC_FACLIN = D.SERIE ' +
+    '  AND L.NUMERO_FAC_FACLIN = D.NUMERO ' +
+    ' LEFT JOIN fza_articulos A ' +
+    '   ON A.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
+    ' LEFT JOIN fza_articulos_familias F ' +
+    '   ON F.CODIGO_FAM_FAM = COALESCE(' +
+    '     NULLIF(L.CODIGO_FAM_FACLIN, ''''), A.CODIGO_FAM_ART) ' +
+    ' GROUP BY CODIGO_FAMILIA, FAMILIA ' +
+    ' ORDER BY FAMILIA';
+end;
+
+// Unidades y neto por proveedor del articulo.
+class function TVentasWsJson.SqlCierreResumenProveedores: string;
+begin
+  Result :=
+    ' SELECT COALESCE(NULLIF(L.CODIGO_PRV_FACLIN, ''''), ' +
+    '   AP.CODIGO_PRV_AP, ''(sin proveedor)'') ' +
+    '   AS CODIGO_PROVEEDOR, ' +
+    '   COALESCE(NULLIF(L.RAZON_SOCIAL_PROVEEDOR_FACLIN, ''''), ' +
+    '   NULLIF(PRV.RAZON_SOCIAL_PRV, ''''), ' +
+    '   NULLIF(L.CODIGO_PRV_FACLIN, ''''), AP.CODIGO_PRV_AP, ' +
+    '   ''(sin proveedor)'') AS PROVEEDOR, ' +
+    '   COALESCE(SUM(L.CANTIDAD_FACLIN), 0) AS UNIDADES, ' +
+    '   COALESCE(SUM(L.TOTAL_FACLIN), 0) AS NETO ' +
+    ' FROM (SELECT DISTINCT ' +
+    '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
+    '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
+    '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
+    '   FROM fza_caja_operaciones O ' +
+    '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
+    '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
+    '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
+    ' INNER JOIN fza_facturas_lineas L ' +
+    '   ON L.CODIGO_EMP_FACLIN = D.EMPRESA ' +
+    '  AND L.SERIE_FAC_FACLIN = D.SERIE ' +
+    '  AND L.NUMERO_FAC_FACLIN = D.NUMERO ' +
+    ' LEFT JOIN fza_articulos A ' +
+    '   ON A.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
+    ' LEFT JOIN fza_articulos_proveedores AP ' +
+    '   ON AP.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
+    '  AND AP.CODIGO_PRV_AP = COALESCE(' +
+    '    NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
+    '    (SELECT APX.CODIGO_PRV_AP ' +
+    '       FROM fza_articulos_proveedores APX ' +
+    '      WHERE APX.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
+    '      ORDER BY CASE ' +
+    '        WHEN APX.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
+    '        THEN 0 ELSE 1 END, ' +
+    '        APX.FECHA_VALIDEZ_AP DESC, APX.CODIGO_PRV_AP ' +
+    '      LIMIT 1)) ' +
+    ' LEFT JOIN fza_proveedores PRV ' +
+    '   ON PRV.CODIGO_PRV_PRV = COALESCE(' +
+    '     NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
+    '     AP.CODIGO_PRV_AP) ' +
+    ' GROUP BY CODIGO_PROVEEDOR, PROVEEDOR ' +
+    ' ORDER BY PROVEEDOR';
+end;
+
+// Operaciones e importe por forma de pago.
+class function TVentasWsJson.SqlCierreResumenFormasPago: string;
+begin
+  Result :=
+    ' SELECT P.CODIGO_FP_CFP AS CODIGO_FORMA_PAGO, ' +
+    '   COALESCE(NULLIF(FP.DESCRIPCION_FORMA_PAGO_CFP, ''''), ' +
+    '   P.CODIGO_FP_CFP) AS FORMA_PAGO, ' +
+    '   COUNT(DISTINCT O.EMPRESA, O.ALMACEN, O.CAJA, ' +
+    '     O.SERIE, O.NUMERO) AS OPERACIONES, ' +
+    '   COALESCE(SUM(COALESCE(P.IMPORTE_ENTREGADO_PAGO, 0) - ' +
+    '     COALESCE(P.IMPORTE_CAMBIO_PAGO, 0)), 0) AS IMPORTE ' +
+    ' FROM (SELECT DISTINCT ' +
+    '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
+    '     O.CODIGO_ALM_OPCAJA AS ALMACEN, ' +
+    '     O.CODIGO_CAJA_OPCAJA AS CAJA, ' +
+    '     COALESCE(O.SERIE_FAC_OPCAJA, '''') AS SERIE, ' +
+    '     O.NUMERO_OPERACION_OPCAJA AS NUMERO ' +
+    '   FROM fza_caja_operaciones O ' +
+    '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO) O ' +
+    ' INNER JOIN fza_caja_pagos P ' +
+    '   ON P.CODIGO_EMP_PAGO = O.EMPRESA ' +
+    '  AND P.CODIGO_ALM_PAGO = O.ALMACEN ' +
+    '  AND P.CODIGO_CAJA_PAGO = O.CAJA ' +
+    '  AND P.SERIE_OPERACION_PAGO = O.SERIE ' +
+    '  AND P.NUMERO_OPERACION_PAGO = O.NUMERO ' +
+    ' LEFT JOIN fza_caja_formas_pago FP ' +
+    '   ON FP.CODIGO_FP_CFP = P.CODIGO_FP_CFP ' +
+    ' GROUP BY P.CODIGO_FP_CFP, FORMA_PAGO ' +
+    ' ORDER BY IMPORTE DESC';
+end;
+
+// Operaciones y neto por empleado.
+class function TVentasWsJson.SqlCierreResumenEmpleados: string;
+begin
+  Result :=
+    ' SELECT D.CODIGO_EMPLEADO AS CODIGO_EMPLEADO, ' +
+    '   COALESCE(NULLIF(E.DIMINUTIVO_TICKET_EMPL, ''''), ' +
+    '   NULLIF(E.NOMBRE_EMPL, ''''), ' +
+    '   D.CODIGO_EMPLEADO, ''?'') AS EMPLEADO, ' +
+    '   COUNT(*) AS OPERACIONES, ' +
+    '   COALESCE(SUM(F.TOTAL_LIQUIDO_FAC), 0) AS NETO ' +
+    ' FROM (SELECT ' +
+    '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
+    '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
+    '     O.NUMERO_FAC_OPCAJA AS NUMERO, ' +
+    '     MAX(O.CODIGO_EMPLEADO_OPCAJA) AS CODIGO_EMPLEADO ' +
+    '   FROM fza_caja_operaciones O ' +
+    '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
+    '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
+    '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''' ' +
+    '   GROUP BY O.CODIGO_EMP_OPCAJA, O.SERIE_FAC_OPCAJA, ' +
+    '     O.NUMERO_FAC_OPCAJA) D ' +
+    ' INNER JOIN fza_facturas F ' +
+    '   ON F.CODIGO_EMP_FAC = D.EMPRESA ' +
+    '  AND F.SERIE_FAC = D.SERIE ' +
+    '  AND F.NUMERO_FAC = D.NUMERO ' +
+    ' LEFT JOIN fza_empleados E ' +
+    '   ON E.CODIGO_EMPL = D.CODIGO_EMPLEADO ' +
+    ' GROUP BY D.CODIGO_EMPLEADO, EMPLEADO ' +
+    ' ORDER BY NETO DESC';
+end;
+
+// Bases, cuotas y total por serie de factura.
+class function TVentasWsJson.SqlCierreResumenSeries: string;
+begin
+  Result :=
+    ' SELECT F.SERIE_FAC AS SERIE, ' +
+    '   COALESCE(SUM(F.TOTAL_BASES_FAC), 0) AS BASE, ' +
+    '   COALESCE(SUM(F.TOTAL_IMPUESTOS_FAC), 0) AS CUOTA, ' +
+    '   COALESCE(SUM(F.TOTAL_LIQUIDO_FAC), 0) AS TOTAL ' +
+    ' FROM (SELECT DISTINCT ' +
+    '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
+    '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
+    '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
+    '   FROM fza_caja_operaciones O ' +
+    '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
+    '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
+    '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
+    '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
+    ' INNER JOIN fza_facturas F ' +
+    '   ON F.CODIGO_EMP_FAC = D.EMPRESA ' +
+    '  AND F.SERIE_FAC = D.SERIE ' +
+    '  AND F.NUMERO_FAC = D.NUMERO ' +
+    ' GROUP BY F.SERIE_FAC ORDER BY F.SERIE_FAC';
+end;
+
 class function TVentasWsJson.ConstruirCierre(
   AConn: TUniConnection;
   const AEmpresa, ACodigo: string): TJSONObject;
@@ -300,211 +527,19 @@ begin
       'cabecera',
       ConstruirCierreCabecera(AConn, AEmpresa, ACodigo));
     Result.AddPair('recuento', ConstruirArrayCierre(
-      AConn,
-      ' SELECT R.* ' +
-      ' FROM fza_caja_arqueos_recuento R ' +
-      ' INNER JOIN fza_caja_arqueos A ' +
-      '   ON A.CODIGO_ARQ = R.CODIGO_ARQ_ARQR ' +
-      ' WHERE A.CODIGO_EMP_ARQ = :EMPRESA ' +
-      '   AND R.CODIGO_ARQ_ARQR = :CODIGO ' +
-      ' ORDER BY R.ESCAJON_ARQR DESC, R.CODIGO_FP_CFP_ARQR',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreRecuento, AEmpresa, ACodigo));
     Result.AddPair('resumen_temporadas', ConstruirArrayCierre(
-      AConn,
-      ' SELECT COALESCE(NULLIF((SELECT COALESCE(PV.PV, ' +
-      '     P.VALOR_LIBRE_ARTPROP) ' +
-      '   FROM fza_articulos_propiedades P ' +
-      '   LEFT JOIN fza_propiedades_valores PV ' +
-      '     ON PV.ID_PV_ARTPROP = P.ID_PV_ARTPROP ' +
-      '   WHERE P.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
-      '     AND P.CODIGO_PROP_ARTPROP = ''TEMPORADA'' ' +
-      '     AND P.CODIGO_UNIDAD_ARTPROP IN ( ' +
-      '       IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ' +
-      '       SUBSTRING_INDEX(' +
-      '         IFNULL(L.CODIGO_UNIDAD_FACLIN, ''''), ''/'', 2), ' +
-      '       '''') ' +
-      '   ORDER BY LENGTH(P.CODIGO_UNIDAD_ARTPROP) DESC, ' +
-      '     P.CODIGO_UNIDAD_ARTPROP DESC ' +
-      '   LIMIT 1), ''''), ''(sin temporada)'') AS TEMPORADA, ' +
-      '   COALESCE(SUM(L.CANTIDAD_FACLIN), 0) AS UNIDADES, ' +
-      '   COALESCE(SUM(L.TOTAL_FACLIN), 0) AS NETO ' +
-      ' FROM (SELECT DISTINCT ' +
-      '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-      '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
-      '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
-      '   FROM fza_caja_operaciones O ' +
-      '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
-      '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
-      '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
-      '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
-      ' INNER JOIN fza_facturas_lineas L ' +
-      '   ON L.CODIGO_EMP_FACLIN = D.EMPRESA ' +
-      '  AND L.SERIE_FAC_FACLIN = D.SERIE ' +
-      '  AND L.NUMERO_FAC_FACLIN = D.NUMERO ' +
-      ' GROUP BY TEMPORADA ORDER BY TEMPORADA',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreResumenTemporadas, AEmpresa, ACodigo));
     Result.AddPair('resumen_familias', ConstruirArrayCierre(
-      AConn,
-      ' SELECT COALESCE(NULLIF(L.CODIGO_FAM_FACLIN, ''''), ' +
-      '   A.CODIGO_FAM_ART, '''') AS CODIGO_FAMILIA, ' +
-      '   COALESCE(NULLIF(L.NOMBRE_FAM_FACLIN, ''''), ' +
-      '   NULLIF(F.DESCRIPCION_FAM, ''''), ' +
-      '   NULLIF(F.NOMBRE_FAM_FAM, ''''), ' +
-      '   ''(sin familia)'') AS FAMILIA, ' +
-      '   COALESCE(SUM(L.CANTIDAD_FACLIN), 0) AS UNIDADES, ' +
-      '   COALESCE(SUM(L.TOTAL_FACLIN), 0) AS NETO ' +
-      ' FROM (SELECT DISTINCT ' +
-      '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-      '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
-      '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
-      '   FROM fza_caja_operaciones O ' +
-      '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
-      '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
-      '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
-      '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
-      ' INNER JOIN fza_facturas_lineas L ' +
-      '   ON L.CODIGO_EMP_FACLIN = D.EMPRESA ' +
-      '  AND L.SERIE_FAC_FACLIN = D.SERIE ' +
-      '  AND L.NUMERO_FAC_FACLIN = D.NUMERO ' +
-      ' LEFT JOIN fza_articulos A ' +
-      '   ON A.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
-      ' LEFT JOIN fza_articulos_familias F ' +
-      '   ON F.CODIGO_FAM_FAM = COALESCE(' +
-      '     NULLIF(L.CODIGO_FAM_FACLIN, ''''), A.CODIGO_FAM_ART) ' +
-      ' GROUP BY CODIGO_FAMILIA, FAMILIA ' +
-      ' ORDER BY FAMILIA',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreResumenFamilias, AEmpresa, ACodigo));
     Result.AddPair('resumen_proveedores', ConstruirArrayCierre(
-      AConn,
-      ' SELECT COALESCE(NULLIF(L.CODIGO_PRV_FACLIN, ''''), ' +
-      '   AP.CODIGO_PRV_AP, ''(sin proveedor)'') ' +
-      '   AS CODIGO_PROVEEDOR, ' +
-      '   COALESCE(NULLIF(L.RAZON_SOCIAL_PROVEEDOR_FACLIN, ''''), ' +
-      '   NULLIF(PRV.RAZON_SOCIAL_PRV, ''''), ' +
-      '   NULLIF(L.CODIGO_PRV_FACLIN, ''''), AP.CODIGO_PRV_AP, ' +
-      '   ''(sin proveedor)'') AS PROVEEDOR, ' +
-      '   COALESCE(SUM(L.CANTIDAD_FACLIN), 0) AS UNIDADES, ' +
-      '   COALESCE(SUM(L.TOTAL_FACLIN), 0) AS NETO ' +
-      ' FROM (SELECT DISTINCT ' +
-      '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-      '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
-      '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
-      '   FROM fza_caja_operaciones O ' +
-      '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
-      '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
-      '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
-      '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
-      ' INNER JOIN fza_facturas_lineas L ' +
-      '   ON L.CODIGO_EMP_FACLIN = D.EMPRESA ' +
-      '  AND L.SERIE_FAC_FACLIN = D.SERIE ' +
-      '  AND L.NUMERO_FAC_FACLIN = D.NUMERO ' +
-      ' LEFT JOIN fza_articulos A ' +
-      '   ON A.CODIGO_ART_ART = L.CODIGO_ART_FACLIN ' +
-      ' LEFT JOIN fza_articulos_proveedores AP ' +
-      '   ON AP.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
-      '  AND AP.CODIGO_PRV_AP = COALESCE(' +
-      '    NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
-      '    (SELECT APX.CODIGO_PRV_AP ' +
-      '       FROM fza_articulos_proveedores APX ' +
-      '      WHERE APX.CODIGO_ART_AP = A.CODIGO_ART_ART ' +
-      '      ORDER BY CASE ' +
-      '        WHEN APX.ESPROVEEDORPRINCIPAL_AP = ''S'' ' +
-      '        THEN 0 ELSE 1 END, ' +
-      '        APX.FECHA_VALIDEZ_AP DESC, APX.CODIGO_PRV_AP ' +
-      '      LIMIT 1)) ' +
-      ' LEFT JOIN fza_proveedores PRV ' +
-      '   ON PRV.CODIGO_PRV_PRV = COALESCE(' +
-      '     NULLIF(TRIM(L.CODIGO_PRV_FACLIN), ''''), ' +
-      '     AP.CODIGO_PRV_AP) ' +
-      ' GROUP BY CODIGO_PROVEEDOR, PROVEEDOR ' +
-      ' ORDER BY PROVEEDOR',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreResumenProveedores, AEmpresa, ACodigo));
     Result.AddPair('resumen_formas_pago', ConstruirArrayCierre(
-      AConn,
-      ' SELECT P.CODIGO_FP_CFP AS CODIGO_FORMA_PAGO, ' +
-      '   COALESCE(NULLIF(FP.DESCRIPCION_FORMA_PAGO_CFP, ''''), ' +
-      '   P.CODIGO_FP_CFP) AS FORMA_PAGO, ' +
-      '   COUNT(DISTINCT O.EMPRESA, O.ALMACEN, O.CAJA, ' +
-      '     O.SERIE, O.NUMERO) AS OPERACIONES, ' +
-      '   COALESCE(SUM(COALESCE(P.IMPORTE_ENTREGADO_PAGO, 0) - ' +
-      '     COALESCE(P.IMPORTE_CAMBIO_PAGO, 0)), 0) AS IMPORTE ' +
-      ' FROM (SELECT DISTINCT ' +
-      '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-      '     O.CODIGO_ALM_OPCAJA AS ALMACEN, ' +
-      '     O.CODIGO_CAJA_OPCAJA AS CAJA, ' +
-      '     COALESCE(O.SERIE_FAC_OPCAJA, '''') AS SERIE, ' +
-      '     O.NUMERO_OPERACION_OPCAJA AS NUMERO ' +
-      '   FROM fza_caja_operaciones O ' +
-      '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
-      '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO) O ' +
-      ' INNER JOIN fza_caja_pagos P ' +
-      '   ON P.CODIGO_EMP_PAGO = O.EMPRESA ' +
-      '  AND P.CODIGO_ALM_PAGO = O.ALMACEN ' +
-      '  AND P.CODIGO_CAJA_PAGO = O.CAJA ' +
-      '  AND P.SERIE_OPERACION_PAGO = O.SERIE ' +
-      '  AND P.NUMERO_OPERACION_PAGO = O.NUMERO ' +
-      ' LEFT JOIN fza_caja_formas_pago FP ' +
-      '   ON FP.CODIGO_FP_CFP = P.CODIGO_FP_CFP ' +
-      ' GROUP BY P.CODIGO_FP_CFP, FORMA_PAGO ' +
-      ' ORDER BY IMPORTE DESC',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreResumenFormasPago, AEmpresa, ACodigo));
     Result.AddPair('resumen_empleados', ConstruirArrayCierre(
-      AConn,
-      ' SELECT D.CODIGO_EMPLEADO AS CODIGO_EMPLEADO, ' +
-      '   COALESCE(NULLIF(E.DIMINUTIVO_TICKET_EMPL, ''''), ' +
-      '   NULLIF(E.NOMBRE_EMPL, ''''), ' +
-      '   D.CODIGO_EMPLEADO, ''?'') AS EMPLEADO, ' +
-      '   COUNT(*) AS OPERACIONES, ' +
-      '   COALESCE(SUM(F.TOTAL_LIQUIDO_FAC), 0) AS NETO ' +
-      ' FROM (SELECT ' +
-      '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-      '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
-      '     O.NUMERO_FAC_OPCAJA AS NUMERO, ' +
-      '     MAX(O.CODIGO_EMPLEADO_OPCAJA) AS CODIGO_EMPLEADO ' +
-      '   FROM fza_caja_operaciones O ' +
-      '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
-      '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
-      '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
-      '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''' ' +
-      '   GROUP BY O.CODIGO_EMP_OPCAJA, O.SERIE_FAC_OPCAJA, ' +
-      '     O.NUMERO_FAC_OPCAJA) D ' +
-      ' INNER JOIN fza_facturas F ' +
-      '   ON F.CODIGO_EMP_FAC = D.EMPRESA ' +
-      '  AND F.SERIE_FAC = D.SERIE ' +
-      '  AND F.NUMERO_FAC = D.NUMERO ' +
-      ' LEFT JOIN fza_empleados E ' +
-      '   ON E.CODIGO_EMPL = D.CODIGO_EMPLEADO ' +
-      ' GROUP BY D.CODIGO_EMPLEADO, EMPLEADO ' +
-      ' ORDER BY NETO DESC',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreResumenEmpleados, AEmpresa, ACodigo));
     Result.AddPair('resumen_series', ConstruirArrayCierre(
-      AConn,
-      ' SELECT F.SERIE_FAC AS SERIE, ' +
-      '   COALESCE(SUM(F.TOTAL_BASES_FAC), 0) AS BASE, ' +
-      '   COALESCE(SUM(F.TOTAL_IMPUESTOS_FAC), 0) AS CUOTA, ' +
-      '   COALESCE(SUM(F.TOTAL_LIQUIDO_FAC), 0) AS TOTAL ' +
-      ' FROM (SELECT DISTINCT ' +
-      '     O.CODIGO_EMP_OPCAJA AS EMPRESA, ' +
-      '     O.SERIE_FAC_OPCAJA AS SERIE, ' +
-      '     O.NUMERO_FAC_OPCAJA AS NUMERO ' +
-      '   FROM fza_caja_operaciones O ' +
-      '   WHERE O.CODIGO_EMP_OPCAJA = :EMPRESA ' +
-      '     AND O.CODIGO_ARQUEO_OPCAJA = :CODIGO ' +
-      '     AND COALESCE(O.SERIE_FAC_OPCAJA, '''') <> '''' ' +
-      '     AND COALESCE(O.NUMERO_FAC_OPCAJA, '''') <> '''') D ' +
-      ' INNER JOIN fza_facturas F ' +
-      '   ON F.CODIGO_EMP_FAC = D.EMPRESA ' +
-      '  AND F.SERIE_FAC = D.SERIE ' +
-      '  AND F.NUMERO_FAC = D.NUMERO ' +
-      ' GROUP BY F.SERIE_FAC ORDER BY F.SERIE_FAC',
-      AEmpresa,
-      ACodigo));
+      AConn, SqlCierreResumenSeries, AEmpresa, ACodigo));
   except
     FreeAndNil(Result);
     raise;

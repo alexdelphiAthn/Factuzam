@@ -25,7 +25,7 @@ function CrearServicioReaperturaBorrador(
   const AParametrosCaja: IParametrosCaja;
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioReaperturaFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   const ARegistroLog: IRegistroLog
 ): IServicioReaperturaBorrador;
 
@@ -44,7 +44,7 @@ type
     FParametrosCaja: IParametrosCaja;
     FConexion: TUniConnection;
     FRepositorio: IRepositorioReaperturaFactura;
-    FRepositorioVentasWs: IRepositorioVentasWsCola;
+    FRepositorioVentasWs: IAltaVentasWsCola;
     FRegistroLog: IRegistroLog;
     function Evaluar(
       const ASerie, ANumero: string;
@@ -58,7 +58,7 @@ type
       const AParametrosCaja: IParametrosCaja;
       AConexion: TUniConnection;
       const ARepositorio: IRepositorioReaperturaFactura;
-      const ARepositorioVentasWs: IRepositorioVentasWsCola;
+      const ARepositorioVentasWs: IAltaVentasWsCola;
       const ARegistroLog: IRegistroLog);
     function Validar(
       const ASerie, ANumero: string
@@ -72,7 +72,7 @@ constructor TServicioReaperturaBorrador.Create(
   const AParametrosCaja: IParametrosCaja;
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioReaperturaFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   const ARegistroLog: IRegistroLog);
 begin
   inherited Create;
@@ -177,7 +177,7 @@ function CrearServicioReaperturaBorrador(
   const AParametrosCaja: IParametrosCaja;
   AConexion: TUniConnection;
   const ARepositorio: IRepositorioReaperturaFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   const ARegistroLog: IRegistroLog
 ): IServicioReaperturaBorrador;
 begin

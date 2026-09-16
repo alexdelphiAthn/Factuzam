@@ -10,7 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Cola transaccional de eventos de venta y envío al webservice de respaldo. }
-{    La persistencia entra por IRepositorioVentasWsCola.                       }
+{    El alta entra por IAltaVentasWsCola; el despacho de la cola               }
+{    por IDespachoVentasWsCola.                                                }
 {******************************************************************************}
 unit inLibVentasWsCola;
 
@@ -30,7 +31,7 @@ type
       const AParametrosCaja: IParametrosCaja): Boolean; static;
     class procedure AdjuntarPdfSeguro(
       const AParametrosCaja: IParametrosCaja;
-      const ARepositorio: IRepositorioVentasWsCola;
+      const ARepositorio: IAltaVentasWsCola;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string;
       AEsFactura: Boolean;
@@ -38,24 +39,24 @@ type
   public
     class procedure RegistrarFactura(
       const AParametrosCaja: IParametrosCaja;
-      const ARepositorio: IRepositorioVentasWsCola;
+      const ARepositorio: IAltaVentasWsCola;
       const AUsuario: string;
       const ASerie, ANumero, ATipoOperacion: string); static;
     class procedure RegistrarEventoSeguro(
       const AParametrosCaja: IParametrosCaja;
-      const ARepositorio: IRepositorioVentasWsCola;
+      const ARepositorio: IAltaVentasWsCola;
       const AUsuario: string;
       const ATipoEvento, ASerie, ANumero: string;
       const ARegistroLog: IRegistroLog); static;
     class procedure AdjuntarTicketPdfSeguro(
       const AParametrosCaja: IParametrosCaja;
-      const ARepositorio: IRepositorioVentasWsCola;
+      const ARepositorio: IAltaVentasWsCola;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string;
       const ARegistroLog: IRegistroLog); static;
     class procedure AdjuntarFacturaPdfSeguro(
       const AParametrosCaja: IParametrosCaja;
-      const ARepositorio: IRepositorioVentasWsCola;
+      const ARepositorio: IAltaVentasWsCola;
       const AUsuario: string;
       const ASerie, ANumero, ARutaPdf: string;
       const ARegistroLog: IRegistroLog); static;
@@ -84,7 +85,7 @@ type
   THiloVentasWsCola = class(TThread)
   private
     FSesion: ISesionVentasWs;
-    FRepositorio: IRepositorioVentasWsCola;
+    FRepositorio: IDespachoVentasWsCola;
     FRegistradorIntentos: IRegistradorIntentosVentasWsCola;
     FContextoSesion: IContextoSesionAplicacion;
     FParametrosApp: IParametrosAplicacion;
@@ -257,7 +258,7 @@ end;
 
 class procedure TVentasWsCola.RegistrarFactura(
   const AParametrosCaja: IParametrosCaja;
-  const ARepositorio: IRepositorioVentasWsCola;
+  const ARepositorio: IAltaVentasWsCola;
   const AUsuario: string;
   const ASerie, ANumero, ATipoOperacion: string);
 var
@@ -286,7 +287,7 @@ end;
 
 class procedure TVentasWsCola.RegistrarEventoSeguro(
   const AParametrosCaja: IParametrosCaja;
-  const ARepositorio: IRepositorioVentasWsCola;
+  const ARepositorio: IAltaVentasWsCola;
   const AUsuario: string;
   const ATipoEvento, ASerie, ANumero: string;
   const ARegistroLog: IRegistroLog);
@@ -308,7 +309,7 @@ end;
 
 class procedure TVentasWsCola.AdjuntarTicketPdfSeguro(
   const AParametrosCaja: IParametrosCaja;
-  const ARepositorio: IRepositorioVentasWsCola;
+  const ARepositorio: IAltaVentasWsCola;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string;
   const ARegistroLog: IRegistroLog);
@@ -326,7 +327,7 @@ end;
 
 class procedure TVentasWsCola.AdjuntarFacturaPdfSeguro(
   const AParametrosCaja: IParametrosCaja;
-  const ARepositorio: IRepositorioVentasWsCola;
+  const ARepositorio: IAltaVentasWsCola;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string;
   const ARegistroLog: IRegistroLog);
@@ -344,7 +345,7 @@ end;
 
 class procedure TVentasWsCola.AdjuntarPdfSeguro(
   const AParametrosCaja: IParametrosCaja;
-  const ARepositorio: IRepositorioVentasWsCola;
+  const ARepositorio: IAltaVentasWsCola;
   const AUsuario: string;
   const ASerie, ANumero, ARutaPdf: string;
   AEsFactura: Boolean;

@@ -20,7 +20,7 @@ uses
   Uni, inLibVentasWsColaIntf;
 
 function CrearRepositorioVentasWsColaUniDAC(
-  AConexion: TUniConnection): IRepositorioVentasWsCola;
+  AConexion: TUniConnection): IDespachoVentasWsCola;
 
 implementation
 
@@ -30,7 +30,8 @@ uses
 type
   TRepositorioVentasWsColaUniDAC = class(
     TInterfacedObject,
-    IRepositorioVentasWsCola)
+    IAltaVentasWsCola,
+    IDespachoVentasWsCola)
   private
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
@@ -431,7 +432,7 @@ begin
 end;
 
 function CrearRepositorioVentasWsColaUniDAC(
-  AConexion: TUniConnection): IRepositorioVentasWsCola;
+  AConexion: TUniConnection): IDespachoVentasWsCola;
 begin
   Result := TRepositorioVentasWsColaUniDAC.Create(AConexion);
 end;

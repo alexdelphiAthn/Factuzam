@@ -356,7 +356,7 @@ procedure AbrirMantenimiento(
   const AMantenimiento: IMantenimientoEmbebido);
 begin
   if Assigned(AMantenimiento) and
-     PrepararPrecargaMantenimiento(AMantenimiento, ADestino.Rol) then
+     AMantenimiento.PrepararPrecarga(ADestino.Rol) then
   begin
     if AContexto.Busqueda <> '' then
     begin

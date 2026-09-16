@@ -197,6 +197,7 @@ begin
   Servicios := TServiciosColumnasSkuUniDAC.Create(AConexion);
   Result.Busqueda := Servicios;
   Result.Paleta := Servicios;
+  Result.PaletaAnclada := Servicios;
   Result.PersistenciaTallas := Servicios;
   Result.ModoDesglose := Servicios;
 end;

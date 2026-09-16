@@ -35,7 +35,7 @@ function CrearServiciosOperacionCaja(
   const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
   const ARepositorioConsultas: IRepositorioConsultasCaja;
   const ARepositorioPdf: IRepositorioPdfFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   const ARegistroLog: IRegistroLog
 ): TContextoDependenciasOperacionCaja;
 
@@ -55,7 +55,7 @@ function CrearServiciosOperacionCaja(
   const AUnidadTrabajo: IUnidadTrabajoVentaCaja;
   const ARepositorioConsultas: IRepositorioConsultasCaja;
   const ARepositorioPdf: IRepositorioPdfFactura;
-  const ARepositorioVentasWs: IRepositorioVentasWsCola;
+  const ARepositorioVentasWs: IAltaVentasWsCola;
   const ARegistroLog: IRegistroLog
 ): TContextoDependenciasOperacionCaja;
 begin

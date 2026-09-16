@@ -60,6 +60,9 @@ type
   TServiciosColumnasSku = record
     Busqueda: IFabricaBusquedaTallas;
     Paleta: IPresentacionAtributosSku;
+    // Variante anclada del selector de valores. No todos los
+    // proveedores de paleta la ofrecen, por eso viaja aparte.
+    PaletaAnclada: ISelectorValorAtributoAnclado;
     PersistenciaTallas: IFabricaPersistenciaTallas;
     ModoDesglose: IFabricaModoEntradaDesglose;
   end;

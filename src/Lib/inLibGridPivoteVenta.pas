@@ -947,6 +947,7 @@ end;
 
 function SeleccionarValorHorizontal(
   const ASelector: IPresentacionAtributosSku;
+  const ASelectorAnclado: ISelectorValorAtributoAnclado;
   const AAtributo: TArticuloAtributo;
   const AValores: TArray<TArticuloAtributoValor>;
   AEsTalla, AEsColor: Boolean;
@@ -955,7 +956,6 @@ function SeleccionarValorHorizontal(
 var
   aValoresTexto: TArray<string>;
   i: Integer;
-  oSelectorAnclado: ISelectorValorAtributoAnclado;
 begin
   Result := Length(AValores) > 0;
   AValor := '';
@@ -969,9 +969,8 @@ begin
       for i := 0 to High(AValores) do
         aValoresTexto[i] := AValores[i].Valor;
       if AEsColor and AAnclaje.Valido and
-         Supports(ASelector, ISelectorValorAtributoAnclado,
-           oSelectorAnclado) then
-        Result := oSelectorAnclado.SeleccionarEn(
+         Assigned(ASelectorAnclado) then
+        Result := ASelectorAnclado.SeleccionarEn(
           AAtributo.NombreAtributo, aValoresTexto,
           AAnclaje, AValor)
       else
@@ -1054,7 +1053,8 @@ begin
         // Los atributos no pivotados, como el color, siguen definiendo
         // el grupo horizontal y pueden necesitar selección.
         bCancelado := not SeleccionarValorHorizontal(
-          FConfig.Servicios.Paleta, aAtribs[i], aAvs,
+          FConfig.Servicios.Paleta,
+          FConfig.Servicios.PaletaAnclada, aAtribs[i], aAvs,
           bEsTalla, bEsColor, oAnclajeColor, sAvNuevo);
         if not bCancelado then
         begin

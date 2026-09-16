@@ -538,11 +538,12 @@ end;
 
 procedure TGridArticulosLineas.LiberarEnterAsTab(Sender: TObject);
 begin
-  if FEnterAsTabSolicitado then
+  // Con la lista desplegada el Enter lo consume el propio editor: la
+  // solicitud sigue viva hasta que se cierre.
+  if FEnterAsTabSolicitado and
+     not ((Sender is TcxCustomDropDownEdit) and
+          TcxCustomDropDownEdit(Sender).DroppedDown) then
   begin
-    if (Sender is TcxCustomDropDownEdit) and
-       TcxCustomDropDownEdit(Sender).DroppedDown then
-      Exit;
     FEnterAsTabSolicitado := False;
     if Assigned(FOnSalirEdicion) then
       FOnSalirEdicion(Sender);

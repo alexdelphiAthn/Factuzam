@@ -358,31 +358,33 @@ begin
     // No se recarga durante un Insert o Edit para evitar reentradas.
     sClave := FCodigoEmpresa + '|' + FCodigoAlmacen + '|' + FSerie + '|' +
       FNumero;
-    if ASoloSiCambiaClave and cdsLineas.Active and
-       (FClaveLineasCargada = sClave) then
-      Exit;
-    FClaveLineasCargada := '';
-    if Assigned(FAlEmpezarCargaLineas) then
-      FAlEmpezarCargaLineas(ContarLineasInventario);
-    try
-      unqryLineas.Close;
-      unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
-      unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
-      unqryLineas.ParamByName('SERIE').AsString   := FSerie;
-      unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
-      unqryLineas.Open;
-      if cdsLineas.Active then
-        cdsLineas.Close;
-      // Los atributos (ATTR1..5/NUM) los calcula Midas registro a
-      // registro al leerlo (cdsLineasCalcFields con dsInternalCalc):
-      // ninguna pasada extra sobre las lineas.
-      FCalcularAtributosAlLeer := FDesempaquetarAlCargar;
-      RecargarCdsLineas;
-      FLineasDesempaquetadas := FCalcularAtributosAlLeer;
-      FClaveLineasCargada := sClave;
-    finally
-      if Assigned(FAlTerminarCargaLineas) then
-        FAlTerminarCargaLineas();
+    // Con la misma clave ya cargada no hace falta releer las lineas.
+    if not (ASoloSiCambiaClave and cdsLineas.Active and
+            (FClaveLineasCargada = sClave)) then
+    begin
+      FClaveLineasCargada := '';
+      if Assigned(FAlEmpezarCargaLineas) then
+        FAlEmpezarCargaLineas(ContarLineasInventario);
+      try
+        unqryLineas.Close;
+        unqryLineas.ParamByName('EMPRESA').AsString := FCodigoEmpresa;
+        unqryLineas.ParamByName('ALMACEN').AsString := FCodigoAlmacen;
+        unqryLineas.ParamByName('SERIE').AsString   := FSerie;
+        unqryLineas.ParamByName('NUMERO').AsString  := FNumero;
+        unqryLineas.Open;
+        if cdsLineas.Active then
+          cdsLineas.Close;
+        // Los atributos (ATTR1..5/NUM) los calcula Midas registro a
+        // registro al leerlo (cdsLineasCalcFields con dsInternalCalc):
+        // ninguna pasada extra sobre las lineas.
+        FCalcularAtributosAlLeer := FDesempaquetarAlCargar;
+        RecargarCdsLineas;
+        FLineasDesempaquetadas := FCalcularAtributosAlLeer;
+        FClaveLineasCargada := sClave;
+      finally
+        if Assigned(FAlTerminarCargaLineas) then
+          FAlTerminarCargaLineas();
+      end;
     end;
   end;
 end;

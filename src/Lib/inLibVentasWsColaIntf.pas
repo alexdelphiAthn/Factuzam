@@ -29,8 +29,10 @@ type
     Intentos: Integer;
     Contenido: string;
   end;
-  IRepositorioVentasWsCola = interface
-    ['{3F278436-0936-47F8-B8DD-D024273A4851}']
+  // Alta de eventos en la cola: lo que necesita quien factura,
+  // cobra o cierra un arqueo.
+  IAltaVentasWsCola = interface
+    ['{E373214F-AE19-4914-9B32-E0F42990C337}']
     function Encolar(
       const AIdEvento, ATipoEvento, ASerie, ANumero,
         AUsuario: string): Int64;
@@ -44,6 +46,11 @@ type
       AEsFactura: Boolean;
       AIdCola: Int64;
       const ARutaPdf, AUsuario: string);
+  end;
+  // Despacho de la cola: lo que necesita el hilo que envia al
+  // webservice. Quien despacha tambien puede dar de alta.
+  IDespachoVentasWsCola = interface(IAltaVentasWsCola)
+    ['{3F278436-0936-47F8-B8DD-D024273A4851}']
     procedure ReencolarProcesandoCaducadas;
     function BuscarPendientes(
       AMaximo: Integer): TArray<Int64>;
@@ -67,11 +74,11 @@ type
   end;
   ISesionVentasWs = interface
     ['{06E365D5-63CF-48D0-9D6E-165A815DBB77}']
-    function GetRepositorio: IRepositorioVentasWsCola;
+    function GetRepositorio: IDespachoVentasWsCola;
     function GetJson: IVentasWsJson;
     function GetRegistradorIntentos:
       IRegistradorIntentosVentasWsCola;
-    property Repositorio: IRepositorioVentasWsCola read GetRepositorio;
+    property Repositorio: IDespachoVentasWsCola read GetRepositorio;
     property Json: IVentasWsJson read GetJson;
     property RegistradorIntentos: IRegistradorIntentosVentasWsCola
       read GetRegistradorIntentos;

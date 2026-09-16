@@ -86,6 +86,7 @@ type
     FOnNotificarMensaje: TNotificarMensajeDatosEvent;
     procedure ConectarConsultas;
     procedure ConfigurarConsultaMaestro;
+    function SqlFiltroTextoMaestro: string;
     procedure ConfigurarConsultasCaja;
     procedure ConfigurarConsultasMovimientoCliente;
     procedure ConfigurarConsultasDepositoFactura;
@@ -159,6 +160,37 @@ begin
   qryFacturaLin.Connection  := FConexion;
 end;
 
+// Filtro de texto libre del maestro: numero de operacion, numero de
+// factura, razon social del cliente, concepto de caja y lineas de la
+// factura asociada.
+function TdmConsultaOpe.SqlFiltroTextoMaestro: string;
+begin
+  Result :=
+    '   AND ( :PTXT = '''' '                                              +
+    '         OR o.NUMERO_OPERACION_OPCAJA LIKE CONCAT(''%'', :PTXT, ''%'') ' +
+    '         OR COALESCE(fd.NUMERO_FAC, fo.NUMERO_FAC) '             +
+    '            LIKE CONCAT(''%'', :PTXT, ''%'') '                   +
+    '         OR cli.RAZON_SOCIAL_CLI LIKE CONCAT(''%'', :PTXT, ''%'') ' +
+    '         OR o.CONCEPTO_GASTO_INGRESO_OPCAJA LIKE CONCAT(''%'', :PTXT, ' +
+    '''%'') ' +
+    '         OR EXISTS ( '                                                +
+    '               SELECT 1 FROM fza_facturas_lineas l '                  +
+    '                WHERE l.CODIGO_EMP_FACLIN   = o.CODIGO_EMP_OPCAJA ' +
+    '                  AND l.CODIGO_ALM_FACLIN   = o.CODIGO_ALM_OPCAJA ' +
+    '                  AND l.CODIGO_CAJA_FACLIN      = o.CODIGO_CAJA_OPCAJA ' +
+    '                  AND l.NUMERO_OPERACION_FACLIN = ' +
+    'o.NUMERO_OPERACION_OPCAJA ' +
+    '                  AND ( l.DESCRIPCION_ARTICULO_FACLIN LIKE ' +
+    'CONCAT(''%'', :PTXT, ''%'') ' +
+    '                     OR l.CODIGO_ART_FACLIN      LIKE CONCAT(''%'', ' +
+    ':PTXT, ''%'') ' +
+    '                     OR l.CODIGO_UNIDAD_FACLIN        LIKE ' +
+    'CONCAT(''%'', :PTXT, ''%'') ' +
+    '                      ) '                                             +
+    '                   ) '                                                +
+    '       ) ';
+end;
+
 procedure TdmConsultaOpe.ConfigurarConsultaMaestro;
 begin
   // Una fila por numero, agrupando todos sus tipos de operacion.
@@ -218,29 +250,7 @@ begin
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA') +
-    '   AND ( :PTXT = '''' '                                              +
-    '         OR o.NUMERO_OPERACION_OPCAJA LIKE CONCAT(''%'', :PTXT, ''%'') ' +
-    '         OR COALESCE(fd.NUMERO_FAC, fo.NUMERO_FAC) '             +
-    '            LIKE CONCAT(''%'', :PTXT, ''%'') '                   +
-    '         OR cli.RAZON_SOCIAL_CLI LIKE CONCAT(''%'', :PTXT, ''%'') ' +
-    '         OR o.CONCEPTO_GASTO_INGRESO_OPCAJA LIKE CONCAT(''%'', :PTXT, ' +
-    '''%'') ' +
-    '         OR EXISTS ( '                                                +
-    '               SELECT 1 FROM fza_facturas_lineas l '                  +
-    '                WHERE l.CODIGO_EMP_FACLIN   = o.CODIGO_EMP_OPCAJA ' +
-    '                  AND l.CODIGO_ALM_FACLIN   = o.CODIGO_ALM_OPCAJA ' +
-    '                  AND l.CODIGO_CAJA_FACLIN      = o.CODIGO_CAJA_OPCAJA ' +
-    '                  AND l.NUMERO_OPERACION_FACLIN = ' +
-    'o.NUMERO_OPERACION_OPCAJA ' +
-    '                  AND ( l.DESCRIPCION_ARTICULO_FACLIN LIKE ' +
-    'CONCAT(''%'', :PTXT, ''%'') ' +
-    '                     OR l.CODIGO_ART_FACLIN      LIKE CONCAT(''%'', ' +
-    ':PTXT, ''%'') ' +
-    '                     OR l.CODIGO_UNIDAD_FACLIN        LIKE ' +
-    'CONCAT(''%'', :PTXT, ''%'') ' +
-    '                      ) '                                             +
-    '                   ) '                                                +
-    '       ) '                                                           +
+    SqlFiltroTextoMaestro +
     ' GROUP BY o.CODIGO_EMP_OPCAJA, '                                 +
     '          o.CODIGO_ALM_OPCAJA, '                                 +
     '          o.CODIGO_CAJA_OPCAJA, '                                    +
