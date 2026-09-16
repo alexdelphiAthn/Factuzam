@@ -88,10 +88,10 @@ const
   CNombre: string = 'Alejandro Laorden Hidalgo';
   CEmail:  string = 'alejandro.laorden@protonmail.com';
   CRutas:  array[0..3] of string = (
-    'fondo.png',
-    '..\..\fondo.png',
-    'logo_art\icon-256.png',
-    '..\..\logo_art\icon-256.png'
+    'fondo_verde.png',
+    '..\..\fondo_verde.png',
+    'icon-verde-256.png',
+    '..\..\icon-verde-256.png'
   );
 var
   sBase, sRuta: string;
@@ -105,7 +105,7 @@ begin
   // valor cableado (que ademas en versiones antiguas era una direccion
   // de batch antigua).
   hlEmail.Text := CEmail;
-  // Cargamos fondo.png (recurso RCDATA 'FONDO' embebido via {$R fondo.res}
+  // Cargamos fondo_verde.png (recurso RCDATA 'FONDO' embebido via {$R fondo.res}
   // en fzam.dpr, o fichero suelto con las mismas rutas que
   // TfrmMtoPrincipal.CargarFondoLogo) en un PNG original y lo escalamos al
   // area de imagen con GDI+ (bicubica, alfa preservado) en vez de dejar que

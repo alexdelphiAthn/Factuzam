@@ -286,8 +286,8 @@ end;
 function TPresentacionInicioPrincipal.CargarFondoDisco: Boolean;
 const
   RUTAS: array[0..1] of string = (
-    'fondo.png',
-    '..\..\fondo.png');
+    'fondo_verde.png',
+    '..\..\fondo_verde.png');
 var
   i: Integer;
   sBase: string;
