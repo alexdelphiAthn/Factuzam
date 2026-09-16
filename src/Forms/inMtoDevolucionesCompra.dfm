@@ -471,14 +471,13 @@
             object tsTotales: TcxTabSheet
               Caption = '&2_Totales'
               ImageIndex = 2
-              object scrTotales: TScrollBox
+              object scrTotales: TcxScrollBox
                 Left = 0
                 Top = 0
                 Width = 929
                 Height = 347
                 Align = alClient
-                BorderStyle = bsNone
-                ParentBackground = True
+                BorderStyle = cxcbsNone
                 TabOrder = 0
                 object lblTotalesTotalBase: TcxLabel
                   Left = 38
@@ -655,7 +654,7 @@
                   TabOrder = 18
                   Width = 91
                 end
-                object grpDesgloseImpuestos: TGroupBox
+                object grpDesgloseImpuestos: TcxGroupBox
                   Left = 384
                   Top = 11
                   Width = 525

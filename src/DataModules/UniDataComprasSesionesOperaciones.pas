@@ -383,11 +383,8 @@ begin
   ds.FieldByName('CODIGO_ART_REUSAR_SESLIN').AsString := AResul.CodigoArt;
   ds.FieldByName('CODIGO_ART_TENTATIVO_SESLIN').AsString := AResul.CodigoArt;
 
-  // Datos del articulo. No machacamos descripcion si el usuario ya
-  // tecleo algo (>0 caracteres distinto) — pero al ser REUSAR del
-  // mismo articulo, la descripcion oficial es la del maestro: la
-  // sobrescribimos siempre.
-  ds.FieldByName('DESCRIPCION_SESLIN').AsString := AResul.DescripcionArt;
+  ds.FieldByName('DESCRIPCION_SESLIN').AsString :=
+    ADM.DescripcionParaLinea(AResul.DescripcionArt);
   if AResul.CodigoFam <> '' then
     ds.FieldByName('CODIGO_FAM_SESLIN').AsString := AResul.CodigoFam;
   if AResul.TipoArt <> '' then

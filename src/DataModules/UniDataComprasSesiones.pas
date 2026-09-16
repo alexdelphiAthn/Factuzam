@@ -260,6 +260,9 @@ type
     // Reabre la ficha y los kits del proveedor indicado (pestaña Proveedor).
     // Con cadena vacia deja las queries cerradas.
     procedure RecargarProveedorSesion(const ACodigoPrv: string);
+    procedure HeredarDescripcionProveedor;
+    function DejarDescripcionEnBlanco: Boolean;
+    function DescripcionParaLinea(const ADescripcion: string): string;
 
     // Abre las tres queries de impresion para una sesion concreta.
     // Usado por TfrmPrintSesion.preparar_consulta.
@@ -284,6 +287,9 @@ uses
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 {$R *.dfm}
+
+const
+  fdescripcionblanco = 'ESDESCRIPCION_BLANCO_SES';
 
 resourcestring
   SErrorImportacionOcrConUnidadTrabajoActiva =
@@ -702,7 +708,7 @@ end;
 
 procedure TdmComprasSesiones.ConfigurarSqlCabecera;
 const
-  CAMPOS_SES: array[0..79] of string = (
+  CAMPOS_SES: array[0..80] of string = (
     'SERIE_SES',
     'NUMERO_SES',
     'FECHA_SES',
@@ -737,6 +743,7 @@ const
     'ESGENERA_ALBARAN_SES',
     'ESFORMATO_DISTRIBUIDO_SES',
     'ESCOPIAR_DESCRIPCION_FAM_SES',
+    fdescripcionblanco,
     'SERIE_PEDC_SES',
     'NUMERO_PEDC_SES',
     'SERIE_ALBC_SES',
@@ -1115,6 +1122,7 @@ begin
       FieldByName('ESFORMATO_DISTRIBUIDO_SES').AsString := 'N';
     if FindField('ESCOPIAR_DESCRIPCION_FAM_SES') <> nil then
       FieldByName('ESCOPIAR_DESCRIPCION_FAM_SES').AsString := 'S';
+    FieldByName(fdescripcionblanco).AsString := 'N';
     // Contador de lineas: cada nueva linea hace +10 sobre este valor
     // (mismo patron que facturas/pedidos/albaranes). Arrancar en 0 => la
     // primera linea sera 10, la segunda 20, etc.
@@ -1819,6 +1827,36 @@ begin
     if not unqryPrvKitsDet.Active then
       unqryPrvKitsDet.Open;
   end;
+end;
+
+procedure TdmComprasSesiones.HeredarDescripcionProveedor;
+var
+  sValor: string;
+begin
+  sValor := 'N';
+  if unqryPrvFicha.Active and (not unqryPrvFicha.IsEmpty) and
+     SameText(unqryPrvFicha.FieldByName(
+       'ESDESCRIPCION_BLANCO_PRV').AsString, 'S') then
+    sValor := 'S';
+  if not (unqryTablaG.State in [dsInsert, dsEdit]) then
+    unqryTablaG.Edit;
+  unqryTablaG.FieldByName(fdescripcionblanco).AsString := sValor;
+end;
+
+function TdmComprasSesiones.DejarDescripcionEnBlanco: Boolean;
+begin
+  Result := unqryTablaG.Active and (not unqryTablaG.IsEmpty) and
+    SameText(unqryTablaG.FieldByName(
+      fdescripcionblanco).AsString, 'S');
+end;
+
+function TdmComprasSesiones.DescripcionParaLinea(
+  const ADescripcion: string): string;
+begin
+  if DejarDescripcionEnBlanco then
+    Result := ''
+  else
+    Result := ADescripcion;
 end;
 
 procedure TdmComprasSesiones.PrepararPrint(const ASerie, ANumero: string);

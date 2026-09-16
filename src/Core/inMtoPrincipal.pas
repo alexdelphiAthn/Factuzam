@@ -332,7 +332,7 @@ type
       const AIdentidad: TIdentidadSesion;
       const AUbicacion: TUbicacionSesion);
     procedure FinalizarArranqueAplicacion;
-    procedure AbrirUrlAyuda(const AUrl: string);
+    procedure AbrirUrlAyuda(const ATitulo, AUrl: string);
     procedure AppException(Sender: TObject; E: Exception);
     procedure AplicarPermisosMenu;
     procedure AvisarFalloCargaPermisos(const ADetalle: string);
@@ -1440,6 +1440,8 @@ begin
     imgFondoLogo.BringToFront;
     if Assigned(FPresentacionInicio) then
       FPresentacionInicio.ActualizarFondo;
+    // Con la ventana ya creada: fondo del skin en la barra y submenus.
+    FPainterMenu.AplicarFondo(jvMnMenuPrin);
   end;
 end;
 
@@ -1780,18 +1782,9 @@ begin
   end;
 end;
 
-procedure TfrmMtoPrincipal.AbrirUrlAyuda(const AUrl: string);
-var
-  Resultado: HINST;
+procedure TfrmMtoPrincipal.AbrirUrlAyuda(const ATitulo, AUrl: string);
 begin
-  Resultado := ShellExecute(0,
-                            'open',
-                            PChar(AUrl),
-                            nil,
-                            nil,
-                            SW_SHOWNORMAL);
-  if Resultado <= 32 then
-    ShowMessage_fza(Format(SErrorAbrirDireccion, [AUrl]));
+  MostrarAyudaWeb(Self, StripHotkey(ATitulo), AUrl);
 end;
 
 procedure TfrmMtoPrincipal.mnuAcercadeClick(Sender: TObject);
@@ -1803,7 +1796,7 @@ end;
 procedure TfrmMtoPrincipal.mnuForoSoporteClick(Sender: TObject);
 begin
   inherited;
-  AbrirUrlAyuda(URL_FORO_SOPORTE);
+  AbrirUrlAyuda(mnuForoSoporte.Caption, URL_FORO_SOPORTE);
 end;
 
 procedure TfrmMtoPrincipal.mnuConsultaStocksClick(Sender: TObject);
@@ -1829,7 +1822,7 @@ end;
 procedure TfrmMtoPrincipal.mnuManualWebClick(Sender: TObject);
 begin
   inherited;
-  AbrirUrlAyuda(URL_MANUAL_WEB);
+  AbrirUrlAyuda(mnuManualWeb.Caption, URL_MANUAL_WEB);
 end;
 
 procedure TfrmMtoPrincipal.mnuProcesosAuxiliaresBBDDClick(

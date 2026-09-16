@@ -25,7 +25,7 @@ uses
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
   cxData, cxDataStorage, cxEdit, cxNavigator, dxDateRanges, Data.DB, cxDBData,
   Vcl.Menus, cxContainer, dxSkinsForm, cxClasses, cxLocalization, cxDBNavigator,
-  cxLabel, Vcl.StdCtrls, cxButtons, cxGridLevel, cxGridCustomView,
+  cxLabel, cxScrollBox, Vcl.StdCtrls, cxButtons, cxGridLevel, cxGridCustomView,
   cxGridCustomTableView, cxGridTableView, cxGridDBTableView, cxGrid, cxPC,
   Vcl.ExtCtrls, UniDataConn, UniDataClientes,
   Vcl.ToolWin, Vcl.ActnMan, Vcl.ActnCtrls, cxTextEdit, Vcl.Buttons, dxBevel,
@@ -75,8 +75,8 @@ type
     pcPestanas: TcxPageControl;
     tsDomicilioFiscal: TcxTabSheet;
     tsMasDatos: TcxTabSheet;
-    scrDomicilioFiscal: TScrollBox;
-    scrMasDatos: TScrollBox;
+    scrDomicilioFiscal: TcxScrollBox;
+    scrMasDatos: TcxScrollBox;
     tsParametrosEDoc: TcxTabSheet;
     tsHistoriaFacturacion: TcxTabSheet;
     tsPresupuestos: TcxTabSheet;
@@ -111,7 +111,7 @@ type
     cxgrdlvlPresupuestos: TcxGridLevel;
     cxgrdlvlLineasPresupuesto: TcxGridLevel;
     tsOtros: TcxTabSheet;
-    pnlUserInstantBottom: TPanel;
+    pnlUserInstantBottom: TcxGroupBox;
     txtUSUARIOALTA: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;

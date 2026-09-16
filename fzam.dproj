@@ -892,6 +892,16 @@
         <DCCReference Include="src\Caja\Lib\inLibCajaVentaOperacion.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaStock.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaDescuentos.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaSubsanacionImportes.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaSubsanacionRepositorio.pas"/>
+        <DCCReference Include="src\Caja\Forms\inMtoCajaSubsanacionVcl.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaSubsanacion.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibCajaSubsanacionIntf.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibMsgPersistenciaSubsanacionCaja.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibMsgSubsanacionCaja.pas"/>
+        <DCCReference Include="src\Caja\Modals\inMtoModalImporteSubsanacion.pas">
+            <Form>frmModalImporteSubsanacion</Form>
+        </DCCReference>
         <DCCReference Include="src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaRectificacion.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaOpeComposicion.pas"/>
@@ -1211,6 +1221,9 @@
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalVerifactuDecl.pas">
             <Form>frmModalVerifactuDecl</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalAyudaWeb.pas">
+            <Form>frmModalAyudaWeb</Form>
         </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalDescargaTraduccion.pas">
             <Form>frmModalDescargaTraduccion</Form>
@@ -1818,6 +1831,9 @@
         <DCCReference Include="src\verifactu\inLibVerifactuDesgloseFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibMenuIconos.pas"/>
         <DCCReference Include="src\Lib\inLibMenuBarraIconos.pas"/>
+        <DCCReference Include="src\Lib\inLibInspectorSkin.pas"/>
+        <DCCReference Include="src\Lib\inLibCajaMenuTarjetaVcl.pas"/>
+        <DCCReference Include="src\Lib\inLibCajaMenuMaquetaVcl.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -2824,4 +2840,15 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
+    <Target Name="CopiarCargadorWebView2" AfterTargets="CoreBuild">
+        <PropertyGroup>
+            <ArquitecturaWebView2 Condition="'$(Platform)'=='Win32'">x86</ArquitecturaWebView2>
+            <ArquitecturaWebView2 Condition="'$(Platform)'=='Win64'">x64</ArquitecturaWebView2>
+            <OrigenWebView2>$(MSBuildProjectDirectory)\src\3rdpartyComp\WebView2</OrigenWebView2>
+        </PropertyGroup>
+        <Copy SourceFiles="$(OrigenWebView2)\$(ArquitecturaWebView2)\WebView2Loader.dll"
+              DestinationFolder="$(DCC_ExeOutput)" SkipUnchangedFiles="true"/>
+        <Copy SourceFiles="$(OrigenWebView2)\Microsoft.WebView2.LICENSE.txt"
+              DestinationFolder="$(DCC_ExeOutput)" SkipUnchangedFiles="true"/>
+    </Target>
 </Project>

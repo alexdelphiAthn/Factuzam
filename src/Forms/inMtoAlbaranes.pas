@@ -22,6 +22,7 @@ uses
   Dialogs, inMtoDocumento, dxSkinsCore, dxSkinBlue,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
   cxLookAndFeelPainters, cxContainer, cxEdit, dxSkinsForm, cxLabel, cxTextEdit,
+  cxScrollBox,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
   cxDBData,
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
@@ -143,7 +144,7 @@ type
     lblTotalLiquido: TcxLabel;
     curTOTAL_LIQUIDO_ALB: TcxDBCurrencyEdit;
     tsTotales: TcxTabSheet;
-    scrTotales: TScrollBox;
+    scrTotales: TcxScrollBox;
     lblTotalesTotalBase: TcxLabel;
     curTotalesTOTAL_BASES_ALB: TcxDBCurrencyEdit;
     lblTotalesTotalImpuestos: TcxLabel;
@@ -159,7 +160,7 @@ type
     chkTotalesESIVA_RECARGO_CLIENTE_ALB: TcxDBCheckBox;
     lblTotalesTotalPrendas: TcxLabel;
     lblTotalPrendasAlb: TcxLabel;
-    grpDesgloseImpuestos: TGroupBox;
+    grpDesgloseImpuestos: TcxGroupBox;
     lblTotalesPorIva: TcxLabel;
     lblTotalesTotalIva: TcxLabel;
     lblTotalesIVAN: TcxLabel;

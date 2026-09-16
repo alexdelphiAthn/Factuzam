@@ -380,6 +380,7 @@ type
     lblTipoIvaDefecto: TcxLabel;
     cbbTipoIvaDefecto: TcxDBComboBox;
     chkCopiarDescripcionFamilia: TcxDBCheckBox;
+    chkDescripcionBlanco: TcxDBCheckBox;
 
     // ------------------------------------------------------------------
     // Eventos
@@ -483,6 +484,7 @@ type
     procedure EnlazarPestanaProveedor;
     procedure LogSes(const ATexto: string);
     procedure RefrescarVisibilidadTipoIva;
+    procedure RefrescarOpcionesDescripcion;
     procedure dsTablaGDataChangeHook(Sender: TObject; Field: TField);
     procedure dsTablaGStateChangeHook(Sender: TObject);
     procedure GridListaGetContentStyle(Sender: TcxCustomGridTableView;
@@ -1340,6 +1342,7 @@ begin
     FVisorPedidoOriginal.Cargar;
     ReconstruirTallas;
   end;
+  RefrescarOpcionesDescripcion;
 end;
 
 procedure TfrmMtoComprasSesiones.dsTablaGStateChangeHook(Sender: TObject);
@@ -1355,6 +1358,12 @@ begin
     RecargarTallasVisibles;
     RecargarTallasDiferido;
   end;
+end;
+
+procedure TfrmMtoComprasSesiones.RefrescarOpcionesDescripcion;
+begin
+  chkCopiarDescripcionFamilia.Enabled :=
+    (Dmm = nil) or (not Dmm.DejarDescripcionEnBlanco);
 end;
 
 procedure TfrmMtoComprasSesiones.RefrescarVisibilidadTipoIva;
@@ -1573,6 +1582,7 @@ begin
   CrearColaboradorTallas;
   FTallas.CrearColumnas;
   inherited;
+  chkDescripcionBlanco.Caption := SComprasDejarDescripcionBlanco;
   ConfigurarBotonBusquedaDesplegable(
     cbbProveedor,
     cbbProveedorPropertiesButtonClick);

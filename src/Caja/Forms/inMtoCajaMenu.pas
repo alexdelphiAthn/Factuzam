@@ -30,7 +30,8 @@ uses
   inMtoModalCajDef, JvTFManager, JvTFGlance, JvTFMonths, Vcl.ComCtrls,
   JvExComCtrls, JvMonthCalendar, cxCalendar, CommCtrl,
   inLibVentasCalendario, System.Actions, Vcl.ActnList, dxGDIPlusClasses,
-  cxImage, inLibPermisosIntf, inLibCajaPantallaInyeccion;
+  cxImage, inLibPermisosIntf, inLibCajaPantallaInyeccion,
+  inLibCajaMenuTarjetaVcl, inLibCajaMenuMaquetaVcl;
 
 const
   WM_REACTIVAR_OPERACION_CAJA = WM_APP + 107;
@@ -41,7 +42,6 @@ type
     lblF10: TcxLabel;
     lblBuscarModificar: TcxLabel;
     lblVentas: TcxLabel;
-    shpFondo: TShape;
     clkHora: TcxClock;
     tmrReloj: TTimer;
     lblF6: TcxLabel;
@@ -53,10 +53,8 @@ type
     lblSalir: TcxLabel;
     lblESC: TcxLabel;
     lblFecha: TcxLabel;
-    shpSeparador: TShape;
     lblF3: TcxLabel;
     lblTraspasos: TcxLabel;
-    gifAnimador: TJvGIFAnimator;
     lblEmpresa: TcxLabel;
     calMes: TJvMonthCalendar;
     alCajaMenu: TActionList;
@@ -64,45 +62,10 @@ type
     cxImage1: TcxImage;
     procedure Timer1Timer(Sender: TObject);
     procedure FormCreate(Sender: TObject);
-    // Eventos F5
-    procedure lblVentasMouseEnter(Sender: TObject);
-    procedure lblVentasMouseLeave(Sender: TObject);
-    procedure lblF5MouseEnter(Sender: TObject);
-    procedure lblF5MouseLeave(Sender: TObject);
-    // Eventos F10
-    procedure lblBuscarModificarMouseEnter(Sender: TObject);
-    procedure lblBuscarModificarMouseLeave(Sender: TObject);
-    procedure lblF10MouseEnter(Sender: TObject);
-    procedure lblF10MouseLeave(Sender: TObject);
-    // Eventos F6
     procedure lblEntradaCambioClick(Sender: TObject);
-    procedure lblEntradaCambioMouseEnter(Sender: TObject);
-    procedure lblEntradaCambioMouseLeave(Sender: TObject);
-    procedure lblF6MouseEnter(Sender: TObject);
-    procedure lblF6MouseLeave(Sender: TObject);
-    // Eventos F7
     procedure lblGastosCajaClick(Sender: TObject);
-    procedure lblGastosCajaMouseEnter(Sender: TObject);
-    procedure lblGastosCajaMouseLeave(Sender: TObject);
-    procedure lblF7MouseEnter(Sender: TObject);
-    procedure lblF7MouseLeave(Sender: TObject);
-    // Eventos F11
     procedure lblArqueoClick(Sender: TObject);
-    procedure lblArqueoMouseEnter(Sender: TObject);
-    procedure lblArqueoMouseLeave(Sender: TObject);
-    procedure lblF11MouseEnter(Sender: TObject);
-    procedure lblF11MouseLeave(Sender: TObject);
-    // Eventos F3
     procedure lblTraspasosClick(Sender: TObject);
-    procedure lblTraspasosMouseEnter(Sender: TObject);
-    procedure lblTraspasosMouseLeave(Sender: TObject);
-    procedure lblF3MouseEnter(Sender: TObject);
-    procedure lblF3MouseLeave(Sender: TObject);
-    // Eventos ESC
-    procedure lblSalirMouseEnter(Sender: TObject);
-    procedure lblSalirMouseLeave(Sender: TObject);
-    procedure lblESCMouseEnter(Sender: TObject);
-    procedure lblESCMouseLeave(Sender: TObject);
     procedure JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
       Month, Year: Cardinal; var MonthBoldInfo: Cardinal);
     procedure JvMonthCalendar1DblClick(Sender: TObject);
@@ -110,8 +73,6 @@ type
       Shift: TShiftState);
     procedure FormDestroy(Sender: TObject);
     procedure lblESCClick(Sender: TObject);
-    procedure lblFechaMouseEnter(Sender: TObject);
-    procedure lblFechaMouseLeave(Sender: TObject);
     procedure cxButton1Click(Sender: TObject);
     procedure lblVentasClick(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -132,44 +93,22 @@ type
     procedure WMSysCommand(var Mensaje: TWMSysCommand);
       message WM_SYSCOMMAND;
   private
-    type
-      TMenuItem = record
-        KeyLabel: TcxLabel;
-        DescLabel: TcxLabel;
-        HoverColor: TColor;
-        OriginalKeyColor: TColor;
-        OriginalDescColor: TColor;
-      end;
-  private
     FVentasCal: TVentasCalendarioCache;
     FDependenciasInyeccion: TDependenciasMenuCaja;
     procedure AbrirBuscarModificar;
   private
-    // Colores originales
-    FOriginalF5Color: TColor;
-    FOriginalVentasColor: TColor;
-    FOriginalF10Color: TColor;
-    FOriginalBuscarModificarColor: TColor;
-    FOriginalF6Color: TColor;
-    FOriginalEntradaCambioColor: TColor;
-    FOriginalF7Color: TColor;
-    FOriginalGastosCajaColor: TColor;
-    FOriginalF11Color: TColor;
-    FOriginalArqueoColor: TColor;
-    FOriginalESCColor: TColor;
-    FOriginalSalirColor: TColor;
-    FOriginalF3Color: TColor;
-    FOriginalTraspasosColor: TColor;
     FUltimoTickReloj: TDateTime;
-    // Navegación por teclado
-    FMenuItems: array of TMenuItem;
+    // Tarjetas del menú (se crean en ejecución; los textos salen de las
+    // etiquetas ocultas del DFM para conservar su traducción) y navegación
+    // por teclado.
+    FTarjetas: TArray<TTarjetaMenuCaja>;
+    // Algo siempre en movimiento: evita que la pantalla del TPV se quede
+    // congelada (antes lo hacía el GIF animado).
+    FIndicador: TIndicadorActividadCaja;
     FSelectedIndex: Integer;
-    procedure ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
-                                   HoverColor: TColor);
-    procedure RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
-                                    OriginalFKeyColor,
-                                    OriginalDescColor: TColor);
-    procedure InitMenuItems;
+    procedure CrearTarjetas;
+    procedure MaquetarPantalla;
+    procedure TarjetaSeleccionar(Sender: TObject);
     procedure SetSelectedIndex(NewIndex: Integer);
     procedure ExecuteSelectedItem;
     procedure AbrirSelectorCaja;
@@ -347,6 +286,10 @@ begin
   FVentasCal := TVentasCalendarioCache.Create(
     ConexionPrincipal,
     FDependenciasInyeccion.VentasCalendario);
+  // La maqueta crea el handle del calendario, que pide enseguida los días en
+  // negrita: tiene que ir después de crear el caché.
+  CrearTarjetas;
+  MaquetarPantalla;
 
   if ParametrosCaja.GetBool('vgerShowCajaSelection', True) then
     AbrirSelectorCaja
@@ -371,23 +314,8 @@ begin
   if bContinuar then
   begin
     calMes.Invalidate;
-    FOriginalF5Color := lblF5.Style.TextColor;
-    FOriginalVentasColor := lblVentas.Style.TextColor;
-    FOriginalF10Color := lblF10.Style.TextColor;
-    FOriginalBuscarModificarColor := lblBuscarModificar.Style.TextColor;
-    FOriginalF6Color := lblF6.Style.TextColor;
-    FOriginalEntradaCambioColor := lblEntradaCambio.Style.TextColor;
-    FOriginalF7Color := lblF7.Style.TextColor;
-    FOriginalGastosCajaColor := lblGastosCaja.Style.TextColor;
-    FOriginalF11Color := lblF11.Style.TextColor;
-    FOriginalArqueoColor := lblArqueo.Style.TextColor;
-    FOriginalF3Color := lblF3.Style.TextColor;
-    FOriginalTraspasosColor := lblTraspasos.Style.TextColor;
     ActualizarFechaCaja(Now);
     clkHora.OnDblClick := clkHoraDblClick;
-    FOriginalESCColor := lblESC.Style.TextColor;
-    FOriginalSalirColor := lblSalir.Style.TextColor;
-    InitMenuItems;
     FSelectedIndex := -1;
     SetSelectedIndex(0);
   end;
@@ -562,7 +490,10 @@ end;
 procedure TfrmMtoMenuCaja.JvMonthCalendar1GetMonthBoldInfo(Sender: TObject;
   Month, Year: Cardinal; var MonthBoldInfo: Cardinal);
 begin
-  MonthBoldInfo := FVentasCal.MaskBoldDelMes(Year, Month);
+  if Assigned(FVentasCal) then
+    MonthBoldInfo := FVentasCal.MaskBoldDelMes(Year, Month)
+  else
+    MonthBoldInfo := 0;
 end;
 
 procedure TfrmMtoMenuCaja.JvMonthCalendar1Click(Sender: TObject);
@@ -611,111 +542,91 @@ begin
 end;
 
 // =============================================================================
-// Hover de etiquetas — sin cambios funcionales respecto a tu versión
+// Tarjetas del menú y navegación: ratón y teclado comparten la selección;
+// Enter o clic ejecutan la acción de la etiqueta asociada.
 // =============================================================================
 
-procedure TfrmMtoMenuCaja.ChangeMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
-  HoverColor: TColor);
-begin
-  FKeyLabel.Style.TextColor := HoverColor;
-  DescLabel.Style.TextColor := HoverColor;
-end;
+procedure TfrmMtoMenuCaja.CrearTarjetas;
 
-procedure TfrmMtoMenuCaja.RestoreMenuItemColors(FKeyLabel, DescLabel: TcxLabel;
-  OriginalFKeyColor, OriginalDescColor: TColor);
-begin
-  FKeyLabel.Style.TextColor := OriginalFKeyColor;
-  DescLabel.Style.TextColor := OriginalDescColor;
-end;
-
-// =============================================================================
-// Navegación por teclado: Up / Down resaltan, Enter ejecuta el OnClick
-// =============================================================================
-
-procedure TfrmMtoMenuCaja.InitMenuItems;
-
-  procedure AddItem(Idx: Integer; KeyLbl, DescLbl: TcxLabel;
-                    OrigKey, OrigDesc, Hover: TColor);
+  procedure Agregar(AIndice: Integer; ATecla, ATitulo: TcxLabel;
+    const AIcono: string);
+  var
+    oTarjeta: TTarjetaMenuCaja;
   begin
-    FMenuItems[Idx].KeyLabel         := KeyLbl;
-    FMenuItems[Idx].DescLabel        := DescLbl;
-    FMenuItems[Idx].HoverColor       := Hover;
-    FMenuItems[Idx].OriginalKeyColor := OrigKey;
-    FMenuItems[Idx].OriginalDescColor:= OrigDesc;
+    oTarjeta := TTarjetaMenuCaja.Create(Self);
+    oTarjeta.Parent := Self;
+    oTarjeta.Tag := AIndice;
+    oTarjeta.Tecla := ATecla.Caption;
+    oTarjeta.EtiquetaTitulo := ATitulo;
+    oTarjeta.Hint := ATitulo.Hint;
+    // El tamaño del icono depende del estilo: se fija antes de cargarlo.
+    if AIndice < 3 then
+      oTarjeta.Estilo := etcGrande
+    else
+      oTarjeta.Estilo := etcCompacta;
+    oTarjeta.CargarIcono(AIcono);
+    oTarjeta.OnClick := ATitulo.OnClick;
+    oTarjeta.OnSeleccionar := TarjetaSeleccionar;
+    FTarjetas[AIndice] := oTarjeta;
   end;
 
 begin
-  SetLength(FMenuItems, 7);
-  AddItem(0, lblF5, lblVentas, FOriginalF5Color, FOriginalVentasColor, clBlue);
-  AddItem(1,
-          lblF10,
-          lblBuscarModificar,
-          FOriginalF10Color,
-          FOriginalBuscarModificarColor,
-          clBlue);
-  AddItem(2,
-          lblF6,
-          lblEntradaCambio,
-          FOriginalF6Color,
-          FOriginalEntradaCambioColor,
-          clWebOrange);
-  AddItem(3,
-          lblF7,
-          lblGastosCaja,
-          FOriginalF7Color,
-          FOriginalGastosCajaColor,
-          clWebOrange);
-  AddItem(4,
-          lblF11,
-          lblArqueo,
-          FOriginalF11Color,
-          FOriginalArqueoColor,
-          clWebOrange);
-  AddItem(5,
-          lblF3,
-          lblTraspasos,
-          FOriginalF3Color,
-          FOriginalTraspasosColor,
-          clWebOrange);
-  AddItem(6, lblESC, lblSalir, FOriginalESCColor, FOriginalSalirColor, clBlue);
+  FIndicador := TIndicadorActividadCaja.Create(Self);
+  FIndicador.Parent := Self;
+  SetLength(FTarjetas, 7);
+  // Orden visual y de navegación: fila grande, fila compacta y salir.
+  Agregar(0, lblF5, lblVentas, 'MNUMENUCAJA');
+  Agregar(1, lblF10, lblBuscarModificar, 'MNUCAJAOPERACIONESHIST');
+  Agregar(2, lblF11, lblArqueo, 'MNUCAJAARQUEOSHIST');
+  Agregar(3, lblF6, lblEntradaCambio, 'MNUCAJAPAGOSHIST');
+  Agregar(4, lblF7, lblGastosCaja, 'FORMASDEPAGOCAJA1');
+  Agregar(5, lblF3, lblTraspasos, 'MNUCAJASOLICITUDESTRASPASOHIST');
+  Agregar(6, lblESC, lblSalir, 'SALIR1');
+end;
+
+procedure TfrmMtoMenuCaja.MaquetarPantalla;
+var
+  rControles: TControlesMenuCaja;
+begin
+  // El calendario nativo se autoajusta; la maqueta le da su tamaño mínimo.
+  calMes.AutoSize := False;
+  rControles.Logo := cxImage1;
+  rControles.Calendario := calMes;
+  rControles.Reloj := clkHora;
+  rControles.Fecha := lblFecha;
+  rControles.Empresa := lblEmpresa;
+  rControles.Tarjetas := FTarjetas;
+  rControles.Indicador := FIndicador;
+  MaquetarMenuCaja(Self, rControles);
+end;
+
+procedure TfrmMtoMenuCaja.TarjetaSeleccionar(Sender: TObject);
+begin
+  SetSelectedIndex(TTarjetaMenuCaja(Sender).Tag);
 end;
 
 procedure TfrmMtoMenuCaja.SetSelectedIndex(NewIndex: Integer);
 var
-  Cnt: Integer;
+  Cnt, I: Integer;
 begin
-  Cnt := Length(FMenuItems);
+  Cnt := Length(FTarjetas);
   if Cnt > 0 then
   begin
     NewIndex := ((NewIndex mod Cnt) + Cnt) mod Cnt;
     if NewIndex <> FSelectedIndex then
     begin
-      if (FSelectedIndex >= 0) and (FSelectedIndex < Cnt) then
-        RestoreMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
-          FMenuItems[FSelectedIndex].DescLabel,
-          FMenuItems[FSelectedIndex].OriginalKeyColor,
-          FMenuItems[FSelectedIndex].OriginalDescColor);
       FSelectedIndex := NewIndex;
-      ChangeMenuItemColors(FMenuItems[FSelectedIndex].KeyLabel,
-        FMenuItems[FSelectedIndex].DescLabel,
-        FMenuItems[FSelectedIndex].HoverColor);
+      for I := 0 to Cnt - 1 do
+        FTarjetas[I].Seleccionada := I = FSelectedIndex;
     end;
   end;
 end;
 
 procedure TfrmMtoMenuCaja.ExecuteSelectedItem;
-var
-  Item: TMenuItem;
 begin
-  if (FSelectedIndex >= 0) and
-     (FSelectedIndex < Length(FMenuItems)) then
-  begin
-    Item := FMenuItems[FSelectedIndex];
-    if Assigned(Item.DescLabel.OnClick) then
-      Item.DescLabel.OnClick(Item.DescLabel)
-    else if Assigned(Item.KeyLabel.OnClick) then
-      Item.KeyLabel.OnClick(Item.KeyLabel);
-  end;
+  if (FSelectedIndex >= 0) and (FSelectedIndex < Length(FTarjetas)) and
+     Assigned(FTarjetas[FSelectedIndex].OnClick) then
+    FTarjetas[FSelectedIndex].OnClick(FTarjetas[FSelectedIndex]);
 end;
 
 // F5 - Ventas
@@ -741,32 +652,6 @@ begin
   end;
 end;
 
-procedure TfrmMtoMenuCaja.lblVentasMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF5, lblVentas, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblVentasMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF5,
-                        lblVentas,
-                        FOriginalF5Color,
-                        FOriginalVentasColor);
-end;
-
-procedure TfrmMtoMenuCaja.lblF5MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF5, lblVentas, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblF5MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF5,
-                        lblVentas,
-                        FOriginalF5Color,
-                        FOriginalVentasColor);
-end;
-
 // F10 - Buscar/Modificar
 procedure TfrmMtoMenuCaja.lblBuscarModificarClick(Sender: TObject);
 begin
@@ -774,32 +659,10 @@ begin
   AbrirBuscarModificar;
 end;
 
-procedure TfrmMtoMenuCaja.lblBuscarModificarMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF10, lblBuscarModificar, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblBuscarModificarMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF10, lblBuscarModificar,
-                        FOriginalF10Color, FOriginalBuscarModificarColor);
-end;
-
 procedure TfrmMtoMenuCaja.lblF10Click(Sender: TObject);
 begin
   inherited;
   AbrirBuscarModificar;
-end;
-
-procedure TfrmMtoMenuCaja.lblF10MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF10, lblBuscarModificar, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblF10MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF10, lblBuscarModificar,
-                        FOriginalF10Color, FOriginalBuscarModificarColor);
 end;
 
 // F6 - Entrada de Cambio
@@ -821,28 +684,6 @@ begin
     FFechaCaja);
 end;
 
-procedure TfrmMtoMenuCaja.lblEntradaCambioMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF6, lblEntradaCambio, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblEntradaCambioMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF6, lblEntradaCambio,
-                        FOriginalF6Color, FOriginalEntradaCambioColor);
-end;
-
-procedure TfrmMtoMenuCaja.lblF6MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF6, lblEntradaCambio, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblF6MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF6, lblEntradaCambio,
-                        FOriginalF6Color, FOriginalEntradaCambioColor);
-end;
-
 // F7 - Gastos por Caja
 procedure TfrmMtoMenuCaja.lblGastosCajaClick(Sender: TObject);
 begin
@@ -854,39 +695,6 @@ begin
     FAlmacen,
     FCaja,
     FFechaCaja);
-end;
-
-procedure TfrmMtoMenuCaja.lblGastosCajaMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF7, lblGastosCaja, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblGastosCajaMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF7, lblGastosCaja,
-                        FOriginalF7Color, FOriginalGastosCajaColor);
-end;
-
-procedure TfrmMtoMenuCaja.lblF7MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF7, lblGastosCaja, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblF7MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF7, lblGastosCaja,
-                        FOriginalF7Color, FOriginalGastosCajaColor);
-end;
-
-// Etiqueta fecha
-procedure TfrmMtoMenuCaja.lblFechaMouseEnter(Sender: TObject);
-begin
-  lblFecha.Style.TextColor := clBlue;
-end;
-
-procedure TfrmMtoMenuCaja.lblFechaMouseLeave(Sender: TObject);
-begin
-  lblFecha.Style.TextColor := clBlack;
 end;
 
 // F11 - Arqueo
@@ -907,28 +715,6 @@ begin
       DateOf(FFechaCaja),
       DateOf(FFechaCaja));
   end;
-end;
-
-procedure TfrmMtoMenuCaja.lblArqueoMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF11, lblArqueo, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblArqueoMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF11, lblArqueo,
-                        FOriginalF11Color, FOriginalArqueoColor);
-end;
-
-procedure TfrmMtoMenuCaja.lblF11MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF11, lblArqueo, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblF11MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF11, lblArqueo,
-                        FOriginalF11Color, FOriginalArqueoColor);
 end;
 
 // F3 - Traspasos
@@ -957,54 +743,10 @@ begin
   end;
 end;
 
-procedure TfrmMtoMenuCaja.lblTraspasosMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblTraspasosMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF3, lblTraspasos,
-                        FOriginalF3Color, FOriginalTraspasosColor);
-end;
-
-procedure TfrmMtoMenuCaja.lblF3MouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblF3, lblTraspasos, clWebOrange);
-end;
-
-procedure TfrmMtoMenuCaja.lblF3MouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblF3, lblTraspasos,
-                        FOriginalF3Color, FOriginalTraspasosColor);
-end;
-
 // ESC - Salir
-procedure TfrmMtoMenuCaja.lblSalirMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblESC, lblSalir, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblSalirMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblESC, lblSalir,
-                        FOriginalESCColor, FOriginalSalirColor);
-end;
-
 procedure TfrmMtoMenuCaja.lblESCClick(Sender: TObject);
 begin
   Close;
-end;
-
-procedure TfrmMtoMenuCaja.lblESCMouseEnter(Sender: TObject);
-begin
-  ChangeMenuItemColors(lblESC, lblSalir, clBlue);
-end;
-
-procedure TfrmMtoMenuCaja.lblESCMouseLeave(Sender: TObject);
-begin
-  RestoreMenuItemColors(lblESC, lblSalir,
-                        FOriginalESCColor, FOriginalSalirColor);
 end;
 
 initialization

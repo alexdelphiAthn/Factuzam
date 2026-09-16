@@ -6,6 +6,8 @@
 *.msi
 *.rsm
 *.dll
+!src/3rdpartyComp/WebView2/x86/WebView2Loader.dll
+!src/3rdpartyComp/WebView2/x64/WebView2Loader.dll
 *.bpl
 *.dcp
 *.tds

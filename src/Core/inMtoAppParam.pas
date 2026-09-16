@@ -212,7 +212,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMensajesVcl,
+  inLibMensajesVcl, inLibInspectorSkin,
   StrUtils, Vcl.Printers,
    dxSkinsLookAndFeelPainter,
    dxSkinsDefaultPainters, dxSkinsForm,
@@ -351,6 +351,7 @@ begin
   FInts              := TList<PInteger>.Create;
   FStrs              := TList<PString>.Create;
   FValoresOriginales := TDictionary<string, string>.Create;
+  AplicarPintorSkin(JvInspector1, JvInspectorDotNETPainter1);
   JvInspector1.OnItemEdit := InspectorItemEdit;
   JvInspector1.OnItemValueChanged := InspectorItemValueChanged;
   FIdiomaInspectorAnterior := IDIOMA_ESPANOL;

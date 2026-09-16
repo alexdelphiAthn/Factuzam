@@ -92,6 +92,9 @@ uses
 
 {$R *.dfm}
 
+const
+  fdescripcionblanco = 'ESDESCRIPCION_BLANCO_PRV';
+
 procedure ForceReferenceToClass(C: TClass); begin end;
 
 procedure TdmProveedores.DataModuleCreate(Sender: TObject);
@@ -452,6 +455,7 @@ begin
   inherited;
   unqryTablaG.FindField('CODIGO_PRV_PRV').AsString := '0';
   unqryTablaG.FindField('ORDEN_PRV').AsString := '0';
+  unqryTablaG.FieldByName(fdescripcionblanco).AsString := 'N';
   if unqryTablaG.FindField('ESACTIVO_PRV') <> nil then
     unqryTablaG.FieldByName('ESACTIVO_PRV').AsString := 'S';
   if unqryTablaG.FindField('ESVARIOS_TIPOS_IVA_PRV') <> nil then

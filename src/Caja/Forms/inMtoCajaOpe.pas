@@ -41,7 +41,8 @@ uses
   inLibArticulosResolverIntf, inLibArticulosAtributosIntf,
   inLibCajaPantallaInyeccion, inMtoCajaEditorLineasBusqueda,
   inMtoCajaEditorLineasInteraccion, inMtoCajaEditorLineasRender,
-  inMtoCajaEditorAtributosVcl, inMtoCajaOpeVentanaVcl;
+  inMtoCajaEditorAtributosVcl, inMtoCajaOpeVentanaVcl,
+  inMtoCajaSubsanacionVcl, inLibCajaSubsanacionIntf;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -467,6 +468,15 @@ type
     FPreguntandoVentaOrigen: Boolean;
     FEditorLineas: TEditorLineasCajaVcl;
     FPresentacion: TVentanaOperacionCajaVcl;
+    FSubsanacion: TModoSubsanacionCajaVcl;
+    FOperacionSubsanacion: TOperacionSubsanacionCaja;
+    FServicioSubsanacion: IServicioSubsanacionCaja;
+    procedure ConfigurarModoSubsanacion;
+    function CerrarSubsanacion: Boolean;
+    procedure ActualizarTotalSubsanacion;
+    procedure GuardarSubsanacion;
+    procedure ConfirmarSubsanacion;
+    procedure ReimprimirSubsanacion;
     procedure CargarDevolucionPorTicket;
     procedure WMPreguntarVentaOrigen(var Msg: TMessage);
                                        message WM_PREGUNTAR_VENTA_ORIGEN;
@@ -535,6 +545,9 @@ type
     procedure CargarDevolucion(
       const ASerie, ANumero, AEmpresaOrigen,
       AAlmacenOrigen: string);
+    procedure CargarSubsanacion(
+      const AOperacion: TOperacionSubsanacionCaja;
+      const AServicio: IServicioSubsanacionCaja);
     function IntentarCerrar:Boolean;
     // True si no hay venta a medias (sin líneas pendientes)
     function OperacionVacia: Boolean;
@@ -571,7 +584,9 @@ uses
   inMtoCajaOpeBusquedaVcl,
   UniDataFacturasLecturas,
   System.StrUtils,
-  inLibMsgCaja, inLibTraducciones;
+  inLibMsgCaja, inLibTraducciones, inLibMsgSubsanacionCaja,
+  inLibCajaSubsanacion, UniDataCajaSubsanacionImportes,
+  inLibGenerarTicketBD;
 
 constructor TfrmMtoOpeCaja.Create(
   AOwner: TComponent;
@@ -1162,7 +1177,8 @@ end;
 
 procedure TfrmMtoOpeCaja.WMCancelarLinea(var Msg: TMessage);
 begin
-  FEditorLineas.CancelarLinea;
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.CancelarLinea;
 end;
 
 procedure TfrmMtoOpeCaja.tmrBusqTimer(Sender: TObject);
@@ -1217,7 +1233,10 @@ end;
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(
   Sender: TObject);
 begin
-  FEditorLineas.CambiarTotal(Sender);
+  if Assigned(FSubsanacion) then
+    TcxCustomEdit(Sender).PostEditValue
+  else
+    FEditorLineas.CambiarTotal(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(
@@ -1243,14 +1262,18 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1Editing(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   var AAllow: Boolean);
 begin
-  FEditorLineas.ComprobarEdicion(Sender, AItem, AAllow);
+  if Assigned(FSubsanacion) then
+    AAllow := (AItem = tvTotal) and not FSubsanacion.Guardada
+  else
+    FEditorLineas.ComprobarEdicion(Sender, AItem, AAllow);
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1EditKeyDown(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   AEdit: TcxCustomEdit; var Key: Word; Shift: TShiftState);
 begin
-  FEditorLineas.ProcesarTeclaEdicion(
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.ProcesarTeclaEdicion(
     Sender, AItem, AEdit, Key, Shift);
 end;
 
@@ -1259,7 +1282,8 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1FocusedRecordChanged(
   AFocusedRecord: TcxCustomGridRecord;
   ANewItemRecordFocusingChanged: Boolean);
 begin
-  FEditorLineas.CambiarRegistroEnfocado(
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.CambiarRegistroEnfocado(
     Sender,
     APrevFocusedRecord,
     AFocusedRecord,
@@ -1303,20 +1327,23 @@ end;
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1KeyDown(
   Sender: TObject; var Key: Word; Shift: TShiftState);
 begin
-  FEditorLineas.ProcesarTeclaRejilla(Sender, Key, Shift);
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.ProcesarTeclaRejilla(Sender, Key, Shift);
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1DBTableView1MouseDown(
   Sender: TObject; Button: TMouseButton; Shift: TShiftState;
   X, Y: Integer);
 begin
-  FEditorLineas.PulsarRejilla(Sender, Button, Shift, X, Y);
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.PulsarRejilla(Sender, Button, Shift, X, Y);
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1Enter(Sender: TObject);
 begin
   DesactivarEnterAsTabTemporal(Sender);
-  FEditorLineas.EntrarRejilla(Sender);
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.EntrarRejilla(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.cxGrid1Exit(Sender: TObject);
@@ -1384,6 +1411,9 @@ end;
 function TfrmMtoOpeCaja.CargarSkuExterno(const ASku: string;
   ACant: Double): Boolean;
 begin
+  Result := False;
+  if not Assigned(FSubsanacion) then
+  begin
   // Fila en blanco lista y en edicion, como tras una lectura.
   FEditorLineas.AsegurarLineaNueva;
   if not (DatosCaja.cdsLineas.State in dsEditModes) then
@@ -1402,6 +1432,7 @@ begin
   begin
     if DatosCaja.cdsLineas.State in dsEditModes then
       DatosCaja.cdsLineas.Cancel;
+  end;
   end;
 end;
 
@@ -1540,7 +1571,8 @@ end;
 
 procedure TfrmMtoOpeCaja.FormKeyPress(Sender: TObject; var Key: Char);
 begin
-  FEntrada.Lector.KeyPress(Key);
+  if not Assigned(FSubsanacion) then
+    FEntrada.Lector.KeyPress(Key);
 end;
 
 procedure TfrmMtoOpeCaja.LectorCodigoLeido(Sender: TObject;
@@ -1585,7 +1617,7 @@ end;
 // Unica precondicion: el vendedor (cajero) debe estar dado de alta.
 procedure TfrmMtoOpeCaja.ProcesarLecturaScanner(const ACodigo: string);
 begin
-  if Assigned(FEntrada.Aplicacion) then
+  if not Assigned(FSubsanacion) and Assigned(FEntrada.Aplicacion) then
     FEntrada.Aplicacion.Procesar(ACodigo);
 end;
 
@@ -2644,7 +2676,8 @@ end;
 
 procedure TfrmMtoOpeCaja.actEliminarLineaExecute(Sender: TObject);
 begin
-  FEditorLineas.CancelarLinea;
+  if not Assigned(FSubsanacion) then
+    FEditorLineas.CancelarLinea;
 end;
 
 procedure TfrmMtoOpeCaja.actGuardarLayoutExecute(Sender: TObject);
@@ -2666,7 +2699,10 @@ end;
 
 procedure TfrmMtoOpeCaja.actSalirExecute(Sender: TObject);
 begin
-  if (DatosCaja.cdsLineas.Active) and (not DatosCaja.cdsLineas.IsEmpty) then
+  if Assigned(FSubsanacion) then
+    CerrarSubsanacion
+  else if DatosCaja.cdsLineas.Active and
+          not DatosCaja.cdsLineas.IsEmpty then
   begin
     if MessageDlg_fza(SPreguntaBorrarVentaCaja,
                   mtConfirmation, [mbYes, mbNo], 0) = mrYes then
@@ -3091,18 +3127,147 @@ end;
 
 procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 begin
-  TCoordinadorCierreVentaCajaVcl.Ejecutar(
-    CrearContextoCierreVentaCajaVcl(Self));
+  if Assigned(FSubsanacion) then
+    GuardarSubsanacion
+  else
+    TCoordinadorCierreVentaCajaVcl.Ejecutar(
+      CrearContextoCierreVentaCajaVcl(Self));
 end;
 
 function TfrmMtoOpeCaja.OperacionVacia: Boolean;
 begin
-  Result := OperacionVentaVacia(DatosCaja.cdsLineas);
+  Result := not Assigned(FSubsanacion) and
+    OperacionVentaVacia(DatosCaja.cdsLineas);
 end;
 
 function TfrmMtoOpeCaja.FormularioCaja: TCustomForm;
 begin
   Result := Self;
+end;
+
+procedure TfrmMtoOpeCaja.CargarSubsanacion(
+  const AOperacion: TOperacionSubsanacionCaja;
+  const AServicio: IServicioSubsanacionCaja);
+var
+  oControles: TControlesSubsanacionCaja;
+begin
+  FOperacionSubsanacion := AOperacion;
+  FFecha := AOperacion.FechaFactura;
+  lblFecha.Caption := FormatDateTime('dd/mm/yyyy hh:nn', FFecha);
+  FServicioSubsanacion := AServicio;
+  DatosCaja.cdsLineas.Cancel;
+  DatosCaja.cdsLineas.EmptyDataSet;
+  FDependencias.ServicioRectificacion.Cargar(
+    AOperacion.Clave.SerieFactura, AOperacion.Clave.NumeroFactura,
+    trcSustitutiva, tmrMantenerOriginales,
+    DatosCaja.cdsCabecera, DatosCaja.cdsLineas);
+  oControles := Default(TControlesSubsanacionCaja);
+  oControles.Propietario := Self;
+  oControles.Contenedor := Self;
+  oControles.Lineas := DatosCaja.cdsLineas;
+  oControles.Vista := tvLineasOpe;
+  oControles.ColumnaImporte := tvTotal;
+  oControles.Recalcular := ActualizarTotalSubsanacion;
+  FSubsanacion := TModoSubsanacionCajaVcl.Create(oControles,
+    AOperacion.Lineas, AServicio.Medios, AOperacion.FormaPago,
+    AOperacion.Referencia);
+  ConfigurarModoSubsanacion;
+  DatosCaja.cdsLineas.First;
+  ActualizarTotalSubsanacion;
+end;
+
+procedure TfrmMtoOpeCaja.ConfigurarModoSubsanacion;
+begin
+  Caption := Format(SSubsanacionTituloOperacion,
+    [FOperacionSubsanacion.Clave.SerieFactura,
+     FOperacionSubsanacion.Clave.NumeroFactura]);
+  FEntrada.Lector.Activo := False;
+  tmrBusq.Enabled := False;
+  pnlUp.Enabled := False;
+  pnlBusqueda.Visible := False;
+  WindowState := wsMaximized;
+  actGuardarLayout.Enabled := False;
+  btnF3.Enabled := False;
+  btnF6.Enabled := False;
+  btnF5.Enabled := False;
+  btnF7.Enabled := False;
+  btnF8.Enabled := False;
+  btnF61.Enabled := False;
+  btnF2.Enabled := False;
+  btnF10.Enabled := False;
+  actBuscarEmpleados.Enabled := False;
+  actEliminarLinea.Enabled := False;
+  actCargarCta.Enabled := False;
+  actBuscarModificar.Enabled := False;
+  tvPrecioUni.Visible := False;
+  tvDescuento.Visible := False;
+  tvDescuentoMenos.Visible := False;
+  lblTipoRectificativa.Caption := SSubsanacionModo;
+  lblTipoRectificativa.Visible := True;
+  lblCobro.Caption := SSubsanacionBoton;
+end;
+
+function TfrmMtoOpeCaja.CerrarSubsanacion: Boolean;
+begin
+  Result := FSubsanacion.Guardada or
+    (MessageDlg_fza(SSubsanacionDescartar,
+      mtConfirmation, [mbYes, mbNo], 0) = mrYes);
+  if Result then
+  begin
+    if DatosCaja.cdsLineas.State in dsEditModes then
+      DatosCaja.cdsLineas.Cancel;
+    Close;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.ActualizarTotalSubsanacion;
+begin
+  ActualizarLabelTotal(Self,
+    TotalSubsanacion(LeerImportesSubsanacion(DatosCaja.cdsLineas)));
+end;
+
+procedure TfrmMtoOpeCaja.GuardarSubsanacion;
+begin
+  try
+    if not FSubsanacion.Guardada then
+      ConfirmarSubsanacion;
+    ReimprimirSubsanacion;
+  except
+    on E: Exception do
+      ShowMessage_fza(E.Message);
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.ConfirmarSubsanacion;
+var
+  oSolicitud: TSolicitudSubsanacionCaja;
+  oResultado: TResultadoSubsanacionCaja;
+begin
+  oSolicitud := Default(TSolicitudSubsanacionCaja);
+  oSolicitud.Original := FOperacionSubsanacion;
+  oSolicitud.Lineas := FSubsanacion.LineasCorregidas;
+  oSolicitud.FormaPago := FSubsanacion.FormaPago;
+  oSolicitud.Referencia := FSubsanacion.Referencia;
+  oSolicitud.Motivo := FSubsanacion.Motivo;
+  oResultado := FServicioSubsanacion.Guardar(oSolicitud);
+  FSubsanacion.MarcarGuardada;
+  if oResultado.EncoladaVerifactu then
+    lblTipoRectificativa.Caption := SSubsanacionGuardada
+  else
+    lblTipoRectificativa.Caption := SSubsanacionGuardadaLocal;
+  lblCobro.Caption := SSubsanacionReimprimir;
+  RefrescarConsultasOperacionesCaja;
+end;
+
+procedure TfrmMtoOpeCaja.ReimprimirSubsanacion;
+begin
+  ImprimirTicketDesdeBD(ParametrosApp, PreviewTicket, UnidadesMedida,
+    FDependenciasPantalla.Tickets.Tickets,
+    FOperacionSubsanacion.Clave.Empresa,
+    FOperacionSubsanacion.Clave.Almacen,
+    FOperacionSubsanacion.Clave.Caja,
+    FOperacionSubsanacion.Clave.NumeroOperacion,
+    ParametrosCaja.ImpresoraCaja);
 end;
 
 procedure TfrmMtoOpeCaja.CargarRectificacion(
@@ -3283,6 +3448,8 @@ end;
 
 procedure TfrmMtoOpeCaja.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FSubsanacion);
+  FServicioSubsanacion := nil;
   RestaurarEnterAsTabTemporal(Sender);
   if Assigned(DatosCaja) then
   begin
@@ -3517,6 +3684,13 @@ end;
 procedure TfrmMtoOpeCaja.FormKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
+  if Assigned(FSubsanacion) then
+  begin
+    if (Key >= VK_F1) and (Key <= VK_F11) then
+      Key := 0;
+  end
+  else
+  begin
   // El lector resetea su estado, captura si la rejilla editaba y cierra la
   // lectura por velocidad (consume el VK_RETURN si era una rafaga del lector).
   FEntrada.Lector.KeyDown(Key, Shift);
@@ -3538,6 +3712,7 @@ begin
   begin
     FPresentacion.ResetearLayout;
     Key := 0;
+  end;
   end;
 end;
 
@@ -3609,8 +3784,16 @@ end;
 
 procedure TfrmMtoOpeCaja.FormShow(Sender: TObject);
 begin
-  FPresentacion.RestaurarLayout;
-  FPresentacion.ActualizarFoco;
+  if Assigned(FSubsanacion) then
+  begin
+    tvLineasOpe.Controller.FocusedColumn := tvTotal;
+    cxgrdLineasOpe.SetFocus;
+  end
+  else
+  begin
+    FPresentacion.RestaurarLayout;
+    FPresentacion.ActualizarFoco;
+  end;
 end;
 
 procedure TEditorLineasCajaVcl.AbrirPopupAtributo;
@@ -3643,7 +3826,9 @@ end;
 function TfrmMtoOpeCaja.IntentarCerrar: Boolean;
 begin
   Result := True;
-  if not (csDestroying in ComponentState) then
+  if Assigned(FSubsanacion) then
+    Result := CerrarSubsanacion
+  else if not (csDestroying in ComponentState) then
   begin
     if DatosCaja.cdsLineas.Active and not DatosCaja.cdsLineas.IsEmpty then
     begin
@@ -3682,7 +3867,8 @@ end;
 
 procedure TfrmMtoOpeCaja.Timer1Timer(Sender: TObject);
 begin
-  FPresentacion.ActualizarReloj;
+  if not Assigned(FSubsanacion) then
+    FPresentacion.ActualizarReloj;
 end;
 
 end.

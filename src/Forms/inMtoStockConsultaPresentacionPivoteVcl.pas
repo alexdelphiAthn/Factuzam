@@ -121,9 +121,67 @@ type
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Math,
+  cxLookAndFeels, cxLookAndFeelPainters,
   inLibAtributosPaleta,
   inLibMsgArticulos;
+
+const
+  // WCAG AA para texto normal.
+  CONTRASTE_MINIMO_ESTADO = 4.5;
+
+function LuminanciaRelativa(AColor: TColor): Double;
+
+  function Canal(AValor: Byte): Double;
+  var
+    dValor: Double;
+  begin
+    dValor := AValor / 255;
+    if dValor <= 0.03928 then
+      Result := dValor / 12.92
+    else
+      Result := Power((dValor + 0.055) / 1.055, 2.4);
+  end;
+
+var
+  iRGB: Integer;
+begin
+  iRGB := ColorToRGB(AColor);
+  Result := 0.2126 * Canal(GetRValue(iRGB)) +
+    0.7152 * Canal(GetGValue(iRGB)) + 0.0722 * Canal(GetBValue(iRGB));
+end;
+
+function Contraste(AColor1, AColor2: TColor): Double;
+var
+  dL1, dL2: Double;
+begin
+  dL1 := LuminanciaRelativa(AColor1);
+  dL2 := LuminanciaRelativa(AColor2);
+  Result := (Max(dL1, dL2) + 0.05) / (Min(dL1, dL2) + 0.05);
+end;
+
+// Los colores de estado estan pensados para fondo claro (azul marino,
+// granate...). Con un skin oscuro se aclaran, y con uno claro se oscurecen,
+// lo justo para que se lean; el tono se conserva.
+function ColorEstadoLegible(AEstado: TEstadoStock; AFondo: TColor): TColor;
+var
+  cBase, cExtremo: TColor;
+  iMezcla: Integer;
+begin
+  cBase := TColor(ColorEstadoStock(AEstado));
+  Result := cBase;
+  if LuminanciaRelativa(AFondo) < 0.5 then
+    cExtremo := clWhite
+  else
+    cExtremo := clBlack;
+  iMezcla := 0;
+  while (Contraste(Result, AFondo) < CONTRASTE_MINIMO_ESTADO) and
+        (iMezcla < 100) do
+  begin
+    Inc(iMezcla, 10);
+    Result := dxGetMiddleRGB(cExtremo, cBase, iMezcla);
+  end;
+end;
 
 type
   TColumnaPivoteStock = class(TcxGridDBColumn)
@@ -188,6 +246,9 @@ begin
   FRadioSimplificado := TcxRadioButton.Create(AOwner);
   FRadioSimplificado.Parent := APanelModo;
   FRadioSimplificado.Caption := ACaptionSimplificado;
+  // Sin transparencia pintan fondo claro de sistema y con skin oscuro el
+  // texto no se ve.
+  FRadioSimplificado.Transparent := True;
   // Estos radios heredan una fuente escalada por DPI, pero antes conservaban
   // un ancho fijo de 110 px. En monitores escalados se veian como
   // "Simplifica" y "Desglosa". Medimos el texto ya escalado y reservamos el
@@ -214,6 +275,7 @@ begin
   FRadioDesglosado := TcxRadioButton.Create(AOwner);
   FRadioDesglosado.Parent := APanelModo;
   FRadioDesglosado.Caption := ACaptionDesglosado;
+  FRadioDesglosado.Transparent := True;
   iAnchoDesglosado := cxTextWidth(
     FRadioDesglosado.Font, FRadioDesglosado.Caption) + iMargenTexto;
   if iAnchoDesglosado < iAnchoMinimo then
@@ -253,7 +315,8 @@ end;
 
 procedure TPresentadorEstadosStock.AplicarColorEstadoActual;
 begin
-  FCombo.Style.TextColor := TColor(ColorEstadoStock(EstadoActual));
+  FCombo.Style.TextColor := ColorEstadoLegible(EstadoActual,
+    RootLookAndFeel.Painter.DefaultEditorBackgroundColor(False));
 end;
 
 procedure TPresentadorEstadosStock.PoblarCombo;
@@ -309,8 +372,8 @@ begin
     Etiqueta := TLabel.Create(FPanelLeyenda);
     Etiqueta.Parent := FPanelLeyenda;
     Etiqueta.AutoSize := True;
-    Etiqueta.Font.Color :=
-      TColor(ColorEstadoStock(ESTADOS_LEYENDA_STOCK[i]));
+    Etiqueta.Font.Color := ColorEstadoLegible(ESTADOS_LEYENDA_STOCK[i],
+      RootLookAndFeel.Painter.DefaultControlColor);
     Etiqueta.Font.Style := [fsBold];
     Etiqueta.Caption :=
       NombreEstadoStockCorto(ESTADOS_LEYENDA_STOCK[i]);
@@ -392,7 +455,8 @@ begin
   begin
     Estilo := TcxStyle.Create(AOwner);
     Estilo.AssignedValues := [svTextColor];
-    Estilo.TextColor := TColor(ColorEstadoStock(Estado));
+    Estilo.TextColor := ColorEstadoLegible(Estado,
+      RootLookAndFeel.Painter.DefaultContentColor);
     FEstilos[Estado] := Estilo;
   end;
 end;

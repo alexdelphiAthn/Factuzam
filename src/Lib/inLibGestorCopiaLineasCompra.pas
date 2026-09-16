@@ -183,8 +183,10 @@ begin
     ADatos.CodigoArticulo;
   FLineas.FieldByName('REF_PRV_SESLIN').AsString :=
     ADatos.ReferenciaProveedor;
-  FLineas.FieldByName('DESCRIPCION_SESLIN').AsString :=
-    ADatos.Descripcion;
+  if not SameText(Trim(FCabecera.FieldByName(
+    'ESDESCRIPCION_BLANCO_SES').AsString), 'S') then
+    FLineas.FieldByName('DESCRIPCION_SESLIN').AsString :=
+      ADatos.Descripcion;
   if ADatos.IdConjuntoPivot > 0 then
     FLineas.FieldByName('ID_AC_PIVOT_SESLIN').AsInteger :=
       ADatos.IdConjuntoPivot;

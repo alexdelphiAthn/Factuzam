@@ -26,6 +26,7 @@ type
   // las columnas de fza_facturas_consolidaciones para que el worker de la
   // cola persista la respuesta del servicio sin transformaciones.
   TResultadoEnvioVerifactu = record
+    IdIntento:         string;
     Ok:                Boolean;
     MensajeError:      string;
     EstadoRegistro:    string;    // Correcto / AceptadoConErrores
@@ -65,6 +66,12 @@ function EnviarRegistroFactura(
                                const AUsuario: string;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
+
+// Conserva el XML preparado en AResultado si falla el transporte.
+procedure EnviarRegistroFacturaConResultado(
+  const AParametrosApp: IParametrosAplicacion; AConn: TUniConnection;
+  const AUsuario, ASerie, ANumero, ATipoOperacion: string;
+  var AResultado: TResultadoEnvioVerifactu);
 
 // Genera el registro oficial de facturación en local y lo firma XAdES,
 // sin llamar al servicio AEAT. El llamador persiste el resultado y avanza
@@ -1007,7 +1014,11 @@ end;
 // ===========================================================================
 
 procedure InicializarResultadoEnvio(var AResultado: TResultadoEnvioVerifactu);
+var
+  oIdIntento: TGUID;
 begin
+  CreateGUID(oIdIntento);
+  AResultado.IdIntento := GUIDToString(oIdIntento);
   AResultado.Ok             := False;
   AResultado.QueueId        := 0;
   AResultado.IssuedTime     := 0;
@@ -1253,6 +1264,7 @@ begin
   else
   begin
     AResultado.CodigoError := oRespuesta.CodigoError;
+    AResultado.EstadoRegistro := oRespuesta.EstadoRegistro;
     AResultado.DescripcionError := oRespuesta.DescripcionError;
     AResultado.EsperaSegundos := oRespuesta.EsperaSegundos;
     if oRespuesta.Aceptado then
@@ -1276,6 +1288,15 @@ function EnviarRegistroFactura(
                                const AUsuario: string;
                                const ASerie, ANumero, ATipoOperacion: string)
                                : TResultadoEnvioVerifactu;
+begin
+  EnviarRegistroFacturaConResultado(AParametrosApp, AConn, AUsuario,
+    ASerie, ANumero, ATipoOperacion, Result);
+end;
+
+procedure EnviarRegistroFacturaConResultado(
+  const AParametrosApp: IParametrosAplicacion; AConn: TUniConnection;
+  const AUsuario, ASerie, ANumero, ATipoOperacion: string;
+  var AResultado: TResultadoEnvioVerifactu);
 var
   oDatos: TDatosFacturaRegistro;
   oCadena: TCadenaAnterior;
@@ -1284,23 +1305,27 @@ var
   iEstadoHttp: Integer;
   sCuerpo: string;
 begin
-  InicializarResultadoEnvio(Result);
+  InicializarResultadoEnvio(AResultado);
   if ConstruirRegistroFactura(AParametrosApp, AConn, AUsuario,
       ASerie, ANumero, ATipoOperacion, oDatos, oCadena,
       sRegistro, sHuella) then
   begin
     PrepararRegistroFirmado(AParametrosApp, oDatos, sRegistro,
-                            ATipoOperacion, sHuella, Result);
-    Result.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
-    EnviarHttp(UrlEnvio(AParametrosApp), Result.PeticionCompleta,
+                            ATipoOperacion, sHuella, AResultado);
+    AResultado.IssuerIrsId := oDatos.NifEmisor;
+    AResultado.FechaExpedicion := oDatos.FechaExpedicion;
+    AResultado.ChainNumber := IntToStr(oCadena.Contador + 1);
+    AResultado.ChainHash := sHuella;
+    AResultado.PeticionCompleta := EnvolverSoap(oDatos, sRegistro);
+    EnviarHttp(UrlEnvio(AParametrosApp), AResultado.PeticionCompleta,
       oDatos.SerialCert, oDatos.TitularCert, iEstadoHttp, sCuerpo);
-    Result.RespuestaCompleta := sCuerpo;
+    AResultado.RespuestaCompleta := sCuerpo;
     AplicarRespuestaAeat(AParametrosApp, oDatos, oCadena,
       ASerie, ANumero, ATipoOperacion, sHuella, iEstadoHttp,
-      sCuerpo, Result);
+      sCuerpo, AResultado);
   end
   else
-    Result.MensajeError := Format(SErrorFacturaEnvioVerifactuNoEncontrada,
+    AResultado.MensajeError := Format(SErrorFacturaEnvioVerifactuNoEncontrada,
       [ASerie, ANumero]);
 end;
 

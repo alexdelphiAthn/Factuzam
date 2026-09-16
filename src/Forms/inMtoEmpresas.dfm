@@ -1486,7 +1486,7 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
             object tsOtros: TcxTabSheet
               Caption = '&6_Otros'
               ImageIndex = 3
-              object scrOtros: TScrollBox
+              object scrOtros: TcxScrollBox
                 Left = 0
                 Top = 0
                 Width = 937
@@ -1494,18 +1494,20 @@ inherited frmMtoEmpresas: TfrmMtoEmpresas
                 HorzScrollBar.Visible = False
                 VertScrollBar.Tracking = True
                 Align = alClient
-                BorderStyle = bsNone
+                BorderStyle = cxcbsNone
                 TabOrder = 0
                 DesignSize = (
                   937
                   427)
-                object pnlUserInstantBottom: TPanel
+                object pnlUserInstantBottom: TcxGroupBox
                   Left = 0
                   Top = 342
-                  Width = 937
-                  Height = 79
                   Anchors = [akLeft, akTop, akRight]
+                  PanelStyle.Active = True
                   TabOrder = 4
+                  Transparent = True
+                  Height = 79
+                  Width = 937
                   object cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit
                     Left = 17
                     Top = 37

@@ -32,6 +32,8 @@ procedure MostrarCambioArticuloColor(
   AConexion: TUniConnection;
   const AUsuario: string);
 procedure MostrarDeclaracionVerifactu(AOwner: TComponent);
+procedure MostrarAyudaWeb(AOwner: TComponent;
+  const ATitulo, AUrl: string);
 procedure MostrarBalanceAlmacenHorizontal;
 procedure MostrarBalanceAlmacenSinTallas;
 procedure MostrarMovimientosVentasArticulos;
@@ -66,6 +68,7 @@ uses
   UniDataCambioArticuloColorRepositorio,
   UniDataCambioArticuloColorHistoricoConsulta,
   inMtoModalVerifactuDecl,
+  inMtoModalAyudaWeb,
   inMtoModalImpBalanceTallas,
   inMtoModalImpBalanceSinTallas,
   inMtoModalImpMovVentasArt,
@@ -151,6 +154,12 @@ end;
 procedure MostrarDeclaracionVerifactu(AOwner: TComponent);
 begin
   TfrmModalVerifactuDecl.Ejecutar(AOwner);
+end;
+
+procedure MostrarAyudaWeb(AOwner: TComponent;
+  const ATitulo, AUrl: string);
+begin
+  TfrmModalAyudaWeb.Ejecutar(AOwner, ATitulo, AUrl);
 end;
 
 procedure MostrarBalanceAlmacenHorizontal;

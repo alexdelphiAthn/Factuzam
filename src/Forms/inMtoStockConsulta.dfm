@@ -146,11 +146,12 @@
     TabOrder = 2
     ExplicitWidth = 896
     ExplicitHeight = 276
-    object splVert: TSplitter
+    object splVert: TcxSplitter
       Left = 280
       Top = 0
+      Width = 8
       Height = 284
-      ExplicitHeight = 368
+      Control = pnlIzq
     end
     object pnlIzq: TPanel
       Left = 0

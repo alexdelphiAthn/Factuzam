@@ -35,7 +35,8 @@ uses
   inLibEmisionFiscalIntf, inLibGenerarTicketIntf,
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
   inLibVentasCalendarioIntf, inLibPermisosIntf,
-  inLibCajaPantallaInyeccion, inLibCorreccionPagoIntf;
+  inLibCajaPantallaInyeccion, inLibCorreccionPagoIntf,
+  inLibCajaSubsanacionIntf;
 
 type
   TfrmConsultaOpe = class(TfrmBase, IConsultaOperacionesCaja)
@@ -96,6 +97,7 @@ type
     btnRectificar: TButton;
     btnEnviarEmail: TcxButton;
     btnCorregirPago: TcxButton;
+    btnSubsanar: TcxButton;
     colMovColor: TcxGridDBColumn;
     colMovTalla: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
@@ -118,6 +120,7 @@ type
     procedure btnRectificarClick(Sender: TObject);
     procedure btnEnviarEmailClick(Sender: TObject);
     procedure btnCorregirPagoClick(Sender: TObject);
+    procedure btnSubsanarClick(Sender: TObject);
     procedure cxViewMovCustomDrawCell(Sender: TcxCustomGridTableView;
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
       var ADone: Boolean);
@@ -133,7 +136,12 @@ type
     FRepositoriosTicketsCaja: TRepositoriosTicketsCaja;
     FLecturasImpresionTicket: ILecturasImpresionTicket;
     FCorreccionPagos: ICorreccionPago;
+    FServicioSubsanacion: IServicioSubsanacionCaja;
     procedure CorregirPago;
+    procedure SubsanarOperacion;
+    procedure AbrirOperacionSubsanacion(
+      const AOperacion: TOperacionSubsanacionCaja);
+    function ClaveOperacionSubsanacion: TClaveOperacionSubsanacionCaja;
     procedure ValidarDependencias;
     // Factura de la operación seleccionada (pestaña Factura)
     procedure NotificarMensajeDesdeDM(
@@ -201,7 +209,7 @@ uses
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
-  inMtoModalCorregirPago;
+  inMtoModalCorregirPago, inLibMsgSubsanacionCaja;
 
 resourcestring
   STituloPersonalizacionConsultaOperaciones =
@@ -237,6 +245,7 @@ begin
   FRepositoriosTicketsCaja := ADependencias.Tickets;
   FLecturasImpresionTicket := ADependencias.LecturasTicket;
   FCorreccionPagos := ADependencias.CorreccionPagos;
+  FServicioSubsanacion := ADependencias.Subsanacion;
   inherited Create(AOwner, APermisos);
 end;
 
@@ -251,6 +260,7 @@ begin
   Dependencias.Tickets := FRepositoriosTicketsCaja;
   Dependencias.LecturasTicket := FLecturasImpresionTicket;
   Dependencias.CorreccionPagos := FCorreccionPagos;
+  Dependencias.Subsanacion := FServicioSubsanacion;
   Dependencias.Validar;
 end;
 
@@ -320,6 +330,7 @@ end;
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
   FCorreccionPagos := nil;
+  FServicioSubsanacion := nil;
   FLecturasImpresionTicket := nil;
   FRepositoriosTicketsCaja.Impresion := nil;
   FRepositoriosTicketsCaja.Recordatorios := nil;
@@ -567,6 +578,68 @@ end;
 procedure TfrmConsultaOpe.btnCorregirPagoClick(Sender: TObject);
 begin
   CorregirPago;
+end;
+
+function TfrmConsultaOpe.ClaveOperacionSubsanacion:
+  TClaveOperacionSubsanacionCaja;
+begin
+  Result := Default(TClaveOperacionSubsanacionCaja);
+  if not FacturaSeleccionada(Result.SerieFactura, Result.NumeroFactura) then
+    raise EInvalidOpException.Create(SSubsanacionNoPermitida);
+  Result.Empresa := FdmConsulta.qryMaestro.FieldByName(
+    'CODIGO_EMP_OPCAJA').AsString;
+  Result.Almacen := FdmConsulta.qryMaestro.FieldByName(
+    'CODIGO_ALM_OPCAJA').AsString;
+  Result.Caja := FdmConsulta.qryMaestro.FieldByName(
+    'CODIGO_CAJA_OPCAJA').AsString;
+  Result.NumeroOperacion := FdmConsulta.qryMaestro.FieldByName(
+    'NUMERO_OPERACION_OPCAJA').AsString;
+end;
+
+procedure TfrmConsultaOpe.AbrirOperacionSubsanacion(
+  const AOperacion: TOperacionSubsanacionCaja);
+var
+  oAnfitrion: IAnfitrionCajaVentanas;
+  oOperacion: IOperacionCaja;
+  oFormulario: TCustomForm;
+begin
+  oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
+  oOperacion := oAnfitrion.CrearOperacionCaja(Application, Permisos);
+  oFormulario := oOperacion.FormularioCaja;
+  try
+    oOperacion.PrepararValores(AOperacion.Clave.Empresa,
+      AOperacion.Clave.Almacen, AOperacion.Clave.Caja, Now);
+    oOperacion.CargarSubsanacion(AOperacion, FServicioSubsanacion);
+  except
+    on E: Exception do
+    begin
+      RegistroLog.RegistrarError('AbrirOperacionSubsanacion: ' + E.Message);
+      oOperacion := nil;
+      FreeAndNil(oFormulario);
+      raise;
+    end;
+  end;
+  ActivarOperacionCaja(oFormulario);
+end;
+
+procedure TfrmConsultaOpe.SubsanarOperacion;
+var
+  rOperacion: TOperacionSubsanacionCaja;
+  rClave: TClaveOperacionSubsanacionCaja;
+  rFactura: TFacturaConsultaOperacion;
+begin
+  rClave := ClaveOperacionSubsanacion;
+  rFactura := FRepositorioFacturas.ConsultarFactura(
+    rClave.SerieFactura, rClave.NumeroFactura);
+  if not rFactura.PuedeSubsanar then
+    raise EInvalidOpException.Create(SSubsanacionNoPermitida);
+  rOperacion := FServicioSubsanacion.Cargar(rClave);
+  AbrirOperacionSubsanacion(rOperacion);
+end;
+
+procedure TfrmConsultaOpe.btnSubsanarClick(Sender: TObject);
+begin
+  SubsanarOperacion;
 end;
 
 procedure TfrmConsultaOpe.ActivarOperacionCaja(
@@ -1032,6 +1105,9 @@ begin
   btnEnviarEmail.Enabled := btnReimprimir.Enabled;
   btnCorregirPago.Caption := SCaptionCorregirPago;
   btnCorregirPago.Enabled := FdmConsulta.TienePagos and
+    FCorreccionPagos.Permitida;
+  btnSubsanar.Caption := SSubsanacionBoton;
+  btnSubsanar.Enabled := FdmConsulta.TieneFactura and
     FCorreccionPagos.Permitida;
 end;
 

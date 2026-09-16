@@ -29,6 +29,9 @@ type
     procedure CopiarLineas(
       AOrigen, ADestino: TDataSet;
       ASigno: Double);
+    procedure CopiarAtributos(AOrigen, ADestino: TDataSet);
+    procedure CopiarCampoAtributo(AOrigen, ADestino: TDataSet;
+      const ANombre: string);
     procedure CargarOrigen(
       const ASerie, ANumero: string;
       ASigno: Double;
@@ -87,6 +90,55 @@ begin
   ADestino.Post;
 end;
 
+procedure TServicioRectificacionCaja.CopiarCampoAtributo(
+  AOrigen, ADestino: TDataSet; const ANombre: string);
+var
+  CampoOrigen, CampoDestino: TField;
+begin
+  CampoOrigen := AOrigen.FindField(ANombre + '_FACLIN');
+  CampoDestino := ADestino.FindField(ANombre);
+  if Assigned(CampoOrigen) and Assigned(CampoDestino) and
+     not CampoOrigen.IsNull then
+    CampoDestino.Value := CampoOrigen.Value;
+end;
+
+procedure TServicioRectificacionCaja.CopiarAtributos(
+  AOrigen, ADestino: TDataSet);
+var
+  Partes: TArray<string>;
+  Campo: TField;
+  Indice, NumeroAtributos: Integer;
+  Nombre: string;
+begin
+  // La factura guarda ATTR*_FACLIN; Caja usa ATTR* sin ese sufijo.
+  // El SKU permite recuperar el desglose de tickets antiguos.
+  Partes := nil;
+  Campo := AOrigen.FindField('CODIGO_UNIDAD_FACLIN');
+  if Assigned(Campo) then
+    Partes := Campo.AsString.Split(['/']);
+  NumeroAtributos := 0;
+  Campo := AOrigen.FindField('NUM_ATRIBUTOS_FACLIN');
+  if Assigned(Campo) then
+    NumeroAtributos := Campo.AsInteger;
+  for Indice := 1 to 5 do
+  begin
+    Nombre := 'ATTR' + IntToStr(Indice);
+    CopiarCampoAtributo(AOrigen, ADestino, Nombre + '_NOMBRE');
+    CopiarCampoAtributo(AOrigen, ADestino, Nombre + '_VALOR');
+    Campo := ADestino.FindField(Nombre + '_VALOR');
+    if Assigned(Campo) then
+    begin
+      if (Trim(Campo.AsString) = '') and (Indice < Length(Partes)) then
+        Campo.AsString := Partes[Indice];
+      if (Trim(Campo.AsString) <> '') and (Indice > NumeroAtributos) then
+        NumeroAtributos := Indice;
+    end;
+  end;
+  Campo := ADestino.FindField('NUM_ATRIBUTOS_REQ_FACTURA_LINEA');
+  if Assigned(Campo) then
+    Campo.AsInteger := NumeroAtributos;
+end;
+
 procedure TServicioRectificacionCaja.CopiarLineas(
   AOrigen, ADestino: TDataSet;
   ASigno: Double);
@@ -111,7 +163,11 @@ begin
           CampoDestino.Value := CampoOrigen.Value;
         end;
       end;
-      if ADestino.FindField('CANTIDAD_FACLIN') <> nil then
+      CopiarAtributos(AOrigen, ADestino);
+      // La sustitutiva conserva ventas, devoluciones y líneas gratuitas.
+      // Sólo diferencias y devoluciones fuerzan el signo negativo.
+      if (ASigno < 0) and
+         (ADestino.FindField('CANTIDAD_FACLIN') <> nil) then
       begin
         ADestino.FieldByName('CANTIDAD_FACLIN').AsFloat :=
           ASigno *
@@ -119,7 +175,7 @@ begin
             AOrigen.FieldByName(
               'CANTIDAD_FACLIN').AsFloat);
       end;
-      if Assigned(
+      if (ASigno < 0) and Assigned(
            ADestino.FindField('TOTAL_FACLIN')) and
          Assigned(
            AOrigen.FindField('TOTAL_FACLIN')) then
@@ -130,7 +186,7 @@ begin
             AOrigen.FieldByName(
               'TOTAL_FACLIN').AsCurrency);
       end;
-      if Assigned(
+      if (ASigno < 0) and Assigned(
            ADestino.FindField(
              'TOTAL_FAC_SIVA_FACLIN')) and
          Assigned(

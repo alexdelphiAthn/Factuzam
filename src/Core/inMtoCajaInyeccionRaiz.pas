@@ -19,6 +19,7 @@ uses
   inLibCajaVentanasIntf,
   inLibPermisosIntf,
   inLibCajaPantallaInyeccion,
+  inLibCajaSubsanacionIntf,
   inLibCajasDefectoPersistenciaIntf,
   inLibCajaOperacionesHistPersistenciaIntf,
   inLibCajaPagosHistPersistenciaIntf,
@@ -40,6 +41,8 @@ type
     function CrearDependenciasTraspaso(
       const ACaja: TComposicionCajaPantalla
     ): TDependenciasTraspasoCaja;
+    function CrearServicioSubsanacion(
+      const APermisos: IPermisosAplicacion): IServicioSubsanacionCaja;
   public
     constructor Create(
       AOwnerRaiz: TComponent;
@@ -88,7 +91,9 @@ uses
   inMtoDepositosCliente,
   inMtoUsuarios,
   inMtoModalImpOperacionesVenta,
-  UniDataCorreccionPago;
+  UniDataCorreccionPago,
+  UniDataCajaSubsanacionRepositorio,
+  UniDataVerifactuSubsanacionRepositorio;
 
 procedure NormalizarOwnerPantallaCaja(
   AOwnerSolicitado: TComponent;
@@ -193,6 +198,23 @@ begin
   Result := Formulario;
 end;
 
+function TInyeccionCajaRaiz.CrearServicioSubsanacion(
+  const APermisos: IPermisosAplicacion): IServicioSubsanacionCaja;
+var
+  rDependencias: TDependenciasSubsanacionCaja;
+begin
+  rDependencias := Default(TDependenciasSubsanacionCaja);
+  rDependencias.ParametrosApp := FComposicion.ParametrosApp;
+  rDependencias.ParametrosCaja := FComposicion.ParametrosCaja;
+  rDependencias.Permisos := APermisos;
+  rDependencias.Fiscal := CrearServicioVerifactuCorreccionRegistroUniDAC(
+    FComposicion.Conexiones.ConexionPrincipal);
+  rDependencias.RegistroLog := FComposicion.RegistroLog;
+  rDependencias.Usuario := FComposicion.ContextoSesion.Identidad.Usuario;
+  Result := CrearServicioSubsanacionCajaUniDAC(
+    FComposicion.Conexiones.ConexionPrincipal, rDependencias);
+end;
+
 function TInyeccionCajaRaiz.CrearConsulta(
   AOwner: TComponent;
   const APermisos: IPermisosAplicacion): IConsultaOperacionesCaja;
@@ -206,6 +228,7 @@ begin
   Dependencias.CorreccionPagos := TCorreccionPagoUniDAC.Create(
     FComposicion.Conexiones.ConexionPrincipal, APermisos,
     FComposicion.ContextoSesion.Identidad.Usuario);
+  Dependencias.Subsanacion := CrearServicioSubsanacion(APermisos);
   Dependencias.Facturas :=
     Caja.Consultas.CrearRepositorioConsultaFacturas;
   Dependencias.VentasCalendario :=

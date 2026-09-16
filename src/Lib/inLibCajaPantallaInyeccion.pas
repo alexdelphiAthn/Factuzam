@@ -18,6 +18,7 @@ interface
 uses
   Data.DB, Uni,
   inLibParametrosIntf, inLibCorreccionPagoIntf,
+  inLibCajaSubsanacionIntf,
   inLibConsultaFacturasOperacionesPersistenciaIntf,
   inLibVentasCalendarioIntf,
   inLibEmisionFiscalIntf,
@@ -63,6 +64,7 @@ type
 
   TDependenciasConsultaOperacionesCaja = record
     CorreccionPagos: ICorreccionPago;
+    Subsanacion: IServicioSubsanacionCaja;
     Facturas: IRepositorioConsultaFacturasOperaciones;
     VentasCalendario: IRepositorioVentasCalendario;
     EmisionFiscal: IServicioEmisionFiscal;
@@ -206,6 +208,7 @@ end;
 procedure TDependenciasConsultaOperacionesCaja.Validar;
 begin
   ValidarDependenciaCaja(CorreccionPagos, 'corrección de cobros');
+  ValidarDependenciaCaja(Subsanacion, 'subsanación de operaciones');
   ValidarDependenciaCaja(Facturas, 'facturas de operaciones');
   ValidarDependenciaCaja(VentasCalendario, 'calendario de ventas');
   ValidarDependenciaCaja(EmisionFiscal, 'emisión fiscal');

@@ -23,5 +23,13 @@ type
       const AParametrosCaja: IParametrosCaja;
       const AUsuario, ASerie, ANumero, AMotivo: string);
   end;
+  IServicioVerifactuCorreccionRegistro = interface
+    ['{8792C4EC-EA22-4BAC-964D-1609F986581A}']
+    // Comparte la transacción activa del llamador y no la confirma.
+    procedure EncolarCorreccionRegistro(
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja;
+      const AUsuario, ASerie, ANumero, AMotivo: string);
+  end;
 implementation
 end.

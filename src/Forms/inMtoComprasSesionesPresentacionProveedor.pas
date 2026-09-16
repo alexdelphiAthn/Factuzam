@@ -292,6 +292,7 @@ var
   Ficha: TDataSet;
   Cabecera: TDataSet;
 begin
+  FEntorno.Datos.HeredarDescripcionProveedor;
   Ficha := FEntorno.Datos.unqryPrvFicha;
   Cabecera := FEntorno.Datos.unqryTablaG;
   if Ficha.Active and (not Ficha.IsEmpty) then

@@ -110,7 +110,7 @@ implementation
 {$R *.dfm}
 
 uses
-  inLibMensajesVcl,
+  inLibMensajesVcl, inLibInspectorSkin,
   StrUtils, inLibLayoutForm, inLibMsgCaja;
 
 resourcestring
@@ -146,6 +146,7 @@ begin
   FInts  := TList<PInteger>.Create;
   FStrs  := TList<PString>.Create;
   FValoresOriginales := TDictionary<string, string>.Create;
+  AplicarPintorSkin(JvInspector1, JvInspectorDotNETPainter1);
 end;
 
 procedure TfrmMtoCajaParam.FormKeyDown(Sender: TObject;

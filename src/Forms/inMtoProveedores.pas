@@ -186,6 +186,7 @@ type
     lblMargenPrv: TcxLabel;
     spnMargenPrv: TcxDBSpinEdit;
     chkVariosTiposIvaPrv: TcxDBCheckBox;
+    chkESDESCRIPCION_BLANCO_PRV: TcxDBCheckBox;
     lblSistemaTallasPrv: TcxLabel;
     cbbSistemaTallasPrv: TcxDBLookupComboBox;
     lblDefectosInfo: TcxLabel;
@@ -395,6 +396,8 @@ procedure TfrmMtoProveedores.CrearTablaPrincipal;
 begin
   inherited;
   FDmmProveedores := tdmDataModule as TdmProveedores;
+  chkESDESCRIPCION_BLANCO_PRV.Caption :=
+    SComprasDejarDescripcionBlanco;
   tvArticulos.DataController.DataSource := FDmmProveedores.dsArticulos;
   tvLinFac.DataController.DataSource :=
     FDmmProveedores.dsLinFacturasArticulos;

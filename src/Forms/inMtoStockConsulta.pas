@@ -46,7 +46,7 @@ uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.Generics.Collections,
   Vcl.Graphics, Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls,
-  Vcl.StdCtrls, Vcl.Menus, Vcl.Imaging.pngimage,
+  Vcl.StdCtrls, Vcl.Menus, Vcl.Imaging.pngimage, Vcl.AppEvnts,
   Data.DB,
   cxClasses, cxLookAndFeels, cxLookAndFeelPainters, cxContainer,
   cxEdit, cxLabel, cxTextEdit, cxButtonEdit, cxButtons, cxMaskEdit,
@@ -57,7 +57,7 @@ uses
   cxGridDBTableView, cxGrid, cxPC, cxGraphics, cxLocalization,
   dxSkinsCore, dxSkinBlue, dxSkinsForm, dxScrollbarAnnotations,
   dxDateRanges, cxMemo, cxControls, dxCoreGraphics, cxCustomListBox,
-  cxRadioGroup, inLibLectorScanner, inLibDocumentosTrabajo,
+  cxRadioGroup, cxSplitter, inLibLectorScanner, inLibDocumentosTrabajo,
   inLibFotos,
   inMtoFrmBase, inLibPermisosIntf,
   inLibStockConsultaPersistenciaIntf,
@@ -99,7 +99,7 @@ type
     tsAlmacenes   : TcxTabSheet;
     lblAlmacenes  : TcxLabel;
     lstAlmacenes  : TcxListBox;
-    splVert       : TSplitter;
+    splVert       : TcxSplitter;
     pnlDer        : TPanel;
     pcVistas      : TcxPageControl;
     tsPorAlmacen  : TcxTabSheet;
@@ -138,6 +138,8 @@ type
     FFiltrosLista: TPresentadorFiltrosListaStock;
     FPopMenuStock: TPopupMenu;
     FMenuAgregarDoc: TMenuItem;
+    FEventosLector: TApplicationEvents;
+    procedure MensajeLector(var Msg: TMsg; var Handled: Boolean);
     procedure FormKeyPress(Sender: TObject; var Key: Char);
     procedure FormShortCut(var Msg: TWMKey; var Handled: Boolean);
     procedure LectorCodigoLeido(Sender: TObject;
@@ -167,6 +169,8 @@ type
               Shift: TShiftState);
     procedure btnArtExit(Sender: TObject);
     procedure ResolverTextoArticulo(AMostrarError: Boolean);
+    procedure OmitirTabEnArticulo(Sender: TObject; AControl: TWinControl;
+              var AProcesado: Boolean);
   protected
     FDependencias: TContextoDependenciasStockConsulta;
   public
@@ -278,6 +282,8 @@ begin
   Formulario.Visible := True;
   Formulario.BringToFront;
   SetForegroundWindow(Formulario.Handle);
+  if Formulario.btnArt.CanFocus then
+    Formulario.btnArt.SetFocus;
 end;
 
 procedure DesvincularPerfilesStockConsulta;
@@ -326,6 +332,8 @@ begin
   FDependencias.Lector.LongitudMinima := SCAN_MIN_LONG;
   FDependencias.Lector.ConsumirRafaga := True;
   FDependencias.Lector.OnCodigoLeido := LectorCodigoLeido;
+  FEventosLector := TApplicationEvents.Create(Self);
+  FEventosLector.OnMessage := MensajeLector;
   CrearPresentadores;
   FFiltrosLista.CargarAlmacenes;
   AjustarFotoCabecera;
@@ -400,6 +408,7 @@ begin
     end);
   btnArt.OnKeyDown := btnArtKeyDown;
   btnArt.OnExit := btnArtExit;
+  jvntrstb1.OnHandleEnter := OmitirTabEnArticulo;
   // Letrero de aviso: oculto por defecto, rojo y en negrita para que "cante"
   // las propiedades propias del color (color/SKU) al pincharlo.
   lblLetreroTemp.Transparent      := False;
@@ -445,6 +454,7 @@ end;
 
 procedure TfrmStockConsulta.FormDestroy(Sender: TObject);
 begin
+  FreeAndNil(FEventosLector);
   if FPivote <> nil then
     FPivote.Limpiar;
   FreeAndNil(FFotos);
@@ -492,9 +502,16 @@ begin
   FDependencias.Lector.KeyPress(Key);
 end;
 
+procedure TfrmStockConsulta.MensajeLector(var Msg: TMsg;
+  var Handled: Boolean);
+begin
+  if not Handled then
+    Handled := FDependencias.Lector.MensajeTrama(Msg, Self);
+end;
+
 // OnShortCut se dispara en CN_KEYDOWN, antes que CM_DIALOGKEY (jvEnterTab de
 // TfrmBase convierte Enter en Tab) y que el boton con foco (Enter = clic).
-// Sin esto, con el foco en btnArt o en "Op de Caja" (foco inicial), el Enter
+// Sin esto, con el foco en btnArt o en "Op de Caja", el Enter
 // que cierra una rafaga del lector o el CR que envia tras ETX no llegaba a
 // FormKeyDown: la lectura se perdia o pulsaba el boton.
 procedure TfrmStockConsulta.FormShortCut(var Msg: TWMKey;
@@ -510,12 +527,26 @@ procedure TfrmStockConsulta.LectorCodigoLeido(Sender: TObject;
   const ACodigo: string);
 begin
   if Assigned(FDependencias.Entrada) then
-    FDependencias.Entrada.ProcesarCodigoBarras(ACodigo);
+  begin
+    FVista.ResolviendoEntrada := True;
+    try
+      FCoincidencias.Ocultar;
+      FDependencias.Entrada.ProcesarCodigoBarras(ACodigo);
+    finally
+      FVista.ResolviendoEntrada := False;
+    end;
+  end;
 end;
 
 // ---------------------------------------------------------------------------
 //  Entrada de articulo por texto
 // ---------------------------------------------------------------------------
+procedure TfrmStockConsulta.OmitirTabEnArticulo(Sender: TObject;
+  AControl: TWinControl; var AProcesado: Boolean);
+begin
+  AProcesado := AProcesado or btnArt.ContainsControl(AControl);
+end;
+
 procedure TfrmStockConsulta.btnArtKeyDown(Sender: TObject; var Key: Word;
   Shift: TShiftState);
 begin
@@ -533,7 +564,8 @@ end;
 
 procedure TfrmStockConsulta.ResolverTextoArticulo(AMostrarError: Boolean);
 begin
-  if FVista.AdmiteResolverEntrada and Assigned(FDependencias.Entrada) then
+  if FVista.AdmiteResolverEntrada and Assigned(FDependencias.Entrada) and
+    (not FDependencias.Lector.LecturaPendiente) then
   begin
     FVista.ResolviendoEntrada := True;
     try

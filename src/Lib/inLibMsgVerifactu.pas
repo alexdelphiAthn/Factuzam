@@ -337,6 +337,13 @@ resourcestring
     'aceptado con errores y que no exista otra subsanación activa.';
   SErrorIncidenciaEstadoCambio =
     'La subsanación ya no parte de un registro aceptado con errores.';
+  SErrorSubsanacionTransaccion =
+    'La corrección fiscal requiere una transacción activa.';
+  SErrorSubsanacionRegistroNoVigente =
+    'La factura no tiene un registro fiscal aceptado y vigente.';
+  SErrorSubsanacionColaActiva =
+    'La factura tiene un envío fiscal pendiente, en curso o con errores. ' +
+    'Debe resolverse antes de guardar otra subsanación.';
   SInfoIncidenciaSubsanacionEncolada =
     'Subsanación encolada. La factura original permanece inalterada.';
   SInfoIncidenciaRectificativaCreada =

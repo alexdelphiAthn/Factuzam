@@ -1,0 +1,962 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       UniDataCajaSubsanacionRepositorio                             }
+{    Tipo:       Data Module                                                   }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       16/09/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo.                                    }
+{  SPDX-License-Identifier: MPL-2.0                                            }
+{  Descripción:                                                                }
+{    Guarda importes, cobro, auditoría y subsanación fiscal de forma atómica.  }
+{******************************************************************************}
+unit UniDataCajaSubsanacionRepositorio;
+
+interface
+
+uses
+  Uni, inLibCajaSubsanacionIntf, inLibParametrosIntf,
+  inLibPermisosIntf, inLibLogIntf, inLibVerifactuSubsanacionIntf;
+
+type
+  TDependenciasSubsanacionCaja = record
+    ParametrosApp: IParametrosAplicacion;
+    ParametrosCaja: IParametrosCaja;
+    Permisos: IPermisosAplicacion;
+    Fiscal: IServicioVerifactuCorreccionRegistro;
+    RegistroLog: IRegistroLog;
+    Usuario: string;
+  end;
+
+function CrearServicioSubsanacionCajaUniDAC(AConexion: TUniConnection;
+  const ADependencias: TDependenciasSubsanacionCaja): IServicioSubsanacionCaja;
+
+implementation
+
+uses
+  System.SysUtils, System.StrUtils, System.Classes, System.JSON, System.Hash,
+  System.Diagnostics, System.Generics.Collections, Data.DB,
+  Datasnap.DBClient, Datasnap.Provider,
+  inLibCajaSubsanacion, inLibCorreccionPagoIntf, inLibFacturas,
+  inLibMsgPersistenciaSubsanacionCaja, UniDataCajaSubsanacionImportes;
+
+const
+  ftotal = 'TOTAL_LIQUIDO_FAC';
+  ftotalope = 'IMPORTE_TOTAL_OPCAJA';
+  fentregado = 'IMPORTE_ENTREGADO_PAGO';
+  fcambio = 'IMPORTE_CAMBIO_PAGO';
+  fforma = 'CODIGO_FP_CFP';
+  fref = 'REFERENCIA_FACPAG';
+  SQL_CLAVE_OPE =
+    'CODIGO_EMP_OPCAJA = :EMP AND CODIGO_ALM_OPCAJA = :ALM ' +
+    'AND CODIGO_CAJA_OPCAJA = :CAJA ' +
+    'AND NUMERO_OPERACION_OPCAJA = :OPE ';
+  SQL_CLAVE_PAGO =
+    'CODIGO_EMP_PAGO = :EMP AND CODIGO_ALM_PAGO = :ALM ' +
+    'AND CODIGO_CAJA_PAGO = :CAJA AND NUMERO_OPERACION_PAGO = :OPE ';
+  SQL_MEDIO_SIMPLE =
+    'COALESCE(ESCRIPTO_FORMA_PAGO_CFP, ''N'') <> ''S'' ' +
+    'AND COALESCE(ESDIVISA_FORMA_PAGO_CFP, ''N'') <> ''S'' ' +
+    'AND CODIGO_FP_CFP NOT IN (''VALE'', ''BONO'', ''DEUDA'') ' +
+    'AND CHAR_LENGTH(CODIGO_FP_CFP) <= 10 ';
+  CAMPOS_TOTALES =
+    'TOTAL_BASEI_IVAN_FAC,TOTAL_BASEI_IVAR_FAC,' +
+    'TOTAL_BASEI_IVAS_FAC,TOTAL_BASEI_IVAE_FAC,TOTAL_BASES_FAC,' +
+    'TOTAL_IVAN_FAC,TOTAL_IVAR_FAC,TOTAL_IVAS_FAC,TOTAL_IVAE_FAC,' +
+    'TOTAL_REN_FAC,TOTAL_RER_FAC,TOTAL_RES_FAC,TOTAL_REE_FAC,' +
+    'TOTAL_IMPUESTOS_FAC,TOTAL_RETENCION_FAC,TOTAL_LIQUIDO_FAC';
+  CAMPOS_CABECERA =
+    'SERIE_FAC,NUMERO_FAC,FECHA_FAC,CODIGO_EMP_FAC,' +
+    'CODIGO_ALM_FAC,CODIGO_CAJA_FAC,NUMERO_OPERACION_FAC,' +
+    'ESCONSOLIDADA_FAC,TIPO_FAC,FASE_FAC,INSTANTE_MODIF,' +
+    'RAZON_SOCIAL_EMPRESA_FAC,CODIGO_CLI_FAC,' +
+    'RAZON_SOCIAL_CLIENTE_FAC,NIF_CLIENTE_FAC,DIRECCION1_CLIENTE_FAC,' +
+    'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC,' +
+    'ESREGIMENESPECIALAGRICOLA_CLIENTE_FAC,' +
+    'ESINTRACOMUNITARIO_CLIENTE_FAC,ESVENTA_ACTIVO_FIJO_FAC,' +
+    'ESRETENCIONES_CLIENTE_FAC,ESRETENCIONES_EMPRESA_FAC,' +
+    'ESIVA_EXENTO_CLIENTE_FAC,ESIVA_RECARGO_CLIENTE_FAC,' +
+    'ESIRPF_IMP_INCL_ZONA_IVA_FAC,ESAPLICA_RE_ZONA_IVA_FAC,' +
+    'GRUPO_ZONA_IVA_EMPRESA_FAC,CODIGO_IVA_FAC,' +
+    'PORCENTAJE_RETENCION_FAC,PORCENTAJE_IVAN_FAC,' +
+    'PORCENTAJE_IVAR_FAC,PORCENTAJE_IVAS_FAC,PORCENTAJE_IVAE_FAC,' +
+    'PORCENTAJE_REN_FAC,PORCENTAJE_RER_FAC,' +
+    'PORCENTAJE_RES_FAC,PORCENTAJE_REE_FAC,' + CAMPOS_TOTALES;
+  CAMPOS_IMPORTES_LINEA =
+    'PRECIO_SALIDA_FACLIN,PORCENTAJE_DTO_FACLIN,PRECIO_DTO_FACLIN,' +
+    'PRECIO_VENTA_SIVA_ARTICULO_FACLIN,' +
+    'PRECIO_VENTA_CIVA_ARTICULO_FACLIN,' +
+    'TOTAL_FAC_SIVA_FACLIN,TOTAL_FACLIN';
+  CAMPOS_LINEAS =
+    'LINEA_FACLIN,CODIGO_ART_FACLIN,CODIGO_UNIDAD_FACLIN,' +
+    'DESCRIPCION_ARTICULO_FACLIN,CANTIDAD_FACLIN,' +
+    'ESIMP_INCL_TARIFA_FACLIN,TIPO_IVA_ARTICULO_FACLIN,' +
+    'PORCENTAJE_IVA_FACLIN,INSTANTE_MODIF,' + CAMPOS_IMPORTES_LINEA;
+
+type
+  TDatosSubsanacionCaja = class
+  public
+    Cabecera: TClientDataSet;
+    Lineas: TClientDataSet;
+    Operacion: TClientDataSet;
+    Pagos: TClientDataSet;
+    PagosFactura: TClientDataSet;
+    destructor Destroy; override;
+    function ComoJson: string;
+  end;
+
+  TServicioSubsanacionCajaUniDAC = class(TInterfacedObject,
+    IServicioSubsanacionCaja)
+  private
+    FConexion: TUniConnection;
+    FDependencias: TDependenciasSubsanacionCaja;
+    function Consulta(const ASql: string;
+      const AClave: TClaveOperacionSubsanacionCaja): TUniQuery;
+    function LeerDatos(const AClave: TClaveOperacionSubsanacionCaja;
+      ABloquear: Boolean): TDatosSubsanacionCaja;
+    function LeerCopia(const ASql: string;
+      const AClave: TClaveOperacionSubsanacionCaja;
+      ABloquear: Boolean): TClientDataSet;
+    function CrearSnapshot(const AClave: TClaveOperacionSubsanacionCaja;
+      ADatos: TDatosSubsanacionCaja): TOperacionSubsanacionCaja;
+    procedure ExigirPermiso;
+    procedure ComprobarEsquema;
+    procedure ValidarClave(const AClave: TClaveOperacionSubsanacionCaja);
+    procedure ValidarDatos(ADatos: TDatosSubsanacionCaja;
+      const AClave: TClaveOperacionSubsanacionCaja);
+    procedure ValidarFiscal(const AClave: TClaveOperacionSubsanacionCaja);
+    procedure ValidarVinculos(const AClave: TClaveOperacionSubsanacionCaja);
+    procedure ValidarArqueo(ADatos: TDatosSubsanacionCaja;
+      const AClave: TClaveOperacionSubsanacionCaja);
+    procedure ValidarCabecera(ADatos: TDatosSubsanacionCaja);
+    procedure ValidarPago(ADatos: TDatosSubsanacionCaja);
+    procedure ValidarMedio(const ASolicitud: TSolicitudSubsanacionCaja);
+    procedure ValidarSolicitud(const ASolicitud: TSolicitudSubsanacionCaja;
+      const AActual: TOperacionSubsanacionCaja);
+    procedure Recalcular(ADatos: TDatosSubsanacionCaja;
+      const ASolicitud: TSolicitudSubsanacionCaja);
+    procedure ValidarLineasCalculadas(ADatos: TDatosSubsanacionCaja;
+      AOriginales: TDataSet; const ALineas: TLineasSubsanacionCaja);
+    procedure GuardarImportes(ADatos: TDatosSubsanacionCaja;
+      const ASolicitud: TSolicitudSubsanacionCaja);
+    procedure GuardarCobro(ADatos: TDatosSubsanacionCaja;
+      const ASolicitud: TSolicitudSubsanacionCaja);
+    procedure GuardarPagoFactura(ADatos: TDatosSubsanacionCaja;
+      const ASolicitud: TSolicitudSubsanacionCaja);
+    procedure GuardarAuditoria(const ASolicitud: TSolicitudSubsanacionCaja;
+      const AAntes, ADespues: string);
+    procedure ActualizarCampos(const ATabla, ACondicion,
+      ACampos: string; AOrigen: TDataSet;
+      const AClave: TClaveOperacionSubsanacionCaja);
+  public
+    constructor Create(AConexion: TUniConnection;
+      const ADependencias: TDependenciasSubsanacionCaja);
+    function Cargar(const AClave: TClaveOperacionSubsanacionCaja):
+      TOperacionSubsanacionCaja;
+    function Medios: TArray<TMedioCorreccionPago>;
+    function Guardar(const ASolicitud: TSolicitudSubsanacionCaja):
+      TResultadoSubsanacionCaja;
+  end;
+
+function HayImportesModificados(const ALineas: TLineasSubsanacionCaja):
+  Boolean;
+var
+  oLinea: TLineaSubsanacionCaja;
+begin
+  Result := False;
+  for oLinea in ALineas do
+    Result := Result or (oLinea.Importe <> oLinea.ImporteOriginal);
+end;
+
+function DatosComoJson(AOrigen: TDataSet): TJSONArray;
+var
+  oFila: TJSONObject;
+  oCampo: TField;
+begin
+  Result := TJSONArray.Create;
+  try
+    AOrigen.First;
+    while not AOrigen.Eof do
+    begin
+      oFila := TJSONObject.Create;
+      Result.AddElement(oFila);
+      for oCampo in AOrigen.Fields do
+      begin
+        if oCampo.IsNull then
+          oFila.AddPair(oCampo.FieldName, TJSONNull.Create)
+        else
+          oFila.AddPair(oCampo.FieldName, oCampo.AsString);
+      end;
+      AOrigen.Next;
+    end;
+    AOrigen.First;
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+destructor TDatosSubsanacionCaja.Destroy;
+begin
+  FreeAndNil(Cabecera);
+  FreeAndNil(Lineas);
+  FreeAndNil(Operacion);
+  FreeAndNil(Pagos);
+  FreeAndNil(PagosFactura);
+  inherited;
+end;
+
+function TDatosSubsanacionCaja.ComoJson: string;
+var
+  oJson: TJSONObject;
+begin
+  oJson := TJSONObject.Create;
+  try
+    oJson.AddPair('factura', DatosComoJson(Cabecera));
+    oJson.AddPair('lineas', DatosComoJson(Lineas));
+    oJson.AddPair('operacion', DatosComoJson(Operacion));
+    oJson.AddPair('cobros', DatosComoJson(Pagos));
+    oJson.AddPair('pagosFactura', DatosComoJson(PagosFactura));
+    Result := oJson.ToJSON;
+  finally
+    FreeAndNil(oJson);
+  end;
+end;
+
+constructor TServicioSubsanacionCajaUniDAC.Create(
+  AConexion: TUniConnection;
+  const ADependencias: TDependenciasSubsanacionCaja);
+begin
+  inherited Create;
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  if not Assigned(ADependencias.Permisos) or
+     not Assigned(ADependencias.Fiscal) or
+     not Assigned(ADependencias.ParametrosApp) or
+     not Assigned(ADependencias.ParametrosCaja) or
+     not Assigned(ADependencias.RegistroLog) then
+    raise EArgumentNilException.Create('ADependencias');
+  FConexion := AConexion;
+  FDependencias := ADependencias;
+end;
+
+function CrearServicioSubsanacionCajaUniDAC(AConexion: TUniConnection;
+  const ADependencias: TDependenciasSubsanacionCaja): IServicioSubsanacionCaja;
+begin
+  Result := TServicioSubsanacionCajaUniDAC.Create(AConexion, ADependencias);
+end;
+
+function TServicioSubsanacionCajaUniDAC.Consulta(const ASql: string;
+  const AClave: TClaveOperacionSubsanacionCaja): TUniQuery;
+  procedure Parametro(const ANombre, AValor: string);
+  begin
+    if Assigned(Result.Params.FindParam(ANombre)) then
+      Result.ParamByName(ANombre).AsString := AValor;
+  end;
+begin
+  Result := TUniQuery.Create(nil);
+  try
+    Result.Connection := FConexion;
+    Result.SQL.Text := ASql;
+    Parametro('EMP', AClave.Empresa);
+    Parametro('ALM', AClave.Almacen);
+    Parametro('CAJA', AClave.Caja);
+    Parametro('OPE', AClave.NumeroOperacion);
+    Parametro('SERIE', AClave.SerieFactura);
+    Parametro('NUMERO', AClave.NumeroFactura);
+    Parametro('USUARIO', FDependencias.Usuario);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+function TServicioSubsanacionCajaUniDAC.LeerCopia(const ASql: string;
+  const AClave: TClaveOperacionSubsanacionCaja;
+  ABloquear: Boolean): TClientDataSet;
+var
+  oConsulta: TUniQuery;
+  oProveedor: TDataSetProvider;
+  sSql: string;
+begin
+  sSql := ASql;
+  if ABloquear then
+    sSql := sSql + ' FOR UPDATE';
+  oConsulta := Consulta(sSql, AClave);
+  oProveedor := nil;
+  Result := nil;
+  try
+    oConsulta.Open;
+    oProveedor := TDataSetProvider.Create(nil);
+    oProveedor.DataSet := oConsulta;
+    Result := TClientDataSet.Create(nil);
+    try
+      Result.Data := oProveedor.Data;
+    except
+      FreeAndNil(Result);
+      raise;
+    end;
+  finally
+    FreeAndNil(oProveedor);
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ExigirPermiso;
+begin
+  if (Trim(FDependencias.Usuario) = '') or
+     not FDependencias.Permisos.Disponible or
+     not FDependencias.Permisos.TienePermiso(
+       CodigoPermisoMto('CajaPagosHist', apmModificar), paPermitir) then
+    raise EInvalidOpException.Create(SSubsanacionSinPermiso);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarClave(
+  const AClave: TClaveOperacionSubsanacionCaja);
+begin
+  if (Trim(AClave.Empresa) = '') or (Trim(AClave.Almacen) = '') or
+     (Trim(AClave.Caja) = '') or (Trim(AClave.NumeroOperacion) = '') or
+     (Trim(AClave.SerieFactura) = '') or
+     (Trim(AClave.NumeroFactura) = '') then
+    raise EArgumentException.Create(SSubsanacionIdentidadInvalida);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ComprobarEsquema;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'SELECT COUNT(*) AS N FROM INFORMATION_SCHEMA.TABLES ' +
+    'WHERE TABLE_SCHEMA = DATABASE() ' +
+    'AND TABLE_NAME = ''fza_caja_subsanaciones''',
+    Default(TClaveOperacionSubsanacionCaja));
+  try
+    oConsulta.Open;
+    if oConsulta.FieldByName('N').AsInteger <> 1 then
+      raise EInvalidOpException.Create(SSubsanacionEsquemaPendiente);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TServicioSubsanacionCajaUniDAC.LeerDatos(
+  const AClave: TClaveOperacionSubsanacionCaja;
+  ABloquear: Boolean): TDatosSubsanacionCaja;
+begin
+  Result := TDatosSubsanacionCaja.Create;
+  try
+    Result.Cabecera := LeerCopia('SELECT ' + CAMPOS_CABECERA +
+      ' FROM fza_facturas WHERE SERIE_FAC = :SERIE ' +
+      'AND NUMERO_FAC = :NUMERO AND CODIGO_EMP_FAC = :EMP ' +
+      'AND CODIGO_ALM_FAC = :ALM AND CODIGO_CAJA_FAC = :CAJA ' +
+      'AND NUMERO_OPERACION_FAC = :OPE', AClave, ABloquear);
+    if Result.Cabecera.IsEmpty then
+      raise EInvalidOpException.Create(SSubsanacionFacturaNoVigente);
+    Result.Lineas := LeerCopia('SELECT ' + CAMPOS_LINEAS +
+      ' FROM fza_facturas_lineas WHERE SERIE_FAC_FACLIN = :SERIE ' +
+      'AND NUMERO_FAC_FACLIN = :NUMERO ORDER BY LINEA_FACLIN',
+      AClave, ABloquear);
+    Result.Operacion := LeerCopia(
+      'SELECT ID_OPCAJA,TIPO_OPERACION_OPCAJA,IMPORTE_TOTAL_OPCAJA,' +
+      'SERIE_FAC_OPCAJA,NUMERO_FAC_OPCAJA,FECHA_OPERACION_OPCAJA,' +
+      'ID_DEPOSITO_OPCAJA,CODIGO_ARQUEO_OPCAJA,' +
+      'ESTADO_DEVOLUCION_OPCAJA,IMPORTE_DEVUELTO_ACUM_OPCAJA,' +
+      'INSTANTE_MODIF FROM fza_caja_operaciones WHERE ' +
+      SQL_CLAVE_OPE + 'ORDER BY ID_OPCAJA', AClave, ABloquear);
+    Result.Pagos := LeerCopia(
+      'SELECT SERIE_OPERACION_PAGO,NUMERO_LINEA_PAGO,CODIGO_FP_CFP,' +
+      'IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO,REFERENCIA_FACPAG,' +
+      'CODIGO_DIVISA_PAGO,RED_BLOCKCHAIN_PAGO,FACTOR_CAMBIO_PAGO,' +
+      'IMPORTE_DIVISA_PAGO,INSTANTE_MODIF ' +
+      'FROM fza_caja_pagos WHERE ' + SQL_CLAVE_PAGO +
+      'ORDER BY SERIE_OPERACION_PAGO,NUMERO_LINEA_PAGO',
+      AClave, ABloquear);
+    Result.PagosFactura := LeerCopia(
+      'SELECT LINEA_FACPAG,TIPO_FACPAG,IMPORTE_FACPAG,' +
+      'REFERENCIA_FACPAG,DESCRIPCION_FACPAG,ENTIDAD_FACPAG,' +
+      'FECHA_FACPAG,INSTANTE_MODIF FROM fza_facturas_pagos ' +
+      'WHERE SERIE_FAC_FACPAG = :SERIE AND NUMERO_FAC_FACPAG = :NUMERO ' +
+      'ORDER BY LINEA_FACPAG', AClave, ABloquear);
+  except
+    FreeAndNil(Result);
+    raise;
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarCabecera(
+  ADatos: TDatosSubsanacionCaja);
+var
+  oCabecera: TDataSet;
+  sCliente: string;
+begin
+  oCabecera := ADatos.Cabecera;
+  if (oCabecera.FieldByName('ESCONSOLIDADA_FAC').AsString <> 'S') or
+     (oCabecera.FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') or
+     not MatchText(oCabecera.FieldByName('FASE_FAC').AsString,
+       ['VERIFACTU_OK', 'VERIFACTU_ACEPT_ERR']) then
+    raise EInvalidOpException.Create(SSubsanacionFacturaNoVigente);
+  sCliente := oCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
+  if (oCabecera.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString = '') or
+     (oCabecera.FieldByName(
+       'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString = 'S') or
+     ((sCliente <> '') and (sCliente <> '0') and
+      (sCliente <> 'VENTA CONTADO') and
+      (oCabecera.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '')) then
+    raise EInvalidOpException.Create(SSubsanacionDatosFiscales);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarFiscal(
+  const AClave: TClaveOperacionSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'SELECT c.ESTADO_FACCON FROM fza_facturas_consolidaciones c ' +
+    'WHERE c.SERIE_FAC_FACCON = :SERIE ' +
+    'AND c.NUMERO_FAC_FACCON = :NUMERO ' +
+    'AND NOT EXISTS (SELECT 1 FROM fza_verifactu_cola q ' +
+    'WHERE q.SERIE_FAC_VFCOLA = :SERIE ' +
+    'AND q.NUMERO_FAC_VFCOLA = :NUMERO ' +
+    'AND q.TIPO_OPERACION_VFCOLA IN ' +
+    '(''ALTA'', ''ANULACION'', ''SUBSANACION'') ' +
+    'AND (q.ESTADO_VFCOLA <> ''ENVIADA'' ' +
+    'OR q.TIPO_OPERACION_VFCOLA = ''ANULACION'')) ' +
+    'ORDER BY c.ID_FACCON DESC LIMIT 1', AClave);
+  try
+    oConsulta.Open;
+    if oConsulta.IsEmpty or
+       not MatchText(oConsulta.FieldByName('ESTADO_FACCON').AsString,
+         ['VERIFACTU_OK', 'VERIFACTU_PROCESADO', 'VERIFACTU_DUPLICADO',
+          'VERIFACTU_SUBSANADO', 'VERIFACTU_ACEPT_ERR']) then
+      raise EInvalidOpException.Create(SSubsanacionRegistroNoAceptado);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarVinculos(
+  const AClave: TClaveOperacionSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'SELECT 1 AS VINCULO FROM fza_recibos ' +
+    'WHERE SERIE_FAC_REC = :SERIE AND NUMERO_FAC_REC = :NUMERO ' +
+    'UNION ALL SELECT 1 FROM fza_caja_vales WHERE ' +
+    '(CODIGO_EMP_EMI_VL = :EMP AND CODIGO_ALM_EMI_VL = :ALM ' +
+    'AND CODIGO_CAJA_EMI_VL = :CAJA ' +
+    'AND NUMERO_OPERACION_EMI_VL = :OPE) OR ' +
+    '(CODIGO_EMP_RED_VL = :EMP AND CODIGO_ALM_RED_VL = :ALM ' +
+    'AND CODIGO_CAJA_RED_VL = :CAJA ' +
+    'AND NUMERO_OPERACION_RED_VL = :OPE) ' +
+    'UNION ALL SELECT 1 FROM fza_facturas_relaciones ' +
+    'WHERE SERIE_FAC_ORIGEN_FACREL = :SERIE ' +
+    'AND NUMERO_FAC_ORIGEN_FACREL = :NUMERO', AClave);
+  try
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+      raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarArqueo(
+  ADatos: TDatosSubsanacionCaja;
+  const AClave: TClaveOperacionSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+  sBloqueo: string;
+begin
+  if ADatos.Operacion.FieldByName(
+       'CODIGO_ARQUEO_OPCAJA').AsString <> '' then
+    raise EInvalidOpException.Create(SSubsanacionArqueoCerrado);
+  sBloqueo := '';
+  if FConexion.InTransaction then
+    sBloqueo := ' FOR UPDATE';
+  oConsulta := Consulta(
+    'SELECT CODIGO_ARQ FROM fza_caja_arqueos ' +
+    'WHERE CODIGO_EMP_ARQ = :EMP AND CODIGO_ALM_ARQ = :ALM ' +
+    'AND CODIGO_CAJA_ARQ = :CAJA AND FASE_ARQ = ''CERRADO'' ' +
+    'AND FECHA_DESDE_ARQ <= :FECHA AND FECHA_HASTA_ARQ >= :FECHA' +
+    sBloqueo, AClave);
+  try
+    oConsulta.ParamByName('FECHA').AsDateTime :=
+      ADatos.Operacion.FieldByName('FECHA_OPERACION_OPCAJA').AsDateTime;
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+      raise EInvalidOpException.Create(SSubsanacionArqueoCerrado);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarPago(
+  ADatos: TDatosSubsanacionCaja);
+var
+  oPago: TDataSet;
+  oConsulta: TUniQuery;
+begin
+  oPago := ADatos.Pagos;
+  if (oPago.RecordCount <> 1) or (ADatos.PagosFactura.RecordCount > 1) then
+    raise EInvalidOpException.Create(SSubsanacionPagoUnico);
+  if not MatchText(oPago.FieldByName('CODIGO_DIVISA_PAGO').AsString,
+       ['', 'EUR']) or
+     (oPago.FieldByName('RED_BLOCKCHAIN_PAGO').AsString <> '') or
+     (oPago.FieldByName('FACTOR_CAMBIO_PAGO').AsFloat <> 1) or
+     (oPago.FieldByName('IMPORTE_DIVISA_PAGO').AsCurrency <> 0) then
+    raise EInvalidOpException.Create(SSubsanacionPagoUnico);
+  oConsulta := Consulta(
+    'SELECT CODIGO_FP_CFP FROM fza_caja_formas_pago WHERE ' +
+    SQL_MEDIO_SIMPLE + 'AND CODIGO_FP_CFP = :FP',
+    Default(TClaveOperacionSubsanacionCaja));
+  try
+    oConsulta.ParamByName('FP').AsString := oPago.FieldByName(fforma).AsString;
+    oConsulta.Open;
+    if oConsulta.IsEmpty then
+      raise EInvalidOpException.Create(SSubsanacionPagoUnico);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarDatos(
+  ADatos: TDatosSubsanacionCaja;
+  const AClave: TClaveOperacionSubsanacionCaja);
+var
+  oOperacion: TDataSet;
+  dTotal: Currency;
+  oLinea: TLineaSubsanacionCaja;
+begin
+  ValidarCabecera(ADatos);
+  oOperacion := ADatos.Operacion;
+  if (oOperacion.RecordCount <> 1) or
+     (oOperacion.FieldByName('TIPO_OPERACION_OPCAJA').AsString <> 'VE') or
+     (oOperacion.FieldByName('ID_DEPOSITO_OPCAJA').AsString <> '') or
+     (oOperacion.FieldByName('SERIE_FAC_OPCAJA').AsString <>
+       AClave.SerieFactura) or
+     (oOperacion.FieldByName('NUMERO_FAC_OPCAJA').AsString <>
+       AClave.NumeroFactura) or
+     (oOperacion.FieldByName('IMPORTE_DEVUELTO_ACUM_OPCAJA').AsCurrency
+       <> 0) then
+    raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+  ValidarFiscal(AClave);
+  ValidarVinculos(AClave);
+  ValidarArqueo(ADatos, AClave);
+  ValidarPago(ADatos);
+  dTotal := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
+  for oLinea in LeerImportesSubsanacion(ADatos.Lineas) do
+  begin
+    if (oLinea.Cantidad < 0) or (oLinea.Importe < 0) then
+      raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+  end;
+  if (dTotal < 0) or
+     (TotalSubsanacion(LeerImportesSubsanacion(ADatos.Lineas)) <> dTotal) or
+     (oOperacion.FieldByName(ftotalope).AsCurrency <> dTotal) or
+     (ADatos.Pagos.FieldByName(fentregado).AsCurrency -
+       ADatos.Pagos.FieldByName(fcambio).AsCurrency <> dTotal) then
+    raise EInvalidOpException.Create(SSubsanacionDescuadreOriginal);
+  if not ADatos.PagosFactura.IsEmpty and
+     (ADatos.PagosFactura.FieldByName('IMPORTE_FACPAG').AsCurrency <>
+       dTotal) then
+    raise EInvalidOpException.Create(SSubsanacionDescuadreOriginal);
+end;
+
+function TServicioSubsanacionCajaUniDAC.CrearSnapshot(
+  const AClave: TClaveOperacionSubsanacionCaja;
+  ADatos: TDatosSubsanacionCaja): TOperacionSubsanacionCaja;
+begin
+  Result := Default(TOperacionSubsanacionCaja);
+  Result.Clave := AClave;
+  Result.FechaFactura := ADatos.Cabecera.FieldByName('FECHA_FAC').AsDateTime;
+  Result.Lineas := LeerImportesSubsanacion(ADatos.Lineas);
+  Result.Total := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
+  Result.SeriePago :=
+    ADatos.Pagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
+  Result.LineaPago := ADatos.Pagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger;
+  Result.FormaPago := ADatos.Pagos.FieldByName(fforma).AsString;
+  Result.Referencia := ADatos.Pagos.FieldByName(fref).AsString;
+  Result.ImportePago := ADatos.Pagos.FieldByName(fentregado).AsCurrency -
+    ADatos.Pagos.FieldByName(fcambio).AsCurrency;
+  Result.Version := THashSHA2.GetHashString(ADatos.ComoJson);
+end;
+
+function TServicioSubsanacionCajaUniDAC.Cargar(
+  const AClave: TClaveOperacionSubsanacionCaja): TOperacionSubsanacionCaja;
+var
+  oDatos: TDatosSubsanacionCaja;
+begin
+  ExigirPermiso;
+  ValidarClave(AClave);
+  ComprobarEsquema;
+  oDatos := LeerDatos(AClave, False);
+  try
+    ValidarDatos(oDatos, AClave);
+    Result := CrearSnapshot(AClave, oDatos);
+  finally
+    FreeAndNil(oDatos);
+  end;
+end;
+
+function TServicioSubsanacionCajaUniDAC.Medios:
+  TArray<TMedioCorreccionPago>;
+var
+  oConsulta: TUniQuery;
+  oLista: TList<TMedioCorreccionPago>;
+  oMedio: TMedioCorreccionPago;
+begin
+  ExigirPermiso;
+  oConsulta := Consulta(
+    'SELECT CODIGO_FP_CFP,DESCRIPCION_FORMA_PAGO_CFP,' +
+    'ESREQ_REFERENCIA_FORMA_PAGO_CFP FROM fza_caja_formas_pago ' +
+    'WHERE ESACTIVO_FORMA_PAGO_CFP = ''S'' AND ' + SQL_MEDIO_SIMPLE +
+    'ORDER BY ORDEN_VISUAL_FORMA_PAGO_CFP,CODIGO_FP_CFP',
+    Default(TClaveOperacionSubsanacionCaja));
+  oLista := TList<TMedioCorreccionPago>.Create;
+  try
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      oMedio.Codigo := oConsulta.FieldByName(fforma).AsString;
+      oMedio.Descripcion :=
+        oConsulta.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
+      oMedio.RequiereReferencia := oConsulta.FieldByName(
+        'ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S';
+      oLista.Add(oMedio);
+      oConsulta.Next;
+    end;
+    Result := oLista.ToArray;
+  finally
+    FreeAndNil(oLista);
+    FreeAndNil(oConsulta);
+  end;
+end;
+procedure TServicioSubsanacionCajaUniDAC.ValidarSolicitud(
+  const ASolicitud: TSolicitudSubsanacionCaja;
+  const AActual: TOperacionSubsanacionCaja);
+var
+  oLineas: TDictionary<string, TLineaSubsanacionCaja>;
+  oLinea, oActual: TLineaSubsanacionCaja;
+  bCambio: Boolean;
+begin
+  if (Trim(ASolicitud.Motivo) = '') or
+     (Length(ASolicitud.Motivo) > 500) then
+    raise EArgumentException.Create(SSubsanacionMotivoObligatorio);
+  if (ASolicitud.Original.Version = '') or
+     (ASolicitud.Original.Version <> AActual.Version) then
+    raise EInvalidOpException.Create(SSubsanacionConflicto);
+  ValidarImportesSubsanacion(ASolicitud.Lineas);
+  if Length(ASolicitud.Lineas) <> Length(AActual.Lineas) then
+    raise EInvalidOpException.Create(SSubsanacionConflicto);
+  if TotalSubsanacion(ASolicitud.Lineas) < 0 then
+    raise EArgumentException.Create(SSubsanacionTotalInvalido);
+  bCambio := (ASolicitud.FormaPago <> AActual.FormaPago) or
+    (ASolicitud.Referencia <> AActual.Referencia);
+  oLineas := TDictionary<string, TLineaSubsanacionCaja>.Create;
+  try
+    for oActual in AActual.Lineas do
+      oLineas.Add(oActual.Numero, oActual);
+    for oLinea in ASolicitud.Lineas do
+    begin
+      if not oLineas.TryGetValue(oLinea.Numero, oActual) then
+        raise EInvalidOpException.Create(SSubsanacionConflicto);
+      if (oLinea.Cantidad <> oActual.Cantidad) or
+         (oLinea.ImporteOriginal <> oActual.ImporteOriginal) then
+        raise EInvalidOpException.Create(SSubsanacionConflicto);
+      bCambio := bCambio or (oLinea.Importe <> oActual.Importe);
+      oLineas.Remove(oLinea.Numero);
+    end;
+  finally
+    FreeAndNil(oLineas);
+  end;
+  if not bCambio then
+    raise EArgumentException.Create(SSubsanacionSinCambios);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarMedio(
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'SELECT CODIGO_FP_CFP,ESREQ_REFERENCIA_FORMA_PAGO_CFP ' +
+    'FROM fza_caja_formas_pago WHERE ' + SQL_MEDIO_SIMPLE +
+    'AND ESACTIVO_FORMA_PAGO_CFP = ''S'' AND CODIGO_FP_CFP = :FP ' +
+    'FOR UPDATE', ASolicitud.Original.Clave);
+  try
+    oConsulta.ParamByName('FP').AsString := ASolicitud.FormaPago;
+    oConsulta.Open;
+    if oConsulta.IsEmpty then
+      raise EArgumentException.Create(SSubsanacionMedioInvalido);
+    if (Length(ASolicitud.Referencia) > 100) or
+       ((oConsulta.FieldByName('ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString
+         = 'S') and (Trim(ASolicitud.Referencia) = '')) then
+      raise EArgumentException.Create(SSubsanacionReferenciaInvalida);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.Recalcular(
+  ADatos: TDatosSubsanacionCaja;
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oTotales: TFacturaTotales;
+  oOriginales: TClientDataSet;
+begin
+  oOriginales := TClientDataSet.Create(nil);
+  oTotales := nil;
+  try
+    oOriginales.Data := ADatos.Lineas.Data;
+    AplicarImportesSubsanacion(ADatos.Lineas, ASolicitud.Lineas);
+    oTotales := TFacturaTotales.Create(nil, nil,
+      ADatos.Cabecera, ADatos.Lineas, nil, FDependencias.RegistroLog);
+    if not oTotales.ProcesarFacturaCompleta then
+      raise EInvalidOpException.CreateFmt(SSubsanacionCalculoInvalido,
+        [oTotales.MensajeError]);
+    if ADatos.Cabecera.State in dsEditModes then
+      ADatos.Cabecera.Post;
+    if ADatos.Cabecera.FieldByName(ftotal).AsCurrency <>
+       TotalSubsanacion(ASolicitud.Lineas) then
+      raise EInvalidOpException.CreateFmt(SSubsanacionCalculoInvalido,
+        [SSubsanacionTotalFiscalDistinto]);
+    ValidarLineasCalculadas(ADatos, oOriginales, ASolicitud.Lineas);
+    ADatos.Lineas.First;
+  finally
+    FreeAndNil(oTotales);
+    FreeAndNil(oOriginales);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarLineasCalculadas(
+  ADatos: TDatosSubsanacionCaja; AOriginales: TDataSet;
+  const ALineas: TLineasSubsanacionCaja);
+var
+  oLinea: TLineaSubsanacionCaja;
+  sCampo: string;
+begin
+  for oLinea in ALineas do
+  begin
+    if not AOriginales.Locate('LINEA_FACLIN', oLinea.Numero, []) or
+       not ADatos.Lineas.Locate('LINEA_FACLIN', oLinea.Numero, []) then
+      raise EInvalidOpException.Create(SSubsanacionConflicto);
+    if (ADatos.Lineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString <>
+          AOriginales.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString) or
+       (ADatos.Lineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency <>
+          AOriginales.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency) then
+      raise EInvalidOpException.Create(SSubsanacionDatosFiscales);
+    if ADatos.Lineas.FieldByName('TOTAL_FACLIN').AsCurrency <>
+       oLinea.Importe then
+      raise EInvalidOpException.CreateFmt(SSubsanacionCalculoInvalido,
+        [SSubsanacionTotalFiscalDistinto]);
+    if oLinea.Importe = oLinea.ImporteOriginal then
+      for sCampo in CAMPOS_IMPORTES_LINEA.Split([',']) do
+        if ADatos.Lineas.FieldByName(sCampo).AsCurrency <>
+           AOriginales.FieldByName(sCampo).AsCurrency then
+          raise EInvalidOpException.CreateFmt(SSubsanacionCalculoInvalido,
+            [SSubsanacionLineaIntactaDistinta]);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ActualizarCampos(
+  const ATabla, ACondicion, ACampos: string; AOrigen: TDataSet;
+  const AClave: TClaveOperacionSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+  sCampo, sSql: string;
+begin
+  sSql := 'UPDATE ' + ATabla + ' SET ';
+  for sCampo in ACampos.Split([',']) do
+    sSql := sSql + sCampo + ' = :' + sCampo + ',';
+  sSql := sSql + 'INSTANTE_MODIF = NOW(),USUARIO_MODIF = :USUARIO ' +
+    'WHERE ' + ACondicion;
+  oConsulta := Consulta(sSql, AClave);
+  try
+    for sCampo in ACampos.Split([',']) do
+      oConsulta.ParamByName(sCampo).Value := AOrigen.FieldByName(sCampo).Value;
+    if Assigned(oConsulta.Params.FindParam('LINEA')) then
+      oConsulta.ParamByName('LINEA').AsString :=
+        AOrigen.FieldByName('LINEA_FACLIN').AsString;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.GuardarImportes(
+  ADatos: TDatosSubsanacionCaja;
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oLinea: TLineaSubsanacionCaja;
+  oClave: TClaveOperacionSubsanacionCaja;
+begin
+  oClave := ASolicitud.Original.Clave;
+  for oLinea in ASolicitud.Lineas do
+  begin
+    if oLinea.Importe <> oLinea.ImporteOriginal then
+    begin
+      if not ADatos.Lineas.Locate('LINEA_FACLIN', oLinea.Numero, []) then
+        raise EInvalidOpException.Create(SSubsanacionConflicto);
+      ActualizarCampos('fza_facturas_lineas',
+        'SERIE_FAC_FACLIN = :SERIE AND NUMERO_FAC_FACLIN = :NUMERO ' +
+        'AND LINEA_FACLIN = :LINEA',
+        CAMPOS_IMPORTES_LINEA, ADatos.Lineas, oClave);
+    end;
+  end;
+  ActualizarCampos('fza_facturas',
+    'SERIE_FAC = :SERIE AND NUMERO_FAC = :NUMERO',
+    CAMPOS_TOTALES, ADatos.Cabecera, oClave);
+  ADatos.Operacion.Edit;
+  ADatos.Operacion.FieldByName(ftotalope).AsCurrency :=
+    ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
+  ADatos.Operacion.Post;
+  ActualizarCampos('fza_caja_operaciones', SQL_CLAVE_OPE,
+    ftotalope, ADatos.Operacion, oClave);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.GuardarCobro(
+  ADatos: TDatosSubsanacionCaja;
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+  dTotal: Currency;
+begin
+  dTotal := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
+  oConsulta := Consulta(
+    'UPDATE fza_caja_pagos SET CODIGO_FP_CFP = :FP,' +
+    'IMPORTE_ENTREGADO_PAGO = :TOTAL,IMPORTE_CAMBIO_PAGO = 0,' +
+    'REFERENCIA_FACPAG = :REF,INSTANTE_MODIF = NOW() WHERE ' +
+    SQL_CLAVE_PAGO + 'AND SERIE_OPERACION_PAGO = :SERIEP ' +
+    'AND NUMERO_LINEA_PAGO = :LINEAP', ASolicitud.Original.Clave);
+  try
+    oConsulta.ParamByName('FP').AsString := ASolicitud.FormaPago;
+    oConsulta.ParamByName('TOTAL').AsCurrency := dTotal;
+    oConsulta.ParamByName('REF').AsString := ASolicitud.Referencia;
+    oConsulta.ParamByName('SERIEP').AsString :=
+      ADatos.Pagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
+    oConsulta.ParamByName('LINEAP').AsInteger :=
+      ADatos.Pagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  if not ADatos.PagosFactura.IsEmpty then
+    GuardarPagoFactura(ADatos, ASolicitud);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.GuardarPagoFactura(
+  ADatos: TDatosSubsanacionCaja;
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'UPDATE fza_facturas_pagos SET TIPO_FACPAG = :FP,' +
+    'IMPORTE_FACPAG = :TOTAL,REFERENCIA_FACPAG = :REF,' +
+    'DESCRIPCION_FACPAG = CASE WHEN :ANTERIOR <> :FP THEN ' +
+    '(SELECT DESCRIPCION_FORMA_PAGO_CFP FROM fza_caja_formas_pago ' +
+    'WHERE CODIGO_FP_CFP = :FP) ELSE DESCRIPCION_FACPAG END,' +
+    'ENTIDAD_FACPAG = CASE WHEN :ANTERIOR <> :FP THEN NULL ' +
+    'ELSE ENTIDAD_FACPAG END,INSTANTE_MODIF = NOW(),' +
+    'USUARIO_MODIF = :USUARIO WHERE SERIE_FAC_FACPAG = :SERIE ' +
+    'AND NUMERO_FAC_FACPAG = :NUMERO AND LINEA_FACPAG = :LINEAP',
+    ASolicitud.Original.Clave);
+  try
+    oConsulta.ParamByName('FP').AsString := ASolicitud.FormaPago;
+    oConsulta.ParamByName('TOTAL').AsCurrency :=
+      ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
+    oConsulta.ParamByName('REF').AsString := ASolicitud.Referencia;
+    oConsulta.ParamByName('ANTERIOR').AsString :=
+      ADatos.Pagos.FieldByName(fforma).AsString;
+    oConsulta.ParamByName('LINEAP').AsInteger :=
+      ADatos.PagosFactura.FieldByName('LINEA_FACPAG').AsInteger;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.GuardarAuditoria(
+  const ASolicitud: TSolicitudSubsanacionCaja;
+  const AAntes, ADespues: string);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'INSERT INTO fza_caja_subsanaciones (' +
+    'CODIGO_EMP_CJSUB,CODIGO_ALM_CJSUB,CODIGO_CAJA_CJSUB,' +
+    'NUMERO_OPERACION_CJSUB,SERIE_FAC_CJSUB,NUMERO_FAC_CJSUB,' +
+    'MOTIVO_CJSUB,DATOS_ANTES_CJSUB,DATOS_DESPUES_CJSUB,' +
+    'INSTANTE_ALTA,USUARIO_ALTA) VALUES (' +
+    ':EMP,:ALM,:CAJA,:OPE,:SERIE,:NUMERO,:MOTIVO,:ANTES,:DESPUES,' +
+    'NOW(),:USUARIO)', ASolicitud.Original.Clave);
+  try
+    oConsulta.ParamByName('MOTIVO').AsString := Trim(ASolicitud.Motivo);
+    oConsulta.ParamByName('ANTES').AsMemo := AAntes;
+    oConsulta.ParamByName('DESPUES').AsMemo := ADespues;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TServicioSubsanacionCajaUniDAC.Guardar(
+  const ASolicitud: TSolicitudSubsanacionCaja): TResultadoSubsanacionCaja;
+var
+  oDatos, oDespues: TDatosSubsanacionCaja;
+  oActual: TOperacionSubsanacionCaja;
+  sAntes: string;
+  oReloj: TStopwatch;
+begin
+  ExigirPermiso;
+  ValidarClave(ASolicitud.Original.Clave);
+  ComprobarEsquema;
+  if FConexion.InTransaction then
+    raise EInvalidOpException.Create(SSubsanacionTransaccionActiva);
+  oReloj := TStopwatch.StartNew;
+  oDatos := nil;
+  oDespues := nil;
+  FConexion.StartTransaction;
+  try
+    try
+      oDatos := LeerDatos(ASolicitud.Original.Clave, True);
+      ValidarDatos(oDatos, ASolicitud.Original.Clave);
+      oActual := CrearSnapshot(ASolicitud.Original.Clave, oDatos);
+      ValidarSolicitud(ASolicitud, oActual);
+      ValidarMedio(ASolicitud);
+      sAntes := oDatos.ComoJson;
+      if HayImportesModificados(ASolicitud.Lineas) then
+      begin
+        Recalcular(oDatos, ASolicitud);
+        GuardarImportes(oDatos, ASolicitud);
+      end;
+      GuardarCobro(oDatos, ASolicitud);
+      FDependencias.Fiscal.EncolarCorreccionRegistro(
+        FDependencias.ParametrosApp, FDependencias.ParametrosCaja,
+        FDependencias.Usuario, ASolicitud.Original.Clave.SerieFactura,
+        ASolicitud.Original.Clave.NumeroFactura, ASolicitud.Motivo);
+      oDespues := LeerDatos(ASolicitud.Original.Clave, False);
+      GuardarAuditoria(ASolicitud, sAntes, oDespues.ComoJson);
+      Result.Clave := ASolicitud.Original.Clave;
+      Result.Total := oDatos.Cabecera.FieldByName(ftotal).AsCurrency;
+      FConexion.Commit;
+    except
+      on E: Exception do
+      begin
+        FConexion.Rollback;
+        FDependencias.RegistroLog.RegistrarError(
+          'Subsanar operación de caja: ' + E.Message);
+        raise;
+      end;
+    end;
+  finally
+    FreeAndNil(oDespues);
+    FreeAndNil(oDatos);
+    FDependencias.RegistroLog.RegistrarRendimiento(
+      'Caja.Subsanacion', ASolicitud.Original.Clave.NumeroOperacion,
+      oReloj.ElapsedMilliseconds);
+  end;
+end;
+
+end.

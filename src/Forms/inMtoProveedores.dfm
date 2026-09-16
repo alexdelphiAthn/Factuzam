@@ -1268,6 +1268,20 @@
                   TabOrder = 4
                   Width = 220
                 end
+                object chkESDESCRIPCION_BLANCO_PRV: TcxDBCheckBox
+                  Left = 352
+                  Top = 60
+                  Caption = ''
+                  DataBinding.DataField = 'ESDESCRIPCION_BLANCO_PRV'
+                  DataBinding.DataSource = dsTablaG
+                  Properties.AllowGrayed = False
+                  Properties.ValueChecked = 'S'
+                  Properties.ValueUnchecked = 'N'
+                  Style.TransparentBorder = False
+                  TabOrder = 5
+                  Transparent = True
+                  Width = 314
+                end
                 object lblDefectosInfo: TcxLabel
                   Left = 16
                   Top = 94
@@ -1275,7 +1289,7 @@
                     'Se aplican al elegir este proveedor en una sesi'#243'n de compra' +
                     ' (el sistema de tallas solo propone el defecto; cada l'#237'nea ' +
                     'lo puede cambiar).'
-                  TabOrder = 5
+                  TabOrder = 6
                   Transparent = True
                 end
               end

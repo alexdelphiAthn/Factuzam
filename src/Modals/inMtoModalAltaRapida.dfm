@@ -13,13 +13,13 @@
   Font.Style = []
   Position = poScreenCenter
   TextHeight = 17
-  object ScrollBox: TScrollBox
+  object ScrollBox: TcxScrollBox
     Left = 0
     Top = 0
     Width = 450
     Height = 550
     Align = alClient
-    BorderStyle = bsNone
+    BorderStyle = cxcbsNone
     TabOrder = 0
     ExplicitWidth = 448
     ExplicitHeight = 542

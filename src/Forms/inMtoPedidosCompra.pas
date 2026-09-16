@@ -32,7 +32,7 @@ uses
   Forms, Dialogs, Uni, System.Types,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
-  cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
+  cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxScrollBox, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
   cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, ExtCtrls, cxButtons,
@@ -83,7 +83,7 @@ type
     tsLineasPedido:      TcxTabSheet;
     tsObservaciones:     TcxTabSheet;
     tsTotales:           TcxTabSheet;
-    scrTotales:          TScrollBox;
+    scrTotales:          TcxScrollBox;
     pnlBottomTotales:    TPanel;
     cxgrdLineasPedido:   TcxGrid;
     tvLineasPedido:      TcxGridDBTableView;
@@ -159,7 +159,7 @@ type
     curTotalesTOTAL_PRENDAS_PEDC: TcxDBCurrencyEdit;
     lblTotalesFormaPago: TcxLabel;
     cbbTotalesFORMA_PAGO_PEDC: TcxDBLookupComboBox;
-    grpDesgloseImpuestos: TGroupBox;
+    grpDesgloseImpuestos: TcxGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
     shpSeparador3: TShape;

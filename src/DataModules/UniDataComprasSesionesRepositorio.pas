@@ -232,13 +232,18 @@ const
     '        OR TRIM(CODIGO_ART_TENTATIVO_SESLIN) = '''') ' +
     ' ORDER BY LINEA_SESLIN';
   SQL_VALIDAR_LINEAS_SIN_DESCRIPCION =
-    'SELECT LINEA_SESLIN, CODIGO_ART_TENTATIVO_SESLIN ' +
-    '  FROM fza_compras_sesiones_lineas ' +
-    ' WHERE SERIE_SES_SESLIN = :s ' +
-    '   AND NUMERO_SES_SESLIN = :n ' +
-    '   AND (DESCRIPCION_SESLIN IS NULL ' +
-    '        OR TRIM(DESCRIPCION_SESLIN) = '''') ' +
-    ' ORDER BY LINEA_SESLIN';
+    'SELECT L.LINEA_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN, ' +
+    '       S.ESDESCRIPCION_BLANCO_SES ' +
+    '  FROM fza_compras_sesiones_lineas L ' +
+    '  JOIN fza_compras_sesiones S ' +
+    '    ON S.SERIE_SES = L.SERIE_SES_SESLIN ' +
+    '   AND S.NUMERO_SES = L.NUMERO_SES_SESLIN ' +
+    ' WHERE L.SERIE_SES_SESLIN = :s ' +
+    '   AND L.NUMERO_SES_SESLIN = :n ' +
+    '   AND IFNULL(S.ESDESCRIPCION_BLANCO_SES, ''N'') <> ''S'' ' +
+    '   AND (L.DESCRIPCION_SESLIN IS NULL ' +
+    '        OR TRIM(L.DESCRIPCION_SESLIN) = '''') ' +
+    ' ORDER BY L.LINEA_SESLIN';
   SQL_VALIDAR_MATRICES_SIN_CANTIDADES =
     'SELECT L.LINEA_SESLIN, L.CODIGO_ART_TENTATIVO_SESLIN, ' +
     '       L.DESCRIPCION_SESLIN ' +
@@ -511,7 +516,8 @@ begin
     'ValidarLineasSinDescripcion',
     SQL_VALIDAR_LINEAS_SIN_DESCRIPCION,
     's,n',
-    'LINEA_SESLIN,CODIGO_ART_TENTATIVO_SESLIN',
+    'LINEA_SESLIN,CODIGO_ART_TENTATIVO_SESLIN,' +
+    'ESDESCRIPCION_BLANCO_SES',
     tssSelect,
     pesPerfilLecturaConFallback);
 end;

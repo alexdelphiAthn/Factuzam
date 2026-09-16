@@ -27,7 +27,7 @@ uses
   cxCheckBox, cxTextEdit, cxGridLevel, cxClasses,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, ComCtrls, StdCtrls, Buttons, ExtCtrls,
-  cxSplitter, cxImage, cxDBEdit, cxPC, cxLabel,
+  cxSplitter, cxImage, cxDBEdit, cxPC, cxLabel, cxScrollBox,
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxMemo, cxDBLookupComboBox,
   cxGridBandedTableView, cxGridDBBandedTableView, cxLocalization,
   cxGroupBox, DBCtrls, cxCurrencyEdit, Menus, cxButtons, cxButtonEdit,
@@ -85,7 +85,7 @@ type
     pcDetail: TcxPageControl;
     tsLineasFactura: TcxTabSheet;
     tsTotales: TcxTabSheet;
-    scrTotales: TScrollBox;
+    scrTotales: TcxScrollBox;
     lblTotalaPagar: TcxLabel;
     cxgrdLineasFactura: TcxGrid;
     tvLineasFactura: TcxGridDBTableView;
@@ -329,7 +329,7 @@ type
     ctbPRECIO_DTO_FACTURA_LINEA: TcxGridDBColumn;
     lblTotalesTotalPrendas: TcxLabel;
     lblTotalPrendasFactura: TcxLabel;
-    grpDesgloseImpuestos: TGroupBox;
+    grpDesgloseImpuestos: TcxGroupBox;
     lblTotRE: TcxLabel;
     PorRE: TcxLabel;
     lblTotIVA: TcxLabel;
@@ -377,7 +377,7 @@ type
     cbbPaisesEmp: TcxDBLookupComboBox;
     chkConsolidada: TcxDBCheckBox;
     chkMueveStock: TcxDBCheckBox;
-    pnlUserInstantBottom: TPanel;
+    pnlUserInstantBottom: TcxGroupBox;
     txtUSUARIOALTA: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;
@@ -397,20 +397,20 @@ type
     cxGrdMovimientosFac: TcxGrid;
     tvMovimientosFac: TcxGridDBTableView;
     cxGrdMovimientosFacLevel: TcxGridLevel;
-    scrlbxVerifactu: TScrollBox;
-    lblPETICION_COMPLETA: TLabel;
-    lblRESPUESTA_COMPLETA: TLabel;
-    lblQRCODE_BASE64: TLabel;
-    lblVERIFACTU_URL: TLabel;
-    lblCHAIN_HASH: TLabel;
-    lblCHAIN_NUMBER: TLabel;
-    lblISSUED_TIME: TLabel;
-    lblISSUER_IRS_ID: TLabel;
-    lblQUEUE_ID: TLabel;
-    lblREQUEST_ID: TLabel;
-    lbl: TLabel;
-    lblFECHA_PROCESAMIENTO: TLabel;
-    lblESTADO: TLabel;
+    scrlbxVerifactu: TcxScrollBox;
+    lblPETICION_COMPLETA: TcxLabel;
+    lblRESPUESTA_COMPLETA: TcxLabel;
+    lblQRCODE_BASE64: TcxLabel;
+    lblVERIFACTU_URL: TcxLabel;
+    lblCHAIN_HASH: TcxLabel;
+    lblCHAIN_NUMBER: TcxLabel;
+    lblISSUED_TIME: TcxLabel;
+    lblISSUER_IRS_ID: TcxLabel;
+    lblQUEUE_ID: TcxLabel;
+    lblREQUEST_ID: TcxLabel;
+    lbl: TcxLabel;
+    lblFECHA_PROCESAMIENTO: TcxLabel;
+    lblESTADO: TcxLabel;
     spQUEUE_ID: TcxDBSpinEdit;
     cxdbmRESPUESTA_COMPLETA: TcxDBMemo;
     cxdbmQRCODE_BASE64: TcxDBMemo;

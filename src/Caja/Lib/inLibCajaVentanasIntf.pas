@@ -16,7 +16,8 @@ unit inLibCajaVentanasIntf;
 interface
 
 uses
-  System.Classes, Vcl.Forms, inLibCajaTipos, inLibPermisosIntf;
+  System.Classes, Vcl.Forms, inLibCajaTipos, inLibPermisosIntf,
+  inLibCajaSubsanacionIntf;
 
 type
   TModoVentanaTraspaso = (
@@ -49,6 +50,9 @@ type
     procedure CargarDevolucion(
       const ASerie, ANumero, AEmpresaOrigen,
       AAlmacenOrigen: string);
+    procedure CargarSubsanacion(
+      const AOperacion: TOperacionSubsanacionCaja;
+      const AServicio: IServicioSubsanacionCaja);
     procedure CargarRectificacion(
       const ASerie, ANumero: string;
       ATipoRectificativa: TTipoRectificativaCaja;

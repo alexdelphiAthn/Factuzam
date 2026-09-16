@@ -29,7 +29,7 @@ uses
   Forms, Dialogs,
   inMtoDocumento, dxSkinsCore, dxSkinBlue, dxSkinsForm,
   cxClasses, cxPropertiesStore, cxGraphics, cxControls, cxLookAndFeels,
-  cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxTextEdit,
+  cxLookAndFeelPainters, cxContainer, cxEdit, cxLabel, cxScrollBox, cxTextEdit,
   cxDBEdit, cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, DB,
   cxDBData, cxGridLevel, cxGridCustomView, cxGridCustomTableView,
   cxGridTableView, cxGridDBTableView, cxGrid, cxPC, ExtCtrls, cxButtons,
@@ -72,7 +72,7 @@ type
     tsLineasDevolucion:     TcxTabSheet;
     tsObservaciones:     TcxTabSheet;
     tsTotales:           TcxTabSheet;
-    scrTotales:          TScrollBox;
+    scrTotales:          TcxScrollBox;
     pnlBottomTotales:    TPanel;
     cxgrdLineasDevolucion:  TcxGrid;
     tvLineasDevolucion:     TcxGridDBTableView;
@@ -126,7 +126,7 @@ type
     lblTotalesDtoFinanciero: TcxLabel;
     spnTotalesPORCENTAJE_DTO_FINANCIERO_DEVC: TcxDBSpinEdit;
     curTotalesTOTAL_DTO_FINANCIERO_DEVC: TcxDBCurrencyEdit;
-    grpDesgloseImpuestos: TGroupBox;
+    grpDesgloseImpuestos: TcxGroupBox;
     shpSeparador1: TShape;
     shpSeparador2: TShape;
     shpSeparador3: TShape;

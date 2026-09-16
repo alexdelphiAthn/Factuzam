@@ -244,6 +244,7 @@ begin
   AddSuf('fza_caja_formas_pago',                'CFP');
   AddSuf('fza_caja_operaciones',                'OPCAJA');
   AddSuf('fza_caja_pagos',                      'PAGO');
+  AddSuf('fza_caja_subsanaciones',              'CJSUB');
   AddSuf('fza_caja_vales',                      'VL');
   AddSuf('fza_clientes',                        'CLI');
   AddSuf('fza_codigos_barras',                  'CB');
@@ -326,6 +327,7 @@ begin
   AddSuf('fza_ventas_ws_cola_intentos',         'VWSCI');
   AddSuf('fza_verifactu_cadena',                'VFCAD');
   AddSuf('fza_verifactu_cola',                  'VFCOLA');
+  AddSuf('fza_verifactu_historial',             'VFHIST');
   AddSuf('fza_verifactu_eventos',               'LOG');
   AddSuf('fza_winforms',                        'WINF');
 
@@ -411,6 +413,7 @@ begin
   AddOwn('fza_familias_atributos_defecto',     ['ATRIBUTO']);
   AddOwn('fza_familias_claves_info_defecto',   ['INFO']);
   AddOwn('fza_caja_formas_pago',               ['FORMAPAGO','FORMAP']);
+  AddOwn('fza_caja_subsanaciones',             ['SUBSANACION']);
   AddOwn('fza_atributos_basicos',              ['BASICO']);
   AddOwn('fza_atributos_conjuntos',            ['CONJUNTO']);
   AddOwn('fza_atributos_conjuntos_det',        ['CONJUNTO','DET']);

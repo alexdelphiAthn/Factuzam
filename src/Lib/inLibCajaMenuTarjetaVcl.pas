@@ -1,0 +1,391 @@
+﻿{******************************************************************************}
+{                                                                              }
+{  Módulo:       inLibCajaMenuTarjetaVcl                                       }
+{    Tipo:       Librería (control VCL)                                        }
+{ Versión:       1.0.0                                                         }
+{   Fecha:       16/09/2026                                                    }
+{   Autor:       Alejandro Laorden Hidalgo                                     }
+{                                                                              }
+{  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
+{                                                                              }
+{  Descripción:                                                                }
+{    Tarjeta pulsable del menú de caja: icono, tecla de función y título.      }
+{    Los colores salen del skin activo de DevExpress, así que sirve igual con  }
+{    temas claros y oscuros. El título se lee de una etiqueta del formulario   }
+{    (oculta) para que siga funcionando la traducción por nombre de            }
+{    componente.                                                               }
+{    Indicador de actividad: anillo de puntos que gira sin parar. Mantiene la  }
+{    pantalla repintándose en los equipos de caja (antes lo hacía un GIF).     }
+{******************************************************************************}
+unit inLibCajaMenuTarjetaVcl;
+
+interface
+
+uses
+  System.Classes, System.Types, Winapi.Windows, Winapi.Messages,
+  Vcl.Controls, Vcl.Graphics, Vcl.ExtCtrls, Vcl.Imaging.pngimage, cxLabel;
+
+type
+  TEstiloTarjetaCaja = (etcGrande, etcCompacta);
+
+  TTarjetaMenuCaja = class(TCustomControl)
+  private
+    FTecla: string;
+    FEtiquetaTitulo: TcxLabel;
+    FEstilo: TEstiloTarjetaCaja;
+    FSeleccionada: Boolean;
+    FIcono: TPngImage;
+    FOnSeleccionar: TNotifyEvent;
+    procedure SetSeleccionada(AValor: Boolean);
+    procedure SetEstilo(AValor: TEstiloTarjetaCaja);
+    function Titulo: string;
+    function Escalar(AValor: Integer): Integer;
+    procedure PintarFondo(const ARect: TRect; AFondo, ABorde: TColor;
+      AGrosor: Integer);
+    procedure PintarTecla(const ARect: TRect; AFondo, ABorde,
+      ATexto: TColor; AAltoFuente: Integer);
+    procedure CMMouseEnter(var Mensaje: TMessage); message CM_MOUSEENTER;
+  protected
+    procedure Paint; override;
+    procedure WMEraseBkgnd(var Mensaje: TWMEraseBkgnd);
+      message WM_ERASEBKGND;
+  public
+    constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    /// Carga el icono PNG de IconosMenu.res (<ARecurso>_48 o _32).
+    procedure CargarIcono(const ARecurso: string);
+    property Tecla: string read FTecla write FTecla;
+    property EtiquetaTitulo: TcxLabel read FEtiquetaTitulo
+      write FEtiquetaTitulo;
+    property Estilo: TEstiloTarjetaCaja read FEstilo write SetEstilo;
+    property Seleccionada: Boolean read FSeleccionada write SetSeleccionada;
+    property OnClick;
+    /// Se dispara al entrar el ratón: el menú unifica ratón y teclado.
+    property OnSeleccionar: TNotifyEvent read FOnSeleccionar
+      write FOnSeleccionar;
+  end;
+
+  TIndicadorActividadCaja = class(TCustomControl)
+  private
+    FTemporizador: TTimer;
+    FPaso: Integer;
+    procedure Avanzar(Sender: TObject);
+  protected
+    procedure Paint; override;
+    procedure WMEraseBkgnd(var Mensaje: TWMEraseBkgnd);
+      message WM_ERASEBKGND;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+implementation
+
+uses
+  System.SysUtils, System.Math, Vcl.Forms, cxGraphics, cxGeometry,
+  cxLookAndFeels, cxLookAndFeelPainters, dxGDIPlusClasses;
+
+const
+  FUENTE_TARJETA = 'Source Sans 3';
+  PUNTOS_INDICADOR = 12;
+  INTERVALO_INDICADOR_MS = 80;
+
+function Mezcla(AColor1, AColor2: TColor; APorcentaje1: Integer): TColor;
+begin
+  Result := dxGetMiddleRGB(AColor1, AColor2, APorcentaje1);
+end;
+
+constructor TTarjetaMenuCaja.Create(AOwner: TComponent);
+begin
+  inherited;
+  ControlStyle := ControlStyle + [csParentBackground, csOpaque] -
+    [csDoubleClicks];
+  DoubleBuffered := True;
+  TabStop := False;
+  Cursor := crHandPoint;
+  FEstilo := etcGrande;
+end;
+
+destructor TTarjetaMenuCaja.Destroy;
+begin
+  FreeAndNil(FIcono);
+  inherited;
+end;
+
+procedure TTarjetaMenuCaja.CargarIcono(const ARecurso: string);
+var
+  sRecurso: string;
+  oFlujo: TResourceStream;
+begin
+  FreeAndNil(FIcono);
+  if FEstilo = etcGrande then
+    sRecurso := UpperCase(ARecurso) + '_48'
+  else
+    sRecurso := UpperCase(ARecurso) + '_32';
+  if FindResource(HInstance, PChar(sRecurso), RT_RCDATA) <> 0 then
+  begin
+    oFlujo := TResourceStream.Create(HInstance, sRecurso, RT_RCDATA);
+    try
+      FIcono := TPngImage.Create;
+      FIcono.LoadFromStream(oFlujo);
+    finally
+      oFlujo.Free;
+    end;
+  end;
+  Invalidate;
+end;
+
+function TTarjetaMenuCaja.Titulo: string;
+begin
+  if Assigned(FEtiquetaTitulo) then
+    Result := FEtiquetaTitulo.Caption
+  else
+    Result := Caption;
+end;
+
+function TTarjetaMenuCaja.Escalar(AValor: Integer): Integer;
+begin
+  Result := MulDiv(AValor, CurrentPPI, Screen.DefaultPixelsPerInch);
+end;
+
+procedure TTarjetaMenuCaja.SetEstilo(AValor: TEstiloTarjetaCaja);
+begin
+  if FEstilo <> AValor then
+  begin
+    FEstilo := AValor;
+    Invalidate;
+  end;
+end;
+
+procedure TTarjetaMenuCaja.SetSeleccionada(AValor: Boolean);
+begin
+  if FSeleccionada <> AValor then
+  begin
+    FSeleccionada := AValor;
+    Invalidate;
+  end;
+end;
+
+procedure TTarjetaMenuCaja.CMMouseEnter(var Mensaje: TMessage);
+begin
+  inherited;
+  if Assigned(FOnSeleccionar) then
+    FOnSeleccionar(Self);
+end;
+
+procedure TTarjetaMenuCaja.WMEraseBkgnd(var Mensaje: TWMEraseBkgnd);
+begin
+  // Todo se pinta en Paint (con doble búfer): evita parpadeo.
+  Mensaje.Result := 1;
+end;
+
+procedure TTarjetaMenuCaja.PintarFondo(const ARect: TRect; AFondo,
+  ABorde: TColor; AGrosor: Integer);
+var
+  oGrafico: TdxGPGraphics;
+  iRadio: Integer;
+  rRect: TRect;
+begin
+  iRadio := Escalar(12);
+  rRect := ARect;
+  InflateRect(rRect, -AGrosor, -AGrosor);
+  oGrafico := dxGpBeginPaint(Canvas.Handle, ClientRect);
+  try
+    oGrafico.SmoothingMode := smAntiAlias;
+    oGrafico.RoundRect(rRect, ABorde, AFondo, iRadio, iRadio, AGrosor,
+      255, 255);
+  finally
+    dxGpEndPaint(oGrafico);
+  end;
+end;
+
+procedure TTarjetaMenuCaja.PintarTecla(const ARect: TRect; AFondo, ABorde,
+  ATexto: TColor; AAltoFuente: Integer);
+var
+  oGrafico: TdxGPGraphics;
+  rTexto: TRect;
+begin
+  oGrafico := dxGpBeginPaint(Canvas.Handle, ClientRect);
+  try
+    oGrafico.SmoothingMode := smAntiAlias;
+    oGrafico.RoundRect(ARect, ABorde, AFondo, ARect.Height div 2,
+      ARect.Height div 2, 1, 255, 255);
+  finally
+    dxGpEndPaint(oGrafico);
+  end;
+  rTexto := ARect;
+  Canvas.Brush.Style := bsClear;
+  Canvas.Font.Name := FUENTE_TARJETA;
+  Canvas.Font.Style := [fsBold];
+  Canvas.Font.Height := -AAltoFuente;
+  Canvas.Font.Color := ATexto;
+  DrawText(Canvas.Handle, PChar(FTecla), Length(FTecla), rTexto,
+    DT_CENTER or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+end;
+
+procedure TTarjetaMenuCaja.Paint;
+var
+  oPainter: TcxCustomLookAndFeelPainter;
+  cFondoForm, cTexto, cAcento, cTarjeta, cBorde, cTecla, cTeclaTexto,
+    cTeclaBorde: TColor;
+  rTarjeta, rTecla, rTexto, rMedida: TRect;
+  iMargen, iAnchoTecla, iAltoTecla, iIcono, iGrosor, iAltoBloque: Integer;
+  sTitulo: string;
+begin
+  oPainter := RootLookAndFeel.Painter;
+  cFondoForm := oPainter.DefaultControlColor;
+  cTexto := oPainter.DefaultControlTextColor;
+  cAcento := oPainter.DefaultSelectionColor;
+
+  if FSeleccionada then
+  begin
+    cTarjeta := Mezcla(cAcento, cFondoForm, 22);
+    cBorde := cAcento;
+    cTecla := cAcento;
+    cTeclaBorde := cAcento;
+    cTeclaTexto := oPainter.DefaultSelectionTextColor;
+    iGrosor := Escalar(2);
+  end
+  else
+  begin
+    cTarjeta := Mezcla(cTexto, cFondoForm, 7);
+    cBorde := Mezcla(cTexto, cFondoForm, 16);
+    cTecla := cTarjeta;
+    cTeclaBorde := Mezcla(cTexto, cFondoForm, 35);
+    cTeclaTexto := Mezcla(cTexto, cFondoForm, 70);
+    iGrosor := 1;
+  end;
+
+  cxDrawTransparentControlBackground(Self, Canvas, ClientRect);
+  rTarjeta := ClientRect;
+  PintarFondo(rTarjeta, cTarjeta, cBorde, iGrosor);
+
+  iMargen := Escalar(14);
+  iAltoTecla := Escalar(24);
+  Canvas.Font.Name := FUENTE_TARJETA;
+  Canvas.Font.Style := [fsBold];
+  Canvas.Font.Height := -Escalar(14);
+  iAnchoTecla := Canvas.TextWidth(FTecla) + Escalar(20);
+  sTitulo := Titulo;
+
+  if FEstilo = etcGrande then
+  begin
+    // Icono arriba a la izquierda, tecla arriba a la derecha y título
+    // abajo, en una o dos líneas.
+    iIcono := Escalar(40);
+    rTecla := Rect(rTarjeta.Right - iMargen - iAnchoTecla,
+      rTarjeta.Top + iMargen, rTarjeta.Right - iMargen,
+      rTarjeta.Top + iMargen + iAltoTecla);
+    PintarTecla(rTecla, cTecla, cTeclaBorde, cTeclaTexto, Escalar(14));
+    if Assigned(FIcono) then
+      Canvas.StretchDraw(Rect(rTarjeta.Left + iMargen, rTarjeta.Top + iMargen,
+        rTarjeta.Left + iMargen + iIcono, rTarjeta.Top + iMargen + iIcono),
+        FIcono);
+    rTexto := Rect(rTarjeta.Left + iMargen,
+      rTarjeta.Top + iMargen + iIcono + Escalar(4),
+      rTarjeta.Right - iMargen, rTarjeta.Bottom - Escalar(10));
+    Canvas.Brush.Style := bsClear;
+    Canvas.Font.Name := FUENTE_TARJETA;
+    Canvas.Font.Style := [fsBold];
+    Canvas.Font.Height := -Escalar(21);
+    Canvas.Font.Color := cTexto;
+    DrawText(Canvas.Handle, PChar(sTitulo), Length(sTitulo), rTexto,
+      DT_LEFT or DT_BOTTOM or DT_SINGLELINE or DT_END_ELLIPSIS or
+      DT_NOPREFIX);
+  end
+  else
+  begin
+    // Icono a la izquierda, título en el centro (hasta dos líneas) y tecla
+    // a la derecha.
+    iIcono := Escalar(28);
+    Canvas.Font.Height := -Escalar(12);
+    iAltoTecla := Escalar(20);
+    iAnchoTecla := Canvas.TextWidth(FTecla) + Escalar(14);
+    rTecla := Rect(rTarjeta.Right - Escalar(10) - iAnchoTecla,
+      (rTarjeta.Top + rTarjeta.Bottom - iAltoTecla) div 2,
+      rTarjeta.Right - Escalar(10),
+      (rTarjeta.Top + rTarjeta.Bottom + iAltoTecla) div 2);
+    PintarTecla(rTecla, cTecla, cTeclaBorde, cTeclaTexto, Escalar(12));
+    if Assigned(FIcono) then
+      Canvas.StretchDraw(Rect(rTarjeta.Left + Escalar(12),
+        (rTarjeta.Top + rTarjeta.Bottom - iIcono) div 2,
+        rTarjeta.Left + Escalar(12) + iIcono,
+        (rTarjeta.Top + rTarjeta.Bottom + iIcono) div 2), FIcono);
+    rTexto := Rect(rTarjeta.Left + Escalar(12) + iIcono + Escalar(8),
+      rTarjeta.Top + Escalar(4), rTecla.Left - Escalar(6),
+      rTarjeta.Bottom - Escalar(4));
+    Canvas.Brush.Style := bsClear;
+    Canvas.Font.Name := FUENTE_TARJETA;
+    Canvas.Font.Style := [fsBold];
+    Canvas.Font.Height := -Escalar(16);
+    Canvas.Font.Color := cTexto;
+    // Centrado vertical de un bloque que puede partirse en dos líneas.
+    rMedida := rTexto;
+    DrawText(Canvas.Handle, PChar(sTitulo), Length(sTitulo), rMedida,
+      DT_LEFT or DT_WORDBREAK or DT_NOPREFIX or DT_CALCRECT);
+    iAltoBloque := Min(rMedida.Height, rTexto.Height);
+    rTexto.Top := (rTexto.Top + rTexto.Bottom - iAltoBloque) div 2;
+    rTexto.Bottom := rTexto.Top + iAltoBloque;
+    DrawText(Canvas.Handle, PChar(sTitulo), Length(sTitulo), rTexto,
+      DT_LEFT or DT_WORDBREAK or DT_END_ELLIPSIS or DT_NOPREFIX);
+  end;
+end;
+
+{ TIndicadorActividadCaja }
+
+constructor TIndicadorActividadCaja.Create(AOwner: TComponent);
+begin
+  inherited;
+  ControlStyle := ControlStyle + [csParentBackground, csOpaque];
+  DoubleBuffered := True;
+  TabStop := False;
+  FTemporizador := TTimer.Create(Self);
+  FTemporizador.Interval := INTERVALO_INDICADOR_MS;
+  FTemporizador.OnTimer := Avanzar;
+end;
+
+procedure TIndicadorActividadCaja.Avanzar(Sender: TObject);
+begin
+  FPaso := (FPaso + 1) mod PUNTOS_INDICADOR;
+  Invalidate;
+end;
+
+procedure TIndicadorActividadCaja.WMEraseBkgnd(var Mensaje: TWMEraseBkgnd);
+begin
+  Mensaje.Result := 1;
+end;
+
+procedure TIndicadorActividadCaja.Paint;
+var
+  oGrafico: TdxGPGraphics;
+  cPunto: TColor;
+  I, iDistancia: Integer;
+  dCentroX, dCentroY, dRadioAnillo, dRadioPunto, dAngulo, dX, dY: Double;
+  bAlfa: Byte;
+begin
+  cxDrawTransparentControlBackground(Self, Canvas, ClientRect);
+  cPunto := RootLookAndFeel.Painter.DefaultSelectionColor;
+  dCentroX := ClientWidth / 2;
+  dCentroY := ClientHeight / 2;
+  dRadioPunto := Min(ClientWidth, ClientHeight) / 14;
+  dRadioAnillo := Min(ClientWidth, ClientHeight) / 2 - dRadioPunto - 1;
+  oGrafico := dxGpBeginPaint(Canvas.Handle, ClientRect);
+  try
+    oGrafico.SmoothingMode := smAntiAlias;
+    for I := 0 to PUNTOS_INDICADOR - 1 do
+    begin
+      // El punto de cabeza es opaco y la estela se desvanece hacia atrás.
+      iDistancia := (FPaso - I + PUNTOS_INDICADOR) mod PUNTOS_INDICADOR;
+      bAlfa := Max(40, 255 - iDistancia * 20);
+      dAngulo := 2 * Pi * I / PUNTOS_INDICADOR - Pi / 2;
+      dX := dCentroX + dRadioAnillo * Cos(dAngulo);
+      dY := dCentroY + dRadioAnillo * Sin(dAngulo);
+      oGrafico.Ellipse(dxRectF(dX - dRadioPunto, dY - dRadioPunto,
+        dX + dRadioPunto, dY + dRadioPunto), cPunto, cPunto, 0, psClear,
+        0, bAlfa);
+    end;
+  finally
+    dxGpEndPaint(oGrafico);
+  end;
+end;
+
+end.

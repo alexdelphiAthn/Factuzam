@@ -1130,7 +1130,6 @@ begin
   txtPorcenDtoGlobal.Enabled := False;
   txtTotalPagar.Properties.ReadOnly := True;
   txtValeEmitido.Properties.ReadOnly := False;
-  txtValeEmitido.Style.Color := clWindow;
   lblPendienteCobroAlt.Caption := SCaptionPendienteDevolver;
 end;
 
@@ -1150,7 +1149,6 @@ begin
       PuedeAplicarDescuentoGlobal;
 
   txtValeEmitido.Properties.ReadOnly := True;
-  txtValeEmitido.Style.Color := clWhite;
   lblPendienteCobroAlt.Caption := SCaptionPendienteCobro;
 end;
 

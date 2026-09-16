@@ -35,7 +35,8 @@ uses
   Vcl.Menus, dxSkinsForm, cxButtons, dxSkinsDefaultPainters, cxMemo, cxSpinEdit,
   cxCalendar, cxBlobEdit, dxScrollbarAnnotations, dxCore, cxRadioGroup,
   System.Actions, Vcl.ActnList, Vcl.PlatformDefaultStyleActnCtrls, Vcl.ActnMan,
-  cxSplitter, cxGroupBox, dxSkinBasic, dxSkinBlack, dxSkinBlueprint,
+  cxSplitter, cxGroupBox, cxScrollBox, dxSkinBasic, dxSkinBlack,
+  dxSkinBlueprint,
   dxSkinCaramel, dxSkinCoffee, dxSkinDarkroom, dxSkinDarkSide,
   dxSkinDevExpressDarkStyle, dxSkinDevExpressStyle, dxSkinFoggy,
   dxSkinGlassOceans, dxSkinHighContrast, dxSkiniMaginary, dxSkinLilian,
@@ -61,8 +62,8 @@ type
     tsMasDatos: TcxTabSheet;
     pnlFichaCab: TPanel;
     tsOtros: TcxTabSheet;
-    scrOtros: TScrollBox;
-    pnlUserInstantBottom: TPanel;
+    scrOtros: TcxScrollBox;
+    pnlUserInstantBottom: TcxGroupBox;
     cxdbtxtdtDIRECCION1_CLIENTE: TcxDBTextEdit;
     lblUsuarioAlta: TcxLabel;
     lblInstanteAlta: TcxLabel;

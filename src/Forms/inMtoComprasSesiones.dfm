@@ -1905,6 +1905,20 @@
               TabOrder = 13
               Transparent = True
             end
+            object chkDescripcionBlanco: TcxDBCheckBox
+              Left = 616
+              Top = 174
+              Caption = 'Dejar descripción en blanco'
+              DataBinding.DataField = 'ESDESCRIPCION_BLANCO_SES'
+              DataBinding.DataSource = dsTablaG
+              Properties.AllowGrayed = False
+              Properties.ValueChecked = 'S'
+              Properties.ValueUnchecked = 'N'
+              Style.TransparentBorder = False
+              TabOrder = 14
+              Transparent = True
+              Width = 230
+            end
           end
           object tsPedidoOriginal: TcxTabSheet
             Caption = 'Pedido original'

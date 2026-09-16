@@ -109,6 +109,7 @@ type
     procedure RefrescarColumnasTallas;
     function ProveedorCabecera: string;
     function HayLineaEditable: Boolean;
+    function PuedeCompletarDescripcion: Boolean;
   public
     constructor Create(const AEntorno: TEntornoModeloProveedorSesion);
     destructor Destroy; override;
@@ -612,10 +613,18 @@ begin
     FEntorno.GenerarCodigoArticulo(ogcaFamilia);
     Editor.EditValue := FEntorno.Lineas.FieldByName(
       'CODIGO_ART_TENTATIVO_SESLIN').AsString;
-    if FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
+    if PuedeCompletarDescripcion then
       FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString :=
         sNombre;
   end;
+end;
+
+function TBuscadorModeloProveedorSesion.PuedeCompletarDescripcion: Boolean;
+begin
+  Result := (FEntorno.Lineas.FieldByName(
+    'DESCRIPCION_SESLIN').AsString = '') and
+    not SameText(FEntorno.Cabecera.FieldByName(
+      'ESDESCRIPCION_BLANCO_SES').AsString, 'S');
 end;
 
 procedure TBuscadorModeloProveedorSesion.ConfirmarReferenciaTecleada(
@@ -640,7 +649,7 @@ begin
     FEntorno.Lineas.FieldByName('CODIGO_FAM_SESLIN').AsString :=
       ACodigoFamilia;
     FEntorno.GenerarCodigoArticulo(ogcaFamilia);
-    if FEntorno.Lineas.FieldByName('DESCRIPCION_SESLIN').AsString = '' then
+    if PuedeCompletarDescripcion then
     begin
       sNombre := ANombreFamilia;
       if sNombre = '' then

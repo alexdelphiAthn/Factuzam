@@ -1030,6 +1030,16 @@
       TabOrder = 8
       OnClick = btnCorregirPagoClick
     end
+    object btnSubsanar: TcxButton
+      Left = 224
+      Top = 39
+      Width = 132
+      Height = 28
+      Caption = 'Subsanar'
+      Enabled = False
+      TabOrder = 9
+      OnClick = btnSubsanarClick
+    end
   end
   object tmrBusqueda: TTimer
     Enabled = False

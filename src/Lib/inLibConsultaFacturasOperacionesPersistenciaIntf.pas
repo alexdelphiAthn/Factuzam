@@ -19,6 +19,7 @@ type
   TFacturaConsultaOperacion = record
     Existe: Boolean;
     Consolidada: Boolean;
+    PuedeSubsanar: Boolean;
     Tipo: string;
     Fecha: TDateTime;
   end;

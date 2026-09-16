@@ -90,7 +90,8 @@ begin
       'SELECT COALESCE(L.CODIGO_ART_REUSAR_SESLIN, ' +
       'L.CODIGO_ART_TENTATIVO_SESLIN), ' +
       '       ''S'', L.TIPO_ART_SESLIN, ' +
-      '       CASE WHEN IFNULL(S.ESCOPIAR_DESCRIPCION_FAM_SES, ''S'') = ' +
+      '       CASE WHEN S.ESDESCRIPCION_BLANCO_SES = ''S'' THEN '''' ' +
+      '            WHEN IFNULL(S.ESCOPIAR_DESCRIPCION_FAM_SES, ''S'') = ' +
       '                      ''S'' ' +
       '            THEN COALESCE(NULLIF(F.DESCRIPCION_FAM, ''''), ' +
       '                          L.DESCRIPCION_SESLIN) ' +

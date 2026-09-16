@@ -16,12 +16,22 @@ unit inLibMenuBarraIconos;
     FPainterMenu := TJvMenuBarIconPainter.Create(Self);
     jvMnMenuPrin.ItemPainter := FPainterMenu;   // pone Style := msItemPainter
     jvMnMenuPrin.TextMargin := 8;               // 35 deja huecos enormes
+    FPainterMenu.AplicarFondo(jvMnMenuPrin);     // fondo de barra y submenus
+
+  Colores: JVCL pinta con los colores de sistema (clMenu, clHighlight...),
+  que no siguen al skin de DevExpress y con un tema oscuro dejan la barra
+  y los desplegables en claro. Aqui se toman del painter del
+  RootLookAndFeel en cada pintado, asi que un cambio de skin se refleja
+  sin recrear nada. El hueco de la barra sin items y los bordes de los
+  desplegables no pasan por el painter: se pintan con la brocha de fondo
+  del HMENU (SetMenuInfo).
 }
 
 interface
 
 uses
-  System.Classes, System.Types, Winapi.Windows, Vcl.Menus, JvMenus;
+  System.Classes, System.Types, Winapi.Windows, Vcl.Graphics, Vcl.Menus,
+  JvMenus;
 
 type
   TJvMenuBarIconPainter = class(TJvStandardMenuItemPainter)
@@ -29,12 +39,22 @@ type
     FItemActual: TMenuItem;
     FEstadoActual: TMenuOwnerDrawState;
     FEspacio: Integer;
+    FBrochaFondo: HBRUSH;
+    FColorBrocha: TColor;
     function EsRaiz(AItem: TMenuItem): Boolean;
+    function BrochaFondo: HBRUSH;
+    procedure AsegurarFondoMenu(AMenu: HMENU; ASubmenus: Boolean);
   protected
     procedure DrawItemText(ARect: TRect; const Text: string;
       Flags: Longint); override;
+    procedure DrawSeparator(ARect: TRect); override;
+    function GetGrayColor: TColor; override;
+    function GetDrawHighlight: Boolean; override;
   public
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
+    /// Pone la brocha de fondo del skin en la barra y en sus submenus.
+    procedure AplicarFondo(AMenu: TMenu);
     procedure Measure(Item: TMenuItem; var Width, Height: Integer); override;
     procedure Paint(Item: TMenuItem; ItemRect: TRect;
       State: TMenuOwnerDrawState); override;
@@ -45,10 +65,80 @@ type
 
 implementation
 
+uses
+  cxLookAndFeels, cxLookAndFeelPainters;
+
+function PainterSkin: TcxCustomLookAndFeelPainter;
+begin
+  Result := RootLookAndFeel.Painter;
+end;
+
 constructor TJvMenuBarIconPainter.Create(AOwner: TComponent);
 begin
   inherited;
   FEspacio := 6;
+  FColorBrocha := clNone;
+end;
+
+destructor TJvMenuBarIconPainter.Destroy;
+begin
+  if FBrochaFondo <> 0 then
+    DeleteObject(FBrochaFondo);
+  inherited;
+end;
+
+function TJvMenuBarIconPainter.BrochaFondo: HBRUSH;
+var
+  Color: TColor;
+begin
+  // Se recrea solo si el skin ha cambiado de color de fondo.
+  Color := PainterSkin.DefaultControlColor;
+  if (FBrochaFondo = 0) or (Color <> FColorBrocha) then
+  begin
+    if FBrochaFondo <> 0 then
+      DeleteObject(FBrochaFondo);
+    FBrochaFondo := CreateSolidBrush(ColorToRGB(Color));
+    FColorBrocha := Color;
+  end;
+  Result := FBrochaFondo;
+end;
+
+procedure TJvMenuBarIconPainter.AsegurarFondoMenu(AMenu: HMENU;
+  ASubmenus: Boolean);
+var
+  Info: TMenuInfo;
+  Brocha: HBRUSH;
+begin
+  if AMenu <> 0 then
+  begin
+    Brocha := BrochaFondo;
+    FillChar(Info, SizeOf(Info), 0);
+    Info.cbSize := SizeOf(Info);
+    Info.fMask := MIM_BACKGROUND;
+    // Solo se toca el HMENU si no tiene ya la brocha (o si hay que
+    // propagarla a los submenus).
+    if ASubmenus or not GetMenuInfo(AMenu, Info) or
+       (Info.hbrBack <> Brocha) then
+    begin
+      FillChar(Info, SizeOf(Info), 0);
+      Info.cbSize := SizeOf(Info);
+      Info.fMask := MIM_BACKGROUND;
+      if ASubmenus then
+        Info.fMask := Info.fMask or MIM_APPLYTOSUBMENUS;
+      Info.hbrBack := Brocha;
+      SetMenuInfo(AMenu, Info);
+    end;
+  end;
+end;
+
+procedure TJvMenuBarIconPainter.AplicarFondo(AMenu: TMenu);
+begin
+  if AMenu <> nil then
+  begin
+    AsegurarFondoMenu(AMenu.Handle, True);
+    if (AMenu is TMainMenu) and (TMainMenu(AMenu).WindowHandle <> 0) then
+      DrawMenuBar(TMainMenu(AMenu).WindowHandle);
+  end;
 end;
 
 function TJvMenuBarIconPainter.EsRaiz(AItem: TMenuItem): Boolean;
@@ -77,6 +167,23 @@ begin
   // tenerlos disponibles en DrawItemText.
   FItemActual := Item;
   FEstadoActual := State;
+  // VCL rehace los HMENU al cambiar items (traducciones, permisos) y se
+  // pierde la brocha: se repone aqui, en el menu que contiene el item.
+  if Item.Parent <> nil then
+    AsegurarFondoMenu(Item.Parent.Handle, False);
+  // PreparePaint rellena el item con Canvas.Brush.Color y el texto sale
+  // con Canvas.Font.Color: se sustituyen los colores de sistema que deja
+  // TJvMainMenu.WMDrawItem por los del skin.
+  if (mdSelected in State) or (mdHotlight in State) then
+  begin
+    Canvas.Brush.Color := PainterSkin.DefaultSelectionColor;
+    Canvas.Font.Color := PainterSkin.DefaultSelectionTextColor;
+  end
+  else
+  begin
+    Canvas.Brush.Color := PainterSkin.DefaultControlColor;
+    Canvas.Font.Color := PainterSkin.DefaultControlTextColor;
+  end;
   try
     inherited;
   finally
@@ -106,6 +213,29 @@ begin
     Dec(ARect.Right, Borde);
   end;
   inherited DrawItemText(ARect, Text, Flags);
+end;
+
+procedure TJvMenuBarIconPainter.DrawSeparator(ARect: TRect);
+var
+  Y: Integer;
+begin
+  Y := (ARect.Top + ARect.Bottom) div 2;
+  Canvas.Pen.Width := 1;
+  Canvas.Pen.Color := PainterSkin.DefaultSeparatorColor;
+  Canvas.MoveTo(ARect.Left, Y);
+  Canvas.LineTo(ARect.Right, Y);
+end;
+
+function TJvMenuBarIconPainter.GetGrayColor: TColor;
+begin
+  Result := PainterSkin.DefaultEditorTextColor(True);
+end;
+
+function TJvMenuBarIconPainter.GetDrawHighlight: Boolean;
+begin
+  // El relieve blanco de los items deshabilitados solo casa con fondos
+  // claros de sistema.
+  Result := False;
 end;
 
 end.

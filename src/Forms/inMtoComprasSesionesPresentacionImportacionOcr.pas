@@ -371,7 +371,8 @@ begin
     AEntorno.Datos.unqrySesionLin.FieldByName(
       'REF_PRV_SESLIN').AsString := Copy(ALinea.Datos.Modelo, 1, 100);
     AEntorno.Datos.unqrySesionLin.FieldByName(
-      'DESCRIPCION_SESLIN').AsString := ALinea.Datos.Descripcion;
+      'DESCRIPCION_SESLIN').AsString :=
+        AEntorno.Datos.DescripcionParaLinea(ALinea.Datos.Descripcion);
     AEntorno.Datos.unqrySesionLin.FieldByName(
       'COLOR_TEXTO_SESLIN').AsString := ALinea.Datos.Color;
     AEntorno.Datos.unqrySesionLin.FieldByName(

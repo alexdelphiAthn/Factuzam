@@ -25,7 +25,6 @@
     Margins.Top = 5
     Margins.Right = 5
     Margins.Bottom = 5
-    ParentColor = True
     TabOrder = 0
     StyleElements = [seFont, seClient, seBorder]
     ExplicitWidth = 1087
@@ -1158,14 +1157,13 @@
               Margins.Bottom = 4
               Caption = '&2_Totales'
               ImageIndex = 2
-              object scrTotales: TScrollBox
+              object scrTotales: TcxScrollBox
                 Left = 0
                 Top = 0
                 Width = 1071
                 Height = 395
                 Align = alClient
-                BorderStyle = bsNone
-                ParentBackground = True
+                BorderStyle = cxcbsNone
                 TabOrder = 0
                 object lblTotalaPagar: TcxLabel
                   Left = 105
@@ -1360,7 +1358,7 @@
                   Height = 20
                   Width = 133
                 end
-                object grpDesgloseImpuestos: TGroupBox
+                object grpDesgloseImpuestos: TcxGroupBox
                   Left = 432
                   Top = 11
                   Width = 617
@@ -2060,14 +2058,16 @@
                 Height = 36
                 Width = 733
               end
-              object pnlUserInstantBottom: TPanel
+              object pnlUserInstantBottom: TcxGroupBox
                 Left = 0
                 Top = 316
                 Width = 1071
                 Height = 79
                 Align = alBottom
-                BevelOuter = bvNone
                 TabOrder = 2
+                PanelStyle.Active = True
+                Style.BorderStyle = ebsNone
+                Transparent = True
                 object txtUSUARIOALTA: TcxDBTextEdit
                   Left = 17
                   Top = 37
@@ -2169,17 +2169,15 @@
             object tsVerifactu: TcxTabSheet
               Caption = '&5_Verifactu'
               ImageIndex = 4
-              object scrlbxVerifactu: TScrollBox
+              object scrlbxVerifactu: TcxScrollBox
                 Left = 0
                 Top = 0
                 Width = 1071
                 Height = 395
-                VertScrollBar.ButtonSize = 20
                 VertScrollBar.Position = 26
                 Align = alClient
-                ParentBackground = True
                 TabOrder = 0
-                object lblPETICION_COMPLETA: TLabel
+                object lblPETICION_COMPLETA: TcxLabel
                   Left = 44
                   Top = 586
                   Width = 157
@@ -2187,7 +2185,7 @@
                   Caption = 'PETICION_COMPLETA'
                   Transparent = True
                 end
-                object lblRESPUESTA_COMPLETA: TLabel
+                object lblRESPUESTA_COMPLETA: TcxLabel
                   Left = 43
                   Top = 34
                   Width = 173
@@ -2196,7 +2194,7 @@
                   FocusControl = cxdbmRESPUESTA_COMPLETA
                   Transparent = True
                 end
-                object lblQRCODE_BASE64: TLabel
+                object lblQRCODE_BASE64: TcxLabel
                   Left = 74
                   Top = 517
                   Width = 127
@@ -2205,7 +2203,7 @@
                   FocusControl = cxdbmQRCODE_BASE64
                   Transparent = True
                 end
-                object lblVERIFACTU_URL: TLabel
+                object lblVERIFACTU_URL: TcxLabel
                   Left = 80
                   Top = 450
                   Width = 124
@@ -2214,7 +2212,7 @@
                   FocusControl = cxdbmVERIFACTU_URL
                   Transparent = True
                 end
-                object lblCHAIN_HASH: TLabel
+                object lblCHAIN_HASH: TcxLabel
                   Left = 101
                   Top = 384
                   Width = 101
@@ -2223,7 +2221,7 @@
                   FocusControl = txtCHAIN_HASH
                   Transparent = True
                 end
-                object lblCHAIN_NUMBER: TLabel
+                object lblCHAIN_NUMBER: TcxLabel
                   Left = 92
                   Top = 335
                   Width = 123
@@ -2232,7 +2230,7 @@
                   FocusControl = txtCHAIN_NUMBER
                   Transparent = True
                 end
-                object lblISSUED_TIME: TLabel
+                object lblISSUED_TIME: TcxLabel
                   Left = 121
                   Top = 287
                   Width = 96
@@ -2241,7 +2239,7 @@
                   FocusControl = dteISSUED_TIME
                   Transparent = True
                 end
-                object lblISSUER_IRS_ID: TLabel
+                object lblISSUER_IRS_ID: TcxLabel
                   Left = 108
                   Top = 238
                   Width = 109
@@ -2250,7 +2248,7 @@
                   FocusControl = txtISSUER_IRS_ID
                   Transparent = True
                 end
-                object lblQUEUE_ID: TLabel
+                object lblQUEUE_ID: TcxLabel
                   Left = 142
                   Top = 190
                   Width = 75
@@ -2259,7 +2257,7 @@
                   FocusControl = spQUEUE_ID
                   Transparent = True
                 end
-                object lblREQUEST_ID: TLabel
+                object lblREQUEST_ID: TcxLabel
                   Left = 125
                   Top = 141
                   Width = 92
@@ -2268,7 +2266,7 @@
                   FocusControl = txtREQUEST_ID
                   Transparent = True
                 end
-                object lbl: TLabel
+                object lbl: TcxLabel
                   Left = 61
                   Top = -6
                   Width = 87
@@ -2277,7 +2275,7 @@
                   FocusControl = spID_CONSOLIDACION
                   Transparent = True
                 end
-                object lblFECHA_PROCESAMIENTO: TLabel
+                object lblFECHA_PROCESAMIENTO: TcxLabel
                   Left = 446
                   Top = 198
                   Width = 186
@@ -2286,7 +2284,7 @@
                   FocusControl = dteFECHA_PROCESAMIENTO
                   Transparent = True
                 end
-                object lblESTADO: TLabel
+                object lblESTADO: TcxLabel
                   Left = 386
                   Top = -6
                   Width = 60

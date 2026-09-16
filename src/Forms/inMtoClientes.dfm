@@ -392,13 +392,13 @@
               Margins.Bottom = 4
               Caption = '&1_Domicilio fiscal'
               ImageIndex = 0
-              object scrDomicilioFiscal: TScrollBox
+              object scrDomicilioFiscal: TcxScrollBox
                 Left = 0
                 Top = 0
                 Width = 985
                 Height = 412
                 Align = alClient
-                BorderStyle = bsNone
+                BorderStyle = cxcbsNone
                 TabOrder = 0
                 DesignSize = (
                   985
@@ -681,13 +681,13 @@
             object tsMasDatos: TcxTabSheet
               Caption = '&2_M'#225's datos'
               ImageIndex = 1
-              object scrMasDatos: TScrollBox
+              object scrMasDatos: TcxScrollBox
                 Left = 0
                 Top = 0
                 Width = 985
                 Height = 412
                 Align = alClient
-                BorderStyle = bsNone
+                BorderStyle = cxcbsNone
                 TabOrder = 0
                 DesignSize = (
                   985
@@ -2546,14 +2546,16 @@
             object tsOtros: TcxTabSheet
               Caption = '&5_Otros'
               ImageIndex = 4
-              object pnlUserInstantBottom: TPanel
+              object pnlUserInstantBottom: TcxGroupBox
                 Left = 0
                 Top = 333
                 Width = 985
                 Height = 79
                 Align = alBottom
-                BevelOuter = bvNone
                 TabOrder = 6
+                PanelStyle.Active = True
+                Style.BorderStyle = ebsNone
+                Transparent = True
                 object txtUSUARIOALTA: TcxDBTextEdit
                   Left = 17
                   Top = 37

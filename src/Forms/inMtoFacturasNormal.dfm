@@ -28,7 +28,7 @@
               end
             end
             inherited tsTotales: TcxTabSheet
-              inherited scrTotales: TScrollBox
+              inherited scrTotales: TcxScrollBox
               inherited curTotalAPagar: TcxDBCurrencyEdit
                 ExplicitHeight = 25
               end
@@ -47,7 +47,7 @@
               inherited cbbFORMAPAGO: TcxDBLookupComboBox
                 ExplicitHeight = 25
               end
-              inherited grpDesgloseImpuestos: TGroupBox
+              inherited grpDesgloseImpuestos: TcxGroupBox
                 inherited curTOTAL_BASEI_IVAN_FAC: TcxDBCurrencyEdit
                   ExplicitHeight = 25
                 end
@@ -137,8 +137,7 @@
               inherited cbbTipoOperVerifactu: TcxDBLookupComboBox
                 ExplicitHeight = 25
               end
-              inherited pnlUserInstantBottom: TPanel
-                StyleElements = [seFont, seClient, seBorder]
+              inherited pnlUserInstantBottom: TcxGroupBox
                 inherited txtUSUARIOALTA: TcxDBTextEdit
                   ExplicitHeight = 25
                 end
@@ -158,59 +157,46 @@
               ExplicitTop = 28
               ExplicitWidth = 1071
               ExplicitHeight = 395
-              inherited scrlbxVerifactu: TScrollBox
+              inherited scrlbxVerifactu: TcxScrollBox
                 VertScrollBar.Position = 0
-                inherited lblPETICION_COMPLETA: TLabel
+                inherited lblPETICION_COMPLETA: TcxLabel
                   Top = 612
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblRESPUESTA_COMPLETA: TLabel
+                inherited lblRESPUESTA_COMPLETA: TcxLabel
                   Top = 60
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblQRCODE_BASE64: TLabel
+                inherited lblQRCODE_BASE64: TcxLabel
                   Top = 543
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblVERIFACTU_URL: TLabel
+                inherited lblVERIFACTU_URL: TcxLabel
                   Top = 476
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblCHAIN_HASH: TLabel
+                inherited lblCHAIN_HASH: TcxLabel
                   Top = 410
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblCHAIN_NUMBER: TLabel
+                inherited lblCHAIN_NUMBER: TcxLabel
                   Top = 361
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblISSUED_TIME: TLabel
+                inherited lblISSUED_TIME: TcxLabel
                   Top = 313
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblISSUER_IRS_ID: TLabel
+                inherited lblISSUER_IRS_ID: TcxLabel
                   Top = 264
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblQUEUE_ID: TLabel
+                inherited lblQUEUE_ID: TcxLabel
                   Top = 216
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblREQUEST_ID: TLabel
+                inherited lblREQUEST_ID: TcxLabel
                   Top = 167
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lbl: TLabel
+                inherited lbl: TcxLabel
                   Top = 20
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblFECHA_PROCESAMIENTO: TLabel
+                inherited lblFECHA_PROCESAMIENTO: TcxLabel
                   Top = 224
-                  StyleElements = [seFont, seClient, seBorder]
                 end
-                inherited lblESTADO: TLabel
+                inherited lblESTADO: TcxLabel
                   Top = 20
-                  StyleElements = [seFont, seClient, seBorder]
                 end
                 inherited spQUEUE_ID: TcxDBSpinEdit
                   Top = 208

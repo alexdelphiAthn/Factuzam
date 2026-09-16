@@ -15,7 +15,8 @@ unit UniDataVerifactuColaProcesador;
 interface
 uses
   System.Classes, Uni, inLibConexionesIntf, inLibParametrosIntf,
-  inLibContextoSesionIntf, inLibVerifactuColaIntf, inLibLogIntf;
+  inLibContextoSesionIntf, inLibVerifactuColaIntf, inLibLogIntf,
+  inLibVerifactuEnvio;
 type
   TContextoProcesadorVerifactuCola = record
     Conexiones: IServicioConexiones;
@@ -32,9 +33,13 @@ type
     FAvisoNoDisponible: Boolean;
     function PuedeContinuar: Boolean;
     procedure ProcesarPendientes;
+    function ReclamarFila(AIdCola: Int64): Boolean;
     function ProcesarFila(AIdCola: Int64;
       const ASerie, ANumero, ATipoOperacion: string;
       AIntentos: Integer): Integer;
+    procedure ConservarIntentoFallido(AIdCola: Int64;
+      const ASerie, ANumero, ATipoOperacion: string;
+      const AResultado: TResultadoEnvioVerifactu);
     procedure EsperarCiclo;
     procedure EsperarSegundos(ASegundos: Integer);
   protected
@@ -54,8 +59,8 @@ function CrearProcesadorVerifactuColaUniDAC(
 implementation
 uses
   Winapi.Windows, System.SysUtils, inLibVerifactu,
-  inLibVerifactuTipos, inLibVerifactuEnvio,
-  UniDataVerifactuColaResultados, inLibErroresHttp;
+  inLibVerifactuTipos, UniDataVerifactuColaResultados, inLibErroresHttp,
+  UniDataVerifactuSubsanacionResultados;
 const
   CResultadoFilaSinConexion = -1;
   CSegundosReintentoSinConexion = 300;
@@ -316,16 +321,26 @@ begin
     end;
   end;
 end;
-function THiloVerifactuCola.ProcesarFila(AIdCola: Int64;
-                                         const ASerie, ANumero,
-                                         ATipoOperacion: string;
-                                         AIntentos: Integer): Integer;
+procedure THiloVerifactuCola.ConservarIntentoFallido(AIdCola: Int64;
+  const ASerie, ANumero, ATipoOperacion: string;
+  const AResultado: TResultadoEnvioVerifactu);
 var
-  Qry:        TUniQuery;
-  bReclamada: Boolean;
-  oResultado: TResultadoEnvioVerifactu;
+  oContexto: TContextoSubsanacionFiscal;
 begin
-  Result := 0;
+  if ATipoOperacion = 'SUBSANACION' then
+  begin
+    oContexto.IdCola := AIdCola;
+    oContexto.Serie := ASerie;
+    oContexto.Numero := ANumero;
+    oContexto.Usuario := FContexto.Usuario;
+    GuardarIntentoSubsanacion(FConn, oContexto, AResultado);
+  end;
+end;
+
+function THiloVerifactuCola.ReclamarFila(AIdCola: Int64): Boolean;
+var
+  Qry: TUniQuery;
+begin
   Qry := TUniQuery.Create(nil);
   try
     // Reclamo optimista: si otro puesto se adelantó, aquí no se procesa
@@ -340,19 +355,29 @@ begin
     Qry.ParamByName('USUARIO').AsString := FContexto.Usuario;
     Qry.ParamByName('ID').AsLargeInt    := AIdCola;
     Qry.Execute;
-    bReclamada := (Qry.RowsAffected = 1);
+    Result := Qry.RowsAffected = 1;
   finally
     FreeAndNil(Qry);
   end;
-  if bReclamada then
+end;
+
+function THiloVerifactuCola.ProcesarFila(AIdCola: Int64;
+  const ASerie, ANumero, ATipoOperacion: string;
+  AIntentos: Integer): Integer;
+var
+  oResultado: TResultadoEnvioVerifactu;
+begin
+  Result := 0;
+  oResultado := Default(TResultadoEnvioVerifactu);
+  if ReclamarFila(AIdCola) then
   begin
     // Transacción del envío: el FOR UPDATE de fza_verifactu_cadena que
     // toma EnviarRegistroFactura serializa el encadenamiento entre
     // puestos hasta el commit/rollback
     FConn.StartTransaction;
     try
-      oResultado := EnviarRegistroFactura(FContexto.ParametrosApp, FConn,
-        FContexto.Usuario, ASerie, ANumero, ATipoOperacion);
+      EnviarRegistroFacturaConResultado(FContexto.ParametrosApp, FConn,
+        FContexto.Usuario, ASerie, ANumero, ATipoOperacion, oResultado);
       if oResultado.Ok then
       begin
         // El registro YA está aceptado por la AEAT: si fallara la
@@ -371,6 +396,9 @@ begin
           begin
             if FConn.InTransaction then
               FConn.Rollback;
+            oResultado.MensajeError := E.Message;
+            ConservarIntentoFallido(AIdCola, ASerie, ANumero,
+              ATipoOperacion, oResultado);
             TResultadosVerifactuColaUniDAC.GuardarEnvioError(
               FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
               FContexto.Usuario,
@@ -383,6 +411,8 @@ begin
       else
       begin
         FConn.Rollback;
+        ConservarIntentoFallido(AIdCola, ASerie, ANumero,
+          ATipoOperacion, oResultado);
         TResultadosVerifactuColaUniDAC.GuardarEnvioError(
           FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
           FContexto.Usuario,
@@ -394,6 +424,9 @@ begin
       begin
         if FConn.InTransaction then
           FConn.Rollback;
+        oResultado.MensajeError := E.Message;
+        ConservarIntentoFallido(AIdCola, ASerie, ANumero,
+          ATipoOperacion, oResultado);
         TResultadosVerifactuColaUniDAC.GuardarEnvioError(
           FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
           FContexto.Usuario,
@@ -406,6 +439,9 @@ begin
       begin
         if FConn.InTransaction then
           FConn.Rollback;
+        oResultado.MensajeError := E.Message;
+        ConservarIntentoFallido(AIdCola, ASerie, ANumero,
+          ATipoOperacion, oResultado);
         TResultadosVerifactuColaUniDAC.GuardarEnvioError(
           FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
           FContexto.Usuario,

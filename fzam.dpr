@@ -471,6 +471,14 @@ uses
   inLibCajaVentaOperacion in 'src\Caja\Lib\inLibCajaVentaOperacion.pas',
   inLibCajaStock in 'src\Caja\Lib\inLibCajaStock.pas',
   inLibCajaDescuentos in 'src\Caja\Lib\inLibCajaDescuentos.pas',
+  UniDataCajaSubsanacionImportes in 'src\Caja\DataModules\UniDataCajaSubsanacionImportes.pas',
+  UniDataCajaSubsanacionRepositorio in 'src\Caja\DataModules\UniDataCajaSubsanacionRepositorio.pas',
+  inMtoCajaSubsanacionVcl in 'src\Caja\Forms\inMtoCajaSubsanacionVcl.pas',
+  inLibCajaSubsanacion in 'src\Caja\Lib\inLibCajaSubsanacion.pas',
+  inLibCajaSubsanacionIntf in 'src\Caja\Lib\inLibCajaSubsanacionIntf.pas',
+  inLibMsgPersistenciaSubsanacionCaja in 'src\Caja\Lib\inLibMsgPersistenciaSubsanacionCaja.pas',
+  inLibMsgSubsanacionCaja in 'src\Caja\Lib\inLibMsgSubsanacionCaja.pas',
+  inMtoModalImporteSubsanacion in 'src\Caja\Modals\inMtoModalImporteSubsanacion.pas' {frmModalImporteSubsanacion},
   UniDataCajaConsultasRepositorio in 'src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas',
   inLibCajaRectificacion in 'src\Caja\Lib\inLibCajaRectificacion.pas',
   inLibCajaOpeComposicion in 'src\Caja\Lib\inLibCajaOpeComposicion.pas',
@@ -729,6 +737,8 @@ uses
   inMtoVerifactuLog in 'src\verifactu\inMtoVerifactuLog.pas' {frmMtoVerifactuLog},
   UniDataVerifactuLog in 'src\verifactu\UniDataVerifactuLog.pas' {dmVerifactuLog: TDataModule},
   inMtoModalVerifactuDecl in 'src\Modals\inMtoModalVerifactuDecl.pas' {frmModalVerifactuDecl},
+  inMtoModalAyudaWeb in 'src\Modals\inMtoModalAyudaWeb.pas'
+    {frmModalAyudaWeb},
   inMtoModalDescargaTraduccion in 'src\Modals\inMtoModalDescargaTraduccion.pas' {frmModalDescargaTraduccion},
   inMtoModalFacturarTicket in 'src\Modals\inMtoModalFacturarTicket.pas' {frmModalFacturarTicket},
   inMtoModalSerieFechaFactura in 'src\Modals\inMtoModalSerieFechaFactura.pas' {frmModalSerieFechaFactura},
@@ -1120,7 +1130,10 @@ uses
   inLibTicketRecordatorio in 'src\Lib\inLibTicketRecordatorio.pas',
   inLibVerifactuDesgloseFiscal in 'src\verifactu\inLibVerifactuDesgloseFiscal.pas',
   inLibMenuIconos in 'src\Lib\inLibMenuIconos.pas',
-  inLibMenuBarraIconos in 'src\Lib\inLibMenuBarraIconos.pas';
+  inLibMenuBarraIconos in 'src\Lib\inLibMenuBarraIconos.pas',
+  inLibInspectorSkin in 'src\Lib\inLibInspectorSkin.pas',
+  inLibCajaMenuTarjetaVcl in 'src\Lib\inLibCajaMenuTarjetaVcl.pas',
+  inLibCajaMenuMaquetaVcl in 'src\Lib\inLibCajaMenuMaquetaVcl.pas';
 
 {$R *.res}
 {$R fondo.res}

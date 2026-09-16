@@ -16,6 +16,7 @@ unit inLibMsgCompras;
 interface
 
 resourcestring
+  SComprasDejarDescripcionBlanco = 'Dejar descripción en blanco';
   SErrorPersistenciaGridPivoteCompraNoRegistrada =
     'No se ha registrado la persistencia del pivote de compra.';
   SAvisoAlmacenDestinoAlbaranCompraObligatorio =

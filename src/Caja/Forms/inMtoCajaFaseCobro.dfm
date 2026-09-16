@@ -125,7 +125,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.Alignment.Horz = taCenter
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 4
             Text = '1'
             Width = 64
@@ -138,7 +137,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 5
             Width = 171
           end
@@ -146,7 +144,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Left = 243
             Top = 57
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 8
             Width = 96
           end
@@ -160,7 +157,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.OnChange = txtTotalPagarPropertiesChange
             Properties.OnValidate = txtTotalPagarPropertiesValidate
             Style.BorderStyle = ebsOffice11
-            Style.Color = clWhite
             TabOrder = 10
             Width = 171
           end
@@ -172,7 +168,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 7
             Width = 171
           end
@@ -181,7 +176,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Top = 57
             Properties.Alignment.Horz = taRightJustify
             Properties.DisplayFormat = '#,##0.00 '#8364
-            Style.Color = clCream
             TabOrder = 9
             Width = 171
           end
@@ -196,7 +190,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.ReadOnly = False
             Properties.OnChange = txtPorcenDtoGlobalPropertiesChange
             Style.BorderStyle = ebsOffice11
-            Style.Color = clWindow
             TabOrder = 6
             Width = 92
           end
@@ -247,7 +240,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 2
             Width = 171
           end
@@ -259,7 +251,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 3
             Width = 171
           end
@@ -310,7 +301,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clWhite
             TabOrder = 2
             Width = 171
           end
@@ -323,7 +313,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.ReadOnly = True
             Properties.OnEditValueChanged = txtValeEmitidoPropertiesEditValueChanged
             Style.BorderStyle = ebsOffice11
-            Style.Color = clWhite
             TabOrder = 3
             Width = 171
           end
@@ -426,7 +415,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 1
             Width = 171
           end
@@ -454,7 +442,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Properties.EditFormat = ',0.00 '#8364
             Properties.ReadOnly = True
             Style.BorderStyle = ebsOffice11
-            Style.Color = clCream
             TabOrder = 3
             Width = 171
           end
@@ -951,7 +938,6 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
           Properties.MaxLength = 8
           Properties.ReadOnly = False
           Style.BorderStyle = ebsOffice11
-          Style.Color = clCream
           Style.Font.Charset = ANSI_CHARSET
           Style.Font.Color = clWindowText
           Style.Font.Height = -23
