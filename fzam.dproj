@@ -5,7 +5,7 @@
         <FrameworkType>VCL</FrameworkType>
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
-        <Config Condition="'$(Config)'==''">Release</Config>
+        <Config Condition="'$(Config)'==''">Debug</Config>
         <Platform Condition="'$(Platform)'==''">Win64</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
@@ -171,18 +171,21 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
-        <DCCReference Include="src\Lib\inLibMsgPresupuestos.pas" />
-        <DCCReference Include="src\Forms\inMtoPresupuestos.pas" />
-        <DCCReference Include="src\DataModules\UniDataPresupuestos.pas" />
-        <DCCReference Include="src\DataModules\UniDataPresupuestosSql.pas" />
-        <DCCReference Include="src\DataModules\UniDataPresupuestosConversion.pas" />
+        <DCCReference Include="src\Lib\inLibMsgPresupuestos.pas"/>
+        <DCCReference Include="src\Forms\inMtoPresupuestos.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPresupuestos.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPresupuestosSql.pas"/>
+        <DCCReference Include="src\DataModules\UniDataPresupuestosConversion.pas"/>
         <DCCReference Include="src\Lib\inLibInformeDocumento.pas"/>
-        <DCCReference Include="src\Lib\inLibPresupuestosIntf.pas" />
-        <DCCReference Include="src\DataModules\UniDataInformeDocumento.pas" />
-        <DCCReference Include="src\Modals\inMtoModalImpDocumento.pas" />
+        <DCCReference Include="src\Lib\inLibPresupuestosIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataInformeDocumento.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalImpDocumento.pas"/>
         <DCCReference Include="src\vcl37\Vcl.Consts.pas"/>
         <DCCReference Include="src\vcl\Vcl.Consts.pas"/>
         <DCCReference Include="src\Lib\inLibDevExp.pas"/>
+        <DCCReference Include="src\Lib\inLibFuenteFastReport.pas"/>
+        <DCCReference Include="src\Lib\inLibTipoCantidad.pas"/>
+        <DCCReference Include="src\Lib\inLibCalculadoraVcl.pas"/>
         <DCCReference Include="src\Lib\inLibHojaCalculoIntf.pas"/>
         <DCCReference Include="src\Lib\inLibHojaCalculoUtil.pas"/>
         <DCCReference Include="src\Lib\inLibHojaCalculoDevEx.pas"/>
@@ -341,6 +344,7 @@
         <DCCReference Include="src\Lib\inLibFiltroUsuario.pas"/>
         <DCCReference Include="src\Lib\inLibGestorFiltrosMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorPerfilesMto.pas"/>
+        <DCCReference Include="src\Lib\inLibGestorGuardianBorradoMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorGuiasGridMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorTareasMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorArticulosMto.pas"/>
@@ -1057,9 +1061,6 @@
         <DCCReference Include="src\Lib\inLibDeteccionImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEspera.pas"/>
         <DCCReference Include="src\Lib\inLibMensajesVcl.pas"/>
-        <DCCReference Include="src\Lib\inLibFuenteFastReport.pas"/>
-        <DCCReference Include="src\Lib\inLibTipoCantidad.pas"/>
-        <DCCReference Include="src\Lib\inLibCalculadoraVcl.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa1914XML.pas"/>
@@ -1233,14 +1234,14 @@
             <Form>dmConsultaOpe</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Forms\inMtoConsultaOpe.pas">
+            <Form>frmConsultaOpe</Form>
+        </DCCReference>
         <DCCReference Include="src\Caja\Lib\inLibCorreccionPagoIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataCorreccionPago.pas"/>
         <DCCReference Include="src\Caja\Modals\inMtoModalCorregirPago.pas">
             <Form>frmModalCorregirPago</Form>
             <FormType>dfm</FormType>
-        </DCCReference>
-        <DCCReference Include="src\Forms\inMtoConsultaOpe.pas">
-            <Form>frmConsultaOpe</Form>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibVentasCalendarioIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataVentasCalendario.pas"/>
