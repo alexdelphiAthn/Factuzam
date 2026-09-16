@@ -1118,10 +1118,11 @@ var
   oContextoHistorial: TContextoTransportePrestaShop;
 begin
   ComprobarCierreSeguro;
-  ATrabajo := FRepositorio.LeerTrabajo(
+  FRepositorio.LeerTrabajo(
     AIdCola,
     AToken,
-    AConfiguracion.Cola);
+    AConfiguracion.Cola,
+    ATrabajo);
   if ATrabajo.IdCola = 0 then
     ATrabajo.IdCola := AIdCola;
   ATrabajo.Token := AToken;

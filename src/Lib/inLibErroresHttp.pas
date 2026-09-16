@@ -45,7 +45,9 @@ begin
     // Las clases por sí solas son demasiado amplias: por ejemplo,
     // ENetHTTPClientException también puede representar un fallo TLS.
     // Se aceptan solo las causas propias de una caída de conectividad.
+    // Incluye fallos al abrir la petición y al enviar o leer la respuesta.
     Result := ((oErrorBase is ENetHTTPClientException) or
+               (oErrorBase is ENetHTTPRequestException) or
                (oErrorBase is ENetHTTPResponseException)) and
               ((Pos(CErrorWinHttpTimeout, oErrorBase.Message) > 0) or
                (Pos(CErrorWinHttpNombreNoResuelto,

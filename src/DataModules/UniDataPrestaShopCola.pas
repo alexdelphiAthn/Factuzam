@@ -87,11 +87,11 @@ type
       AIdTienda: Integer;
       const AUsuario: string;
       out AToken: string): Boolean;
-    function LeerTrabajo(
+    procedure LeerTrabajo(
       AIdCola: Int64;
       const AToken: string;
-      const AConfiguracion: TConfiguracionPrestaShopCola):
-      TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionPrestaShopCola;
+      out ATrabajo: TTrabajoArticuloPrestaShop);
     function RenovarReclamacion(
       AIdCola: Int64;
       const AToken: string): Boolean;
@@ -1034,15 +1034,17 @@ begin
   end;
 end;
 
-function TRepositorioPrestaShopColaUniDAC.LeerTrabajo(
+procedure TRepositorioPrestaShopColaUniDAC.LeerTrabajo(
   AIdCola: Int64;
   const AToken: string;
-  const AConfiguracion: TConfiguracionPrestaShopCola):
-  TTrabajoArticuloPrestaShop;
+  const AConfiguracion: TConfiguracionPrestaShopCola;
+  out ATrabajo: TTrabajoArticuloPrestaShop);
 var
   oConsulta: TUniQuery;
 begin
-  Result := Default(TTrabajoArticuloPrestaShop);
+  ATrabajo := Default(TTrabajoArticuloPrestaShop);
+  ATrabajo.IdCola := AIdCola;
+  ATrabajo.Token := AToken;
   oConsulta := NuevaConsulta;
   try
     oConsulta.SQL.Text :=
@@ -1072,51 +1074,51 @@ begin
     oConsulta.Open;
     if not oConsulta.IsEmpty then
     begin
-      Result.IdCola :=
+      ATrabajo.IdCola :=
         oConsulta.FieldByName('ID_PSCOLA').AsLargeInt;
-      Result.IdTienda :=
+      ATrabajo.IdTienda :=
         oConsulta.FieldByName('ID_TIENDA_PSCOLA').AsInteger;
-      Result.Intentos := oConsulta.FieldByName(
+      ATrabajo.Intentos := oConsulta.FieldByName(
         'CONTADOR_INTENTOS_PSCOLA').AsInteger;
-      Result.VersionReclamada := oConsulta.FieldByName(
+      ATrabajo.VersionReclamada := oConsulta.FieldByName(
         'VERSION_RECLAMADA_PSCOLA').AsLargeInt;
-      Result.CodigoArticulo := oConsulta.FieldByName(
+      ATrabajo.CodigoArticulo := oConsulta.FieldByName(
         'CODIGO_ART_PSCOLA').AsString;
-      Result.Token := oConsulta.FieldByName(
+      ATrabajo.Token := oConsulta.FieldByName(
         'ID_RECLAMACION_PSCOLA').AsString;
-      Result.EstaEnWeb :=
+      ATrabajo.EstaEnWeb :=
         oConsulta.FieldByName('ESWEB_ART').AsString = 'S';
-      Result.EsServicio := SameText(
+      ATrabajo.EsServicio := SameText(
         oConsulta.FieldByName('TIPO_ART').AsString,
         'SERVICIO');
-      Result.TienePrecio := oConsulta.FieldByName(
+      ATrabajo.TienePrecio := oConsulta.FieldByName(
         'ESCAMBIO_PRECIO_RECLAMADO_PSCOLA').AsString = 'S';
-      Result.TieneStock := oConsulta.FieldByName(
+      ATrabajo.TieneStock := oConsulta.FieldByName(
         'ESCAMBIO_STOCK_RECLAMADO_PSCOLA').AsString = 'S';
-      Result.AccionVisibilidad := TextoAccionVisibilidad(
+      ATrabajo.AccionVisibilidad := TextoAccionVisibilidad(
         oConsulta.FieldByName(
           'ACCION_VISIBILIDAD_RECLAMADA_PSCOLA').AsString);
-      Result.TieneStock := Result.TieneStock and
+      ATrabajo.TieneStock := ATrabajo.TieneStock and
         AConfiguracion.StockActivo and
-        (not Result.EsServicio);
-      Result.ReanudarAlta := StartsText(
+        (not ATrabajo.EsServicio);
+      ATrabajo.ReanudarAlta := StartsText(
         CMarcaReanudacionAltaPrestaShop,
         oConsulta.FieldByName('MENSAJE_ERROR_PSCOLA').AsString);
     end;
   finally
     FreeAndNil(oConsulta);
   end;
-  if (Result.IdCola > 0) and Result.EstaEnWeb then
+  if (ATrabajo.CodigoArticulo <> '') and ATrabajo.EstaEnWeb then
   begin
-    if Result.TienePrecio then
-      CargarPrecioProducto(AConfiguracion, Result);
-    if (Result.TienePrecio and Result.TienePrecioProducto) or
-       Result.TieneStock then
-      CargarLineas(AConfiguracion, Result);
-    if Result.TieneStock and (Length(Result.Lineas) = 0) then
+    if ATrabajo.TienePrecio then
+      CargarPrecioProducto(AConfiguracion, ATrabajo);
+    if (ATrabajo.TienePrecio and ATrabajo.TienePrecioProducto) or
+       ATrabajo.TieneStock then
+      CargarLineas(AConfiguracion, ATrabajo);
+    if ATrabajo.TieneStock and (Length(ATrabajo.Lineas) = 0) then
       raise EDatabaseError.CreateFmt(
         'El artículo %s no tiene unidades válidas para sincronizar stock',
-        [Result.CodigoArticulo]);
+        [ATrabajo.CodigoArticulo]);
   end;
 end;
 
@@ -1372,7 +1374,9 @@ begin
       'DATE_ADD(NOW(), INTERVAL :ESPERA SECOND) ELSE NULL END, ' +
       'MENSAJE_ERROR_PSCOLA = CASE ' +
       'WHEN VERSION_DESEADA_PSCOLA = VERSION_RECLAMADA_PSCOLA ' +
-      'THEN :MENSAJE ' +
+      'THEN CASE WHEN MENSAJE_ERROR_PSCOLA LIKE :MARCA_ALTA ' +
+      'AND :MENSAJE NOT LIKE :MARCA_ALTA ' +
+      'THEN CONCAT(:PREFIJO_ALTA, :MENSAJE) ELSE :MENSAJE END ' +
       'WHEN MENSAJE_ERROR_PSCOLA LIKE :MARCA_ALTA ' +
       'THEN MENSAJE_ERROR_PSCOLA ELSE NULL END, ' +
       'VERSION_RECLAMADA_PSCOLA = NULL, ' +
@@ -1393,6 +1397,8 @@ begin
       oConsulta.ParamByName('INCREMENTO').AsInteger := 0;
     oConsulta.ParamByName('ESPERA').AsInteger := AEsperaSegundos;
     oConsulta.ParamByName('MENSAJE').AsMemo := AMensaje;
+    oConsulta.ParamByName('PREFIJO_ALTA').AsString :=
+      CMarcaReanudacionAltaPrestaShop;
     oConsulta.ParamByName('MARCA_ALTA').AsString :=
       CMarcaReanudacionAltaPrestaShop + '%';
     oConsulta.ParamByName('USUARIO').AsString := AUsuario;

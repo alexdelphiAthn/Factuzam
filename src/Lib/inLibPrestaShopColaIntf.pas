@@ -132,11 +132,12 @@ type
       AIdTienda: Integer;
       const AUsuario: string;
       out AToken: string): Boolean;
-    function LeerTrabajo(
+    // La cabecera queda disponible aunque falle el cálculo de precio o stock.
+    procedure LeerTrabajo(
       AIdCola: Int64;
       const AToken: string;
-      const AConfiguracion: TConfiguracionPrestaShopCola):
-      TTrabajoArticuloPrestaShop;
+      const AConfiguracion: TConfiguracionPrestaShopCola;
+      out ATrabajo: TTrabajoArticuloPrestaShop);
     function RenovarReclamacion(
       AIdCola: Int64;
       const AToken: string): Boolean;
