@@ -19,8 +19,14 @@ type
   TFacturaConsultaOperacion = record
     Existe: Boolean;
     Consolidada: Boolean;
+    // Registro VeriFactu enviado y aceptado por la AEAT.
     PuedeSubsanar: Boolean;
+    // Registro NO VERI*FACTU firmado y encadenado.
+    PuedeSubsanarNoVerifactu: Boolean;
+    // Subsanable en modo SIN VeriFactu, sin exigir consolidación.
+    PuedeSubsanarSinVerifactu: Boolean;
     Tipo: string;
+    Fase: string;
     Fecha: TDateTime;
   end;
 

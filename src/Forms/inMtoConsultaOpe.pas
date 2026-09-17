@@ -25,7 +25,7 @@ uses
   cxDBData, cxGridLevel, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxPC, cxCalendar, cxTextEdit,
   cxMaskEdit, cxDropDownEdit, cxButtonEdit, cxContainer, cxLabel,
-  cxSplitter, cxButtons, Vcl.Imaging.PngImage,
+  cxSplitter, cxButtons, cxCheckBox, Vcl.Imaging.PngImage,
   inMtoFrmBase, inLibVentasCalendario, inLibLayoutForm,
   UniDataConsultaOpe, UniDataCaja, dxCore, cxDateUtils, dxCoreGraphics,
   cxCurrencyEdit, cxClasses, cxGridCustomView, JvComponentBase, JvEnterTab,
@@ -44,6 +44,7 @@ type
     lblFecha:         TcxLabel;
     lblBuscar:        TcxLabel;
     edtBuscar:        TcxButtonEdit;
+    chkVerTodos:      TcxCheckBox;
     pnlMaestro:       TPanel;
     cxGridMaestro:    TcxGrid;
     cxViewMaestro:    TcxGridDBTableView;
@@ -87,17 +88,18 @@ type
     pnlFotoConsulta:  TPanel;
     imgFotoConsulta:  TImage;
     pnlPie:           TPanel;
-    btnReimprimir:    TButton;
+    btnReimprimir:    TcxButton;
     btnReimprimirOtros: TcxButton;
-    btnCerrar:        TButton;
+    btnCerrar:        TcxButton;
     tmrBusqueda:      TTimer;
-    btnDevolverAbonar: TButton;
-    btnAnularVerifactu: TButton;
-    btnFacturarTicket: TButton;
-    btnRectificar: TButton;
+    btnDevolverAbonar: TcxButton;
+    btnAnularVerifactu: TcxButton;
+    btnFacturarTicket: TcxButton;
+    btnRectificar: TcxButton;
     btnEnviarEmail: TcxButton;
     btnCorregirPago: TcxButton;
     btnSubsanar: TcxButton;
+    colFaseFactura: TcxGridDBColumn;
     colMovColor: TcxGridDBColumn;
     colMovTalla: TcxGridDBColumn;
     procedure FormCreate(Sender: TObject);
@@ -105,6 +107,7 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure btnRefrescarClick(Sender: TObject);
     procedure edtBuscarPropertiesChange(Sender: TObject);
+    procedure chkVerTodosPropertiesChange(Sender: TObject);
     procedure tmrBusquedaTimer(Sender: TObject);
     procedure btnReimprimirClick(Sender: TObject);
     procedure btnReimprimirOtrosClick(Sender: TObject);
@@ -192,6 +195,7 @@ type
   private
     FLayout: TLayoutLoader;
     FVentasCal: TVentasCalendarioCache;
+    procedure AplicarEstiloCaja;
     procedure dtpFechaGetDayState(Sender: TObject; ADate: TDateTime;
       AState: TCustomDrawState; AFont: TFont; var ABackgroundColor: TColor);
   end;
@@ -205,11 +209,11 @@ uses
   inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibFotos, inMtoFotoArticulo,
      inLibTraspasoTicket, inLibShowMto,
-     inLibVerifactu, inMtoModalFacturarTicket,
+     inLibVerifactu, inLibVerifactuTipos, inMtoModalFacturarTicket,
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
-  inMtoModalCorregirPago, inLibMsgSubsanacionCaja;
+  inMtoModalCorregirPago, inLibMsgSubsanacionCaja, inLibCajaEstiloVcl;
 
 resourcestring
   STituloPersonalizacionConsultaOperaciones =
@@ -300,6 +304,47 @@ begin
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
                         // este en el grid o en el edit de busqueda
+  AplicarEstiloCaja;
+end;
+
+// Mismo aspecto que el menú y la operación de caja: textos en Source Sans 3,
+// cabeceras en negrita y botones como tarjetas. "Cerrar (ESC)" pasa a la
+// segunda fila, a la derecha, con la tecla en una píldora.
+procedure TfrmConsultaOpe.AplicarEstiloCaja;
+const
+  ALTO_BOTON = 36;
+  ALTO_FUENTE_BOTON = 15;
+var
+  Estilo: TEstiloCaja;
+  Boton: TcxButton;
+  Vista: TcxGridTableView;
+  iMargen, iHueco, iAlto: Integer;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  QuitarBiselesCaja([pnlFotoConsulta]);
+  EstilarEtiquetaCaja(lblFecha, 16, True);
+  EstilarEtiquetaCaja(lblBuscar, 16, True);
+  for Vista in TArray<TcxGridTableView>.Create(cxViewMaestro, cxViewOpe,
+    cxViewPagos, cxViewVales, cxViewMov, cxViewCli, cxViewDep, cxViewFacCab,
+    cxViewFacLin) do
+    Estilo.EstilarRejilla(Vista);
+  for Boton in TArray<TcxButton>.Create(btnReimprimir, btnReimprimirOtros,
+    btnEnviarEmail, btnDevolverAbonar, btnRectificar, btnAnularVerifactu,
+    btnFacturarTicket, btnCorregirPago, btnSubsanar, btnCerrar) do
+    Estilo.EstilarBoton(Boton, '', nil, ALTO_FUENTE_BOTON);
+  iMargen := EscalarCaja(Self, 12);
+  iHueco := EscalarCaja(Self, 8);
+  iAlto := EscalarCaja(Self, ALTO_BOTON);
+  pnlPie.Height := 2 * iAlto + 3 * iHueco;
+  ColocarFilaBotonesCaja([btnReimprimir, btnReimprimirOtros, btnEnviarEmail,
+    btnDevolverAbonar, btnRectificar, btnAnularVerifactu, btnFacturarTicket],
+    iMargen, iHueco, iAlto, ALTO_FUENTE_BOTON);
+  ColocarFilaBotonesCaja([btnCorregirPago, btnSubsanar], iMargen,
+    2 * iHueco + iAlto, iAlto, ALTO_FUENTE_BOTON);
+  ColocarFilaBotonesCaja([btnCerrar], 0, 2 * iHueco + iAlto, iAlto,
+    ALTO_FUENTE_BOTON);
+  btnCerrar.Left := pnlPie.ClientWidth - iMargen - btnCerrar.Width;
+  btnCerrar.Anchors := [akTop, akRight];
 end;
 
 procedure TfrmConsultaOpe.NotificarMensajeDesdeDM(
@@ -627,19 +672,47 @@ var
   rOperacion: TOperacionSubsanacionCaja;
   rClave: TClaveOperacionSubsanacionCaja;
   rFactura: TFacturaConsultaOperacion;
+  bPuedeSubsanar: Boolean;
+  sMotivoRechazo: string;
 begin
   rClave := ClaveOperacionSubsanacion;
   rFactura := FRepositorioFacturas.ConsultarFactura(
     rClave.SerieFactura, rClave.NumeroFactura);
-  if not rFactura.PuedeSubsanar then
+  if not rFactura.Existe then
     raise EInvalidOpException.Create(SSubsanacionNoPermitida);
+  case ModoVerifactu(ParametrosApp) of
+    mvSinVerifactu:
+    begin
+      bPuedeSubsanar := rFactura.PuedeSubsanarSinVerifactu;
+      sMotivoRechazo := SSubsanacionNoPermitidaSinVerifactu;
+    end;
+    mvNoVerifactu:
+    begin
+      bPuedeSubsanar := rFactura.PuedeSubsanarNoVerifactu;
+      sMotivoRechazo := SSubsanacionNoPermitidaNoVerifactu;
+    end;
+  else
+    bPuedeSubsanar := rFactura.PuedeSubsanar;
+    sMotivoRechazo := SSubsanacionNoPermitidaVerifactu;
+  end;
+  if not bPuedeSubsanar then
+    raise EInvalidOpException.CreateFmt(sMotivoRechazo,
+      [rClave.SerieFactura, rClave.NumeroFactura, rFactura.Fase]);
   rOperacion := FServicioSubsanacion.Cargar(rClave);
   AbrirOperacionSubsanacion(rOperacion);
 end;
 
 procedure TfrmConsultaOpe.btnSubsanarClick(Sender: TObject);
 begin
-  SubsanarOperacion;
+  // Las validaciones de negocio se informan con un aviso, no como error.
+  try
+    SubsanarOperacion;
+  except
+    on E: EInvalidOpException do
+      ShowMessage_fza(E.Message);
+    on E: EArgumentException do
+      ShowMessage_fza(E.Message);
+  end;
 end;
 
 procedure TfrmConsultaOpe.ActivarOperacionCaja(
@@ -1043,6 +1116,11 @@ begin
   end;
 end;
 
+procedure TfrmConsultaOpe.chkVerTodosPropertiesChange(Sender: TObject);
+begin
+  RecargarMaestro;
+end;
+
 procedure TfrmConsultaOpe.RecargarMaestro;
 begin
   if (FEmpresa = '') or (FAlmacen = '') or (FCaja = '') then
@@ -1058,7 +1136,8 @@ begin
     Screen.Cursor := crHourGlass;
     try
       FdmConsulta.CargarMaestro(
-        dtpFecha.Date, FEmpresa, FAlmacen, FCaja, Trim(edtBuscar.Text));
+        dtpFecha.Date, FEmpresa, FAlmacen, FCaja, Trim(edtBuscar.Text),
+        chkVerTodos.Checked);
       AjustarVisibilidadPestanas;
     finally
       Screen.Cursor := crDefault;

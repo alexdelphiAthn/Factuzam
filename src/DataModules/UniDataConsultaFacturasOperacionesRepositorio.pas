@@ -25,16 +25,31 @@ uses
 
 const
   SQL_CONSULTAR_FACTURA =
-    'SELECT f.ESCONSOLIDADA_FAC, f.TIPO_FAC, f.FECHA_FAC, ' +
+    'SELECT f.ESCONSOLIDADA_FAC, f.TIPO_FAC, f.FECHA_FAC, f.FASE_FAC, ';
+  SQL_FASES_VERIFACTU = '''VERIFACTU_OK'', ''VERIFACTU_ACEPT_ERR''';
+  SQL_ESTADOS_VERIFACTU =
+    '''VERIFACTU_OK'', ''VERIFACTU_PROCESADO'', ''VERIFACTU_DUPLICADO'', ' +
+    '''VERIFACTU_SUBSANADO'', ''VERIFACTU_ACEPT_ERR''';
+  SQL_FASES_NO_VERIFACTU = '''NOVERIFACTU_OK''';
+  SQL_ESTADOS_NO_VERIFACTU = '''NOVERIF_REGISTRADO'', ''NOVERIF_SUBSANADO''';
+  SQL_SUBSANABLE_SIN_VERIFACTU =
+    // Sin VeriFactu no se exige consolidación ni registro fiscal.
+    'CASE WHEN f.TIPO_FAC = ''SIMPLIFICADA'' ' +
+    'AND COALESCE(f.FASE_FAC, '''') NOT IN ' +
+    '(''SIN_VERIF_ANULADA'', ''VERIFACTU_ANULADA'', ' +
+    '''NOVERIFACTU_ANULADA'', ''RECTIFICADA'', ''CANCELADA'') ';
+
+function SQLSubsanableRegistrado(const AFases, AEstados: string): string;
+begin
+  // Registro fiscal aceptado y sin envíos ni anulaciones pendientes.
+  Result :=
     'CASE WHEN f.ESCONSOLIDADA_FAC = ''S'' ' +
     'AND f.TIPO_FAC = ''SIMPLIFICADA'' ' +
-    'AND f.FASE_FAC IN (''VERIFACTU_OK'', ''VERIFACTU_ACEPT_ERR'') ' +
+    'AND f.FASE_FAC IN (' + AFases + ') ' +
     'AND (SELECT c.ESTADO_FACCON FROM fza_facturas_consolidaciones c ' +
     'WHERE c.SERIE_FAC_FACCON = f.SERIE_FAC ' +
     'AND c.NUMERO_FAC_FACCON = f.NUMERO_FAC ' +
-    'ORDER BY c.ID_FACCON DESC LIMIT 1) IN ' +
-    '(''VERIFACTU_OK'', ''VERIFACTU_PROCESADO'', ''VERIFACTU_DUPLICADO'', ' +
-    '''VERIFACTU_SUBSANADO'', ''VERIFACTU_ACEPT_ERR'') ' +
+    'ORDER BY c.ID_FACCON DESC LIMIT 1) IN (' + AEstados + ') ' +
     'AND NOT EXISTS (SELECT 1 FROM fza_verifactu_cola q ' +
     'WHERE q.SERIE_FAC_VFCOLA = f.SERIE_FAC ' +
     'AND q.NUMERO_FAC_VFCOLA = f.NUMERO_FAC ' +
@@ -42,6 +57,7 @@ const
     '(''ALTA'', ''ANULACION'', ''SUBSANACION'') ' +
     'AND (q.ESTADO_VFCOLA <> ''ENVIADA'' ' +
     'OR q.TIPO_OPERACION_VFCOLA = ''ANULACION'')) ';
+end;
 
 type
   TRepositorioConsultaFacturasOperacionesUniDAC = class(
@@ -68,15 +84,22 @@ function TRepositorioConsultaFacturasOperacionesUniDAC.ConsultarFactura(
   const ASerie, ANumero: string): TFacturaConsultaOperacion;
 var
   Consulta: TUniQuery;
+  sVigente: string;
 begin
   Result := Default(TFacturaConsultaOperacion);
+  sVigente := SQLExcluirVentaRetirada(
+    'f.CODIGO_EMP_FAC', 'f.SERIE_FAC', 'f.NUMERO_FAC');
   Consulta := TUniQuery.Create(nil);
   try
     Consulta.Connection := FConexion;
     Consulta.SQL.Text := SQL_CONSULTAR_FACTURA +
-      SQLExcluirVentaRetirada(
-        'f.CODIGO_EMP_FAC', 'f.SERIE_FAC', 'f.NUMERO_FAC') +
-      'THEN ''S'' ELSE ''N'' END AS PUEDE_SUBSANAR ' +
+      SQLSubsanableRegistrado(SQL_FASES_VERIFACTU, SQL_ESTADOS_VERIFACTU) +
+      sVigente + 'THEN ''S'' ELSE ''N'' END AS PUEDE_SUBSANAR, ' +
+      SQLSubsanableRegistrado(SQL_FASES_NO_VERIFACTU,
+        SQL_ESTADOS_NO_VERIFACTU) +
+      sVigente + 'THEN ''S'' ELSE ''N'' END AS PUEDE_SUBSANAR_NO_VERIFACTU, ' +
+      SQL_SUBSANABLE_SIN_VERIFACTU +
+      sVigente + 'THEN ''S'' ELSE ''N'' END AS PUEDE_SUBSANAR_SIN_VERIFACTU ' +
       'FROM fza_facturas f WHERE f.SERIE_FAC = :SERIE ' +
       'AND f.NUMERO_FAC = :NUMERO';
     Consulta.ParamByName('SERIE').AsString := ASerie;
@@ -89,7 +112,12 @@ begin
         Consulta.FieldByName('ESCONSOLIDADA_FAC').AsString = 'S';
       Result.PuedeSubsanar :=
         Consulta.FieldByName('PUEDE_SUBSANAR').AsString = 'S';
+      Result.PuedeSubsanarNoVerifactu := Consulta.FieldByName(
+        'PUEDE_SUBSANAR_NO_VERIFACTU').AsString = 'S';
+      Result.PuedeSubsanarSinVerifactu := Consulta.FieldByName(
+        'PUEDE_SUBSANAR_SIN_VERIFACTU').AsString = 'S';
       Result.Tipo := Consulta.FieldByName('TIPO_FAC').AsString;
+      Result.Fase := Consulta.FieldByName('FASE_FAC').AsString;
       Result.Fecha := Consulta.FieldByName('FECHA_FAC').AsDateTime;
     end;
   finally

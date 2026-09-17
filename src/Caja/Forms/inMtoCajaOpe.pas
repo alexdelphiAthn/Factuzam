@@ -471,11 +471,13 @@ type
     FSubsanacion: TModoSubsanacionCajaVcl;
     FOperacionSubsanacion: TOperacionSubsanacionCaja;
     FServicioSubsanacion: IServicioSubsanacionCaja;
+    procedure AplicarEstiloCaja;
+    procedure ColocarTarjetaTotal;
     procedure ConfigurarModoSubsanacion;
     function CerrarSubsanacion: Boolean;
     procedure ActualizarTotalSubsanacion;
     procedure GuardarSubsanacion;
-    procedure ConfirmarSubsanacion;
+    function ConfirmarSubsanacion: Boolean;
     procedure ReimprimirSubsanacion;
     procedure CargarDevolucionPorTicket;
     procedure WMPreguntarVentaOrigen(var Msg: TMessage);
@@ -586,7 +588,7 @@ uses
   System.StrUtils,
   inLibMsgCaja, inLibTraducciones, inLibMsgSubsanacionCaja,
   inLibCajaSubsanacion, UniDataCajaSubsanacionImportes,
-  inLibGenerarTicketBD;
+  inLibGenerarTicketBD, inLibCajaEstiloVcl;
 
 constructor TfrmMtoOpeCaja.Create(
   AOwner: TComponent;
@@ -3169,8 +3171,7 @@ begin
   oControles.ColumnaImporte := tvTotal;
   oControles.Recalcular := ActualizarTotalSubsanacion;
   FSubsanacion := TModoSubsanacionCajaVcl.Create(oControles,
-    AOperacion.Lineas, AServicio.Medios, AOperacion.FormaPago,
-    AOperacion.Referencia);
+    AOperacion.Lineas);
   ConfigurarModoSubsanacion;
   DatosCaja.cdsLineas.First;
   ActualizarTotalSubsanacion;
@@ -3229,30 +3230,51 @@ end;
 procedure TfrmMtoOpeCaja.GuardarSubsanacion;
 begin
   try
-    if not FSubsanacion.Guardada then
-      ConfirmarSubsanacion;
-    ReimprimirSubsanacion;
+    if FSubsanacion.Guardada or ConfirmarSubsanacion then
+      ReimprimirSubsanacion;
   except
     on E: Exception do
       ShowMessage_fza(E.Message);
   end;
 end;
 
-procedure TfrmMtoOpeCaja.ConfirmarSubsanacion;
+function TfrmMtoOpeCaja.ConfirmarSubsanacion: Boolean;
 var
   oSolicitud: TSolicitudSubsanacionCaja;
   oResultado: TResultadoSubsanacionCaja;
+  oLineas: TLineasSubsanacionCaja;
+  dDescuento: Currency;
 begin
+  // Valida la edición antes de abrir el cobro; la forma de pago y el
+  // descuento global se deciden en la pantalla de Cobro.
+  FSubsanacion.LineasCorregidas;
   oSolicitud := Default(TSolicitudSubsanacionCaja);
   oSolicitud.Original := FOperacionSubsanacion;
-  oSolicitud.Lineas := FSubsanacion.LineasCorregidas;
-  oSolicitud.FormaPago := FSubsanacion.FormaPago;
-  oSolicitud.Referencia := FSubsanacion.Referencia;
-  oSolicitud.Motivo := FSubsanacion.Motivo;
+  Result := TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
+    CrearContextoCierreVentaCajaVcl(Self), FOperacionSubsanacion.Pagos,
+    dDescuento, oSolicitud.Pagos);
+  if Result then
+  begin
+    oLineas := FSubsanacion.LineasCorregidas;
+    if dDescuento <> 0 then
+      oLineas := RepartirTotalSubsanacion(oLineas,
+        TotalSubsanacion(oLineas) - dDescuento);
+    oSolicitud.Lineas := oLineas;
+    Result := FSubsanacion.PedirMotivo(oSolicitud.Motivo);
+  end;
+  if not Result then
+    Exit;
   oResultado := FServicioSubsanacion.Guardar(oSolicitud);
+  if dDescuento <> 0 then
+  begin
+    AplicarImportesSubsanacion(DatosCaja.cdsLineas, oLineas);
+    ActualizarTotalSubsanacion;
+  end;
   FSubsanacion.MarcarGuardada;
   if oResultado.EncoladaVerifactu then
     lblTipoRectificativa.Caption := SSubsanacionGuardada
+  else if oResultado.RegistradaNoVerifactu then
+    lblTipoRectificativa.Caption := SSubsanacionGuardadaNoVerifactu
   else
     lblTipoRectificativa.Caption := SSubsanacionGuardadaLocal;
   lblCobro.Caption := SSubsanacionReimprimir;
@@ -3603,6 +3625,62 @@ begin
     Avisos);
 end;
 
+// Mismo aspecto que el menú de caja: paneles planos, textos en Source Sans 3
+// con los colores del skin y la botonera como tarjetas con su tecla.
+procedure TfrmMtoOpeCaja.AplicarEstiloCaja;
+var
+  Estilo: TEstiloCaja;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  QuitarBiselesCaja([pnlUp, pnlCli, pnlAccionesIzq, pnlAccionesDer,
+    pnlBusqueda, pnlFotoStock, pnlBotones, pnlTotal]);
+  EstilarEtiquetaCaja(lblFecha, 20, True);
+  EstilarEtiquetaCaja(lblCliente, 20, True);
+  EstilarEtiquetaCaja(lblInstrucciones, 13, False);
+  EstilarCampoCaja(lblNombreEmpleado, 17);
+  EstilarCampoCaja(lblNombreCliente, 17);
+  EstilarCampoCaja(lblTarifa, 14);
+  EstilarCampoCaja(lblFechaCaja, 14);
+  EstilarCampoCaja(lblTipoRectificativa, 17, True);
+  lblTipoRectificativa.Style.TextColor := TColoresCaja.Actuales.Acento;
+  lblTipoRectificativa.Style.BorderColor := TColoresCaja.Actuales.Acento;
+  Estilo.EstilarRejilla(tvLineasOpe);
+  Estilo.EstilarRejilla(dbtvStock);
+  dbtvStock.Styles.Content := nil;
+  Estilo.EstilarBoton(btnF12, 'F12', lblCobro);
+  Estilo.EstilarBoton(btnF3, 'F3', lblBuscar);
+  Estilo.EstilarBoton(btnF8, 'F8', lblEliminar);
+  Estilo.EstilarBoton(btnF6, 'F6', lblTextoTarifa);
+  Estilo.EstilarBoton(btnF61, 'F4', lblBusqTick);
+  Estilo.EstilarBoton(btnF7, 'F7', lblIndIVA);
+  Estilo.EstilarBoton(btnF5, 'F5', lblOtro);
+  Estilo.EstilarBoton(btnF2, 'F2', lblCargarCta);
+  Estilo.EstilarBoton(btnF10, 'F10', lblBuscarModificar);
+  Estilo.RepartirEn(pnlBotones, [btnF12, btnF3, btnF8, btnF6, btnF61,
+    btnF7, btnF5, btnF2, btnF10]);
+  ColocarTarjetaTotal;
+end;
+
+procedure TfrmMtoOpeCaja.ColocarTarjetaTotal;
+var
+  Tarjeta: TPanelTarjetaCaja;
+  iHueco: Integer;
+begin
+  iHueco := EscalarCaja(Self, 8);
+  Tarjeta := TPanelTarjetaCaja.Create(Self);
+  Tarjeta.Parent := pnlTotal;
+  Tarjeta.AlignWithMargins := True;
+  Tarjeta.Margins.SetBounds(0, iHueco, iHueco, iHueco);
+  Tarjeta.Align := alClient;
+  lblTotal.Parent := Tarjeta;
+  lblTotal.AlignWithMargins := True;
+  lblTotal.Margins.SetBounds(iHueco * 2, 0, iHueco * 2, 0);
+  lblTotal.Align := alClient;
+  EstilarEtiquetaCaja(lblTotal, 44, True);
+  lblTotal.Properties.WordWrap := False;
+  lblTotal.Properties.Alignment.Horz := taRightJustify;
+end;
+
 procedure TfrmMtoOpeCaja.FormCreate(Sender: TObject);
 begin
   inherited;
@@ -3616,6 +3694,7 @@ begin
      SameText(lblBusqTick.Caption, 'Busq Tick') then
     lblBusqTick.Caption := 'Buscar ticket';
   FPresentacion.AjustarFuentesBotonera;
+  AplicarEstiloCaja;
   FDependenciasPantalla.Validar;
   FLecturas.RepositorioFacturas :=
     CrearRepositorioLecturasFacturaUniDAC(ConexionPrincipal);

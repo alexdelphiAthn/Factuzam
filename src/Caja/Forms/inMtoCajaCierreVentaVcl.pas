@@ -20,7 +20,7 @@ uses
   inLibFacturas, inLibFacturasLecturasIntf,
   inLibLogIntf,
   inLibCajaTipos, inLibCajaVentaIntf,
-  inLibCajaPantallaInyeccion,
+  inLibCajaPantallaInyeccion, inLibCajaSubsanacionIntf,
   inMtoCajaFaseCobro;
 
 type
@@ -79,6 +79,13 @@ type
   public
     class procedure Ejecutar(
       const AContexto: TContextoCierreVentaCajaVcl); static;
+    // Pantalla de Cobro en modo subsanación: devuelve el descuento global
+    // y los cobros nuevos sin grabar nada.
+    class function EjecutarCobroSubsanacion(
+      const AContexto: TContextoCierreVentaCajaVcl;
+      const APagos: TPagosSubsanacionCaja;
+      out ADescuentoGlobal: Currency;
+      out APagosNuevos: TPagosSubsanacionCaja): Boolean; static;
   end;
   TOrigenDevolucionCajaVcl = record
     Serie: string;
@@ -302,6 +309,44 @@ begin
   Result.Grabacion.AlmacenOrigenDevolucion :=
     AContexto.AlmacenOrigenDevolucion;
   Result.Grabacion.DatosCobro := oCobro.DatosCobro;
+end;
+
+class function TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
+  const AContexto: TContextoCierreVentaCajaVcl;
+  const APagos: TPagosSubsanacionCaja;
+  out ADescuentoGlobal: Currency;
+  out APagosNuevos: TPagosSubsanacionCaja): Boolean;
+var
+  oFormulario: TfrmMtoCajaFaseCobro;
+  oTotales: TFacturaTotales;
+begin
+  ADescuentoGlobal := 0;
+  APagosNuevos := nil;
+  oFormulario := nil;
+  oTotales := TFacturaTotales.Create(
+    AContexto.Conexion,
+    AContexto.RepositorioFacturas,
+    AContexto.Cabecera,
+    AContexto.Lineas,
+    nil,
+    AContexto.RegistroLog);
+  try
+    oTotales.ProcesarFacturaCompleta;
+    oFormulario := TfrmMtoCajaFaseCobro.Create(
+      AContexto.Propietario,
+      AContexto.DependenciasFaseCobro);
+    ConfigurarFaseCobro(AContexto, oFormulario, oTotales);
+    oFormulario.ConfigurarSubsanacion(APagos);
+    Result := oFormulario.ShowModal = mrOk;
+    if Result then
+    begin
+      ADescuentoGlobal := oFormulario.DatosCobro.ImporteDescuentoGlobal;
+      APagosNuevos := oFormulario.PagosSubsanacion;
+    end;
+  finally
+    FreeAndNil(oFormulario);
+    FreeAndNil(oTotales);
+  end;
 end;
 
 class procedure TCoordinadorCierreVentaCajaVcl.Ejecutar(

@@ -10,9 +10,7 @@ interface
 
 uses
   System.Classes, System.SysUtils, Data.DB, Datasnap.DBClient,
-  Vcl.Controls, Vcl.ExtCtrls, cxButtons, cxLabel, cxTextEdit,
-  cxDropDownEdit, cxGridDBTableView, inLibCajaSubsanacion,
-  inLibCorreccionPagoIntf;
+  Vcl.Controls, cxGridDBTableView, inLibCajaSubsanacion;
 
 type
   TControlesSubsanacionCaja = record
@@ -28,33 +26,22 @@ type
   private
     FControles: TControlesSubsanacionCaja;
     FOriginales: TLineasSubsanacionCaja;
-    FMedios: TArray<TMedioCorreccionPago>;
     FAntesInsertar: TDataSetNotifyEvent;
     FAntesEliminar: TDataSetNotifyEvent;
     FDespuesGuardar: TDataSetNotifyEvent;
-    FPanel: TPanel;
-    FFormaPago: TcxComboBox;
-    FReferencia: TcxTextEdit;
-    FMotivo: TcxTextEdit;
-    FBotonTotal: TcxButton;
     FGuardada: Boolean;
-    procedure CrearControles;
     procedure ActualizarTotal(ADataSet: TDataSet);
     procedure BloquearEstructura(ADataSet: TDataSet);
-    procedure CambiarTotal(Sender: TObject);
-    procedure AjustarTotal;
     procedure ConfirmarEdicion;
     function LeerLineas: TLineasSubsanacionCaja;
   public
+    // Forma de pago y descuento global se editan en la pantalla de Cobro.
     constructor Create(const AControles: TControlesSubsanacionCaja;
-      const AOriginales: TLineasSubsanacionCaja;
-      const AMedios: TArray<TMedioCorreccionPago>;
-      const AFormaPago, AReferencia: string);
+      const AOriginales: TLineasSubsanacionCaja);
     destructor Destroy; override;
     function LineasCorregidas: TLineasSubsanacionCaja;
-    function FormaPago: string;
-    function Referencia: string;
-    function Motivo: string;
+    // Pide el motivo al grabar; False si el usuario cancela.
+    function PedirMotivo(out AMotivo: string): Boolean;
     procedure MarcarGuardada;
     property Guardada: Boolean read FGuardada;
   end;
@@ -62,33 +49,24 @@ type
 implementation
 
 uses
-  Vcl.Forms, cxEdit, inLibMensajesVcl, inLibMsgSubsanacionCaja,
-  UniDataCajaSubsanacionImportes, inMtoModalImporteSubsanacion;
+  Vcl.Dialogs, cxEdit, inLibMensajesVcl, inLibMsgSubsanacionCaja,
+  UniDataCajaSubsanacionImportes;
+
+const
+  LONGITUD_MOTIVO = 500;
 
 constructor TModoSubsanacionCajaVcl.Create(
   const AControles: TControlesSubsanacionCaja;
-  const AOriginales: TLineasSubsanacionCaja;
-  const AMedios: TArray<TMedioCorreccionPago>;
-  const AFormaPago, AReferencia: string);
+  const AOriginales: TLineasSubsanacionCaja);
 var
   i: Integer;
 begin
   inherited Create;
   FControles := AControles;
   FOriginales := Copy(AOriginales);
-  FMedios := Copy(AMedios);
   FAntesInsertar := FControles.Lineas.BeforeInsert;
   FAntesEliminar := FControles.Lineas.BeforeDelete;
   FDespuesGuardar := FControles.Lineas.AfterPost;
-  CrearControles;
-  FReferencia.Text := AReferencia;
-  for i := 0 to High(FMedios) do
-  begin
-    FFormaPago.Properties.Items.Add(
-      FMedios[i].Codigo + ' - ' + FMedios[i].Descripcion);
-    if SameText(FMedios[i].Codigo, AFormaPago) then
-      FFormaPago.ItemIndex := i;
-  end;
   FControles.Lineas.AfterPost := ActualizarTotal;
   FControles.Lineas.BeforeInsert := BloquearEstructura;
   FControles.Lineas.BeforeDelete := BloquearEstructura;
@@ -109,54 +87,7 @@ begin
     FControles.Lineas.BeforeInsert := FAntesInsertar;
     FControles.Lineas.BeforeDelete := FAntesEliminar;
   end;
-  FreeAndNil(FPanel);
   inherited;
-end;
-
-procedure TModoSubsanacionCajaVcl.CrearControles;
-var
-  oEtiqueta: TcxLabel;
-begin
-  FPanel := TPanel.Create(FControles.Propietario);
-  FPanel.Name := 'pnlSubsanacion';
-  FPanel.Parent := FControles.Contenedor;
-  FPanel.Align := alTop;
-  FPanel.Height := 92;
-  FPanel.BevelOuter := bvNone;
-  oEtiqueta := TcxLabel.Create(FPanel);
-  oEtiqueta.Parent := FPanel;
-  oEtiqueta.Transparent := True;
-  oEtiqueta.Caption := SSubsanacionModo;
-  oEtiqueta.SetBounds(12, 4, 620, 22);
-  FBotonTotal := TcxButton.Create(FPanel);
-  FBotonTotal.Parent := FPanel;
-  FBotonTotal.Caption := SSubsanacionAjustarTotal;
-  FBotonTotal.SetBounds(12, 30, 140, 25);
-  FBotonTotal.OnClick := CambiarTotal;
-  oEtiqueta := TcxLabel.Create(FPanel);
-  oEtiqueta.Parent := FPanel;
-  oEtiqueta.Transparent := True;
-  oEtiqueta.Caption := SSubsanacionFormaPago;
-  oEtiqueta.SetBounds(164, 32, 94, 22);
-  FFormaPago := TcxComboBox.Create(FPanel);
-  FFormaPago.Parent := FPanel;
-  FFormaPago.Properties.DropDownListStyle := lsFixedList;
-  FFormaPago.SetBounds(260, 30, 245, 25);
-  FReferencia := TcxTextEdit.Create(FPanel);
-  FReferencia.Parent := FPanel;
-  FReferencia.Properties.Nullstring := SSubsanacionReferencia;
-  FReferencia.Hint := SSubsanacionReferencia;
-  FReferencia.ShowHint := True;
-  FReferencia.SetBounds(515, 30, 260, 25);
-  oEtiqueta := TcxLabel.Create(FPanel);
-  oEtiqueta.Parent := FPanel;
-  oEtiqueta.Transparent := True;
-  oEtiqueta.Caption := SSubsanacionMotivo;
-  oEtiqueta.SetBounds(12, 62, 140, 22);
-  FMotivo := TcxTextEdit.Create(FPanel);
-  FMotivo.Parent := FPanel;
-  FMotivo.Properties.MaxLength := 500;
-  FMotivo.SetBounds(164, 60, 611, 25);
 end;
 
 procedure TModoSubsanacionCajaVcl.BloquearEstructura(ADataSet: TDataSet);
@@ -211,56 +142,27 @@ begin
   ValidarImportesSubsanacion(Result);
 end;
 
-procedure TModoSubsanacionCajaVcl.CambiarTotal(Sender: TObject);
-begin
-  try
-    AjustarTotal;
-  except
-    on E: EArgumentException do
-      ShowMessage_fza(E.Message);
-  end;
-end;
-
-procedure TModoSubsanacionCajaVcl.AjustarTotal;
+function TModoSubsanacionCajaVcl.PedirMotivo(out AMotivo: string): Boolean;
 var
-  oLineas: TLineasSubsanacionCaja;
-  dTotal: Currency;
+  oValores: array of string;
 begin
-  ConfirmarEdicion;
-  oLineas := LeerImportesSubsanacion(FControles.Lineas);
-  if TfrmModalImporteSubsanacion.Ejecutar(FControles.Propietario,
-    TotalSubsanacion(oLineas), dTotal) then
-  begin
-    oLineas := RepartirTotalSubsanacion(oLineas, dTotal);
-    AplicarImportesSubsanacion(FControles.Lineas, oLineas);
-    FControles.Recalcular();
-  end;
-end;
-
-function TModoSubsanacionCajaVcl.FormaPago: string;
-begin
-  if (FFormaPago.ItemIndex < 0) or
-     (FFormaPago.ItemIndex >= Length(FMedios)) then
-    raise EArgumentException.Create(SSubsanacionSeleccionePago);
-  Result := FMedios[FFormaPago.ItemIndex].Codigo;
-end;
-
-function TModoSubsanacionCajaVcl.Referencia: string;
-begin
-  Result := Trim(FReferencia.Text);
-end;
-
-function TModoSubsanacionCajaVcl.Motivo: string;
-begin
-  Result := Trim(FMotivo.Text);
-  if Result = '' then
-    raise EArgumentException.Create(SSubsanacionMotivoObligatorio);
+  SetLength(oValores, 1);
+  Result := InputQuery(SSubsanacionBoton, [SSubsanacionMotivo], oValores,
+    function(const AValores: array of string): Boolean
+    begin
+      Result := (Trim(AValores[0]) <> '') and
+        (Length(Trim(AValores[0])) <= LONGITUD_MOTIVO);
+      if not Result then
+        ShowMessage_fza(SSubsanacionMotivoObligatorio);
+    end);
+  AMotivo := '';
+  if Result then
+    AMotivo := Trim(oValores[0]);
 end;
 
 procedure TModoSubsanacionCajaVcl.MarcarGuardada;
 begin
   FGuardada := True;
-  FPanel.Enabled := False;
   FControles.Vista.OptionsData.Editing := False;
 end;
 

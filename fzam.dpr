@@ -1131,6 +1131,7 @@ uses
   inLibVerifactuDesgloseFiscal in 'src\verifactu\inLibVerifactuDesgloseFiscal.pas',
   inLibMenuIconos in 'src\Lib\inLibMenuIconos.pas',
   inLibMenuBarraIconos in 'src\Lib\inLibMenuBarraIconos.pas',
+  inLibCajaEstiloVcl in 'src\Lib\inLibCajaEstiloVcl.pas',
   inLibInspectorSkin in 'src\Lib\inLibInspectorSkin.pas',
   inLibCajaMenuTarjetaVcl in 'src\Lib\inLibCajaMenuTarjetaVcl.pas',
   inLibCajaMenuMaquetaVcl in 'src\Lib\inLibCajaMenuMaquetaVcl.pas';

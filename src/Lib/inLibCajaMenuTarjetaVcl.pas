@@ -82,17 +82,12 @@ implementation
 
 uses
   System.SysUtils, System.Math, Vcl.Forms, cxGraphics, cxGeometry,
-  cxLookAndFeels, cxLookAndFeelPainters, dxGDIPlusClasses;
+  cxLookAndFeels, cxLookAndFeelPainters, dxGDIPlusClasses, inLibCajaEstiloVcl;
 
 const
-  FUENTE_TARJETA = 'Source Sans 3';
+  FUENTE_TARJETA = FUENTE_CAJA;
   PUNTOS_INDICADOR = 12;
   INTERVALO_INDICADOR_MS = 80;
-
-function Mezcla(AColor1, AColor2: TColor; APorcentaje1: Integer): TColor;
-begin
-  Result := dxGetMiddleRGB(AColor1, AColor2, APorcentaje1);
-end;
 
 constructor TTarjetaMenuCaja.Create(AOwner: TComponent);
 begin
@@ -180,78 +175,46 @@ end;
 
 procedure TTarjetaMenuCaja.PintarFondo(const ARect: TRect; AFondo,
   ABorde: TColor; AGrosor: Integer);
-var
-  oGrafico: TdxGPGraphics;
-  iRadio: Integer;
-  rRect: TRect;
 begin
-  iRadio := Escalar(12);
-  rRect := ARect;
-  InflateRect(rRect, -AGrosor, -AGrosor);
-  oGrafico := dxGpBeginPaint(Canvas.Handle, ClientRect);
-  try
-    oGrafico.SmoothingMode := smAntiAlias;
-    oGrafico.RoundRect(rRect, ABorde, AFondo, iRadio, iRadio, AGrosor,
-      255, 255);
-  finally
-    dxGpEndPaint(oGrafico);
-  end;
+  PintarTarjetaCaja(Canvas, ClientRect, ARect, AFondo, ABorde, AGrosor,
+    Escalar(12));
 end;
 
 procedure TTarjetaMenuCaja.PintarTecla(const ARect: TRect; AFondo, ABorde,
   ATexto: TColor; AAltoFuente: Integer);
-var
-  oGrafico: TdxGPGraphics;
-  rTexto: TRect;
 begin
-  oGrafico := dxGpBeginPaint(Canvas.Handle, ClientRect);
-  try
-    oGrafico.SmoothingMode := smAntiAlias;
-    oGrafico.RoundRect(ARect, ABorde, AFondo, ARect.Height div 2,
-      ARect.Height div 2, 1, 255, 255);
-  finally
-    dxGpEndPaint(oGrafico);
-  end;
-  rTexto := ARect;
-  Canvas.Brush.Style := bsClear;
-  Canvas.Font.Name := FUENTE_TARJETA;
-  Canvas.Font.Style := [fsBold];
-  Canvas.Font.Height := -AAltoFuente;
-  Canvas.Font.Color := ATexto;
-  DrawText(Canvas.Handle, PChar(FTecla), Length(FTecla), rTexto,
-    DT_CENTER or DT_VCENTER or DT_SINGLELINE or DT_NOPREFIX);
+  PintarTeclaCaja(Canvas, ClientRect, ARect, FTecla, AFondo, ABorde, ATexto,
+    AAltoFuente);
 end;
 
 procedure TTarjetaMenuCaja.Paint;
 var
-  oPainter: TcxCustomLookAndFeelPainter;
-  cFondoForm, cTexto, cAcento, cTarjeta, cBorde, cTecla, cTeclaTexto,
-    cTeclaBorde: TColor;
+  Colores: TColoresCaja;
+  cTexto, cTarjeta, cBorde, cTecla, cTeclaTexto, cTeclaBorde: TColor;
   rTarjeta, rTecla, rTexto, rMedida: TRect;
   iMargen, iAnchoTecla, iAltoTecla, iIcono, iGrosor, iAltoBloque: Integer;
   sTitulo: string;
 begin
-  oPainter := RootLookAndFeel.Painter;
-  cFondoForm := oPainter.DefaultControlColor;
-  cTexto := oPainter.DefaultControlTextColor;
-  cAcento := oPainter.DefaultSelectionColor;
+  // Colores compartidos con el resto de pantallas de caja.
+  Colores := TColoresCaja.Actuales;
+  cTexto := Colores.Texto;
 
   if FSeleccionada then
   begin
-    cTarjeta := Mezcla(cAcento, cFondoForm, 22);
-    cBorde := cAcento;
-    cTecla := cAcento;
-    cTeclaBorde := cAcento;
-    cTeclaTexto := oPainter.DefaultSelectionTextColor;
+    cTarjeta := Colores.TarjetaActiva;
+    cBorde := Colores.Acento;
+    cTecla := Colores.Acento;
+    cTeclaBorde := Colores.Acento;
+    cTeclaTexto := Colores.TextoAcento;
     iGrosor := Escalar(2);
   end
   else
   begin
-    cTarjeta := Mezcla(cTexto, cFondoForm, 7);
-    cBorde := Mezcla(cTexto, cFondoForm, 16);
+    cTarjeta := Colores.Tarjeta;
+    cBorde := Colores.BordeTarjeta;
     cTecla := cTarjeta;
-    cTeclaBorde := Mezcla(cTexto, cFondoForm, 35);
-    cTeclaTexto := Mezcla(cTexto, cFondoForm, 70);
+    cTeclaBorde := Colores.BordeTecla;
+    cTeclaTexto := Colores.TextoTecla;
     iGrosor := 1;
   end;
 

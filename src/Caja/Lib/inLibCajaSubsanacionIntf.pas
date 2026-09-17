@@ -28,24 +28,29 @@ type
     NumeroFactura: string;
   end;
 
+  // Cobro vigente o nuevo, neto de cambio, en euros.
+  TPagoSubsanacionCaja = record
+    FormaPago: string;
+    Referencia: string;
+    Importe: Currency;
+  end;
+  TPagosSubsanacionCaja = TArray<TPagoSubsanacionCaja>;
+
   TOperacionSubsanacionCaja = record
     Clave: TClaveOperacionSubsanacionCaja;
     FechaFactura: TDateTime;
     Lineas: TLineasSubsanacionCaja;
     Total: Currency;
-    SeriePago: string;
-    LineaPago: Integer;
-    FormaPago: string;
-    Referencia: string;
-    ImportePago: Currency;
+    Pagos: TPagosSubsanacionCaja;
     Version: string;
   end;
 
   TSolicitudSubsanacionCaja = record
     Original: TOperacionSubsanacionCaja;
     Lineas: TLineasSubsanacionCaja;
-    FormaPago: string;
-    Referencia: string;
+    // Si difieren de Original.Pagos se compensan los vigentes y se dan de
+    // alta estos, como en la corrección de forma de pago.
+    Pagos: TPagosSubsanacionCaja;
     Motivo: string;
   end;
 
@@ -53,6 +58,7 @@ type
     Clave: TClaveOperacionSubsanacionCaja;
     Total: Currency;
     EncoladaVerifactu: Boolean;
+    RegistradaNoVerifactu: Boolean;
   end;
 
   IServicioSubsanacionCaja = interface

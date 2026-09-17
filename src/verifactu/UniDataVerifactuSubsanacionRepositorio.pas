@@ -28,7 +28,7 @@ implementation
 uses
   System.SysUtils, inLibMsgVerifactu, inLibParametrosIntf,
   inLibVentasWsCola, inLibVerifactu, UniDataVentasWsCola,
-  UniDataVerifactuSubsanacionResultados;
+  UniDataVerifactuSubsanacionResultados, UniDataVerifactuColaOperaciones;
 
 type
   TSolicitudEncoladoSubsanacion = record
@@ -37,6 +37,7 @@ type
     Numero: string;
     Motivo: string;
     EsCorreccionRegistro: Boolean;
+    EsNoVerifactu: Boolean;
   end;
   TServicioVerifactuSubsanacionUniDAC = class(TInterfacedObject,
     IServicioVerifactuSubsanacion, IServicioVerifactuCorreccionRegistro)
@@ -51,6 +52,10 @@ type
     procedure ReintentarCola(AId: Int64;
       const AEntrada: TSolicitudEncoladoSubsanacion);
     procedure EncolarSolicitud(
+      const AParametrosApp: IParametrosAplicacion;
+      const AParametrosCaja: IParametrosCaja;
+      const AEntrada: TSolicitudEncoladoSubsanacion);
+    procedure RegistrarCorreccionNoVerifactu(
       const AParametrosApp: IParametrosAplicacion;
       const AParametrosCaja: IParametrosCaja;
       const AEntrada: TSolicitudEncoladoSubsanacion);
@@ -136,7 +141,10 @@ begin
     begin
       sEstado := oConsulta.FieldByName('ESTADO_FACCON').AsString;
       bAceptado := sEstado = 'VERIFACTU_ACEPT_ERR';
-      if AEntrada.EsCorreccionRegistro then
+      if AEntrada.EsNoVerifactu then
+        bAceptado := (sEstado = 'NOVERIF_REGISTRADO') or
+          (sEstado = 'NOVERIF_SUBSANADO')
+      else if AEntrada.EsCorreccionRegistro then
         bAceptado := bAceptado or (sEstado = 'VERIFACTU_PROCESADO') or
           (sEstado = 'VERIFACTU_DUPLICADO') or
           (sEstado = 'VERIFACTU_SUBSANADO') or (sEstado = 'VERIFACTU_OK');
@@ -315,7 +323,41 @@ begin
   oEntrada.Numero := ANumero;
   oEntrada.Motivo := Trim(AMotivo);
   oEntrada.EsCorreccionRegistro := True;
-  EncolarSolicitud(AParametrosApp, AParametrosCaja, oEntrada);
+  oEntrada.EsNoVerifactu := NoVerifactuActivo(AParametrosApp);
+  if oEntrada.EsNoVerifactu then
+    RegistrarCorreccionNoVerifactu(AParametrosApp, AParametrosCaja, oEntrada)
+  else
+    EncolarSolicitud(AParametrosApp, AParametrosCaja, oEntrada);
+end;
+
+procedure TServicioVerifactuSubsanacionUniDAC.RegistrarCorreccionNoVerifactu(
+  const AParametrosApp: IParametrosAplicacion;
+  const AParametrosCaja: IParametrosCaja;
+  const AEntrada: TSolicitudEncoladoSubsanacion);
+var
+  oConsulta: TUniQuery;
+begin
+  // NO VERI*FACTU no envía a la AEAT: firma y encadena un nuevo registro de
+  // subsanación y lo anota en el registro de eventos, en la misma transacción.
+  if AEntrada.Motivo = '' then
+    raise EArgumentException.Create(SErrorIncidenciaMotivoObligatorio);
+  if not FConexion.InTransaction then
+    raise EInvalidOpException.Create(SErrorSubsanacionTransaccion);
+  BloquearFactura(AEntrada);
+  ValidarRegistro(AEntrada);
+  BloquearColas(AEntrada);
+  oConsulta := CrearConsulta;
+  try
+    TOperacionesVerifactuColaUniDAC.RegistrarFacturaNoVerifactu(
+      AParametrosApp, AParametrosCaja, oConsulta, AEntrada.Usuario,
+      AEntrada.Serie, AEntrada.Numero, 'SUBSANACION', False, nil);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  RegistrarEventoVerifactu(AParametrosApp, FConexion, AEntrada.Usuario,
+    cEventoVerifactuInfo, SInfoSubsanacionNoVerifactuRegistrada,
+    Format(SInfoSubsanacionNoVerifactuMotivo, [AEntrada.Motivo]),
+    AEntrada.Serie, AEntrada.Numero);
 end;
 
 end.

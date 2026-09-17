@@ -347,6 +347,10 @@ type
       const AEntrada: TEntradaGrabacionModalArqueo;
       const APreparacion: TResultadoPreparacionModalArqueo);
     procedure GrabarArqueo;
+    procedure AplicarEstiloCaja;
+    procedure ColocarBotonesCaja;
+  protected
+    procedure DoShow; override;
   public
     destructor Destroy; override;
     class procedure Ejecutar(AOwner       : TComponent;
@@ -377,7 +381,8 @@ uses
      inMtoModalArqueosHistCaja,
      inMtoModalDesgloseEfectivo,
      inLibTiraCajaTicket,
-     inMtoModalTiraCaja, inMtoGenSearch, inLibVerifactu, inLibMsgCaja;
+     inMtoModalTiraCaja, inMtoGenSearch, inLibVerifactu, inLibMsgCaja,
+  inLibCajaEstiloVcl;
 
 resourcestring
   SCaptionGrabarArqueoSinJustificante =
@@ -547,6 +552,118 @@ begin
   Self.Position := poScreenCenter;
   ConfigurarAtajosPestanas;
   ConfigurarResumenes;
+  AplicarEstiloCaja;
+end;
+
+// Mismo aspecto que el resto de pantallas de caja: secciones como tarjetas,
+// títulos y totales en negrita con los colores del skin, cabeceras de
+// rejilla en negrita y botones como tarjetas con la tecla en una píldora.
+procedure TfrmModalArqueo.AplicarEstiloCaja;
+const
+  ALTO_FUENTE_BOTON = 15;
+var
+  Estilo: TEstiloCaja;
+  Panel: TPanel;
+  Etiqueta: TcxLabel;
+  Vista: TcxGridTableView;
+  Boton: TcxButton;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  for Panel in TArray<TPanel>.Create(pnlLineas, pnlOperaciones, pnlCobros,
+    pnlResEmpleado, pnlResFP, pnlResFam, pnlResProp, pnlResIVA, pnlOtrasFP,
+    pnlRecuentoTotales) do
+    ConvertirPanelEnTarjetaCaja(Panel, EscalarCaja(Self, 3));
+  for Etiqueta in TArray<TcxLabel>.Create(lblLineasTitulo, lblOpeTitulo,
+    lblCobrosTitulo, lblResEmpleadoTit, lblResFPTit, lblResFamTit,
+    lblResPropTit, lblResIVATit, lblOtrasFPTit, lblAnteriorTit) do
+    EstilarEtiquetaCaja(Etiqueta, 17, True);
+  for Etiqueta in TArray<TcxLabel>.Create(lblTituloDesde, lblTituloHasta,
+    lblTituloVentas, lblVentas) do
+    EstilarEtiquetaCaja(Etiqueta, 16, True);
+  // Las líneas de total ("= ...") en negrita, sin cambiar tamaño ni color.
+  for Etiqueta in TArray<TcxLabel>.Create(lblLinNetoLbl, lblLinNeto,
+    lblOpeTotalVentasLbl, lblOpeTotalVentas, lblCobIngresosLbl,
+    lblCobIngresos, lblEftCajaLbl, lblEftCaja, lblSaldoLbl, lblSaldo) do
+    Etiqueta.Style.Font.Style := [fsBold];
+  for Vista in TArray<TcxGridTableView>.Create(tvResEmpleado, tvResFP,
+    tvResFam, tvResProp, tvResIVA, tvRecuento) do
+    Estilo.EstilarRejilla(Vista);
+  for Boton in TArray<TcxButton>.Create(btnRecalcular, btnTiraCaja,
+    btnImprimir, btnHistorico, btnGrabarArqueo, btnDesgloseEfectivo,
+    btnAtras) do
+    Estilo.EstilarBoton(Boton, '', nil, ALTO_FUENTE_BOTON);
+  // Sobre la tarjeta, sin su propio fondo.
+  rgRetiradaTipo.Transparent := True;
+  // La tecla ya va en la píldora de "Atrás".
+  lblESC.Visible := False;
+  // "Ventas" pasa a la barra inferior: la fila superior se llena con los
+  // botones, más anchos con la píldora de la tecla.
+  lblTituloVentas.Parent := pnlBottom;
+  lblVentas.Parent := pnlBottom;
+end;
+
+procedure TfrmModalArqueo.DoShow;
+begin
+  inherited;
+  ColocarBotonesCaja;
+end;
+
+// Al mostrarse, porque la preparación puede ocultar botones o cambiar su
+// texto (p. ej. sin justificante).
+procedure TfrmModalArqueo.ColocarBotonesCaja;
+const
+  ALTO_FUENTE_BOTON = 15;
+var
+  Visibles: TArray<TcxButton>;
+  Boton: TcxButton;
+  iMargen, iHueco, iAlto, iDerecha: Integer;
+begin
+  iMargen := EscalarCaja(Self, 12);
+  iHueco := EscalarCaja(Self, 8);
+  iAlto := EscalarCaja(Self, 36);
+
+  btnRecalcular.Width := 0;
+  ColocarFilaBotonesCaja([btnRecalcular], btnRecalcular.Left,
+    (pnlTop.ClientHeight - iAlto) div 2 + EscalarCaja(Self, 6), iAlto,
+    ALTO_FUENTE_BOTON);
+
+  Visibles := nil;
+  for Boton in TArray<TcxButton>.Create(btnTiraCaja, btnImprimir,
+    btnHistorico) do
+    if Boton.Visible then
+    begin
+      Boton.Width := 0;
+      Visibles := Visibles + [Boton];
+    end;
+  if Length(Visibles) > 0 then
+  begin
+    iDerecha := ColocarFilaBotonesCaja(Visibles, 0, btnRecalcular.Top,
+      iAlto, ALTO_FUENTE_BOTON);
+    for Boton in Visibles do
+      Boton.Left := Boton.Left + pnlTop.ClientWidth - iMargen - iDerecha;
+  end;
+
+  btnGrabarArqueo.Width := 0;
+  ColocarFilaBotonesCaja([btnGrabarArqueo], btnGrabarArqueo.Left,
+    btnGrabarArqueo.Top, iAlto, ALTO_FUENTE_BOTON);
+  btnDesgloseEfectivo.Width := 0;
+  ColocarFilaBotonesCaja([btnDesgloseEfectivo],
+    btnDesgloseEfectivo.Left, btnDesgloseEfectivo.Top,
+    btnDesgloseEfectivo.Height, ALTO_FUENTE_BOTON);
+  btnDesgloseEfectivo.Left := btnDesgloseEfectivo.Parent.ClientWidth -
+    iHueco - btnDesgloseEfectivo.Width;
+
+  btnAtras.Width := 0;
+  ColocarFilaBotonesCaja([btnAtras], 0,
+    (pnlBottom.ClientHeight - iAlto) div 2, iAlto, ALTO_FUENTE_BOTON);
+  btnAtras.Left := pnlBottom.ClientWidth - iMargen - btnAtras.Width;
+
+  lblTituloVentas.Left := iMargen;
+  lblTituloVentas.Top := (pnlBottom.ClientHeight - lblTituloVentas.Height)
+    div 2;
+  lblVentas.AutoSize := True;
+  lblVentas.Left := lblTituloVentas.BoundsRect.Right + iHueco;
+  lblVentas.Top := lblTituloVentas.Top;
 end;
 
 procedure TfrmModalArqueo.ConfigurarAtajosPestanas;

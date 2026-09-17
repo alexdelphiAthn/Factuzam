@@ -339,6 +339,9 @@ resourcestring
     'La subsanación ya no parte de un registro aceptado con errores.';
   SErrorSubsanacionTransaccion =
     'La corrección fiscal requiere una transacción activa.';
+  SInfoSubsanacionNoVerifactuRegistrada =
+    'Subsanación NO VERI*FACTU registrada';
+  SInfoSubsanacionNoVerifactuMotivo = 'Motivo: %s';
   SErrorSubsanacionRegistroNoVigente =
     'La factura no tiene un registro fiscal aceptado y vigente.';
   SErrorSubsanacionColaActiva =

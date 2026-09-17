@@ -101,7 +101,8 @@ type
                             const AEmp,
                                   AAlm,
                                   ACaja,
-                                  ATextoLibre: string);
+                                  ATextoLibre: string;
+                            AVerTodos: Boolean = False);
     procedure CerrarPestanasHijas;
     procedure CargarDetalleOperacion(const AEmp,
                                            AAlm,
@@ -216,6 +217,7 @@ begin
     '       COALESCE('                                                +
     '         MAX(COALESCE(fd.NUMERO_FAC, fo.NUMERO_FAC)), '         +
     '         MAX(o.NUMERO_FAC_OPCAJA)) AS NUMERO_FAC, '              +
+    '       MAX(COALESCE(fd.FASE_FAC, fo.FASE_FAC)) AS FASE_FAC, '     +
     '       MAX(COALESCE(fd.CODIGO_CLI_FAC, '                         +
     '                    fo.CODIGO_CLI_FAC, '                         +
     '                    o.CODIGO_CLI_OPCAJA)) AS CLIENTE, '          +
@@ -246,10 +248,16 @@ begin
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
     '   AND o.CODIGO_CAJA_OPCAJA    = :PCAJA '                            +
+    // "Ver todos" muestra también canceladas, anuladas y rectificadas por
+    // sustitución.
+    '   AND (:PVERTODOS = 1 OR ('                                        +
+    '        COALESCE(fd.FASE_FAC, fo.FASE_FAC, '''') '                  +
+    '          NOT IN (''CANCELADA'', ''ANULADA'') '                     +
     SQLExcluirVentaRetirada(
       'o.CODIGO_EMP_OPCAJA',
       'o.SERIE_FAC_OPCAJA',
       'o.NUMERO_FAC_OPCAJA') +
+    ')) ' +
     SqlFiltroTextoMaestro +
     ' GROUP BY o.CODIGO_EMP_OPCAJA, '                                 +
     '          o.CODIGO_ALM_OPCAJA, '                                 +
@@ -633,7 +641,8 @@ procedure TdmConsultaOpe.CargarMaestro(AFecha:     TDate;
                                        const AEmp,
                                              AAlm,
                                              ACaja,
-                                             ATextoLibre: string);
+                                             ATextoLibre: string;
+                                       AVerTodos: Boolean);
 var
   sClaveMaestro: string;
 begin
@@ -643,7 +652,7 @@ begin
   // CargarMaestro identicos (uno por handler de dtpFecha y otro por
   // FormShow); ahora la 2a y 3a salen sin tocar BBDD.
   sClaveMaestro := DateToStr(AFecha) + '|' + AEmp + '|' + AAlm + '|' + ACaja +
-                   '|' + ATextoLibre;
+                   '|' + ATextoLibre + '|' + BoolToStr(AVerTodos, True);
   if sClaveMaestro = FUltimaClaveMaestro then
   begin
     FRegistroLog.RegistrarInformacion(
@@ -675,6 +684,7 @@ begin
     qryMaestro.ParamByName('PALM').AsString    := AAlm;
     qryMaestro.ParamByName('PCAJA').AsString   := ACaja;
     qryMaestro.ParamByName('PTXT').AsString    := ATextoLibre;
+    qryMaestro.ParamByName('PVERTODOS').AsInteger := Ord(AVerTodos);
     qryMaestro.Open;
     // Reset del cache de clave de hijas: forzamos que la siguiente
     // RefrescarPestanasHijas SI recargue (puede ser la misma op pero con

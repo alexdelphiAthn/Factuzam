@@ -60,6 +60,17 @@
       TabOrder = 1
       Width = 500
     end
+    object chkVerTodos: TcxCheckBox
+      Left = 816
+      Top = 16
+      Hint = 'Muestra tambi'#233'n operaciones canceladas, anuladas y rectificadas por sustituci'#243'n'
+      Caption = 'Ver todos'
+      ParentShowHint = False
+      Properties.OnChange = chkVerTodosPropertiesChange
+      ShowHint = True
+      TabOrder = 4
+      Transparent = True
+    end
   end
   object pnlMaestro: TPanel [2]
     Left = 0
@@ -111,6 +122,11 @@
           Caption = 'N'#186' Borrador'
           DataBinding.FieldName = 'NUMERO_FAC'
           Width = 97
+        end
+        object colFaseFactura: TcxGridDBColumn
+          Caption = 'Fase'
+          DataBinding.FieldName = 'FASE_FAC'
+          Width = 150
         end
         object colCliente: TcxGridDBColumn
           Caption = 'Cliente'
@@ -947,7 +963,7 @@
     DesignSize = (
       1163
       73)
-    object btnReimprimir: TButton
+    object btnReimprimir: TcxButton
       Left = 12
       Top = 6
       Width = 120
@@ -956,7 +972,7 @@
       TabOrder = 0
       OnClick = btnReimprimirClick
     end
-    object btnCerrar: TButton
+    object btnCerrar: TcxButton
       Left = 1041
       Top = 6
       Width = 108
@@ -966,7 +982,7 @@
       TabOrder = 6
       OnClick = btnCerrarClick
     end
-    object btnDevolverAbonar: TButton
+    object btnDevolverAbonar: TcxButton
       Left = 332
       Top = 6
       Width = 222
@@ -975,7 +991,7 @@
       TabOrder = 2
       OnClick = btnDevolverAbonarClick
     end
-    object btnRectificar: TButton
+    object btnRectificar: TcxButton
       Left = 562
       Top = 6
       Width = 100
@@ -984,7 +1000,7 @@
       TabOrder = 3
       OnClick = btnRectificarClick
     end
-    object btnAnularVerifactu: TButton
+    object btnAnularVerifactu: TcxButton
       Left = 670
       Top = 6
       Width = 174
@@ -993,7 +1009,7 @@
       TabOrder = 4
       OnClick = btnAnularVerifactuClick
     end
-    object btnFacturarTicket: TButton
+    object btnFacturarTicket: TcxButton
       Left = 852
       Top = 6
       Width = 164

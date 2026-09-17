@@ -18,20 +18,35 @@ interface
 resourcestring
   SSubsanacionDescartar = '¿Descartar los cambios de la subsanación?';
   SSubsanacionModo =
-    'Subsanación: edite el importe de cada línea. F12 guarda y reimprime.';
-  SSubsanacionAjustarTotal = 'Descuento global';
-  SSubsanacionFormaPago = 'Forma de pago';
-  SSubsanacionReferencia = 'Referencia del pago';
+    'Subsanación: edite el importe de cada línea. F12 abre el cobro para ' +
+    'la forma de pago y el descuento global.';
+  SSubsanacionTituloCobro = 'Subsanación: forma de pago y descuento global';
+  SSubsanacionCobroExacto =
+    'El cobro debe cuadrar con el total, sin cambio, vales ni importes ' +
+    'a cuenta.';
   SSubsanacionMotivo = 'Motivo de la corrección';
   SSubsanacionLineasFijas =
     'En Subsanación no se pueden añadir o quitar líneas ni cambiar cantidades.';
-  SSubsanacionSeleccionePago = 'Seleccione una forma de pago.';
   SSubsanacionMotivoObligatorio = 'Indique el motivo de la subsanación.';
   SSubsanacionBoton = 'Subsanar';
   SSubsanacionNoPermitida =
     'Seleccione un ticket vigente para subsanar.';
+  SSubsanacionNoPermitidaVerifactu =
+    'Modo VERIFACTU: el ticket %s/%s (fase "%s") no se puede subsanar. ' +
+    'Sólo se subsanan tickets simplificados enviados y aceptados por la ' +
+    'AEAT, sin envíos ni anulaciones pendientes.';
+  SSubsanacionNoPermitidaNoVerifactu =
+    'Modo NO VERI*FACTU: el ticket %s/%s (fase "%s") no se puede subsanar. ' +
+    'Sólo se subsanan tickets simplificados con registro NO VERI*FACTU ' +
+    'firmado y vigente.';
+  SSubsanacionNoPermitidaSinVerifactu =
+    'Modo SIN VeriFactu: el ticket %s/%s (fase "%s") no se puede subsanar. ' +
+    'Sólo se subsanan tickets simplificados que no estén anulados, ' +
+    'rectificados ni cancelados.';
   SSubsanacionGuardada = 'Subsanación guardada y encolada para VeriFactu.';
   SSubsanacionGuardadaLocal = 'Subsanación guardada.';
+  SSubsanacionGuardadaNoVerifactu =
+    'Subsanación guardada y registrada en NO VERI*FACTU.';
   SSubsanacionTituloOperacion = 'Subsanación de %s / %s';
   SSubsanacionReimprimir = 'Reimprimir';
   SSubsanacionDescuentoInvalido =

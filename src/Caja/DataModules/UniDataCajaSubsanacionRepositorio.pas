@@ -39,7 +39,8 @@ uses
   System.Diagnostics, System.Generics.Collections, Data.DB,
   Datasnap.DBClient, Datasnap.Provider,
   inLibCajaSubsanacion, inLibCorreccionPagoIntf, inLibFacturas,
-  inLibMsgPersistenciaSubsanacionCaja, UniDataCajaSubsanacionImportes;
+  inLibMsgPersistenciaSubsanacionCaja, UniDataCajaSubsanacionImportes,
+  inLibVerifactu, System.Math;
 
 const
   ftotal = 'TOTAL_LIQUIDO_FAC';
@@ -129,6 +130,7 @@ type
     procedure ValidarVinculos(const AClave: TClaveOperacionSubsanacionCaja);
     procedure ValidarArqueo(ADatos: TDatosSubsanacionCaja;
       const AClave: TClaveOperacionSubsanacionCaja);
+    function EsSinVerifactu: Boolean;
     procedure ValidarCabecera(ADatos: TDatosSubsanacionCaja);
     procedure ValidarPago(ADatos: TDatosSubsanacionCaja);
     procedure ValidarMedio(const ASolicitud: TSolicitudSubsanacionCaja);
@@ -142,7 +144,13 @@ type
       const ASolicitud: TSolicitudSubsanacionCaja);
     procedure GuardarCobro(ADatos: TDatosSubsanacionCaja;
       const ASolicitud: TSolicitudSubsanacionCaja);
-    procedure GuardarPagoFactura(ADatos: TDatosSubsanacionCaja;
+    procedure InsertarCompensacion(const AClave: TClaveOperacionSubsanacionCaja;
+      const ASerie: string; AOrigen, ALinea: Integer;
+      const AObservacion: string);
+    procedure InsertarPago(const AClave: TClaveOperacionSubsanacionCaja;
+      const ASerie: string; ALinea: Integer;
+      const APago: TPagoSubsanacionCaja; const AObservacion: string);
+    procedure GuardarPagosFactura(ADatos: TDatosSubsanacionCaja;
       const ASolicitud: TSolicitudSubsanacionCaja);
     procedure GuardarAuditoria(const ASolicitud: TSolicitudSubsanacionCaja;
       const AAntes, ADespues: string);
@@ -158,6 +166,145 @@ type
     function Guardar(const ASolicitud: TSolicitudSubsanacionCaja):
       TResultadoSubsanacionCaja;
   end;
+
+function FasesRegistradas(
+  const AParametrosApp: IParametrosAplicacion): TArray<string>;
+begin
+  if NoVerifactuActivo(AParametrosApp) then
+    Result := [cFaseFacturaNoVerifactuOk]
+  else
+    Result := [cFaseFacturaVerifactuOk, 'VERIFACTU_ACEPT_ERR'];
+end;
+
+function EstadosRegistroAceptado(
+  const AParametrosApp: IParametrosAplicacion): TArray<string>;
+begin
+  // NO VERI*FACTU no envía: basta el registro firmado y encadenado.
+  if NoVerifactuActivo(AParametrosApp) then
+    Result := ['NOVERIF_REGISTRADO', 'NOVERIF_SUBSANADO']
+  else
+    Result := ['VERIFACTU_OK', 'VERIFACTU_PROCESADO', 'VERIFACTU_DUPLICADO',
+      'VERIFACTU_SUBSANADO', 'VERIFACTU_ACEPT_ERR'];
+end;
+
+function ClaveCobro(ASerie: string; ALinea: Integer): string;
+begin
+  Result := ASerie + '|' + IntToStr(ALinea);
+end;
+
+// Líneas ya compensadas por una corrección anterior (TIPO N).
+function LeerCobrosCompensados(APagos: TDataSet):
+  TDictionary<string, Boolean>;
+begin
+  Result := TDictionary<string, Boolean>.Create;
+  APagos.First;
+  while not APagos.Eof do
+  begin
+    if APagos.FieldByName('TIPO_CORRECCION_PAGO').AsString = 'N' then
+      Result.AddOrSetValue(ClaveCobro(
+        APagos.FieldByName('SERIE_OPERACION_PAGO').AsString,
+        APagos.FieldByName('NUMERO_LINEA_ORIGEN_PAGO').AsInteger), True);
+    APagos.Next;
+  end;
+  APagos.First;
+end;
+
+function EsCobroVigente(APagos: TDataSet;
+  ACompensados: TDictionary<string, Boolean>): Boolean;
+begin
+  Result := (APagos.FieldByName('TIPO_CORRECCION_PAGO').AsString <> 'N') and
+    not ACompensados.ContainsKey(ClaveCobro(
+      APagos.FieldByName('SERIE_OPERACION_PAGO').AsString,
+      APagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger));
+end;
+
+function LeerCobrosVigentes(APagos: TDataSet): TPagosSubsanacionCaja;
+var
+  oCompensados: TDictionary<string, Boolean>;
+  oLista: TList<TPagoSubsanacionCaja>;
+  oPago: TPagoSubsanacionCaja;
+begin
+  oCompensados := LeerCobrosCompensados(APagos);
+  oLista := TList<TPagoSubsanacionCaja>.Create;
+  try
+    while not APagos.Eof do
+    begin
+      if EsCobroVigente(APagos, oCompensados) then
+      begin
+        oPago.FormaPago := APagos.FieldByName(fforma).AsString;
+        oPago.Referencia := APagos.FieldByName(fref).AsString;
+        oPago.Importe := APagos.FieldByName(fentregado).AsCurrency -
+          APagos.FieldByName(fcambio).AsCurrency;
+        oLista.Add(oPago);
+      end;
+      APagos.Next;
+    end;
+    APagos.First;
+    Result := oLista.ToArray;
+  finally
+    FreeAndNil(oLista);
+    FreeAndNil(oCompensados);
+  end;
+end;
+
+function TotalCobros(const APagos: TPagosSubsanacionCaja): Currency;
+var
+  oPago: TPagoSubsanacionCaja;
+begin
+  Result := 0;
+  for oPago in APagos do
+    Result := Result + oPago.Importe;
+end;
+
+// Mismo importe por forma de pago y referencia: el cobro no se toca.
+function CobrosDistintos(const AActuales,
+  ANuevos: TPagosSubsanacionCaja): Boolean;
+var
+  oSaldos: TDictionary<string, Currency>;
+  oPago: TPagoSubsanacionCaja;
+  dSaldo: Currency;
+  procedure Acumular(const APago: TPagoSubsanacionCaja; ASigno: Integer);
+  var
+    sClave: string;
+  begin
+    sClave := UpperCase(Trim(APago.FormaPago)) + #9 + Trim(APago.Referencia);
+    if not oSaldos.TryGetValue(sClave, dSaldo) then
+      dSaldo := 0;
+    oSaldos.AddOrSetValue(sClave, dSaldo + ASigno * APago.Importe);
+  end;
+begin
+  oSaldos := TDictionary<string, Currency>.Create;
+  try
+    for oPago in AActuales do
+      Acumular(oPago, 1);
+    for oPago in ANuevos do
+      Acumular(oPago, -1);
+    Result := False;
+    for dSaldo in oSaldos.Values do
+      Result := Result or (dSaldo <> 0);
+  finally
+    FreeAndNil(oSaldos);
+  end;
+end;
+
+procedure ValidarCobrosSolicitud(const APagos: TPagosSubsanacionCaja;
+  ATotal: Currency);
+var
+  oPago: TPagoSubsanacionCaja;
+begin
+  if Length(APagos) = 0 then
+    raise EArgumentException.Create(SSubsanacionPagosInvalidos);
+  for oPago in APagos do
+  begin
+    if (Trim(oPago.FormaPago) = '') or (oPago.Importe <= 0) or
+       (Frac(oPago.Importe * 100) <> 0) then
+      raise EArgumentException.Create(SSubsanacionPagosInvalidos);
+    if Length(oPago.Referencia) > 100 then
+      raise EArgumentException.Create(SSubsanacionReferenciaInvalida);
+  end;
+  if TotalCobros(APagos) <> ATotal then
+    raise EArgumentException.Create(SSubsanacionPagosInvalidos);
+end;
 
 function HayImportesModificados(const ALineas: TLineasSubsanacionCaja):
   Boolean;
@@ -368,7 +515,8 @@ begin
       'SELECT SERIE_OPERACION_PAGO,NUMERO_LINEA_PAGO,CODIGO_FP_CFP,' +
       'IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO,REFERENCIA_FACPAG,' +
       'CODIGO_DIVISA_PAGO,RED_BLOCKCHAIN_PAGO,FACTOR_CAMBIO_PAGO,' +
-      'IMPORTE_DIVISA_PAGO,INSTANTE_MODIF ' +
+      'IMPORTE_DIVISA_PAGO,NUMERO_LINEA_ORIGEN_PAGO,' +
+      'TIPO_CORRECCION_PAGO,INSTANTE_MODIF ' +
       'FROM fza_caja_pagos WHERE ' + SQL_CLAVE_PAGO +
       'ORDER BY SERIE_OPERACION_PAGO,NUMERO_LINEA_PAGO',
       AClave, ABloquear);
@@ -391,15 +539,26 @@ var
   sCliente: string;
 begin
   oCabecera := ADatos.Cabecera;
+  if oCabecera.FieldByName(
+       'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString = 'S' then
+    raise EInvalidOpException.Create(SSubsanacionDatosFiscales);
+  if EsSinVerifactu then
+  begin
+    // Sin VeriFactu no se valida la consolidación ni el registro fiscal.
+    if (oCabecera.FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') or
+       MatchText(oCabecera.FieldByName('FASE_FAC').AsString,
+         [cFaseFacturaSinVerifactuAnulada, cFaseFacturaVerifactuAnulada,
+          cFaseFacturaNoVerifactuAnulada, 'RECTIFICADA', 'CANCELADA']) then
+      raise EInvalidOpException.Create(SSubsanacionFacturaNoVigente);
+    Exit;
+  end;
   if (oCabecera.FieldByName('ESCONSOLIDADA_FAC').AsString <> 'S') or
      (oCabecera.FieldByName('TIPO_FAC').AsString <> 'SIMPLIFICADA') or
      not MatchText(oCabecera.FieldByName('FASE_FAC').AsString,
-       ['VERIFACTU_OK', 'VERIFACTU_ACEPT_ERR']) then
+       FasesRegistradas(FDependencias.ParametrosApp)) then
     raise EInvalidOpException.Create(SSubsanacionFacturaNoVigente);
   sCliente := oCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
   if (oCabecera.FieldByName('RAZON_SOCIAL_EMPRESA_FAC').AsString = '') or
-     (oCabecera.FieldByName(
-       'ESREGIMENESPECIALAGRICOLA_EMPRESA_FAC').AsString = 'S') or
      ((sCliente <> '') and (sCliente <> '0') and
       (sCliente <> 'VENTA CONTADO') and
       (oCabecera.FieldByName('RAZON_SOCIAL_CLIENTE_FAC').AsString = '')) then
@@ -427,12 +586,17 @@ begin
     oConsulta.Open;
     if oConsulta.IsEmpty or
        not MatchText(oConsulta.FieldByName('ESTADO_FACCON').AsString,
-         ['VERIFACTU_OK', 'VERIFACTU_PROCESADO', 'VERIFACTU_DUPLICADO',
-          'VERIFACTU_SUBSANADO', 'VERIFACTU_ACEPT_ERR']) then
+         EstadosRegistroAceptado(FDependencias.ParametrosApp)) then
       raise EInvalidOpException.Create(SSubsanacionRegistroNoAceptado);
   finally
     FreeAndNil(oConsulta);
   end;
+end;
+
+function TServicioSubsanacionCajaUniDAC.EsSinVerifactu: Boolean;
+begin
+  // El modo fiscal decide: con VeriFactu sólo se corrige lo enviado a la AEAT.
+  Result := SinVerifactuActivo(FDependencias.ParametrosApp);
 end;
 
 procedure TServicioSubsanacionCajaUniDAC.ValidarVinculos(
@@ -498,24 +662,34 @@ var
   oPago: TDataSet;
   oConsulta: TUniQuery;
 begin
+  // Admite varios cobros, también los de correcciones anteriores, siempre
+  // en euros y con medios simples: sin divisas, cripto, vales ni deuda.
   oPago := ADatos.Pagos;
-  if (oPago.RecordCount <> 1) or (ADatos.PagosFactura.RecordCount > 1) then
-    raise EInvalidOpException.Create(SSubsanacionPagoUnico);
-  if not MatchText(oPago.FieldByName('CODIGO_DIVISA_PAGO').AsString,
-       ['', 'EUR']) or
-     (oPago.FieldByName('RED_BLOCKCHAIN_PAGO').AsString <> '') or
-     (oPago.FieldByName('FACTOR_CAMBIO_PAGO').AsFloat <> 1) or
-     (oPago.FieldByName('IMPORTE_DIVISA_PAGO').AsCurrency <> 0) then
+  if oPago.IsEmpty then
     raise EInvalidOpException.Create(SSubsanacionPagoUnico);
   oConsulta := Consulta(
     'SELECT CODIGO_FP_CFP FROM fza_caja_formas_pago WHERE ' +
     SQL_MEDIO_SIMPLE + 'AND CODIGO_FP_CFP = :FP',
     Default(TClaveOperacionSubsanacionCaja));
   try
-    oConsulta.ParamByName('FP').AsString := oPago.FieldByName(fforma).AsString;
-    oConsulta.Open;
-    if oConsulta.IsEmpty then
-      raise EInvalidOpException.Create(SSubsanacionPagoUnico);
+    oPago.First;
+    while not oPago.Eof do
+    begin
+      if not MatchText(oPago.FieldByName('CODIGO_DIVISA_PAGO').AsString,
+           ['', 'EUR']) or
+         (oPago.FieldByName('RED_BLOCKCHAIN_PAGO').AsString <> '') or
+         (oPago.FieldByName('FACTOR_CAMBIO_PAGO').AsFloat <> 1) or
+         (oPago.FieldByName('IMPORTE_DIVISA_PAGO').AsCurrency <> 0) then
+        raise EInvalidOpException.Create(SSubsanacionPagoUnico);
+      oConsulta.Close;
+      oConsulta.ParamByName('FP').AsString :=
+        oPago.FieldByName(fforma).AsString;
+      oConsulta.Open;
+      if oConsulta.IsEmpty then
+        raise EInvalidOpException.Create(SSubsanacionPagoUnico);
+      oPago.Next;
+    end;
+    oPago.First;
   finally
     FreeAndNil(oConsulta);
   end;
@@ -526,7 +700,7 @@ procedure TServicioSubsanacionCajaUniDAC.ValidarDatos(
   const AClave: TClaveOperacionSubsanacionCaja);
 var
   oOperacion: TDataSet;
-  dTotal: Currency;
+  dTotal, dTotalFactura: Currency;
   oLinea: TLineaSubsanacionCaja;
 begin
   ValidarCabecera(ADatos);
@@ -541,7 +715,8 @@ begin
      (oOperacion.FieldByName('IMPORTE_DEVUELTO_ACUM_OPCAJA').AsCurrency
        <> 0) then
     raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
-  ValidarFiscal(AClave);
+  if not EsSinVerifactu then
+    ValidarFiscal(AClave);
   ValidarVinculos(AClave);
   ValidarArqueo(ADatos, AClave);
   ValidarPago(ADatos);
@@ -554,12 +729,18 @@ begin
   if (dTotal < 0) or
      (TotalSubsanacion(LeerImportesSubsanacion(ADatos.Lineas)) <> dTotal) or
      (oOperacion.FieldByName(ftotalope).AsCurrency <> dTotal) or
-     (ADatos.Pagos.FieldByName(fentregado).AsCurrency -
-       ADatos.Pagos.FieldByName(fcambio).AsCurrency <> dTotal) then
+     (TotalCobros(LeerCobrosVigentes(ADatos.Pagos)) <> dTotal) then
     raise EInvalidOpException.Create(SSubsanacionDescuadreOriginal);
-  if not ADatos.PagosFactura.IsEmpty and
-     (ADatos.PagosFactura.FieldByName('IMPORTE_FACPAG').AsCurrency <>
-       dTotal) then
+  dTotalFactura := 0;
+  ADatos.PagosFactura.First;
+  while not ADatos.PagosFactura.Eof do
+  begin
+    dTotalFactura := dTotalFactura +
+      ADatos.PagosFactura.FieldByName('IMPORTE_FACPAG').AsCurrency;
+    ADatos.PagosFactura.Next;
+  end;
+  ADatos.PagosFactura.First;
+  if not ADatos.PagosFactura.IsEmpty and (dTotalFactura <> dTotal) then
     raise EInvalidOpException.Create(SSubsanacionDescuadreOriginal);
 end;
 
@@ -572,13 +753,7 @@ begin
   Result.FechaFactura := ADatos.Cabecera.FieldByName('FECHA_FAC').AsDateTime;
   Result.Lineas := LeerImportesSubsanacion(ADatos.Lineas);
   Result.Total := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
-  Result.SeriePago :=
-    ADatos.Pagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
-  Result.LineaPago := ADatos.Pagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger;
-  Result.FormaPago := ADatos.Pagos.FieldByName(fforma).AsString;
-  Result.Referencia := ADatos.Pagos.FieldByName(fref).AsString;
-  Result.ImportePago := ADatos.Pagos.FieldByName(fentregado).AsCurrency -
-    ADatos.Pagos.FieldByName(fcambio).AsCurrency;
+  Result.Pagos := LeerCobrosVigentes(ADatos.Pagos);
   Result.Version := THashSHA2.GetHashString(ADatos.ComoJson);
 end;
 
@@ -651,8 +826,9 @@ begin
     raise EInvalidOpException.Create(SSubsanacionConflicto);
   if TotalSubsanacion(ASolicitud.Lineas) < 0 then
     raise EArgumentException.Create(SSubsanacionTotalInvalido);
-  bCambio := (ASolicitud.FormaPago <> AActual.FormaPago) or
-    (ASolicitud.Referencia <> AActual.Referencia);
+  ValidarCobrosSolicitud(ASolicitud.Pagos,
+    TotalSubsanacion(ASolicitud.Lineas));
+  bCambio := CobrosDistintos(AActual.Pagos, ASolicitud.Pagos);
   oLineas := TDictionary<string, TLineaSubsanacionCaja>.Create;
   try
     for oActual in AActual.Lineas do
@@ -678,6 +854,7 @@ procedure TServicioSubsanacionCajaUniDAC.ValidarMedio(
   const ASolicitud: TSolicitudSubsanacionCaja);
 var
   oConsulta: TUniQuery;
+  oPago: TPagoSubsanacionCaja;
 begin
   oConsulta := Consulta(
     'SELECT CODIGO_FP_CFP,ESREQ_REFERENCIA_FORMA_PAGO_CFP ' +
@@ -685,14 +862,17 @@ begin
     'AND ESACTIVO_FORMA_PAGO_CFP = ''S'' AND CODIGO_FP_CFP = :FP ' +
     'FOR UPDATE', ASolicitud.Original.Clave);
   try
-    oConsulta.ParamByName('FP').AsString := ASolicitud.FormaPago;
-    oConsulta.Open;
-    if oConsulta.IsEmpty then
-      raise EArgumentException.Create(SSubsanacionMedioInvalido);
-    if (Length(ASolicitud.Referencia) > 100) or
-       ((oConsulta.FieldByName('ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString
-         = 'S') and (Trim(ASolicitud.Referencia) = '')) then
-      raise EArgumentException.Create(SSubsanacionReferenciaInvalida);
+    for oPago in ASolicitud.Pagos do
+    begin
+      oConsulta.Close;
+      oConsulta.ParamByName('FP').AsString := oPago.FormaPago;
+      oConsulta.Open;
+      if oConsulta.IsEmpty then
+        raise EArgumentException.Create(SSubsanacionMedioInvalido);
+      if (oConsulta.FieldByName('ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString
+          = 'S') and (Trim(oPago.Referencia) = '') then
+        raise EArgumentException.Create(SSubsanacionReferenciaInvalida);
+    end;
   finally
     FreeAndNil(oConsulta);
   end;
@@ -815,63 +995,181 @@ begin
     ftotalope, ADatos.Operacion, oClave);
 end;
 
-procedure TServicioSubsanacionCajaUniDAC.GuardarCobro(
-  ADatos: TDatosSubsanacionCaja;
-  const ASolicitud: TSolicitudSubsanacionCaja);
+procedure TServicioSubsanacionCajaUniDAC.InsertarCompensacion(
+  const AClave: TClaveOperacionSubsanacionCaja; const ASerie: string;
+  AOrigen, ALinea: Integer; const AObservacion: string);
 var
   oConsulta: TUniQuery;
-  dTotal: Currency;
 begin
-  dTotal := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
   oConsulta := Consulta(
-    'UPDATE fza_caja_pagos SET CODIGO_FP_CFP = :FP,' +
-    'IMPORTE_ENTREGADO_PAGO = :TOTAL,IMPORTE_CAMBIO_PAGO = 0,' +
-    'REFERENCIA_FACPAG = :REF,INSTANTE_MODIF = NOW() WHERE ' +
-    SQL_CLAVE_PAGO + 'AND SERIE_OPERACION_PAGO = :SERIEP ' +
-    'AND NUMERO_LINEA_PAGO = :LINEAP', ASolicitud.Original.Clave);
+    'INSERT INTO fza_caja_pagos (CODIGO_EMP_PAGO,CODIGO_ALM_PAGO,' +
+    'CODIGO_CAJA_PAGO,SERIE_OPERACION_PAGO,NUMERO_OPERACION_PAGO,' +
+    'NUMERO_LINEA_PAGO,CODIGO_FP_CFP,CODIGO_DIVISA_PAGO,' +
+    'RED_BLOCKCHAIN_PAGO,FACTOR_CAMBIO_PAGO,IMPORTE_DIVISA_PAGO,' +
+    'IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO,REFERENCIA_FACPAG,' +
+    'OBSERVACIONES_PAGO,INSTANTE_ALTA,INSTANTE_MODIF,USUARIO_ALTA,' +
+    'NUMERO_LINEA_ORIGEN_PAGO,TIPO_CORRECCION_PAGO) ' +
+    'SELECT CODIGO_EMP_PAGO,CODIGO_ALM_PAGO,CODIGO_CAJA_PAGO,' +
+    'SERIE_OPERACION_PAGO,NUMERO_OPERACION_PAGO,:LINEA,CODIGO_FP_CFP,' +
+    'CODIGO_DIVISA_PAGO,RED_BLOCKCHAIN_PAGO,FACTOR_CAMBIO_PAGO,' +
+    '-IMPORTE_DIVISA_PAGO,-IMPORTE_ENTREGADO_PAGO,-IMPORTE_CAMBIO_PAGO,' +
+    'REFERENCIA_FACPAG,:OBS,NOW(),NOW(),:USUARIO,NUMERO_LINEA_PAGO,''N'' ' +
+    'FROM fza_caja_pagos WHERE ' + SQL_CLAVE_PAGO +
+    'AND SERIE_OPERACION_PAGO = :SERIEP AND NUMERO_LINEA_PAGO = :ORIGEN',
+    AClave);
   try
-    oConsulta.ParamByName('FP').AsString := ASolicitud.FormaPago;
-    oConsulta.ParamByName('TOTAL').AsCurrency := dTotal;
-    oConsulta.ParamByName('REF').AsString := ASolicitud.Referencia;
-    oConsulta.ParamByName('SERIEP').AsString :=
-      ADatos.Pagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
-    oConsulta.ParamByName('LINEAP').AsInteger :=
-      ADatos.Pagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger;
+    oConsulta.ParamByName('SERIEP').AsString := ASerie;
+    oConsulta.ParamByName('ORIGEN').AsInteger := AOrigen;
+    oConsulta.ParamByName('LINEA').AsInteger := ALinea;
+    oConsulta.ParamByName('OBS').AsString := AObservacion;
+    oConsulta.Execute;
+    if oConsulta.RowsAffected <> 1 then
+      raise EInvalidOpException.Create(SSubsanacionConflicto);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.InsertarPago(
+  const AClave: TClaveOperacionSubsanacionCaja; const ASerie: string;
+  ALinea: Integer; const APago: TPagoSubsanacionCaja;
+  const AObservacion: string);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'INSERT INTO fza_caja_pagos (CODIGO_EMP_PAGO,CODIGO_ALM_PAGO,' +
+    'CODIGO_CAJA_PAGO,SERIE_OPERACION_PAGO,NUMERO_OPERACION_PAGO,' +
+    'NUMERO_LINEA_PAGO,CODIGO_FP_CFP,CODIGO_DIVISA_PAGO,' +
+    'RED_BLOCKCHAIN_PAGO,FACTOR_CAMBIO_PAGO,IMPORTE_DIVISA_PAGO,' +
+    'IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO,REFERENCIA_FACPAG,' +
+    'OBSERVACIONES_PAGO,INSTANTE_ALTA,INSTANTE_MODIF,USUARIO_ALTA,' +
+    'NUMERO_LINEA_ORIGEN_PAGO,TIPO_CORRECCION_PAGO) VALUES (' +
+    ':EMP,:ALM,:CAJA,:SERIEP,:OPE,:LINEA,:FP,''EUR'',NULL,1,0,:IMPORTE,0,' +
+    'NULLIF(:REF, ''''),:OBS,NOW(),NOW(),:USUARIO,NULL,''P'')', AClave);
+  try
+    oConsulta.ParamByName('SERIEP').AsString := ASerie;
+    oConsulta.ParamByName('LINEA').AsInteger := ALinea;
+    oConsulta.ParamByName('FP').AsString := APago.FormaPago;
+    oConsulta.ParamByName('IMPORTE').AsCurrency := APago.Importe;
+    oConsulta.ParamByName('REF').AsString := Trim(APago.Referencia);
+    oConsulta.ParamByName('OBS').AsString := AObservacion;
     oConsulta.Execute;
   finally
     FreeAndNil(oConsulta);
   end;
-  if not ADatos.PagosFactura.IsEmpty then
-    GuardarPagoFactura(ADatos, ASolicitud);
 end;
 
-procedure TServicioSubsanacionCajaUniDAC.GuardarPagoFactura(
+procedure TServicioSubsanacionCajaUniDAC.GuardarCobro(
+  ADatos: TDatosSubsanacionCaja;
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oCompensados: TDictionary<string, Boolean>;
+  oUltimas: TDictionary<string, Integer>;
+  oPagos: TDataSet;
+  oPago: TPagoSubsanacionCaja;
+  sSerie, sSerieNueva, sObservacion: string;
+  iLinea: Integer;
+begin
+  // Como la corrección de forma de pago: sólo si cambia el cobro, se
+  // compensan en negativo los cobros vigentes y se añaden los nuevos.
+  if not CobrosDistintos(ASolicitud.Original.Pagos, ASolicitud.Pagos) then
+    Exit;
+  sObservacion := Copy(Format(SSubsanacionObservacionPago,
+    [Trim(ASolicitud.Motivo)]), 1, 255);
+  oPagos := ADatos.Pagos;
+  oCompensados := LeerCobrosCompensados(oPagos);
+  oUltimas := TDictionary<string, Integer>.Create;
+  try
+    sSerieNueva := '';
+    while not oPagos.Eof do
+    begin
+      sSerie := oPagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
+      if not oUltimas.TryGetValue(sSerie, iLinea) then
+        iLinea := 0;
+      oUltimas.AddOrSetValue(sSerie, Max(iLinea,
+        oPagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger));
+      if (sSerieNueva = '') and EsCobroVigente(oPagos, oCompensados) then
+        sSerieNueva := sSerie;
+      oPagos.Next;
+    end;
+    if sSerieNueva = '' then
+      raise EInvalidOpException.Create(SSubsanacionConflicto);
+    oPagos.First;
+    while not oPagos.Eof do
+    begin
+      if EsCobroVigente(oPagos, oCompensados) then
+      begin
+        sSerie := oPagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
+        iLinea := oUltimas[sSerie] + 1;
+        oUltimas[sSerie] := iLinea;
+        InsertarCompensacion(ASolicitud.Original.Clave, sSerie,
+          oPagos.FieldByName('NUMERO_LINEA_PAGO').AsInteger, iLinea,
+          sObservacion);
+      end;
+      oPagos.Next;
+    end;
+    oPagos.First;
+    for oPago in ASolicitud.Pagos do
+    begin
+      iLinea := oUltimas[sSerieNueva] + 1;
+      oUltimas[sSerieNueva] := iLinea;
+      InsertarPago(ASolicitud.Original.Clave, sSerieNueva, iLinea, oPago,
+        sObservacion);
+    end;
+  finally
+    FreeAndNil(oUltimas);
+    FreeAndNil(oCompensados);
+  end;
+  if not ADatos.PagosFactura.IsEmpty then
+    GuardarPagosFactura(ADatos, ASolicitud);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.GuardarPagosFactura(
   ADatos: TDatosSubsanacionCaja;
   const ASolicitud: TSolicitudSubsanacionCaja);
 var
   oConsulta: TUniQuery;
+  oPago: TPagoSubsanacionCaja;
+  dtFecha: TDateTime;
+  iLinea: Integer;
 begin
+  // El detalle fiscal de cobros refleja los cobros vigentes tras subsanar.
+  ADatos.PagosFactura.First;
+  dtFecha := Now;
+  if not ADatos.PagosFactura.FieldByName('FECHA_FACPAG').IsNull then
+    dtFecha := ADatos.PagosFactura.FieldByName('FECHA_FACPAG').AsDateTime;
   oConsulta := Consulta(
-    'UPDATE fza_facturas_pagos SET TIPO_FACPAG = :FP,' +
-    'IMPORTE_FACPAG = :TOTAL,REFERENCIA_FACPAG = :REF,' +
-    'DESCRIPCION_FACPAG = CASE WHEN :ANTERIOR <> :FP THEN ' +
-    '(SELECT DESCRIPCION_FORMA_PAGO_CFP FROM fza_caja_formas_pago ' +
-    'WHERE CODIGO_FP_CFP = :FP) ELSE DESCRIPCION_FACPAG END,' +
-    'ENTIDAD_FACPAG = CASE WHEN :ANTERIOR <> :FP THEN NULL ' +
-    'ELSE ENTIDAD_FACPAG END,INSTANTE_MODIF = NOW(),' +
-    'USUARIO_MODIF = :USUARIO WHERE SERIE_FAC_FACPAG = :SERIE ' +
-    'AND NUMERO_FAC_FACPAG = :NUMERO AND LINEA_FACPAG = :LINEAP',
+    'DELETE FROM fza_facturas_pagos WHERE SERIE_FAC_FACPAG = :SERIE ' +
+    'AND NUMERO_FAC_FACPAG = :NUMERO', ASolicitud.Original.Clave);
+  try
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+  oConsulta := Consulta(
+    'INSERT INTO fza_facturas_pagos (SERIE_FAC_FACPAG,NUMERO_FAC_FACPAG,' +
+    'LINEA_FACPAG,TIPO_FACPAG,IMPORTE_FACPAG,REFERENCIA_FACPAG,' +
+    'DESCRIPCION_FACPAG,ENTIDAD_FACPAG,FECHA_FACPAG,INSTANTE_ALTA,' +
+    'USUARIO_ALTA,USUARIO_MODIF) SELECT :SERIE,:NUMERO,:LINEAP,' +
+    'fp.CODIGO_FP_CFP,:IMPORTE,NULLIF(:REF, ''''),' +
+    'fp.DESCRIPCION_FORMA_PAGO_CFP,NULL,:FECHA,NOW(),:USUARIO,:USUARIO ' +
+    'FROM fza_caja_formas_pago fp WHERE fp.CODIGO_FP_CFP = :FP',
     ASolicitud.Original.Clave);
   try
-    oConsulta.ParamByName('FP').AsString := ASolicitud.FormaPago;
-    oConsulta.ParamByName('TOTAL').AsCurrency :=
-      ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
-    oConsulta.ParamByName('REF').AsString := ASolicitud.Referencia;
-    oConsulta.ParamByName('ANTERIOR').AsString :=
-      ADatos.Pagos.FieldByName(fforma).AsString;
-    oConsulta.ParamByName('LINEAP').AsInteger :=
-      ADatos.PagosFactura.FieldByName('LINEA_FACPAG').AsInteger;
-    oConsulta.Execute;
+    iLinea := 0;
+    for oPago in ASolicitud.Pagos do
+    begin
+      Inc(iLinea);
+      oConsulta.ParamByName('LINEAP').AsInteger := iLinea;
+      oConsulta.ParamByName('FP').AsString := oPago.FormaPago;
+      oConsulta.ParamByName('IMPORTE').AsCurrency := oPago.Importe;
+      oConsulta.ParamByName('REF').AsString := Trim(oPago.Referencia);
+      oConsulta.ParamByName('FECHA').AsDateTime := dtFecha;
+      oConsulta.Execute;
+      if oConsulta.RowsAffected <> 1 then
+        raise EInvalidOpException.Create(SSubsanacionMedioInvalido);
+    end;
   finally
     FreeAndNil(oConsulta);
   end;
@@ -932,15 +1230,25 @@ begin
         GuardarImportes(oDatos, ASolicitud);
       end;
       GuardarCobro(oDatos, ASolicitud);
-      FDependencias.Fiscal.EncolarCorreccionRegistro(
-        FDependencias.ParametrosApp, FDependencias.ParametrosCaja,
-        FDependencias.Usuario, ASolicitud.Original.Clave.SerieFactura,
-        ASolicitud.Original.Clave.NumeroFactura, ASolicitud.Motivo);
+      Result := Default(TResultadoSubsanacionCaja);
+      Result.EncoladaVerifactu := VerifactuActivo(FDependencias.ParametrosApp);
+      Result.RegistradaNoVerifactu :=
+        NoVerifactuActivo(FDependencias.ParametrosApp);
+      if not EsSinVerifactu then
+        FDependencias.Fiscal.EncolarCorreccionRegistro(
+          FDependencias.ParametrosApp, FDependencias.ParametrosCaja,
+          FDependencias.Usuario, ASolicitud.Original.Clave.SerieFactura,
+          ASolicitud.Original.Clave.NumeroFactura, ASolicitud.Motivo);
       oDespues := LeerDatos(ASolicitud.Original.Clave, False);
       GuardarAuditoria(ASolicitud, sAntes, oDespues.ComoJson);
       Result.Clave := ASolicitud.Original.Clave;
       Result.Total := oDatos.Cabecera.FieldByName(ftotal).AsCurrency;
       FConexion.Commit;
+      FDependencias.RegistroLog.RegistrarInformacion(Format(
+        SSubsanacionRegistrada, [ASolicitud.Original.Clave.SerieFactura,
+        ASolicitud.Original.Clave.NumeroFactura,
+        ModoVerifactuTexto(FDependencias.ParametrosApp),
+        Trim(ASolicitud.Motivo)]));
     except
       on E: Exception do
       begin

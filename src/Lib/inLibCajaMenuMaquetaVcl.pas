@@ -49,6 +49,9 @@ uses
   System.Types, System.Math, Winapi.Windows, Winapi.CommCtrl, Winapi.UxTheme,
   Vcl.Graphics, cxGraphics, cxLookAndFeels, cxLookAndFeelPainters, cxEdit;
 
+type
+  TControlAccesoCalendario = class(TWinControl);
+
 const
   // Con el marco más ancho de los skins la ventana queda en unos 786 px.
   ANCHO_CLIENTE   = 752;
@@ -69,6 +72,13 @@ var
   cFondo, cTexto, cAcento: TColor;
   hCal: HWND;
 begin
+  // Misma letra que el resto del menú. Normal y no negrita: el calendario
+  // marca en negrita los días con ventas. Antes de pedir el tamaño mínimo,
+  // que depende de la fuente.
+  TControlAccesoCalendario(ACalendario).Font.Name := FUENTE_MENU;
+  TControlAccesoCalendario(ACalendario).Font.Style := [];
+  TControlAccesoCalendario(ACalendario).Font.Height :=
+    -MulDiv(15, ACalendario.CurrentPPI, 96);
   oPainter := RootLookAndFeel.Painter;
   cFondo := ColorToRGB(oPainter.DefaultControlColor);
   cTexto := ColorToRGB(oPainter.DefaultControlTextColor);

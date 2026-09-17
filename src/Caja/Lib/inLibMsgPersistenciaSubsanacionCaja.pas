@@ -29,7 +29,12 @@ resourcestring
     'Esta subsanación admite ventas simples sin depósitos, devoluciones, ' +
     'vales, deuda ni recibos asociados.';
   SSubsanacionPagoUnico =
-    'Esta subsanación requiere un único cobro en euros, sin compensaciones.';
+    'Esta subsanación requiere cobros en euros, sin divisas, ' +
+    'criptomonedas, vales ni deuda.';
+  SSubsanacionPagosInvalidos =
+    'Indique cobros positivos, con dos decimales como máximo, que sumen ' +
+    'el total corregido del ticket.';
+  SSubsanacionObservacionPago = 'Subsanación: %s';
   SSubsanacionDescuadreOriginal =
     'Los importes del ticket, sus líneas, la operación y el cobro no ' +
     'coinciden. Revise la operación antes de subsanar.';
@@ -38,6 +43,8 @@ resourcestring
   SSubsanacionDatosFiscales =
     'El ticket requiere revisar sus datos fiscales antes de subsanar ' +
     'los importes de caja.';
+  SSubsanacionRegistrada =
+    'Subsanación de caja %s\%s guardada (modo %s). Motivo: %s';
   SSubsanacionConflicto =
     'La operación ha cambiado desde que se abrió. Vuelva a cargarla.';
   SSubsanacionMotivoObligatorio =

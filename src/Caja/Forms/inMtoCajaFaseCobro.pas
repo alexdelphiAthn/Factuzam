@@ -35,6 +35,7 @@ uses
   inLibFaseCobroPersistenciaIntf,
   inMtoCajaReferenciaPago, System.UITypes, dxGDIPlusClasses, cxImage,
   inLibInformesCajaPersistenciaIntf, inLibCajaPantallaInyeccion,
+  inLibCajaSubsanacionIntf,
   JvComponentBase, JvEnterTab, cxLocalization;
 
 type
@@ -202,6 +203,10 @@ type
     FCodigoCaja: string;
     FFecha: TDate;
     FHayLineasDeposito: Boolean;
+    FModoSubsanacion: Boolean;
+    FPagosSubsanacion: TPagosSubsanacionCaja;
+    procedure PrepararModoSubsanacion;
+    function ValidarCobroSubsanacion: Boolean;
     function ValidaryConfirmar:boolean;
     function PuedeEmitir(const ASerie: string; AFecha: TDateTime): Boolean;
     function SerieAdmiteFecha(const ASerie: string;
@@ -224,6 +229,7 @@ type
     procedure EscribirImporteEnFormaActual(AImporte: Double);
     procedure MemTablePagosAfterPost(DataSet: TDataSet);
     procedure FMemTablePagosBeforePost(DataSet: TDataSet);
+    procedure AplicarEstiloCaja;
     procedure DibujarIconoEmail;
     function GetEnviarEmail: Boolean;
   public
@@ -236,6 +242,10 @@ type
     property EnviarEmail: Boolean read GetEnviarEmail;
     property EmailEnvio: string read FEmailEnvio;
     procedure Configurar(const AEntrada: TEntradaFaseCobro);
+    // Subsanación: sólo forma de pago y descuento global, con los cobros
+    // vigentes precargados y sin emitir documento.
+    procedure ConfigurarSubsanacion(const APagos: TPagosSubsanacionCaja);
+    function PagosSubsanacion: TPagosSubsanacionCaja;
     function ObtenerResultado: TResultadoFaseCobro;
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
     procedure AlRecalcularDatos(Sender: TObject);
@@ -250,7 +260,8 @@ implementation
 uses
   inLibMensajesVcl,
   inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
-     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja;
+     UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja,
+  inLibCajaEstiloVcl, inLibMsgSubsanacionCaja, System.StrUtils;
 
 constructor TfrmMtoCajaFaseCobro.Create(
   AOwner: TComponent;
@@ -276,6 +287,98 @@ begin
   FNombrePaisCliente := AEntrada.NombrePaisCliente;
   FRectificaA := AEntrada.RectificaA;
   FHayLineasDeposito := AEntrada.HayLineasDeposito;
+end;
+
+procedure TfrmMtoCajaFaseCobro.ConfigurarSubsanacion(
+  const APagos: TPagosSubsanacionCaja);
+begin
+  FModoSubsanacion := True;
+  FPagosSubsanacion := Copy(APagos);
+end;
+
+procedure TfrmMtoCajaFaseCobro.PrepararModoSubsanacion;
+var
+  oControl: TControl;
+  oPago: TPagoSubsanacionCaja;
+  sCodigo: string;
+begin
+  Caption := SSubsanacionTituloCobro;
+  for oControl in TArray<TControl>.Create(btnSinTicket, btnSinPrecios,
+    btnDeposito, btnFactura, btnBuscarVale, btnMasDatos, chkEnviarEmail,
+    imgEnviarEmail, cbbSERIE_FAC, edtNumeroDoc, lblNumDoc, pnlCuenta) do
+    oControl.Visible := False;
+  btnConTicket.Caption := SSubsanacionBoton;
+  FMemTablePagos.DisableControls;
+  try
+    // Sólo medios simples en euros, como admite la subsanación.
+    FMemTablePagos.First;
+    while not FMemTablePagos.Eof do
+    begin
+      sCodigo := FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
+      if (FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString =
+          'S') or
+         (FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString =
+          'S') or MatchText(sCodigo, ['VALE', 'BONO', 'DEUDA']) then
+        FMemTablePagos.Delete
+      else
+        FMemTablePagos.Next;
+    end;
+    for oPago in FPagosSubsanacion do
+    begin
+      if FMemTablePagos.Locate('CODIGO_FP_CFP', oPago.FormaPago,
+        [loCaseInsensitive]) then
+      begin
+        FMemTablePagos.Edit;
+        FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat :=
+          FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat +
+          oPago.Importe;
+        if Trim(oPago.Referencia) <> '' then
+          FMemTablePagos.FieldByName('REFERENCIA').AsString :=
+            oPago.Referencia;
+        FMemTablePagos.Post;
+      end;
+    end;
+    FMemTablePagos.First;
+  finally
+    FMemTablePagos.EnableControls;
+  end;
+end;
+
+function TfrmMtoCajaFaseCobro.ValidarCobroSubsanacion: Boolean;
+begin
+  Result := (Abs(FDatosCobro.ImportePendiente) < 0.01) and
+    (Abs(FDatosCobro.ImporteCambio) < 0.01) and
+    (FDatosCobro.ImporteValeRecogido = 0) and
+    (FDatosCobro.ImporteValeEmitido = 0) and
+    (FDatosCobro.ImporteDejarCuenta = 0);
+  if not Result then
+    MessageDlg_fza(SSubsanacionCobroExacto, mtError, [mbOK], 0);
+end;
+
+function TfrmMtoCajaFaseCobro.PagosSubsanacion: TPagosSubsanacionCaja;
+var
+  oPago: TPagoSubsanacionCaja;
+begin
+  Result := nil;
+  FMemTablePagos.DisableControls;
+  try
+    FMemTablePagos.First;
+    while not FMemTablePagos.Eof do
+    begin
+      oPago.FormaPago :=
+        FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
+      oPago.Referencia := Trim(
+        FMemTablePagos.FieldByName('REFERENCIA').AsString);
+      oPago.Importe := SimpleRoundTo(
+        FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat -
+        FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency, -2);
+      if oPago.Importe <> 0 then
+        Result := Result + [oPago];
+      FMemTablePagos.Next;
+    end;
+  finally
+    FMemTablePagos.EnableControls;
+  end;
 end;
 
 function TfrmMtoCajaFaseCobro.ObtenerResultado:
@@ -327,7 +430,12 @@ begin
 end;
 procedure TfrmMtoCajaFaseCobro.btnConTicketClick(Sender: TObject);
 begin
-  if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
+  if FModoSubsanacion then
+  begin
+    if ValidarYConfirmar and ValidarCobroSubsanacion then
+      ModalResult := mrOk;
+  end
+  else if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiConTicket;
     ModalResult := mrOk;
@@ -345,6 +453,8 @@ var
   oDatos: TSerieFechaFacturaResult;
 begin
   //F8 -> grabar la venta como factura completa (A4), no como ticket
+  if FModoSubsanacion then
+    Exit;
   if FRectificaA <> '' then
     ShowMessage_fza(SErrorRectificacionCajaNoAdmiteBorrador)
   else if (Trim(FCodigoCliente) = '') or (Trim(FCodigoCliente) = '0') then
@@ -383,7 +493,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);
 begin
-  if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
+  if not FModoSubsanacion and ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiSinTicket;
     ModalResult := mrOk;
@@ -392,7 +502,7 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinPreciosClick(Sender: TObject);
 begin
-  if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
+  if not FModoSubsanacion and ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiTicketRegalo;
     ModalResult := mrOk;
@@ -605,6 +715,7 @@ begin
   FActualizandoEmail := False;
   FEmailEnvio := '';
   chkEnviarEmail.Checked := False;
+  AplicarEstiloCaja;
   DibujarIconoEmail;
   ConfigurarTablaVirtual;
   FDatosCobro := TDatosFaseCobro.Create(
@@ -616,6 +727,59 @@ begin
   dsFormasPago.DataSet := FMemTablePagos;
   FMemTablePagos.AfterPost := MemTablePagosAfterPost;
   FMemTablePagos.BeforePost := FMemTablePagosBeforePost;
+end;
+
+// Mismo aspecto que el menú y la operación de caja. Cada acción tenía dos
+// botones (tecla y texto) que hacen lo mismo: queda el de texto como tarjeta
+// con la tecla en una píldora y se oculta el de la tecla.
+procedure TfrmMtoCajaFaseCobro.AplicarEstiloCaja;
+const
+  PASO_BOTON = 50;
+  ALTO_BOTON = 44;
+var
+  Estilo: TEstiloCaja;
+  Etiqueta: TcxLabel;
+  Botones: TArray<TcxButton>;
+  Teclas: TArray<TcxButton>;
+  I: Integer;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  QuitarBiselesCaja([pnlLogoLeft, pnlContenedor]);
+  ConvertirPanelEnTarjetaCaja(pnlTotales, EscalarCaja(Self, 4));
+  ConvertirPanelEnTarjetaCaja(pnlCuenta, EscalarCaja(Self, 4));
+  ConvertirPanelEnTarjetaCaja(pnlCambioVales, EscalarCaja(Self, 4));
+  for Etiqueta in TArray<TcxLabel>.Create(lblSuma, lblImporteDtoLineal,
+    lblDescuento, lblImporteTotalAPagar, lblImporteACuenta,
+    lblPendienteCobro, lblValeRecogido, lblValeEmitido, lblDevolucionCambio,
+    lblPendienteCobroAlt, lblNumDoc) do
+    EstilarEtiquetaCaja(Etiqueta, 20, True);
+  // Serie, número y envío por correo en negrita, como los importes.
+  chkEnviarEmail.Style.Font.Name := FUENTE_CAJA;
+  chkEnviarEmail.Style.Font.Style := [fsBold];
+  chkEnviarEmail.Style.Font.Pitch := fpDefault;
+  chkEnviarEmail.Style.TextColor := TColoresCaja.Actuales.Texto;
+  cbbSERIE_FAC.Style.Font.Style := [fsBold];
+  cbbSERIE_FAC.Style.Font.Pitch := fpDefault;
+  edtNumeroDoc.Style.Font.Style := [fsBold];
+  edtNumeroDoc.Style.Font.Pitch := fpDefault;
+  Estilo.EstilarRejilla(dbtvFormasPago);
+  for I := 0 to dbtvFormasPago.ColumnCount - 1 do
+    dbtvFormasPago.Columns[I].Styles.Header := nil;
+
+  Botones := TArray<TcxButton>.Create(btnSinTicket, btnConTicket,
+    btnSinPrecios, btnDeposito, btnFactura, btnBuscarVale, btnMasDatos,
+    btnBuscarT, btnAtras);
+  Teclas := TArray<TcxButton>.Create(btnF11, btnF12, btnF10, btnF7, btnF8,
+    btnF6, btnF2, btnF3, btnESC);
+  for I := 0 to High(Botones) do
+  begin
+    Teclas[I].Visible := False;
+    Botones[I].SetBounds(EscalarCaja(Self, 10),
+      EscalarCaja(Self, 8 + I * PASO_BOTON),
+      Botones[I].Parent.ClientWidth - EscalarCaja(Self, 20),
+      EscalarCaja(Self, ALTO_BOTON));
+    Estilo.EstilarBoton(Botones[I], Teclas[I].Caption, nil, 20);
+  end;
 end;
 
 procedure TfrmMtoCajaFaseCobro.DibujarIconoEmail;
@@ -630,7 +794,7 @@ begin
   Lienzo.Brush.Color := clFuchsia;
   Lienzo.FillRect(Rect(0, 0, 24, 18));
   Lienzo.Brush.Style := bsClear;
-  Lienzo.Pen.Color := clNavy;
+  Lienzo.Pen.Color := TColoresCaja.Actuales.Texto;
   Lienzo.Pen.Width := 2;
   Lienzo.Rectangle(1, 2, 23, 17);
   Lienzo.MoveTo(2, 3);
@@ -1190,6 +1354,8 @@ var
   Res: TResultadoValidacion;
 begin
   inherited;
+  if FModoSubsanacion then
+    Exit;
   // 1. Validar que tenemos un cliente válido y con permisos para dejar a deber
   if not FDatosCobro.PuedeDejarEnCuenta then
   begin
@@ -1232,7 +1398,7 @@ var
   PendienteActual, Exceso: Currency;
 begin
   inherited;
-  if TfrmMtoCajaSeleccionVale.Ejecutar(
+  if not FModoSubsanacion and TfrmMtoCajaSeleccionVale.Ejecutar(
     FRepositorioVales,
     ValeSeleccionado) then
   begin
@@ -1289,6 +1455,8 @@ begin
   end;
   CargarComboSeries;
   CargarFormasPago;
+  if FModoSubsanacion then
+    PrepararModoSubsanacion;
   ActualizarInterfaz;
   if cxgrdFormasPago.CanFocus then
   begin

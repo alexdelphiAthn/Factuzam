@@ -1831,6 +1831,7 @@
         <DCCReference Include="src\verifactu\inLibVerifactuDesgloseFiscal.pas"/>
         <DCCReference Include="src\Lib\inLibMenuIconos.pas"/>
         <DCCReference Include="src\Lib\inLibMenuBarraIconos.pas"/>
+        <DCCReference Include="src\Lib\inLibCajaEstiloVcl.pas"/>
         <DCCReference Include="src\Lib\inLibInspectorSkin.pas"/>
         <DCCReference Include="src\Lib\inLibCajaMenuTarjetaVcl.pas"/>
         <DCCReference Include="src\Lib\inLibCajaMenuMaquetaVcl.pas"/>
