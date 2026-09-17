@@ -2312,8 +2312,8 @@ begin
   else
   begin
     sMotivo := '';
-    if InputQuery(STituloDenegarSolicitudTraspaso,
-                  SSolicitudMotivoRechazoTraspaso, sMotivo) then
+    if InputQuery_fza(STituloDenegarSolicitudTraspaso,
+                      SSolicitudMotivoRechazoTraspaso, sMotivo) then
     begin
       if Trim(sMotivo) = '' then
         ShowMessage_fza(SErrorMotivoDenegacionTraspasoNoIndicado)

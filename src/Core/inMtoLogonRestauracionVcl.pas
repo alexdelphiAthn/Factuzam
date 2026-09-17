@@ -111,7 +111,7 @@ begin
   sContrasena := AContexto.ContrasenaConexion;
   if AContexto.RutaFichero = '' then
   begin
-    sContrasena := InputBox(SGetPassBBDD, '', '');
+    sContrasena := InputBox_fza(SGetPassBBDD, '', '');
     ConfigurarDialogo(AContexto.Dialogo);
     bContinuar := AContexto.Dialogo.Execute;
     if bContinuar then

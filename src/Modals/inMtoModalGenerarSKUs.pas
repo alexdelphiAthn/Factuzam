@@ -327,7 +327,7 @@ var
   bContinuar: Boolean;
 begin
   // 1. INPUTS DEL USUARIO
-  NuevoNombre := Trim(InputBox(STituloAnadirValorSku,
+  NuevoNombre := Trim(InputBox_fza(STituloAnadirValorSku,
     SSolicitudNombreValorSku, ''));
   if NuevoNombre <> '' then
   begin
@@ -341,7 +341,7 @@ begin
     OrdenSugerido := CalcularSiguienteOrdenValor(
       IdAtrSel,
       IdConjuntoAsignado);
-    OrdenStr := Trim(InputBox(
+    OrdenStr := Trim(InputBox_fza(
       STituloAnadirValorSku,
       SSolicitudOrdenNuevoValorSku,
       IntToStr(OrdenSugerido)));
@@ -444,7 +444,7 @@ begin
     IdAtr := FDetalle.FieldByName('ID_ATB_VA').AsString;
     if IdVal > 0 then
     begin
-      OrdenStr := Trim(InputBox(STituloCambiarOrdenValorSku,
+      OrdenStr := Trim(InputBox_fza(STituloCambiarOrdenValorSku,
         Format(SSolicitudOrdenValorSku, [NombreVal]),
         IntToStr(OrdenActual)));
       if OrdenStr <> '' then
@@ -492,7 +492,7 @@ begin
     OrdenActual := FMaestro.FieldByName('ORDEN_ACA').AsInteger;
     if IdAtr <> '' then
     begin
-      OrdenStr := Trim(InputBox(STituloCambiarOrdenAtributoSku,
+      OrdenStr := Trim(InputBox_fza(STituloCambiarOrdenAtributoSku,
         Format(SSolicitudOrdenAtributoSku, [NombreAtr]),
         IntToStr(OrdenActual)));
       if OrdenStr <> '' then

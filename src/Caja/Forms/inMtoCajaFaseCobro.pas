@@ -828,7 +828,7 @@ begin
       begin
         FEmailEnvio := Trim(FEmailEnvio);
         if FEmailEnvio = '' then
-          bContinuar := InputQuery(STituloEnviarDocumentacionCaja,
+          bContinuar := InputQuery_fza(STituloEnviarDocumentacionCaja,
             SSolicitudCorreoDocumentacionCaja, FEmailEnvio);
         if bContinuar and (Trim(FEmailEnvio) = '') then
         begin

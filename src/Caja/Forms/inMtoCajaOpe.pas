@@ -2919,7 +2919,8 @@ begin
           RegistroLog);
         try
           Totales.ProcesarFacturaCompleta;
-          ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
+          if not Totales.CalculoOmitido then
+            ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
         finally
           FreeAndNil(Totales);
         end;
@@ -3395,7 +3396,8 @@ begin
     RegistroLog);
   try
     Totales.ProcesarFacturaCompleta;
-    ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
+    if not Totales.CalculoOmitido then
+      ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
   finally
     FreeAndNil(Totales);
     end;

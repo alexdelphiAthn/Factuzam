@@ -899,9 +899,6 @@
         <DCCReference Include="src\Caja\Lib\inLibCajaSubsanacionIntf.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibMsgPersistenciaSubsanacionCaja.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibMsgSubsanacionCaja.pas"/>
-        <DCCReference Include="src\Caja\Modals\inMtoModalImporteSubsanacion.pas">
-            <Form>frmModalImporteSubsanacion</Form>
-        </DCCReference>
         <DCCReference Include="src\Caja\DataModules\UniDataCajaConsultasRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaRectificacion.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaOpeComposicion.pas"/>
@@ -1249,12 +1246,6 @@
         </DCCReference>
         <DCCReference Include="src\Forms\inMtoConsultaOpe.pas">
             <Form>frmConsultaOpe</Form>
-        </DCCReference>
-        <DCCReference Include="src\Caja\Lib\inLibCorreccionPagoIntf.pas"/>
-        <DCCReference Include="src\Caja\DataModules\UniDataCorreccionPago.pas"/>
-        <DCCReference Include="src\Caja\Modals\inMtoModalCorregirPago.pas">
-            <Form>frmModalCorregirPago</Form>
-            <FormType>dfm</FormType>
         </DCCReference>
         <DCCReference Include="src\Lib\inLibVentasCalendarioIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataVentasCalendario.pas"/>

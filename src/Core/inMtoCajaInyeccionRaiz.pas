@@ -91,7 +91,6 @@ uses
   inMtoDepositosCliente,
   inMtoUsuarios,
   inMtoModalImpOperacionesVenta,
-  UniDataCorreccionPago,
   UniDataCajaSubsanacionRepositorio,
   UniDataVerifactuSubsanacionRepositorio;
 
@@ -225,9 +224,6 @@ var
 begin
   Caja := Componer('frmConsultaOpe');
   Dependencias := Default(TDependenciasConsultaOperacionesCaja);
-  Dependencias.CorreccionPagos := TCorreccionPagoUniDAC.Create(
-    FComposicion.Conexiones.ConexionPrincipal, APermisos,
-    FComposicion.ContextoSesion.Identidad.Usuario);
   Dependencias.Subsanacion := CrearServicioSubsanacion(APermisos);
   Dependencias.Facturas :=
     Caja.Consultas.CrearRepositorioConsultaFacturas;

@@ -35,7 +35,7 @@ uses
   inLibEmisionFiscalIntf, inLibGenerarTicketIntf,
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
   inLibVentasCalendarioIntf, inLibPermisosIntf,
-  inLibCajaPantallaInyeccion, inLibCorreccionPagoIntf,
+  inLibCajaPantallaInyeccion,
   inLibCajaSubsanacionIntf;
 
 type
@@ -97,7 +97,6 @@ type
     btnFacturarTicket: TcxButton;
     btnRectificar: TcxButton;
     btnEnviarEmail: TcxButton;
-    btnCorregirPago: TcxButton;
     btnSubsanar: TcxButton;
     colFaseFactura: TcxGridDBColumn;
     colMovColor: TcxGridDBColumn;
@@ -122,7 +121,6 @@ type
     procedure btnDevolverAbonarClick(Sender: TObject);
     procedure btnRectificarClick(Sender: TObject);
     procedure btnEnviarEmailClick(Sender: TObject);
-    procedure btnCorregirPagoClick(Sender: TObject);
     procedure btnSubsanarClick(Sender: TObject);
     procedure cxViewMovCustomDrawCell(Sender: TcxCustomGridTableView;
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
@@ -138,9 +136,7 @@ type
     FRepositorioTraspasoTicket: IRepositorioTraspasoTicket;
     FRepositoriosTicketsCaja: TRepositoriosTicketsCaja;
     FLecturasImpresionTicket: ILecturasImpresionTicket;
-    FCorreccionPagos: ICorreccionPago;
     FServicioSubsanacion: IServicioSubsanacionCaja;
-    procedure CorregirPago;
     procedure SubsanarOperacion;
     procedure AbrirOperacionSubsanacion(
       const AOperacion: TOperacionSubsanacionCaja);
@@ -213,7 +209,7 @@ uses
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
-  inMtoModalCorregirPago, inLibMsgSubsanacionCaja, inLibCajaEstiloVcl;
+  inLibMsgSubsanacionCaja, inLibCajaEstiloVcl;
 
 resourcestring
   STituloPersonalizacionConsultaOperaciones =
@@ -248,7 +244,6 @@ begin
   FRepositorioTraspasoTicket := ADependencias.TraspasoTicket;
   FRepositoriosTicketsCaja := ADependencias.Tickets;
   FLecturasImpresionTicket := ADependencias.LecturasTicket;
-  FCorreccionPagos := ADependencias.CorreccionPagos;
   FServicioSubsanacion := ADependencias.Subsanacion;
   inherited Create(AOwner, APermisos);
 end;
@@ -263,7 +258,6 @@ begin
   Dependencias.TraspasoTicket := FRepositorioTraspasoTicket;
   Dependencias.Tickets := FRepositoriosTicketsCaja;
   Dependencias.LecturasTicket := FLecturasImpresionTicket;
-  Dependencias.CorreccionPagos := FCorreccionPagos;
   Dependencias.Subsanacion := FServicioSubsanacion;
   Dependencias.Validar;
 end;
@@ -330,7 +324,7 @@ begin
     Estilo.EstilarRejilla(Vista);
   for Boton in TArray<TcxButton>.Create(btnReimprimir, btnReimprimirOtros,
     btnEnviarEmail, btnDevolverAbonar, btnRectificar, btnAnularVerifactu,
-    btnFacturarTicket, btnCorregirPago, btnSubsanar, btnCerrar) do
+    btnFacturarTicket, btnSubsanar, btnCerrar) do
     Estilo.EstilarBoton(Boton, '', nil, ALTO_FUENTE_BOTON);
   iMargen := EscalarCaja(Self, 12);
   iHueco := EscalarCaja(Self, 8);
@@ -339,7 +333,7 @@ begin
   ColocarFilaBotonesCaja([btnReimprimir, btnReimprimirOtros, btnEnviarEmail,
     btnDevolverAbonar, btnRectificar, btnAnularVerifactu, btnFacturarTicket],
     iMargen, iHueco, iAlto, ALTO_FUENTE_BOTON);
-  ColocarFilaBotonesCaja([btnCorregirPago, btnSubsanar], iMargen,
+  ColocarFilaBotonesCaja([btnSubsanar], iMargen,
     2 * iHueco + iAlto, iAlto, ALTO_FUENTE_BOTON);
   ColocarFilaBotonesCaja([btnCerrar], 0, 2 * iHueco + iAlto, iAlto,
     ALTO_FUENTE_BOTON);
@@ -374,7 +368,6 @@ end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
-  FCorreccionPagos := nil;
   FServicioSubsanacion := nil;
   FLecturasImpresionTicket := nil;
   FRepositoriosTicketsCaja.Impresion := nil;
@@ -594,35 +587,6 @@ begin
     end;
   end;
   Result := (Trim(ASerie) <> '') and (Trim(ANumero) <> '');
-end;
-
-procedure TfrmConsultaOpe.CorregirPago;
-var
-  Operacion: TOperacionCorreccionPago;
-begin
-  if FdmConsulta.qryMaestro.Active and
-     not FdmConsulta.qryMaestro.IsEmpty then
-  begin
-    Operacion.Empresa := FdmConsulta.qryMaestro.FieldByName(
-      'CODIGO_EMP_OPCAJA').AsString;
-    Operacion.Almacen := FdmConsulta.qryMaestro.FieldByName(
-      'CODIGO_ALM_OPCAJA').AsString;
-    Operacion.Caja := FdmConsulta.qryMaestro.FieldByName(
-      'CODIGO_CAJA_OPCAJA').AsString;
-    Operacion.Numero := FdmConsulta.qryMaestro.FieldByName(
-      'NUMERO_OPERACION_OPCAJA').AsString;
-    if TfrmModalCorregirPago.Ejecutar(Self, FCorreccionPagos, Operacion) then
-    begin
-      FdmConsulta.CerrarPestanasHijas;
-      FdmConsulta.RefrescarPestanasHijas;
-      pcHijos.ActivePage := tsPagos;
-    end;
-  end;
-end;
-
-procedure TfrmConsultaOpe.btnCorregirPagoClick(Sender: TObject);
-begin
-  CorregirPago;
 end;
 
 function TfrmConsultaOpe.ClaveOperacionSubsanacion:
@@ -1182,12 +1146,9 @@ begin
     or FdmConsulta.EsTraspaso;
   btnReimprimirOtros.Enabled := btnReimprimir.Enabled;
   btnEnviarEmail.Enabled := btnReimprimir.Enabled;
-  btnCorregirPago.Caption := SCaptionCorregirPago;
-  btnCorregirPago.Enabled := FdmConsulta.TienePagos and
-    FCorreccionPagos.Permitida;
   btnSubsanar.Caption := SSubsanacionBoton;
   btnSubsanar.Enabled := FdmConsulta.TieneFactura and
-    FCorreccionPagos.Permitida;
+    FServicioSubsanacion.Permitida;
 end;
 
 // -----------------------------------------------------------------------------
@@ -1265,7 +1226,7 @@ begin
       if not bContinuar then
         ShowMessage_fza(SErrorOperacionCorreoNoEncontrada)
       else if sEmail = '' then
-        bContinuar := InputQuery(STituloEnviarDocumentacion,
+        bContinuar := InputQuery_fza(STituloEnviarDocumentacion,
           SSolicitudCorreoElectronico, sEmail);
       if bContinuar and (Trim(sEmail) = '') then
       begin

@@ -153,6 +153,7 @@ procedure AplicarImporteLinea(ADataSet: TDataSet;
 var
   oLinea: TLinFac;
   dPrecio: Currency;
+  dTotalCalculado: Currency;
 begin
   dPrecio := CalcularPrecioSubsanacion(ALinea);
   oLinea := TLinFac.Create(ADataSet);
@@ -166,7 +167,10 @@ begin
     else
       oLinea.Dto := oLinea.PrecioSal - oLinea.PreSiva;
     oLinea.CalcularLinea;
-    if SimpleRoundTo(oLinea.TotCiva, -2) <> ALinea.Importe then
+    // SimpleRoundTo devuelve Double: se compara en Currency para no fallar
+    // con importes sin representación binaria exacta (36,30).
+    dTotalCalculado := SimpleRoundTo(oLinea.TotCiva, -2);
+    if dTotalCalculado <> ALinea.Importe then
       raise EArgumentException.CreateFmt(
         SSubsanacionPrecisionLinea, [ALinea.Numero]);
     CopiarImportesCalculados(ADataSet, oLinea, ALinea.Importe);

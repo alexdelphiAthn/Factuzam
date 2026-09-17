@@ -21,11 +21,11 @@ unit inLibMensajesVcl;
 interface
 
 uses
-  Winapi.Windows, System.UITypes;
+  Winapi.Windows, System.UITypes, Vcl.Dialogs;
 
 const
   NOMBRE_FUENTE_MENSAJES = 'Source Sans 3';
-  TAMANO_FUENTE_MENSAJES = 9;
+  TAMANO_FUENTE_MENSAJES = 11;
   // Tipo de MessageBox que Winapi.Windows no declara.
   MB_CANCELTRYCONTINUE = $00000006;
 
@@ -43,6 +43,14 @@ function MessageDlg_fza(const AMensaje: string; ATipo: TMsgDlgType;
 // MB_ICONINFORMATION, MB_DEFBUTTON2... y resultados IDOK, IDYES, IDNO...
 function MessageBox_fza(const ATexto, ATitulo: string;
   AIndicadores: Longint = MB_OK): Integer;
+// Sustitutos de InputQuery e InputBox con la misma fuente que los mensajes.
+function InputQuery_fza(const ATitulo, APregunta: string;
+  var AValor: string): Boolean; overload;
+// Varias preguntas con validación al aceptar, como el InputQuery de la VCL.
+function InputQuery_fza(const ATitulo: string;
+  const APreguntas: array of string; var AValores: array of string;
+  const AValidar: TInputCloseQueryFunc): Boolean; overload;
+function InputBox_fza(const ATitulo, APregunta, AValorDefecto: string): string;
 
 // Traducción entre los indicadores MB_* y el diálogo de la VCL. Públicas
 // para poder probarlas sin mostrar ventanas.
@@ -56,7 +64,7 @@ function ResultadoDeMessageBox(AResultadoModal: Integer;
 implementation
 
 uses
-  System.SysUtils, Vcl.Forms, Vcl.Dialogs;
+  System.SysUtils, System.Classes, Vcl.Forms;
 
 type
   TOrdenBotones = array of TMsgDlgBtn;
@@ -175,26 +183,39 @@ begin
   end;
 end;
 
-function CrearDialogo(const AMensaje: string; ATipo: TMsgDlgType;
-  ABotones: TMsgDlgButtons; ABotonPorDefecto: TMsgDlgBtn;
-  AContextoAyuda: Longint): TForm;
+// CreateMessageDialog e InputQuery toman la fuente de Screen.MessageFont al
+// crear el formulario y dimensionan con ella el texto y los botones.
+procedure ConFuenteMensajes(const AProceso: TProc);
 var
   iTamanoAnterior: Integer;
   sFuenteAnterior: string;
 begin
-  // CreateMessageDialog toma la fuente de Screen.MessageFont al crear el
-  // formulario y dimensiona con ella el texto y los botones.
   sFuenteAnterior := Screen.MessageFont.Name;
   iTamanoAnterior := Screen.MessageFont.Size;
   Screen.MessageFont.Name := NOMBRE_FUENTE_MENSAJES;
   Screen.MessageFont.Size := TAMANO_FUENTE_MENSAJES;
   try
-    Result := CreateMessageDialog(
-      AMensaje, ATipo, ABotones, ABotonPorDefecto);
+    AProceso();
   finally
     Screen.MessageFont.Name := sFuenteAnterior;
     Screen.MessageFont.Size := iTamanoAnterior;
   end;
+end;
+
+function CrearDialogo(const AMensaje: string; ATipo: TMsgDlgType;
+  ABotones: TMsgDlgButtons; ABotonPorDefecto: TMsgDlgBtn;
+  AContextoAyuda: Longint): TForm;
+var
+  oDialogo: TForm;
+begin
+  oDialogo := nil;
+  ConFuenteMensajes(
+    procedure
+    begin
+      oDialogo := CreateMessageDialog(
+        AMensaje, ATipo, ABotones, ABotonPorDefecto);
+    end);
+  Result := oDialogo;
   Result.HelpContext := AContextoAyuda;
   Result.Position := poScreenCenter;
 end;
@@ -250,6 +271,60 @@ begin
   if (AIndicadores and MB_ICONMASK) <> 0 then
     MessageBeep(AIndicadores and MB_ICONMASK);
   Result := ResultadoDeMessageBox(MostrarDialogo(oDialogo), AIndicadores);
+end;
+
+function InputQuery_fza(const ATitulo, APregunta: string;
+  var AValor: string): Boolean;
+var
+  bAceptado: Boolean;
+  sValor: string;
+begin
+  // InputQuery lee Screen.MessageFont durante toda su ejecución (crea y
+  // muestra el formulario dentro), así que se envuelve la llamada entera.
+  sValor := AValor;
+  bAceptado := False;
+  ConFuenteMensajes(
+    procedure
+    begin
+      bAceptado := InputQuery(ATitulo, APregunta, sValor);
+    end);
+  if bAceptado then
+    AValor := sValor;
+  Result := bAceptado;
+end;
+
+function InputQuery_fza(const ATitulo: string;
+  const APreguntas: array of string; var AValores: array of string;
+  const AValidar: TInputCloseQueryFunc): Boolean;
+var
+  bAceptado: Boolean;
+  sPreguntas, sValores: TArray<string>;
+  I: Integer;
+begin
+  // Los parámetros array abiertos no pueden capturarse en el método anónimo:
+  // se copian a arrays dinámicos y se devuelven al terminar.
+  SetLength(sPreguntas, Length(APreguntas));
+  for I := 0 to High(APreguntas) do
+    sPreguntas[I] := APreguntas[I];
+  SetLength(sValores, Length(AValores));
+  for I := 0 to High(AValores) do
+    sValores[I] := AValores[I];
+  bAceptado := False;
+  ConFuenteMensajes(
+    procedure
+    begin
+      bAceptado := InputQuery(ATitulo, sPreguntas, sValores, AValidar);
+    end);
+  if bAceptado then
+    for I := 0 to High(AValores) do
+      AValores[I] := sValores[I];
+  Result := bAceptado;
+end;
+
+function InputBox_fza(const ATitulo, APregunta, AValorDefecto: string): string;
+begin
+  Result := AValorDefecto;
+  InputQuery_fza(ATitulo, APregunta, Result);
 end;
 
 end.

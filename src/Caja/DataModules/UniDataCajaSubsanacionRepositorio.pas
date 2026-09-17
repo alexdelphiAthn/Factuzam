@@ -38,7 +38,7 @@ uses
   System.SysUtils, System.StrUtils, System.Classes, System.JSON, System.Hash,
   System.Diagnostics, System.Generics.Collections, Data.DB,
   Datasnap.DBClient, Datasnap.Provider,
-  inLibCajaSubsanacion, inLibCorreccionPagoIntf, inLibFacturas,
+  inLibCajaSubsanacion, inLibFacturas,
   inLibMsgPersistenciaSubsanacionCaja, UniDataCajaSubsanacionImportes,
   inLibVerifactu, System.Math;
 
@@ -162,7 +162,7 @@ type
       const ADependencias: TDependenciasSubsanacionCaja);
     function Cargar(const AClave: TClaveOperacionSubsanacionCaja):
       TOperacionSubsanacionCaja;
-    function Medios: TArray<TMedioCorreccionPago>;
+    function Permitida: Boolean;
     function Guardar(const ASolicitud: TSolicitudSubsanacionCaja):
       TResultadoSubsanacionCaja;
   end;
@@ -450,12 +450,17 @@ begin
   end;
 end;
 
+function TServicioSubsanacionCajaUniDAC.Permitida: Boolean;
+begin
+  Result := (Trim(FDependencias.Usuario) <> '') and
+    FDependencias.Permisos.Disponible and
+    FDependencias.Permisos.TienePermiso(
+      CodigoPermisoMto('CajaPagosHist', apmModificar), paPermitir);
+end;
+
 procedure TServicioSubsanacionCajaUniDAC.ExigirPermiso;
 begin
-  if (Trim(FDependencias.Usuario) = '') or
-     not FDependencias.Permisos.Disponible or
-     not FDependencias.Permisos.TienePermiso(
-       CodigoPermisoMto('CajaPagosHist', apmModificar), paPermitir) then
+  if not Permitida then
     raise EInvalidOpException.Create(SSubsanacionSinPermiso);
 end;
 
@@ -774,39 +779,6 @@ begin
   end;
 end;
 
-function TServicioSubsanacionCajaUniDAC.Medios:
-  TArray<TMedioCorreccionPago>;
-var
-  oConsulta: TUniQuery;
-  oLista: TList<TMedioCorreccionPago>;
-  oMedio: TMedioCorreccionPago;
-begin
-  ExigirPermiso;
-  oConsulta := Consulta(
-    'SELECT CODIGO_FP_CFP,DESCRIPCION_FORMA_PAGO_CFP,' +
-    'ESREQ_REFERENCIA_FORMA_PAGO_CFP FROM fza_caja_formas_pago ' +
-    'WHERE ESACTIVO_FORMA_PAGO_CFP = ''S'' AND ' + SQL_MEDIO_SIMPLE +
-    'ORDER BY ORDEN_VISUAL_FORMA_PAGO_CFP,CODIGO_FP_CFP',
-    Default(TClaveOperacionSubsanacionCaja));
-  oLista := TList<TMedioCorreccionPago>.Create;
-  try
-    oConsulta.Open;
-    while not oConsulta.Eof do
-    begin
-      oMedio.Codigo := oConsulta.FieldByName(fforma).AsString;
-      oMedio.Descripcion :=
-        oConsulta.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
-      oMedio.RequiereReferencia := oConsulta.FieldByName(
-        'ESREQ_REFERENCIA_FORMA_PAGO_CFP').AsString = 'S';
-      oLista.Add(oMedio);
-      oConsulta.Next;
-    end;
-    Result := oLista.ToArray;
-  finally
-    FreeAndNil(oLista);
-    FreeAndNil(oConsulta);
-  end;
-end;
 procedure TServicioSubsanacionCajaUniDAC.ValidarSolicitud(
   const ASolicitud: TSolicitudSubsanacionCaja;
   const AActual: TOperacionSubsanacionCaja);

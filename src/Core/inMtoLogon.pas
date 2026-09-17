@@ -313,7 +313,7 @@ var
   oPerfilFormulario: TPerfilConexion;
   oPerfilAdministrativo: TPerfilConexion;
 begin
-  sCredencial := InputBox(SSolicitudPassBBDD, '', '');
+  sCredencial := InputBox_fza(SSolicitudPassBBDD, '', '');
   DescartarConfiguracionConexionPendiente;
   try
     oPerfilFormulario := CrearPerfilConexionFormulario(

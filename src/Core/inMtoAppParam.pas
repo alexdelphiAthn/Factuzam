@@ -1551,9 +1551,9 @@ begin
     else
     begin
       sUsuario := usuarios[0];
-      if InputQuery(STituloCambiarUsuario,
-                    Format(SSolicitudCambiarUsuario, [usuarios.CommaText]),
-                    sUsuario) then
+      if InputQuery_fza(STituloCambiarUsuario,
+                        Format(SSolicitudCambiarUsuario, [usuarios.CommaText]),
+                        sUsuario) then
       begin
         if usuarios.IndexOf(sUsuario) < 0 then
           ShowMessage_fza(Format(SErrorUsuarioNoEncontrado, [sUsuario]))

@@ -147,7 +147,7 @@ var
   oValores: array of string;
 begin
   SetLength(oValores, 1);
-  Result := InputQuery(SSubsanacionBoton, [SSubsanacionMotivo], oValores,
+  Result := InputQuery_fza(SSubsanacionBoton, [SSubsanacionMotivo], oValores,
     function(const AValores: array of string): Boolean
     begin
       Result := (Trim(AValores[0]) <> '') and

@@ -110,7 +110,8 @@ type
 implementation
 
 uses
-  inLibWin, inLibShowMto, inLibFotos, inLibMsgArticulos;
+  inLibWin, inLibShowMto, inLibFotos, inLibMsgArticulos,
+  inLibMensajesVcl;
 
 {$R *.dfm}
 
@@ -253,7 +254,7 @@ begin
       iOrdenSugerido :=
         dmmAtributosConjuntos.CalcularSiguienteOrdenValor(
           iIdConjunto, sIdAtributo);
-      sOrden := Trim(InputBox(
+      sOrden := Trim(InputBox_fza(
         STituloAnadirValorSku,
         SSolicitudOrdenNuevoValorSku,
         IntToStr(iOrdenSugerido)));

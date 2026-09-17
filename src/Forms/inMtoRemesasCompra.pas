@@ -434,8 +434,8 @@ begin
       sFecha := FormatDateTime('dd/mm/yyyy',
         dmmRemesasCompra.unqryTablaG.FieldByName('FECHA_CARGO_REMC')
           .AsDateTime);
-    if InputQuery(STituloFechaCargoRemesa, SSolicitudFechaCargoRemesa,
-                  sFecha) then
+    if InputQuery_fza(STituloFechaCargoRemesa, SSolicitudFechaCargoRemesa,
+                      sFecha) then
     begin
       if TryStrToDate(sFecha, dFecha) then
       begin

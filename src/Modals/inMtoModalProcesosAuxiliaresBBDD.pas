@@ -1999,7 +1999,7 @@ begin
   if ObjetoActivo(sNombre) then
   begin
     sSQL := FCatalogo.GenerarLlamadaProcedimiento(sNombre);
-    if InputQuery(
+    if InputQuery_fza(
          STituloEjecutarProcedimientoProcesosAuxiliaresBBDD,
          SPromptEjecutarProcedimientoProcesosAuxiliaresBBDD,
          sSQL) and

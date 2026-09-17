@@ -83,7 +83,7 @@ function TInteraccionDocumentosTrabajoVcl.SolicitarTitulo(
   out ATitulo: string): Boolean;
 begin
   ATitulo := ATituloPropuesto;
-  Result := InputQuery(
+  Result := InputQuery_fza(
     STituloNuevoDocumentoTrabajo,
     SSolicitudTituloDocumentoTrabajo,
     ATitulo);

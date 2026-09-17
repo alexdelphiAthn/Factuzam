@@ -440,9 +440,9 @@ procedure TfrmMtoGeneradorProcesos.BuscarGlobal;
 var
   TextoBuscar: string;
 begin
-  if InputQuery(STituloBusquedaGlobal,
-                SSolicitudTextoBusquedaGlobal,
-                TextoBuscar) then
+  if InputQuery_fza(STituloBusquedaGlobal,
+                    SSolicitudTextoBusquedaGlobal,
+                    TextoBuscar) then
   if Trim(TextoBuscar) <> '' then
   begin
     // Nos pasamos a la pestaña de la lista de procesos

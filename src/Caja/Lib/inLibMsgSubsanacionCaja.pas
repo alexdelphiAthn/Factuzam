@@ -49,15 +49,6 @@ resourcestring
     'Subsanación guardada y registrada en NO VERI*FACTU.';
   SSubsanacionTituloOperacion = 'Subsanación de %s / %s';
   SSubsanacionReimprimir = 'Reimprimir';
-  SSubsanacionDescuentoInvalido =
-    'El descuento debe estar entre cero y el total positivo de la operación.';
-  SSubsanacionTitulo = 'Descuento global';
-  SSubsanacionTotalActual = 'Total actual: %s';
-  SSubsanacionTotalCorregido = 'Importe del descuento';
-  SSubsanacionExplicacion =
-    'El descuento se repartirá entre las líneas existentes.';
-  SSubsanacionAplicar = 'Aplicar';
-  SSubsanacionCancelar = 'Cancelar';
   SSubsanacionSinLineas = 'La operación no tiene líneas para subsanar.';
   SSubsanacionCantidadInvalida =
     'La cantidad de la línea %s no es válida.';

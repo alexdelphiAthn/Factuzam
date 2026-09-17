@@ -777,7 +777,7 @@ begin
     else
     begin
       sUsuario := usuarios[0];
-      if InputQuery(STituloCambiarUsuarioParametrosCaja,
+      if InputQuery_fza(STituloCambiarUsuarioParametrosCaja,
         Format(SSolicitudCambiarUsuarioParametrosCaja,
           [usuarios.CommaText]), sUsuario) then
       begin

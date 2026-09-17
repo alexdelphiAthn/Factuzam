@@ -16,7 +16,7 @@ unit inLibCajaSubsanacionIntf;
 interface
 
 uses
-  inLibCajaSubsanacion, inLibCorreccionPagoIntf;
+  inLibCajaSubsanacion;
 
 type
   TClaveOperacionSubsanacionCaja = record
@@ -65,7 +65,8 @@ type
     ['{FBC3BA3E-6AFA-4C39-A596-0C742E67A808}']
     function Cargar(const AClave: TClaveOperacionSubsanacionCaja):
       TOperacionSubsanacionCaja;
-    function Medios: TArray<TMedioCorreccionPago>;
+    // El usuario puede subsanar (permiso de modificar cobros de caja).
+    function Permitida: Boolean;
     function Guardar(const ASolicitud: TSolicitudSubsanacionCaja):
       TResultadoSubsanacionCaja;
   end;

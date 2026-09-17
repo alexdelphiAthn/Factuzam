@@ -406,7 +406,7 @@ begin
   if dtFechaBase = 0 then
     dtFechaBase := Now;
   sHora := FormatDateTime('hh:nn', dtFechaBase);
-  if InputQuery(STituloHoraCaja, SSolicitudHoraCaja, sHora) then
+  if InputQuery_fza(STituloHoraCaja, SSolicitudHoraCaja, sHora) then
   begin
     if TryStrToTime(sHora, dtHora) then
       ActualizarFechaCaja(DateOf(dtFechaBase) + Frac(dtHora))

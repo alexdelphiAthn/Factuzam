@@ -263,6 +263,7 @@ type
     _grupoZonaIVA: string;
     _codigoIVA: string;
     _mensajeError: string;
+    _calculoOmitido: Boolean;
     _LineaenEdicion:TLinFac;
     _lineasMotorFiscal: TLineasMotorFiscalVenta;
     FRepositorioLecturas: IRepositorioLecturasFactura;
@@ -310,6 +311,9 @@ type
     property PorcentajeRetencion: Currency
       read _dPorRetencion write _dPorRetencion;
     property MensajeError: string read _mensajeError;
+    // True si la línea en edición aún no está resuelta y no se calculó:
+    // Totales no es válido y no debe mostrarse (quedaría a cero).
+    property CalculoOmitido: Boolean read _calculoOmitido;
     property Cabecera:TDataSet read _unqryFac;
     property Lineas:TDataset read _unqryLineas;
   end;
@@ -492,7 +496,8 @@ begin
           SErrorRecalcularTotalesFactura,
           [oTotales.MensajeError]);
       end;
-      if Assigned(AAlActualizarTotal) then
+      // Sin cálculo el total quedaría a cero: se conserva el mostrado.
+      if Assigned(AAlActualizarTotal) and not oTotales.CalculoOmitido then
       begin
         AAlActualizarTotal(
           nil,
@@ -1244,7 +1249,8 @@ begin
   // La búsqueda puede escribir el artículo antes de que el editor termine de
   // resolver la descripción o el SKU con atributos. No se fuerza el Post de
   // esa línea intermedia; el evento final volverá a solicitar el cálculo.
-  if not LineaActualPendienteDeResolver then
+  _calculoOmitido := LineaActualPendienteDeResolver;
+  if not _calculoOmitido then
   begin
     try
       // Leer configuración de la factura

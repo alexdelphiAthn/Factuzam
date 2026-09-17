@@ -260,7 +260,7 @@ begin
   if Fecha = 0 then
     Fecha := Now;
   HoraTexto := FormatDateTime('hh:nn', Fecha);
-  if InputQuery(STituloHoraCaja, SSolicitudHoraCaja, HoraTexto) then
+  if InputQuery_fza(STituloHoraCaja, SSolicitudHoraCaja, HoraTexto) then
   begin
     if TryStrToTime(HoraTexto, Hora) then
       Fecha := Trunc(Fecha) + Frac(Hora)
