@@ -141,17 +141,6 @@ resourcestring
   STituloNuevaFilaCompra = 'Nueva fila';
   SSolicitudNombreFilaCompra =
     'Nombre de la fila (color del proveedor):';
-  SAvisoConjuntoPivotCompraObligatorio =
-    'Selecciona primero un "Conjunto pivot" en la cabecera de la sesion ' +
-    'para poder anadirle un valor (talla).';
-  SErrorConjuntoPivotCompraNoExiste =
-    'El conjunto pivot no existe en la BBDD.';
-  STituloAnadirValorPivotCompra =
-    'Anadir talla / valor pivot';
-  SSolicitudNombreValorPivotCompra =
-    'Nombre del valor (ej: XXL, 47):';
-  SSolicitudOrdenValorPivotCompra =
-    'Orden (los SKUs se ordenan por este numero; usa pasos de 10).';
   SErrorAlbaranCompraMovimientosNoEncontrado =
     'Albaran de compra %s/%s no encontrado para generar movimientos.';
   SErrorAlbaranCompraMovimientosYaGenerados =

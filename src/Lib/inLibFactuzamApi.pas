@@ -23,6 +23,10 @@ const
     'https://webservice.veryverifactu.com/api/v1/';
 
 type
+  // Devuelve True cuando el llamador ya no puede esperar la respuesta,
+  // por ejemplo porque la aplicación se está cerrando.
+  TConsultarCancelacionEnvio = reference to function: Boolean;
+
   TResultadoFactuzamApi = record
     Ok: Boolean;
     EstadoHttp: Integer;
@@ -52,9 +56,12 @@ type
       const ANombres, AValores: array of string): string; static;
     class function Configurada(
       const AParametrosApp: IParametrosAplicacion): Boolean; static;
+    // Con AConsultarCancelacion el envío se puede interrumpir: si devuelve
+    // True antes de la respuesta, se lanza EPeticionHttpCancelada.
     class function EnviarJson(
       const AParametrosApp: IParametrosAplicacion;
-      const ARuta, AContenido: string):
+      const ARuta, AContenido: string;
+      const AConsultarCancelacion: TConsultarCancelacionEnvio = nil):
       TResultadoFactuzamApi; static;
     class function RecibirJson(
       const AParametrosApp: IParametrosAplicacion;
@@ -72,9 +79,13 @@ type
 implementation
 
 uses
-  System.Classes, System.JSON, System.NetEncoding,
+  System.Classes, System.JSON, System.NetEncoding, System.Types,
   System.Net.HttpClient, System.Net.URLClient,
   inLibMsgIntegraciones, inLibErroresHttp;
+
+const
+  // Cada cuánto consulta un envío cancelable si debe interrumpirse.
+  cMilisegundosConsultaCancelacion = 100;
 
 { Crea el cliente HTTP con los tiempos de espera y la credencial ya
   puestos. Todas las llamadas de la API comparten esta configuración. }
@@ -84,6 +95,55 @@ begin
   Result.ConnectionTimeout := 10000;
   Result.ResponseTimeout := 60000;
   Result.CustomHeaders['Authorization'] := 'Bearer ' + AToken;
+end;
+
+{ Espera a que termine la petición y la cancela en cuanto el llamador lo
+  pide; cancelar cierra el handle de WinHTTP y la petición vuelve al
+  momento. Devuelve True si se canceló. La petición usa el cliente y el
+  cuerpo del llamador: no se sale de aquí, ni con una excepción, hasta
+  que termina. }
+function EsperarPeticionCancelable(
+  const APeticion: IAsyncResult;
+  const AConsultarCancelacion: TConsultarCancelacionEnvio): Boolean;
+begin
+  Result := False;
+  try
+    while not APeticion.IsCompleted do
+    begin
+      if (not Result) and AConsultarCancelacion() then
+        Result := APeticion.Cancel;
+      APeticion.AsyncWaitEvent.WaitFor(cMilisegundosConsultaCancelacion);
+    end;
+  except
+    APeticion.Cancel;
+    APeticion.AsyncWaitEvent.WaitFor(INFINITE);
+    raise;
+  end;
+end;
+
+{ Sin consulta de cancelación el POST es síncrono, como siempre. Con ella
+  se lanza asíncrono para poder interrumpirlo desde el hilo que espera. }
+function EnviarPost(
+  AHttp: THTTPClient;
+  const AUrl: string;
+  ACuerpo: TStream;
+  const AConsultarCancelacion: TConsultarCancelacionEnvio): IHTTPResponse;
+var
+  aCabeceras: TNetHeaders;
+  oPeticion: IAsyncResult;
+begin
+  aCabeceras := [
+    TNetHeader.Create('Content-Type', 'application/json; charset=utf-8'),
+    TNetHeader.Create('Accept', 'application/json')];
+  if not Assigned(AConsultarCancelacion) then
+    Result := AHttp.Post(AUrl, ACuerpo, nil, aCabeceras)
+  else
+  begin
+    oPeticion := AHttp.BeginPost(AUrl, ACuerpo, nil, aCabeceras);
+    if EsperarPeticionCancelable(oPeticion, AConsultarCancelacion) then
+      raise EPeticionHttpCancelada.Create(SErrorEnvioFactuzamApiCancelado);
+    Result := THTTPClient.EndAsyncHTTP(oPeticion);
+  end;
 end;
 
 function TextoDesdeFlujo(AFlujo: TStream): string;
@@ -230,7 +290,9 @@ end;
 
 class function TClienteFactuzamApi.EnviarJson(
   const AParametrosApp: IParametrosAplicacion;
-  const ARuta, AContenido: string): TResultadoFactuzamApi;
+  const ARuta, AContenido: string;
+  const AConsultarCancelacion: TConsultarCancelacionEnvio):
+  TResultadoFactuzamApi;
 var
   oCuerpo: TStringStream;
   oHttp: THTTPClient;
@@ -251,11 +313,11 @@ begin
       oCuerpo := TStringStream.Create(AContenido, TEncoding.UTF8);
       try
         try
-          oRespuesta := oHttp.Post(
-            ComponerUrl(AParametrosApp, ARuta), oCuerpo, nil,
-            [TNetHeader.Create('Content-Type',
-                               'application/json; charset=utf-8'),
-             TNetHeader.Create('Accept', 'application/json')]);
+          oRespuesta := EnviarPost(
+            oHttp,
+            ComponerUrl(AParametrosApp, ARuta),
+            oCuerpo,
+            AConsultarCancelacion);
           sRespuesta := oRespuesta.ContentAsString(TEncoding.UTF8);
         except
           on E: Exception do

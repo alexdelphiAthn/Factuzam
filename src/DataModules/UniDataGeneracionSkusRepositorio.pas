@@ -24,6 +24,7 @@ implementation
 uses
   System.SysUtils, Data.DB,
   inLibCodigosSinBarra,
+  inLibPrestaShopColaSenal,
   UniDataPrestaShopEncolado;
 
 const
@@ -36,11 +37,22 @@ const
     'ON va.ID_ATB_VA = aca.ID_VA_ACA AND va.ID_VAR_VA = :var ' +
     'WHERE aca.CODIGO_ART_ACA = :art ' +
     'ORDER BY aca.ORDEN_ACA, va.ORDEN_VA';
+  // Valores de cada dimensión: los del conjunto asignado al artículo más
+  // los que ya usa algún SKU suyo, sin repetir nombre.
+  //   - ID_AC: si el nombre tiene varios ID, manda el que ya usan los SKU
+  //     del artículo para que los SKU nuevos no mezclen dos ID del mismo
+  //     color o talla.
+  //   - ORDEN_AV: el orden del conjunto prevalece sobre el global; antes
+  //     ganaba el global (MIN) y las tallas de un conjunto salían todas a 0.
   SQL_DETALLE =
-    'SELECT ID_ATB_VA, MAX(ID_AC) AS ID_AC, NOMBRE_AC, ' +
-    'MIN(ORDEN_AV) AS ORDEN_AV, 0 AS ASIGNADO FROM (' +
-    'SELECT atr.ID_ATB_VA, val.ID_AV AS ID_AC, ' +
-    'val.AV AS NOMBRE_AC, det.ORDEN_ACD AS ORDEN_AV ' +
+    'SELECT ID_ATB_VA, ' +
+    'COALESCE(MIN(CASE WHEN EN_SKU = 1 THEN ID_AC END), MAX(ID_AC)) ' +
+    'AS ID_AC, NOMBRE_AC, ' +
+    'COALESCE(MIN(ORDEN_CONJUNTO), MIN(ORDEN_GLOBAL)) AS ORDEN_AV, ' +
+    '0 AS ASIGNADO FROM (' +
+    'SELECT atr.ID_ATB_VA, val.ID_AV AS ID_AC, val.AV AS NOMBRE_AC, ' +
+    'det.ORDEN_ACD AS ORDEN_CONJUNTO, val.ORDEN_AV AS ORDEN_GLOBAL, ' +
+    '0 AS EN_SKU ' +
     'FROM fza_variaciones_atributos atr ' +
     'JOIN fza_articulos_conjuntos_asign asign ' +
     'ON asign.ID_VA_ACA = atr.ID_ATB_VA ' +
@@ -49,16 +61,22 @@ const
     'ON det.ID_AC_ACD = asign.ID_AC_ACA ' +
     'JOIN fza_atributos_valores val ON val.ID_AV = det.ID_AV_ACD ' +
     'WHERE atr.ID_VAR_VA = :Variacion UNION ' +
-    'SELECT atr.ID_ATB_VA, val.ID_AV AS ID_AC, ' +
-    'val.AV AS NOMBRE_AC, val.ORDEN_AV AS ORDEN_AV ' +
+    'SELECT atr.ID_ATB_VA, val.ID_AV AS ID_AC, val.AV AS NOMBRE_AC, ' +
+    'det.ORDEN_ACD AS ORDEN_CONJUNTO, val.ORDEN_AV AS ORDEN_GLOBAL, ' +
+    '1 AS EN_SKU ' +
     'FROM fza_variaciones_atributos atr ' +
     'JOIN fza_atributos_valores val ON val.ID_VA_AV = atr.ID_ATB_VA ' +
     'JOIN fza_atributos_sku asku ON asku.ID_AV_SA = val.ID_AV ' +
     'JOIN fza_articulos_skus skus ' +
     'ON skus.CODIGO_UNIDAD_SKU = asku.CODIGO_UNIDAD_SKU_SA ' +
     'AND skus.CODIGO_ART_SKU = :Articulo ' +
+    'LEFT JOIN fza_articulos_conjuntos_asign asign ' +
+    'ON asign.CODIGO_ART_ACA = skus.CODIGO_ART_SKU ' +
+    'AND asign.ID_VA_ACA = atr.ID_ATB_VA ' +
+    'LEFT JOIN fza_atributos_conjuntos_det det ' +
+    'ON det.ID_AC_ACD = asign.ID_AC_ACA AND det.ID_AV_ACD = val.ID_AV ' +
     'WHERE atr.ID_VAR_VA = :Variacion) AS combinados ' +
-    'GROUP BY ID_ATB_VA, NOMBRE_AC ORDER BY ORDEN_AV';
+    'GROUP BY ID_ATB_VA, NOMBRE_AC ORDER BY ORDEN_AV, NOMBRE_AC';
   SQL_ASEGURAR_FILAS =
     'INSERT IGNORE INTO fza_articulos_conjuntos_asign ' +
     '(CODIGO_ART_ACA, ID_AC_ACA, ID_VA_ACA, ORDEN_ACA, ' +
@@ -87,9 +105,14 @@ const
     'SELECT (FLOOR(COALESCE(MAX(ORDEN_AV), 0) / 10) + 1) * 10 ' +
     'AS SIGUIENTE_ORDEN FROM fza_atributos_valores ' +
     'WHERE ID_VA_AV = :IdAtributo';
+  // Con nombres repetidos manda el ID más antiguo, que es el canónico.
   SQL_BUSCAR_VALOR =
-    'SELECT ID_AV FROM fza_atributos_valores ' +
-    'WHERE ID_VA_AV = :IdVa AND TRIM(UPPER(AV)) = UPPER(:Valor)';
+    'SELECT ID_AV, AV FROM fza_atributos_valores ' +
+    'WHERE ID_VA_AV = :IdVa AND TRIM(UPPER(AV)) = UPPER(:Valor) ' +
+    'ORDER BY ID_AV';
+  SQL_CODIGOS_SKU =
+    'SELECT CODIGO_UNIDAD_SKU FROM fza_articulos_skus ' +
+    'WHERE CODIGO_ART_SKU = :Articulo ORDER BY CODIGO_UNIDAD_SKU';
   SQL_INSERTAR_VALOR =
     'INSERT INTO fza_atributos_valores (ID_VA_AV, AV, ORDEN_AV, ' +
     'INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
@@ -136,6 +159,7 @@ type
     FMaestro: TUniQuery;
     FDetalle: TUniQuery;
     FOrigenMaestro: TDataSource;
+    procedure Abrir;
   public
     constructor Create(
       AConexion: TUniConnection;
@@ -155,6 +179,8 @@ type
     procedure AsegurarFilas(
       const ACodigoArticulo: string;
       const ATipoVariacion: string);
+    function InsertarSku(
+      const ACodigoSku, ACodigoArticulo, ATipoVariacion: string): Boolean;
   public
     constructor Create(AConexion: TUniConnection);
     function PrepararDatos(
@@ -169,28 +195,24 @@ type
       const AIdAtributo: string;
       AIdConjunto: Integer
     ): Integer;
+    function BuscarValor(
+      const AIdAtributo, ANombre: string): TValorAtributoSku;
     function AsegurarValor(
-      const AIdAtributo: string;
-      const ANombre: string;
-      AOrden: Integer
-    ): Integer;
+      const AIdAtributo, ANombre: string;
+      AOrden: Integer): TValorAtributoSku;
     procedure GuardarValorEnConjunto(
       AIdConjunto: Integer;
       AIdValor: Integer;
       AOrden: Integer);
-    procedure GuardarSku(
-      const ACodigoSku: string;
-      const ACodigoArticulo: string;
-      const ATipoVariacion: string;
-      const AIdsValores: TArray<Integer>);
+    function ObtenerCodigosSku(
+      const ACodigoArticulo: string): TArray<string>;
+    function GuardarSku(
+      const ACodigoSku, ACodigoArticulo, ATipoVariacion: string;
+      const AIdsValores: TArray<Integer>): Boolean;
     procedure GuardarOrdenAtributo(
       const ACodigoArticulo: string;
       const AIdAtributo: string;
       AOrden: Integer);
-    function ObtenerNombreConjunto(
-      const ACodigoArticulo: string;
-      const AIdAtributo: string
-    ): string;
     procedure GuardarOrdenValor(
       AIdValor: Integer;
       AOrden: Integer);
@@ -217,7 +239,11 @@ begin
   FDetalle.CachedUpdates := True;
   FDetalle.MasterSource := FOrigenMaestro;
   FDetalle.MasterFields := 'ID_ATB_VA';
-  RecargarMaestro;
+  // Sin DetailFields UniDAC enlaza por parámetros del SQL y aquí no hay
+  // ninguno con nombre de campo del maestro: el detalle salía sin filtrar,
+  // con tallas y colores mezclados bajo cualquier dimensión.
+  FDetalle.DetailFields := 'ID_ATB_VA';
+  Abrir;
 end;
 
 destructor TDatosGeneracionSkusUniDAC.Destroy;
@@ -240,8 +266,13 @@ end;
 
 procedure TDatosGeneracionSkusUniDAC.RecargarMaestro;
 begin
-  FDetalle.Close;
-  FMaestro.Close;
+  // Solo el maestro. El detalle guarda en memoria las casillas marcadas y
+  // los valores añadidos para esta vez: reabrirlo los perdería.
+  FMaestro.Refresh;
+end;
+
+procedure TDatosGeneracionSkusUniDAC.Abrir;
+begin
   FMaestro.ParamByName('var').AsString := FTipoVariacion;
   FMaestro.ParamByName('art').AsString := FCodigoArticulo;
   FMaestro.Open;
@@ -252,10 +283,7 @@ begin
   FDetalle.FieldByName('ID_ATB_VA').ReadOnly := False;
   FDetalle.FieldByName('ID_AC').ReadOnly := False;
   FDetalle.FieldByName('NOMBRE_AC').ReadOnly := False;
-  if FDetalle.FindField('ORDEN_AV') <> nil then
-  begin
-    FDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
-  end;
+  FDetalle.FieldByName('ORDEN_AV').ReadOnly := False;
 end;
 
 constructor TRepositorioGeneracionSkusUniDAC.Create(
@@ -343,13 +371,12 @@ begin
   end;
 end;
 
-function TRepositorioGeneracionSkusUniDAC.AsegurarValor(
-  const AIdAtributo: string;
-  const ANombre: string;
-  AOrden: Integer): Integer;
+function TRepositorioGeneracionSkusUniDAC.BuscarValor(
+  const AIdAtributo, ANombre: string): TValorAtributoSku;
 var
   oConsulta: TUniQuery;
 begin
+  Result := Default(TValorAtributoSku);
   oConsulta := TUniQuery.Create(nil);
   try
     oConsulta.Connection := FConexion;
@@ -359,20 +386,36 @@ begin
     oConsulta.Open;
     if not oConsulta.IsEmpty then
     begin
-      Result := oConsulta.FieldByName('ID_AV').AsInteger;
-    end
-    else
-    begin
-      FConexion.ExecSQL(
-        SQL_INSERTAR_VALOR,
-        [AIdAtributo, SinBarraSku(ANombre), AOrden]);
-      oConsulta.Close;
-      oConsulta.SQL.Text := SQL_ULTIMO_ID;
-      oConsulta.Open;
-      Result := oConsulta.FieldByName('NUEVO_ID').AsInteger;
+      Result.Id := oConsulta.FieldByName('ID_AV').AsInteger;
+      Result.Nombre := oConsulta.FieldByName('AV').AsString;
     end;
   finally
     FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioGeneracionSkusUniDAC.AsegurarValor(
+  const AIdAtributo, ANombre: string;
+  AOrden: Integer): TValorAtributoSku;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := BuscarValor(AIdAtributo, ANombre);
+  if Result.Id = 0 then
+  begin
+    Result.Nombre := SinBarraSku(ANombre);
+    FConexion.ExecSQL(
+      SQL_INSERTAR_VALOR,
+      [AIdAtributo, Result.Nombre, AOrden]);
+    oConsulta := TUniQuery.Create(nil);
+    try
+      oConsulta.Connection := FConexion;
+      oConsulta.SQL.Text := SQL_ULTIMO_ID;
+      oConsulta.Open;
+      Result.Id := oConsulta.FieldByName('NUEVO_ID').AsInteger;
+    finally
+      FreeAndNil(oConsulta);
+    end;
   end;
 end;
 
@@ -386,27 +429,85 @@ begin
     [AIdConjunto, AIdValor, AOrden]);
 end;
 
-procedure TRepositorioGeneracionSkusUniDAC.GuardarSku(
-  const ACodigoSku: string;
-  const ACodigoArticulo: string;
-  const ATipoVariacion: string;
-  const AIdsValores: TArray<Integer>);
+function TRepositorioGeneracionSkusUniDAC.ObtenerCodigosSku(
+  const ACodigoArticulo: string): TArray<string>;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := nil;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_CODIGOS_SKU;
+    oConsulta.ParamByName('Articulo').AsString := ACodigoArticulo;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      Result := Result +
+        [oConsulta.FieldByName('CODIGO_UNIDAD_SKU').AsString];
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioGeneracionSkusUniDAC.InsertarSku(
+  const ACodigoSku, ACodigoArticulo, ATipoVariacion: string): Boolean;
+var
+  oAlta: TUniQuery;
+begin
+  oAlta := TUniQuery.Create(nil);
+  try
+    oAlta.Connection := FConexion;
+    oAlta.SQL.Text := SQL_GUARDAR_SKU;
+    oAlta.ParamByName('cod').AsString := ACodigoSku;
+    oAlta.ParamByName('art').AsString := ACodigoArticulo;
+    oAlta.ParamByName('var').AsString := ATipoVariacion;
+    oAlta.Execute;
+    Result := oAlta.RowsAffected > 0;
+  finally
+    FreeAndNil(oAlta);
+  end;
+end;
+
+function TRepositorioGeneracionSkusUniDAC.GuardarSku(
+  const ACodigoSku, ACodigoArticulo, ATipoVariacion: string;
+  const AIdsValores: TArray<Integer>): Boolean;
 var
   iIdValor: Integer;
+  bTransaccionPropia: Boolean;
 begin
-  FConexion.ExecSQL(
-    SQL_GUARDAR_SKU,
-    [ACodigoSku, ACodigoArticulo, ATipoVariacion]);
-  for iIdValor in AIdsValores do
-  begin
-    FConexion.ExecSQL(
-      SQL_GUARDAR_ATRIBUTO_SKU,
-      [ACodigoSku, iIdValor]);
+  // El SKU se crea entero (fila, atributos y aviso a la tienda) o no se
+  // crea: uno a medias quedaría sin color ni talla y, al existir ya, un
+  // reintento lo daría por bueno. Si el SKU ya existía no se le añaden
+  // atributos: podría acabar con dos colores o dos tallas.
+  bTransaccionPropia := not FConexion.InTransaction;
+  if bTransaccionPropia then
+    FConexion.StartTransaction;
+  try
+    Result := InsertarSku(ACodigoSku, ACodigoArticulo, ATipoVariacion);
+    if Result then
+    begin
+      for iIdValor in AIdsValores do
+        FConexion.ExecSQL(
+          SQL_GUARDAR_ATRIBUTO_SKU,
+          [ACodigoSku, iIdValor]);
+      EncolarArticuloPrestaShop(
+        FConexion,
+        ACodigoArticulo,
+        'SISTEMA');
+    end;
+    if bTransaccionPropia then
+      FConexion.Commit;
+  except
+    if bTransaccionPropia then
+      FConexion.Rollback;
+    raise;
   end;
-  EncolarArticuloPrestaShop(
-    FConexion,
-    ACodigoArticulo,
-    'SISTEMA');
+  // La cola solo avisa por sí misma fuera de transacción.
+  if Result and bTransaccionPropia then
+    SolicitarProcesadoPrestaShop;
 end;
 
 procedure TRepositorioGeneracionSkusUniDAC.GuardarOrdenAtributo(
@@ -417,18 +518,6 @@ begin
   FConexion.ExecSQL(
     SQL_GUARDAR_ORDEN_ATRIBUTO,
     [ACodigoArticulo, AIdAtributo, AOrden]);
-end;
-
-function TRepositorioGeneracionSkusUniDAC.ObtenerNombreConjunto(
-  const ACodigoArticulo: string;
-  const AIdAtributo: string): string;
-var
-  oConjunto: TConjuntoAtributoSku;
-begin
-  oConjunto := ObtenerConjuntoAtributo(
-    ACodigoArticulo,
-    AIdAtributo);
-  Result := oConjunto.Nombre;
 end;
 
 procedure TRepositorioGeneracionSkusUniDAC.GuardarOrdenValor(

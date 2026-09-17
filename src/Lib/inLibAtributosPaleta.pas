@@ -22,7 +22,7 @@ uses
   System.Types, System.Generics.Collections, Data.DB,
   Vcl.Graphics, Vcl.Controls, Vcl.ImgList,
   Uni,
-  cxGraphics, cxEdit, cxDropDownEdit,
+  cxGraphics, cxEdit, cxDropDownEdit, cxLookupDBGrid,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, System.UITypes,
   inLibAtributosPaletaIntf;
 
@@ -111,6 +111,13 @@ procedure PintarOpcionComboConSwatch(ACanvas: TcxCanvas;
                                      const ATexto: string;
                                      AHayColor: Boolean;
                                      const AInfo: TInfoBasico);
+
+// Lista desplegable de un TcxLookupComboBox: la columna ACampoHex pinta el
+// cuadradito de paleta en vez del texto '#RRGGBB'. La lista no tiene evento
+// de pintado propio, así que se le asigna un editor de solo lectura (su
+// RepositoryItem), que pertenece a la propia lista.
+procedure MostrarMuestraPaletaEnLista(AColumnas: TcxLookupDBGridColumns;
+                                      const ACampoHex: string);
 
 // Rellena ADict con NOMBRE_ATRIBUTO (uppercase) -> ID_ATRIBUTO para todos los
 // atributos del articulo padre. Pensado para grids de stock que no conocen
@@ -300,6 +307,40 @@ function SeleccionarAvConPaleta(AConexion: TUniConnection;
                                 const ACodArt: string = ''): Boolean;
 
 implementation
+
+uses
+  cxContainer, cxGeometry, cxTextEdit, cxEditRepositoryItems;
+
+type
+  // Celda de la lista que pinta el HEX como cuadradito, sin texto.
+  TMuestraPaletaViewInfo = class(TcxCustomTextEditViewInfo)
+  private
+    FInfo: TInfoBasico;
+  protected
+    procedure InternalPaint(ACanvas: TcxCanvas); override;
+  end;
+
+  TMuestraPaletaViewData = class(TcxCustomTextEditViewData)
+  public
+    procedure EditValueToDrawValue(const AEditValue: TcxEditValue;
+      AViewInfo: TcxCustomEditViewInfo); override;
+  end;
+
+  TMuestraPaletaProperties = class(TcxTextEditProperties)
+  public
+    class function GetViewDataClass: TcxCustomEditViewDataClass; override;
+    class function GetViewInfoClass: TcxContainerViewInfoClass; override;
+  end;
+
+  TMuestraPaletaRepositorio = class(TcxEditRepositoryTextItem)
+  public
+    class function GetEditPropertiesClass: TcxCustomEditPropertiesClass;
+      override;
+  end;
+
+const
+  // Lado a 96 ppp del cuadradito de la lista (se escala con la celda).
+  LADO_MUESTRA_LISTA = 14;
 
 var
   GCache        : TDictionary<string, TInfoBasico>;
@@ -543,6 +584,57 @@ begin
     ACanvas.Rectangle(Cuadrado);
     ACanvas.Brush.Style := bsSolid;
   end;
+end;
+
+procedure TMuestraPaletaViewInfo.InternalPaint(ACanvas: TcxCanvas);
+begin
+  // Fondo de la fila (con la selección) sin texto; encima, el cuadradito.
+  inherited InternalPaint(ACanvas);
+  PintarSwatchEnCanvas(ACanvas, ClientRect, FInfo,
+    ScaleFactor.Apply(LADO_MUESTRA_LISTA));
+end;
+
+procedure TMuestraPaletaViewData.EditValueToDrawValue(
+  const AEditValue: TcxEditValue; AViewInfo: TcxCustomEditViewInfo);
+var
+  oVista: TMuestraPaletaViewInfo;
+begin
+  inherited EditValueToDrawValue(AEditValue, AViewInfo);
+  oVista := AViewInfo as TMuestraPaletaViewInfo;
+  oVista.FInfo := Default(TInfoBasico);
+  oVista.FInfo.HexColor := Trim(oVista.Text);
+  oVista.FInfo.Color := HexToColor(oVista.FInfo.HexColor);
+  oVista.FInfo.EsValido := oVista.FInfo.Color <> clNone;
+  oVista.Text := '';
+end;
+
+class function TMuestraPaletaProperties.GetViewDataClass:
+  TcxCustomEditViewDataClass;
+begin
+  Result := TMuestraPaletaViewData;
+end;
+
+class function TMuestraPaletaProperties.GetViewInfoClass:
+  TcxContainerViewInfoClass;
+begin
+  Result := TMuestraPaletaViewInfo;
+end;
+
+class function TMuestraPaletaRepositorio.GetEditPropertiesClass:
+  TcxCustomEditPropertiesClass;
+begin
+  Result := TMuestraPaletaProperties;
+end;
+
+procedure MostrarMuestraPaletaEnLista(AColumnas: TcxLookupDBGridColumns;
+                                      const ACampoHex: string);
+var
+  oColumna: TcxLookupDBGridColumn;
+begin
+  oColumna := AColumnas.ColumnByFieldName(ACampoHex);
+  if oColumna <> nil then
+    oColumna.RepositoryItem :=
+      TMuestraPaletaRepositorio.Create(AColumnas.Grid);
 end;
 
 procedure PintarOpcionComboConSwatch(ACanvas: TcxCanvas;

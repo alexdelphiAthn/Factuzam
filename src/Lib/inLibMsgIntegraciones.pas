@@ -29,6 +29,8 @@ resourcestring
   SErrorRespuestaHttpFactuzamApi = 'Respuesta HTTP %d';
   SErrorFactuzamApiNoConfigurada =
     'La API de Factuzam no está configurada.';
+  SErrorEnvioFactuzamApiCancelado =
+    'Envío cancelado antes de recibir la respuesta del servidor.';
   SInfoEventoFactuzamApiRecibido =
     'Evento recibido correctamente.';
   SInfoConsultaFactuzamApiRealizada =

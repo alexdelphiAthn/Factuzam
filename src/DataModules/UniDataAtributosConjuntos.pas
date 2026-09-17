@@ -256,6 +256,9 @@ begin
         oConsulta.ParamByName('USUARIO').AsString :=
           IdentidadSesion.Usuario;
         oConsulta.ExecSQL;
+        // El nombre guardado, que es el que ofrece la lista desplegable:
+        // con el tecleado ('M/L') la celda no encontraba 'M-L'.
+        AValor := SinBarraSku(sTexto);
         oConsulta.SQL.Text := SQL_ULTIMO_ID_VALOR;
         oConsulta.Open;
         Result := oConsulta.FieldByName('ID').AsInteger;

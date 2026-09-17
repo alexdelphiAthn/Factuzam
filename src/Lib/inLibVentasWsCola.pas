@@ -106,6 +106,9 @@ type
       const AIntento: TIntentoVentasWsCola);
     procedure GuardarError(AIdCola: Int64; const AMensaje: string;
       AIntentos: Integer; AConsumirIntento: Boolean);
+    function DebeCancelarEnvio: Boolean;
+    procedure AplazarEnvioInterrumpido(AIdCola: Int64;
+      const AMensaje: string);
   protected
     procedure Execute; override;
   public
@@ -620,6 +623,11 @@ begin
         GuardarError(AIdCola, E.Message, oFila.Intentos, False);
         Result := False;
       end;
+      on E: EPeticionHttpCancelada do
+      begin
+        AplazarEnvioInterrumpido(AIdCola, E.Message);
+        Result := False;
+      end;
       on E: Exception do
         GuardarError(AIdCola, E.Message, oFila.Intentos, True);
     end;
@@ -655,15 +663,18 @@ begin
       Result := TClienteFactuzamApi.EnviarJson(
         FParametrosApp,
         oIntento.RecursoHttp,
-        AContenido);
+        AContenido,
+        DebeCancelarEnvio);
     except
-      on E: EConexionHttpTemporal do
+      on E: Exception do
       begin
         Result.Mensaje := E.Message;
-        raise;
+        // Ni la caída de conexión ni el cierre gastan intento: los
+        // trata ProcesarFila.
+        if (E is EConexionHttpTemporal) or
+           (E is EPeticionHttpCancelada) then
+          raise;
       end;
-      on E: Exception do
-        Result.Mensaje := E.Message;
     end;
   finally
     oIntento.InstanteFin := Now;
@@ -761,6 +772,27 @@ begin
     FRegistroLog.RegistrarAviso(
       'Cola de ventas WS aplazada por falta de conexión; ' +
       'el intento no se contabiliza: ' + AMensaje);
+end;
+
+{ Al cerrar, DetenerHilo espera a este hilo: el envío en curso se corta en
+  vez de agotar los tiempos de espera de WinHTTP. }
+function THiloVentasWsCola.DebeCancelarEnvio: Boolean;
+begin
+  Result := Terminated or FContextoSesion.CerrandoAplicacion;
+end;
+
+procedure THiloVentasWsCola.AplazarEnvioInterrumpido(AIdCola: Int64;
+  const AMensaje: string);
+begin
+  // Lo cortó el cierre, no el servidor: vuelve a PENDIENTE sin gastar
+  // intento ni esperar. Si el servidor llegó a recibirlo, acepta el
+  // reenvío como repetido (mismo id de evento y misma huella).
+  FRepositorio.GuardarErrorIntento(
+    AIdCola, 'PENDIENTE', 0, AMensaje, FUsuario, False);
+  if Assigned(FRegistroLog) then
+    FRegistroLog.RegistrarInformacion(
+      'Cola de ventas WS: envío interrumpido por el cierre; ' +
+      'el intento no se contabiliza.');
 end;
 
 end.

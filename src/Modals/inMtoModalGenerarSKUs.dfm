@@ -15,7 +15,6 @@
     inherited btnCancelar: TcxButton
       Left = 50
       Top = 6
-      OnClick = btnCancelarClick
       ExplicitLeft = 50
       ExplicitTop = 6
     end
@@ -30,8 +29,7 @@
       Top = 6
       Width = 177
       Height = 40
-      Cancel = True
-      Caption = '&A'#241'adir Valor (F3)'
+      Caption = 'Añadir &Valor (F3)'
       TabOrder = 2
       OnClick = btnAddValueClick
     end
@@ -62,6 +60,10 @@
         ExplicitWidth = 726
         object tvMaestro: TcxGridDBTableView
           DataController.DataSource = dsMaestro
+          OptionsData.Deleting = False
+          OptionsData.Editing = False
+          OptionsData.Inserting = False
+          OptionsSelection.CellSelect = False
           OptionsView.GroupByBox = False
           object tvMaestroID_ATRIBUTO_VA: TcxGridDBColumn
             DataBinding.FieldName = 'ID_ATB_VA'
@@ -124,6 +126,8 @@
         object tvDetalle: TcxGridDBTableView
           OnCellDblClick = tvDetalleCellDblClick
           DataController.DataSource = dsDetalle
+          OptionsData.Deleting = False
+          OptionsData.Inserting = False
           OptionsView.GroupByBox = False
           object tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn
             DataBinding.FieldName = 'ID_VA_AC'
@@ -135,8 +139,11 @@
             Width = 167
           end
           object tvDetalleNOMBRE_AC: TcxGridDBColumn
-            Caption = 'Nombre Atr'
+            Caption = 'Valor'
             DataBinding.FieldName = 'NOMBRE_AC'
+            Options.Editing = False
+            SortIndex = 1
+            SortOrder = soAscending
             Width = 168
           end
           object tvDetalleASIGNADO: TcxGridDBColumn
@@ -144,6 +151,7 @@
             DataBinding.FieldName = 'ASIGNADO'
             PropertiesClassName = 'TcxCheckBoxProperties'
             Properties.Alignment = taRightJustify
+            Properties.ImmediatePost = True
             Properties.ValueChecked = '1'
             Properties.ValueUnchecked = '0'
           end
@@ -156,6 +164,8 @@
             DataBinding.FieldName = 'ORDEN_AV'
             HeaderAlignmentHorz = taRightJustify
             Options.Editing = False
+            SortIndex = 0
+            SortOrder = soAscending
             Width = 299
           end
         end
@@ -165,7 +175,14 @@
       end
     end
   end
+  inherited ActionList1: TActionList
+    object actAnadirValor: TAction
+      ShortCut = 114
+      OnExecute = btnAddValueClick
+    end
+  end
   object dsMaestro: TDataSource
+    OnDataChange = dsMaestroDataChange
     Left = 592
     Top = 144
   end

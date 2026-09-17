@@ -6,7 +6,7 @@
         <MainSource>fzam.dpr</MainSource>
         <Base>True</Base>
         <Config Condition="'$(Config)'==''">Release</Config>
-        <Platform Condition="'$(Platform)'==''">Win64</Platform>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
         <TargetedPlatforms>3</TargetedPlatforms>
         <AppType>Application</AppType>
         <ProjectName Condition="'$(ProjectName)'==''">fzam</ProjectName>
@@ -346,6 +346,7 @@
         <DCCReference Include="src\Lib\inLibGestorPerfilesMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorGuardianBorradoMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorGuiasGridMto.pas"/>
+        <DCCReference Include="src\Lib\inLibMenuColumnasRejillaVcl.pas"/>
         <DCCReference Include="src\Lib\inLibGestorTareasMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorArticulosMto.pas"/>
         <DCCReference Include="src\Lib\inLibGestorCopiaLineasCompra.pas"/>
@@ -1079,6 +1080,8 @@
         <DCCReference Include="src\Lib\inLibBusquedaDatosPersistenciaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataBusquedaDatosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGeneracionSkusPersistenciaIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibGeneracionSkus.pas"/>
+        <DCCReference Include="src\Lib\inLibAltaValorAtributoVcl.pas"/>
         <DCCReference Include="src\DataModules\UniDataGeneracionSkusRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibDistribuidorPersistenciaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataDistribuidorRepositorio.pas"/>

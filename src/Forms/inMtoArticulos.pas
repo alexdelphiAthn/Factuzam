@@ -171,7 +171,6 @@ type
     actClientes: TAction;
     actProveedores: TAction;
     actTarifas: TAction;
-    dbcTarifasCODIGO_UNICO_TARIFA: TcxGridDBColumn;
     dbcTarifasESIMP_INCL_TARIFA: TcxGridDBColumn;
     dbcDESCRIPCION_FAM: TcxDBLabel;
     dbcNOMBRE_FAM_FAM: TcxDBLabel;
@@ -576,6 +575,7 @@ uses
   UniDataDestinoFacturaRepositorio,
   UniDataFiltroArticulosRepositorio,
   inMtoArticulosNavegacionFacturasVcl,
+  inLibMenuColumnasRejillaVcl,
   System.Diagnostics,   // TStopwatch
   inLibMsgArticulos, inLibMsgComun;
 
@@ -755,17 +755,12 @@ begin
     FCbbTipoVariacion.SetFocus;
   end;
   if (CodArticulo <> '') and (TipoVariacion <> '') then
-  begin
-    TfrmMtoModalGenerarSKUs.Ejecutar(
-      Self,
-      CodArticulo,
-      TipoVariacion,
-      FDependencias.GeneracionSkus);
-    dmmArticulos.unqrySkus.Close;
-    dmmArticulos.unqrySkus.Open;
-    dmmArticulos.unqryVariacionesArticulos.Close;
-    dmmArticulos.unqryVariacionesArticulos.Open;
-  end;
+    dmmArticulos.RecargarSkusGenerados(
+      TfrmMtoModalGenerarSKUs.Ejecutar(
+        Self,
+        CodArticulo,
+        TipoVariacion,
+        FDependencias.GeneracionSkus).SkusCreados);
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
@@ -1350,6 +1345,8 @@ begin
   cbbFamilia.Properties.ListSource := dmmArticulos.dsFamiliaArticulos;
   cbbTipoCantidad.Properties.ListSource := dmmArticulos.dsUnidadesMedidaLookup;
   tvTarifas.DataController.DataSource := dmmArticulos.dsTarifasArticulos;
+  // Botón derecho con las columnas, como en la lista. Lo libera Self.
+  TMenuColumnasRejilla.Create(Self, cxgrdTarifas, tvTarifas);
   tvProveedores.DataController.DataSource :=
                                             dmmArticulos.dsProveedoresArticulos;
   tvLinFac.DataController.DataSource := dmmArticulos.dsLinFacturasArticulos;
@@ -1414,6 +1411,8 @@ begin
     begin
       Result := oDatos.ActualizarSkusColorActivo(ACodArt, AColor, AActivo);
     end);
+  FPresAtributos.PrepararListaBasicos(
+    tvSkuAtributosBasicosID_ATB_AV.Properties as TcxLookupComboBoxProperties);
   oContextoStock := Default(TContextoStockArticuloVcl);
   oContextoStock.Vista := tvStock;
   oContextoStock.Conexion := ConexionPrincipal;
@@ -2023,7 +2022,12 @@ begin
     // que el siguiente cambio de articulo (master/detail) no dispare un
     // refresh innecesario de ~2s sobre vi_articulos_tarifas.
     if pcDetail.ActivePage = tsTarifas then
-      dmmArticulos.AsegurarTarifasAbiertas
+    begin
+      dmmArticulos.AsegurarTarifasAbiertas;
+      // Al cambiar de artículo las tarifas estaban cerradas y la columna
+      // Sku quedó oculta: se decide ahora con las tarifas cargadas.
+      ActualizarVisibilidadColumnaSku;
+    end
     else
       CerrarSiNoVisible(dmmArticulos.unqryTarifasArticulos, tsTarifas);
     // Stock: si activan la pestaña, refrescar solo si cambio el articulo.

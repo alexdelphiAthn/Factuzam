@@ -2,18 +2,18 @@
   BorderStyle = bsDialog
   Caption = 'Resolver incidencia VERI*FACTU'
   ClientHeight = 570
-  ClientWidth = 720
+  ClientWidth = 750
   Position = poMainFormCenter
   object pnlBotones: TPanel
     Left = 0
     Top = 520
-    Width = 720
+    Width = 750
     Height = 50
     Align = alBottom
     BevelOuter = bvNone
     TabOrder = 3
     object btnResolver: TcxButton
-      Left = 486
+      Left = 516
       Top = 9
       Width = 105
       Height = 32
@@ -22,7 +22,7 @@
       OnClick = btnResolverClick
     end
     object btnCancelar: TcxButton
-      Left = 599
+      Left = 629
       Top = 9
       Width = 105
       Height = 32
@@ -39,7 +39,7 @@
     Caption = 'Incidencia comunicada por la AEAT'
     TabOrder = 0
     Height = 142
-    Width = 696
+    Width = 726
     object lblFacturaTitulo: TcxLabel
       Left = 14
       Top = 24
@@ -47,7 +47,7 @@
       Transparent = True
     end
     object lblFactura: TcxLabel
-      Left = 166
+      Left = 196
       Top = 24
       AutoSize = False
       Caption = '-'
@@ -62,7 +62,7 @@
       Transparent = True
     end
     object lblError: TcxLabel
-      Left = 166
+      Left = 196
       Top = 54
       AutoSize = False
       Caption = '-'
@@ -78,7 +78,7 @@
       Transparent = True
     end
     object lblClienteActual: TcxLabel
-      Left = 166
+      Left = 196
       Top = 105
       AutoSize = False
       Caption = '-'
@@ -93,7 +93,7 @@
     Caption = 'Tratamiento de la incidencia'
     TabOrder = 1
     Height = 176
-    Width = 696
+    Width = 726
     object rgResolucion: TcxRadioGroup
       Left = 14
       Top = 22
@@ -110,7 +110,7 @@
       Properties.OnChange = rgResolucionPropertiesChange
       TabOrder = 0
       Height = 68
-      Width = 666
+      Width = 696
     end
     object lblMotivo: TcxLabel
       Left = 14
@@ -119,7 +119,7 @@
       Transparent = True
     end
     object mMotivo: TcxMemo
-      Left = 166
+      Left = 196
       Top = 94
       Properties.ScrollBars = ssVertical
       TabOrder = 2
@@ -133,7 +133,7 @@
     Caption = 'Destinatario correcto'
     TabOrder = 2
     Height = 162
-    Width = 696
+    Width = 726
     object lblCodigoCliente: TcxLabel
       Left = 14
       Top = 27
@@ -141,13 +141,13 @@
       Transparent = True
     end
     object edtCodigoCliente: TcxTextEdit
-      Left = 139
+      Left = 196
       Top = 25
       TabOrder = 0
       Width = 132
     end
     object btnCargarCliente: TcxButton
-      Left = 279
+      Left = 336
       Top = 23
       Width = 118
       Height = 28
@@ -156,13 +156,13 @@
       OnClick = btnCargarClienteClick
     end
     object lblClienteCorrecto: TcxLabel
-      Left = 139
+      Left = 196
       Top = 58
       AutoSize = False
       Caption = '-'
       Transparent = True
       Height = 24
-      Width = 527
+      Width = 500
     end
     object lblSerieRectificativa: TcxLabel
       Left = 14
@@ -171,19 +171,19 @@
       Transparent = True
     end
     object edtSerieRectificativa: TcxTextEdit
-      Left = 139
+      Left = 196
       Top = 94
       TabOrder = 3
       Width = 132
     end
     object lblFechaRectificativa: TcxLabel
-      Left = 304
+      Left = 360
       Top = 96
       Caption = 'Fecha rectificativa'
       Transparent = True
     end
     object dtFechaRectificativa: TcxDateEdit
-      Left = 436
+      Left = 520
       Top = 94
       TabOrder = 5
       Width = 132

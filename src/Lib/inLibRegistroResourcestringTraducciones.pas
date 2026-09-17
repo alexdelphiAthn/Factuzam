@@ -3203,28 +3203,94 @@ begin
       SErrorValoresDimensionesSkuIncompletos);
   ARegistrar(
     'inLibMsgArticulos.' +
-    'SInfoCombinacionesSkuGeneradas',
+    'SErrorCodigosSkuDemasiadoLargos',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
-      SInfoCombinacionesSkuGeneradas);
+      SErrorCodigosSkuDemasiadoLargos);
   ARegistrar(
     'inLibMsgArticulos.' +
-    'STituloAnadirValorSku',
+    'SInfoSkusMarcadosYaExisten',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
-      STituloAnadirValorSku);
+      SInfoSkusMarcadosYaExisten);
   ARegistrar(
     'inLibMsgArticulos.' +
-    'SSolicitudNombreValorSku',
+    'SPreguntaGenerarSkus',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
-      SSolicitudNombreValorSku);
+      SPreguntaGenerarSkus);
   ARegistrar(
     'inLibMsgArticulos.' +
-    'SSolicitudOrdenNuevoValorSku',
+    'STextoRestoCodigosSku',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
-      SSolicitudOrdenNuevoValorSku);
+      STextoRestoCodigosSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SAvisoSkusCreadosParcialmente',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SAvisoSkusCreadosParcialmente);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STituloNuevoValorAtributo',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STituloNuevoValorAtributo);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STituloAnadirValorDimensionSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STituloAnadirValorDimensionSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SEtiquetaNombreValorSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SEtiquetaNombreValorSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SEtiquetaOrdenValorSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SEtiquetaOrdenValorSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SEtiquetaOrdenDeSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SEtiquetaOrdenDeSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorValorNuevoSkuNoValido',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorValorNuevoSkuNoValido);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SNotaOrdenGlobalValorSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SNotaOrdenGlobalValorSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SErrorDimensionSkuNoSeleccionada',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SErrorDimensionSkuNoSeleccionada);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SInfoValorSkuYaListado',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SInfoValorSkuYaListado);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SPreguntaAltaValorAtributo',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SPreguntaAltaValorAtributo);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SPreguntaGuardarValorSkuGlobal',
@@ -3245,12 +3311,6 @@ begin
       STituloCambiarOrdenValorSku);
   ARegistrar(
     'inLibMsgArticulos.' +
-    'SSolicitudOrdenValorSku',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SSolicitudOrdenValorSku);
-  ARegistrar(
-    'inLibMsgArticulos.' +
     'SErrorOrdenValorSkuNoValido',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
@@ -3267,12 +3327,6 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       STituloCambiarOrdenAtributoSku);
-  ARegistrar(
-    'inLibMsgArticulos.' +
-    'SSolicitudOrdenAtributoSku',
-    'src/Lib/inLibMsgArticulos.pas',
-    @inLibMsgArticulos.
-      SSolicitudOrdenAtributoSku);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SErrorOrdenAtributoSkuNoValido',
@@ -3531,6 +3585,36 @@ begin
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.
       SHintQuitarPropiedad);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'STituloAnadirPropiedades',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      STituloAnadirPropiedades);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionTipoValorLista',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionTipoValorLista);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionTipoValorTextoLibre',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionTipoValorTextoLibre);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionTipoValorNumero',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionTipoValorNumero);
+  ARegistrar(
+    'inLibMsgArticulos.' +
+    'SCaptionTipoValorBooleano',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SCaptionTipoValorBooleano);
   ARegistrar(
     'inLibMsgArticulos.' +
     'SCaptionPorColorSku',
@@ -5287,36 +5371,6 @@ begin
     'src/Lib/inLibMsgCompras.pas',
     @inLibMsgCompras.
       SSolicitudNombreFilaCompra);
-  ARegistrar(
-    'inLibMsgCompras.' +
-    'SAvisoConjuntoPivotCompraObligatorio',
-    'src/Lib/inLibMsgCompras.pas',
-    @inLibMsgCompras.
-      SAvisoConjuntoPivotCompraObligatorio);
-  ARegistrar(
-    'inLibMsgCompras.' +
-    'SErrorConjuntoPivotCompraNoExiste',
-    'src/Lib/inLibMsgCompras.pas',
-    @inLibMsgCompras.
-      SErrorConjuntoPivotCompraNoExiste);
-  ARegistrar(
-    'inLibMsgCompras.' +
-    'STituloAnadirValorPivotCompra',
-    'src/Lib/inLibMsgCompras.pas',
-    @inLibMsgCompras.
-      STituloAnadirValorPivotCompra);
-  ARegistrar(
-    'inLibMsgCompras.' +
-    'SSolicitudNombreValorPivotCompra',
-    'src/Lib/inLibMsgCompras.pas',
-    @inLibMsgCompras.
-      SSolicitudNombreValorPivotCompra);
-  ARegistrar(
-    'inLibMsgCompras.' +
-    'SSolicitudOrdenValorPivotCompra',
-    'src/Lib/inLibMsgCompras.pas',
-    @inLibMsgCompras.
-      SSolicitudOrdenValorPivotCompra);
   ARegistrar(
     'inLibMsgCompras.' +
     'SErrorAlbaranCompraMovimientosNoEncontrado',

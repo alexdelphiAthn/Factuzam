@@ -39,7 +39,7 @@ uses
   Vcl.Controls, Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Graphics,
   Vcl.Dialogs, inMtoModalAceptCancel, Messages,
   cxControls, cxContainer, cxEdit, cxTextEdit, cxSpinEdit,
-  cxCheckBox, cxLabel, cxDropDownEdit, cxButtons,
+  cxCheckBox, cxCheckListBox, cxLabel, cxDropDownEdit, cxButtons,
   cxPC, cxLookAndFeels, cxLookAndFeelPainters,
   System.UITypes, inLibArticulosPropiedadesPersistenciaIntf;
 
@@ -65,9 +65,13 @@ type
   private
     FLectura        : ILectorPropiedadesArticulo;
     FExcluirCodigos : TStringList;
-    FListBox        : TListBox;
+    FLista          : TcxCheckListBox;
+    procedure AjustarColumnaTipo(AAnchoNombres, AAnchoTipos: Integer;
+      AMedidor: TCanvas);
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
+  protected
+    procedure DoCreate; override;
   public
     CodigosSeleccionados : TStringList;
     constructor Create(
@@ -157,6 +161,8 @@ type
     procedure DeleteUnidad(const AUnidad: string);
     procedure BtnAceptarClick(Sender: TObject);
     procedure BtnCancelarClick(Sender: TObject);
+  protected
+    procedure DoCreate; override;
   public
     constructor Create(
       AOwner: TComponent;
@@ -171,11 +177,10 @@ type
 implementation
 
 uses
-  inLibMensajesVcl,
+  System.Math, inLibMensajesVcl,
   uGenericIfThen, inLibMsgArticulos;
 
 resourcestring
-  STituloAnadirPropiedadesArticulo = 'Añadir propiedades al artículo';
   STituloPropiedadPorSku = '%s por SKU';
   STituloPropiedadPorColor = '%s por color';
 
@@ -187,6 +192,58 @@ const
   ANCHO_CTRL     = 260;
   ANCHO_BTN_DEL  = 24;
   COLOR_REQUERIDO = clMaroon;
+  // Medidas de los modales a 96 ppp: su DFM heredado ya viene escalado al
+  // PPI del monitor, así que se aplican con ScaleValue.
+  ANCHO_BOTON_MODAL       = 140;
+  ALTO_BOTONERA_MODAL     = 50;
+  MARGEN_BOTONERA         = 9;
+  MARGEN_DERECHO_BOTONERA = 12;
+  SEPARACION_BOTONES      = 8;
+  MARGEN_LISTA            = 10;
+  ALTO_SELECTOR           = 360;
+  ANCHO_MIN_SELECTOR      = 380;
+  ANCHO_MAX_SELECTOR      = 640;
+  ANCHO_MAX_NOMBRES       = 400;
+  // Casilla, bordes y barra de desplazamiento de la lista.
+  RESERVA_ANCHO_LISTA     = 90;
+  // Hueco mínimo entre nombre y tipo, en anchos medios de carácter.
+  SEPARACION_TIPO         = 3;
+
+// La botonera del DFM base (botones de 177x40) está pensada para modales
+// anchos: aquí se agrupa a la derecha con botones más compactos.
+procedure CompactarBotonera(AForm: TfrmModalAceptCancel);
+
+  procedure Colocar(ABoton: TcxButton; AMargenDerecho: Integer);
+  begin
+    ABoton.Width := AForm.ScaleValue(ANCHO_BOTON_MODAL);
+    ABoton.AlignWithMargins := True;
+    ABoton.Margins.SetBounds(
+      0,
+      AForm.ScaleValue(MARGEN_BOTONERA),
+      AForm.ScaleValue(AMargenDerecho),
+      AForm.ScaleValue(MARGEN_BOTONERA));
+    ABoton.Align := alRight;
+  end;
+
+begin
+  AForm.pnlButton.Height := AForm.ScaleValue(ALTO_BOTONERA_MODAL);
+  Colocar(AForm.btnAceptar, MARGEN_DERECHO_BOTONERA);
+  Colocar(AForm.btnCancelar, SEPARACION_BOTONES);
+end;
+
+function TextoTipoValor(const ATipo: string): string;
+begin
+  if ATipo = 'LISTA' then
+    Result := SCaptionTipoValorLista
+  else if ATipo = 'TEXTO_LIBRE' then
+    Result := SCaptionTipoValorTextoLibre
+  else if ATipo = 'NUMERO' then
+    Result := SCaptionTipoValorNumero
+  else if ATipo = 'BOOLEANO' then
+    Result := SCaptionTipoValorBooleano
+  else
+    Result := ATipo;
+end;
 
 constructor TfrmSelPropiedades.Create(
   AOwner: TComponent;
@@ -197,24 +254,26 @@ begin
   FLectura        := ALectura;
   FExcluirCodigos := AExcluir;
   CodigosSeleccionados := TStringList.Create;
-  Caption    := STituloAnadirPropiedadesArticulo;
-  Width      := 542;
-  Height     := 400;
   Position   := poOwnerFormCenter;
   BorderStyle:= bsDialog;
   Font.name := 'Source Sans 3';
-  FListBox := TListBox.Create(Self);
-  FListBox.Parent      := pnlBody;
-  FListBox.Align       := alClient;
-  FListBox.MultiSelect := True;
-  FListBox.Style       := lbOwnerDrawFixed;
-  FListBox.ItemHeight  := 22;
-  FListBox.BorderStyle := bsNone;
-  FListBox.ParentFont := True;
+  FLista := TcxCheckListBox.Create(Self);
+  FLista.Parent := pnlBody;
+  FLista.Align := alClient;
+  FLista.AlignWithMargins := True;
+  FLista.Margins.SetBounds(
+    ScaleValue(MARGEN_LISTA),
+    ScaleValue(MARGEN_LISTA),
+    ScaleValue(MARGEN_LISTA),
+    ScaleValue(MARGEN_LISTA));
+  // cvfStatesString: con cvfInteger el checklist limita a 64 ítems.
+  FLista.EditValueFormat := cvfStatesString;
   if Assigned(btnAceptar) then
     btnAceptar.OnClick := BtnAceptarClick;
   if Assigned(btnCancelar) then
     btnCancelar.OnClick := BtnCancelarClick;
+  ClientHeight := ScaleValue(ALTO_SELECTOR);
+  CompactarBotonera(Self);
   CargarLista;
 end;
 
@@ -222,6 +281,14 @@ destructor TfrmSelPropiedades.Destroy;
 begin
   FreeAndNil(CodigosSeleccionados);
   inherited;
+end;
+
+procedure TfrmSelPropiedades.DoCreate;
+begin
+  inherited;
+  // FormCreate de TfrmBase traduce el Caption buscando su clave por la
+  // jerarquía de clases: sin clave propia aplica la de TfrmBase ('frmBase').
+  Caption := STituloAnadirPropiedades;
 end;
 
 function TfrmSelPropiedades.IsShortCut(var Message: TWMKey): Boolean;
@@ -235,31 +302,78 @@ begin
     // córtala aquí y NO la pases al formulario principal".
     Result := True;
   end
+  else if Message.CharCode = VK_F12 then
+  begin
+    // La acción F12 heredada llama al btnAceptarClick de la base (cierra
+    // como Cancelar), no al OnClick asignado en el constructor.
+    BtnAceptarClick(Self);
+    Result := True;
+  end
   else
     Result := inherited IsShortCut(Message);
 end;
 
 procedure TfrmSelPropiedades.CargarLista;
 var
+  iAnchoNombres: Integer;
+  iAnchoTipos: Integer;
+  oMedidor: TBitmap;
   oPropiedad: TDefinicionPropiedadArticulo;
   oPropiedades: TArray<TDefinicionPropiedadArticulo>;
+  sTipo: string;
 begin
-  FListBox.Clear;
-  oPropiedades := FLectura.ListarDisponibles;
-  for oPropiedad in oPropiedades do
-  begin
-    // Excluir las ya asignadas
-    if FExcluirCodigos.IndexOf(oPropiedad.Codigo) < 0 then
+  iAnchoNombres := 0;
+  iAnchoTipos := 0;
+  oMedidor := TBitmap.Create;
+  FLista.Items.BeginUpdate;
+  try
+    oMedidor.Canvas.Font.Assign(FLista.Style.GetVisibleFont);
+    FLista.Items.Clear;
+    CodigosSeleccionados.Clear;
+    oPropiedades := FLectura.ListarDisponibles;
+    for oPropiedad in oPropiedades do
     begin
-      FListBox.Items.AddObject(
-        oPropiedad.Nombre + '  [' + oPropiedad.TipoValor + ']',
-        TObject(FListBox.Items.Count));
-      // La lista conserva el código asociado al mismo índice visual.
-      CodigosSeleccionados.Add(oPropiedad.Codigo);
+      // Excluir las ya asignadas
+      if FExcluirCodigos.IndexOf(oPropiedad.Codigo) < 0 then
+      begin
+        sTipo := TextoTipoValor(oPropiedad.TipoValor);
+        FLista.Items.Add.Text := oPropiedad.Nombre + #9 + sTipo;
+        // La lista conserva el código asociado al mismo índice visual.
+        CodigosSeleccionados.Add(oPropiedad.Codigo);
+        iAnchoNombres := Max(
+          iAnchoNombres,
+          oMedidor.Canvas.TextWidth(oPropiedad.Nombre));
+        iAnchoTipos := Max(iAnchoTipos, oMedidor.Canvas.TextWidth(sTipo));
+      end;
     end;
+    AjustarColumnaTipo(iAnchoNombres, iAnchoTipos, oMedidor.Canvas);
+  finally
+    FLista.Items.EndUpdate;
+    FreeAndNil(oMedidor);
   end;
   // CodigosSeleccionados servirá como mapa índice→código
   // lo reutilizamos; los seleccionados reales se calculan en BtnAceptarClick
+end;
+
+// El tipo va tras un tabulador. El checklist pinta con DrawTextEx, que salta
+// a múltiplos de TabWidth por el ancho medio de carácter: se toma el primer
+// salto que deja atrás el nombre más largo y se ensancha el diálogo lo justo.
+procedure TfrmSelPropiedades.AjustarColumnaTipo(AAnchoNombres,
+  AAnchoTipos: Integer; AMedidor: TCanvas);
+var
+  iAnchoCaracter: Integer;
+  oMetricas: TTextMetric;
+begin
+  GetTextMetrics(AMedidor.Handle, oMetricas);
+  iAnchoCaracter := Max(oMetricas.tmAveCharWidth, 1);
+  FLista.TabWidth :=
+    Min(AAnchoNombres, ScaleValue(ANCHO_MAX_NOMBRES)) div iAnchoCaracter +
+    SEPARACION_TIPO;
+  ClientWidth := EnsureRange(
+    FLista.TabWidth * iAnchoCaracter + AAnchoTipos +
+      ScaleValue(RESERVA_ANCHO_LISTA),
+    ScaleValue(ANCHO_MIN_SELECTOR),
+    ScaleValue(ANCHO_MAX_SELECTOR));
 end;
 
 procedure TfrmSelPropiedades.BtnAceptarClick(Sender: TObject);
@@ -269,9 +383,12 @@ var
 begin
   seleccionados := TStringList.Create;
   try
-    for i := 0 to FListBox.Items.Count - 1 do
-      if FListBox.Selected[i] then
+    for i := 0 to FLista.Items.Count - 1 do
+      if FLista.Items[i].Checked then
         seleccionados.Add(CodigosSeleccionados[i]);
+    // Sin marcas vale la fila resaltada: clic en el nombre y Aceptar.
+    if (seleccionados.Count = 0) and (FLista.ItemIndex >= 0) then
+      seleccionados.Add(CodigosSeleccionados[FLista.ItemIndex]);
     CodigosSeleccionados.Clear;
     CodigosSeleccionados.AddStrings(seleccionados);
   finally
@@ -987,15 +1104,12 @@ begin
   FFilas      := TList<TFilaUnidadProp>.Create;
   FOpciones   := TList<TPair<Integer, string>>.Create;
   FActuales   := TDictionary<string, TValUnidadProp>.Create;
-  if FNivel = 'SKU' then
-    Caption := Format(STituloPropiedadPorSku, [FNombreProp])
-  else
-    Caption := Format(STituloPropiedadPorColor, [FNombreProp]);
   Width       := 560;
   Height      := 460;
   Position    := poOwnerFormCenter;
   BorderStyle := bsDialog;
   Font.Name   := 'Source Sans 3';
+  CompactarBotonera(Self);
   FScroll := TScrollBox.Create(Self);
   FScroll.Parent      := pnlBody;
   FScroll.Align       := alClient;
@@ -1021,11 +1135,26 @@ begin
   inherited;
 end;
 
+procedure TfrmPropPorUnidad.DoCreate;
+begin
+  inherited;
+  // Como en TfrmSelPropiedades.DoCreate: FormCreate deja 'frmBase'.
+  if FNivel = 'SKU' then
+    Caption := Format(STituloPropiedadPorSku, [FNombreProp])
+  else
+    Caption := Format(STituloPropiedadPorColor, [FNombreProp]);
+end;
+
 function TfrmPropPorUnidad.IsShortCut(var Message: TWMKey): Boolean;
 begin
   if Message.CharCode = VK_ESCAPE then
   begin
     BtnCancelarClick(Self);
+    Result := True;
+  end
+  else if Message.CharCode = VK_F12 then
+  begin
+    BtnAceptarClick(Self);
     Result := True;
   end
   else

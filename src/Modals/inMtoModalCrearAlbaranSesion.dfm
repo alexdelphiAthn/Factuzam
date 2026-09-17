@@ -83,7 +83,7 @@
       Transparent = True
     end
     object dteFecha: TcxDateEdit
-      Left = 160
+      Left = 200
       Top = 138
       TabOrder = 4
       Width = 130
@@ -95,7 +95,7 @@
       Transparent = True
     end
     object cbbAlmacen: TcxLookupComboBox
-      Left = 160
+      Left = 200
       Top = 178
       Properties.KeyFieldNames = 'CODIGO_ALM_ALM'
       Properties.OnEditValueChanged = cbbAlmacenPropertiesEditValueChanged
@@ -111,7 +111,7 @@
         end>
       Properties.ListOptions.ShowHeader = False
       TabOrder = 5
-      Width = 390
+      Width = 350
     end
     object lblTarifa: TcxLabel
       Left = 16
@@ -120,7 +120,7 @@
       Transparent = True
     end
     object cbbTarifa: TcxLookupComboBox
-      Left = 160
+      Left = 200
       Top = 218
       Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
       Properties.ListColumns = <
@@ -130,7 +130,7 @@
         end>
       Properties.ListOptions.ShowHeader = False
       TabOrder = 6
-      Width = 390
+      Width = 350
     end
     object lblTemporada: TcxLabel
       Left = 16
@@ -139,7 +139,7 @@
       Transparent = True
     end
     object cbbTemporada: TcxLookupComboBox
-      Left = 160
+      Left = 200
       Top = 258
       Properties.KeyFieldNames = 'ID_PV_ARTPROP'
       Properties.ListColumns = <
@@ -149,7 +149,7 @@
         end>
       Properties.ListOptions.ShowHeader = False
       TabOrder = 7
-      Width = 390
+      Width = 350
     end
     object lblRefPrv: TcxLabel
       Left = 16
@@ -158,11 +158,11 @@
       Transparent = True
     end
     object txtRefPrv: TcxTextEdit
-      Left = 160
+      Left = 200
       Top = 298
       Properties.MaxLength = 100
       TabOrder = 8
-      Width = 390
+      Width = 350
     end
     object rgAgrupacion: TcxRadioGroup
       Left = 16

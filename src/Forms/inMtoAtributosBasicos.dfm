@@ -120,7 +120,7 @@
               Transparent = True
             end
             object txtID_ATB: TcxDBTextEdit
-              Left = 160
+              Left = 176
               Top = 13
               DataBinding.DataField = 'ID_ATB'
               DataBinding.DataSource = dsTablaG
@@ -135,7 +135,7 @@
               Transparent = True
             end
             object cbbID_VA_ATB: TcxDBLookupComboBox
-              Left = 160
+              Left = 176
               Top = 45
               DataBinding.DataField = 'ID_VA_ATB'
               DataBinding.DataSource = dsTablaG
@@ -162,7 +162,7 @@
               Transparent = True
             end
             object txtCODIGO_ATB: TcxDBTextEdit
-              Left = 160
+              Left = 176
               Top = 77
               DataBinding.DataField = 'CODIGO_ATB'
               DataBinding.DataSource = dsTablaG
@@ -176,7 +176,7 @@
               Transparent = True
             end
             object txtNOMBRE_ATB: TcxDBTextEdit
-              Left = 160
+              Left = 176
               Top = 109
               DataBinding.DataField = 'NOMBRE_ATB'
               DataBinding.DataSource = dsTablaG
@@ -190,7 +190,7 @@
               Transparent = True
             end
             object txtDESCRIPCION_ATB: TcxDBTextEdit
-              Left = 160
+              Left = 176
               Top = 141
               DataBinding.DataField = 'DESCRIPCION_ATB'
               DataBinding.DataSource = dsTablaG
@@ -204,7 +204,7 @@
               Transparent = True
             end
             object btnHEX_ATB: TcxDBButtonEdit
-              Left = 160
+              Left = 176
               Top = 173
               DataBinding.DataField = 'HEX_ATB'
               DataBinding.DataSource = dsTablaG
@@ -218,13 +218,13 @@
               Width = 130
             end
             object lblValor: TcxLabel
-              Left = 320
+              Left = 336
               Top = 176
               Caption = 'Valor num'#233'rico'
               Transparent = True
             end
             object txtVALOR_NUM_ATB: TcxDBTextEdit
-              Left = 460
+              Left = 476
               Top = 173
               DataBinding.DataField = 'VALOR_NUM_ATB'
               DataBinding.DataSource = dsTablaG
@@ -232,13 +232,13 @@
               Width = 100
             end
             object lblUnidad: TcxLabel
-              Left = 580
+              Left = 596
               Top = 176
               Caption = 'Unidad'
               Transparent = True
             end
             object txtUNIDAD_ATB: TcxDBTextEdit
-              Left = 660
+              Left = 676
               Top = 173
               DataBinding.DataField = 'UNIDAD_ATB'
               DataBinding.DataSource = dsTablaG
@@ -252,7 +252,7 @@
               Transparent = True
             end
             object spnORDEN_ATB: TcxDBSpinEdit
-              Left = 160
+              Left = 176
               Top = 205
               DataBinding.DataField = 'ORDEN_ATB'
               DataBinding.DataSource = dsTablaG
@@ -260,7 +260,7 @@
               Width = 100
             end
             object chkESACTIVO_ATB: TcxDBCheckBox
-              Left = 160
+              Left = 176
               Top = 240
               Caption = 'Activo'
               DataBinding.DataField = 'ESACTIVO_ATB'

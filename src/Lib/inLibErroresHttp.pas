@@ -16,6 +16,9 @@ uses
 
 type
   EConexionHttpTemporal = class(Exception);
+  // El llamador canceló la petición antes de recibir la respuesta. No es
+  // un fallo del servidor: el servidor pudo procesarla o no.
+  EPeticionHttpCancelada = class(Exception);
 
 function EsFalloTemporalTransporteHttp(
   const AError: Exception): Boolean;

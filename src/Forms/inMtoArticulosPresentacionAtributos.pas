@@ -20,8 +20,8 @@ interface
 uses
   Winapi.Windows, System.SysUtils, System.Types, System.Variants,
   System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Dialogs, Data.DB,
-  cxGraphics, cxEdit, cxGridCustomView, cxGridCustomTableView,
-  cxGridTableView,
+  cxGraphics, cxEdit, cxDBLookupComboBox, cxGridCustomView,
+  cxGridCustomTableView, cxGridTableView,
   inLibArticulosAtributosBasicosIntf;
 
 type
@@ -61,6 +61,7 @@ type
     procedure CambiarUnidad(ASender: TObject);
     procedure CambiarDescripcion(ASender: TObject);
     procedure CambiarBasico(ASender: TObject);
+    procedure PrepararListaBasicos(AProperties: TcxLookupComboBoxProperties);
     procedure AbrirDesplegableBasico;
     procedure CerrarDesplegableBasico;
     procedure ValidarBasico(var ADisplayValue: Variant;
@@ -77,6 +78,7 @@ uses
   inLibMensajesVcl,
   Vcl.Forms,
   inLibArticulosPresentacion,
+  inLibAtributosPaleta,
   inLibMsgArticulos;
 
 constructor TPresentadorAtributosBasicosArticulo.Create(
@@ -317,6 +319,15 @@ begin
       FDetalles.Cancel;
     FDetalles.Refresh;
   end;
+end;
+
+procedure TPresentadorAtributosBasicosArticulo.PrepararListaBasicos(
+  AProperties: TcxLookupComboBoxProperties);
+// La lista (columnas en el DFM) solo muestra el código y el cuadradito de
+// paleta: la columna HEX_ATB se pinta como muestra, sin el texto '#RRGGBB'.
+begin
+  if AProperties <> nil then
+    MostrarMuestraPaletaEnLista(AProperties.ListColumns, 'HEX_ATB');
 end;
 
 procedure TPresentadorAtributosBasicosArticulo.AbrirDesplegableBasico;

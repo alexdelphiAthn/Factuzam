@@ -1227,7 +1227,7 @@
                   Transparent = True
                 end
                 object spnMargenPrv: TcxDBSpinEdit
-                  Left = 104
+                  Left = 120
                   Top = 26
                   DataBinding.DataField = 'PORCENTAJE_MARGEN_PRV'
                   DataBinding.DataSource = dsTablaG
@@ -1236,7 +1236,7 @@
                   Width = 92
                 end
                 object chkVariosTiposIvaPrv: TcxDBCheckBox
-                  Left = 224
+                  Left = 240
                   Top = 26
                   Caption = 'Varios tipos IVA artículos'
                   DataBinding.DataField = 'ESVARIOS_TIPOS_IVA_PRV'
@@ -1255,7 +1255,7 @@
                   Transparent = True
                 end
                 object cbbSistemaTallasPrv: TcxDBLookupComboBox
-                  Left = 104
+                  Left = 120
                   Top = 60
                   DataBinding.DataField = 'ID_AC_TALLAS_PRV'
                   DataBinding.DataSource = dsTablaG
@@ -1269,7 +1269,7 @@
                   Width = 220
                 end
                 object chkESDESCRIPCION_BLANCO_PRV: TcxDBCheckBox
-                  Left = 352
+                  Left = 368
                   Top = 60
                   Caption = ''
                   DataBinding.DataField = 'ESDESCRIPCION_BLANCO_PRV'
@@ -1446,7 +1446,7 @@
                 Transparent = True
               end
               object cbbFormaPagoPrv: TcxDBLookupComboBox
-                Left = 200
+                Left = 260
                 Top = 21
                 DataBinding.DataField = 'CODIGO_FP_PRV'
                 DataBinding.DataSource = dsTablaG
@@ -1467,7 +1467,7 @@
                 Transparent = True
               end
               object cbbEmpBanPrv: TcxDBLookupComboBox
-                Left = 200
+                Left = 260
                 Top = 61
                 DataBinding.DataField = 'CODIGO_EMPBAN_PRV'
                 DataBinding.DataSource = dsTablaG

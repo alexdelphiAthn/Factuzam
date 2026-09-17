@@ -156,6 +156,9 @@ type
     // menu/boton de color. Devuelve cuantos SKU forman el grupo de color.
     function ActualizarSkusColorActivo(const aCodArt, aColor,
                                        aActivo: string): Integer;
+    // Tras generar SKU: recarga las fichas de SKU y de variaciones y deja
+    // la primera sobre el primero de los recién creados.
+    procedure RecargarSkusGenerados(const ASkusCreados: TArray<string>);
     // Override: abre las queries detalle y lookups del Mto de Articulos
     // (tarifas, proveedores, lineas-factura, variaciones, skus, stock,
     // movimientos, atributos basicos, ivas, familias). Lo invoca
@@ -467,6 +470,17 @@ begin
   finally
     FreeAndNil(qry);
   end;
+end;
+
+procedure TdmArticulos.RecargarSkusGenerados(
+  const ASkusCreados: TArray<string>);
+begin
+  unqrySkus.Close;
+  unqrySkus.Open;
+  unqryVariacionesArticulos.Close;
+  unqryVariacionesArticulos.Open;
+  if Length(ASkusCreados) > 0 then
+    unqrySkus.Locate('CODIGO_UNIDAD_SKU', ASkusCreados[0], []);
 end;
 
 function TdmArticulos.ActualizarSkusColorActivo(const aCodArt, aColor,

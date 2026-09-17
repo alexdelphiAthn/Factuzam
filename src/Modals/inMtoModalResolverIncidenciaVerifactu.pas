@@ -118,7 +118,8 @@ begin
   Caption := STituloResolverIncidenciaVerifactu;
   grpIncidencia.Caption := STextoIncidenciaErrorAeat;
   lblFacturaTitulo.Caption := STextoIncidenciaFactura;
-  lblErrorTitulo.Caption := STextoIncidenciaErrorAeat;
+  // lblErrorTitulo conserva el Caption corto del DFM (traducido por clave):
+  // el titulo del grupo no cabe a la izquierda de lblError.
   lblClienteActualTitulo.Caption := STextoIncidenciaClienteActual;
   grpResolucion.Caption := STextoIncidenciaDecision;
   rgResolucion.Properties.Items[0].Caption := STextoIncidenciaSubsanar;

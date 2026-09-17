@@ -57,6 +57,8 @@ type
       APerfiles: TPerfilList;
       const APermisos, ASubclave, AValor: string);
     function NombreTablaOrigen: string;
+    function DebeAplicarDisenoGuardado(
+      AVista: TcxCustomGridTableView): Boolean;
   public
     constructor Create(
       AFormulario: TCustomForm;
@@ -183,6 +185,36 @@ begin
   end;
 end;
 
+function TGestorPerfilesMto.DebeAplicarDisenoGuardado(
+  AVista: TcxCustomGridTableView): Boolean;
+var
+  iItem: Integer;
+  sCampo: string;
+begin
+  Result := SameText(
+    Trim(Valor(AVista.Name + '__oApplyWidth', 'False')), 'True');
+  if Result then
+  begin
+    // Un diseño marcado para aplicarse pero sin columnas guardadas no
+    // describe nada: restaurarlo pondría visibles todas las columnas
+    // ocultas del DFM, que es lo que pasaba con los grabados antiguos de
+    // pestañas con la consulta cerrada.
+    Result := False;
+    iItem := 0;
+    while (not Result) and (iItem < AVista.ItemCount) do
+    begin
+      sCampo := GetItemFieldName(AVista.Items[iItem]);
+      Result := (sCampo <> '') and
+        (Valor(AVista.Name + '_' + sCampo + '_Visible', '') <> '');
+      Inc(iItem);
+    end;
+    if (not Result) and Assigned(FRegistroLog) then
+      FRegistroLog.RegistrarAviso(Format(
+        'Perfil de %s.%s sin columnas guardadas: se conserva el diseño',
+        [FFormulario.Name, AVista.Name]));
+  end;
+end;
+
 procedure TGestorPerfilesMto.AplicarEtiquetas;
 var
   i: Integer;
@@ -225,10 +257,7 @@ begin
     begin
       for oGrid in oGrids do
       begin
-        if SameText(
-          Trim(Valor(
-            oGrid.Name + '__oApplyWidth', 'False')),
-          'True') then
+        if DebeAplicarDisenoGuardado(oGrid) then
         begin
           PonerAnchosTitulos(
             oGrid,

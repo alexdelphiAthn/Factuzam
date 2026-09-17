@@ -827,16 +827,48 @@ resourcestring
   SErrorValoresDimensionesSkuIncompletos =
     'Debes marcar al menos un valor en cada dimensión del artículo.' +
     sLineBreak + 'Falta marcar valores en: %s';
-  SInfoCombinacionesSkuGeneradas =
-    '¡Combinaciones generadas con éxito!';
-  STituloAnadirValorSku =
-    'Añadir nuevo valor';
-  SSolicitudNombreValorSku =
-    'Introduce el nombre del nuevo atributo (Ej: XXL, Turquesa):';
-  SSolicitudOrdenNuevoValorSku =
-    'Introduce el ORDEN (Ej: 10, 20, 30...).' + sLineBreak + sLineBreak +
-    'ATENCIÓN: El orden asignado será global y afectará a todos los ' +
-    'artículos que usen este valor en el futuro.';
+  SErrorCodigosSkuDemasiadoLargos =
+    'Estos códigos de SKU superan los %d caracteres admitidos y no se ' +
+    'pueden crear:' + sLineBreak + sLineBreak + '%s' + sLineBreak +
+    sLineBreak + 'Acorta el nombre de alguno de sus valores.';
+  SInfoSkusMarcadosYaExisten =
+    'Todas las combinaciones marcadas ya existen como SKU de este ' +
+    'artículo. No hay nada que generar.';
+  SPreguntaGenerarSkus =
+    'SKU nuevos que se van a crear: %d' + sLineBreak + sLineBreak + '%s' +
+    sLineBreak + sLineBreak +
+    'Combinaciones marcadas que ya existían (no se tocan): %d' +
+    sLineBreak + sLineBreak + '¿Continuar?';
+  STextoRestoCodigosSku =
+    '... y %d más';
+  SAvisoSkusCreadosParcialmente =
+    'Se han creado %d de los %d SKU previstos. El resto ya existía.';
+  STituloNuevoValorAtributo =
+    'Nuevo valor "%s"';
+  // Las preguntas de InputQuery van cortas a propósito: la VCL ensancha el
+  // diálogo hasta casi el doble de su pregunta más larga.
+  STituloAnadirValorDimensionSku =
+    'Añadir valor a "%s"';
+  SEtiquetaNombreValorSku =
+    'Nombre:';
+  SEtiquetaOrdenValorSku =
+    'Orden:';
+  SEtiquetaOrdenDeSku =
+    'Orden de "%s":';
+  SErrorValorNuevoSkuNoValido =
+    'Indica el nombre del valor y un orden entero mayor o igual que 0 ' +
+    '(10, 20, 30...).';
+  SNotaOrdenGlobalValorSku =
+    'ATENCIÓN: el orden %d será global y afectará a todos los artículos ' +
+    'que usen este valor en el futuro.';
+  SErrorDimensionSkuNoSeleccionada =
+    'Selecciona arriba la dimensión (color, talla...) a la que quieres ' +
+    'añadir el valor.';
+  SInfoValorSkuYaListado =
+    'El valor "%s" ya estaba en la lista de "%s". Se ha marcado para ' +
+    'generar sus SKU.';
+  SPreguntaAltaValorAtributo =
+    '¿Dar de alta el valor "%s"?';
   SPreguntaGuardarValorSkuGlobal =
     'Va a utilizar el valor "%s".' + sLineBreak + sLineBreak +
     '¿Desea guardarlo de forma permanente en el conjunto global "%s" para ' +
@@ -851,9 +883,6 @@ resourcestring
     'conjuntos.' + sLineBreak + sLineBreak + '¿Desea continuar?';
   STituloCambiarOrdenValorSku =
     'Cambiar orden del valor';
-  SSolicitudOrdenValorSku =
-    'Orden de "%s" (número entero, los más bajos van primero y prevalence ' +
-    'el orden del sistema):';
   SErrorOrdenValorSkuNoValido =
     'Por favor, introduce un número entero válido, (mayor o igual a 0).';
   SPreguntaCambiarOrdenValorSkuGlobal =
@@ -864,9 +893,6 @@ resourcestring
     '¿Desea continuar?';
   STituloCambiarOrdenAtributoSku =
     'Cambiar orden';
-  SSolicitudOrdenAtributoSku =
-    'Orden de "%s" dentro del SKU (número entero, los más bajos van ' +
-    'primero):';
   SErrorOrdenAtributoSkuNoValido =
     'Introduce un número entero mayor que 0.';
   // R02 - Textos de controles de artículos en ejecución
@@ -921,6 +947,11 @@ resourcestring
     'Añadir Bloque - Carga masiva en Inventario';
   STituloAnadirBloqueTarifa = 'Añadir Bloque - Carga masiva en Tarifa';
   SHintQuitarPropiedad = 'Quitar propiedad %s';
+  STituloAnadirPropiedades = 'Añadir propiedades';
+  SCaptionTipoValorLista = 'Lista';
+  SCaptionTipoValorTextoLibre = 'Texto libre';
+  SCaptionTipoValorNumero = 'Número';
+  SCaptionTipoValorBooleano = 'Sí/No';
   SCaptionPorColorSku = 'Por color/SKU…';
   SCaptionPorColor = 'Por color…';
   SHintFijarPropiedadPorColorSku = 'Fijar %s por color/SKU';

@@ -706,6 +706,94 @@ begin
   end;
 end;
 
+procedure AnadirValorPerfilVista(AList: TPerfilList;
+  const AsProfile, sName, ASubclave, AValor: string);
+var
+  oItem: TPerfilItem;
+begin
+  oItem.UserGroup := AsProfile;
+  oItem.KeyPerfil := sName;
+  oItem.SubKey := ASubclave;
+  oItem.Value := AValor;
+  // El ValueText del record lo dejamos vacío para el batch normal
+  AList.Add(oItem);
+end;
+
+procedure RecogerFocoVistaPerfil(AVista: TcxCustomGridTableView;
+  AList: TPerfilList; const AsProfile, sName: string;
+  const ARegistroLog: IRegistroLog);
+var
+  oDatos: TcxGridDBDataController;
+  sCamposClave: string;
+  vValoresClave: Variant;
+begin
+  oDatos := GetDBDataController(AVista);
+  // Obtenemos la clave primaria disponible en la consulta.
+  sCamposClave := oDatos.KeyFieldNames;
+  if (sCamposClave <> '') and
+     (not CamposClaveDisponibles(oDatos.DataSet, sCamposClave)) then
+  begin
+    ARegistroLog.RegistrarAviso(
+      Format('CollectSettingsColumnProfile: vista=%s ' +
+      'clave="%s" no disponible en la consulta activa',
+      [AVista.Name, sCamposClave]));
+    oDatos.KeyFieldNames := '';
+    sCamposClave := '';
+  end;
+  if sCamposClave = '' then
+  begin
+    sCamposClave := inLibDatasets.ObtenerClavePrimaria(oDatos.DataSet);
+    if (sCamposClave <> '') and
+       CamposClaveDisponibles(oDatos.DataSet, sCamposClave) then
+      oDatos.KeyFieldNames := sCamposClave;
+    if (sCamposClave <> '') and
+       (not CamposClaveDisponibles(oDatos.DataSet, sCamposClave)) then
+    begin
+      ARegistroLog.RegistrarAviso(
+        Format('CollectSettingsColumnProfile: vista=%s ' +
+        'clave="%s" descartada porque faltan campos',
+        [AVista.Name, sCamposClave]));
+      sCamposClave := '';
+    end;
+  end;
+  if sCamposClave <> '' then
+  begin
+    vValoresClave := oDatos.GetKeyFieldsValues;
+    if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
+      AnadirValorPerfilVista(AList, AsProfile, sName,
+        AVista.Name + '_FocusedID',
+        inLibDatasets.KeyValuesToStr(vValoresClave));
+  end;
+end;
+
+procedure GrabarFiltroVistaPerfil(AVista: TcxCustomGridTableView;
+  const AsProfile, sName: string;
+  const APerfilesUsuario: IEscritorPerfilesUsuario);
+var
+  oFlujo: TMemoryStream;
+  oTexto: TStringStream;
+begin
+  if AVista.DataController.Filter.IsEmpty then
+    APerfilesUsuario.GrabarPerfil(
+      AsProfile, sName, AVista.Name + '_Filtro', '', '')
+  else
+  begin
+    oFlujo := TMemoryStream.Create;
+    oTexto := TStringStream.Create('');
+    try
+      AVista.DataController.Filter.SaveToStream(oFlujo);
+      oFlujo.Position := 0;
+      TNetEncoding.Base64.Encode(oFlujo, oTexto);
+      APerfilesUsuario.GrabarPerfil(
+        AsProfile, sName, AVista.Name + '_Filtro', '',
+        oTexto.DataString);
+    finally
+      FreeAndNil(oFlujo);
+      FreeAndNil(oTexto);
+    end;
+  end;
+end;
+
 procedure CollectSettingsColumnProfile(AcxgrdtvVista: TcxCustomGridTableView;
                                         const sName: string;
                                         const AsProfile: string;
@@ -716,69 +804,25 @@ procedure CollectSettingsColumnProfile(AcxgrdtvVista: TcxCustomGridTableView;
 var
   i: Integer;
   oItem: TcxGridColumn;
-  sVistaName, sColumnName, sPrefix: string;
-  LStream: TMemoryStream;
-  BStream: TStringStream;
+  sColumnName, sPrefix: string;
   oDBDataCtrl: TcxGridDBDataController;
 
   procedure Add(const aSub, aVal: string);
-  var item: TPerfilItem;
   begin
-    item.UserGroup := AsProfile;
-    item.KeyPerfil := sName;
-    item.SubKey    := aSub;
-    item.Value     := aVal;
-    // El ValueText del record lo dejamos vacío para el batch normal
-    AList.Add(item);
+    AnadirValorPerfilVista(AList, AsProfile, sName, aSub, aVal);
   end;
 
 begin
-  sVistaName := AcxgrdtvVista.Name;
-  var sCamposClave: string;
-  var vValoresClave: Variant;
   oDBDataCtrl := GetDBDataController(AcxgrdtvVista);
-  if (oDBDataCtrl <> nil) and
-     Assigned(oDBDataCtrl.DataSet) and
-     oDBDataCtrl.DataSet.Active then
+  if (oDBDataCtrl <> nil) and Assigned(oDBDataCtrl.DataSet) then
   begin
-    // Obtenemos la clave primaria disponible en la consulta.
-    sCamposClave := oDBDataCtrl.KeyFieldNames;
-    if (sCamposClave <> '') and
-       (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
-    begin
-      ARegistroLog.RegistrarAviso(
-        Format('CollectSettingsColumnProfile: vista=%s ' +
-        'clave="%s" no disponible en la consulta activa',
-        [AcxgrdtvVista.Name, sCamposClave]));
-      oDBDataCtrl.KeyFieldNames := '';
-      sCamposClave := '';
-    end;
-    if sCamposClave = '' then
-    begin
-      sCamposClave := inLibDatasets.ObtenerClavePrimaria(
-        oDBDataCtrl.DataSet);
-      if (sCamposClave <> '') and
-         CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave) then
-        oDBDataCtrl.KeyFieldNames := sCamposClave;
-      if (sCamposClave <> '') and
-         (not CamposClaveDisponibles(oDBDataCtrl.DataSet, sCamposClave)) then
-      begin
-        ARegistroLog.RegistrarAviso(
-          Format('CollectSettingsColumnProfile: vista=%s ' +
-          'clave="%s" descartada porque faltan campos',
-          [AcxgrdtvVista.Name, sCamposClave]));
-        sCamposClave := '';
-      end;
-    end;
-    if sCamposClave <> '' then
-    begin
-      vValoresClave := oDBDataCtrl.GetKeyFieldsValues;
-      if not VarIsNull(vValoresClave) and not VarIsEmpty(vValoresClave) then
-      begin
-        Add(AcxgrdtvVista.Name + '_FocusedID',
-          inLibDatasets.KeyValuesToStr(vValoresClave));
-      end;
-    end;
+    // Solo el foco necesita la consulta abierta. Las pestañas de carga
+    // perezosa (Tarifas de Artículos) la cierran al salir: si las columnas
+    // dependieran de ella, el perfil quedaba marcado para aplicarse y sin
+    // columnas, y al restaurarlo salían visibles todas las del diseño.
+    if oDBDataCtrl.DataSet.Active then
+      RecogerFocoVistaPerfil(AcxgrdtvVista, AList, AsProfile, sName,
+        ARegistroLog);
     // Recolección de propiedades de columnas para el lote.
     for i := 0 to AcxgrdtvVista.ItemCount - 1 do
     begin
@@ -786,7 +830,7 @@ begin
       sColumnName := GetItemFieldName(oItem);
       if sColumnName <> '' then
       begin
-        sPrefix := sVistaName + '_' + sColumnName + '_';
+        sPrefix := AcxgrdtvVista.Name + '_' + sColumnName + '_';
         Add(sPrefix + 'Visible',
           TGenUtils.IfThen<String>(oItem.Visible, 'True', 'False'));
         Add(sPrefix + 'Index', IntToStr(oItem.Index));
@@ -805,27 +849,8 @@ begin
         end;
       end;
     end;
-    if AcxgrdtvVista.DataController.Filter.IsEmpty then
-    begin
-      APerfilesUsuario.GrabarPerfil(
-        AsProfile, sName, sVistaName + '_Filtro', '', '');
-    end
-    else
-    begin
-      LStream := TMemoryStream.Create;
-      BStream := TStringStream.Create('');
-      try
-        AcxgrdtvVista.DataController.Filter.SaveToStream(LStream);
-        LStream.Position := 0;
-        TNetEncoding.Base64.Encode(LStream, BStream);
-        APerfilesUsuario.GrabarPerfil(
-          AsProfile, sName, sVistaName + '_Filtro', '',
-          BStream.DataString);
-      finally
-        FreeAndNil(LStream);
-        FreeAndNil(BStream);
-      end;
-    end;
+    GrabarFiltroVistaPerfil(AcxgrdtvVista, AsProfile, sName,
+      APerfilesUsuario);
   end;
 end;
 

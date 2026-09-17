@@ -304,7 +304,7 @@
                 Transparent = True
               end
               object spnPORCENTAJE_COMISION_FORMA_PAGO_CFP: TcxDBSpinEdit
-                Left = 490
+                Left = 504
                 Top = 21
                 DataBinding.DataField = 'PORCENTAJE_COMISION_FORMA_PAGO_CFP'
                 DataBinding.DataSource = dsTablaG
@@ -331,7 +331,7 @@
                 Transparent = True
               end
               object txtNUM_COD_DIGIT_FORMA_PAGO_CFP: TcxDBTextEdit
-                Left = 490
+                Left = 504
                 Top = 81
                 DataBinding.DataField = 'NUM_COD_DIGIT_FORMA_PAGO_CFP'
                 DataBinding.DataSource = dsTablaG
@@ -351,7 +351,7 @@
                 Transparent = True
               end
               object txtRED_BLOCKCHAIN_FORMA_PAGO_CFP: TcxDBTextEdit
-                Left = 150
+                Left = 166
                 Top = 21
                 DataBinding.DataField = 'RED_BLOCKCHAIN_FORMA_PAGO_CFP'
                 DataBinding.DataSource = dsTablaG
@@ -366,7 +366,7 @@
                 Transparent = True
               end
               object txtHASH_BLOCKCHAIN_FORMA_PAGO_CFP: TcxDBTextEdit
-                Left = 150
+                Left = 166
                 Top = 53
                 DataBinding.DataField = 'HASH_BLOCKCHAIN_FORMA_PAGO_CFP'
                 DataBinding.DataSource = dsTablaG

@@ -287,6 +287,7 @@ type
     FProgressBar: TProgressBar;
     FProgressLabel: TcxLabel;
     FReiniciando: Boolean;
+    FCierreEnCurso: Boolean;
     FNivelModalCierrePendiente: Integer;
     FRelanzarLoginPendiente: Boolean;
     FRutaRestauracionPendiente: string;
@@ -350,6 +351,7 @@ type
       TDecisionCierrePrestaShop;
     procedure RelanzarLoginSiPendiente;
     function PosponerCierrePorModal: Boolean;
+    function PrepararCierreAplicacion: Boolean;
     procedure SolicitarCancelarOperacionEnCurso;
     procedure ApplicationEvents1Idle(Sender: TObject; var Done: Boolean);
     function GetParametrosAppEdicion: IParametrosEdicion;
@@ -1285,6 +1287,9 @@ procedure TfrmMtoPrincipal.FormClose(Sender: TObject; var Action: TCloseAction);
 var
   GestorContexto: IGestorContextoSesion;
 begin
+  // Sin desmarcar hasta que acabe el proceso: un segundo FormClose durante
+  // las esperas de este liberaría la composición que aún se está usando.
+  FCierreEnCurso := True;
   // Señalar a las tareas de segundo plano que la app se esta cerrando, ANTES
   // de empezar a liberar formularios y conexiones. Asi no arrancan trabajo
   // nuevo ni tocan formularios en destruccion
@@ -1368,60 +1373,77 @@ begin
   end;
 end;
 
-procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
-  var CanClose: Boolean);
+function TfrmMtoPrincipal.PrepararCierreAplicacion: Boolean;
 var
   CierreConfirmado: Boolean;
   ModalCerrado: Boolean;
 begin
-  inherited;
   CierreConfirmado := FNivelModalCierrePendiente > 0;
   ModalCerrado := not CierreConfirmado or
     (Application.ModalLevel < FNivelModalCierrePendiente);
   FNivelModalCierrePendiente := 0;
   // Si el modal veto su cierre, se cancela tambien la salida pendiente.
   if not ModalCerrado then
-    CanClose := False
+    Result := False
   else if Assigned(FCoordinadorOperaciones) and
      FCoordinadorOperaciones.EnCurso then
   begin
-    CanClose := False;
+    Result := False;
     SolicitarCancelarOperacionEnCurso;
   end
   // Cierre por reinicio de sesión ('Invocar login'): omite sólo la pregunta
   // general. La protección de una fila PrestaShop activa se aplica después.
   else if FReiniciando or CierreConfirmado then
-    CanClose := True
+    Result := True
   else
   begin
     if MessageDlg_fza(SPreguntaSalirAplicacion,
                   mtConfirmation, [mbYes, mbNo], 0) = mrNo then
     begin
-      CanClose := False; // Cancela el cierre
+      Result := False; // Cancela el cierre
     end
     else
     begin
-      CanClose := True;  // Permite el cierre
+      Result := True;  // Permite el cierre
     end;
   end;
-  if CanClose and not FReiniciando then
-    CanClose := PuedenCerrarOperacionesCaja;
-  if CanClose and Assigned(FComposicion) then
+  if Result and not FReiniciando then
+    Result := PuedenCerrarOperacionesCaja;
+  if Result and Assigned(FComposicion) then
   begin
-    CanClose := FComposicion.PrepararCierrePrestaShop(
+    Result := FComposicion.PrepararCierrePrestaShop(
       function: TDecisionCierrePrestaShop
       begin
         Result := ConsultarDecisionCierrePrestaShop;
       end);
   end;
-  if CanClose then
-    CanClose := not PosponerCierrePorModal;
-  if (not CanClose) and (FNivelModalCierrePendiente = 0) and
+  if Result then
+    Result := not PosponerCierrePorModal;
+  if (not Result) and (FNivelModalCierrePendiente = 0) and
      FRelanzarLoginPendiente then
   begin
     FRelanzarLoginPendiente := False;
     FReiniciando := False;
     FRutaRestauracionPendiente := '';
+  end;
+end;
+
+procedure TfrmMtoPrincipal.FormCloseQuery(Sender: TObject;
+  var CanClose: Boolean);
+begin
+  inherited;
+  // Los diálogos del cierre y las esperas a los hilos (TThread.WaitFor)
+  // atienden mensajes: otra petición de cierre que llegue mientras se
+  // decide o se ejecuta uno (varios clics en cerrar) se descarta.
+  CanClose := not FCierreEnCurso;
+  if CanClose then
+  begin
+    FCierreEnCurso := True;
+    try
+      CanClose := PrepararCierreAplicacion;
+    finally
+      FCierreEnCurso := False;
+    end;
   end;
 end;
 

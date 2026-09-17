@@ -100,6 +100,12 @@ type
     dmmAtributosConjuntos: TdmAtributosConjuntos;
     procedure ActualizarDescripciones;
     procedure ActualizarValoresLookup;
+    function SeleccionarValorLookup(ASender: TObject; AIdValor: Integer;
+      const AValor: string; var ADisplayValue: Variant): Boolean;
+    function DarDeAltaValor(ASender: TObject;
+      const AIdAtributo, ATexto: string;
+      var ADisplayValue: Variant): Boolean;
+    procedure FijarOrdenDetalleSinOrden(AOrden: Integer);
   public
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -111,7 +117,7 @@ implementation
 
 uses
   inLibWin, inLibShowMto, inLibFotos, inLibMsgArticulos,
-  inLibMensajesVcl;
+  inLibCodigosSinBarra, inLibAltaValorAtributoVcl;
 
 {$R *.dfm}
 
@@ -202,13 +208,8 @@ procedure TfrmMtoAtributosConjuntos.
   var DisplayValue: Variant; var ErrorText: TCaption;
   var Error: Boolean);
 var
-  bValorLocalizado: Boolean;
-  iIdConjunto: Integer;
   iIdValor: Integer;
-  iOrden: Integer;
-  iOrdenSugerido: Integer;
   sIdAtributo: string;
-  sOrden: string;
   sTexto: string;
   sValor: string;
 begin
@@ -228,19 +229,10 @@ begin
     else if dmmAtributosConjuntos.BuscarValorActivo(
               sIdAtributo, sTexto, iIdValor, sValor) then
     begin
-      bValorLocalizado :=
-        dmmAtributosConjuntos.unqryValoresLookup.Locate(
-          'ID_AV', iIdValor, []);
-      if bValorLocalizado and (Sender is TcxCustomLookupEdit) then
-      begin
-        TcxCustomLookupEdit(Sender).EditValue := iIdValor;
-        DisplayValue := sValor;
-      end
-      else
-      begin
-        Error := True;
+      Error := not SeleccionarValorLookup(
+        Sender, iIdValor, sValor, DisplayValue);
+      if Error then
         ErrorText := SErrorValorColeccionAtributosObligatorio;
-      end;
     end
     else if dsTablaG.DataSet.State in [dsEdit, dsInsert] then
     begin
@@ -250,58 +242,70 @@ begin
     end
     else
     begin
-      iIdConjunto := dsTablaG.DataSet.FieldByName('ID_AC').AsInteger;
-      iOrdenSugerido :=
-        dmmAtributosConjuntos.CalcularSiguienteOrdenValor(
-          iIdConjunto, sIdAtributo);
-      sOrden := Trim(InputBox_fza(
-        STituloAnadirValorSku,
-        SSolicitudOrdenNuevoValorSku,
-        IntToStr(iOrdenSugerido)));
-      if sOrden = '' then
-      begin
-        Error := True;
+      // Si se cancela, la celda sigue en error con lo tecleado para poder
+      // corregirlo. Antes Cancelar creaba el valor con el orden propuesto.
+      Error := not DarDeAltaValor(
+        Sender, sIdAtributo, sTexto, DisplayValue);
+      if Error then
         ErrorText := SErrorValorColeccionAtributosObligatorio;
-      end
-      else
-      begin
-        iOrden := StrToIntDef(sOrden, iOrdenSugerido);
-        iIdValor := dmmAtributosConjuntos.AsegurarValor(
-          sIdAtributo, sTexto, iOrden, sValor);
-        if iIdValor > 0 then
-        begin
-          dmmAtributosConjuntos.unqryValoresLookup.Refresh;
-          ActualizarValoresLookup;
-          bValorLocalizado :=
-            dmmAtributosConjuntos.unqryValoresLookup.Locate(
-              'ID_AV', iIdValor, []);
-          if bValorLocalizado and (Sender is TcxCustomLookupEdit) then
-          begin
-            TcxCustomLookupEdit(Sender).EditValue := iIdValor;
-            DisplayValue := sValor;
-            if dmmAtributosConjuntos.unqryConjuntoDetalle.State in
-                 [dsEdit, dsInsert] then
-            begin
-              if dmmAtributosConjuntos.unqryConjuntoDetalle.FieldByName(
-                   'ORDEN_ACD').AsInteger = 0 then
-                dmmAtributosConjuntos.unqryConjuntoDetalle.FieldByName(
-                  'ORDEN_ACD').AsInteger := iOrden;
-            end;
-          end
-          else
-          begin
-            Error := True;
-            ErrorText := SErrorValorColeccionAtributosObligatorio;
-          end;
-        end
-        else
-        begin
-          Error := True;
-          ErrorText := SErrorValorColeccionAtributosObligatorio;
-        end;
-      end;
     end;
   end;
+end;
+
+function TfrmMtoAtributosConjuntos.SeleccionarValorLookup(ASender: TObject;
+  AIdValor: Integer; const AValor: string;
+  var ADisplayValue: Variant): Boolean;
+begin
+  Result := dmmAtributosConjuntos.unqryValoresLookup.Locate(
+    'ID_AV', AIdValor, []) and (ASender is TcxCustomLookupEdit);
+  if Result then
+  begin
+    TcxCustomLookupEdit(ASender).EditValue := AIdValor;
+    ADisplayValue := AValor;
+  end;
+end;
+
+function TfrmMtoAtributosConjuntos.DarDeAltaValor(ASender: TObject;
+  const AIdAtributo, ATexto: string; var ADisplayValue: Variant): Boolean;
+var
+  iIdValor: Integer;
+  iOrden: Integer;
+  sValor: string;
+begin
+  // El valor se enseña como se guardará: sin barras.
+  Result := PedirAltaValorAtributo(
+    SinBarraSku(ATexto),
+    dmmAtributosConjuntos.CalcularSiguienteOrdenValor(
+      dsTablaG.DataSet.FieldByName('ID_AC').AsInteger,
+      AIdAtributo),
+    iOrden);
+  if Result then
+  begin
+    iIdValor := dmmAtributosConjuntos.AsegurarValor(
+      AIdAtributo, ATexto, iOrden, sValor);
+    Result := iIdValor > 0;
+    if Result then
+    begin
+      dmmAtributosConjuntos.unqryValoresLookup.Refresh;
+      ActualizarValoresLookup;
+      Result := SeleccionarValorLookup(
+        ASender, iIdValor, sValor, ADisplayValue);
+    end;
+    if Result then
+      FijarOrdenDetalleSinOrden(iOrden);
+  end;
+end;
+
+procedure TfrmMtoAtributosConjuntos.FijarOrdenDetalleSinOrden(
+  AOrden: Integer);
+var
+  oDetalle: TDataSet;
+begin
+  // La fila de la colección toma el orden del valor si no traía uno.
+  oDetalle := dmmAtributosConjuntos.unqryConjuntoDetalle;
+  if (oDetalle.State in [dsEdit, dsInsert]) and
+     (oDetalle.FieldByName('ORDEN_ACD').AsInteger = 0) then
+    oDetalle.FieldByName('ORDEN_ACD').AsInteger := AOrden;
 end;
 
 procedure TfrmMtoAtributosConjuntos.ActualizarDescripciones;
