@@ -606,6 +606,7 @@ uses
   inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
   inLibDeteccionImpresora in 'src\Lib\inLibDeteccionImpresora.pas',
   inLibVentanaEspera in 'src\Lib\inLibVentanaEspera.pas',
+  inLibWebView2Loader in 'src\Lib\inLibWebView2Loader.pas',
   inLibMensajesVcl in 'src\Lib\inLibMensajesVcl.pas',
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
   uDJMSepa in 'src\Lib3par\uDJMSepa.pas',

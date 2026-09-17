@@ -48,7 +48,8 @@ type
 implementation
 
 uses
-  Winapi.ActiveX, System.SysUtils, System.Win.ComObj, inLibMsgComun;
+  Winapi.ActiveX, System.SysUtils, System.Win.ComObj, inLibMsgComun,
+  inLibWebView2Loader;
 
 {$R *.dfm}
 
@@ -88,6 +89,7 @@ begin
   lblEstado.Visible := True;
   navegador.Visible := False;
   btnRecargar.Enabled := False;
+  PrepararCargadorWebView2;
   navegador.CreateWebView;
 end;
 

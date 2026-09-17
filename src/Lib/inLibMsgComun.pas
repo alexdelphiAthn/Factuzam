@@ -560,7 +560,8 @@ resourcestring
   SErrorAyudaWebIniciar =
     'No se ha podido iniciar el visor web (código %s).' + sLineBreak +
     'Compruebe que Microsoft Edge WebView2 Runtime está instalado y que ' +
-    'WebView2Loader.dll acompaña al ejecutable de Factuzam.' + sLineBreak +
+    'Factuzam puede escribir en la carpeta temporal del usuario.' +
+    sLineBreak +
     'Después pulse Recargar o contacte con su administrador.';
 implementation
 

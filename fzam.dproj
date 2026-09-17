@@ -1067,6 +1067,7 @@
         <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibDeteccionImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEspera.pas"/>
+        <DCCReference Include="src\Lib\inLibWebView2Loader.pas"/>
         <DCCReference Include="src\Lib\inLibMensajesVcl.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>
         <DCCReference Include="src\Lib3par\uDJMSepa.pas"/>
@@ -2834,13 +2835,10 @@
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
     <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
     <Import Project="$(MSBuildProjectName).deployproj" Condition="Exists('$(MSBuildProjectName).deployproj')"/>
-    <Target Name="CopiarCargadorWebView2" AfterTargets="CoreBuild">
+    <Target Name="CopiarLicenciaWebView2" AfterTargets="CoreBuild">
         <PropertyGroup>
-            <ArquitecturaWebView2 Condition="'$(Platform)'=='Win32'">x86</ArquitecturaWebView2>
-            <ArquitecturaWebView2 Condition="'$(Platform)'=='Win64'">x64</ArquitecturaWebView2>
             <OrigenWebView2>$(MSBuildProjectDirectory)\src\3rdpartyComp\WebView2</OrigenWebView2>
         </PropertyGroup>
-        <Copy SourceFiles="$(OrigenWebView2)\$(ArquitecturaWebView2)\WebView2Loader.dll" DestinationFolder="$(DCC_ExeOutput)" SkipUnchangedFiles="true"/>
         <Copy SourceFiles="$(OrigenWebView2)\Microsoft.WebView2.LICENSE.txt" DestinationFolder="$(DCC_ExeOutput)" SkipUnchangedFiles="true"/>
     </Target>
 </Project>

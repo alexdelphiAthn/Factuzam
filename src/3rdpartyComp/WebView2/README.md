@@ -10,11 +10,24 @@ El equipo cliente necesita Microsoft Edge WebView2 Runtime. Es un motor
 integrado: no abre el navegador de escritorio ni depende de permitir su
 ejecución a los empleados. Las políticas del equipo deben permitir WebView2.
 
-El paso común `CoreBuild` de `fzam.dproj` copia automáticamente el cargador
-de la arquitectura correcta y su licencia junto a `fzam.exe`, tanto en
-`Make` (Compilar desde Delphi) como en `Build` (Construir). El instalador demo
-incluye ambos archivos. Las actualizaciones manuales deben distribuirlos
-también. El runtime se administra por separado en el equipo cliente.
+`WebView2Loader.dll` viaja dentro de `fzam.exe` como recurso RCDATA
+(`WebView2Loader_x86.res` / `WebView2Loader_x64.res`, enlazados por
+`inLibWebView2Loader` según la plataforma). Al abrir la ayuda web se escribe
+en `%TEMP%\Factuzam\WebView2\<arquitectura>\<16 primeros del SHA-256>\` y se
+carga con ruta completa tras comprobar su SHA-256 con la DLL abierta sin
+permitir escrituras. Si falta (limpieza de temporales) se vuelve a escribir.
+Si no se puede, `Vcl.Edge` busca la DLL junto al ejecutable.
+
+Al actualizar la DLL hay que regenerar los `.res` desde esta carpeta y cambiar
+los hashes de `inLibWebView2Loader.pas`; un `.res` que no coincide no se usa:
+
+```
+brcc32 -foWebView2Loader_x86.res WebView2Loader_x86.rc
+brcc32 -foWebView2Loader_x64.res WebView2Loader_x64.rc
+```
+
+`fzam.dproj` copia solo la licencia junto a `fzam.exe`, y el instalador demo
+la incluye. El runtime se administra por separado en el equipo cliente.
 
 El perfil se guarda en la carpeta local del usuario que gestiona `TEdgeBrowser`,
 separado del navegador de escritorio. «Ventana interna» no implica modo
