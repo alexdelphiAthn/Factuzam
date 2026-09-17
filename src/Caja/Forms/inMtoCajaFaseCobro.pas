@@ -301,6 +301,8 @@ var
   oControl: TControl;
   oPago: TPagoSubsanacionCaja;
   sCodigo: string;
+  dRestante, dImporte: Currency;
+  i: Integer;
 begin
   Caption := SSubsanacionTituloCobro;
   for oControl in TArray<TControl>.Create(btnSinTicket, btnSinPrecios,
@@ -323,15 +325,23 @@ begin
       else
         FMemTablePagos.Next;
     end;
-    for oPago in FPagosSubsanacion do
+    // Los cobros vigentes se precargan hasta el total corregido: si bajó,
+    // se recortan en orden; si subió, la diferencia va al último.
+    dRestante := FDatosCobro.ImporteTotalPagar;
+    for i := 0 to High(FPagosSubsanacion) do
     begin
-      if FMemTablePagos.Locate('CODIGO_FP_CFP', oPago.FormaPago,
-        [loCaseInsensitive]) then
+      oPago := FPagosSubsanacion[i];
+      dImporte := Min(oPago.Importe, dRestante);
+      if i = High(FPagosSubsanacion) then
+        dImporte := dRestante;
+      if (dImporte > 0) and FMemTablePagos.Locate('CODIGO_FP_CFP',
+        oPago.FormaPago, [loCaseInsensitive]) then
       begin
+        dRestante := dRestante - dImporte;
         FMemTablePagos.Edit;
         FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat :=
           FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat +
-          oPago.Importe;
+          dImporte;
         if Trim(oPago.Referencia) <> '' then
           FMemTablePagos.FieldByName('REFERENCIA').AsString :=
             oPago.Referencia;

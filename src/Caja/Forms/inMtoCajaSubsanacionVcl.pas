@@ -18,7 +18,8 @@ type
     Contenedor: TWinControl;
     Lineas: TClientDataSet;
     Vista: TcxGridDBTableView;
-    ColumnaImporte: TcxGridDBColumn;
+    // Precio, descuento, "menos" y total, como en el ticket original.
+    ColumnasEditables: TArray<TcxGridDBColumn>;
     Recalcular: TProc;
   end;
 
@@ -40,6 +41,7 @@ type
       const AOriginales: TLineasSubsanacionCaja);
     destructor Destroy; override;
     function LineasCorregidas: TLineasSubsanacionCaja;
+    function PermiteEditar(AColumna: TObject): Boolean;
     // Pide el motivo al grabar; False si el usuario cancela.
     function PedirMotivo(out AMotivo: string): Boolean;
     procedure MarcarGuardada;
@@ -76,7 +78,17 @@ begin
   FControles.Vista.OptionsView.NewItemRow := False;
   for i := 0 to FControles.Vista.ColumnCount - 1 do
     FControles.Vista.Columns[i].Options.Editing :=
-      FControles.Vista.Columns[i] = FControles.ColumnaImporte;
+      PermiteEditar(FControles.Vista.Columns[i]);
+end;
+
+function TModoSubsanacionCajaVcl.PermiteEditar(AColumna: TObject): Boolean;
+var
+  oColumna: TcxGridDBColumn;
+begin
+  Result := False;
+  if not FGuardada then
+    for oColumna in FControles.ColumnasEditables do
+      Result := Result or (oColumna = AColumna);
 end;
 
 destructor TModoSubsanacionCajaVcl.Destroy;
@@ -126,6 +138,7 @@ begin
         if Result[i].Cantidad <> oActuales[j].Cantidad then
           raise EArgumentException.Create(SSubsanacionLineasFijas);
         Result[i].Importe := oActuales[j].Importe;
+        Result[i].PrecioSalida := oActuales[j].PrecioSalida;
         bEncontrada := True;
       end;
     end;

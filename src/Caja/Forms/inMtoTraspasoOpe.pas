@@ -204,6 +204,12 @@ type
       const ANumero, ASerie: string;
       AResultadoModal: Integer);
     procedure ModalImprimirClick(Sender: TObject);
+    function CrearBotonModal(ADialogo: TForm; APanel: TPanel;
+      const ACaption: string): TcxButton;
+    procedure ColocarBotonesModal(APanel: TPanel;
+      const AIzquierda: array of TcxButton; ASalir: TcxButton);
+    procedure DimensionarModal(ADialogo: TForm; AAncho, AAlto: Integer);
+    procedure ModalMostrado(Sender: TObject);
     procedure ConfigurarModalMisPeticiones(
       ADialogo: TForm;
       const ATitulo: string);
@@ -219,6 +225,8 @@ type
       const AAlmacen, ATitulo: string);
     procedure AbrirMisPeticiones;
     procedure AplicarModo(AModo: TModoTraspaso);
+    procedure AplicarEstiloCaja;
+    procedure ActualizarEstiloModo;
     procedure ConfigurarControlesReposicion;
     procedure InicializarRangoVentasReposicion;
     procedure InvalidarVentasReposicion;
@@ -288,10 +296,13 @@ uses
   inLibMsgCaja, inLibMsgComun,
   UniDataGridArticulosRepositorio, UniDataColumnasSkuServicios,
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
-  inLibMsgArticulos;
+  inLibMsgArticulos, inLibCajaEstiloVcl, System.Math,
+  inLibPosicionFormulario;
 
 const
   ALTO_CABECERA_NORMAL_96_DPI = 89;
+  ALTO_BOTON_CAJA_96_DPI = 36;
+  ALTO_FUENTE_BOTON_CAJA = 15;
   ALTO_CABECERA_REPOSICION_96_DPI = 128;
   ANCHO_MIN_A_PEDIR_96_DPI = 70;
   ANCHO_MIN_STOCK_DESTINO_96_DPI = 105;
@@ -307,6 +318,8 @@ resourcestring
     'Artículos de la petición';
   SCaptionPeticionesRealizadasTraspaso =
     'Peticiones realizadas';
+  SCaptionTipoPeticionTraspaso =
+    'Tipo';
   SCaptionAlmacenSolicitadoTraspaso =
     'Solicitado a (almacén)';
   SCaptionLineasPendientesTraspaso =
@@ -401,6 +414,7 @@ begin
   KeyPreview := True;
   FComboCodigos := TStringList.Create;
   FDatos := TdmTraspaso.Create(Self, ConexionPrincipal);
+  AplicarEstiloCaja;
   // La entrada detallada es el modo inicial de traspasos. F1 alterna con la
   // entrada por SKU completo en una sola columna, como en documentos.
   FModoEntradaSel := mcsDesglose;
@@ -1347,7 +1361,80 @@ begin
   if ModoPermiteCargaManual then
     AsegurarLineaNueva;
   ActualizarTotal;
+  ActualizarEstiloModo;
   EnfocarSegunModo;
+end;
+
+// Mismo aspecto que el resto de pantallas de caja: textos en Source Sans 3
+// con los colores del skin, cabeceras de rejilla en negrita y botones como
+// tarjetas con la tecla ("F5 ...") en una píldora.
+procedure TfrmMtoOpeTraspaso.AplicarEstiloCaja;
+var
+  Estilo: TEstiloCaja;
+  Etiqueta: TcxLabel;
+  Boton: TcxButton;
+  iMargen, iAlto: Integer;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  for Etiqueta in TArray<TcxLabel>.Create(lblOrigen, lblDestino, lblEmpleado,
+    lblVentasDesde, lblVentasHasta) do
+    EstilarEtiquetaCaja(Etiqueta, 15, True);
+  EstilarEtiquetaCaja(lblEmpleadoNombre, 15, False);
+  EstilarEtiquetaCaja(lblTotal, 18, True);
+  Estilo.EstilarRejilla(FView);
+  Estilo.EstilarRejilla(FStockView);
+  for Boton in TArray<TcxButton>.Create(btnModoTraspaso, btnModoReposicion,
+    btnModoSolicitar, btnModoAtender, btnMisPeticiones, btnCargarVentas,
+    btnF8, btnF11, btnF12) do
+    Estilo.EstilarBoton(Boton, '', nil, ALTO_FUENTE_BOTON_CAJA);
+
+  iMargen := EscalarCaja(Self, 8);
+  iAlto := EscalarCaja(Self, ALTO_BOTON_CAJA_96_DPI);
+  pnlModos.Height := iAlto + 2 * iMargen;
+  for Boton in TArray<TcxButton>.Create(btnModoTraspaso, btnModoReposicion,
+    btnModoSolicitar, btnModoAtender, btnMisPeticiones) do
+    Boton.Width := 0;
+  ColocarFilaBotonesCaja([btnModoTraspaso, btnModoReposicion,
+    btnModoSolicitar, btnModoAtender, btnMisPeticiones], iMargen, iMargen,
+    iAlto, ALTO_FUENTE_BOTON_CAJA);
+  btnCargarVentas.Width := 0;
+  ColocarFilaBotonesCaja([btnCargarVentas], btnCargarVentas.Left,
+    btnCargarVentas.Top, btnCargarVentas.Height, ALTO_FUENTE_BOTON_CAJA);
+end;
+
+// El modo activo se marca y la botonera inferior se recoloca, porque el
+// texto de F12 y la visibilidad de F11 cambian con el modo.
+procedure TfrmMtoOpeTraspaso.ActualizarEstiloModo;
+var
+  Estilo: TEstiloCaja;
+  Boton: TcxButton;
+  Visibles: TArray<TcxButton>;
+  iMargen, iAlto, iDerecha: Integer;
+begin
+  Estilo := EstiloCajaDe(Self);
+  if not Assigned(Estilo) then
+    Exit;
+  for Boton in TArray<TcxButton>.Create(btnModoTraspaso, btnModoReposicion,
+    btnModoSolicitar, btnModoAtender) do
+    Estilo.MarcarBoton(Boton, Boton.Tag = Ord(FModo));
+
+  iMargen := EscalarCaja(Self, 12);
+  iAlto := EscalarCaja(Self, ALTO_BOTON_CAJA_96_DPI);
+  Visibles := nil;
+  for Boton in TArray<TcxButton>.Create(btnF8, btnF11, btnF12) do
+    if Boton.Visible then
+    begin
+      Boton.Width := 0;
+      Visibles := Visibles + [Boton];
+    end;
+  iDerecha := ColocarFilaBotonesCaja(Visibles, 0,
+    (pnlBottom.ClientHeight - iAlto) div 2, iAlto, ALTO_FUENTE_BOTON_CAJA);
+  for Boton in Visibles do
+  begin
+    Boton.Left := Boton.Left + pnlBottom.ClientWidth - iMargen - iDerecha;
+    Boton.Anchors := [akTop, akRight];
+  end;
+  lblTotal.Top := (pnlBottom.ClientHeight - lblTotal.Height) div 2;
 end;
 
 procedure TfrmMtoOpeTraspaso.ConfigurarControlesReposicion;
@@ -1779,12 +1866,7 @@ procedure TfrmMtoOpeTraspaso.ConfigurarModalSolicitudes(
   ADialogo: TForm);
 begin
   ADialogo.Caption := STituloSolicitudesPendientesAtender;
-  ADialogo.Font.Assign(Font);
-  ADialogo.Position := poOwnerFormCenter;
-  ADialogo.BorderStyle := bsDialog;
-  ADialogo.ClientWidth := 760;
-  ADialogo.ClientHeight := 440;
-  ADialogo.KeyPreview := True;
+  DimensionarModal(ADialogo, 960, 480);
   ADialogo.OnKeyDown := ModalSolicitudesKeyDown;
 end;
 
@@ -1793,12 +1875,73 @@ procedure TfrmMtoOpeTraspaso.ConfigurarModalMisPeticiones(
   const ATitulo: string);
 begin
   ADialogo.Caption := ATitulo;
+  DimensionarModal(ADialogo, 1080, 620);
+end;
+
+// Las ventanas se crean en código: sus medidas van en píxeles a 96 ppp y hay
+// que escalarlas al PPI del formulario (la fuente ya viene escalada). Llevan
+// el estilo de caja para botones y cabeceras de rejilla.
+procedure TfrmMtoOpeTraspaso.DimensionarModal(ADialogo: TForm;
+  AAncho, AAlto: Integer);
+var
+  rArea: TRect;
+begin
   ADialogo.Font.Assign(Font);
-  ADialogo.Position := poOwnerFormCenter;
+  ADialogo.Position := poScreenCenter;
   ADialogo.BorderStyle := bsDialog;
-  ADialogo.ClientWidth := 900;
-  ADialogo.ClientHeight := 560;
   ADialogo.KeyPreview := True;
+  rArea := Monitor.WorkareaRect;
+  ADialogo.ClientWidth := Min(EscalarCaja(Self, AAncho),
+    rArea.Width - EscalarCaja(Self, 40));
+  ADialogo.ClientHeight := Min(EscalarCaja(Self, AAlto),
+    rArea.Height - EscalarCaja(Self, 60));
+  TEstiloCaja.Create(ADialogo);
+  AsociarVentanaPropietaria(ADialogo, Self);
+  ADialogo.OnShow := ModalMostrado;
+end;
+
+// Anchos de columna según contenido y título, ya con la rejilla visible
+// (antes de mostrarse no tiene medidas con las que calcularlos).
+procedure TfrmMtoOpeTraspaso.ModalMostrado(Sender: TObject);
+var
+  oDialogo: TComponent;
+  oRejilla: TcxGrid;
+  I, J: Integer;
+begin
+  oDialogo := Sender as TComponent;
+  for I := 0 to oDialogo.ComponentCount - 1 do
+    if oDialogo.Components[I] is TcxGrid then
+    begin
+      oRejilla := TcxGrid(oDialogo.Components[I]);
+      for J := 0 to oRejilla.ViewCount - 1 do
+        if oRejilla.Views[J] is TcxGridTableView then
+          TcxGridTableView(oRejilla.Views[J]).ApplyBestFit;
+    end;
+end;
+
+function TfrmMtoOpeTraspaso.CrearBotonModal(ADialogo: TForm; APanel: TPanel;
+  const ACaption: string): TcxButton;
+begin
+  Result := TcxButton.Create(ADialogo);
+  Result.Parent := APanel;
+  Result.Caption := ACaption;
+  EstiloCajaDe(ADialogo).EstilarBoton(Result, '', nil,
+    ALTO_FUENTE_BOTON_CAJA);
+end;
+
+procedure TfrmMtoOpeTraspaso.ColocarBotonesModal(APanel: TPanel;
+  const AIzquierda: array of TcxButton; ASalir: TcxButton);
+var
+  iMargen, iAlto, iTop: Integer;
+begin
+  iMargen := EscalarCaja(Self, 12);
+  iAlto := EscalarCaja(Self, ALTO_BOTON_CAJA_96_DPI);
+  iTop := (APanel.ClientHeight - iAlto) div 2;
+  ColocarFilaBotonesCaja(AIzquierda, iMargen, iTop, iAlto,
+    ALTO_FUENTE_BOTON_CAJA);
+  ColocarFilaBotonesCaja([ASalir], 0, iTop, iAlto, ALTO_FUENTE_BOTON_CAJA);
+  ASalir.Left := APanel.ClientWidth - iMargen - ASalir.Width;
+  ASalir.Anchors := [akTop, akRight];
 end;
 
 function TfrmMtoOpeTraspaso.CrearPanelBotonesSolicitudes(
@@ -1807,7 +1950,7 @@ begin
   Result := TPanel.Create(ADialogo);
   Result.Parent := ADialogo;
   Result.Align := alBottom;
-  Result.Height := 60;
+  Result.Height := EscalarCaja(Self, 60);
   Result.BevelOuter := bvNone;
 end;
 
@@ -1847,8 +1990,11 @@ begin
   AVista.OptionsData.Deleting := False;
   AVista.OptionsSelection.CellSelect := False;
   AVista.OptionsView.GroupByBox := False;
-  AVista.OptionsView.ColumnAutoWidth := True;
+  // Sin reparto forzado al ancho: con muchas columnas las recortaba todas.
+  // Los anchos se ajustan al contenido al titularlas.
+  AVista.OptionsView.ColumnAutoWidth := False;
   AVista.DataController.CreateAllItems;
+  EstiloCajaDe(ADialogo).EstilarRejilla(AVista);
 end;
 
 procedure TfrmMtoOpeTraspaso.TitularColumnasSolicitudes(
@@ -1888,7 +2034,9 @@ begin
       AVista.Columns[iColumna].Caption := SCaptionColEstadoSolicitud
     else if SameText(sCampo, 'LINEAS_PEND_TRSOL') then
       AVista.Columns[iColumna].Caption :=
-        SCaptionLineasPendientesTraspaso;
+        SCaptionLineasPendientesTraspaso
+    else if SameText(sCampo, 'TIPO_TRSOL') then
+      AVista.Columns[iColumna].Caption := SCaptionTipoPeticionTraspaso;
   end;
 end;
 
@@ -1964,7 +2112,11 @@ begin
       AVista.Columns[iColumna].Caption :=
         SCaptionColMotivoRechazoTraspaso;
       AVista.Columns[iColumna].Width := 190;
-    end;
+    end
+    else if SameText(sCampo, 'CODIGO_PRV_TRSOLLIN') then
+      AVista.Columns[iColumna].Visible := False
+    else if SameText(sCampo, 'RAZON_SOCIAL_PRV_TRSOLLIN') then
+      AVista.Columns[iColumna].Caption := SCaptionProveedor;
   end;
 end;
 
@@ -1972,55 +2124,41 @@ procedure TfrmMtoOpeTraspaso.CrearBotonesSolicitudes(
   ADialogo: TForm;
   APanel: TPanel);
 var
-  oAtender: TButton;
-  oImprimir: TButton;
-  oNoAtender: TButton;
-  oSalir: TButton;
+  oAtender: TcxButton;
+  oImprimir: TcxButton;
+  oNoAtender: TcxButton;
+  oSalir: TcxButton;
 begin
-  oAtender := TButton.Create(ADialogo);
-  oAtender.Parent := APanel;
-  oAtender.SetBounds(14, 12, 160, 36);
-  oAtender.Caption := TextoBotonConAtajo(SCaptionAtender, 'F7');
+  oAtender := CrearBotonModal(ADialogo, APanel,
+    TextoBotonConAtajo(SCaptionAtender, 'F7'));
   oAtender.ModalResult := mrYes;
   oAtender.Default := True;
-  oNoAtender := TButton.Create(ADialogo);
-  oNoAtender.Parent := APanel;
-  oNoAtender.SetBounds(186, 12, 160, 36);
-  oNoAtender.Caption := TextoBotonConAtajo(SCaptionNoAtender, 'F6');
+  oNoAtender := CrearBotonModal(ADialogo, APanel,
+    TextoBotonConAtajo(SCaptionNoAtender, 'F6'));
   oNoAtender.ModalResult := mrNo;
-  oImprimir := TButton.Create(ADialogo);
-  oImprimir.Parent := APanel;
-  oImprimir.SetBounds(358, 12, 160, 36);
-  oImprimir.Caption := SCaptionImprimir;
+  oImprimir := CrearBotonModal(ADialogo, APanel, SCaptionImprimir);
   oImprimir.OnClick := ModalImprimirClick;
-  oSalir := TButton.Create(ADialogo);
-  oSalir.Parent := APanel;
-  oSalir.SetBounds(606, 12, 140, 36);
-  oSalir.Caption := 'ESC ' + Trim(
-    StringReplace(SCaptionSalir, '&', '', [rfReplaceAll]));
+  oSalir := CrearBotonModal(ADialogo, APanel, 'ESC ' + Trim(
+    StringReplace(SCaptionSalir, '&', '', [rfReplaceAll])));
   oSalir.Cancel := True;
   oSalir.ModalResult := mrCancel;
+  ColocarBotonesModal(APanel, [oAtender, oNoAtender, oImprimir], oSalir);
 end;
 
 procedure TfrmMtoOpeTraspaso.CrearBotonesMisPeticiones(
   ADialogo: TForm;
   APanel: TPanel);
 var
-  oReimprimir: TButton;
-  oSalir: TButton;
+  oReimprimir: TcxButton;
+  oSalir: TcxButton;
 begin
-  oReimprimir := TButton.Create(ADialogo);
-  oReimprimir.Parent := APanel;
-  oReimprimir.SetBounds(14, 12, 160, 36);
-  oReimprimir.Caption := 'Reimprimir';
+  oReimprimir := CrearBotonModal(ADialogo, APanel, 'Reimprimir');
   oReimprimir.OnClick := ModalReimprimirClick;
-  oSalir := TButton.Create(ADialogo);
-  oSalir.Parent := APanel;
-  oSalir.SetBounds(746, 12, 140, 36);
-  oSalir.Caption := 'ESC ' + Trim(
-    StringReplace(SCaptionSalir, '&', '', [rfReplaceAll]));
+  oSalir := CrearBotonModal(ADialogo, APanel, 'ESC ' + Trim(
+    StringReplace(SCaptionSalir, '&', '', [rfReplaceAll])));
   oSalir.Cancel := True;
   oSalir.ModalResult := mrCancel;
+  ColocarBotonesModal(APanel, [oReimprimir], oSalir);
 end;
 
 procedure TfrmMtoOpeTraspaso.ModalSolicitudesKeyDown(
@@ -2099,12 +2237,12 @@ begin
     oPanelMaestro := TPanel.Create(oDialogo);
     oPanelMaestro.Parent := oDialogo;
     oPanelMaestro.Align := alTop;
-    oPanelMaestro.Height := 220;
+    oPanelMaestro.Height := EscalarCaja(Self, 250);
     oPanelMaestro.BevelOuter := bvNone;
     oTituloMaestro := TPanel.Create(oDialogo);
     oTituloMaestro.Parent := oPanelMaestro;
     oTituloMaestro.Align := alTop;
-    oTituloMaestro.Height := 28;
+    oTituloMaestro.Height := EscalarCaja(Self, 32);
     oTituloMaestro.BevelOuter := bvNone;
     oTituloMaestro.Caption :=
       SCaptionPeticionesRealizadasTraspaso;
@@ -2129,7 +2267,7 @@ begin
       oTituloDetalle := TPanel.Create(oDialogo);
       oTituloDetalle.Parent := oPanelDetalle;
       oTituloDetalle.Align := alTop;
-      oTituloDetalle.Height := 28;
+      oTituloDetalle.Height := EscalarCaja(Self, 32);
       oTituloDetalle.BevelOuter := bvNone;
       oTituloDetalle.Caption :=
         SCaptionArticulosPeticionTraspaso;

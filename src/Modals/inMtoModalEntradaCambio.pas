@@ -47,6 +47,7 @@ type
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure AplicarEstiloCaja;
     procedure btnEmpleadoPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure btnEmpleadoPropertiesValidate(Sender: TObject;
@@ -85,7 +86,8 @@ implementation
 
 uses
   inLibMensajesVcl,
-  inLibGenerarTicketCaja, inMtoGenSearch, inLibMsgComun;
+  inLibGenerarTicketCaja, inMtoGenSearch, inLibMsgComun,
+  inLibCajaEstiloVcl, inLibPosicionFormulario;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -112,6 +114,7 @@ begin
   Result := False;
   frm := TfrmModalEntradaCambio.Create(AOwner);
   try
+    AsociarVentanaPropietaria(frm, AOwner);
     frm.FConn    := AConn;
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
@@ -145,6 +148,21 @@ begin
   inherited;
   KeyPreview := True;
   Position := poScreenCenter;
+  AplicarEstiloCaja;
+end;
+
+// Mismo aspecto que el resto de pantallas de caja: títulos en negrita con
+// los colores del skin y botones como tarjetas con la tecla en una píldora.
+procedure TfrmModalEntradaCambio.AplicarEstiloCaja;
+var
+  Estilo: TEstiloCaja;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  EstilarEtiquetaCaja(lblTitulo, 16, True);
+  EstilarEtiquetaCaja(lblEmpleadoNombre, 15, True);
+  Estilo.EstilarBoton(btnAceptar, '', nil, 15);
+  Estilo.EstilarBoton(btnCancelar, '', nil, 15);
+  ColocarBotoneraDerechaCaja(btnAceptar.Parent, [btnAceptar, btnCancelar]);
 end;
 
 procedure TfrmModalEntradaCambio.btnEmpleadoPropertiesButtonClick(

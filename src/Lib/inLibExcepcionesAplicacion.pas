@@ -372,7 +372,7 @@ begin
   Dialogo := TForm.Create(AOwner);
   try
     Dialogo.Caption := STituloContrasenaCopiaError;
-    Dialogo.Position := poOwnerFormCenter;
+    Dialogo.Position := poScreenCenter;
     Dialogo.BorderIcons := [];
     Dialogo.BorderStyle := bsDialog;
     Dialogo.ClientWidth := 520;

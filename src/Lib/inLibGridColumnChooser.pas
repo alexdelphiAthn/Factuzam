@@ -155,7 +155,7 @@ begin
       oFormulario.Caption := STituloSeleccionarColumnas;
       oFormulario.Width := 420;
       oFormulario.Height := 460;
-      oFormulario.Position := poMainFormCenter;
+      oFormulario.Position := poScreenCenter;
       oFormulario.BorderStyle := bsDialog;
       oPanel := TPanel.Create(oFormulario);
       oPanel.Parent := oFormulario;

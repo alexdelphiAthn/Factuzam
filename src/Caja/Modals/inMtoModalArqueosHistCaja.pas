@@ -63,6 +63,7 @@ type
     btnDupCierre: TcxButton;
     btnSalir: TcxButton;
     procedure FormCreate(Sender: TObject);
+    procedure AplicarEstiloCaja;
     procedure FormDestroy(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -104,7 +105,7 @@ implementation
 
 uses
   inLibMensajesVcl,
-  inLibMsgCaja;
+  inLibMsgCaja, inLibCajaEstiloVcl, inLibPosicionFormulario;
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -132,6 +133,7 @@ begin
   ADependencias.Validar;
   Frm := TfrmModalArqueosHistCaja.Create(AOwner);
   try
+    AsociarVentanaPropietaria(Frm, AOwner);
     Frm.FConn    := AConn;
     Frm.FRepositorioPersistencia := ADependencias.Informes;
     Frm.FRepositorioArqueoCaja := ADependencias.Arqueo;
@@ -162,6 +164,27 @@ begin
   Self.Position := poScreenCenter;
   Self.KeyPreview := True;
   Self.OnKeyDown := FormKeyDown;
+  AplicarEstiloCaja;
+end;
+
+// Mismo aspecto que el resto de pantallas de caja. Las teclas van en los
+// botones, así que sobra la línea de ayuda; tampoco se agrupa por columnas.
+procedure TfrmModalArqueosHistCaja.AplicarEstiloCaja;
+var
+  Estilo: TEstiloCaja;
+  Boton: TcxButton;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  EstilarEtiquetaCaja(lblTitulo, 18, True);
+  lblAyuda.Visible := False;
+  lblTitulo.Parent.Height := EscalarCaja(Self, 44);
+  dbtvArqueos.OptionsView.GroupByBox := False;
+  Estilo.EstilarRejilla(dbtvArqueos);
+  for Boton in TArray<TcxButton>.Create(btnDupTicket, btnDupCierre,
+    btnSalir) do
+    Estilo.EstilarBoton(Boton, '', nil, 15);
+  ColocarBotoneraDerechaCaja(btnSalir.Parent,
+    [btnDupTicket, btnDupCierre, btnSalir]);
 end;
 
 procedure TfrmModalArqueosHistCaja.FormDestroy(Sender: TObject);

@@ -171,6 +171,7 @@ type
     FConservoImportesUltimaPreparacion: Boolean;
     FEnfoqueArticuloPendiente: Boolean;
     function GetFormulario: TCustomForm;
+    function RejillaEnfocable: Boolean;
     function GetRejilla: TcxGrid;
     function GetVistaLineas: TcxGridDBTableView;
     function GetColumnaArticulo: TcxGridDBColumn;
@@ -1235,10 +1236,7 @@ end;
 procedure TfrmMtoOpeCaja.tvTotalPropertiesEditValueChanged(
   Sender: TObject);
 begin
-  if Assigned(FSubsanacion) then
-    TcxCustomEdit(Sender).PostEditValue
-  else
-    FEditorLineas.CambiarTotal(Sender);
+  FEditorLineas.CambiarTotal(Sender);
 end;
 
 procedure TfrmMtoOpeCaja.tvUdsPropertiesEditValueChanged(
@@ -1265,7 +1263,7 @@ procedure TfrmMtoOpeCaja.cxGrid1DBTableView1Editing(
   var AAllow: Boolean);
 begin
   if Assigned(FSubsanacion) then
-    AAllow := (AItem = tvTotal) and not FSubsanacion.Guardada
+    AAllow := FSubsanacion.PermiteEditar(AItem)
   else
     FEditorLineas.ComprobarEdicion(Sender, AItem, AAllow);
 end;
@@ -2952,7 +2950,7 @@ begin
       end;
     end;
     // 3. Forzamos el foco visual a la celda del Artículo, lista para escanear
-    if cxgrdLineasOpe.CanFocus then
+    if RejillaEnfocable then
       cxgrdLineasOpe.SetFocus;
     tvLineasOpe.Controller.FocusedColumn := tvArticulo;
     SolicitarFocoArticuloLineaNueva;
@@ -3169,7 +3167,8 @@ begin
   oControles.Contenedor := Self;
   oControles.Lineas := DatosCaja.cdsLineas;
   oControles.Vista := tvLineasOpe;
-  oControles.ColumnaImporte := tvTotal;
+  oControles.ColumnasEditables := [tvPrecioUni, tvDescuento,
+    tvDescuentoMenos, tvTotal];
   oControles.Recalcular := ActualizarTotalSubsanacion;
   FSubsanacion := TModoSubsanacionCajaVcl.Create(oControles,
     AOperacion.Lineas);
@@ -3201,9 +3200,6 @@ begin
   actEliminarLinea.Enabled := False;
   actCargarCta.Enabled := False;
   actBuscarModificar.Enabled := False;
-  tvPrecioUni.Visible := False;
-  tvDescuento.Visible := False;
-  tvDescuentoMenos.Visible := False;
   lblTipoRectificativa.Caption := SSubsanacionModo;
   lblTipoRectificativa.Visible := True;
   lblCobro.Caption := SSubsanacionBoton;
@@ -3247,8 +3243,11 @@ var
   dDescuento: Currency;
 begin
   // Valida la edición antes de abrir el cobro; la forma de pago y el
-  // descuento global se deciden en la pantalla de Cobro.
-  FSubsanacion.LineasCorregidas;
+  // descuento global se deciden en la pantalla de Cobro. En la rejilla sólo
+  // se edita el total: se recalculan los precios para que el cobro parta
+  // del importe corregido y no del precio original.
+  SincronizarPreciosSubsanacion(DatosCaja.cdsLineas,
+    FSubsanacion.LineasCorregidas);
   oSolicitud := Default(TSolicitudSubsanacionCaja);
   oSolicitud.Original := FOperacionSubsanacion;
   Result := TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
@@ -3268,7 +3267,7 @@ begin
   oResultado := FServicioSubsanacion.Guardar(oSolicitud);
   if dDescuento <> 0 then
   begin
-    AplicarImportesSubsanacion(DatosCaja.cdsLineas, oLineas);
+    SincronizarPreciosSubsanacion(DatosCaja.cdsLineas, oLineas);
     ActualizarTotalSubsanacion;
   end;
   FSubsanacion.MarcarGuardada;
@@ -3528,16 +3527,25 @@ begin
   end;
 end;
 
+// La ventana puede estar aún oculta (devolución cargada antes de mostrarse)
+// o deshabilitada por un modal: enfocar ahí lanza EInvalidOperation.
+function TEditorLineasCajaVcl.RejillaEnfocable: Boolean;
+begin
+  Result := Assigned(Formulario) and Formulario.Visible and
+    Formulario.HandleAllocated and IsWindowVisible(Formulario.Handle) and
+    IsWindowEnabled(Formulario.Handle) and cxgrdLineasOpe.CanFocus;
+end;
+
 procedure TEditorLineasCajaVcl.EnfocarArticulo;
 begin
   FEnfoqueArticuloPendiente := False;
-  if Assigned(DatosCaja) and DatosCaja.cdsLineas.Active and
+  if RejillaEnfocable and
+     Assigned(DatosCaja) and DatosCaja.cdsLineas.Active and
      (DatosCaja.cdsLineas.State = dsInsert) and
      (Trim(DatosCaja.cdsLineas.FieldByName(
        'CODIGO_ART_FACLIN').AsString) = '') then
   begin
-    if cxgrdLineasOpe.CanFocus then
-      cxgrdLineasOpe.SetFocus;
+    cxgrdLineasOpe.SetFocus;
     if tvLineasOpe.Controller.EditingController.IsEditing and
        (tvLineasOpe.Controller.EditingItem <> tvArticulo) then
       tvLineasOpe.Controller.EditingController.HideEdit(False);

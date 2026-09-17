@@ -151,6 +151,7 @@ implementation
 
 uses
   inLibMensajesVcl,
+  inLibPosicionFormulario,
   Vcl.Dialogs,
   inLibMsgComun, inLibMsgConfiguracion,
   cxGridDBDataDefinitions;
@@ -205,6 +206,10 @@ var
 begin
   if FDisponible then
   begin
+  // Con posición grabada (Alt+F12) no se centra: la VCL aplica Position
+  // después de OnShow y pisaría Left/Top.
+  if GetPerfilValueDef(FPerfil, 'Left', '') <> '' then
+    FijarPosicionFormulario(AForm, poDesigned);
   AForm.Left   := StrToIntDef(
     GetPerfilValueDef(FPerfil, 'Left',   IntToStr(AForm.Left)),   AForm.Left);
   AForm.Top    := StrToIntDef(

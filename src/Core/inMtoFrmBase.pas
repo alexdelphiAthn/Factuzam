@@ -297,7 +297,8 @@ type
 implementation
 
 uses
-  inLibRegistroLogNulo, inLibMsgComun, inLibTraducciones;
+  inLibRegistroLogNulo, inLibMsgComun, inLibTraducciones,
+  inLibPosicionFormulario;
 
 {$R *.dfm}
 {$R CXLOCALIZATION.res}
@@ -1239,6 +1240,9 @@ end;
 
 procedure TfrmBase.DoShow;
 begin
+  // Centrada en pantalla por defecto. Antes de inherited (que lanza OnShow):
+  // si OnShow restaura una geometría grabada, la deja en poDesigned.
+  CentrarFormularioPorDefecto(Self);
   inherited;
   FRegistroLog.RegistrarEvento(
     Self.UnitName,

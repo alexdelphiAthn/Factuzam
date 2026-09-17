@@ -361,7 +361,7 @@ begin
   iAltoBoton := MulDiv(26, iPpi, USER_DEFAULT_SCREEN_DPI);
 
   Caption := STituloSeleccionarFotoVariacion;
-  Position := poOwnerFormCenter;
+  Position := poScreenCenter;
   BorderStyle := bsSizeable;
   BorderIcons := [biSystemMenu, biMaximize];
   KeyPreview := True;

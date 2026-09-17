@@ -62,6 +62,7 @@ type
       Tecla: string;
       Etiqueta: TcxLabel;
       AltoFuente: Integer;
+      Activo: Boolean;
     end;
   private
     FBotones: TDictionary<TcxButton, TDatosBoton>;
@@ -82,6 +83,9 @@ type
     /// Caption (y la etiqueta se oculta).
     procedure EstilarBoton(ABoton: TcxButton; const ATecla: string = '';
       AEtiqueta: TcxLabel = nil; AAltoFuente: Integer = 16);
+    /// Marca el botón como seleccionado (p. ej. el modo activo), con el
+    /// mismo aspecto que la tarjeta seleccionada del menú.
+    procedure MarcarBoton(ABoton: TcxButton; AActivo: Boolean);
     /// Reparte los controles a lo ancho de AContenedor (el panel debe tener
     /// OnResize libre) y los vuelve a repartir al redimensionarse.
     procedure RepartirEn(AContenedor: TPanel;
@@ -90,6 +94,8 @@ type
     procedure EstilarRejilla(AVista: TcxGridTableView);
   end;
 
+/// Estilo de caja creado para AOwner (nil si no hay).
+function EstiloCajaDe(AOwner: TComponent): TEstiloCaja;
 function MezclaCaja(AColor1, AColor2: TColor; APorcentaje1: Integer): TColor;
 function EscalarCaja(AControl: TControl; AValor: Integer): Integer;
 
@@ -115,6 +121,10 @@ function ConvertirPanelEnTarjetaCaja(APanel: TPanel;
 /// derecho del último.
 function ColocarFilaBotonesCaja(const ABotones: array of TcxButton;
   AIzquierda, ATop, AAlto, AAltoFuente: Integer): Integer;
+/// Botonera de pie de ventana: en fila, alineada a la derecha y centrada en
+/// vertical en APanel, con el ancho que pide cada texto.
+procedure ColocarBotoneraDerechaCaja(APanel: TWinControl;
+  const ABotones: array of TcxButton; AAltoFuente: Integer = 15);
 
 implementation
 
@@ -130,17 +140,34 @@ const
   RADIO_TARJETA = 12;
   ALTO_FUENTE_MINIMO = 13;
 
-// "Cerrar (ESC)" -> título "Cerrar" y tecla "ESC". Se hace al dibujar para
-// respetar la traducción del Caption, que puede llegar después.
+function EsTeclaCaja(const ATexto: string): Boolean;
+var
+  I: Integer;
+begin
+  Result := SameText(ATexto, 'ESC');
+  if not Result and (Length(ATexto) in [2, 3]) and
+     CharInSet(ATexto[1], ['F', 'f']) then
+  begin
+    Result := True;
+    for I := 2 to Length(ATexto) do
+      Result := Result and CharInSet(ATexto[I], ['0'..'9']);
+  end;
+end;
+
+// "Cerrar (ESC)" o "F5 Reposiciones" -> título y tecla por separado. Se hace
+// al dibujar para respetar la traducción del Caption, que puede llegar
+// después.
 procedure SepararTeclaCaption(const ACaption: string; out ATitulo: string;
   var ATecla: string);
 var
   sCaption: string;
-  iAbre: Integer;
+  iAbre, iEspacio: Integer;
 begin
   sCaption := Trim(ACaption);
   ATitulo := sCaption;
-  if (ATecla = '') and sCaption.EndsWith(')') then
+  if ATecla <> '' then
+    Exit;
+  if sCaption.EndsWith(')') then
   begin
     iAbre := sCaption.LastIndexOf('(');
     if iAbre > 0 then
@@ -148,7 +175,27 @@ begin
       ATecla := Copy(sCaption, iAbre + 2, Length(sCaption) - iAbre - 2);
       ATitulo := Trim(Copy(sCaption, 1, iAbre));
     end;
+  end
+  else
+  begin
+    iEspacio := Pos(' ', sCaption);
+    if (iEspacio > 1) and EsTeclaCaja(Copy(sCaption, 1, iEspacio - 1)) then
+    begin
+      ATecla := Copy(sCaption, 1, iEspacio - 1);
+      ATitulo := Trim(Copy(sCaption, iEspacio + 1, MaxInt));
+    end;
   end;
+end;
+
+function EstiloCajaDe(AOwner: TComponent): TEstiloCaja;
+var
+  I: Integer;
+begin
+  Result := nil;
+  if Assigned(AOwner) then
+    for I := 0 to AOwner.ComponentCount - 1 do
+      if AOwner.Components[I] is TEstiloCaja then
+        Exit(TEstiloCaja(AOwner.Components[I]));
 end;
 
 function MezclaCaja(AColor1, AColor2: TColor; APorcentaje1: Integer): TColor;
@@ -313,6 +360,27 @@ begin
   APanel.Visible := False;
 end;
 
+procedure ColocarBotoneraDerechaCaja(APanel: TWinControl;
+  const ABotones: array of TcxButton; AAltoFuente: Integer);
+var
+  oBoton: TcxButton;
+  iMargen, iAlto, iDerecha: Integer;
+begin
+  if Length(ABotones) = 0 then
+    Exit;
+  iMargen := EscalarCaja(APanel, 12);
+  iAlto := EscalarCaja(APanel, 36);
+  for oBoton in ABotones do
+    oBoton.Width := 0;
+  iDerecha := ColocarFilaBotonesCaja(ABotones, 0,
+    (APanel.ClientHeight - iAlto) div 2, iAlto, AAltoFuente);
+  for oBoton in ABotones do
+  begin
+    oBoton.Left := oBoton.Left + APanel.ClientWidth - iMargen - iDerecha;
+    oBoton.Anchors := [akTop, akRight];
+  end;
+end;
+
 { TPanelTarjetaCaja }
 
 constructor TPanelTarjetaCaja.Create(AOwner: TComponent);
@@ -377,6 +445,7 @@ begin
   Datos.Tecla := ATecla;
   Datos.Etiqueta := AEtiqueta;
   Datos.AltoFuente := AAltoFuente;
+  Datos.Activo := False;
   if Assigned(AEtiqueta) then
     AEtiqueta.Visible := False;
   FBotones.AddOrSetValue(ABoton, Datos);
@@ -384,6 +453,18 @@ begin
   ABoton.Cursor := crHandPoint;
   ABoton.OnCustomDraw := DibujarBoton;
   ABoton.Invalidate;
+end;
+
+procedure TEstiloCaja.MarcarBoton(ABoton: TcxButton; AActivo: Boolean);
+var
+  Datos: TDatosBoton;
+begin
+  if FBotones.TryGetValue(ABoton, Datos) and (Datos.Activo <> AActivo) then
+  begin
+    Datos.Activo := AActivo;
+    FBotones[ABoton] := Datos;
+    ABoton.Invalidate;
+  end;
 end;
 
 procedure TEstiloCaja.DibujarBoton(Sender: TObject; ACanvas: TcxCanvas;
@@ -427,7 +508,8 @@ begin
     cBordeTecla := cBorde;
     cTextoTecla := cTexto;
   end
-  else if (AViewInfo.State in [cxbsHot, cxbsPressed]) or oBoton.Focused then
+  else if (AViewInfo.State in [cxbsHot, cxbsPressed]) or oBoton.Focused or
+    Datos.Activo then
   begin
     if AViewInfo.State = cxbsPressed then
       cFondo := MezclaCaja(Colores.Acento, Colores.Fondo, 35)

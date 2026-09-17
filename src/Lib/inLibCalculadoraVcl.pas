@@ -119,7 +119,7 @@ begin
   Caption := SCaptionCalculadora;
   BorderStyle := bsDialog;
   BorderIcons := [biSystemMenu];
-  Position := poMainFormCenter;
+  Position := poScreenCenter;
   KeyPreview := True;
   OnKeyDown := TeclaPulsada;
   ClientWidth := EscalarAPantalla(ANCHO_BASE_CALCULADORA);

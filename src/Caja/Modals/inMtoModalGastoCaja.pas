@@ -51,6 +51,7 @@ type
     procedure actAceptarExecute(Sender: TObject);
     procedure actCancelarExecute(Sender: TObject);
     procedure FormCreate(Sender: TObject);
+    procedure AplicarEstiloCaja;
     procedure btnEmpleadoPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
     procedure btnEmpleadoPropertiesValidate(Sender: TObject;
@@ -104,7 +105,7 @@ implementation
 uses
   inLibMensajesVcl,
   inLibGenerarTicketCaja, inMtoGenSearch, Data.DB,
-  inLibMsgCaja, inLibMsgComun;
+  inLibMsgCaja, inLibMsgComun, inLibCajaEstiloVcl, inLibPosicionFormulario;
 
 resourcestring
   SConceptoPagoProveedorGastoCaja = 'Pago proveedor';
@@ -138,6 +139,7 @@ begin
   Result := False;
   frm := TfrmModalGastoCaja.Create(AOwner);
   try
+    AsociarVentanaPropietaria(frm, AOwner);
     frm.FConn    := AConn;
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
@@ -181,6 +183,7 @@ begin
   Result := False;
   frm := TfrmModalGastoCaja.Create(AOwner);
   try
+    AsociarVentanaPropietaria(frm, AOwner);
     frm.FConn    := AConn;
     frm.FEmpresa := AEmpresa;
     frm.FAlmacen := AAlmacen;
@@ -206,6 +209,23 @@ begin
   inherited;
   KeyPreview := True;
   Position := poScreenCenter;
+  AplicarEstiloCaja;
+end;
+
+// Mismo aspecto que el resto de pantallas de caja: títulos en negrita con
+// los colores del skin y botones como tarjetas con la tecla en una píldora.
+procedure TfrmModalGastoCaja.AplicarEstiloCaja;
+var
+  Estilo: TEstiloCaja;
+begin
+  Estilo := TEstiloCaja.Create(Self);
+  EstilarEtiquetaCaja(lblTitulo, 16, True);
+  EstilarEtiquetaCaja(lblEmpleadoNombre, 15, True);
+  EstilarEtiquetaCaja(lblTipoLbl, 15, False);
+  rgTipo.Transparent := True;
+  Estilo.EstilarBoton(btnAceptar, '', nil, 15);
+  Estilo.EstilarBoton(btnCancelar, '', nil, 15);
+  ColocarBotoneraDerechaCaja(btnAceptar.Parent, [btnAceptar, btnCancelar]);
 end;
 
 procedure TfrmModalGastoCaja.ComponerDependencias;

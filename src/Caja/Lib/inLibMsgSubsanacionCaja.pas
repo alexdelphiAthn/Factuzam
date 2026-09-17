@@ -18,8 +18,8 @@ interface
 resourcestring
   SSubsanacionDescartar = '¿Descartar los cambios de la subsanación?';
   SSubsanacionModo =
-    'Subsanación: edite el importe de cada línea. F12 abre el cobro para ' +
-    'la forma de pago y el descuento global.';
+    'Subsanación: cambie precio, descuento o total de cada línea. F12 ' +
+    'abre el cobro para la forma de pago y el descuento global.';
   SSubsanacionTituloCobro = 'Subsanación: forma de pago y descuento global';
   SSubsanacionCobroExacto =
     'El cobro debe cuadrar con el total, sin cambio, vales ni importes ' +

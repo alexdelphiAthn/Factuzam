@@ -22,8 +22,15 @@ type
     Cantidad: Double;
     ImporteOriginal: Currency;
     Importe: Currency;
+    // Precio de salida editable como en el ticket; la diferencia con el
+    // importe queda como descuento de la línea.
+    PrecioSalidaOriginal: Currency;
+    PrecioSalida: Currency;
   end;
   TLineasSubsanacionCaja = TArray<TLineaSubsanacionCaja>;
+
+function LineaSubsanacionModificada(
+  const ALinea: TLineaSubsanacionCaja): Boolean;
 
 function TotalSubsanacion(
   const ALineas: TLineasSubsanacionCaja): Currency;
@@ -83,6 +90,13 @@ begin
       raise EArgumentException.CreateFmt(
         SSubsanacionPrecisionLinea, [ALinea.Numero]);
   end;
+end;
+
+function LineaSubsanacionModificada(
+  const ALinea: TLineaSubsanacionCaja): Boolean;
+begin
+  Result := (ALinea.Importe <> ALinea.ImporteOriginal) or
+    (ALinea.PrecioSalida <> ALinea.PrecioSalidaOriginal);
 end;
 
 function TotalSubsanacion(

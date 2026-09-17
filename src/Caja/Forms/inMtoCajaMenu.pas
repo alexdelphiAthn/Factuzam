@@ -86,6 +86,8 @@ type
     procedure Action1Execute(Sender: TObject);
   protected
     procedure CreateParams(var Params: TCreateParams); override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
     procedure WMActivate(var Mensaje: TWMActivate); message WM_ACTIVATE;
     procedure WMReactivarOperacionCaja(var Mensaje: TMessage);
       message WM_REACTIVAR_OPERACION_CAJA;
@@ -138,7 +140,13 @@ uses
   inLibMensajesVcl,
   DateUtils,
   inMtoModalArqueo, inMtoModalEntradaCambio, inMtoModalGastoCaja,
-  inLibMsgCaja, inLibTraducciones;
+  inLibMsgCaja, inLibTraducciones, inLibVentanaBarraTareas;
+
+const
+  // Identificador de aplicación propio: botón separado en la barra de
+  // tareas, con el icono del menú de caja, aunque la barra combine botones.
+  GRUPO_BARRA_TAREAS_CAJA = 'Factuzam.Caja';
+  ICONO_MENU_CAJA = 'MNUMENUCAJA';
 
 {$R *.dfm}
 
@@ -212,6 +220,21 @@ begin
   Params.WndParent := 0;
 end;
 
+procedure TfrmMtoMenuCaja.CreateWnd;
+begin
+  inherited;
+  AsignarGrupoBarraTareas(Handle, GRUPO_BARRA_TAREAS_CAJA);
+  AsignarIconoVentanaDesdePng(Handle, ICONO_MENU_CAJA);
+end;
+
+procedure TfrmMtoMenuCaja.DestroyWnd;
+begin
+  // La propiedad debe quitarse antes de destruir la ventana.
+  QuitarGrupoBarraTareas(Handle);
+  LiberarIconoVentana(Handle);
+  inherited;
+end;
+
 procedure TfrmMtoMenuCaja.WMActivate(var Mensaje: TWMActivate);
 begin
   inherited;
@@ -223,6 +246,12 @@ end;
 
 procedure TfrmMtoMenuCaja.WMReactivarOperacionCaja(var Mensaje: TMessage);
 begin
+  // Al minimizar la ventana principal, TApplication.Minimize oculta las
+  // ventanas que dependen del menú (ventas, traspasos, arqueo...) y sólo las
+  // devuelve al restaurar la principal. El menú tiene botón propio en la
+  // barra de tareas: al traerlo desde ahí se vuelven a mostrar.
+  if not IsIconic(Handle) then
+    ShowOwnedPopups(Handle, True);
   ReactivarOperacionCajaVisible;
   Mensaje.Result := 0;
 end;

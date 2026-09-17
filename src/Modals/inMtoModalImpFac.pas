@@ -214,7 +214,7 @@ begin
   ClientHeight := 132;
   ClientWidth := 424;
   Font.Assign(Screen.MessageFont);
-  Position := poOwnerFormCenter;
+  Position := poScreenCenter;
   if AOwner is TCustomForm then
   begin
     PopupMode := pmExplicit;

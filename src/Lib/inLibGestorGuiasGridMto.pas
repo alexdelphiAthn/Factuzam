@@ -407,7 +407,7 @@ begin
   try
     oFormulario.Caption := STituloRenombrarColumnas;
     oFormulario.Width := 620;
-    oFormulario.Position := poMainFormCenter;
+    oFormulario.Position := poScreenCenter;
     oFormulario.BorderStyle := bsDialog;
     iTop := 12;
     for i := 0 to FVista.ColumnCount - 1 do

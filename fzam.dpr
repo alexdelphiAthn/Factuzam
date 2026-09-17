@@ -1128,6 +1128,8 @@ uses
   inLibMenuIconos in 'src\Lib\inLibMenuIconos.pas',
   inLibMenuBarraIconos in 'src\Lib\inLibMenuBarraIconos.pas',
   inLibCajaEstiloVcl in 'src\Lib\inLibCajaEstiloVcl.pas',
+  inLibPosicionFormulario in 'src\Lib\inLibPosicionFormulario.pas',
+  inLibVentanaBarraTareas in 'src\Lib\inLibVentanaBarraTareas.pas',
   inLibInspectorSkin in 'src\Lib\inLibInspectorSkin.pas',
   inLibCajaMenuTarjetaVcl in 'src\Lib\inLibCajaMenuTarjetaVcl.pas',
   inLibCajaMenuMaquetaVcl in 'src\Lib\inLibCajaMenuMaquetaVcl.pas';

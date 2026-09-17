@@ -23,6 +23,10 @@ function LeerImportesSubsanacion(
   ADataSet: TDataSet): TLineasSubsanacionCaja;
 procedure AplicarImportesSubsanacion(ADataSet: TClientDataSet;
   const ALineas: TLineasSubsanacionCaja);
+// Deja precios coherentes con el importe de cada línea modificada respecto
+// a su importe original, directamente sobre ADataSet (edición en pantalla).
+procedure SincronizarPreciosSubsanacion(ADataSet: TDataSet;
+  const ALineas: TLineasSubsanacionCaja);
 
 implementation
 
@@ -49,6 +53,8 @@ begin
   Result.ImporteOriginal := SimpleRoundTo(
     ADataSet.FieldByName(ftotciva).AsCurrency, -2);
   Result.Importe := Result.ImporteOriginal;
+  Result.PrecioSalidaOriginal := ADataSet.FieldByName(fpreciosal).AsCurrency;
+  Result.PrecioSalida := Result.PrecioSalidaOriginal;
 end;
 
 function LeerImportesSubsanacion(
@@ -102,7 +108,8 @@ var
 begin
   rActual := LeerLineaSubsanacion(ADataSet);
   if (rActual.Cantidad <> ALinea.Cantidad) or
-     (rActual.ImporteOriginal <> ALinea.ImporteOriginal) then
+     (rActual.ImporteOriginal <> ALinea.ImporteOriginal) or
+     (rActual.PrecioSalidaOriginal <> ALinea.PrecioSalidaOriginal) then
     raise EArgumentException.CreateFmt(
       SSubsanacionLineaModificada, [ALinea.Numero]);
 end;
@@ -161,6 +168,10 @@ begin
     if oLinea.Cant <> ALinea.Cantidad then
       raise EArgumentException.CreateFmt(
         SSubsanacionPrecisionCantidad, [ALinea.Numero]);
+    // Precio de salida tecleado (o el original) y la diferencia con el
+    // importe como descuento de la línea, igual que en el ticket.
+    if ALinea.PrecioSalida <> ALinea.PrecioSalidaOriginal then
+      oLinea.PrecioSal := ALinea.PrecioSalida;
     oLinea.PreCiva := dPrecio;
     if SameText(oLinea.Impcl, 'S') then
       oLinea.Dto := oLinea.PrecioSal - dPrecio
@@ -188,7 +199,7 @@ begin
   while not ADataSet.Eof do
   begin
     iIndice := AIndices[ADataSet.FieldByName(fnrolin).AsString];
-    if ALineas[iIndice].Importe <> ALineas[iIndice].ImporteOriginal then
+    if LineaSubsanacionModificada(ALineas[iIndice]) then
       AplicarImporteLinea(ADataSet, ALineas[iIndice]);
     ADataSet.Next;
   end;
@@ -230,6 +241,42 @@ begin
     end;
   finally
     FreeAndNil(oCopia);
+  end;
+end;
+
+procedure SincronizarPreciosSubsanacion(ADataSet: TDataSet;
+  const ALineas: TLineasSubsanacionCaja);
+var
+  oIndices: TIndicesSubsanacion;
+  aMarcador: TBookmark;
+  iIndice: Integer;
+begin
+  ValidarDataSetSubsanacion(ADataSet);
+  ValidarImportesSubsanacion(ALineas);
+  oIndices := TIndicesSubsanacion.Create;
+  try
+    IndexarLineasSubsanacion(ALineas, oIndices);
+    ADataSet.DisableControls;
+    aMarcador := ADataSet.GetBookmark;
+    try
+      ADataSet.First;
+      while not ADataSet.Eof do
+      begin
+        if not oIndices.TryGetValue(ADataSet.FieldByName(fnrolin).AsString,
+             iIndice) then
+          raise EArgumentException.Create(SSubsanacionLineasDistintas);
+        if LineaSubsanacionModificada(ALineas[iIndice]) then
+          AplicarImporteLinea(ADataSet, ALineas[iIndice]);
+        ADataSet.Next;
+      end;
+    finally
+      if ADataSet.BookmarkValid(aMarcador) then
+        ADataSet.GotoBookmark(aMarcador);
+      ADataSet.FreeBookmark(aMarcador);
+      ADataSet.EnableControls;
+    end;
+  finally
+    FreeAndNil(oIndices);
   end;
 end;
 

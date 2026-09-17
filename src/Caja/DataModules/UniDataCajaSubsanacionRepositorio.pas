@@ -313,7 +313,7 @@ var
 begin
   Result := False;
   for oLinea in ALineas do
-    Result := Result or (oLinea.Importe <> oLinea.ImporteOriginal);
+    Result := Result or LineaSubsanacionModificada(oLinea);
 end;
 
 function DatosComoJson(AOrigen: TDataSet): TJSONArray;
@@ -810,9 +810,10 @@ begin
       if not oLineas.TryGetValue(oLinea.Numero, oActual) then
         raise EInvalidOpException.Create(SSubsanacionConflicto);
       if (oLinea.Cantidad <> oActual.Cantidad) or
-         (oLinea.ImporteOriginal <> oActual.ImporteOriginal) then
+         (oLinea.ImporteOriginal <> oActual.ImporteOriginal) or
+         (oLinea.PrecioSalidaOriginal <> oActual.PrecioSalidaOriginal) then
         raise EInvalidOpException.Create(SSubsanacionConflicto);
-      bCambio := bCambio or (oLinea.Importe <> oActual.Importe);
+      bCambio := bCambio or LineaSubsanacionModificada(oLinea);
       oLineas.Remove(oLinea.Numero);
     end;
   finally
@@ -902,7 +903,7 @@ begin
        oLinea.Importe then
       raise EInvalidOpException.CreateFmt(SSubsanacionCalculoInvalido,
         [SSubsanacionTotalFiscalDistinto]);
-    if oLinea.Importe = oLinea.ImporteOriginal then
+    if not LineaSubsanacionModificada(oLinea) then
       for sCampo in CAMPOS_IMPORTES_LINEA.Split([',']) do
         if ADatos.Lineas.FieldByName(sCampo).AsCurrency <>
            AOriginales.FieldByName(sCampo).AsCurrency then
@@ -946,7 +947,7 @@ begin
   oClave := ASolicitud.Original.Clave;
   for oLinea in ASolicitud.Lineas do
   begin
-    if oLinea.Importe <> oLinea.ImporteOriginal then
+    if LineaSubsanacionModificada(oLinea) then
     begin
       if not ADatos.Lineas.Locate('LINEA_FACLIN', oLinea.Numero, []) then
         raise EInvalidOpException.Create(SSubsanacionConflicto);
