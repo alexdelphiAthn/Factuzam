@@ -51,6 +51,7 @@ var
   cTotalLinea: Currency;
   cTotalFinal: Currency;
   cTotalBruto: Currency;
+  cComprobacion: Currency;
 begin
   SetLength(Result, 0);
   cTotalBruto := 0;
@@ -82,8 +83,12 @@ begin
         cTotalFinal := cTotalLinea - cDescuentoLinea;
         Result[i].ImporteDescuento := cDescuentoLinea;
         Result[i].PrecioConDescuento := cTotalFinal / dCantidad;
-        if SimpleRoundTo(
-          Result[i].PrecioConDescuento * dCantidad, -2) <> cTotalFinal then
+        // SimpleRoundTo devuelve Double y compararlo con un Currency
+        // falla por el último bit (273,90 <> 273,90): se pasa antes
+        // por una variable Currency para comparar importes exactos.
+        cComprobacion := SimpleRoundTo(
+          Result[i].PrecioConDescuento * dCantidad, -2);
+        if cComprobacion <> cTotalFinal then
           raise EArgumentException.Create(SErrorDescuentoPrecisionLinea);
         if cTotalLinea <> 0 then
           Result[i].PorcentajeDescuento :=

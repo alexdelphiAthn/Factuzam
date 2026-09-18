@@ -144,8 +144,14 @@ type
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure dbmImportePropertiesEditValueChanged(Sender: TObject);
+    procedure dbmImportePropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption;
+      var Error: Boolean);
     procedure btnAtrasClick(Sender: TObject);
     procedure txtPorcenDtoGlobalPropertiesChange(Sender: TObject);
+    procedure txtPorcenDtoGlobalPropertiesValidate(Sender: TObject;
+      var DisplayValue: Variant; var ErrorText: TCaption;
+      var Error: Boolean);
     procedure txtTotalPagarPropertiesChange(Sender: TObject);
     procedure txtTotalPagarPropertiesValidate(Sender: TObject;
       var DisplayValue: Variant; var ErrorText: TCaption;
@@ -262,6 +268,14 @@ uses
   inMtoCajaSeleccionVale, inMtoModalSerieFechaFactura,
      UniDataCaja, inLibDocumentoFiscal, inLibCorreoTickets, inLibMsgCaja,
   inLibCajaEstiloVcl, inLibMsgSubsanacionCaja, System.StrUtils;
+
+// FormatFloat admite tres secciones: positivo, negativo y cero. Poniendo en
+// la del cero un literal vacío ('' entre comillas simples) el importe a cero
+// se ve en blanco, en vez de un 0,00 que hay que borrar antes de teclear.
+function ConCeroEnBlanco(const AFormato: string): string;
+begin
+  Result := AFormato + ';-' + AFormato + ';' + #39#39;
+end;
 
 constructor TfrmMtoCajaFaseCobro.Create(
   AOwner: TComponent;
@@ -1046,20 +1060,33 @@ begin
     begin
       EditProps.DecimalPlaces := 9;
       EditProps.DisplayFormat := '#,##0.#########';
-      EditProps.EditFormat := '#########0.#########';
+      EditProps.EditFormat := ConCeroEnBlanco('#########0.#########');
     end
     else if EsDivisa then
     begin
       EditProps.DecimalPlaces := 2;
       EditProps.DisplayFormat := ',0.00';
-      EditProps.EditFormat := ',0.00';
+      EditProps.EditFormat := ConCeroEnBlanco(',0.00');
     end
     else
     begin
       EditProps.DecimalPlaces := 2;
       EditProps.DisplayFormat := ',0.00 €';
-      EditProps.EditFormat := ',0.00 €';
+      EditProps.EditFormat := ConCeroEnBlanco(',0.00 €');
     end;
+  end;
+end;
+
+// Al entrar en la celda el importe a cero sale en blanco, así que salir de
+// ella sin teclear nada tiene que valer: se toma como cero.
+procedure TfrmMtoCajaFaseCobro.dbmImportePropertiesValidate(Sender: TObject;
+  var DisplayValue: Variant; var ErrorText: TCaption; var Error: Boolean);
+begin
+  if Trim(VarToStr(DisplayValue)) = '' then
+  begin
+    DisplayValue := '0';
+    ErrorText    := '';
+    Error        := False;
   end;
 end;
 
@@ -1546,6 +1573,9 @@ begin
   if not FActualizandoDescuento and PuedeAplicarDescuentoGlobal then
   begin
     Valor := txtPorcenDtoGlobal.EditingValue;
+    // El campo vacío es "sin descuento": se aplica un 0 %
+    if VarIsNull(Valor) or VarIsEmpty(Valor) or (Trim(VarToStr(Valor)) = '') then
+      Valor := 0;
     if VarIsNumeric(Valor) then
     begin
       if (Valor >= 0) and (Valor <= 100) then
@@ -1558,6 +1588,20 @@ begin
         end;
       end;
     end;
+  end;
+end;
+
+// Sin descuento el campo se ve en blanco, de modo que dejarlo así no es un
+// error de formato: equivale a un 0 %.
+procedure TfrmMtoCajaFaseCobro.txtPorcenDtoGlobalPropertiesValidate(
+  Sender: TObject; var DisplayValue: Variant; var ErrorText: TCaption;
+  var Error: Boolean);
+begin
+  if Trim(VarToStr(DisplayValue)) = '' then
+  begin
+    DisplayValue := '0';
+    ErrorText    := '';
+    Error        := False;
   end;
 end;
 

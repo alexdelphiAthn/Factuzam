@@ -183,12 +183,13 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
             Left = 243
             Top = 100
             Properties.Alignment.Horz = taRightJustify
-            Properties.DisplayFormat = ',0.00 %'
-            Properties.EditFormat = ',0.00 %'
+            Properties.DisplayFormat = ',0.00 %;-,0.00 %;'#39#39
+            Properties.EditFormat = ',0.00 %;-,0.00 %;'#39#39
             Properties.MinValue = 0.000000000000000000
             Properties.MaxValue = 100.000000000000000000
             Properties.ReadOnly = False
             Properties.OnChange = txtPorcenDtoGlobalPropertiesChange
+            Properties.OnValidate = txtPorcenDtoGlobalPropertiesValidate
             Style.BorderStyle = ebsOffice11
             TabOrder = 6
             Width = 92
@@ -356,8 +357,9 @@ inherited frmMtoCajaFaseCobro: TfrmMtoCajaFaseCobro
               DataBinding.FieldName = 'IMPORTE_ENTREGADO'
               PropertiesClassName = 'TcxCurrencyEditProperties'
               Properties.DisplayFormat = '#,##0.00 '#8364
-              Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364
+              Properties.EditFormat = ',0.00 '#8364';-,0.00 '#8364';'#39#39
               Properties.OnEditValueChanged = dbmImportePropertiesEditValueChanged
+              Properties.OnValidate = dbmImportePropertiesValidate
               OnGetDisplayText = dbmImporteGetDisplayText
               HeaderAlignmentHorz = taRightJustify
               Styles.Header = styCobroLine
