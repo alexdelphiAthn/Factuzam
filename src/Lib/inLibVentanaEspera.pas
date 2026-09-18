@@ -49,9 +49,15 @@ type
 // Crea la ventana (oculta) centrada sobre AReferencia, en coordenadas de
 // pantalla, con las medidas escaladas a APixelesPorPulgada. Liberar la
 // interfaz cierra la ventana y termina su hilo.
+//
+// AVentanaVigilada es la ventana del programa que esta esperando: la de
+// espera se coloca justo encima de ella y se oculta mientras esa ventana
+// se minimiza o se esconde, en vez de quedarse sobre todas las
+// aplicaciones. Con 0 se comporta como una ventana suelta.
 function CrearVentanaEspera(
   const AReferencia: TRect;
-  APixelesPorPulgada: Integer): IVentanaEspera;
+  APixelesPorPulgada: Integer;
+  AVentanaVigilada: HWND = 0): IVentanaEspera;
 
 // Espera a que termine ATarea sin despachar teclado ni ratón (no hay
 // reentrada en la pantalla) pero atendiendo lo que otros hilos piden al
@@ -74,6 +80,9 @@ const
   WM_ESPERA_CANCELABLE = WM_APP + 5;
   WM_ESPERA_CERRAR = WM_APP + 6;
   ID_BOTON_CANCELAR = 1;
+  // Sondeo del estado de la ventana vigilada: minimizada u oculta.
+  ID_TEMPORIZADOR_VIGILANCIA = 2;
+  INTERVALO_VIGILANCIA_MS = 200;
   PIXELES_POR_PULGADA_BASE = 96;
   PUNTOS_FUENTE = 13;
   NOMBRE_FUENTE = 'Source Sans 3';
@@ -102,6 +111,8 @@ type
   private
     FReferencia: TRect;
     FPixelesPorPulgada: Integer;
+    FVentanaVigilada: HWND;
+    FMostrada: Boolean;
     FVentana: HWND;
     FBarra: HWND;
     FBoton: HWND;
@@ -126,12 +137,15 @@ type
     procedure CambiarTexto(var ADestino: string; ALParam: LPARAM);
     procedure InvalidarTextos;
     procedure Cancelar;
+    function VentanaVigiladaUtilizable: Boolean;
+    procedure AjustarAVentanaVigilada;
   protected
     procedure Execute; override;
   public
     constructor Create(
       const AReferencia: TRect;
-      APixelesPorPulgada: Integer);
+      APixelesPorPulgada: Integer;
+      AVentanaVigilada: HWND);
     destructor Destroy; override;
     function Procesar(
       AVentana: HWND;
@@ -154,7 +168,8 @@ type
   public
     constructor Create(
       const AReferencia: TRect;
-      APixelesPorPulgada: Integer);
+      APixelesPorPulgada: Integer;
+      AVentanaVigilada: HWND);
     destructor Destroy; override;
     procedure Mostrar(const AFase: string);
     procedure ActualizarDetalle(const ADetalle: string);
@@ -184,6 +199,18 @@ begin
     Result := DefWindowProc(AVentana, AMensaje, AWParam, ALParam);
 end;
 
+// True si la ventana en primer plano es de este programa. Mientras lo
+// sea, la espera se mantiene sobre las ventanas propias; si el usuario
+// se va a otra aplicacion, se queda donde esta y no la tapa.
+function ProcesoEnPrimerPlano: Boolean;
+var
+  idProceso: DWORD;
+begin
+  idProceso := 0;
+  GetWindowThreadProcessId(GetForegroundWindow, idProceso);
+  Result := idProceso = GetCurrentProcessId;
+end;
+
 // Vacía la cola de teclado y ratón del hilo que llama. Devuelve cuántos
 // mensajes se han descartado.
 function DescartarEntradaPendiente: Integer;
@@ -201,11 +228,14 @@ end;
 
 constructor THiloVentanaEspera.Create(
   const AReferencia: TRect;
-  APixelesPorPulgada: Integer);
+  APixelesPorPulgada: Integer;
+  AVentanaVigilada: HWND);
 begin
   inherited Create(True);
   FReferencia := AReferencia;
   FPixelesPorPulgada := Max(APixelesPorPulgada, PIXELES_POR_PULGADA_BASE);
+  FVentanaVigilada := AVentanaVigilada;
+  FMostrada := False;
   FCreada := TEvent.Create(nil, True, False, '');
 end;
 
@@ -236,8 +266,11 @@ begin
     Result := False
   else
   begin
+    // Sin WS_EX_TOPMOST: la espera acompana al programa, no se pone
+    // sobre las demas aplicaciones. Se mantiene encima de la ventana
+    // que espera desde AjustarAVentanaVigilada.
     FVentana := CreateWindowEx(
-      WS_EX_TOPMOST or WS_EX_TOOLWINDOW or WS_EX_NOACTIVATE,
+      WS_EX_TOOLWINDOW or WS_EX_NOACTIVATE,
       cClaseVentanaEspera, '', WS_POPUP or WS_BORDER,
       0, 0, Escalar(ANCHO_VENTANA), Escalar(ALTO_VENTANA),
       0, 0, HInstance, Pointer(Self));
@@ -309,7 +342,7 @@ begin
     iArriba := Max(oMonitor.rcWork.Top,
       Min(iArriba, oMonitor.rcWork.Bottom - iAlto));
   end;
-  SetWindowPos(FVentana, HWND_TOPMOST, iIzquierda, iArriba, iAncho, iAlto,
+  SetWindowPos(FVentana, HWND_TOP, iIzquierda, iArriba, iAncho, iAlto,
     SWP_NOACTIVATE);
   MoveWindow(FBarra, Escalar(MARGEN_HORIZONTAL), Escalar(ARRIBA_BARRA),
     iAncho - 2 * Escalar(MARGEN_HORIZONTAL), Escalar(ALTO_BARRA), True);
@@ -394,6 +427,36 @@ begin
   InvalidarTextos;
 end;
 
+// La ventana vigilada deja de servir de referencia mientras esta
+// minimizada u oculta: es lo que ocurre al minimizar el programa.
+function THiloVentanaEspera.VentanaVigiladaUtilizable: Boolean;
+begin
+  Result := (FVentanaVigilada = 0) or
+    (IsWindow(FVentanaVigilada) and
+     IsWindowVisible(FVentanaVigilada) and
+     not IsIconic(FVentanaVigilada));
+end;
+
+// Iguala la visibilidad de la espera a la de la ventana que espera y,
+// cuando se ve, la coloca justo encima de ella. Se llama desde el
+// temporizador mientras la espera esta pedida.
+procedure THiloVentanaEspera.AjustarAVentanaVigilada;
+var
+  bDebeVerse: Boolean;
+begin
+  bDebeVerse := FMostrada and VentanaVigiladaUtilizable;
+  if bDebeVerse <> IsWindowVisible(FVentana) then
+  begin
+    if bDebeVerse then
+      ShowWindow(FVentana, SW_SHOWNOACTIVATE)
+    else
+      ShowWindow(FVentana, SW_HIDE);
+  end;
+  if bDebeVerse and ProcesoEnPrimerPlano then
+    SetWindowPos(FVentana, HWND_TOP, 0, 0, 0, 0,
+      SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE);
+end;
+
 function THiloVentanaEspera.EstaCancelado: Boolean;
 begin
   Result := AtomicCmpExchange(FCancelado, 0, 0) <> 0;
@@ -430,9 +493,21 @@ begin
          (HiWord(AWParam) = BN_CLICKED) then
         Cancelar;
     WM_ESPERA_MOSTRAR:
-      ShowWindow(AVentana, SW_SHOWNOACTIVATE);
+      begin
+        FMostrada := True;
+        SetTimer(AVentana, ID_TEMPORIZADOR_VIGILANCIA,
+          INTERVALO_VIGILANCIA_MS, nil);
+        AjustarAVentanaVigilada;
+      end;
     WM_ESPERA_OCULTAR:
-      ShowWindow(AVentana, SW_HIDE);
+      begin
+        FMostrada := False;
+        KillTimer(AVentana, ID_TEMPORIZADOR_VIGILANCIA);
+        ShowWindow(AVentana, SW_HIDE);
+      end;
+    WM_TIMER:
+      if AWParam = ID_TEMPORIZADOR_VIGILANCIA then
+        AjustarAVentanaVigilada;
     WM_ESPERA_FASE:
       CambiarTexto(FFase, ALParam);
     WM_ESPERA_DETALLE:
@@ -440,7 +515,10 @@ begin
     WM_ESPERA_CANCELABLE:
       EnableWindow(FBoton, AWParam <> 0);
     WM_ESPERA_CERRAR:
-      DestroyWindow(AVentana);
+      begin
+        KillTimer(AVentana, ID_TEMPORIZADOR_VIGILANCIA);
+        DestroyWindow(AVentana);
+      end;
     WM_DESTROY:
       PostQuitMessage(0);
   else
@@ -473,10 +551,12 @@ end;
 
 constructor TVentanaEspera.Create(
   const AReferencia: TRect;
-  APixelesPorPulgada: Integer);
+  APixelesPorPulgada: Integer;
+  AVentanaVigilada: HWND);
 begin
   inherited Create;
-  FHilo := THiloVentanaEspera.Create(AReferencia, APixelesPorPulgada);
+  FHilo := THiloVentanaEspera.Create(
+    AReferencia, APixelesPorPulgada, AVentanaVigilada);
   FHilo.Start;
 end;
 
@@ -564,9 +644,11 @@ end;
 
 function CrearVentanaEspera(
   const AReferencia: TRect;
-  APixelesPorPulgada: Integer): IVentanaEspera;
+  APixelesPorPulgada: Integer;
+  AVentanaVigilada: HWND): IVentanaEspera;
 begin
-  Result := TVentanaEspera.Create(AReferencia, APixelesPorPulgada);
+  Result := TVentanaEspera.Create(
+    AReferencia, APixelesPorPulgada, AVentanaVigilada);
 end;
 
 procedure EsperarTareaAtendiendoMensajes(const ATarea: ITask);

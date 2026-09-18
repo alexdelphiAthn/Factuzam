@@ -248,12 +248,7 @@ end;
 procedure TfrmPrintSimulacionValoracion.MostrarPreviewExcel(
   APreview: TfrmMtoPreviewExcel);
 begin
-  Self.Hide;
-  try
-    APreview.ShowModal;
-  finally
-    Self.Show;
-  end;
+  APreview.ShowModal;
 end;
 
 procedure TfrmPrintSimulacionValoracion.ExportarExcelNativo(

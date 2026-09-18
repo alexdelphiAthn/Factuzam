@@ -877,8 +877,11 @@ end;
 procedure TfrmPrint.IniciarEspera(const AFase: string);
 begin
   if not Assigned(FVentanaEspera) then
+    // Se vigila la ventana principal, no este modal: el modal se
+    // oculta a proposito mientras se prepara el informe.
     FVentanaEspera := CrearVentanaEspera(
-      RectanguloReferenciaEspera, Self.CurrentPPI);
+      RectanguloReferenciaEspera, Self.CurrentPPI,
+      Application.MainFormHandle);
   FVentanaEspera.Mostrar(AFase);
 end;
 

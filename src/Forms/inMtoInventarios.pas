@@ -1826,7 +1826,8 @@ begin
       rReferencia := Self.BoundsRect
     else
       rReferencia := Screen.WorkAreaRect;
-    FEsperaInventario := CrearVentanaEspera(rReferencia, Self.CurrentPPI);
+    FEsperaInventario := CrearVentanaEspera(
+      rReferencia, Self.CurrentPPI, Application.MainFormHandle);
   end;
   FEsperaInventario.Mostrar(AFase);
 end;

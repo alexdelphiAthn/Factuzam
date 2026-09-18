@@ -821,12 +821,7 @@ end;
 procedure TfrmPrintMovVentasArt.MostrarPreviewExcel(
   APreview: TfrmMtoPreviewExcel);
 begin
-  Self.Hide;
-  try
-    APreview.ShowModal;
-  finally
-    Self.Show;
-  end;
+  APreview.ShowModal;
 end;
 
 procedure TfrmPrintMovVentasArt.ExportarExcelMovVentas(Sender: TObject);
