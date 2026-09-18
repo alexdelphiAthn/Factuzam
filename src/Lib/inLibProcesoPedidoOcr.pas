@@ -29,6 +29,7 @@ type
   private
     class function CrearDirectorioTrabajo: string; static;
     class function EntreComillas(const AValor: string): string; static;
+    class function LeerSalidaProceso(const AFichero: string): string; static;
   public
     class function Ejecutar(const AFicheroPdf: string;
       const AProcesarMensajes: TProc): TResultadoProcesoPedidoOcr; static;
@@ -81,6 +82,36 @@ class function TProcesoPedidoOcr.EntreComillas(
   const AValor: string): string;
 begin
   Result := '"' + AValor + '"';
+end;
+
+// El extractor escribe por la salida estandar, que aqui va redirigida a
+// un fichero: en ese caso Delphi la codifica con la pagina de codigos
+// ANSI del equipo (1252 en los clientes), no en UTF-8. Leerla como UTF-8
+// estricto reventaba con "No mapping for the Unicode character exists in
+// the target multi-byte code page" en cuanto el log traia un acento. El
+// log es solo diagnostico, asi que probamos UTF-8 y caemos a ANSI.
+class function TProcesoPedidoOcr.LeerSalidaProceso(
+  const AFichero: string): string;
+var
+  aBytes: TBytes;
+begin
+  Result := '';
+  try
+    aBytes := TFile.ReadAllBytes(AFichero);
+    if Length(aBytes) = 0 then
+      Exit;
+    try
+      Result := TEncoding.UTF8.GetString(aBytes);
+    except
+      on EEncodingError do
+        Result := TEncoding.ANSI.GetString(aBytes);
+    end;
+    if Result.StartsWith(#$FEFF) then
+      Result := Result.Substring(1);
+  except
+    on Exception do
+      Result := '';
+  end;
 end;
 
 class function TProcesoPedidoOcr.Ejecutar(const AFicheroPdf: string;
@@ -176,9 +207,7 @@ begin
       CloseHandle(oProceso.hProcess);
     end;
     if TFile.Exists(sFicheroLog) then
-      Result.SalidaProceso := TFile.ReadAllText(
-        sFicheroLog,
-        TEncoding.UTF8);
+      Result.SalidaProceso := LeerSalidaProceso(sFicheroLog);
     if iCodigo <> 0 then
       raise Exception.CreateFmt(
         SErrorExtractorPedidoOcr,
