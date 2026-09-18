@@ -28,7 +28,7 @@ uses
   cxLocalization, Vcl.StdCtrls, cxRadioGroup, cxNavigator, cxDBNavigator,
   Vcl.Buttons, cxGridCustomTableView, cxGridTableView, cxGridLevel, cxClasses,
   cxGridCustomView, cxGrid, cxPC, cxLookupEdit, cxDBLookupEdit,
-  cxDBLookupComboBox, inLibDocumentosTrabajo,
+  cxDBLookupComboBox, inLibDocumentosTrabajo, inLibFamiliasArbol,
   inLibArticulosResolverIntf, inLibBusquedaDatosPersistenciaIntf;
 
 type
@@ -61,7 +61,7 @@ type
     btnOcultar: TcxButton;
     btnPerfiles: TcxButton;
     lblFamilia: TcxLabel;
-    cbbFamilia: TcxComboBox;
+    edtFamilias: TcxButtonEdit;
     lblProveedor: TcxLabel;
     cbbProveedor: TcxLookupComboBox;
     lblTemporada: TcxLabel;
@@ -79,6 +79,8 @@ type
     procedure cbbProveedorKeyPress(Sender: TObject; var Key: Char);
     procedure edtValorPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure edtFamiliasPropertiesButtonClick(Sender: TObject;
+      AButtonIndex: Integer);
     procedure cxGrdDBTabPrinColorCustomDrawCell(
       Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
       AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
@@ -91,6 +93,9 @@ type
     FCronometroApertura: TStopwatch;
     FBusquedaProveedor: string;
     FInstanteBusquedaProveedor: UInt64;
+    FFamiliasCsv: string;
+    FCodigoArticuloElegido: string;
+    FFamiliasArbol: TFamiliasArbol;
     FRepositorioPersistencia: IRepositorioBusquedaDatos;
     FResultadoBusqueda: IResultadoBusquedaDatos;
     FResultadoProveedores: IResultadoBusquedaDatos;
@@ -102,6 +107,9 @@ type
       ACombo: TcxComboBox;
       const AOpciones: TOpcionesBusquedaDatos);
     procedure SeleccionarProveedorPorInicio;
+    procedure AbrirSelectorFamilias;
+    procedure ActualizarResumenFamilias;
+    procedure FamiliasDblClick(Sender: TObject);
     procedure ActualizarInterfazCampo;
     procedure ActualizarColumnasColor;
     procedure ConfigurarMenuContextual;
@@ -126,7 +134,11 @@ type
     procedure ValidarDependencias;
   protected
     function DebeAjustarColumnasAutomaticamente: Boolean; override;
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
   public
+    function CloseQuery: Boolean; override;
     constructor Create(
       AOwner: TComponent;
       const ADependencias: TDependenciasBusquedaDatos); reintroduce;
@@ -138,17 +150,29 @@ type
       const ADependencias: TDependenciasBusquedaDatos;
       AParentForm: TCustomForm = nil); overload;
     procedure CrearTablaPrincipal; override;
+    /// Articulo de la fila aceptada. Se toma al cerrar, porque el
+    /// formulario base suelta el conjunto de datos de la rejilla en su
+    /// OnClose y despues ya no hay de donde leerlo.
+    property CodigoArticuloElegido: string read FCodigoArticuloElegido;
   end;
 
 implementation
 
 uses
   inLibMensajesVcl,
+  inMtoModalSelFamiliasArbol,
   inLibShowMto, inLibAtributosPaleta, inLibMsgComun,
   inLibDocumentosTrabajoPresentacion,
+  inLibVentanaBarraTareas,
   UniDataConfiguracionPantalla;
 
 {$R *.dfm}
+
+const
+  // Identificador de aplicacion propio: boton separado en la barra de
+  // tareas, con el icono de articulos similares.
+  GRUPO_BARRA_TAREAS_BUSQUEDA = 'Factuzam.BusquedaDatos';
+  ICONO_BUSQUEDA_DATOS = 'MNUARTICULOSSIMILARES';
 
 resourcestring
   SErrorSeleccionarFilaSkuDocumentoTrabajo =
@@ -159,6 +183,10 @@ resourcestring
     'No se ha podido identificar el artículo y el SKU.';
   SErrorSeleccionarFilaSkuValidoDocumentoTrabajo =
     'Seleccione una fila que contenga un SKU válido.';
+  SCaptionTodasLasFamilias = '(Todas)';
+  SCaptionVariasFamiliasElegidas = '%d familias';
+  SHintElegirFamiliasArbol =
+    'Pulse el botón para elegir familias en el árbol';
 
 procedure TDependenciasBusquedaDatos.Validar;
 begin
@@ -198,6 +226,9 @@ begin
     'contexto de búsqueda de datos');
 end;
 
+// Ventana modal, como siempre: quien la llama espera el resultado y
+// abre la ficha del articulo elegido. Lo unico que cambia es que tiene
+// boton e icono propios en la barra de tareas.
 class procedure TfrmMtoBusquedaDatos.Ejecutar(
   AOwner: TComponent;
   const ADependencias: TDependenciasBusquedaDatos;
@@ -215,19 +246,70 @@ begin
     if Assigned(AParentForm) then
       frm.PopupParent := AParentForm;
     frm.ShowModal;
-    if (frm.sFicha = 'S') and
-       Assigned(frm.dsTablaG.DataSet) and
-       frm.dsTablaG.DataSet.Active and
-       (not frm.dsTablaG.DataSet.IsEmpty) then
+    if frm.sFicha = 'S' then
     begin
-      sCodigoArt := frm.dsTablaG.DataSet.FieldByName(
-                                      'CODIGO_ART_ART').AsString;
+      sCodigoArt := frm.CodigoArticuloElegido;
+      if sCodigoArt = '' then
+        frm.RegistroLog.RegistrarAviso(
+          'BusquedaDatos: aceptada sin fila de articulo.');
     end;
   finally
     FreeAndNil(frm);
   end;
   if sCodigoArt <> '' then
     ShowMto(AOwner, 'Articulos', sCodigoArt);
+end;
+
+// TfrmMtoGen.FormClose pone a nil dsTablaG.DataSet, y ese OnClose corre
+// dentro de ShowModal: quien abre esta ventana ya no puede leer la fila
+// elegida al recuperar el control. Se guarda aqui, que es lo ultimo que
+// se ejecuta con los datos aun en pie.
+function TfrmMtoBusquedaDatos.CloseQuery: Boolean;
+begin
+  Result := inherited CloseQuery;
+  if Result and (sFicha = 'S') and
+     Assigned(dsTablaG.DataSet) and
+     dsTablaG.DataSet.Active and
+     (not dsTablaG.DataSet.IsEmpty) then
+  begin
+    FCodigoArticuloElegido :=
+      dsTablaG.DataSet.FieldByName('CODIGO_ART_ART').AsString;
+  end;
+end;
+
+// Boton e icono propios en la barra de tareas. No se toca el
+// propietario que le da la VCL: es una ventana modal y debe quedarse
+// sobre la que la abre.
+procedure TfrmMtoBusquedaDatos.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.ExStyle := Params.ExStyle or WS_EX_APPWINDOW;
+end;
+
+procedure TfrmMtoBusquedaDatos.CreateWnd;
+var
+  hIcono: HICON;
+begin
+  inherited;
+  AsignarGrupoBarraTareas(Handle, GRUPO_BARRA_TAREAS_BUSQUEDA);
+  // Tambien en la propiedad del formulario: la VCL reenvia WM_SETICON
+  // con el icono del formulario cada vez que toca el marco, y sin esto
+  // la ventana volveria al icono de la aplicacion.
+  if Icon.Handle = 0 then
+  begin
+    hIcono := IconoDesdeRecursoPng(ICONO_BUSQUEDA_DATOS + '_32');
+    if hIcono <> 0 then
+      Icon.Handle := hIcono;
+  end;
+  AsignarIconoVentanaDesdePng(Handle, ICONO_BUSQUEDA_DATOS);
+end;
+
+procedure TfrmMtoBusquedaDatos.DestroyWnd;
+begin
+  // La propiedad debe quitarse antes de destruir la ventana.
+  QuitarGrupoBarraTareas(Handle);
+  LiberarIconoVentana(Handle);
+  inherited;
 end;
 
 procedure TfrmMtoBusquedaDatos.FormCreate(Sender: TObject);
@@ -240,6 +322,13 @@ begin
   FAltoCriterios := pnlCriterios.Height;
   FBusquedaProveedor := '';
   FInstanteBusquedaProveedor := 0;
+  FFamiliasCsv := '';
+  SetLength(FFamiliasArbol, 0);
+  // El OnDblClick no está en el DFM: abrir el árbol también al hacer
+  // doble clic en el propio cuadro, no solo en su botón.
+  edtFamilias.OnDblClick := FamiliasDblClick;
+  edtFamilias.ShowHint := True;
+  ActualizarResumenFamilias;
   InicializarListas;
   cxGrdDBTabPrin.FilterRow.Visible := True;
   cxGrdDBTabPrin.OptionsView.GroupByBox := True;
@@ -391,9 +480,8 @@ end;
 
 procedure TfrmMtoBusquedaDatos.CargarFiltrosPrecarga;
 begin
-  CargarCombo(
-    cbbFamilia,
-    FRepositorioPersistencia.ListarFamilias);
+  FFamiliasArbol := FRepositorioPersistencia.ListarFamiliasArbol;
+  ActualizarResumenFamilias;
   dsProveedoresBusqueda.DataSet := nil;
   FResultadoProveedores :=
     FRepositorioPersistencia.ConsultarProveedores;
@@ -445,7 +533,8 @@ begin
   cbbEstado.ItemIndex := 0;
   cbbStock.ItemIndex := 1;
   cbbLimite.ItemIndex := 0;
-  cbbFamilia.ItemIndex := 0;
+  FFamiliasCsv := '';
+  ActualizarResumenFamilias;
   cbbProveedor.EditValue := Null;
   FBusquedaProveedor := '';
   FInstanteBusquedaProveedor := 0;
@@ -585,6 +674,66 @@ begin
   end;
 end;
 
+// Filtrar por familias abre el mismo árbol jerárquico que los filtros
+// de los informes: marcar una familia incluye sus subfamilias y se pueden
+// marcar varias. Sin marcar nada = todas.
+procedure TfrmMtoBusquedaDatos.AbrirSelectorFamilias;
+begin
+  if Length(FFamiliasArbol) = 0 then
+    FFamiliasArbol := FRepositorioPersistencia.ListarFamiliasArbol;
+  if SeleccionarFamiliasArbol(Self, FFamiliasArbol, FFamiliasCsv) then
+    ActualizarResumenFamilias;
+end;
+
+procedure TfrmMtoBusquedaDatos.edtFamiliasPropertiesButtonClick(
+  Sender: TObject; AButtonIndex: Integer);
+begin
+  AbrirSelectorFamilias;
+end;
+
+procedure TfrmMtoBusquedaDatos.FamiliasDblClick(Sender: TObject);
+begin
+  AbrirSelectorFamilias;
+end;
+
+// El cuadro es de solo lectura: resume la selección (una familia con su
+// nombre, o cuántas hay) y deja la lista completa en la pista.
+procedure TfrmMtoBusquedaDatos.ActualizarResumenFamilias;
+var
+  aCodigos: TArray<string>;
+  oFamilia: TFamiliaArbol;
+  sTexto: string;
+begin
+  aCodigos := CodigosFamiliaDesdeCsv(FFamiliasCsv);
+  if Length(aCodigos) = 0 then
+  begin
+    sTexto := SCaptionTodasLasFamilias;
+    edtFamilias.Hint := SHintElegirFamiliasArbol;
+  end
+  else
+  begin
+    edtFamilias.Hint := FFamiliasCsv;
+    if Length(aCodigos) > 1 then
+    begin
+      sTexto := Format(
+        SCaptionVariasFamiliasElegidas,
+        [Length(aCodigos)]);
+    end
+    else
+    begin
+      sTexto := aCodigos[0];
+      for oFamilia in FFamiliasArbol do
+      begin
+        if (oFamilia.Codigo = aCodigos[0]) and
+           (oFamilia.Nombre <> '') and
+           (oFamilia.Nombre <> oFamilia.Codigo) then
+          sTexto := oFamilia.Codigo + ' - ' + oFamilia.Nombre;
+      end;
+    end;
+  end;
+  edtFamilias.Text := sTexto;
+end;
+
 procedure TfrmMtoBusquedaDatos.btnPerfilesClick(Sender: TObject);
 begin
   sbFiltros.Click;
@@ -722,7 +871,7 @@ begin
     oCriterios.DistinguirMayusculas :=
       chkDistinguirMayusculas.Checked;
     oCriterios.Valor := Trim(edtValor.Text);
-    oCriterios.Familia := CodigoCombo(cbbFamilia);
+    oCriterios.Familias := FFamiliasCsv;
     oCriterios.Proveedor := CodigoProveedor;
     oCriterios.Temporada := CodigoCombo(cbbTemporada);
     oCriterios.Almacen := UbicacionSesion.Almacen;

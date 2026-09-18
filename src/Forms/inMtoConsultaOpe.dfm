@@ -71,6 +71,18 @@
       TabOrder = 4
       Transparent = True
     end
+    object chkVerMiniaturas: TcxCheckBox
+      Left = 920
+      Top = 16
+      Hint = 'Muestra la columna Fotos con las miniaturas de los art'#237'culos de cada operaci'#243'n'
+      Caption = 'Ver miniaturas en grid'
+      ParentShowHint = False
+      Properties.OnChange = chkVerMiniaturasPropertiesChange
+      ShowHint = True
+      TabOrder = 5
+      Transparent = True
+      Width = 190
+    end
   end
   object pnlMaestro: TPanel [2]
     Left = 0
@@ -111,6 +123,7 @@
         object colTiposOp: TcxGridDBColumn
           Caption = 'Tipos'
           DataBinding.FieldName = 'TIPOS_OP'
+          PropertiesClassName = 'TcxTextEditProperties'
           Width = 86
         end
         object colSerieFactura: TcxGridDBColumn
@@ -148,16 +161,19 @@
         object colFormaPago: TcxGridDBColumn
           Caption = 'Forma de pago'
           DataBinding.FieldName = 'FORMAS_PAGO'
+          PropertiesClassName = 'TcxTextEditProperties'
           Width = 110
         end
         object colEmpleado: TcxGridDBColumn
           Caption = 'Empleado'
           DataBinding.FieldName = 'EMPLEADO'
+          PropertiesClassName = 'TcxTextEditProperties'
           Width = 100
         end
         object colConceptos: TcxGridDBColumn
           Caption = 'Conceptos'
           DataBinding.FieldName = 'CONCEPTOS'
+          PropertiesClassName = 'TcxTextEditProperties'
           Width = 230
         end
       end

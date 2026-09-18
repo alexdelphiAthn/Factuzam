@@ -851,6 +851,14 @@
         Caption = 'Env'#237'o de errores'
         OnClick = MenuGenericoClick
       end
+      object mnuComprobarActualizaciones: TMenuItem
+        Caption = 'Comprobar actualizaciones'
+        OnClick = mnuComprobarActualizacionesClick
+      end
+      object mnuRevertirActualizacion: TMenuItem
+        Caption = 'Revertir actualizaci'#243'n'
+        OnClick = mnuRevertirActualizacionClick
+      end
       object Acercade1: TMenuItem
         Caption = 'Acerca de'
         OnClick = mnuAcercadeClick

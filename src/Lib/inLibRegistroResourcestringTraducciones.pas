@@ -7791,6 +7791,12 @@ begin
       SCaptionSkuEncontradosLimite);
   ARegistrar(
     'inLibMsgComun.' +
+    'SCaptionColumnaFotos',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionColumnaFotos);
+  ARegistrar(
+    'inLibMsgComun.' +
     'SCaptionFiltrosCargaContraido',
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.
@@ -11347,6 +11353,390 @@ begin
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.
       SCaptionErrorImportandoPedido);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorActualizacionesNoConfiguradas',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorActualizacionesNoConfiguradas);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorRespuestaActualizacionNoValida',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorRespuestaActualizacionNoValida);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorServidorActualizacionHttp',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorServidorActualizacionHttp);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorTamanoActualizacionNoCoincide',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorTamanoActualizacionNoCoincide);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorHuellaActualizacionNoCoincide',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorHuellaActualizacionNoCoincide);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorEntradaActualizacionNoDeclarada',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorEntradaActualizacionNoDeclarada);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorEntradaZipActualizacionAusente',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorEntradaZipActualizacionAusente);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorZipActualizacionConVariasEntradas',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorZipActualizacionConVariasEntradas);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorArchivoActualizacionNoEjecutable',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorArchivoActualizacionNoEjecutable);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorArquitecturaActualizacionNoCoincide',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorArquitecturaActualizacionNoCoincide);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorEjecutableNuevoAusente',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorEjecutableNuevoAusente);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorEjecutableAnteriorAusente',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorEjecutableAnteriorAusente);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorSitioEjecutableAnteriorOcupado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorSitioEjecutableAnteriorOcupado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorRenombrarEjecutableActual',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorRenombrarEjecutableActual);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorCopiarEjecutableNuevo',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorCopiarEjecutableNuevo);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorRestaurarEjecutableAnterior',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorRestaurarEjecutableAnterior);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorConexionActualizacionNoDisponible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorConexionActualizacionNoDisponible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorComprobacionScriptsVacia',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorComprobacionScriptsVacia);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorScriptActualizacionAusente',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorScriptActualizacionAusente);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorScriptActualizacionVacio',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorScriptActualizacionVacio);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorHuellaScriptActualizacionNoCoincide',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorHuellaScriptActualizacionNoCoincide);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoConsultandoActualizaciones',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoConsultandoActualizaciones);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoDescargandoActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoDescargandoActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoDescomprimiendoActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoDescomprimiendoActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoComprobandoScriptsAplicados',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoComprobandoScriptsAplicados);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoSinVersionesPublicadas',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoSinVersionesPublicadas);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoVersionInstaladaAlDia',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoVersionInstaladaAlDia);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoActualizacionInstalada',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoActualizacionInstalada);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoAplicandoScriptActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoAplicandoScriptActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoRevirtiendoScriptActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoRevirtiendoScriptActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoSinScriptsPendientes',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoSinScriptsPendientes);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoScriptsPendientesAplicados',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoScriptsPendientesAplicados);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoActualizacionRevertida',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoActualizacionRevertida);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorScriptFaltanteNoPublicado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorScriptFaltanteNoPublicado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorAplicarScriptActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorAplicarScriptActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorRevertirScriptActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorRevertirScriptActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorSinActualizacionRevertible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorSinActualizacionRevertible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'STituloComprobarActualizaciones',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      STituloComprobarActualizaciones);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'STituloRevertirActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      STituloRevertirActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SDetalleActualizacionDisponible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SDetalleActualizacionDisponible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SPreguntaInstalarActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SPreguntaInstalarActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SDetalleScriptsFaltantes',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SDetalleScriptsFaltantes);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SLineaScriptFaltante',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SLineaScriptFaltante);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SPreguntaAplicarScriptsAhora',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SPreguntaAplicarScriptsAhora);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SAvisoCopiaPreviaObligatoria',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SAvisoCopiaPreviaObligatoria);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorAnfitrionCopiaPreviaNoDisponible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorAnfitrionCopiaPreviaNoDisponible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SDetalleReversionActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SDetalleReversionActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SLineaScriptRevertible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SLineaScriptRevertible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SLineaCopiaPreviaReversion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SLineaCopiaPreviaReversion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SPreguntaRevertirActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SPreguntaRevertirActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SDetalleScriptsSinRollback',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SDetalleScriptsSinRollback);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SPreguntaRestaurarCopiaPrevia',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SPreguntaRestaurarCopiaPrevia);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SAvisoSinCopiaPreviaParaRevertir',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SAvisoSinCopiaPreviaParaRevertir);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoProcesoActualizacionTerminado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoProcesoActualizacionTerminado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorInteraccionActualizacionIncompleta',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorInteraccionActualizacionIncompleta);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorIntegridadEjecutableActualizado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorIntegridadEjecutableActualizado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorPlanSustitucionNoValido',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorPlanSustitucionNoValido);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorPlanSustitucionNoAdmisible',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorPlanSustitucionNoAdmisible);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorSustitucionElevadaRechazada',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorSustitucionElevadaRechazada);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorSustitucionElevadaSinRespuesta',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorSustitucionElevadaSinRespuesta);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SAvisoSustitucionNecesitaElevacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SAvisoSustitucionNecesitaElevacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SPreguntaAplicarScriptsPendientesArranque',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SPreguntaAplicarScriptsPendientesArranque);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SAvisoSalirTrasActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SAvisoSalirTrasActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SAvisoElegirCopiaPreviaActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SAvisoElegirCopiaPreviaActualizacion);
   ARegistrar(
     'inLibMsgLogon.' +
     'SErrorBaseDatosAutenticacionNoDisponible',

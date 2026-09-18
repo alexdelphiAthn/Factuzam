@@ -45,21 +45,12 @@ type
     ClasePropiedades: string;
     Formato: string;
     Visible: Boolean;
-    // Solo para columnas de miniaturas: Campo lleva el articulo y
-    // CampoSku el SKU con el que se resuelve la foto.
-    CampoSku: string;
-    Miniaturas: Boolean;
     class function Crear(
       const ANombre, ATitulo, ACampo: string;
       AAncho: Integer;
       const AClasePropiedades: string = '';
       const AFormato: string = '';
       AVisible: Boolean = True): TColumnaDetalleCaja; static;
-    // Columna sin campo con la tira de fotos de la fila. El ancho y el
-    // alto de fila los calcula quien la pinta, no el modelo.
-    class function CrearMiniaturas(
-      const ANombre, ATitulo, ACampoArticulo,
-            ACampoSku: string): TColumnaDetalleCaja; static;
   end;
 
   TVistaDetalleCaja = record
@@ -126,17 +117,6 @@ begin
   Result.ClasePropiedades := AClasePropiedades;
   Result.Formato := AFormato;
   Result.Visible := AVisible;
-  Result.CampoSku := '';
-  Result.Miniaturas := False;
-end;
-
-class function TColumnaDetalleCaja.CrearMiniaturas(
-  const ANombre, ATitulo, ACampoArticulo,
-        ACampoSku: string): TColumnaDetalleCaja;
-begin
-  Result := Crear(ANombre, ATitulo, ACampoArticulo, 0);
-  Result.CampoSku := ACampoSku;
-  Result.Miniaturas := True;
 end;
 
 class function TVistaDetalleCaja.Crear(
@@ -287,8 +267,6 @@ var
   aColumnas: TArray<TColumnaDetalleCaja>;
 begin
   aColumnas := TArray<TColumnaDetalleCaja>.Create(
-    TColumnaDetalleCaja.CrearMiniaturas('colHistMovFotos', 'Foto',
-      'CODIGO_ART_MOV', 'CODIGO_UNIDAD_MOV'),
     TColumnaDetalleCaja.Crear('colHistMovNum', 'Nº Mov',
       'NUMERO_MOV', 94),
     TColumnaDetalleCaja.Crear('colHistMovTipoDoc', 'Tipo Doc',
@@ -364,8 +342,6 @@ var
   aColumnas: TArray<TColumnaDetalleCaja>;
 begin
   aColumnas := TArray<TColumnaDetalleCaja>.Create(
-    TColumnaDetalleCaja.CrearMiniaturas('colHistDepFotos', 'Foto',
-      'CODIGO_ART_DEP', 'CODIGO_UNIDAD_DEP'),
     TColumnaDetalleCaja.Crear('colHistDepRol', 'Rol',
       'ROL_EN_OPERACION', 110, '', '', False),
     TColumnaDetalleCaja.Crear('colHistDepEstado', 'Estado',
@@ -446,8 +422,6 @@ class function TCargadorModeloFichaDetalleCaja.
   CargarColumnasFacturaLineas: TArray<TColumnaDetalleCaja>;
 begin
   Result := TArray<TColumnaDetalleCaja>.Create(
-    TColumnaDetalleCaja.CrearMiniaturas('colHistFlFotos', 'Foto',
-      'CODIGO_ART_FACLIN', 'CODIGO_UNIDAD_FACLIN'),
     TColumnaDetalleCaja.Crear('colHistFlLinea', 'Lín',
       'LINEA_FACLIN', 50),
     TColumnaDetalleCaja.Crear('colHistFlArt', 'Artículo',

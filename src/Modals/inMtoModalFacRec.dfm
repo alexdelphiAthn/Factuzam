@@ -6,7 +6,6 @@
   Caption = 'Duplicar/Abonar Borrador'
   ClientHeight = 351
   ClientWidth = 419
-  FormStyle = fsStayOnTop
   Position = poMainFormCenter
   StyleElements = [seFont, seClient, seBorder]
   ExplicitWidth = 435

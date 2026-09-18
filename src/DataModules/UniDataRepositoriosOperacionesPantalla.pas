@@ -20,6 +20,7 @@ uses
   inLibParametrosIntf, inLibLogIntf,
   inLibConsultaFacturasOperacionesPersistenciaIntf,
   inLibVentasCalendarioIntf, inLibEmisionFiscalIntf,
+  inLibCajaArticulosOperacionIntf,
   inLibOperacionesCajaSkuPersistenciaIntf,
   inLibMovimientosSkuPersistenciaIntf,
   UniDataRepositoriosGeneralesPantalla;
@@ -36,6 +37,8 @@ type
       AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
     function CrearRepositorioMovimientosSku(
       AConexion: TUniConnection = nil): IRepositorioMovimientosSku;
+    function CrearConsultaArticulosOperacion(
+      AConexion: TUniConnection = nil): IConsultaArticulosOperacionCaja;
   end;
 
   TRepositoriosOperacionesPantallaUniDAC = class(
@@ -63,11 +66,14 @@ type
       AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
     function CrearRepositorioMovimientosSku(
       AConexion: TUniConnection = nil): IRepositorioMovimientosSku;
+    function CrearConsultaArticulosOperacion(
+      AConexion: TUniConnection = nil): IConsultaArticulosOperacionCaja;
   end;
 
 implementation
 
 uses
+  UniDataCajaArticulosOperacionRepositorio,
   UniDataConsultaFacturasOperacionesRepositorio,
   UniDataVentasCalendario, UniDataOperacionesCajaSkuRepositorio,
   UniDataMovimientosSkuRepositorio,
@@ -95,6 +101,13 @@ begin
   FParametrosCaja := nil;
   FParametrosApp := nil;
   inherited;
+end;
+
+function TRepositoriosOperacionesPantallaUniDAC.
+  CrearConsultaArticulosOperacion(
+  AConexion: TUniConnection): IConsultaArticulosOperacionCaja;
+begin
+  Result := CrearConsultaArticulosOperacionCajaUniDAC(Conexion(AConexion));
 end;
 
 function TRepositoriosOperacionesPantallaUniDAC.

@@ -58,7 +58,7 @@ type
     procedure ReportBeforePrint(Component: TfrxReportComponent);
     // Precarga en bloque las fotos de los artículos del resultado (1 consulta).
     procedure PrecargarFotosArticulos;
-    // Muestra el visor de Excel ocultando el modal (es fsStayOnTop).
+    // Muestra el visor de Excel sobre el modal.
     procedure MostrarPreviewExcel(APreview: TfrmMtoPreviewExcel);
     // Detalle "Exportando fila X de Y" de la ventana de espera.
     procedure AvisarProgresoExcel(AFila, ATotal: Integer);
@@ -356,12 +356,7 @@ end;
 procedure TfrmPrintBalanceSinTallas.MostrarPreviewExcel(
   APreview: TfrmMtoPreviewExcel);
 begin
-  Self.Hide;
-  try
-    APreview.ShowModal;
-  finally
-    Self.Show;
-  end;
+  APreview.ShowModal;
 end;
 
 procedure TfrmPrintBalanceSinTallas.AvisarProgresoExcel(AFila, ATotal: Integer);

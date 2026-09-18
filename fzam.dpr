@@ -262,6 +262,15 @@ uses
   inMtoErroresEnvios in 'src\Forms\inMtoErroresEnvios.pas' {frmMtoErroresEnvios},
   inLibSeguimientoErrores in 'src\Lib\inLibSeguimientoErrores.pas',
   inLibActualizacionSoporte in 'src\Lib\inLibActualizacionSoporte.pas',
+  inLibActualizacionVersion in 'src\Lib\inLibActualizacionVersion.pas',
+  inLibActualizacionIntf in 'src\Lib\inLibActualizacionIntf.pas',
+  inLibActualizacionInstalacion in 'src\Lib\inLibActualizacionInstalacion.pas',
+  inLibActualizacionEstado in 'src\Lib\inLibActualizacionEstado.pas',
+  inLibActualizacionScriptsLectura in 'src\Lib\inLibActualizacionScriptsLectura.pas',
+  inLibActualizacionScripts in 'src\Lib\inLibActualizacionScripts.pas',
+  inLibActualizacionServicio in 'src\Lib\inLibActualizacionServicio.pas',
+  inLibActualizacionProceso in 'src\Lib\inLibActualizacionProceso.pas',
+  inMtoModalActualizacion in 'src\Modals\inMtoModalActualizacion.pas' {frmModalActualizacion},
   inMtoModalListadoVentas in 'src\Modals\inMtoModalListadoVentas.pas' {frmModalListadoVentas},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},
@@ -616,6 +625,9 @@ uses
   inLibGenerarTicket in 'src\Lib\inLibGenerarTicket.pas',
   inLibGenerarTicketIntf in 'src\Lib\inLibGenerarTicketIntf.pas',
   UniDataGenerarTicketRepositorio in 'src\DataModules\UniDataGenerarTicketRepositorio.pas',
+  inLibFamiliasArbol in 'src\Lib\inLibFamiliasArbol.pas',
+  inLibFamiliasArbolVcl in 'src\Lib\inLibFamiliasArbolVcl.pas',
+  inMtoModalSelFamiliasArbol in 'src\Modals\inMtoModalSelFamiliasArbol.pas',
   inLibBusquedaDatosPersistenciaIntf in 'src\Lib\inLibBusquedaDatosPersistenciaIntf.pas',
   UniDataBusquedaDatosRepositorio in 'src\DataModules\UniDataBusquedaDatosRepositorio.pas',
   inLibGeneracionSkusPersistenciaIntf in 'src\Lib\inLibGeneracionSkusPersistenciaIntf.pas',
@@ -853,6 +865,8 @@ uses
   inMtoModalFacturarAlbaranesFechas in 'src\Modals\inMtoModalFacturarAlbaranesFechas.pas' {frmModalFacturarAlbaranesFechas},
   inMtoCajaOperacionesHist in 'src\Caja\Forms\inMtoCajaOperacionesHist.pas' {frmMtoCajaOperacionesHist},
   UniDataCajaOperacionesHist in 'src\Caja\DataModules\UniDataCajaOperacionesHist.pas' {dmCajaOperacionesHist: TDataModule},
+  inLibCajaArticulosOperacionIntf in 'src\Caja\Lib\inLibCajaArticulosOperacionIntf.pas',
+  UniDataCajaArticulosOperacionRepositorio in 'src\Caja\DataModules\UniDataCajaArticulosOperacionRepositorio.pas',
   inLibCajaOperacionesHistPersistenciaIntf in 'src\Caja\Lib\inLibCajaOperacionesHistPersistenciaIntf.pas',
   UniDataCajaOperacionesHistRepositorio in 'src\Caja\DataModules\UniDataCajaOperacionesHistRepositorio.pas',
   inMtoCajaArqueosHist in 'src\Caja\Forms\inMtoCajaArqueosHist.pas' {frmMtoCajaArqueosHist},
@@ -981,6 +995,7 @@ uses
   UniDataFotosSesionRepositorio in 'src\DataModules\UniDataFotosSesionRepositorio.pas',
   inLibFotos in 'src\Lib\inLibFotos.pas',
   inLibFotosMiniaturasGridVcl in 'src\Lib\inLibFotosMiniaturasGridVcl.pas',
+  inLibCajaFotosOperacionGridVcl in 'src\Lib\inLibCajaFotosOperacionGridVcl.pas',
   inLibDocumentosTrabajo in 'src\Lib\inLibDocumentosTrabajo.pas',
   inLibDocumentosTrabajoEstados in 'src\Lib\inLibDocumentosTrabajoEstados.pas',
   inLibDocumentosTrabajoPresentacion in 'src\Lib\inLibDocumentosTrabajoPresentacion.pas',
@@ -1222,6 +1237,9 @@ begin
   var CodigoSalidaComandoCopia: Cardinal;
   var CodigoSalidaComandoImpresion: Cardinal;
   var CodigoSalidaComandoRecalculosStock: Cardinal;
+  // Instancia lanzada con permisos de administrador solo para
+  // sustituir los ejecutables: hace su trabajo y termina.
+  ProcesarArranqueSustitucionElevada;
   if EsProcesoComandoAyuda then
   begin
     CodigoSalidaComandoAyuda := EjecutarProcesoComandoAyuda;
@@ -1372,6 +1390,14 @@ begin
       begin
         inLibDiag.ProbarStackTrace;
       end));
+    // A partir de aqui los modales pertenecen a la ventana que los
+    // abre, no siempre a la principal: asi los que se abren desde el
+    // menu de Caja se minimizan y se ordenan con ella. Se activa
+    // despues del arranque para no tocar el login ni la presentacion
+    // inicial, que son ventanas de primer nivel mientras no existe la
+    // principal. Ojo: ShowModal recrea el manejador de ventana de los
+    // formularios que siguen en pmNone.
+    Application.ModalPopupMode := pmAuto;
     try
       Application.Run;
     finally

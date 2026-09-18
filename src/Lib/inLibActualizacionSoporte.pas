@@ -30,7 +30,8 @@ uses
   System.IOUtils,
   System.Net.HttpClient,
   System.StrUtils,
-  System.SysUtils;
+  System.SysUtils,
+  inLibActualizacionInstalacion;
 
 resourcestring
   SErrorActualizacionSinHttps =
@@ -55,54 +56,6 @@ resourcestring
   SErrorCopiarEjecutableNuevo =
     'No se pudo copiar el nuevo ejecutable: %s';
 
-function CrearRutaDescarga: string;
-var
-  Identificador: TGUID;
-begin
-  CreateGUID(Identificador);
-  Result := TPath.Combine(
-    TPath.GetTempPath,
-    'Factuzam_Actualizacion_' +
-    StringReplace(
-      StringReplace(GUIDToString(Identificador), '{', '', []),
-      '}',
-      '',
-      []) + '.exe');
-end;
-
-function CabeceraEjecutableValida(
-  const ARuta: string): Boolean;
-var
-  aCabecera: array[0..1] of Byte;
-  oFlujo: TFileStream;
-begin
-  Result := False;
-  oFlujo := TFileStream.Create(ARuta, fmOpenRead or fmShareDenyNone);
-  try
-    if oFlujo.Size >= 2 then
-    begin
-      oFlujo.ReadBuffer(aCabecera, SizeOf(aCabecera));
-      Result := (aCabecera[0] = Ord('M')) and
-        (aCabecera[1] = Ord('Z'));
-    end;
-  finally
-    oFlujo.Free;
-  end;
-end;
-
-function MismaArquitectura(
-  const ARutaActual, ARutaNueva: string): Boolean;
-var
-  iTipoActual: DWORD;
-  iTipoNuevo: DWORD;
-begin
-  iTipoActual := 0;
-  iTipoNuevo := 0;
-  Result := GetBinaryType(PChar(ARutaActual), iTipoActual) and
-    GetBinaryType(PChar(ARutaNueva), iTipoNuevo) and
-    (iTipoActual = iTipoNuevo);
-end;
-
 function DescargarActualizacion(
   const AUrl, ASha256: string;
   ACantidadBytes: Int64;
@@ -122,7 +75,7 @@ begin
     AError := SErrorHuellaActualizacionInvalida
   else
   begin
-    ARuta := CrearRutaDescarga;
+    ARuta := RutaTemporalActualizacion('.exe');
     oHttp := THTTPClient.Create;
     try
       oFlujo := TFileStream.Create(ARuta, fmCreate);
@@ -146,7 +99,7 @@ begin
             sHash := UpperCase(THashSHA2.GetHashStringFromFile(ARuta));
             if not SameText(sHash, Trim(ASha256)) then
               AError := SErrorHuellaActualizacionNoCoincide
-            else if not MismaArquitectura(ParamStr(0), ARuta) then
+            else if not MismaArquitecturaEjecutable(ParamStr(0), ARuta) then
               AError := SErrorArquitecturaActualizacionNoCoincide
             else
               Result := True;

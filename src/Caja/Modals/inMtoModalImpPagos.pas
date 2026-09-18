@@ -190,20 +190,12 @@ begin
     frm.sEmpresa := edtEmpresa.Text;
     frm.sAlmacen := bedAlmacen.Text;
     frm.sCaja    := bedCaja.Text;
-    // Este modal es fsStayOnTop (heredado de TfrmPrint); si no nos
-    // ocultamos, el selector saldria por detras. Mismo patron que usa el
-    // padre al abrir el selector de formatos (Self.Hide / Self.Show).
-    Self.Hide;
-    try
-      frm.ShowModal;
-      if frm.sFicha = 'S' then
-      begin
-        bedAlmacen.Text := frm.AlmacenSeleccionado;
-        bedCaja.Text    := frm.CajaSeleccionada;
-        bCambio         := True;
-      end;
-    finally
-      Self.Show;
+    frm.ShowModal;
+    if frm.sFicha = 'S' then
+    begin
+      bedAlmacen.Text := frm.AlmacenSeleccionado;
+      bedCaja.Text    := frm.CajaSeleccionada;
+      bCambio         := True;
     end;
   finally
     FreeAndNil(frm);

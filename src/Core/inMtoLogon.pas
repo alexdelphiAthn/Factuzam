@@ -175,6 +175,8 @@ type
       const AResultado: TResultadoAutenticacionLogon): Boolean;
     procedure IniciarRestauracionAdministrativa;
     procedure ReiniciarServiciosLogonTrasRestauracion;
+  protected
+    procedure CreateParams(var Params: TCreateParams); override;
   public
     constructor Create(
       AOwner: TComponent;
@@ -264,6 +266,17 @@ resourcestring
   SMensajeLicenciaSinNifEmpresa =
     'No hay NIF de empresa configurado.';
   SFormatoMensajeCopiaDemo = 'Copia DEMO. %s';
+
+// Mientras no existe la ventana principal, la VCL asigna esta ventana
+// a la ventana oculta de la aplicacion: se queda sin boton propio en la
+// barra de tareas y no se puede minimizar ni mandar al fondo. Se declara
+// como ventana de primer nivel, igual que el menu de Caja.
+procedure TfrmLogon.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.ExStyle   := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
 
 constructor TfrmLogon.Create(
   AOwner: TComponent;

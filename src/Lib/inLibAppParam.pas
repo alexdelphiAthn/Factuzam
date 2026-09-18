@@ -320,6 +320,8 @@ begin
   //   ...
   // El usuario puede seguir asignando a otro nivel desde el combo del
   // form de fotos; este parametro solo fija el DEFAULT pre-seleccionado.
+  RegistrarParametro('Fotos', 'appVerMiniaturasGrids',
+    'Ver miniaturas de fotos en los grids', tpBoolean, 'True');
   RegistrarParametro('Fotos', 'appNumAtributosFoto',
     'Atributos del SKU que componen la clave de foto (0 = solo artículo)',
     tpInteger, '1');

@@ -510,6 +510,17 @@
         </DCCReference>
         <DCCReference Include="src\Lib\inLibSeguimientoErrores.pas"/>
         <DCCReference Include="src\Lib\inLibActualizacionSoporte.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionVersion.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionInstalacion.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionEstado.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionScriptsLectura.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionScripts.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionServicio.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionProceso.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalActualizacion.pas">
+            <Form>frmModalActualizacion</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalListadoVentas.pas">
             <Form>frmModalListadoVentas</Form>
         </DCCReference>
@@ -1077,6 +1088,9 @@
         <DCCReference Include="src\Lib\inLibGenerarTicket.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataGenerarTicketRepositorio.pas"/>
+        <DCCReference Include="src\Lib\inLibFamiliasArbol.pas"/>
+        <DCCReference Include="src\Lib\inLibFamiliasArbolVcl.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalSelFamiliasArbol.pas"/>
         <DCCReference Include="src\Lib\inLibBusquedaDatosPersistenciaIntf.pas"/>
         <DCCReference Include="src\DataModules\UniDataBusquedaDatosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGeneracionSkusPersistenciaIntf.pas"/>

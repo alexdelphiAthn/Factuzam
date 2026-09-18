@@ -443,8 +443,8 @@ begin
       [fdoPickFolders, fdoForceFileSystem, fdoPathMustExist];
     if DirectoryExists(ADirectorio) then
       oDialogo.DefaultFolder := ADirectorio;
-    // El modal de impresion es fsStayOnTop: el dialogo debe ser suyo
-    // para que Windows lo mantenga visible por encima.
+    // El dialogo pertenece al modal de impresion: se ordena con el y
+    // se minimiza con la aplicacion.
     Result := oDialogo.Execute(FFormulario.Handle);
     if Result then
       ADirectorio := oDialogo.FileName;

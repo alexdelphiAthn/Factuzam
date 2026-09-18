@@ -49,6 +49,7 @@
             object cxGrdDBTabPrinTIPO_OPERACION_OPCAJA: TcxGridDBColumn
               Caption = 'Tipos'
               DataBinding.FieldName = 'TIPOS_OP'
+              PropertiesClassName = 'TcxTextEditProperties'
               Width = 86
             end
             object cxGrdDBTabPrinCODIGO_EMPLEADO_OPCAJA: TcxGridDBColumn
@@ -86,6 +87,7 @@
             object cxGrdDBTabPrinCONCEPTO_GASTO_INGRESO_OPCAJA: TcxGridDBColumn
               Caption = 'Conceptos'
               DataBinding.FieldName = 'CONCEPTOS'
+              PropertiesClassName = 'TcxTextEditProperties'
               Width = 230
             end
           end
@@ -199,6 +201,18 @@
         inherited nvNavegador: TcxDBNavigator
           Width = 240
           ExplicitWidth = 240
+        end
+        object chkVerMiniaturas: TcxCheckBox
+          Left = 1024
+          Top = 7
+          Hint = 'Muestra la columna Fotos con las miniaturas de los art'#237'culos de cada operaci'#243'n'
+          Caption = 'Ver miniaturas en grid'
+          ParentShowHint = False
+          Properties.OnChange = chkVerMiniaturasPropertiesChange
+          ShowHint = True
+          TabOrder = 6
+          Transparent = True
+          Width = 190
         end
         object btnImprimirInforme: TcxButton
           Left = 848

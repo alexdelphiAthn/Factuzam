@@ -48,6 +48,7 @@ uses
   inLibArqueoIntf,
   inLibArqueoTicketIntf,
   inLibTiraCajaTicketIntf,
+  inLibCajaArticulosOperacionIntf,
   inLibAppParamPersistenciaIntf;
 
 type
@@ -62,6 +63,8 @@ type
     function CrearServicioEmisionFiscal: IServicioEmisionFiscal;
     function CrearRepositorioOperacionesCajaSku(
       AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
+    function CrearConsultaArticulosOperacion(
+      AConexion: TUniConnection = nil): IConsultaArticulosOperacionCaja;
   end;
 
   IComposicionOperacionesCajaPantalla = interface
@@ -180,6 +183,8 @@ type
     function CrearServicioEmisionFiscal: IServicioEmisionFiscal;
     function CrearRepositorioOperacionesCajaSku(
       AConexion: TUniConnection = nil): IRepositorioOperacionesCajaSku;
+    function CrearConsultaArticulosOperacion(
+      AConexion: TUniConnection = nil): IConsultaArticulosOperacionCaja;
   end;
 
   TComposicionOperacionesCajaPantalla = class(
@@ -329,6 +334,12 @@ function TComposicionConsultasCajaPantalla.CrearRepositorioConsultasCaja(
   AConexion: TUniConnection): IRepositorioConsultasCaja;
 begin
   Result := FCaja.CrearRepositorioConsultasCaja(AConexion);
+end;
+
+function TComposicionConsultasCajaPantalla.CrearConsultaArticulosOperacion(
+  AConexion: TUniConnection): IConsultaArticulosOperacionCaja;
+begin
+  Result := FOperaciones.CrearConsultaArticulosOperacion(AConexion);
 end;
 
 function TComposicionConsultasCajaPantalla.CrearRepositorioConsultaFacturas:

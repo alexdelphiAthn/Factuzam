@@ -52,6 +52,7 @@ uses
   inLibConexionesIntf,
   inLibLicenciaAplicacion,
   inLibAnfitrionMtoIntf,
+  inLibActualizacionProceso,
   inLibCajaVentanasIntf, inLibPermisosIntf,
   inLibCopiasSeguridadIntf,
   inLibArranqueAplicacion,
@@ -181,6 +182,8 @@ type
     procedure CancelarEdicionesPantallas;
     procedure VincularFotoMantenimiento(AMantenimiento: TObject);
     function CrearCopiaPreviaScriptSoporte: Boolean;
+    function CrearCopiaPreviaActualizacion(
+      out ARutaCopia: string): Boolean;
     function MenuAplicacion: TMainMenu;
     function CrearOperacionCaja(
       AOwner: TComponent;
@@ -240,6 +243,8 @@ type
     mnuManualWeb: TMenuItem;
     mnuForoSoporte: TMenuItem;
     mnuErroresEnvios: TMenuItem;
+    mnuComprobarActualizaciones: TMenuItem;
+    mnuRevertirActualizacion: TMenuItem;
     mnuConsultaStocks: TMenuItem;
     mnuArticulosSimilares: TMenuItem;
     mnuColasEnvios: TMenuItem;
@@ -273,6 +278,8 @@ type
     procedure mnuAcercadeClick(Sender: TObject);
     procedure mnuManualWebClick(Sender: TObject);
     procedure mnuForoSoporteClick(Sender: TObject);
+    procedure mnuComprobarActualizacionesClick(Sender: TObject);
+    procedure mnuRevertirActualizacionClick(Sender: TObject);
     procedure mnuConsultaStocksClick(Sender: TObject);
     procedure mnuArticulosSimilaresClick(Sender: TObject);
     function IsShortCut(var Message: TWMKey): Boolean; override;
@@ -346,6 +353,13 @@ type
       out ARutaFichero: string
     ): Boolean;
     function CrearCopiaPreviaScript: Boolean;
+    procedure ActualizarVisibilidadActualizaciones;
+    procedure EjecutarPantallaActualizacion(
+      AModo: TModoPantallaActualizacion);
+    procedure ComprobarIntegridadEjecutables;
+    procedure OfrecerScriptsPendientesActualizacion;
+    procedure RestaurarCopiaPreviaActualizacion(
+      const ARutaCopia: string);
     procedure PrepararReinicioRestauracion;
     function ConsultarDecisionCierrePrestaShop:
       TDecisionCierrePrestaShop;
@@ -415,7 +429,11 @@ uses
   System.RegularExpressions,
   inMtoModalErrorAplicacion,
   inMtoPrincipalCertificadosVcl,
-  inMtoComandoImprimirFacturas;
+  inMtoComandoImprimirFacturas,
+  inLibActualizacionEstado,
+  inLibActualizacionInstalacion,
+  inLibMsgIntegraciones,
+  inMtoModalActualizacion;
 
 function CrearContextoRestauracionCopiasVcl(
   AFormulario: TfrmMtoPrincipal): TContextoRestauracionCopiasVcl;
@@ -745,6 +763,7 @@ end;
 procedure TfrmMtoPrincipal.ConfigurarPresentacionPrincipal;
 begin
   AplicarPermisosMenu;
+  ActualizarVisibilidadActualizaciones;
   if not ContextoSesion.Identidad.EsAdministrador then
   begin
     mnuEjecutarScript.Visible := False;
@@ -802,9 +821,12 @@ end;
 
 procedure TfrmMtoPrincipal.FinalizarArranqueAplicacion;
 begin
+  LimpiarEjecutablesAnteriores(ExpandFileName(ParamStr(0)));
   RegistrarInicioAplicacion;
   FPresentacionInicio.CerrarSplash(1000);
   MostrarAvisoCaducidadCertificados(ConexionPrincipal, RegistroLog);
+  ComprobarIntegridadEjecutables;
+  OfrecerScriptsPendientesActualizacion;
 end;
 
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);
@@ -1819,6 +1841,120 @@ procedure TfrmMtoPrincipal.mnuForoSoporteClick(Sender: TObject);
 begin
   inherited;
   AbrirUrlAyuda(mnuForoSoporte.Caption, URL_FORO_SOPORTE);
+end;
+
+procedure TfrmMtoPrincipal.ActualizarVisibilidadActualizaciones;
+var
+  bAdministrador: Boolean;
+begin
+  bAdministrador := ContextoSesion.Identidad.EsAdministrador;
+  mnuComprobarActualizaciones.Visible := bAdministrador;
+  mnuComprobarActualizaciones.Enabled := bAdministrador;
+  mnuRevertirActualizacion.Visible := bAdministrador;
+  mnuRevertirActualizacion.Enabled := bAdministrador and
+    LeerEstadoActualizacion.SePuedeRevertir;
+end;
+
+procedure TfrmMtoPrincipal.RestaurarCopiaPreviaActualizacion(
+  const ARutaCopia: string);
+begin
+  // La restauracion reutiliza el flujo de Recuperar Copia de Seguridad,
+  // que reinicia la aplicacion sin conexiones abiertas.
+  MessageDlg_fza(
+    Format(SAvisoElegirCopiaPreviaActualizacion, [ARutaCopia]),
+    mtInformation,
+    [mbOk],
+    0);
+  mnuEjecutarScriptClick(Self);
+end;
+
+procedure TfrmMtoPrincipal.EjecutarPantallaActualizacion(
+  AModo: TModoPantallaActualizacion);
+var
+  Resultado: TResultadoActualizacion;
+begin
+  TfrmModalActualizacion.Ejecutar(
+    Self,
+    Self,
+    ParametrosApp,
+    ConexionPrincipal,
+    oVersion,
+    AModo,
+    Resultado);
+  if Trim(Resultado.Mensaje) <> '' then
+  begin
+    if Resultado.Ok then
+      MessageDlg_fza(Resultado.Mensaje, mtInformation, [mbOk], 0)
+    else
+      MessageDlg_fza(Resultado.Mensaje, mtError, [mbOk], 0);
+  end;
+  ActualizarVisibilidadActualizaciones;
+  if Resultado.SolicitaRestaurarCopia then
+    RestaurarCopiaPreviaActualizacion(Resultado.RutaCopiaPrevia)
+  else if Resultado.RequiereSalir then
+  begin
+    ShowMessage_fza(SAvisoSalirTrasActualizacion);
+    Close;
+  end;
+end;
+
+procedure TfrmMtoPrincipal.ComprobarIntegridadEjecutables;
+var
+  sMensaje: string;
+begin
+  // La primera vez que arranca la version instalada se contrasta la
+  // huella SHA-256 de cada ejecutable con la que publico el servicio.
+  if not ComprobarIntegridadActualizacion(oVersion, sMensaje) then
+  begin
+    RegistroLog.RegistrarError(sMensaje);
+    MessageDlg_fza(sMensaje, mtError, [mbOk], 0);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.OfrecerScriptsPendientesActualizacion;
+var
+  Estado: TEstadoActualizacion;
+begin
+  if ContextoSesion.Identidad.EsAdministrador then
+  begin
+    Estado := LeerEstadoActualizacion;
+    if Estado.Existe and Estado.HayScriptsPendientes and
+       (MessageDlg_fza(
+          Format(
+            SPreguntaAplicarScriptsPendientesArranque,
+            [Length(Estado.Pendientes)]),
+          mtWarning,
+          [mbYes, mbNo],
+          0) = mrYes) then
+      EjecutarPantallaActualizacion(mpaAplicarPendientes);
+  end;
+end;
+
+procedure TfrmMtoPrincipal.mnuComprobarActualizacionesClick(
+  Sender: TObject);
+begin
+  inherited;
+  if mnuComprobarActualizaciones.Visible then
+    EjecutarPantallaActualizacion(mpaComprobar);
+end;
+
+procedure TfrmMtoPrincipal.mnuRevertirActualizacionClick(
+  Sender: TObject);
+begin
+  inherited;
+  if mnuRevertirActualizacion.Visible and
+     mnuRevertirActualizacion.Enabled then
+    EjecutarPantallaActualizacion(mpaRevertir);
+end;
+
+function TfrmMtoPrincipal.CrearCopiaPreviaActualizacion(
+  out ARutaCopia: string): Boolean;
+begin
+  Result := SolicitarDestinoCopia(ARutaCopia);
+  if Result then
+    Result := FCoordinadorOperaciones.CrearCopia(ARutaCopia, '');
+  if not Result then
+    ARutaCopia := '';
 end;
 
 procedure TfrmMtoPrincipal.mnuConsultaStocksClick(Sender: TObject);

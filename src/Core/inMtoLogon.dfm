@@ -1,7 +1,7 @@
 object frmLogon: TfrmLogon
   Left = 0
   Top = 0
-  BorderIcons = []
+  BorderIcons = [biMinimize]
   BorderStyle = bsSingle
   Caption = 'Login FactuZam'
   ClientHeight = 430

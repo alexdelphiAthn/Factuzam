@@ -6,7 +6,6 @@
   Caption = 'Imprimir'
   ClientHeight = 240
   ClientWidth = 341
-  FormStyle = fsStayOnTop
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose
   ExplicitWidth = 357

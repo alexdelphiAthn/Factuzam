@@ -36,6 +36,9 @@ uses
   inLibTraspasoTicketIntf, inLibTicketsCajaIntf,
   inLibVentasCalendarioIntf, inLibPermisosIntf,
   inLibCajaPantallaInyeccion,
+  inLibCajaArticulosOperacionIntf,
+  inLibCajaFotosOperacionGridVcl,
+  inLibFotosMiniaturasGridVcl,
   inLibCajaSubsanacionIntf;
 
 type
@@ -45,6 +48,7 @@ type
     lblBuscar:        TcxLabel;
     edtBuscar:        TcxButtonEdit;
     chkVerTodos:      TcxCheckBox;
+    chkVerMiniaturas: TcxCheckBox;
     pnlMaestro:       TPanel;
     cxGridMaestro:    TcxGrid;
     cxViewMaestro:    TcxGridDBTableView;
@@ -107,6 +111,7 @@ type
     procedure btnRefrescarClick(Sender: TObject);
     procedure edtBuscarPropertiesChange(Sender: TObject);
     procedure chkVerTodosPropertiesChange(Sender: TObject);
+    procedure chkVerMiniaturasPropertiesChange(Sender: TObject);
     procedure tmrBusquedaTimer(Sender: TObject);
     procedure btnReimprimirClick(Sender: TObject);
     procedure btnReimprimirOtrosClick(Sender: TObject);
@@ -137,6 +142,10 @@ type
     FRepositoriosTicketsCaja: TRepositoriosTicketsCaja;
     FLecturasImpresionTicket: ILecturasImpresionTicket;
     FServicioSubsanacion: IServicioSubsanacionCaja;
+    FArticulosOperacion: IConsultaArticulosOperacionCaja;
+    // Columna "Fotos" de la rejilla maestra (nil si el parametro de caja
+    // la apaga o no hay servicio de fotos).
+    FFotosOperacion: TTiraMiniaturasFotosGrid;
     procedure SubsanarOperacion;
     procedure AbrirOperacionSubsanacion(
       const AOperacion: TOperacionSubsanacionCaja);
@@ -163,6 +172,8 @@ type
     procedure OnMaestroDataChange(Sender: TObject; Field: TField);
     procedure OnMovimientoDataChange(Sender: TObject; Field: TField);
     procedure RefrescarFotoConsulta;
+    procedure CrearColumnaFotosOperacion;
+    procedure AplicarVisibilidadMiniaturas;
     // Lee el ARTICULO / SKU del movimiento activo en cxViewMov para
     // alimentar la pantalla flotante de fotos (Ctrl + F).
     procedure ResolverArtSkuDeMovimiento(out ACodArt, ACodSku: string);
@@ -202,6 +213,7 @@ implementation
 {$R *.dfm}
 
 uses
+  System.StrUtils,
   inLibMensajesVcl,
   inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibFotos, inMtoFotoArticulo,
@@ -211,6 +223,13 @@ uses
   inLibAtributosPaleta, inLibMsgComun,
   inLibMsgCaja, inLibMsgConfiguracion, inLibMsgFacturas,
   inLibMsgSubsanacionCaja, inLibCajaEstiloVcl;
+
+const
+  // Parametro de caja que enciende la columna de miniaturas de la rejilla
+  // principal (Avisos y Busquedas).
+  cParamVerMiniaturasGrids = 'appVerMiniaturasGrids';
+  // Clave del check en el perfil de la pantalla.
+  cPerfilVerMiniaturas = 'VerMiniaturas';
 
 resourcestring
   STituloPersonalizacionConsultaOperaciones =
@@ -246,6 +265,7 @@ begin
   FRepositoriosTicketsCaja := ADependencias.Tickets;
   FLecturasImpresionTicket := ADependencias.LecturasTicket;
   FServicioSubsanacion := ADependencias.Subsanacion;
+  FArticulosOperacion := ADependencias.ArticulosOperacion;
   inherited Create(AOwner, APermisos);
 end;
 
@@ -299,6 +319,10 @@ begin
   tmrBusqueda.Interval := 400;
   KeyPreview := True;   // para que FormKeyDown capture F5/ESC aunque el foco
                         // este en el grid o en el edit de busqueda
+  CrearColumnaFotosOperacion;
+  // El check solo aparece si hay columna de miniaturas; arranca marcado.
+  chkVerMiniaturas.Visible := Assigned(FFotosOperacion);
+  chkVerMiniaturas.Checked := True;
   AplicarEstiloCaja;
 end;
 
@@ -369,6 +393,10 @@ end;
 
 procedure TfrmConsultaOpe.FormDestroy(Sender: TObject);
 begin
+  // Antes que nada: la tira suelta los eventos de la vista y de su
+  // columna, que siguen vivas mientras no se destruyan los componentes.
+  FreeAndNil(FFotosOperacion);
+  FArticulosOperacion := nil;
   FServicioSubsanacion := nil;
   FLecturasImpresionTicket := nil;
   FRepositoriosTicketsCaja.Impresion := nil;
@@ -924,6 +952,51 @@ begin
   end;
 end;
 
+// Enciende y apaga la columna de miniaturas sin deshacer la tira: asi el
+// check no tira la cache de fotos ya calculada.
+procedure TfrmConsultaOpe.AplicarVisibilidadMiniaturas;
+begin
+  if Assigned(FFotosOperacion) and Assigned(FFotosOperacion.Columna) then
+    FFotosOperacion.Columna.Visible := chkVerMiniaturas.Checked;
+end;
+
+procedure TfrmConsultaOpe.chkVerMiniaturasPropertiesChange(
+  Sender: TObject);
+begin
+  AplicarVisibilidadMiniaturas;
+end;
+
+// Columna "Fotos" al final de la rejilla maestra: una tira con las fotos
+// de los articulos de cada operacion. La tira se engancha al
+// OnCustomDrawCell de su propia columna y cachea rutas y bitmaps; sin
+// servicio de fotos o con el parametro apagado no se crea.
+procedure TfrmConsultaOpe.CrearColumnaFotosOperacion;
+begin
+  if (not Assigned(FotosArticulos)) or
+     (not Assigned(FArticulosOperacion)) or
+     (not Assigned(ParametrosApp)) then
+    Exit;
+  if not ParametrosApp.GetBool(cParamVerMiniaturasGrids, True) then
+    Exit;
+  // La rejilla maestra solo trae el numero de operacion y la factura:
+  // empresa, almacen y caja no son columnas aqui, son el contexto fijo de
+  // la pantalla (una instancia por caja), que llega en PrepararValores,
+  // despues de montarse la columna.
+  FFotosOperacion := CrearColumnaFotosOperacionCaja(
+    cxViewMaestro,
+    FotosArticulos,
+    FArticulosOperacion,
+    'colBuscarOpeFotos',
+    SCaptionColumnaFotos,
+    function: TClaveOperacionCaja
+    begin
+      Result := Default(TClaveOperacionCaja);
+      Result.Empresa := FEmpresa;
+      Result.Almacen := FAlmacen;
+      Result.Caja := FCaja;
+    end);
+end;
+
 // Recarga imgFotoConsulta con la foto a 300 px del articulo / SKU del
 // movimiento activo. Lo invoca OnMovimientoDataChange.
 procedure TfrmConsultaOpe.RefrescarFotoConsulta;
@@ -1007,6 +1080,9 @@ begin
     FLayout.RestaurarAlturaPanel('PnlMaestroHeight', pnlMaestro, 80);
     FLayout.RestaurarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta, 50);
     FLayout.RestaurarGrid('Maestro', cxViewMaestro);
+    if chkVerMiniaturas.Visible then
+      chkVerMiniaturas.Checked :=
+        FLayout.RestaurarValor(cPerfilVerMiniaturas, 'S') = 'S';
     AplicarAnchosPestanasHijas;
     RegistroLog.RegistrarInformacion('RestaurarLayout: FIN');
   end;
@@ -1065,6 +1141,10 @@ begin
     Layout.GuardarAlturaPanel('PnlMaestroHeight', pnlMaestro);
     Layout.GuardarAnchoPanel('FotoConsultaWidth', pnlFotoConsulta);
     Layout.GuardarGrid('Maestro',     cxViewMaestro);
+    if chkVerMiniaturas.Visible then
+      Layout.GuardarValor(
+        cPerfilVerMiniaturas,
+        IfThen(chkVerMiniaturas.Checked, 'S', 'N'));
     Layout.GuardarGrid('Operacion',   cxViewOpe);
     Layout.GuardarGrid('Pagos',       cxViewPagos);
     Layout.GuardarGrid('Vales',       cxViewVales);
@@ -1103,6 +1183,10 @@ begin
       FdmConsulta.CargarMaestro(
         dtpFecha.Date, FEmpresa, FAlmacen, FCaja, Trim(edtBuscar.Text),
         chkVerTodos.Checked);
+      // Recargar es el momento de tirar la cache de fotos: asi una foto
+      // anadida o rotada desde otra pantalla se ve sin reabrir.
+      if Assigned(FFotosOperacion) then
+        FFotosOperacion.Limpiar;
       AjustarVisibilidadColumnasCliente;
       AjustarVisibilidadPestanas;
     finally

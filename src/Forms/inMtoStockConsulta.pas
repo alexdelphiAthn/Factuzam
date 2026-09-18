@@ -1,7 +1,7 @@
 ﻿{******************************************************************************}
 {                                                                              }
 {  Modulo:       inMtoStockConsulta                                            }
-{    Tipo:       Formulario (flotante, fsStayOnTop)                            }
+{    Tipo:       Formulario (ventana independiente)                            }
 { Version:       0.8.1                                                         }
 {   Fecha:       09/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
@@ -173,6 +173,9 @@ type
               var AProcesado: Boolean);
   protected
     FDependencias: TContextoDependenciasStockConsulta;
+    procedure CreateParams(var Params: TCreateParams); override;
+    procedure CreateWnd; override;
+    procedure DestroyWnd; override;
   public
     procedure SetArticuloSku(const ACodArt, ACodSku: string);
   end;
@@ -198,7 +201,8 @@ uses
   inMtoModalOperacionesCajaSku, inMtoModalMovimientosSku,
   inLibMsgArticulos, inLibMsgCaja,
   inLibMsgComun, inLibMsgVentas, inLibMsgFacturas,
-  inLibDocumentosTrabajoPresentacion;
+  inLibDocumentosTrabajoPresentacion,
+  inLibVentanaBarraTareas;
 
 {$R *.dfm}
 
@@ -213,6 +217,10 @@ resourcestring
   SCaptionPvpBusquedaStock = 'PVP';
 
 const
+  // Identificador de aplicacion propio: boton separado en la barra de
+  // tareas, con el icono de la consulta, aunque la barra combine botones.
+  GRUPO_BARRA_TAREAS_STOCK = 'Factuzam.Stock';
+  ICONO_CONSULTA_STOCK = 'MNUCONSULTASTOCKS';
   PERFIL_STOCK_CONSULTA = NOMBRE_PANTALLA_STOCK_CONSULTA;
   PERFIL_MODO_DESGLOSADO = 'ModoDesglosado';
   LAYOUT_BUSQUEDA_ARTICULOS = 'frmMtoArtStockSearch';
@@ -280,6 +288,12 @@ begin
   // antes. Antes se mostraba con SW_SHOWNOACTIVATE y devolvia el foco a la
   // ventana anterior, lo que dejaba la consulta imposible de cerrar con ESC.
   Formulario.Visible := True;
+  // Windows quita WS_VISIBLE a una ventana cuando se minimiza el
+  // programa, sin avisar a la VCL: la propiedad Visible se queda en
+  // True y la ventana no volveria a aparecer nunca (se ve su imagen
+  // muerta en pantalla y no responde). Se fuerza a mano.
+  if not IsWindowVisible(Formulario.Handle) then
+    ShowWindow(Formulario.Handle, SW_SHOW);
   Formulario.BringToFront;
   SetForegroundWindow(Formulario.Handle);
   if Formulario.btnArt.CanFocus then
@@ -299,12 +313,49 @@ end;
 // ---------------------------------------------------------------------------
 //  Ciclo de vida
 // ---------------------------------------------------------------------------
+// Ventana independiente, como la del TPV: boton e icono propios en la
+// barra de tareas (WS_EX_APPWINDOW) y sin propietario, de modo que
+// sobrevive al minimizar el programa y se alterna con ella desde la
+// barra. A cambio, al volver a la ventana principal queda detras: se
+// recupera por su boton.
+procedure TfrmStockConsulta.CreateParams(var Params: TCreateParams);
+begin
+  inherited;
+  Params.ExStyle   := Params.ExStyle or WS_EX_APPWINDOW;
+  Params.WndParent := 0;
+end;
+
+procedure TfrmStockConsulta.CreateWnd;
+var
+  hIcono: HICON;
+begin
+  inherited;
+  AsignarGrupoBarraTareas(Handle, GRUPO_BARRA_TAREAS_STOCK);
+  // Tambien en la propiedad del formulario: la VCL reenvia WM_SETICON
+  // con el icono del formulario cada vez que toca el marco, y sin esto
+  // la ventana volveria al icono de la aplicacion.
+  if Icon.Handle = 0 then
+  begin
+    hIcono := IconoDesdeRecursoPng(ICONO_CONSULTA_STOCK + '_32');
+    if hIcono <> 0 then
+      Icon.Handle := hIcono;
+  end;
+  AsignarIconoVentanaDesdePng(Handle, ICONO_CONSULTA_STOCK);
+end;
+
+procedure TfrmStockConsulta.DestroyWnd;
+begin
+  // La propiedad debe quitarse antes de destruir la ventana.
+  QuitarGrupoBarraTareas(Handle);
+  LiberarIconoVentana(Handle);
+  inherited;
+end;
+
 procedure TfrmStockConsulta.FormCreate(Sender: TObject);
 begin
   inherited;
   FDependencias.Validar;
   Self.Position := poDesigned;
-  Self.FormStyle := fsStayOnTop;
   Self.WindowState := wsMaximized;
   // ESC cierra la ventana; KeyPreview para capturarlo aunque el foco este
   // en el grid o el combo. Tambien sirve al hook del lector de codigo de
@@ -618,7 +669,7 @@ begin
   begin
     MessageBox_fza(PChar(sMensaje),
       PChar(STituloDocumentoTrabajo),
-      MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
+      MB_OK or MB_ICONINFORMATION);
   end;
 end;
 
@@ -760,7 +811,7 @@ begin
     MessageBox_fza(
       PChar(sMensaje),
       PChar(STituloOperacionesCajaStock),
-      MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
+      MB_OK or MB_ICONINFORMATION);
 end;
 
 procedure TfrmStockConsulta.btnMovimientosClick(Sender: TObject);
@@ -781,7 +832,7 @@ begin
     MessageBox_fza(
       PChar(sMensaje),
       PChar(STituloMovimientosAlmacen),
-      MB_OK or MB_ICONINFORMATION or MB_TOPMOST or MB_SETFOREGROUND);
+      MB_OK or MB_ICONINFORMATION);
 end;
 
 procedure TfrmStockConsulta.tvStockCellDblClick(
@@ -812,13 +863,12 @@ begin
   end;
 end;
 
-// Muestra un mensaje de error por ENCIMA de la ventana. Como el form es
-// fsStayOnTop, un dialogo normal saldria por detras y la app pareceria
-// colgada; MB_TOPMOST + MB_SETFOREGROUND fuerzan el aviso al frente.
+// Muestra un mensaje de error de la consulta. El dialogo pertenece a
+// esta ventana, asi que sale sobre ella sin taparlo todo.
 procedure TfrmStockConsulta.MostrarError(const AMsg: string);
 begin
   MessageBox_fza(PChar(AMsg), PChar(STituloConsultaStock),
-    MB_OK or MB_ICONERROR or MB_TOPMOST or MB_SETFOREGROUND);
+    MB_OK or MB_ICONERROR);
 end;
 
 // ---------------------------------------------------------------------------
@@ -1096,7 +1146,7 @@ begin
       except
         on E: Exception do
         begin
-          // El error sale por encima de la ventana (fsStayOnTop).
+          // El error sale por encima de la ventana (le pertenece).
           FPivote.Limpiar;
           MostrarError(E.Message);
         end;

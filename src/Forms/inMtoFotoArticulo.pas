@@ -564,7 +564,6 @@ begin
   Self.Position    := poDesigned;
   Self.BorderStyle := bsSizeable;
   Self.BorderIcons := [biSystemMenu, biMinimize, biMaximize];
-  Self.FormStyle   := fsStayOnTop;
   // KeyPreview procesa teclas cuando la flotante esta activa (tras
   // click directo del usuario). El auto-show usa SW_SHOWNOACTIVATE
   // para no robar el foco al Mto, pero una vez el usuario clicka un
@@ -2045,7 +2044,8 @@ begin
     // SW_SHOWNOACTIVATE: muestra la ventana SIN activarla. A
     // diferencia de TForm.Show (que termina llamando SetActiveWindow
     // y roba el teclado al Mto), aqui la flotante aparece encima por
-    // ser fsStayOnTop pero el foco se queda en quien lo tenia.
+    // pertenecer al Mto (PopupParent) pero el foco se queda en quien
+    // lo tenia.
     // Sincronizamos Visible a mano porque ShowWindow no lo hace.
     ShowWindow(Formulario.Handle, SW_SHOWNOACTIVATE);
     Formulario.Visible := True;

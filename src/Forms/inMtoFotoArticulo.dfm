@@ -4,7 +4,6 @@
   Caption = 'Foto del art'#237'culo / SKU'
   ClientHeight = 520
   ClientWidth = 520
-  FormStyle = fsStayOnTop
   Position = poDesigned
   StyleElements = [seFont, seClient, seBorder]
   OnClose = FormClose

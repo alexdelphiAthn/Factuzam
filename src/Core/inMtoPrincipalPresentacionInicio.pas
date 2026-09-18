@@ -115,7 +115,6 @@ begin
   FInstanteSplash := Now;
   try
     FSplash := TfrmSplash.Create(nil, FRegistroLog);
-    FSplash.FormStyle := fsStayOnTop;
     TfrmSplash(FSplash).btnAceptar.Visible := False;
     FSplash.Show;
     Application.ProcessMessages;

@@ -252,6 +252,11 @@ begin
     'Fotos',
     'src/Lib/inLibAppParam.pas');
   ARegistrar(
+    'inMtoAppParam.Parametros.appVerMiniaturasGrids.Descripc' +
+    'ion',
+    'Ver miniaturas de fotos en los grids',
+    'src/Lib/inLibAppParam.pas');
+  ARegistrar(
     'inMtoAppParam.Parametros.appNumAtributosFoto.Descripcion',
     'Atributos del SKU que componen la clave de foto (0 = sol' +
     'o artículo)',

@@ -13,6 +13,9 @@ unit inLibInformeMultiFiltroPersistenciaIntf;
 
 interface
 
+uses
+  inLibFamiliasArbol;
+
 type
   TOrigenProveedoresInformeMultiFiltro = (
     opmfArticulos,
@@ -26,13 +29,11 @@ type
 
   TOpcionesInformeMultiFiltro = TArray<TOpcionInformeMultiFiltro>;
 
-  TFamiliaInformeMultiFiltro = record
-    Codigo: string;
-    Nombre: string;
-    CodigoPadre: string;
-  end;
+  // La jerarquia de familias es la misma que pinta el arbol de familias
+  // de la interfaz, asi que se reutiliza su modelo.
+  TFamiliaInformeMultiFiltro = TFamiliaArbol;
 
-  TFamiliasInformeMultiFiltro = TArray<TFamiliaInformeMultiFiltro>;
+  TFamiliasInformeMultiFiltro = TFamiliasArbol;
 
   IRepositorioInformeMultiFiltro = interface
     ['{A86D1D7E-85DC-4690-952F-D89863995983}']

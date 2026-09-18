@@ -184,14 +184,20 @@
           object lblFamilia: TcxLabel
             Left = 12
             Top = 116
-            Caption = 'Familia (opcional)'
+            Caption = 'Familias (opcional)'
             TabOrder = 20
             Transparent = True
           end
-          object cbbFamilia: TcxComboBox
+          object edtFamilias: TcxButtonEdit
             Left = 12
             Top = 137
-            Properties.DropDownListStyle = lsFixedList
+            Properties.Buttons = <
+              item
+                Default = True
+                Kind = bkEllipsis
+              end>
+            Properties.ReadOnly = True
+            Properties.OnButtonClick = edtFamiliasPropertiesButtonClick
             TabOrder = 17
             Width = 250
           end

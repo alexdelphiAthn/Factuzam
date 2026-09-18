@@ -1243,27 +1243,14 @@ procedure TfrmPrint.SeleccionarFormato(
   out AAccion: string);
 var
   Selector: TfrmMtoModalGenImpEle;
-  RestaurarVisibilidad: Boolean;
 begin
   Selector := TfrmMtoModalGenImpEle.Create(Self, Self);
   try
-    // TfrmPrint es fsStayOnTop. Si sigue visible, Windows mantiene este
-    // formulario por encima del selector modal, que es una ventana normal.
-    // Lo ocultamos durante todo el flujo de seleccion (incluido el posible
-    // dialogo para guardar la opcion predeterminada) y restauramos su estado.
-    RestaurarVisibilidad := Visible;
-    if RestaurarVisibilidad then
-      Hide;
-    try
-      PrepararSelectorFormato(Selector, AFormatoPredeterminado);
-      sElegido := Selector.sElegido;
-      AAccion := Selector.sFicha;
-      ActualizarFormatoPredeterminado(
-        Selector, AFormatoPredeterminado);
-    finally
-      if RestaurarVisibilidad then
-        Show;
-    end;
+    PrepararSelectorFormato(Selector, AFormatoPredeterminado);
+    sElegido := Selector.sElegido;
+    AAccion := Selector.sFicha;
+    ActualizarFormatoPredeterminado(
+      Selector, AFormatoPredeterminado);
   finally
     FreeAndNil(Selector);
   end;

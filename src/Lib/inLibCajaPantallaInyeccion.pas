@@ -29,6 +29,7 @@ uses
   inLibArticulosResolverIntf,
   inLibArticulosValidadorIntf,
   inLibArticulosAtributosIntf,
+  inLibCajaArticulosOperacionIntf,
   inLibCajaOperacionesHistPersistenciaIntf,
   inLibCajaPagosHistPersistenciaIntf,
   inLibPerfilesUsuarioIntf,
@@ -70,6 +71,9 @@ type
     TraspasoTicket: IRepositorioTraspasoTicket;
     Tickets: TRepositoriosTicketsCaja;
     LecturasTicket: ILecturasImpresionTicket;
+    // Fotos de la rejilla principal: puede venir sin asignar (el
+    // parametro de caja las apaga) y entonces no hay columna.
+    ArticulosOperacion: IConsultaArticulosOperacionCaja;
     procedure Validar;
   end;
 
@@ -119,6 +123,9 @@ type
     CrearPersistencia: TCrearOperacionesHistoricasCaja;
     CrearPerfiles: TCrearPerfilesHistoricosCaja;
     Informe: TDependenciasInformeCaja;
+    // Fotos de la rejilla principal: puede venir sin asignar (el
+    // parametro de caja las apaga) y entonces no hay columna.
+    ArticulosOperacion: IConsultaArticulosOperacionCaja;
     procedure Validar;
   end;
 

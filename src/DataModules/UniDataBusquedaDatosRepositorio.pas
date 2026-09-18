@@ -14,7 +14,7 @@ unit UniDataBusquedaDatosRepositorio;
 interface
 
 uses
-  Uni, inLibBusquedaDatosPersistenciaIntf;
+  Uni, inLibBusquedaDatosPersistenciaIntf, inLibFamiliasArbol;
 
 function CrearRepositorioBusquedaDatosUniDAC(
   AConexion: TUniConnection): IRepositorioBusquedaDatos;
@@ -28,7 +28,8 @@ const
   SQL_LISTAR_FAMILIAS =
     'SELECT CODIGO_FAM_FAM AS COD, ' +
     'COALESCE(NOMBRE_FAM_FAM, DESCRIPCION_FAM, ' +
-    'CODIGO_FAM_FAM) AS NOM ' +
+    'CODIGO_FAM_FAM) AS NOM, ' +
+    'COALESCE(CODIGO_SUBFAMILIA_FAM, '''') AS PADRE ' +
     'FROM fza_articulos_familias ' +
     'WHERE IFNULL(ESACTIVO_FAM, ''S'') = ''S'' ' +
     'ORDER BY ORDEN_FAM, CODIGO_FAM_FAM';
@@ -127,6 +128,7 @@ type
     FConexion: TUniConnection;
     function ListarOpciones(
       const ASql: string): TOpcionesBusquedaDatos;
+    function NombreParametroFamilia(AIndice: Integer): string;
     function ExpresionCampo(ACampo: Integer): string;
     function ConstruirDistanciaColor: string;
     procedure PrepararConsultaBase(
@@ -155,7 +157,7 @@ type
       const AValor, AParametro: string);
   public
     constructor Create(AConexion: TUniConnection);
-    function ListarFamilias: TOpcionesBusquedaDatos;
+    function ListarFamiliasArbol: TFamiliasArbol;
     function ConsultarProveedores: IResultadoBusquedaDatos;
     function ListarTemporadas: TOpcionesBusquedaDatos;
     function ListarColoresPaleta: TCadenasBusquedaDatos;
@@ -215,10 +217,41 @@ begin
   end;
 end;
 
-function TRepositorioBusquedaDatosUniDAC.ListarFamilias:
-  TOpcionesBusquedaDatos;
+function TRepositorioBusquedaDatosUniDAC.ListarFamiliasArbol:
+  TFamiliasArbol;
+var
+  iFamilia: Integer;
+  oConsulta: TUniQuery;
 begin
-  Result := ListarOpciones(SQL_LISTAR_FAMILIAS);
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_LISTAR_FAMILIAS;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      iFamilia := Length(Result);
+      SetLength(Result, iFamilia + 1);
+      Result[iFamilia].Codigo :=
+        oConsulta.FieldByName('COD').AsString;
+      Result[iFamilia].Nombre :=
+        oConsulta.FieldByName('NOM').AsString;
+      Result[iFamilia].CodigoPadre :=
+        oConsulta.FieldByName('PADRE').AsString;
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+// Un parametro por familia elegida: el IN con parametros deja que el
+// indice de CODIGO_FAM_ART siga sirviendo.
+function TRepositorioBusquedaDatosUniDAC.NombreParametroFamilia(
+  AIndice: Integer): string;
+begin
+  Result := 'FAMILIA' + IntToStr(AIndice);
 end;
 
 function TRepositorioBusquedaDatosUniDAC.ConsultarProveedores:
@@ -403,9 +436,24 @@ end;
 procedure TRepositorioBusquedaDatosUniDAC.AplicarFiltrosCatalogo(
   AConsulta: TUniQuery;
   const ACriterios: TCriteriosBusquedaDatos);
+var
+  iFamilia: Integer;
+  sLista: string;
+  aFamilias: TArray<string>;
 begin
-  if ACriterios.Familia <> '' then
-    AConsulta.SQL.Add('AND eti.CODIGO_FAM_ART = :FAMILIA');
+  aFamilias := CodigosFamiliaDesdeCsv(ACriterios.Familias);
+  if Length(aFamilias) > 0 then
+  begin
+    sLista := '';
+    for iFamilia := 0 to Length(aFamilias) - 1 do
+    begin
+      if sLista <> '' then
+        sLista := sLista + ', ';
+      sLista := sLista + ':' + NombreParametroFamilia(iFamilia);
+    end;
+    AConsulta.SQL.Add(
+      'AND eti.CODIGO_FAM_ART IN (' + sLista + ')');
+  end;
   if ACriterios.Proveedor <> '' then
     AConsulta.SQL.Add('AND eti.CODIGO_PRV_PRV = :PROVEEDOR');
   if ACriterios.Temporada <> '' then
@@ -490,10 +538,17 @@ procedure TRepositorioBusquedaDatosUniDAC.AsignarParametrosBusqueda(
   const ACriterios: TCriteriosBusquedaDatos;
   AProximidad: Boolean;
   const AValor, AParametro: string);
+var
+  iFamilia: Integer;
+  aFamilias: TArray<string>;
 begin
   AConsulta.ParamByName('ALMACEN_DOC').AsString := ACriterios.Almacen;
-  if ACriterios.Familia <> '' then
-    AConsulta.ParamByName('FAMILIA').AsString := ACriterios.Familia;
+  aFamilias := CodigosFamiliaDesdeCsv(ACriterios.Familias);
+  for iFamilia := 0 to Length(aFamilias) - 1 do
+  begin
+    AConsulta.ParamByName(
+      NombreParametroFamilia(iFamilia)).AsString := aFamilias[iFamilia];
+  end;
   if ACriterios.Proveedor <> '' then
     AConsulta.ParamByName('PROVEEDOR').AsString := ACriterios.Proveedor;
   if ACriterios.Temporada <> '' then

@@ -37,9 +37,11 @@ uses
   JvEnterTab, dxShellDialogs, System.Actions, Vcl.ActnList, cxCalendar,
   UniDataConsultaOpe, dxSpreadSheet, dxSpreadSheetCore, dxSpreadSheetTypes,
   dxSpreadSheetStyles, dxHashUtils, cxMaskEdit, cxDropDownEdit,
+  inLibCajaArticulosOperacionIntf,
   inLibCajaOperacionesHistPersistenciaIntf,
   inLibCajaPantallaHistoricosIntf,
   inLibCajaPantallaDetalleHistorico,
+  inLibCajaFotosOperacionGridVcl,
   inLibFotosMiniaturasGridVcl,
   inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
@@ -59,6 +61,7 @@ type
     cxGrdDBTabPrinRAZON_SOCIAL_CLI: TcxGridDBColumn;
     cxGrdDBTabPrinCONCEPTO_GASTO_INGRESO_OPCAJA: TcxGridDBColumn;
     btnImprimirInforme: TcxButton;
+    chkVerMiniaturas: TcxCheckBox;
     pnlFiltrosCaja: TPanel;
     btnToggleFiltrosCaja: TcxButton;
     pnlContFiltrosCaja: TPanel;
@@ -70,6 +73,7 @@ type
     alOperaciones: TActionList;
     actIrFacturaSimplif: TAction;
     procedure btnImprimirInformeClick(Sender: TObject);
+    procedure chkVerMiniaturasPropertiesChange(Sender: TObject);
     procedure btnToggleFiltrosCajaClick(Sender: TObject);
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
     procedure ccbFiltroAlmacenPropertiesCloseUp(Sender: TObject);
@@ -94,9 +98,9 @@ type
     FbarProgreso: TProgressBar;
     FdmConsulta: TdmConsultaOpe;
     FDetalleCreado: Boolean;
-    // Una tira de miniaturas por rejilla de detalle con articulo
-    // (movimientos, depositos y lineas del borrador).
-    FMiniaturasDetalle: TObjectList<TTiraMiniaturasFotosGrid>;
+    // Tira de miniaturas de la rejilla principal: las fotos de los
+    // articulos que intervienen en cada operacion.
+    FFotosOperacion: TTiraMiniaturasFotosGrid;
     FpcDetalleCaja: TcxPageControl;
     FtsDetalleOperacion: TcxTabSheet;
     FtsDetallePagos: TcxTabSheet;
@@ -123,6 +127,7 @@ type
     FactExportarOperacionExcel: TAction;
     dmmCajaOperacionesHist: TdmCajaOperacionesHist;
     FRepositorioPersistencia: IRepositorioCajaOperacionesHist;
+    FArticulosOperacion: IConsultaArticulosOperacionCaja;
     FGrabadorPerfiles: IGrabadorPerfilesHistoricoCaja;
     FDependenciasInyeccion: TDependenciasOperacionesHistoricasCaja;
     procedure CargarAnyosFiltro;
@@ -150,10 +155,9 @@ type
     procedure RenderizarColumnasDetalleCaja(
       AVista: TcxGridDBTableView;
       const AColumnas: TArray<TColumnaDetalleCaja>);
-    procedure CrearColumnaMiniaturas(
-      AVista: TcxGridDBTableView;
-      const AColumna: TColumnaDetalleCaja);
-    procedure LimpiarMiniaturasDetalle;
+    procedure CrearColumnaFotosOperacion;
+    procedure AplicarVisibilidadMiniaturas;
+    procedure LimpiarFotosOperacion;
     procedure RenderizarVistaDetalleCaja(
       APagina: TcxTabSheet;
       const AModelo: TVistaDetalleCaja);
@@ -238,6 +242,7 @@ type
 implementation
 
 uses
+  System.StrUtils,
   inLibMensajesVcl,
   inLibWin, inLibUser, inLibShowMto,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
@@ -245,6 +250,13 @@ uses
   dxSpreadSheetGraphics, inLibMsgCaja, inLibMsgComun;
 
 {$R *.dfm}
+
+const
+  // Parametro de caja que enciende la columna de miniaturas de la rejilla
+  // principal (Avisos y Busquedas).
+  cParamVerMiniaturasGrids = 'appVerMiniaturasGrids';
+  // Clave del check en el perfil de la pantalla.
+  cPerfilVerMiniaturas = 'oVerMiniaturasGrid';
 
 resourcestring
   SFormatoNombreArchivoOperacionCaja = 'Operacion_Caja_%s_%s_%s_%s';
@@ -352,6 +364,7 @@ begin
   FRepositorioPersistencia :=
     FDependenciasInyeccion.CrearPersistencia(
       dmmCajaOperacionesHist.unqryTablaG);
+  FArticulosOperacion := FDependenciasInyeccion.ArticulosOperacion;
   FGrabadorPerfiles := FDependenciasInyeccion.CrearPerfiles(
     ConexionPrincipal,
     PerfilesEscritura);
@@ -361,6 +374,12 @@ begin
     RegistroLog);
   CrearAccionesFicha;
   CrearFichaDetalle;
+  CrearColumnaFotosOperacion;
+  // El check solo aparece si hay columna de miniaturas; arranca con lo
+  // ultimo que grabo el usuario en su perfil, y marcado si no hay nada.
+  chkVerMiniaturas.Visible := Assigned(FFotosOperacion);
+  chkVerMiniaturas.Checked :=
+    GetPerfilValueDef(oPerfilDic, cPerfilVerMiniaturas, 'S') <> 'N';
   pkFieldName := 'CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
                  'CODIGO_CAJA_OPCAJA;NUMERO_OPERACION_OPCAJA';
   tsFicha.TabVisible := True;
@@ -581,6 +600,12 @@ begin
         sAnyos := sAnyos + ccbFiltroAnyo.Properties.Items[i].Description;
       end;
     end;
+    if Assigned(chkVerMiniaturas) then
+    begin
+      item.SubKey := cPerfilVerMiniaturas;
+      item.Value := IfThen(chkVerMiniaturas.Checked, 'S', 'N');
+      oList.Add(item);
+    end;
     item.SubKey := 'oFiltroAnyos';
     item.Value := sAnyos;
     oList.Add(item);
@@ -667,7 +692,7 @@ var
 begin
   // Recargar la lista es el momento de tirar la cache de fotos: asi una
   // foto anadida o rotada desde otra pantalla se ve sin reabrir esta.
-  LimpiarMiniaturasDetalle;
+  LimpiarFotosOperacion;
   if Assigned(dmmCajaOperacionesHist) and
      Assigned(dmmCajaOperacionesHist.unqryTablaG) then
   begin
@@ -1515,51 +1540,58 @@ var
 begin
   for i := 0 to High(AColumnas) do
   begin
-    if AColumnas[i].Miniaturas then
-      CrearColumnaMiniaturas(AVista, AColumnas[i])
-    else
-      AnadirColumna(
-        AVista,
-        AColumnas[i].Nombre,
-        AColumnas[i].Titulo,
-        AColumnas[i].Campo,
-        AColumnas[i].Ancho,
-        AColumnas[i].ClasePropiedades,
-        AColumnas[i].Formato,
-        AColumnas[i].Visible);
+    AnadirColumna(
+      AVista,
+      AColumnas[i].Nombre,
+      AColumnas[i].Titulo,
+      AColumnas[i].Campo,
+      AColumnas[i].Ancho,
+      AColumnas[i].ClasePropiedades,
+      AColumnas[i].Formato,
+      AColumnas[i].Visible);
   end;
 end;
 
-// La tira se engancha al OnCustomDrawCell de su propia columna y se queda
-// con la cache de fotos; sin servicio de fotos no se crea la columna (no
-// tendria nada que pintar).
-procedure TfrmMtoCajaOperacionesHist.CrearColumnaMiniaturas(
-  AVista: TcxGridDBTableView;
-  const AColumna: TColumnaDetalleCaja);
+// Enciende y apaga la columna de miniaturas sin deshacer la tira: asi el
+// check no tira la cache de fotos ya calculada.
+procedure TfrmMtoCajaOperacionesHist.AplicarVisibilidadMiniaturas;
 begin
-  if Assigned(FotosArticulos) then
-  begin
-    if not Assigned(FMiniaturasDetalle) then
-      FMiniaturasDetalle :=
-        TObjectList<TTiraMiniaturasFotosGrid>.Create(True);
-    FMiniaturasDetalle.Add(
-      TTiraMiniaturasFotosGrid.Create(
-        AVista,
-        FotosArticulos,
-        AColumna.Nombre,
-        AColumna.Titulo,
-        AColumna.Campo,
-        AColumna.CampoSku));
-  end;
+  if Assigned(FFotosOperacion) and Assigned(FFotosOperacion.Columna) then
+    FFotosOperacion.Columna.Visible := chkVerMiniaturas.Checked;
 end;
 
-procedure TfrmMtoCajaOperacionesHist.LimpiarMiniaturasDetalle;
-var
-  oTira: TTiraMiniaturasFotosGrid;
+procedure TfrmMtoCajaOperacionesHist.chkVerMiniaturasPropertiesChange(
+  Sender: TObject);
 begin
-  if Assigned(FMiniaturasDetalle) then
-    for oTira in FMiniaturasDetalle do
-      oTira.Limpiar;
+  AplicarVisibilidadMiniaturas;
+end;
+
+// Columna "Fotos" al final de la rejilla principal: la tira se engancha
+// al OnCustomDrawCell de su propia columna y se queda con la cache de
+// fotos. Sin servicio de fotos no hay nada que pintar, y el parametro de
+// caja permite apagarla.
+procedure TfrmMtoCajaOperacionesHist.CrearColumnaFotosOperacion;
+begin
+  if (not Assigned(FotosArticulos)) or
+     (not Assigned(FArticulosOperacion)) or
+     (not Assigned(ParametrosApp)) then
+    Exit;
+  if not ParametrosApp.GetBool(cParamVerMiniaturasGrids, True) then
+    Exit;
+  // La rejilla trae las cuatro claves de la operacion como columnas, asi
+  // que no hace falta darle el contexto de la pantalla.
+  FFotosOperacion := CrearColumnaFotosOperacionCaja(
+    cxGrdDBTabPrin,
+    FotosArticulos,
+    FArticulosOperacion,
+    'colHistOpeFotos',
+    SCaptionColumnaFotos);
+end;
+
+procedure TfrmMtoCajaOperacionesHist.LimpiarFotosOperacion;
+begin
+  if Assigned(FFotosOperacion) then
+    FFotosOperacion.Limpiar;
 end;
 
 procedure TfrmMtoCajaOperacionesHist.RenderizarVistaDetalleCaja(
@@ -1830,10 +1862,12 @@ end;
 procedure TfrmMtoCajaOperacionesHist.FormDestroy(Sender: TObject);
 begin
   FGrabadorPerfiles := nil;
+  FArticulosOperacion := nil;
   FRepositorioPersistencia := nil;
-  // Antes que nada: las tiras sueltan el OnCustomDrawCell de sus columnas,
-  // que siguen vivas mientras no se destruyan los componentes del form.
-  FreeAndNil(FMiniaturasDetalle);
+  // Antes que nada: la tira suelta los eventos de la vista y de su
+  // columna, que siguen vivas mientras no se destruyan los componentes
+  // del form.
+  FreeAndNil(FFotosOperacion);
   inherited;
   FreeAndNil(FdmConsulta);
   FreeAndNil(FCodigosAlmacen);

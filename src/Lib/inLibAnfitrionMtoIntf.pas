@@ -34,6 +34,10 @@ type
     procedure CancelarEdicionesPantallas;
     procedure VincularFotoMantenimiento(AMantenimiento: TObject);
     function CrearCopiaPreviaScriptSoporte: Boolean;
+    // Como la anterior, pero devuelve dónde quedó la copia para poder
+    // revertir después una actualización.
+    function CrearCopiaPreviaActualizacion(
+      out ARutaCopia: string): Boolean;
   end;
 
   IProveedorMenuPantallas = interface

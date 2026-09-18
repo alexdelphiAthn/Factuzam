@@ -39,6 +39,10 @@ procedure QuitarGrupoBarraTareas(AVentana: HWND);
 procedure AsignarIconoVentanaDesdePng(AVentana: HWND; const ARecurso: string);
 /// Libera los iconos puestos con AsignarIconoVentanaDesdePng.
 procedure LiberarIconoVentana(AVentana: HWND);
+/// Crea un icono con el PNG del recurso indicado, con su sufijo de
+/// tamano (<RECURSO>_32). El llamante se queda con el manejador; si se
+/// asigna a TIcon.Handle, lo libera el propio TIcon.
+function IconoDesdeRecursoPng(const ANombre: string): HICON;
 
 implementation
 

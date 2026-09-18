@@ -85,6 +85,173 @@ resourcestring
   SCaptionNoRecuperadosPedidos = 'No se pudieron recuperar pedidos';
   SCaptionImportandoPedido = 'Importando %s...';
   SCaptionErrorImportandoPedido = 'Error en %s: %s';
+  // R11 - Actualizacion de la aplicacion
+  SErrorActualizacionesNoConfiguradas =
+    'El servicio de actualizaciones no está configurado.';
+  SErrorRespuestaActualizacionNoValida =
+    'El servicio de actualizaciones devolvió una respuesta no válida.';
+  SErrorServidorActualizacionHttp =
+    'El servidor de actualizaciones respondió HTTP %d.';
+  SErrorTamanoActualizacionNoCoincide =
+    'El tamaño de la descarga no coincide con el publicado.';
+  SErrorHuellaActualizacionNoCoincide =
+    'La huella SHA-256 de la descarga no coincide con la publicada.';
+  SErrorEntradaActualizacionNoDeclarada =
+    'La versión publicada no declara ese fichero.';
+  SErrorEntradaZipActualizacionAusente =
+    'El paquete comprimido no contiene %s.';
+  SErrorZipActualizacionConVariasEntradas =
+    'El paquete comprimido contiene más de un fichero.';
+  SErrorArchivoActualizacionNoEjecutable =
+    'El archivo descargado no es un ejecutable válido.';
+  SErrorArquitecturaActualizacionNoCoincide =
+    'La actualización no corresponde a la arquitectura instalada.';
+  SErrorEjecutableNuevoAusente =
+    'No se encuentra el ejecutable descargado: %s';
+  SErrorEjecutableAnteriorAusente =
+    'No se conserva ningún ejecutable anterior de %s.';
+  SErrorSitioEjecutableAnteriorOcupado =
+    'No se pudo apartar el ejecutable actual: los nombres conservados ' +
+    'están ocupados.';
+  SErrorRenombrarEjecutableActual =
+    'No se pudo renombrar el ejecutable actual: %s';
+  SErrorCopiarEjecutableNuevo =
+    'No se pudo copiar el nuevo ejecutable: %s';
+  SErrorRestaurarEjecutableAnterior =
+    'No se pudo devolver a su sitio el ejecutable anterior. Se conserva ' +
+    'en: %s';
+  SErrorConexionActualizacionNoDisponible =
+    'No hay conexión con la base de datos para aplicar los scripts.';
+  SErrorComprobacionScriptsVacia =
+    'No se ha descargado la comprobación de scripts aplicados.';
+  SErrorScriptActualizacionAusente =
+    'No se encuentra el script descargado: %s';
+  SErrorScriptActualizacionVacio =
+    'El script descargado está vacío: %s';
+  SErrorHuellaScriptActualizacionNoCoincide =
+    'La huella SHA-256 del script no coincide con la publicada.';
+  SInfoConsultandoActualizaciones =
+    'Consultando si hay una versión nueva...';
+  SInfoDescargandoActualizacion =
+    'Descargando %s...';
+  SInfoDescomprimiendoActualizacion =
+    'Descomprimiendo %s...';
+  SInfoComprobandoScriptsAplicados =
+    'Comprobando qué scripts faltan en esta base de datos...';
+  SInfoSinVersionesPublicadas =
+    'El servicio todavía no ha publicado ninguna versión.';
+  SInfoVersionInstaladaAlDia =
+    'La versión instalada (%s) ya es la última publicada.';
+  SInfoActualizacionInstalada =
+    'La versión %s queda instalada y entrará en el siguiente arranque.';
+  SInfoAplicandoScriptActualizacion =
+    'Aplicando %s (%d de %d)...';
+  SInfoRevirtiendoScriptActualizacion =
+    'Revirtiendo %s...';
+  SInfoSinScriptsPendientes =
+    'No hay scripts pendientes de aplicar.';
+  SInfoScriptsPendientesAplicados =
+    'Los scripts pendientes se han aplicado correctamente.';
+  SInfoActualizacionRevertida =
+    'Se ha vuelto a la versión %s.';
+  SErrorScriptFaltanteNoPublicado =
+    'La base necesita %s, que la versión %s no publica.';
+  SErrorAplicarScriptActualizacion =
+    'No se pudo aplicar %s: %s';
+  SErrorRevertirScriptActualizacion =
+    'No se pudo revertir %s: %s';
+  SErrorSinActualizacionRevertible =
+    'No hay ninguna actualización que se pueda revertir.';
+  STituloComprobarActualizaciones = 'Comprobar actualizaciones';
+  STituloRevertirActualizacion = 'Revertir actualización';
+  SDetalleActualizacionDisponible =
+    'Hay una versión nueva de Factuzam.' + sLineBreak + sLineBreak +
+    'Versión instalada: %s' + sLineBreak +
+    'Versión disponible: %s' + sLineBreak +
+    'Publicada: %s' + sLineBreak +
+    'Tamaño del programa: %s bytes' + sLineBreak +
+    'Se descargarán: %s bytes' + sLineBreak +
+    'Programas auxiliares: %d' + sLineBreak + sLineBreak +
+    'Novedades:' + sLineBreak + '%s';
+  SPreguntaInstalarActualizacion =
+    '¿Descargar e instalar la versión %s?' + sLineBreak + sLineBreak +
+    'El programa en curso seguirá funcionando; la versión nueva entrará ' +
+    'la próxima vez que se abra Factuzam. El ejecutable actual se ' +
+    'conserva con un guion bajo delante por si hay que volver atrás.';
+  SDetalleScriptsFaltantes =
+    'Esta base de datos necesita los siguientes cambios de esquema, en ' +
+    'este orden:';
+  SLineaScriptFaltante = '  %d  %s  (%s)';
+  SPreguntaAplicarScriptsAhora =
+    'Faltan %d scripts por aplicar en la base de datos.' +
+    sLineBreak + sLineBreak +
+    'Aplicarlos ahora puede llevar bastante tiempo y, al terminar, hay ' +
+    'que salir obligatoriamente del programa y volver a abrirlo con la ' +
+    'versión nueva.' + sLineBreak + sLineBreak +
+    '¿Aplicarlos ahora? Si responde No quedarán guardados y se ' +
+    'ofrecerán en el siguiente arranque.';
+  SAvisoCopiaPreviaObligatoria =
+    'Antes de tocar la base de datos se hace una copia de seguridad. ' +
+    'Elija dónde guardarla: es lo que permitirá revertir los cambios ' +
+    'que no tengan script de reversión.';
+  SErrorAnfitrionCopiaPreviaNoDisponible =
+    'No está disponible el servicio de copias de seguridad.';
+  SDetalleReversionActualizacion =
+    'Se va a deshacer la actualización.' + sLineBreak + sLineBreak +
+    'Versión instalada: %s' + sLineBreak +
+    'Se volverá a: %s' + sLineBreak +
+    'Aplicada el: %s' + sLineBreak +
+    'Ejecutables sustituidos: %d' + sLineBreak +
+    'Scripts aplicados: %d';
+  SLineaScriptRevertible = '  %s  [%s]  %s';
+  SLineaCopiaPreviaReversion = 'Copia previa: %s';
+  SPreguntaRevertirActualizacion =
+    '¿Volver a la versión %s?' + sLineBreak + sLineBreak +
+    'Se revertirán los scripts que tengan reversión y se devolverá el ' +
+    'ejecutable anterior a su sitio. Al terminar hay que salir del ' +
+    'programa.';
+  SDetalleScriptsSinRollback =
+    'Estos scripts se aplicaron y no traen script de reversión, así que ' +
+    'sus cambios siguen en la base de datos:';
+  SPreguntaRestaurarCopiaPrevia =
+    '¿Restaurar la copia de seguridad previa?' + sLineBreak + sLineBreak +
+    '%s' + sLineBreak + sLineBreak +
+    'Se perderá todo lo introducido desde que se hizo esa copia.';
+  SAvisoSinCopiaPreviaParaRevertir =
+    'No se conserva la copia previa, así que esos cambios no se pueden ' +
+    'deshacer automáticamente.';
+  SInfoProcesoActualizacionTerminado = 'Proceso terminado.';
+  SErrorIntegridadEjecutableActualizado =
+    'La huella SHA-256 de %s no coincide con la que publicó la versión ' +
+    '%s. El archivo puede estar dañado o haber sido manipulado: ' +
+    'conviene revertir la actualización o reinstalar el programa.';
+  SErrorPlanSustitucionNoValido =
+    'El plan de sustitución de ejecutables no es válido.';
+  SErrorPlanSustitucionNoAdmisible =
+    'El plan de sustitución apunta fuera de la carpeta del programa.';
+  SErrorSustitucionElevadaRechazada =
+    'Hace falta permiso de administrador de Windows para sustituir el ' +
+    'programa, y no se ha concedido.';
+  SErrorSustitucionElevadaSinRespuesta =
+    'La instancia con permisos de administrador no ha devuelto el ' +
+    'resultado de la sustitución.';
+  SAvisoSustitucionNecesitaElevacion =
+    'Factuzam está instalado en una carpeta protegida, así que Windows ' +
+    'pedirá permiso de administrador para sustituir el programa.';
+  SErrorInteraccionActualizacionIncompleta =
+    'La pantalla de actualizacion no ha facilitado todas las respuestas ' +
+    'que el proceso necesita.';
+  SPreguntaAplicarScriptsPendientesArranque =
+    'La última actualización dejó %d scripts pendientes de aplicar en ' +
+    'la base de datos.' + sLineBreak + sLineBreak +
+    'Aplicarlos puede llevar bastante tiempo y, al terminar, hay que ' +
+    'salir del programa. ¿Aplicarlos ahora?';
+  SAvisoElegirCopiaPreviaActualizacion =
+    'Factuzam se reiniciará para restaurar la copia. Cuando lo pida, ' +
+    'elija este archivo:' + sLineBreak + '%s';
+  SAvisoSalirTrasActualizacion =
+    'Factuzam se va a cerrar. Vuelva a abrirlo para seguir trabajando ' +
+    'con la versión correcta.';
 implementation
 
 end.

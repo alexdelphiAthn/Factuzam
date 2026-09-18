@@ -406,6 +406,7 @@ resourcestring
   SCaptionSkuEncontrados = '%s SKU encontrados';
   SCaptionSkuEncontradosLimite =
     '%s SKU encontrados (límite alcanzado; concrete la búsqueda)';
+  SCaptionColumnaFotos = 'Fotos';
   SCaptionFiltrosCargaContraido = #9654'  Filtros de carga';
   SCaptionFiltrosCargaExpandido = #9660'  Filtros de carga';
   // R03 - Botones genéricos de diálogo

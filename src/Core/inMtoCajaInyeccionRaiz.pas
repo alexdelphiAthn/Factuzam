@@ -236,6 +236,8 @@ begin
   Dependencias.Tickets := Caja.Tickets.CrearRepositorioTicketsCaja;
   Dependencias.LecturasTicket :=
     Caja.Tickets.CrearLecturasImpresionTicketCaja;
+  Dependencias.ArticulosOperacion :=
+    Caja.Consultas.CrearConsultaArticulosOperacion;
   Dependencias.Validar;
   Formulario := TfrmConsultaOpe.Create(
     AOwner,
@@ -505,6 +507,8 @@ begin
             AEscritor);
         end;
       Dependencias.Informe := CrearDependenciasInforme(Caja);
+      Dependencias.ArticulosOperacion :=
+        Caja.Consultas.CrearConsultaArticulosOperacion;
       Dependencias.Validar;
       Formulario := TfrmMtoCajaOperacionesHist.Create(
         OwnerCreacion,

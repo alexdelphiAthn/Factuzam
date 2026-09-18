@@ -14,7 +14,7 @@ unit inLibBusquedaDatosPersistenciaIntf;
 interface
 
 uses
-  Data.DB;
+  Data.DB, inLibFamiliasArbol;
 
 const
   CAMPO_TODOS = 0;
@@ -50,7 +50,9 @@ type
     Limite: Integer;
     DistinguirMayusculas: Boolean;
     Valor: string;
-    Familia: string;
+    // Lista CSV de codigos de familia elegidos en el arbol de familias;
+    // vacia = todas (misma convencion que los filtros de los informes).
+    Familias: string;
     Proveedor: string;
     Temporada: string;
     Almacen: string;
@@ -66,7 +68,8 @@ type
 
   IRepositorioBusquedaDatos = interface
     ['{4B8BEED3-A565-4CD9-933C-DB3A218D4488}']
-    function ListarFamilias: TOpcionesBusquedaDatos;
+    // Familias activas con su padre, para pintarlas como arbol.
+    function ListarFamiliasArbol: TFamiliasArbol;
     function ConsultarProveedores: IResultadoBusquedaDatos;
     function ListarTemporadas: TOpcionesBusquedaDatos;
     function ListarColoresPaleta: TCadenasBusquedaDatos;
