@@ -2001,11 +2001,26 @@
                 Caption = '100 %'
                 TabOrder = 5
               end
+              object btnFijarZoomPedido: TcxButton
+                Left = 492
+                Top = 6
+                Width = 100
+                Height = 28
+                Caption = 'Fijar zoom'
+                Hint =
+                  'Mantiene el zoom actual al cambiar de pedido en lugar de encajar' +
+                  ' la imagen'
+                ParentShowHint = False
+                ShowHint = True
+                SpeedButtonOptions.AllowAllUp = True
+                SpeedButtonOptions.GroupIndex = 1
+                TabOrder = 6
+              end
               object lblPaginaPedido: TcxLabel
-                Left = 506
+                Left = 598
                 Top = 9
                 Caption = 'Sin páginas TIFF importadas'
-                TabOrder = 6
+                TabOrder = 7
                 Transparent = True
               end
             end

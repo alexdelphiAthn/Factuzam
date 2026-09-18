@@ -336,6 +336,7 @@ type
     btnAcercarPedido               : TcxButton;
     btnAjustarPedido               : TcxButton;
     btnZoomRealPedido              : TcxButton;
+    btnFijarZoomPedido             : TcxButton;
     lblPaginaPedido                : TcxLabel;
     scrPedidoOriginal              : TScrollBox;
     imgPedidoOriginal              : TImage;
@@ -1156,9 +1157,9 @@ begin
   begin
     FVisorPedidoOriginal.CargarSiVacio;
     // Si la imagen ya esta cargada se conserva la vista actual: pagina,
-    // zoom y desplazamiento. Una vez el usuario fija un zoom, este se
-    // mantiene tambien al cambiar de sesion: solo el boton Ajustar
-    // devuelve el visor a encajar cada pedido automaticamente.
+    // zoom y desplazamiento. Con el boton Fijar zoom pulsado el zoom se
+    // mantiene tambien al cambiar de sesion; suelto, cada pedido se
+    // encaja en el visor al cargarse.
   end
   else
   begin
@@ -1561,6 +1562,7 @@ begin
   EntornoVisor.BotonAcercar := btnAcercarPedido;
   EntornoVisor.BotonAjustar := btnAjustarPedido;
   EntornoVisor.BotonZoomReal := btnZoomRealPedido;
+  EntornoVisor.BotonFijarZoom := btnFijarZoomPedido;
   EntornoVisor.ObtenerDirectorio :=
     function: string
     begin

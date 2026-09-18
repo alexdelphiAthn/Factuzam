@@ -12,10 +12,11 @@
 {    Presenta las paginas TIFF del pedido original asociado a una sesion.      }
 {    Encapsula carga, navegacion, zoom y arrastre sin conocer el formulario.   }
 {                                                                              }
-{    Zoom fijo: mientras el visor esta en modo ajuste cada carga encaja la     }
-{    pagina en el contenedor. En cuanto el usuario fija un zoom (acercar,      }
-{    alejar, zoom real o rueda) ese zoom se conserva al cambiar de pagina y    }
-{    al cambiar de sesion; solo el boton Ajustar vuelve al modo ajuste.        }
+{    Zoom fijo: el boton Fijar zoom decide que pasa al cargar otro pedido.     }
+{    Suelto (modo ajuste) cada carga encaja la pagina en el contenedor;        }
+{    pulsado se respeta el zoom elegido. Acercar, alejar, zoom real y la       }
+{    rueda fijan el zoom y dejan el boton pulsado; Ajustar ventana encaja      }
+{    la pagina actual sin tocar el estado del boton.                           }
 {******************************************************************************}
 unit inMtoComprasSesionesPresentacionPedidoOriginal;
 
@@ -52,6 +53,7 @@ type
     BotonAcercar: TcxButton;
     BotonAjustar: TcxButton;
     BotonZoomReal: TcxButton;
+    BotonFijarZoom: TcxButton;
     ObtenerDirectorio: TFunc<string>;
     ObtenerSesion: TObtenerSesionPedidoOriginal;
   end;
@@ -63,6 +65,7 @@ type
     FIndicePagina: Integer;
     FZoom: Double;
     FModoAjuste: Boolean;
+    FActualizandoBoton: Boolean;
     FImagenOriginal: TPicture;
     FArrastrando: Boolean;
     FEventosConectados: Boolean;
@@ -73,6 +76,7 @@ type
     procedure MostrarPagina(AVista: TVistaPedidoOriginal);
     procedure AplicarZoom(AZoom: Double);
     procedure FijarZoom(AZoom: Double);
+    procedure EstablecerModoAjuste(AModoAjuste: Boolean);
     procedure Ajustar;
     procedure CambiarPagina(ADesplazamiento: Integer);
     procedure PaginaAnteriorClick(Sender: TObject);
@@ -81,6 +85,7 @@ type
     procedure AcercarClick(Sender: TObject);
     procedure AjustarClick(Sender: TObject);
     procedure ZoomRealClick(Sender: TObject);
+    procedure FijarZoomClick(Sender: TObject);
     procedure ImagenMouseDown(Sender: TObject; Button: TMouseButton;
       Shift: TShiftState; X, Y: Integer);
     procedure ImagenMouseMove(Sender: TObject; Shift: TShiftState;
@@ -161,6 +166,8 @@ begin
     raise EArgumentNilException.Create('AEntorno.BotonAjustar');
   if not Assigned(AEntorno.BotonZoomReal) then
     raise EArgumentNilException.Create('AEntorno.BotonZoomReal');
+  if not Assigned(AEntorno.BotonFijarZoom) then
+    raise EArgumentNilException.Create('AEntorno.BotonFijarZoom');
   if not Assigned(AEntorno.ObtenerDirectorio) then
     raise EArgumentNilException.Create('AEntorno.ObtenerDirectorio');
   if not Assigned(AEntorno.ObtenerSesion) then
@@ -175,8 +182,8 @@ begin
   FEntorno := AEntorno;
   FImagenOriginal := TPicture.Create;
   FZoom := 1;
-  FModoAjuste := True;
   ConectarEventos;
+  EstablecerModoAjuste(True);
 end;
 
 destructor TVisorPedidoOriginalSesion.Destroy;
@@ -194,6 +201,7 @@ begin
   FEntorno.BotonAcercar.OnClick := AcercarClick;
   FEntorno.BotonAjustar.OnClick := AjustarClick;
   FEntorno.BotonZoomReal.OnClick := ZoomRealClick;
+  FEntorno.BotonFijarZoom.OnClick := FijarZoomClick;
   FEntorno.Imagen.OnMouseDown := ImagenMouseDown;
   FEntorno.Imagen.OnMouseMove := ImagenMouseMove;
   FEntorno.Imagen.OnMouseUp := ImagenMouseUp;
@@ -211,6 +219,7 @@ begin
     FEntorno.BotonAcercar.OnClick := nil;
     FEntorno.BotonAjustar.OnClick := nil;
     FEntorno.BotonZoomReal.OnClick := nil;
+    FEntorno.BotonFijarZoom.OnClick := nil;
     FEntorno.Imagen.OnMouseDown := nil;
     FEntorno.Imagen.OnMouseMove := nil;
     FEntorno.Imagen.OnMouseUp := nil;
@@ -328,11 +337,28 @@ begin
   end;
 end;
 
+procedure TVisorPedidoOriginalSesion.EstablecerModoAjuste(
+  AModoAjuste: Boolean);
+begin
+  // El boton es el reflejo del modo: siempre se escribe desde aqui, tanto
+  // si el cambio viene de pulsarlo como si viene de tocar el zoom. El
+  // testigo evita reentrar si escribir Down acabara disparando OnClick.
+  if FActualizandoBoton then
+    Exit;
+  FActualizandoBoton := True;
+  try
+    FModoAjuste := AModoAjuste;
+    FEntorno.BotonFijarZoom.SpeedButtonOptions.Down := not FModoAjuste;
+  finally
+    FActualizandoBoton := False;
+  end;
+end;
+
 procedure TVisorPedidoOriginalSesion.FijarZoom(AZoom: Double);
 begin
   // Zoom elegido por el usuario: se abandona el modo ajuste para que las
   // siguientes cargas (cambio de sesion o reimportacion) lo respeten.
-  FModoAjuste := False;
+  EstablecerModoAjuste(False);
   AplicarZoom(AZoom);
 end;
 
@@ -395,14 +421,24 @@ end;
 
 procedure TVisorPedidoOriginalSesion.AjustarClick(Sender: TObject);
 begin
-  // Unica forma de volver a que cada pedido se encaje solo al cargarse.
-  FModoAjuste := True;
+  // Encaja la pagina que se esta viendo sin decidir por el usuario que
+  // pasara con la siguiente: eso lo manda el boton Fijar zoom. Con el
+  // zoom fijado, el zoom recien encajado es el que se conserva.
   Ajustar;
 end;
 
 procedure TVisorPedidoOriginalSesion.ZoomRealClick(Sender: TObject);
 begin
   FijarZoom(1);
+end;
+
+procedure TVisorPedidoOriginalSesion.FijarZoomClick(Sender: TObject);
+begin
+  // El boton llega aqui ya conmutado por su GroupIndex; se reescribe su
+  // estado desde EstablecerModoAjuste para no depender de ese detalle.
+  EstablecerModoAjuste(not FModoAjuste);
+  if FModoAjuste then
+    Ajustar;
 end;
 
 procedure TVisorPedidoOriginalSesion.ImagenMouseDown(Sender: TObject;
