@@ -21,7 +21,8 @@ interface
 uses
   inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, System.DateUtils, System.UITypes, Vcl.Graphics,
+  System.Classes, System.DateUtils, System.UITypes,
+  System.Generics.Collections, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoGen, dxSkinsCore,
   dxSkinsDefaultPainters, cxGraphics, cxControls,
   cxLookAndFeels, cxLookAndFeelPainters, cxStyles, cxCustomData, cxFilter,
@@ -39,6 +40,7 @@ uses
   inLibCajaOperacionesHistPersistenciaIntf,
   inLibCajaPantallaHistoricosIntf,
   inLibCajaPantallaDetalleHistorico,
+  inLibFotosMiniaturasGridVcl,
   inLibPermisosIntf, inLibCajaPantallaInyeccion;
 
 type
@@ -92,6 +94,9 @@ type
     FbarProgreso: TProgressBar;
     FdmConsulta: TdmConsultaOpe;
     FDetalleCreado: Boolean;
+    // Una tira de miniaturas por rejilla de detalle con articulo
+    // (movimientos, depositos y lineas del borrador).
+    FMiniaturasDetalle: TObjectList<TTiraMiniaturasFotosGrid>;
     FpcDetalleCaja: TcxPageControl;
     FtsDetalleOperacion: TcxTabSheet;
     FtsDetallePagos: TcxTabSheet;
@@ -145,6 +150,10 @@ type
     procedure RenderizarColumnasDetalleCaja(
       AVista: TcxGridDBTableView;
       const AColumnas: TArray<TColumnaDetalleCaja>);
+    procedure CrearColumnaMiniaturas(
+      AVista: TcxGridDBTableView;
+      const AColumna: TColumnaDetalleCaja);
+    procedure LimpiarMiniaturasDetalle;
     procedure RenderizarVistaDetalleCaja(
       APagina: TcxTabSheet;
       const AModelo: TVistaDetalleCaja);
@@ -656,6 +665,9 @@ var
   nTotal, nLeidos: Integer;
   cursorPrev: TCursor;
 begin
+  // Recargar la lista es el momento de tirar la cache de fotos: asi una
+  // foto anadida o rotada desde otra pantalla se ve sin reabrir esta.
+  LimpiarMiniaturasDetalle;
   if Assigned(dmmCajaOperacionesHist) and
      Assigned(dmmCajaOperacionesHist.unqryTablaG) then
   begin
@@ -1211,10 +1223,23 @@ var
   Bm: TBookmark;
   Campo: TField;
   Col: TcxGridDBColumn;
+  aColumnas: TArray<TcxGridDBColumn>;
   iCol, iRow, iFilaCabecera: Integer;
 begin
   if VistaTieneDatos(AVista) then
   begin
+    // Las columnas sin campo (la tira de miniaturas) no se exportan: en
+    // Excel solo dejarian una columna vacia.
+    SetLength(aColumnas, 0);
+    for iCol := 0 to AVista.VisibleColumnCount - 1 do
+    begin
+      Col := AVista.VisibleColumns[iCol] as TcxGridDBColumn;
+      if Col.DataBinding.FieldName <> '' then
+      begin
+        SetLength(aColumnas, Length(aColumnas) + 1);
+        aColumnas[High(aColumnas)] := Col;
+      end;
+    end;
     Sheet := CrearHojaExcel(ASheetControl, AHoja);
     Sheet.BeginUpdate;
     try
@@ -1224,9 +1249,9 @@ begin
       Inc(iRow, 2);
       ds := AVista.DataController.DataSource.DataSet;
       iFilaCabecera := iRow;
-      for iCol := 0 to AVista.VisibleColumnCount - 1 do
+      for iCol := 0 to High(aColumnas) do
       begin
-        Col := AVista.VisibleColumns[iCol] as TcxGridDBColumn;
+        Col := aColumnas[iCol];
         W(Sheet, iRow, iCol, Col.Caption, True, ssahCenter);
         Sheet.Cells[iRow, iCol].Style.Brush.BackgroundColor := clSilver;
         if Col.Width > 0 then
@@ -1239,9 +1264,9 @@ begin
         ds.First;
         while not ds.Eof do
         begin
-          for iCol := 0 to AVista.VisibleColumnCount - 1 do
+          for iCol := 0 to High(aColumnas) do
           begin
-            Col := AVista.VisibleColumns[iCol] as TcxGridDBColumn;
+            Col := aColumnas[iCol];
             Campo := ds.FindField(Col.DataBinding.FieldName);
             if Assigned(Campo) then
             begin
@@ -1262,7 +1287,7 @@ begin
                      iFilaCabecera,
                      0,
                      iRow - 1,
-                     AVista.VisibleColumnCount - 1,
+                     High(aColumnas),
                      sscbsThin);
       finally
         Sheet.EndUpdate;
@@ -1490,16 +1515,51 @@ var
 begin
   for i := 0 to High(AColumnas) do
   begin
-    AnadirColumna(
-      AVista,
-      AColumnas[i].Nombre,
-      AColumnas[i].Titulo,
-      AColumnas[i].Campo,
-      AColumnas[i].Ancho,
-      AColumnas[i].ClasePropiedades,
-      AColumnas[i].Formato,
-      AColumnas[i].Visible);
+    if AColumnas[i].Miniaturas then
+      CrearColumnaMiniaturas(AVista, AColumnas[i])
+    else
+      AnadirColumna(
+        AVista,
+        AColumnas[i].Nombre,
+        AColumnas[i].Titulo,
+        AColumnas[i].Campo,
+        AColumnas[i].Ancho,
+        AColumnas[i].ClasePropiedades,
+        AColumnas[i].Formato,
+        AColumnas[i].Visible);
   end;
+end;
+
+// La tira se engancha al OnCustomDrawCell de su propia columna y se queda
+// con la cache de fotos; sin servicio de fotos no se crea la columna (no
+// tendria nada que pintar).
+procedure TfrmMtoCajaOperacionesHist.CrearColumnaMiniaturas(
+  AVista: TcxGridDBTableView;
+  const AColumna: TColumnaDetalleCaja);
+begin
+  if Assigned(FotosArticulos) then
+  begin
+    if not Assigned(FMiniaturasDetalle) then
+      FMiniaturasDetalle :=
+        TObjectList<TTiraMiniaturasFotosGrid>.Create(True);
+    FMiniaturasDetalle.Add(
+      TTiraMiniaturasFotosGrid.Create(
+        AVista,
+        FotosArticulos,
+        AColumna.Nombre,
+        AColumna.Titulo,
+        AColumna.Campo,
+        AColumna.CampoSku));
+  end;
+end;
+
+procedure TfrmMtoCajaOperacionesHist.LimpiarMiniaturasDetalle;
+var
+  oTira: TTiraMiniaturasFotosGrid;
+begin
+  if Assigned(FMiniaturasDetalle) then
+    for oTira in FMiniaturasDetalle do
+      oTira.Limpiar;
 end;
 
 procedure TfrmMtoCajaOperacionesHist.RenderizarVistaDetalleCaja(
@@ -1771,6 +1831,9 @@ procedure TfrmMtoCajaOperacionesHist.FormDestroy(Sender: TObject);
 begin
   FGrabadorPerfiles := nil;
   FRepositorioPersistencia := nil;
+  // Antes que nada: las tiras sueltan el OnCustomDrawCell de sus columnas,
+  // que siguen vivas mientras no se destruyan los componentes del form.
+  FreeAndNil(FMiniaturasDetalle);
   inherited;
   FreeAndNil(FdmConsulta);
   FreeAndNil(FCodigosAlmacen);
