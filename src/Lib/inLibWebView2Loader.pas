@@ -144,10 +144,16 @@ end;
 function CargarVerificado(const ARuta: string; AFichero: THandle): Boolean;
 begin
   try
+{$IF Declared(SetWebView2Path)}
     SetWebView2Path(ARuta);
     Result := CheckWebView2Loaded;
     if not Result then
       SetWebView2Path(cNombreDll);
+{$ELSE}
+    // Con el módulo ya cargado por ruta completa, la carga por nombre que
+    // hace Vcl.Edge/EdgeUtils reutiliza este mismo módulo.
+    Result := (LoadLibrary(PChar(ARuta)) <> 0) and CheckWebView2Loaded;
+{$IFEND}
   finally
     CloseHandle(AFichero);
   end;
