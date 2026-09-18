@@ -1156,7 +1156,9 @@ begin
   begin
     FVisorPedidoOriginal.CargarSiVacio;
     // Si la imagen ya esta cargada se conserva la vista actual: pagina,
-    // zoom y desplazamiento. Solo se reajusta al cargar o al pulsar el boton.
+    // zoom y desplazamiento. Una vez el usuario fija un zoom, este se
+    // mantiene tambien al cambiar de sesion: solo el boton Ajustar
+    // devuelve el visor a encajar cada pedido automaticamente.
   end
   else
   begin
