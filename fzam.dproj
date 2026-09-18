@@ -1648,6 +1648,7 @@
         <DCCReference Include="src\DataModules\UniDataFotosEdicionRepositorio.pas"/>
         <DCCReference Include="src\DataModules\UniDataFotosSesionRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibFotos.pas"/>
+        <DCCReference Include="src\Lib\inLibFotosMiniaturasGridVcl.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajo.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoEstados.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoPresentacion.pas"/>
