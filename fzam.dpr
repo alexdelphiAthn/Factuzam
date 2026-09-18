@@ -980,6 +980,7 @@ uses
   UniDataFotosEdicionRepositorio in 'src\DataModules\UniDataFotosEdicionRepositorio.pas',
   UniDataFotosSesionRepositorio in 'src\DataModules\UniDataFotosSesionRepositorio.pas',
   inLibFotos in 'src\Lib\inLibFotos.pas',
+  inLibFotosMiniaturasGridVcl in 'src\Lib\inLibFotosMiniaturasGridVcl.pas',
   inLibDocumentosTrabajo in 'src\Lib\inLibDocumentosTrabajo.pas',
   inLibDocumentosTrabajoEstados in 'src\Lib\inLibDocumentosTrabajoEstados.pas',
   inLibDocumentosTrabajoPresentacion in 'src\Lib\inLibDocumentosTrabajoPresentacion.pas',
