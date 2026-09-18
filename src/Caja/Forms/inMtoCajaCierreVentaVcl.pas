@@ -80,12 +80,14 @@ type
     class procedure Ejecutar(
       const AContexto: TContextoCierreVentaCajaVcl); static;
     // Pantalla de Cobro en modo subsanación: devuelve el descuento global
-    // y los cobros nuevos sin grabar nada.
+    // y los cobros nuevos sin grabar nada. AImprimirTicket es False cuando
+    // el usuario subsana con F11 (sin ticket).
     class function EjecutarCobroSubsanacion(
       const AContexto: TContextoCierreVentaCajaVcl;
       const APagos: TPagosSubsanacionCaja;
       out ADescuentoGlobal: Currency;
-      out APagosNuevos: TPagosSubsanacionCaja): Boolean; static;
+      out APagosNuevos: TPagosSubsanacionCaja;
+      out AImprimirTicket: Boolean): Boolean; static;
   end;
   TOrigenDevolucionCajaVcl = record
     Serie: string;
@@ -315,13 +317,15 @@ class function TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
   const AContexto: TContextoCierreVentaCajaVcl;
   const APagos: TPagosSubsanacionCaja;
   out ADescuentoGlobal: Currency;
-  out APagosNuevos: TPagosSubsanacionCaja): Boolean;
+  out APagosNuevos: TPagosSubsanacionCaja;
+  out AImprimirTicket: Boolean): Boolean;
 var
   oFormulario: TfrmMtoCajaFaseCobro;
   oTotales: TFacturaTotales;
 begin
   ADescuentoGlobal := 0;
   APagosNuevos := nil;
+  AImprimirTicket := True;
   oFormulario := nil;
   oTotales := TFacturaTotales.Create(
     AContexto.Conexion,
@@ -342,6 +346,7 @@ begin
     begin
       ADescuentoGlobal := oFormulario.DatosCobro.ImporteDescuentoGlobal;
       APagosNuevos := oFormulario.PagosSubsanacion;
+      AImprimirTicket := oFormulario.TipoImpresion <> tiSinTicket;
     end;
   finally
     FreeAndNil(oFormulario);

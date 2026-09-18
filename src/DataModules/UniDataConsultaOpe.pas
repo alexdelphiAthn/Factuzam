@@ -83,10 +83,16 @@ type
     // OnEditValueChanged y luego FormShow llama tambien a RecargarMaestro:
     // antes salian 2-3 cargas identicas.
     FUltimaClaveMaestro: string;
+    // True si alguna operacion del maestro cargado va a un cliente
+    // distinto del generico de caja.
+    FHayClienteIdentificado: Boolean;
     FOnNotificarMensaje: TNotificarMensajeDatosEvent;
     procedure ConectarConsultas;
     procedure ConfigurarConsultaMaestro;
     function SqlFiltroTextoMaestro: string;
+    function SqlFormasPagoMaestro: string;
+    function SqlVendedoresMaestro: string;
+    procedure EvaluarClienteIdentificado;
     procedure ConfigurarConsultasCaja;
     procedure ConfigurarConsultasMovimientoCliente;
     procedure ConfigurarConsultasDepositoFactura;
@@ -117,6 +123,7 @@ type
     function  TieneVales:       Boolean;
     function  TieneMovimientos: Boolean;
     function  TieneCliente:     Boolean;
+    function  HayClienteIdentificado: Boolean;
     function  TieneDepositos:   Boolean;
     function  TieneFactura:     Boolean;
     function  EsOperacionCaja: Boolean;
@@ -132,6 +139,10 @@ implementation
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
 uses inLibMsgComun, UniDataRectificativasSql;
+
+const
+  // Cliente de mostrador con el que se emiten las ventas anonimas.
+  SClienteGenericoCaja = '0';
 
 {$R *.dfm}
 
@@ -192,6 +203,56 @@ begin
     '       ) ';
 end;
 
+// Codigos de las formas de pago usadas en la operacion, sin repetir y
+// separados por comas (por ejemplo 'EFE, TARJ'). La subconsulta se
+// correlaciona con las cuatro columnas de agrupacion del maestro, asi
+// que devuelve un unico valor por fila del grid.
+function TdmConsultaOpe.SqlFormasPagoMaestro: string;
+begin
+  Result :=
+    '       (SELECT GROUP_CONCAT(DISTINCT p.CODIGO_FP_CFP '           +
+    '                            ORDER BY p.CODIGO_FP_CFP '           +
+    '                            SEPARATOR '', '') '                  +
+    '          FROM fza_caja_pagos p '                                +
+    '         WHERE p.CODIGO_EMP_PAGO  = o.CODIGO_EMP_OPCAJA '        +
+    '           AND p.CODIGO_ALM_PAGO  = o.CODIGO_ALM_OPCAJA '        +
+    '           AND p.CODIGO_CAJA_PAGO = o.CODIGO_CAJA_OPCAJA '       +
+    '           AND p.NUMERO_OPERACION_PAGO = '                       +
+    '               o.NUMERO_OPERACION_OPCAJA) AS FORMAS_PAGO, ';
+end;
+
+// Vendedor o vendedores de la operacion, sin repetir. Se toman de las
+// lineas de la factura, donde cada linea lleva el suyo, y solo si
+// ninguna lo trae se recurre al empleado de la propia operacion. Nunca
+// es el usuario del programa. Se muestra el diminutivo de ticket, que
+// es el nombre con el que la caja identifica al vendedor ('ALEX'), no
+// la razon social del empleado.
+function TdmConsultaOpe.SqlVendedoresMaestro: string;
+const
+  SNombreVendedor = 'COALESCE(ev.DIMINUTIVO_TICKET_EMPL, ' +
+                    'ev.NOMBRE_EMPL, ' +
+                    'l.CODIGO_VENDEDOR_FACLIN)';
+begin
+  Result :=
+    '       COALESCE( '                                              +
+    '         (SELECT GROUP_CONCAT(DISTINCT ' + SNombreVendedor      +
+    '                     ORDER BY ' + SNombreVendedor               +
+    '                     SEPARATOR '', '') '                        +
+    '            FROM fza_facturas_lineas l '                        +
+    '            LEFT JOIN fza_empleados ev '                        +
+    '              ON ev.CODIGO_EMPL = l.CODIGO_VENDEDOR_FACLIN '    +
+    '           WHERE l.CODIGO_EMP_FACLIN  = o.CODIGO_EMP_OPCAJA '   +
+    '             AND l.CODIGO_ALM_FACLIN  = o.CODIGO_ALM_OPCAJA '   +
+    '             AND l.CODIGO_CAJA_FACLIN = o.CODIGO_CAJA_OPCAJA '  +
+    '             AND l.NUMERO_OPERACION_FACLIN = '                  +
+    '                 o.NUMERO_OPERACION_OPCAJA '                    +
+    '             AND TRIM(COALESCE(l.CODIGO_VENDEDOR_FACLIN, '''')) '+
+    '                 <> ''''), '                                    +
+    '         MAX(COALESCE(eo.DIMINUTIVO_TICKET_EMPL, '              +
+    '                      eo.NOMBRE_EMPL, '                         +
+    '                      o.CODIGO_EMPLEADO_OPCAJA))) AS EMPLEADO ';
+end;
+
 procedure TdmConsultaOpe.ConfigurarConsultaMaestro;
 begin
   // Una fila por numero, agrupando todos sus tipos de operacion.
@@ -222,7 +283,8 @@ begin
     '                    fo.CODIGO_CLI_FAC, '                         +
     '                    o.CODIGO_CLI_OPCAJA)) AS CLIENTE, '          +
     '       MAX(cli.RAZON_SOCIAL_CLI)             AS RAZON_SOCIAL_CLI,'+
-    '       MAX(o.USUARIO_ALTA)                       AS EMPLEADO '        +
+    SqlFormasPagoMaestro                                              +
+    SqlVendedoresMaestro                                              +
     '  FROM fza_caja_operaciones o '                                      +
     // Las rutas son excluyentes para que MariaDB use sus indices.
     '  LEFT JOIN fza_facturas fd '                                    +
@@ -244,6 +306,8 @@ begin
     '       COALESCE(fd.CODIGO_CLI_FAC, '                            +
     '                fo.CODIGO_CLI_FAC, '                            +
     '                o.CODIGO_CLI_OPCAJA) '                          +
+    '  LEFT JOIN fza_empleados eo '                                   +
+    '    ON eo.CODIGO_EMPL = o.CODIGO_EMPLEADO_OPCAJA '             +
     ' WHERE o.FECHA_OP_DIA_OPCAJA = :PFECHA '                             +
     '   AND o.CODIGO_EMP_OPCAJA = :PEMP '                             +
     '   AND o.CODIGO_ALM_OPCAJA = :PALM '                             +
@@ -637,6 +701,48 @@ begin
 end;
 
 // -----------------------------------------------------------------------------
+// En caja casi todo se cobra al cliente generico ('0'), asi que las dos
+// columnas de cliente solo ocupan sitio. Se recorre el maestro recien
+// abierto buscando uno real; el recorrido va con FCargando activo y
+// deja el cursor donde estaba.
+procedure TdmConsultaOpe.EvaluarClienteIdentificado;
+var
+  Marcador: TBookmark;
+  sCliente: string;
+begin
+  FHayClienteIdentificado := False;
+  if qryMaestro.Active and (not qryMaestro.IsEmpty) then
+  begin
+    qryMaestro.DisableControls;
+    try
+      Marcador := qryMaestro.GetBookmark;
+      try
+        qryMaestro.First;
+        while (not qryMaestro.Eof) and
+              (not FHayClienteIdentificado) do
+        begin
+          sCliente := Trim(qryMaestro.FieldByName('CLIENTE').AsString);
+          if (sCliente <> '') and (sCliente <> SClienteGenericoCaja) then
+            FHayClienteIdentificado := True
+          else
+            qryMaestro.Next;
+        end;
+        if qryMaestro.BookmarkValid(Marcador) then
+          qryMaestro.GotoBookmark(Marcador);
+      finally
+        qryMaestro.FreeBookmark(Marcador);
+      end;
+    finally
+      qryMaestro.EnableControls;
+    end;
+  end;
+end;
+
+function TdmConsultaOpe.HayClienteIdentificado: Boolean;
+begin
+  Result := FHayClienteIdentificado;
+end;
+
 procedure TdmConsultaOpe.CargarMaestro(AFecha:     TDate;
                                        const AEmp,
                                              AAlm,
@@ -686,6 +792,7 @@ begin
     qryMaestro.ParamByName('PTXT').AsString    := ATextoLibre;
     qryMaestro.ParamByName('PVERTODOS').AsInteger := Ord(AVerTodos);
     qryMaestro.Open;
+    EvaluarClienteIdentificado;
     // Reset del cache de clave de hijas: forzamos que la siguiente
     // RefrescarPestanasHijas SI recargue (puede ser la misma op pero con
     // datos del maestro recien releidos).

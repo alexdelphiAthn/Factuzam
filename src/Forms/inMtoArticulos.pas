@@ -433,8 +433,12 @@ type
     procedure btnImprimirEtiquetasClick(Sender: TObject);
     procedure btnGenerarCBClick(Sender: TObject);
     procedure btnVerificarCBClick(Sender: TObject);
-    procedure dbcTarifasMARGENButtonClick(Sender: TObject;
-                                          AButtonIndex: Integer);
+    procedure tvTarifasCellDblClick(Sender: TcxCustomGridTableView;
+      ACellViewInfo: TcxGridTableDataCellViewInfo;
+      AButton: TMouseButton; AShift: TShiftState;
+      var AHandled: Boolean);
+    procedure tvTarifasKeyDown(Sender: TObject; var Key: Word;
+      Shift: TShiftState);
     procedure dbcTarifasMARGENGetDisplayText(
       Sender: TcxCustomGridTableItem;
       ARecord: TcxCustomGridRecord;
@@ -868,11 +872,31 @@ begin
     dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
 end;
 
-procedure TfrmMtoArticulos.dbcTarifasMARGENButtonClick(Sender: TObject;
-  AButtonIndex: Integer);
+procedure TfrmMtoArticulos.tvTarifasCellDblClick(
+  Sender: TcxCustomGridTableView;
+  ACellViewInfo: TcxGridTableDataCellViewInfo;
+  AButton: TMouseButton; AShift: TShiftState;
+  var AHandled: Boolean);
+begin
+  // El margen no se teclea: sale de coste y precio de salida, así que
+  // editarlo es abrir la calculadora.
+  if (AButton = mbLeft) and (ACellViewInfo.Item = dbcTarifasMARGEN) then
+  begin
+    AHandled := True;
+    FPresTarifas.AbrirCalculadoraMargen(Self);
+  end;
+end;
+
+procedure TfrmMtoArticulos.tvTarifasKeyDown(Sender: TObject; var Key: Word;
+  Shift: TShiftState);
 begin
   inherited;
-  FPresTarifas.AbrirCalculadoraMargen(Self);
+  if (Key = VK_F2) and (Shift = []) and
+     (tvTarifas.Controller.FocusedColumn = dbcTarifasMARGEN) then
+  begin
+    Key := 0;
+    FPresTarifas.AbrirCalculadoraMargen(Self);
+  end;
 end;
 
 procedure TfrmMtoArticulos.dbcTarifasMARGENGetDisplayText(

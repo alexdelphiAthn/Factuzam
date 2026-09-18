@@ -172,6 +172,7 @@ type
     FEnfoqueArticuloPendiente: Boolean;
     function GetFormulario: TCustomForm;
     function RejillaEnfocable: Boolean;
+    function EditandoTextoLinea: Boolean;
     function GetRejilla: TcxGrid;
     function GetVistaLineas: TcxGridDBTableView;
     function GetColumnaArticulo: TcxGridDBColumn;
@@ -475,10 +476,11 @@ type
     procedure AplicarEstiloCaja;
     procedure ColocarTarjetaTotal;
     procedure ConfigurarModoSubsanacion;
+    procedure MostrarAvisoSubsanacion(const ARotulo, ADetalle: string);
     function CerrarSubsanacion: Boolean;
     procedure ActualizarTotalSubsanacion;
     procedure GuardarSubsanacion;
-    function ConfirmarSubsanacion: Boolean;
+    function ConfirmarSubsanacion(out AImprimirTicket: Boolean): Boolean;
     procedure ReimprimirSubsanacion;
     procedure CargarDevolucionPorTicket;
     procedure WMPreguntarVentaOrigen(var Msg: TMessage);
@@ -1621,16 +1623,55 @@ begin
     FEntrada.Aplicacion.Procesar(ACodigo);
 end;
 
+// True cuando el editor en linea tiene texto sin confirmar, es decir, el
+// cajero esta tecleando un codigo en la fila en blanco.
+function TEditorLineasCajaVcl.EditandoTextoLinea: Boolean;
+var
+  Editor: TcxCustomEdit;
+begin
+  Result := False;
+  if (tvLineasOpe.Controller.EditingController <> nil) and
+     tvLineasOpe.Controller.EditingController.IsEditing then
+  begin
+    Editor := tvLineasOpe.Controller.EditingController.Edit;
+    if Editor is TcxCustomTextEdit then
+      Result := Trim(TcxCustomTextEdit(Editor).Text) <> ''
+    else if Assigned(Editor) then
+      Result := Trim(VarToStr(Editor.EditingValue)) <> '';
+  end;
+end;
+
 procedure TEditorLineasCajaVcl.CancelarLinea;
 var
   VieneDeDep: string;
   bCancelar: Boolean;
+  bTecleando: Boolean;
 begin
   if (DatosCaja.cdsLineas.Active) then
   begin
+    // La rejilla trabaja con el editor en linea abierto sobre la fila en
+    // blanco del final. Si se borra con el editor vivo, al cerrarse vuelca
+    // lo tecleado en la linea siguiente, asi que se cierra sin guardar.
+    bTecleando := EditandoTextoLinea;
+    if (tvLineasOpe.Controller.EditingController <> nil) and
+       tvLineasOpe.Controller.EditingController.IsEditing then
+      tvLineasOpe.Controller.EditingController.HideEdit(False);
     bCancelar := True;
+    // Esa fila en blanco no es la linea que se quiere eliminar: se descarta
+    // y se borra la ultima linea real de la venta. Si habia un codigo a
+    // medio teclear, F8 se limita a limpiarlo.
+    if (DatosCaja.cdsLineas.State = dsInsert) and
+       (Trim(DatosCaja.cdsLineas.FieldByName(
+          'CODIGO_ART_FACLIN').AsString) = '') then
+    begin
+      DatosCaja.cdsLineas.Cancel;
+      if bTecleando then
+        bCancelar := False
+      else if not DatosCaja.cdsLineas.IsEmpty then
+        DatosCaja.cdsLineas.Last;
+    end;
     // NUEVO: Bloqueo de borrado por atajo
-    if not DatosCaja.cdsLineas.IsEmpty then
+    if bCancelar and not DatosCaja.cdsLineas.IsEmpty then
     begin
       VieneDeDep :=
         DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString;
@@ -1649,8 +1690,8 @@ begin
       GridRecalc(ConexionPrincipal, FRepositorioFacturas, nil,
         tvLineasOpe, DatosCaja.cdsLineas, DatosCaja.cdsCabecera,
         ActualizarLabelTotal);
-      AsegurarLineaNueva;
     end;
+    AsegurarLineaNueva;
   end;
 end;
 
@@ -3154,7 +3195,6 @@ var
 begin
   FOperacionSubsanacion := AOperacion;
   FFecha := AOperacion.FechaFactura;
-  lblFecha.Caption := FormatDateTime('dd/mm/yyyy hh:nn', FFecha);
   FServicioSubsanacion := AServicio;
   DatosCaja.cdsLineas.Cancel;
   DatosCaja.cdsLineas.EmptyDataSet;
@@ -3179,9 +3219,15 @@ end;
 
 procedure TfrmMtoOpeCaja.ConfigurarModoSubsanacion;
 begin
+  // La fecha de la factura subsanada va en el título, no en la cabecera:
+  // allí taparía al vendedor y sólo tiene día (la hora sería siempre 0:00).
   Caption := Format(SSubsanacionTituloOperacion,
     [FOperacionSubsanacion.Clave.SerieFactura,
      FOperacionSubsanacion.Clave.NumeroFactura]);
+  if FOperacionSubsanacion.FechaFactura > 0 then
+    Caption := Format(SSubsanacionTituloFecha,
+      [Caption, FormatDateTime('dd/mm/yyyy',
+        FOperacionSubsanacion.FechaFactura)]);
   FEntrada.Lector.Activo := False;
   tmrBusq.Enabled := False;
   pnlUp.Enabled := False;
@@ -3200,9 +3246,22 @@ begin
   actEliminarLinea.Enabled := False;
   actCargarCta.Enabled := False;
   actBuscarModificar.Enabled := False;
-  lblTipoRectificativa.Caption := SSubsanacionModo;
-  lblTipoRectificativa.Visible := True;
+  MostrarAvisoSubsanacion(SSubsanacionEtiqueta, SSubsanacionModo);
   lblCobro.Caption := SSubsanacionBoton;
+end;
+
+// El aviso se reparte: el rótulo corto en la caja de la cabecera (la misma
+// que usan las rectificativas, que sólo admite dos palabras sin recortar) y
+// el texto explicativo en la línea de instrucciones, que tiene sitio.
+procedure TfrmMtoOpeCaja.MostrarAvisoSubsanacion(
+  const ARotulo, ADetalle: string);
+begin
+  lblTipoRectificativa.Caption := ARotulo;
+  lblTipoRectificativa.Visible := True;
+  lblInstrucciones.Caption := ADetalle;
+  lblInstrucciones.Style.TextColor := TColoresCaja.Actuales.Acento;
+  lblInstrucciones.Style.Font.Color := lblInstrucciones.Style.TextColor;
+  lblInstrucciones.Visible := True;
 end;
 
 function TfrmMtoOpeCaja.CerrarSubsanacion: Boolean;
@@ -3225,9 +3284,15 @@ begin
 end;
 
 procedure TfrmMtoOpeCaja.GuardarSubsanacion;
+var
+  bImprimirTicket: Boolean;
 begin
   try
-    if FSubsanacion.Guardada or ConfirmarSubsanacion then
+    // Ya guardada, F12 reimprime; si no, imprime salvo que se haya
+    // subsanado con F11 (sin ticket).
+    if FSubsanacion.Guardada then
+      ReimprimirSubsanacion
+    else if ConfirmarSubsanacion(bImprimirTicket) and bImprimirTicket then
       ReimprimirSubsanacion;
   except
     on E: Exception do
@@ -3235,13 +3300,15 @@ begin
   end;
 end;
 
-function TfrmMtoOpeCaja.ConfirmarSubsanacion: Boolean;
+function TfrmMtoOpeCaja.ConfirmarSubsanacion(
+  out AImprimirTicket: Boolean): Boolean;
 var
   oSolicitud: TSolicitudSubsanacionCaja;
   oResultado: TResultadoSubsanacionCaja;
   oLineas: TLineasSubsanacionCaja;
   dDescuento: Currency;
 begin
+  AImprimirTicket := True;
   // Valida la edición antes de abrir el cobro; la forma de pago y el
   // descuento global se deciden en la pantalla de Cobro. En la rejilla sólo
   // se edita el total: se recalculan los precios para que el cobro parta
@@ -3252,7 +3319,7 @@ begin
   oSolicitud.Original := FOperacionSubsanacion;
   Result := TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
     CrearContextoCierreVentaCajaVcl(Self), FOperacionSubsanacion.Pagos,
-    dDescuento, oSolicitud.Pagos);
+    dDescuento, oSolicitud.Pagos, AImprimirTicket);
   if Result then
   begin
     oLineas := FSubsanacion.LineasCorregidas;
@@ -3272,11 +3339,14 @@ begin
   end;
   FSubsanacion.MarcarGuardada;
   if oResultado.EncoladaVerifactu then
-    lblTipoRectificativa.Caption := SSubsanacionGuardada
+    MostrarAvisoSubsanacion(SSubsanacionEtiquetaGuardada,
+      SSubsanacionGuardada)
   else if oResultado.RegistradaNoVerifactu then
-    lblTipoRectificativa.Caption := SSubsanacionGuardadaNoVerifactu
+    MostrarAvisoSubsanacion(SSubsanacionEtiquetaGuardada,
+      SSubsanacionGuardadaNoVerifactu)
   else
-    lblTipoRectificativa.Caption := SSubsanacionGuardadaLocal;
+    MostrarAvisoSubsanacion(SSubsanacionEtiquetaGuardada,
+      SSubsanacionGuardadaLocal);
   lblCobro.Caption := SSubsanacionReimprimir;
   RefrescarConsultasOperacionesCaja;
 end;

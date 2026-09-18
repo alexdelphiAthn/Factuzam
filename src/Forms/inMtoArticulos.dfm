@@ -952,6 +952,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                 TabOrder = 0
                 object tvTarifas: TcxGridDBTableView
                   OnDblClick = cxGrdDBTabPrinDblClick
+                  OnKeyDown = tvTarifasKeyDown
                   Navigator.Buttons.ConfirmDelete = True
                   Navigator.Buttons.First.Hint = 'Va al primer Registro'
                   Navigator.Buttons.First.Visible = False
@@ -996,6 +997,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   OptionsData.Inserting = False
                   OptionsView.GroupByBox = False
                   OptionsView.Indicator = True
+                  OnCellDblClick = tvTarifasCellDblClick
                   object cxgrdbclmnTarifasACTIVO_TARIFA: TcxGridDBColumn
                     Caption = 'Activo'
                     DataBinding.FieldName = 'ESACTIVO_ARTTAR'
@@ -1010,21 +1012,21 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     DataBinding.FieldName = 'NOMBRE_TAR_TAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
-                    Width = 140
+                    Width = 130
                   end
                   object cxgrdbclmnTarifasCODIGO_TARIFA: TcxGridDBColumn
                     Caption = 'C'#243'digo'
                     DataBinding.FieldName = 'CODIGO_TAR_ARTTAR'
                     PropertiesClassName = 'TcxTextEditProperties'
                     Properties.ReadOnly = True
-                    Width = 100
+                    Width = 95
                   end
                   object tvTarifasCODIGO_UNIDAD_TARIFA: TcxGridDBColumn
                     Caption = 'Sku'
                     DataBinding.FieldName = 'CODIGO_UNIDAD_ARTTAR'
                     Visible = False
                     VisibleForCustomization = False
-                    Width = 170
+                    Width = 140
                   end
                   object dbcTarifasESIMP_INCL_TARIFA: TcxGridDBColumn
                     Caption = 'Imp. Incl.'
@@ -1047,18 +1049,21 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object dbcTarifasMARGEN: TcxGridDBColumn
                     Caption = 'Margen'
                     DataBinding.FieldName = 'CODIGO_UNICO_ARTTAR'
-                    PropertiesClassName = 'TcxButtonEditProperties'
+                    PropertiesClassName = 'TcxTextEditProperties'
                     Properties.Alignment.Horz = taRightJustify
-                    Properties.Buttons = <
-                      item
-                        Default = True
-                        Kind = bkEllipsis
-                      end>
                     Properties.ReadOnly = True
-                    Properties.OnButtonClick = dbcTarifasMARGENButtonClick
                     OnGetDisplayText = dbcTarifasMARGENGetDisplayText
                     HeaderAlignmentHorz = taRightJustify
+                    Options.Editing = False
                     Width = 85
+                  end
+                  object dbcTarifasPRECIOSALIDA: TcxGridDBColumn
+                    Caption = 'Precio Salida'
+                    DataBinding.FieldName = 'PRECIO_SALIDA_ARTTAR'
+                    PropertiesClassName = 'TcxCurrencyEditProperties'
+                    Properties.OnEditValueChanged = dbcTarifasPRECIOSALIDAPropertiesEditValueChanged
+                    HeaderAlignmentHorz = taRightJustify
+                    Width = 95
                   end
                   object dbcTarifasPORCEN_DTO_TARIFA: TcxGridDBColumn
                     Caption = '% Dto.'
@@ -1076,7 +1081,7 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                     PropertiesClassName = 'TcxCurrencyEditProperties'
                     Properties.OnEditValueChanged = dbcTarifasPRECIO_DTO_TARIFAPropertiesEditValueChanged
                     HeaderAlignmentHorz = taRightJustify
-                    Width = 95
+                    Width = 90
                   end
                   object dbcTarifasPRECIOFINAL: TcxGridDBColumn
                     Caption = 'Precio Final'
@@ -1089,21 +1094,12 @@ inherited frmMtoArticulos: TfrmMtoArticulos
                   object cxgrdbclmnTarifasFECHA_DESDE_TARIFA: TcxGridDBColumn
                     Caption = 'Desde'
                     DataBinding.FieldName = 'FECHA_DESDE_ARTTAR'
-                    Width = 95
+                    Width = 90
                   end
                   object cxgrdbclmnTarifasFECHA_HASTA_TARIFA: TcxGridDBColumn
                     Caption = 'Hasta'
                     DataBinding.FieldName = 'FECHA_HASTA_ARTTAR'
-                    Width = 95
-                  end
-                  object dbcTarifasPRECIOSALIDA: TcxGridDBColumn
-                    Caption = 'Precio Salida'
-                    DataBinding.FieldName = 'PRECIO_SALIDA_ARTTAR'
-                    PropertiesClassName = 'TcxCurrencyEditProperties'
-                    Properties.OnEditValueChanged = dbcTarifasPRECIOSALIDAPropertiesEditValueChanged
-                    HeaderAlignmentHorz = taRightJustify
-                    Visible = False
-                    Width = 100
+                    Width = 90
                   end
                   object cxgrdbclmnTarifasCODIGO_PROVEEDOR: TcxGridDBColumn
                     Caption = 'C'#243'digo Proveedor'

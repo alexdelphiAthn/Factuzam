@@ -145,6 +145,11 @@
           Properties.DisplayFormat = '#,##0.00 '#8364
           Width = 101
         end
+        object colFormaPago: TcxGridDBColumn
+          Caption = 'Forma de pago'
+          DataBinding.FieldName = 'FORMAS_PAGO'
+          Width = 110
+        end
         object colEmpleado: TcxGridDBColumn
           Caption = 'Empleado'
           DataBinding.FieldName = 'EMPLEADO'

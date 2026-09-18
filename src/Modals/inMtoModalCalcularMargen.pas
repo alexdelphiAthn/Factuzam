@@ -188,6 +188,8 @@ begin
     else
       frm.edtMargen.Value := 100;
     frm.RecalcularPrecioSalida(nil);
+    // Se entra aquí para tocar el margen: foco y texto ya seleccionado.
+    frm.ActiveControl := frm.edtMargen;
 
     frm.ShowModal;
     Result := frm.FResultado;

@@ -305,11 +305,13 @@ var
   i: Integer;
 begin
   Caption := SSubsanacionTituloCobro;
-  for oControl in TArray<TControl>.Create(btnSinTicket, btnSinPrecios,
+  for oControl in TArray<TControl>.Create(btnSinPrecios,
     btnDeposito, btnFactura, btnBuscarVale, btnMasDatos, chkEnviarEmail,
     imgEnviarEmail, cbbSERIE_FAC, edtNumeroDoc, lblNumDoc, pnlCuenta) do
     oControl.Visible := False;
   btnConTicket.Caption := SSubsanacionBoton;
+  // F11 también subsana: graba la corrección sin reimprimir el ticket.
+  btnSinTicket.Caption := SSubsanacionBotonSinTicket;
   FMemTablePagos.DisableControls;
   try
     // Sólo medios simples en euros, como admite la subsanación.
@@ -443,7 +445,10 @@ begin
   if FModoSubsanacion then
   begin
     if ValidarYConfirmar and ValidarCobroSubsanacion then
+    begin
+      FTipoImpresion := tiConTicket;
       ModalResult := mrOk;
+    end;
   end
   else if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
@@ -503,7 +508,15 @@ end;
 
 procedure TfrmMtoCajaFaseCobro.btnSinTicketClick(Sender: TObject);
 begin
-  if not FModoSubsanacion and ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
+  if FModoSubsanacion then
+  begin
+    if ValidarYConfirmar and ValidarCobroSubsanacion then
+    begin
+      FTipoImpresion := tiSinTicket;
+      ModalResult := mrOk;
+    end;
+  end
+  else if ValidarYConfirmar and PuedeEmitir(cbbSERIE_FAC.Text, FFecha) then
   begin
     FTipoImpresion := tiSinTicket;
     ModalResult := mrOk;
@@ -1261,6 +1274,13 @@ begin
     btnConTicket.Enabled := (FDatosCobro.ImportePendiente <= 0.01);
   end;
   btnF12.Enabled := btnConTicket.Enabled;
+  // Subsanar sin ticket se admite siempre que se admita subsanar: aquí no
+  // hay emisión de documento que distinga a un botón del otro.
+  if FModoSubsanacion then
+  begin
+    btnSinTicket.Enabled := btnConTicket.Enabled;
+    btnF11.Enabled := btnSinTicket.Enabled;
+  end;
   if FDatosCobro.EsDevolucionEconomica then
     ConfigurarModoDevolucion
   else

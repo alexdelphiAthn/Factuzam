@@ -17,9 +17,13 @@ interface
 
 resourcestring
   SSubsanacionDescartar = '¿Descartar los cambios de la subsanación?';
+  // Rótulo corto de la cabecera; el detalle va en la línea de
+  // instrucciones, que es donde cabe sin recortarse.
+  SSubsanacionEtiqueta = 'SUBSANACIÓN';
+  SSubsanacionEtiquetaGuardada = 'SUBSANADA';
   SSubsanacionModo =
-    'Subsanación: cambie precio, descuento o total de cada línea. F12 ' +
-    'abre el cobro para la forma de pago y el descuento global.';
+    'Corrija el precio, el descuento o el total de cada línea. F12 abre ' +
+    'el cobro: forma de pago y descuento global.';
   SSubsanacionTituloCobro = 'Subsanación: forma de pago y descuento global';
   SSubsanacionCobroExacto =
     'El cobro debe cuadrar con el total, sin cambio, vales ni importes ' +
@@ -29,6 +33,7 @@ resourcestring
     'En Subsanación no se pueden añadir o quitar líneas ni cambiar cantidades.';
   SSubsanacionMotivoObligatorio = 'Indique el motivo de la subsanación.';
   SSubsanacionBoton = 'Subsanar';
+  SSubsanacionBotonSinTicket = 'Subsanar sin ticket';
   SSubsanacionNoPermitida =
     'Seleccione un ticket vigente para subsanar.';
   SSubsanacionNoPermitidaVerifactu =
@@ -48,6 +53,8 @@ resourcestring
   SSubsanacionGuardadaNoVerifactu =
     'Subsanación guardada y registrada en NO VERI*FACTU.';
   SSubsanacionTituloOperacion = 'Subsanación de %s / %s';
+  // Título de la ventana con la fecha de la factura subsanada.
+  SSubsanacionTituloFecha = '%s del %s';
   SSubsanacionReimprimir = 'Reimprimir';
   SSubsanacionSinLineas = 'La operación no tiene líneas para subsanar.';
   SSubsanacionCantidadInvalida =

@@ -153,6 +153,7 @@ type
       out ATipoRectificativa: TTipoRectificativaCaja): Boolean;
     procedure ActivarOperacionCaja(AFormularioCaja: TCustomForm);
     procedure RecargarMaestro;
+    procedure AjustarVisibilidadColumnasCliente;
     procedure GuardarLayout;
     procedure RestaurarLayout;
     procedure AjustarVisibilidadPestanas;
@@ -1102,6 +1103,7 @@ begin
       FdmConsulta.CargarMaestro(
         dtpFecha.Date, FEmpresa, FAlmacen, FCaja, Trim(edtBuscar.Text),
         chkVerTodos.Checked);
+      AjustarVisibilidadColumnasCliente;
       AjustarVisibilidadPestanas;
     finally
       Screen.Cursor := crDefault;
@@ -1121,6 +1123,23 @@ begin
     FdmConsulta.RefrescarPestanasHijas;
     AjustarVisibilidadPestanas;
   end;
+end;
+
+// Las columnas de cliente se muestran solo si el dia tiene alguna venta
+// a cliente identificado; con todo a mostrador estorban.
+procedure TfrmConsultaOpe.AjustarVisibilidadColumnasCliente;
+var
+  bVisible: Boolean;
+  ColCliente, ColRazonSocial: TcxGridDBColumn;
+begin
+  bVisible := FdmConsulta.HayClienteIdentificado;
+  ColCliente := cxViewMaestro.GetColumnByFieldName('CLIENTE');
+  ColRazonSocial :=
+    cxViewMaestro.GetColumnByFieldName('RAZON_SOCIAL_CLI');
+  if Assigned(ColCliente) then
+    ColCliente.Visible := bVisible;
+  if Assigned(ColRazonSocial) then
+    ColRazonSocial.Visible := bVisible;
 end;
 
 procedure TfrmConsultaOpe.AjustarVisibilidadPestanas;
