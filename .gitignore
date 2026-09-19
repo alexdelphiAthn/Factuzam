@@ -76,3 +76,10 @@ database.cfg
 /mcp_factuzam/.pytest_cache/
 /mcp_factuzam/**/__pycache__/
 /mcp_factuzam/**/*.pyc
+
+# Artefactos de compilacion y empaquetado (nunca a git: ficheros de cientos de MB)
+/build/
+/build_codex_fzam/
+*.rsm
+*.tds
+*.msi
