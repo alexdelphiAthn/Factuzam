@@ -331,6 +331,10 @@
         <DCCReference Include="src\Lib\inLibConexionPerfilIni.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesIntf.pas"/>
         <DCCReference Include="src\Lib\inLibConexionesUniDAC.pas"/>
+        <DCCReference Include="src\Lib\inLibErroresBBDD.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgColaTurno.pas"/>
+        <DCCReference Include="src\Lib\inLibColaTurnoIntf.pas"/>
+        <DCCReference Include="src\DataModules\UniDataColaTurno.pas"/>
         <DCCReference Include="src\Lib\inLibAuditoriaDatosIntf.pas"/>
         <DCCReference Include="src\Lib\inLibAuditoriaDatos.pas"/>
         <DCCReference Include="src\Lib\inLibMonitorSQLIntf.pas"/>

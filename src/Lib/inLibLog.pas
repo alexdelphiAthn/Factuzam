@@ -24,7 +24,18 @@ uses
 
 const
   DEFAULT_LOG_RETENTION = 10;
-  MUTEX_NAME = 'Global\DeleteFileLogMutex';
+  // Cada instancia escribe en su propio archivo, así que el mutex de
+  // escritura solo tiene que excluir a quien comparta ese archivo. Uno
+  // global serializaría todas las sesiones de un servidor de
+  // terminales (y las demás aplicaciones de la casa) sin motivo.
+  PREFIJO_MUTEX_ESCRITURA = 'Local\FzamLogEscritura_';
+  // La rotación usa su propio mutex: comprimir puede tardar segundos y,
+  // compartiendo el de escritura, dejaba a las demás instancias sin
+  // escribir hasta agotar el tiempo de espera.
+  MUTEX_ROTACION_NAME = 'Global\RotateFileLogMutex';
+  // Cada instancia publica un mutex con el nombre de su archivo de log.
+  // Mientras exista, ese archivo está vivo: ni se archiva ni se borra.
+  PREFIJO_MUTEX_LOG_EN_USO = 'Global\FzamLogEnUso_';
   MUTEX_TIMEOUT = 5000; // 5 segundos de timeout
 
 type
@@ -37,10 +48,13 @@ type
   TLog = class
   private
     FLogFileName: string;
+    FCarpetaLog: string;
     FLogFlags: TLogFlags;
     FInstanceID: string;
     FLogRetention: Integer;
     FMutexHandle: THandle;
+    FMutexRotacion: THandle;
+    FMutexEnUso: THandle;
     FMonitorSQL: IServicioMonitorSQL;
     function LogTypeToString(ALogType: TLogType): string;
     procedure WriteToLog(const AMessage: string; ALogType: TLogType);
@@ -48,21 +62,25 @@ type
     procedure WriteInitialInfo;
     function GenerateInstanceID: string;
     procedure RotateLogs;
-    function AcquireMutex: Boolean;
-    procedure ReleaseMutex;
+    function AcquireMutex(AMutex: THandle): Boolean;
+    procedure ReleaseMutex(AMutex: THandle);
     function IsFileAccessible(const FileName: string): Boolean;
-    function FechaLogArchivo(const AFileName: string): TDateTime;
-    function FechaOrdenArchivo(const AFileName: string): TDateTime;
     function ClaveFechaLog(const AFecha: TDateTime): string;
+    function CarpetaArchivoDia(const AFecha: TDateTime): string;
     function FechaZipAnterior(const AFileName: string;
                               out AFecha: TDateTime): Boolean;
     procedure ConsolidarZipAnterior(const AZipAnterior: string;
                                     const AFechaLog: TDateTime);
-    procedure MigrarZipsAnteriores;
+    procedure ConsolidarZipsRepetidos;
     procedure ArchivarGrupoLogs(const AArchivos: TList<string>;
                                 const AFechaLog: TDateTime);
+    procedure BorrarLogArchivado(const ARuta: string; ATamano: Int64;
+                                 const AModificado: TDateTime);
   public
-    constructor Create(ALogRetention: Integer = DEFAULT_LOG_RETENTION);
+    // ACarpetaLog vacío significa la carpeta de log de la aplicación.
+    // Se puede fijar otra para probar la rotación sin tocar la real.
+    constructor Create(ALogRetention: Integer = DEFAULT_LOG_RETENTION;
+                       const ACarpetaLog: string = '');
     destructor Destroy; override;
     procedure LogInfo(const AMessage: string); overload;
     procedure LogWarning(const AMessage: string);
@@ -101,6 +119,14 @@ function Log: TLog;
 function CrearRegistroLog: IRegistroLog;
 procedure LiberarLog;
 
+// Nombre del mutex con el que una instancia marca su archivo de log como
+// en uso. Público para diagnóstico y para las pruebas de rotación.
+function NombreMutexLogEnUso(const ARutaLog: string): string;
+// Nombre del mutex que serializa la escritura de un archivo de log.
+function NombreMutexEscrituraLog(const ARutaLog: string): string;
+// Indica si un proceso vivo está escribiendo ese archivo de log.
+function LogEnUso(const ARutaLog: string): Boolean;
+
 // Aplica los flags de depuración al log y al monitor SQL inyectado.
 // Es idempotente y se invoca al cargar o recargar los parámetros.
 procedure AplicarModosDepuracion(
@@ -117,6 +143,14 @@ type
     Ruta: string;
     FechaLog: TDateTime;
     FechaOrden: TDateTime;
+  end;
+
+  // Huella del archivo en el momento de volcarlo al ZIP. Solo se borra
+  // el original si sigue siendo el mismo cuando se cierra el ZIP.
+  TLogArchivado = record
+    Ruta: string;
+    Tamano: Int64;
+    Modificado: TDateTime;
   end;
 
   TAdaptadorRegistroLog = class(TInterfacedObject, IRegistroLog)
@@ -273,20 +307,27 @@ begin
   end;
 end;
 
-function TLog.AcquireMutex: Boolean;
+function TLog.AcquireMutex(AMutex: THandle): Boolean;
 var
   WaitResult: DWORD;
 begin
-  WaitResult := WaitForSingleObject(FMutexHandle, MUTEX_TIMEOUT);
-  Result := (WaitResult = WAIT_OBJECT_0) or
-            (WaitResult = WAIT_ABANDONED);
-end;
-procedure TLog.ReleaseMutex;
-begin
-  Windows.ReleaseMutex(FMutexHandle);
+  Result := AMutex <> 0;
+  if Result then
+  begin
+    WaitResult := WaitForSingleObject(AMutex, MUTEX_TIMEOUT);
+    Result := (WaitResult = WAIT_OBJECT_0) or
+              (WaitResult = WAIT_ABANDONED);
+  end;
 end;
 
-constructor TLog.Create(ALogRetention: Integer = DEFAULT_LOG_RETENTION);
+procedure TLog.ReleaseMutex(AMutex: THandle);
+begin
+  if AMutex <> 0 then
+    Windows.ReleaseMutex(AMutex);
+end;
+
+constructor TLog.Create(ALogRetention: Integer = DEFAULT_LOG_RETENTION;
+                        const ACarpetaLog: string = '');
   function FileGetSize(const FileName: TFileName): Int64;
   var
    SearchRec: TSearchRec;
@@ -305,21 +346,43 @@ begin
   inherited Create;
   FInstanceID := GenerateInstanceID;
   FLogRetention := ALogRetention;
-  FLogFileName := TPath.Combine(GetLogFolder, 'LOG_' +
+  if ACarpetaLog = '' then
+    FCarpetaLog := GetLogFolder
+  else
+  begin
+    FCarpetaLog := IncludeTrailingPathDelimiter(ACarpetaLog);
+    ForceDirectories(FCarpetaLog + 'archive\');
+  end;
+  FLogFileName := TPath.Combine(FCarpetaLog, 'LOG_' +
                                 FormatDateTime('yyyy_mm_dd_hhnnss', Now) +
                                 '_' + FInstanceID + '.log');
   if not IsFileAccessible(FLogFileName) then
     raise Exception.CreateFmt(SErrorAccesoFicheroLog,
                               [FLogFileName]);
-  FMutexHandle := CreateMutex(nil, False, PChar(MUTEX_NAME));
+  FMutexHandle := CreateMutex(
+    nil, False, PChar(NombreMutexEscrituraLog(FLogFileName)));
   if FMutexHandle = 0 then
-    raise Exception.Create(Format(SErrorCrearMutexLog, [MUTEX_NAME]));
+    raise Exception.Create(
+      Format(SErrorCrearMutexLog,
+             [NombreMutexEscrituraLog(FLogFileName)]));
+  FMutexRotacion := CreateMutex(nil, False, PChar(MUTEX_ROTACION_NAME));
+  // La marca de "en uso" se publica antes de rotar para que ninguna otra
+  // instancia pueda archivar y borrar este archivo mientras se escribe.
+  FMutexEnUso := CreateMutex(nil, False,
+                             PChar(NombreMutexLogEnUso(FLogFileName)));
   // SQL logging desactivado por defecto
   FLogFlags := [ltInfo, ltWarning, ltError];
   IsNewFile := (FileGetSize(FLogFileName) = 0);
   if IsNewFile then
     WriteInitialInfo;
   WriteToLog('Inicio de sesión de log.', ltInfo);
+  if FMutexEnUso = 0 then
+    WriteToLog('WARNING: No se pudo marcar el archivo de log como en uso; ' +
+               'otra instancia podría archivarlo mientras se escribe.',
+               ltWarning);
+  if FMutexRotacion = 0 then
+    WriteToLog('WARNING: No se pudo crear el mutex de rotación de logs.',
+               ltWarning);
   RotateLogs;
 end;
 
@@ -351,6 +414,18 @@ begin
         CloseHandle(FMutexHandle);
         FMutexHandle := 0;
       end;
+      if FMutexRotacion <> 0 then
+      begin
+        CloseHandle(FMutexRotacion);
+        FMutexRotacion := 0;
+      end;
+      // Al soltar la marca, el archivo queda archivable por cualquier
+      // instancia; el sistema la suelta igual si el proceso muere.
+      if FMutexEnUso <> 0 then
+      begin
+        CloseHandle(FMutexEnUso);
+        FMutexEnUso := 0;
+      end;
       inherited;
     end;
   end;
@@ -366,7 +441,7 @@ procedure TLog.WriteToLogInternal(const AMessage: string);
 var
   LogFile: TextFile;
 begin
-  if AcquireMutex then
+  if AcquireMutex(FMutexHandle) then
   try
     AssignFile(LogFile, FLogFileName);
     try
@@ -382,7 +457,7 @@ begin
       CloseFile(LogFile);
     end;
   finally
-    ReleaseMutex;
+    ReleaseMutex(FMutexHandle);
   end;
 end;
 
@@ -407,7 +482,7 @@ begin
   WriteToLogInternal('Usuario de Windows: ' + GetWindowsUserName);
   WriteToLogInternal('Versión de Windows: ' + GetWindowsVersion);
   WriteToLogInternal('Ruta del programa: ' + GetProgramPath);
-  WriteToLogInternal('Carpeta de log: ' + GetLogFolder);
+  WriteToLogInternal('Carpeta de log: ' + FCarpetaLog);
   WriteToLogInternal('Version de fzam: ' + inLibGlobalVar.oVersion);
   WriteToLogInternal('-------------------------------');
 end;
@@ -519,10 +594,44 @@ begin
     'Diagnóstico completo activado desde la pantalla de error');
 end;
 
-function TLog.FechaLogArchivo(const AFileName: string): TDateTime;
+function NombreMutexEscrituraLog(const ARutaLog: string): string;
+begin
+  // Del mismo nombre de archivo que la marca de uso, pero de la sesión:
+  // dos sesiones nunca escriben el mismo log.
+  Result := PREFIJO_MUTEX_ESCRITURA + ExtractFileName(ARutaLog);
+end;
+
+function NombreMutexLogEnUso(const ARutaLog: string): string;
+begin
+  // El nombre del archivo ya es único (fecha, hora y GUID de instancia) y
+  // no lleva barras, lo único que Windows no admite en el nombre de un
+  // objeto de sincronización.
+  Result := PREFIJO_MUTEX_LOG_EN_USO + ExtractFileName(ARutaLog);
+end;
+
+function LogEnUso(const ARutaLog: string): Boolean;
+var
+  Marca: THandle;
+begin
+  Marca := OpenMutex(SYNCHRONIZE, False,
+                     PChar(NombreMutexLogEnUso(ARutaLog)));
+  Result := Marca <> 0;
+  if Result then
+    CloseHandle(Marca)
+  else
+    // Existe pero es de otro usuario: también hay un proceso vivo.
+    Result := GetLastError = ERROR_ACCESS_DENIED;
+end;
+
+function InfoArchivoLog(const ARuta: string): TLogFileInfo;
 var
   sNombre: string;
   dFecha: TDateTime;
+  dHora: TDateTime;
+  dModificado: TDateTime;
+  bConFecha: Boolean;
+  bConHora: Boolean;
+
   function ProbarFecha(const ATexto: string; AAnioPrimero: Boolean;
                        out AFecha: TDateTime): Boolean;
   var
@@ -532,6 +641,7 @@ var
     bFormato: Boolean;
   begin
     Result := False;
+    AFecha := 0;
     if Length(ATexto) = 10 then
     begin
       if AAnioPrimero then
@@ -561,50 +671,99 @@ var
       end;
     end;
   end;
-begin
-  Result := Trunc(TFile.GetLastWriteTime(AFileName));
-  sNombre := TPath.GetFileNameWithoutExtension(AFileName);
-  if (Length(sNombre) >= 14) and
-     SameText(Copy(sNombre, 1, 4), 'LOG_') then
+
+  function ProbarHora(const ATexto: string; out AHora: TDateTime): Boolean;
+  var
+    iHora: Integer;
+    iMinuto: Integer;
+    iSegundo: Integer;
   begin
-    if ProbarFecha(Copy(sNombre, 5, 10), True, dFecha) then
-      Result := dFecha
-    else if Length(sNombre) >= 10 then
+    AHora := 0;
+    Result := (Length(ATexto) = 6) and
+              TryStrToInt(Copy(ATexto, 1, 2), iHora) and
+              TryStrToInt(Copy(ATexto, 3, 2), iMinuto) and
+              TryStrToInt(Copy(ATexto, 5, 2), iSegundo);
+    if Result then
+      Result := (iHora >= 0) and (iHora <= 23) and
+                (iMinuto >= 0) and (iMinuto <= 59) and
+                (iSegundo >= 0) and (iSegundo <= 59);
+    if Result then
+      AHora := EncodeTime(Word(iHora), Word(iMinuto), Word(iSegundo), 0);
+  end;
+
+begin
+  Result.Ruta := ARuta;
+  dFecha := 0;
+  dHora := 0;
+  bConFecha := False;
+  bConHora := False;
+  sNombre := TPath.GetFileNameWithoutExtension(ARuta);
+  if (Length(sNombre) >= 14) and SameText(Copy(sNombre, 1, 4), 'LOG_') then
+  begin
+    bConFecha := ProbarFecha(Copy(sNombre, 5, 10), True, dFecha);
+    if not bConFecha then
+      bConFecha := ProbarFecha(Copy(sNombre, Length(sNombre) - 9, 10),
+                               False, dFecha);
+    if bConFecha and (Length(sNombre) >= 21) then
+      bConHora := ProbarHora(Copy(sNombre, 16, 6), dHora);
+  end;
+  // La fecha del sistema solo se consulta si el nombre no la trae: es un
+  // acceso a disco por archivo y la rotación recorre la carpeta entera
+  // en cada arranque.
+  if bConFecha and bConHora then
+  begin
+    Result.FechaLog := dFecha;
+    Result.FechaOrden := dFecha + dHora;
+  end
+  else
+  begin
+    dModificado := TFile.GetLastWriteTime(ARuta);
+    if bConFecha then
     begin
-      if ProbarFecha(Copy(sNombre, Length(sNombre) - 9, 10), False,
-                     dFecha) then
-        Result := dFecha;
+      Result.FechaLog := dFecha;
+      Result.FechaOrden := dFecha + Frac(dModificado);
+    end
+    else
+    begin
+      Result.FechaLog := Trunc(dModificado);
+      Result.FechaOrden := dModificado;
     end;
   end;
 end;
 
-function TLog.FechaOrdenArchivo(const AFileName: string): TDateTime;
+function NombreEntradaLibre(const AZip: TZipFile; const ANombre: string;
+                            ATamano: Int64;
+                            out AYaEstaba: Boolean): string;
 var
-  sNombre: string;
-  sHora: string;
-  iHora: Integer;
-  iMinuto: Integer;
-  iSegundo: Integer;
-  dFecha: TDateTime;
-  bHoraValida: Boolean;
+  sBase: string;
+  sExtension: string;
+  iEntrada: Integer;
+  iCopia: Integer;
+  bBuscando: Boolean;
 begin
-  dFecha := FechaLogArchivo(AFileName);
-  Result := dFecha + Frac(TFile.GetLastWriteTime(AFileName));
-  sNombre := TPath.GetFileNameWithoutExtension(AFileName);
-  if (Length(sNombre) >= 21) and
-     SameText(Copy(sNombre, 1, 4), 'LOG_') then
+  sBase := TPath.GetFileNameWithoutExtension(ANombre);
+  sExtension := TPath.GetExtension(ANombre);
+  Result := ANombre;
+  AYaEstaba := False;
+  iCopia := 1;
+  bBuscando := True;
+  while bBuscando do
   begin
-    sHora := Copy(sNombre, 16, 6);
-    bHoraValida := TryStrToInt(Copy(sHora, 1, 2), iHora) and
-                   TryStrToInt(Copy(sHora, 3, 2), iMinuto) and
-                   TryStrToInt(Copy(sHora, 5, 2), iSegundo);
-    if bHoraValida then
+    iEntrada := AZip.IndexOf(Result);
+    if iEntrada < 0 then
+      bBuscando := False
+    else if Int64(AZip.FileInfo[iEntrada].UncompressedSize64) = ATamano then
     begin
-      if (iHora >= 0) and (iHora <= 23) and
-         (iMinuto >= 0) and (iMinuto <= 59) and
-         (iSegundo >= 0) and (iSegundo <= 59) then
-        Result := dFecha + EncodeTime(Word(iHora), Word(iMinuto),
-                                      Word(iSegundo), 0);
+      // Ya estaba archivado tal cual: sobra en la carpeta de log.
+      AYaEstaba := True;
+      bBuscando := False;
+    end
+    else
+    begin
+      // Mismo nombre y distinto contenido: el archivo creció después de
+      // archivarlo. Se guarda aparte en vez de perder lo nuevo.
+      Result := Format('%s_%d%s', [sBase, iCopia, sExtension]);
+      Inc(iCopia);
     end;
   end;
 end;
@@ -612,6 +771,15 @@ end;
 function TLog.ClaveFechaLog(const AFecha: TDateTime): string;
 begin
   Result := FormatDateTime('yyyy-mm-dd', AFecha);
+end;
+
+function TLog.CarpetaArchivoDia(const AFecha: TDateTime): string;
+begin
+  Result := TPath.Combine(FCarpetaLog, 'archive');
+  Result := TPath.Combine(Result, FormatDateTime('yyyy', AFecha));
+  Result := TPath.Combine(Result, FormatDateTime('mm', AFecha));
+  if not TDirectory.Exists(Result) then
+    TDirectory.CreateDirectory(Result);
 end;
 
 function TLog.FechaZipAnterior(const AFileName: string;
@@ -625,12 +793,17 @@ var
   bFormato: Boolean;
 begin
   Result := False;
+  AFecha := 0;
   sNombre := TPath.GetFileNameWithoutExtension(AFileName);
-  if (Length(sNombre) >= 15) and
+  if (Length(sNombre) >= 13) and
      SameText(Copy(sNombre, 1, 5), 'Logs_') then
   begin
+    // Se admiten los tres nombres que ha usado el programa:
+    // Logs_yyyy-mm-dd (actual), Logs_yyyy_mm_dd y Logs_yyyymmdd.
     sFecha := Copy(sNombre, 6, 10);
-    bFormato := (sFecha[5] = '-') and (sFecha[8] = '-');
+    bFormato := (Length(sFecha) = 10) and
+                ((sFecha[5] = '-') or (sFecha[5] = '_')) and
+                (sFecha[8] = sFecha[5]);
     if bFormato then
       bFormato := TryStrToInt(Copy(sFecha, 1, 4), iAnio) and
                   TryStrToInt(Copy(sFecha, 6, 2), iMes) and
@@ -638,7 +811,8 @@ begin
     else
     begin
       sFecha := Copy(sNombre, 6, 8);
-      bFormato := TryStrToInt(Copy(sFecha, 1, 4), iAnio) and
+      bFormato := (Length(sFecha) = 8) and
+                  TryStrToInt(Copy(sFecha, 1, 4), iAnio) and
                   TryStrToInt(Copy(sFecha, 5, 2), iMes) and
                   TryStrToInt(Copy(sFecha, 7, 2), iDia);
     end;
@@ -657,135 +831,166 @@ end;
 procedure TLog.ConsolidarZipAnterior(const AZipAnterior: string;
                                      const AFechaLog: TDateTime);
 var
-  ArchiveFolder: string;
   ZipFileName: string;
   EntradaZip: string;
   ZipAnterior: TZipFile;
   ZipDiario: TZipFile;
   Datos: TBytes;
   I: Integer;
+  bYaEstaba: Boolean;
   bCompletado: Boolean;
 begin
-  ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
-  ArchiveFolder := TPath.Combine(ArchiveFolder,
-                                 FormatDateTime('yyyy', AFechaLog));
-  ArchiveFolder := TPath.Combine(ArchiveFolder,
-                                 FormatDateTime('mm', AFechaLog));
-  if not TDirectory.Exists(ArchiveFolder) then
-    TDirectory.CreateDirectory(ArchiveFolder);
-  ZipFileName := TPath.Combine(ArchiveFolder,
+  ZipFileName := TPath.Combine(CarpetaArchivoDia(AFechaLog),
                                'Logs_' + ClaveFechaLog(AFechaLog) + '.zip');
-  if not TZipFile.IsValid(AZipAnterior) then
-    WriteToLog('WARNING: ZIP de logs anterior no válido: ' + AZipAnterior,
-               ltWarning)
-  else if not TFile.Exists(ZipFileName) then
-    TFile.Move(AZipAnterior, ZipFileName)
-  else
+  // Si ya es el ZIP del día con el nombre actual no hay nada que hacer:
+  // abrirlo contra sí mismo lo dejaría a medias.
+  if not SameText(TPath.GetFullPath(AZipAnterior),
+                  TPath.GetFullPath(ZipFileName)) then
   begin
-    ZipAnterior := nil;
-    ZipDiario := nil;
-    bCompletado := True;
-    try
-      ZipAnterior := TZipFile.Create;
-      ZipDiario := TZipFile.Create;
-      ZipAnterior.Open(AZipAnterior, zmRead);
-      ZipDiario.Open(ZipFileName, zmReadWrite);
-      for I := 0 to ZipAnterior.FileCount - 1 do
-      begin
-        EntradaZip := ZipAnterior.FileName[I];
-        if ZipDiario.IndexOf(EntradaZip) < 0 then
+    if not TZipFile.IsValid(AZipAnterior) then
+      WriteToLog('WARNING: ZIP de logs anterior no válido: ' + AZipAnterior,
+                 ltWarning)
+    else if not TFile.Exists(ZipFileName) then
+      TFile.Move(AZipAnterior, ZipFileName)
+    else
+    begin
+      ZipAnterior := nil;
+      ZipDiario := nil;
+      bCompletado := True;
+      try
+        ZipAnterior := TZipFile.Create;
+        ZipDiario := TZipFile.Create;
+        ZipAnterior.Open(AZipAnterior, zmRead);
+        ZipDiario.Open(ZipFileName, zmReadWrite);
+        for I := 0 to ZipAnterior.FileCount - 1 do
         begin
           try
-            ZipAnterior.Read(I, Datos);
-            ZipDiario.Add(Datos, EntradaZip);
+            EntradaZip := NombreEntradaLibre(
+              ZipDiario, ZipAnterior.FileName[I],
+              Int64(ZipAnterior.FileInfo[I].UncompressedSize64), bYaEstaba);
+            if not bYaEstaba then
+            begin
+              ZipAnterior.Read(I, Datos);
+              ZipDiario.Add(Datos, EntradaZip);
+            end;
           except
             on E: Exception do
             begin
               bCompletado := False;
-              WriteToLog('WARNING: No se pudo consolidar ' + EntradaZip +
-                         ' desde ' + AZipAnterior + ': ' + E.Message,
-                         ltWarning);
+              WriteToLog('WARNING: No se pudo consolidar ' +
+                         ZipAnterior.FileName[I] + ' desde ' + AZipAnterior +
+                         ': ' + E.Message, ltWarning);
             end;
           end;
         end;
-      end;
-      ZipDiario.Close;
-      ZipAnterior.Close;
-      if bCompletado then
-        TFile.Delete(AZipAnterior);
-    finally
-      try
-        FreeAndNil(ZipDiario);
+        ZipDiario.Close;
+        ZipAnterior.Close;
+        if bCompletado then
+          TFile.Delete(AZipAnterior);
       finally
-        FreeAndNil(ZipAnterior);
+        try
+          FreeAndNil(ZipDiario);
+        finally
+          FreeAndNil(ZipAnterior);
+        end;
       end;
     end;
   end;
 end;
 
-procedure TLog.MigrarZipsAnteriores;
+procedure TLog.ConsolidarZipsRepetidos;
 var
-  ArchiveFolder: string;
+  CarpetaArchivo: string;
   ZipFiles: TArray<string>;
   dFechaLog: TDateTime;
   I: Integer;
 begin
-  ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
-  ZipFiles := TDirectory.GetFiles(ArchiveFolder, 'Logs_*.zip',
-                                  TSearchOption.soTopDirectoryOnly);
-  for I := 0 to Length(ZipFiles) - 1 do
+  CarpetaArchivo := TPath.Combine(FCarpetaLog, 'archive');
+  if TDirectory.Exists(CarpetaArchivo) then
   begin
-    try
-      if FechaZipAnterior(ZipFiles[I], dFechaLog) then
-        ConsolidarZipAnterior(ZipFiles[I], dFechaLog)
-      else
-        WriteToLog('WARNING: No se reconoce la fecha del ZIP de logs: ' +
-                   ZipFiles[I], ltWarning);
-    except
-      on E: Exception do
-        WriteToLog('WARNING: No se pudo migrar el ZIP de logs ' + ZipFiles[I] +
-                   ': ' + E.Message, ltWarning);
+    // Recorre también los subdirectorios: los ZIP de versiones anteriores
+    // (Logs_yyyymmdd y Logs_yyyy_mm_dd) ya vivían en archive\yyyy\mm, y
+    // con el nombre actual se creaba otro ZIP del mismo día al lado, de
+    // forma que un mismo log acababa repetido en dos o tres comprimidos.
+    ZipFiles := TDirectory.GetFiles(CarpetaArchivo, 'Logs_*.zip',
+                                    TSearchOption.soAllDirectories);
+    for I := 0 to Length(ZipFiles) - 1 do
+    begin
+      try
+        if FechaZipAnterior(ZipFiles[I], dFechaLog) then
+          ConsolidarZipAnterior(ZipFiles[I], dFechaLog)
+        else
+          WriteToLog('WARNING: No se reconoce la fecha del ZIP de logs: ' +
+                     ZipFiles[I], ltWarning);
+      except
+        on E: Exception do
+          WriteToLog('WARNING: No se pudo consolidar el ZIP de logs ' +
+                     ZipFiles[I] + ': ' + E.Message, ltWarning);
+      end;
     end;
+  end;
+end;
+
+procedure TLog.BorrarLogArchivado(const ARuta: string; ATamano: Int64;
+                                  const AModificado: TDateTime);
+begin
+  try
+    if TFile.Exists(ARuta) then
+    begin
+      // Entre el volcado al ZIP y el borrado el archivo ha podido volver
+      // a la vida o crecer. En ese caso se conserva y la próxima rotación
+      // lo archivará completo.
+      if LogEnUso(ARuta) or
+         (TFile.GetSize(ARuta) <> ATamano) or
+         (TFile.GetLastWriteTime(ARuta) <> AModificado) then
+        WriteToLog('WARNING: Log en uso al archivarlo, se conserva: ' +
+                   ARuta, ltWarning)
+      else
+        TFile.Delete(ARuta);
+    end;
+  except
+    on E: Exception do
+      WriteToLog('WARNING: Log archivado pero no borrado ' + ARuta + ': ' +
+                 E.Message, ltWarning);
   end;
 end;
 
 procedure TLog.ArchivarGrupoLogs(const AArchivos: TList<string>;
                                  const AFechaLog: TDateTime);
 var
-  ArchiveFolder: string;
   ZipFileName: string;
   EntradaZip: string;
   Zip: TZipFile;
-  ArchivosParaBorrar: TList<string>;
+  Archivados: TList<TLogArchivado>;
+  Archivado: TLogArchivado;
+  bYaEstaba: Boolean;
   I: Integer;
 begin
   if AArchivos.Count > 0 then
   begin
-    ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
-    ArchiveFolder := TPath.Combine(ArchiveFolder,
-                                   FormatDateTime('yyyy', AFechaLog));
-    ArchiveFolder := TPath.Combine(ArchiveFolder,
-                                   FormatDateTime('mm', AFechaLog));
-    if not TDirectory.Exists(ArchiveFolder) then
-      TDirectory.CreateDirectory(ArchiveFolder);
-    ZipFileName := TPath.Combine(ArchiveFolder,
+    ZipFileName := TPath.Combine(CarpetaArchivoDia(AFechaLog),
                                  'Logs_' + ClaveFechaLog(AFechaLog) + '.zip');
     Zip := nil;
-    ArchivosParaBorrar := nil;
+    Archivados := nil;
     try
       Zip := TZipFile.Create;
-      ArchivosParaBorrar := TList<string>.Create;
+      Archivados := TList<TLogArchivado>.Create;
       if TFile.Exists(ZipFileName) then
         Zip.Open(ZipFileName, zmReadWrite)
       else
         Zip.Open(ZipFileName, zmWrite);
       for I := 0 to AArchivos.Count - 1 do
       begin
-        EntradaZip := ExtractFileName(AArchivos[I]);
         try
-          if Zip.IndexOf(EntradaZip) < 0 then
-            Zip.Add(AArchivos[I], EntradaZip);
-          ArchivosParaBorrar.Add(AArchivos[I]);
+          Archivado.Ruta := AArchivos[I];
+          Archivado.Tamano := TFile.GetSize(Archivado.Ruta);
+          Archivado.Modificado := TFile.GetLastWriteTime(Archivado.Ruta);
+          EntradaZip := NombreEntradaLibre(Zip,
+                                           ExtractFileName(Archivado.Ruta),
+                                           Archivado.Tamano, bYaEstaba);
+          if not bYaEstaba then
+            Zip.Add(Archivado.Ruta, EntradaZip);
+          Archivados.Add(Archivado);
         except
           on E: Exception do
             WriteToLog('WARNING: No se pudo archivar ' + AArchivos[I] +
@@ -793,22 +998,15 @@ begin
         end;
       end;
       Zip.Close;
-      for I := 0 to ArchivosParaBorrar.Count - 1 do
-      begin
-        try
-          if TFile.Exists(ArchivosParaBorrar[I]) then
-            TFile.Delete(ArchivosParaBorrar[I]);
-        except
-          on E: Exception do
-            WriteToLog('WARNING: Log archivado pero no borrado ' +
-                       ArchivosParaBorrar[I] + ': ' + E.Message, ltWarning);
-        end;
-      end;
+      // El borrado espera a tener el ZIP cerrado en disco.
+      for I := 0 to Archivados.Count - 1 do
+        BorrarLogArchivado(Archivados[I].Ruta, Archivados[I].Tamano,
+                           Archivados[I].Modificado);
     finally
       try
         FreeAndNil(Zip);
       finally
-        FreeAndNil(ArchivosParaBorrar);
+        FreeAndNil(Archivados);
       end;
     end;
   end;
@@ -817,42 +1015,38 @@ end;
 procedure TLog.RotateLogs;
 var
   LogFiles: TArray<string>;
-  ArchiveFolder: string;
   InfoFiles: TList<TLogFileInfo>;
   Grupo: TList<string>;
   Info: TLogFileInfo;
+  sRutaPropia: string;
   I: Integer;
   iRetencion: Integer;
   iArchivar: Integer;
   dFechaGrupo: TDateTime;
   bHayGrupo: Boolean;
 begin
-  if AcquireMutex then
+  if AcquireMutex(FMutexRotacion) then
   try
     try
-      ArchiveFolder := TPath.Combine(GetLogFolder, 'archive');
-      if not TDirectory.Exists(ArchiveFolder) then
-        TDirectory.CreateDirectory(ArchiveFolder);
-      MigrarZipsAnteriores;
-      LogFiles := TDirectory.GetFiles(GetLogFolder, '*.log');
+      ConsolidarZipsRepetidos;
+      LogFiles := TDirectory.GetFiles(FCarpetaLog, '*.log');
       iRetencion := FLogRetention;
       if iRetencion < 1 then
         iRetencion := 1;
       iArchivar := Length(LogFiles) - iRetencion;
       if iArchivar > 0 then
       begin
+        sRutaPropia := ExpandFileName(FLogFileName);
         InfoFiles := TList<TLogFileInfo>.Create;
         try
           for I := 0 to Length(LogFiles) - 1 do
           begin
-            if not SameText(ExpandFileName(LogFiles[I]),
-                            ExpandFileName(FLogFileName)) then
-            begin
-              Info.Ruta := LogFiles[I];
-              Info.FechaLog := FechaLogArchivo(LogFiles[I]);
-              Info.FechaOrden := FechaOrdenArchivo(LogFiles[I]);
-              InfoFiles.Add(Info);
-            end;
+            // Ni el log de esta instancia ni el de otra instancia viva:
+            // su proceso lo sigue escribiendo y lo recrearía vacío tras
+            // borrarlo, dejando una copia repetida en la carpeta.
+            if (not SameText(ExpandFileName(LogFiles[I]), sRutaPropia)) and
+               (not LogEnUso(LogFiles[I])) then
+              InfoFiles.Add(InfoArchivoLog(LogFiles[I]));
           end;
           InfoFiles.Sort(TComparer<TLogFileInfo>.Construct(
             function(const AIzquierda, ADerecha: TLogFileInfo): Integer
@@ -898,7 +1092,7 @@ begin
         WriteToLog('WARNING: Error rotando logs: ' + E.Message, ltWarning);
     end;
   finally
-    ReleaseMutex;
+    ReleaseMutex(FMutexRotacion);
   end;
 end;
 

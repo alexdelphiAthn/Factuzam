@@ -33,6 +33,7 @@ type
     FAvisoNoDisponible: Boolean;
     function PuedeContinuar: Boolean;
     procedure ProcesarPendientes;
+    procedure VaciarCola;
     function ReclamarFila(AIdCola: Int64): Boolean;
     function ProcesarFila(AIdCola: Int64;
       const ASerie, ANumero, ATipoOperacion: string;
@@ -58,12 +59,17 @@ function CrearProcesadorVerifactuColaUniDAC(
   const ARegistroLog: IRegistroLog = nil): IProcesadorVerifactuCola;
 implementation
 uses
-  Winapi.Windows, System.SysUtils, inLibVerifactu,
-  inLibVerifactuTipos, UniDataVerifactuColaResultados, inLibErroresHttp,
+  Winapi.Windows, System.SysUtils, inLibVerifactu, inLibColaTurnoIntf,
+  UniDataColaTurno, inLibErroresBBDD, inLibVerifactuTipos,
+  UniDataVerifactuColaResultados, inLibErroresHttp,
   UniDataVerifactuSubsanacionResultados;
 const
   CResultadoFilaSinConexion = -1;
+  // Contención con otro puesto: se repite antes que un fallo de red,
+  // porque el bloqueo se suelta en cuanto el otro envío termina
+  CResultadoFilaBloqueoBBDD = -2;
   CSegundosReintentoSinConexion = 300;
+  CSegundosReintentoBloqueo = 60;
   fidvfcola       = 'ID_VFCOLA';
   fserievfcola    = 'SERIE_FAC_VFCOLA';
   fnumerovfcola   = 'NUMERO_FAC_VFCOLA';
@@ -243,8 +249,7 @@ begin
 end;
 procedure THiloVerifactuCola.ProcesarPendientes;
 var
-  Qry:     TUniQuery;
-  iEspera: Integer;
+  oTurno: ITurnoCola;
 begin
   if FConn = nil then
     FConn := FContexto.Conexiones.CrearConexion(
@@ -266,61 +271,83 @@ begin
   end
   else
   begin
-    Qry := TUniQuery.Create(nil);
+    // Un solo puesto vacía la cola en cada ciclo. El encadenamiento ya
+    // serializa los envíos con el FOR UPDATE de fza_verifactu_cadena, así
+    // que tener a los demás esperando ese bloqueo mientras uno habla con la
+    // AEAT no adelanta ningún envío y sí agota esperas de bloqueo. Quien no
+    // consigue el turno se salta el ciclo; el trabajo sigue ahí.
+    oTurno := CrearTurnoColaUniDAC(
+      FConn, 'vfcola', FContexto.RegistroLog);
+    if oTurno.Intentar then
     try
-      Qry.Connection := FConn;
-      // Rescate de filas PROCESANDO huérfanas (cierre brusco de la app)
-      Qry.SQL.Text :=
-        ' UPDATE fza_verifactu_cola ' +
-        ' SET ESTADO_VFCOLA = ''PENDIENTE'', ' +
-        '     INSTANTE_MODIF = NOW() ' +
-        ' WHERE ESTADO_VFCOLA = ''PROCESANDO'' ' +
-        '   AND INSTANTE_MODIF < DATE_SUB(NOW(), INTERVAL 10 MINUTE)';
-      Qry.Execute;
-      // Reproceso: filas en ERROR con menos intentos que el máximo
-      // vigente vuelven a la cola (p.ej. tras corregir configuración,
-      // resetear intentos a mano o subir appVerifactuMaxIntentos)
-      Qry.SQL.Text :=
-        ' UPDATE fza_verifactu_cola ' +
-        ' SET ESTADO_VFCOLA = ''PENDIENTE'', ' +
-        '     INSTANTE_PROXIMO_INTENTO_VFCOLA = NULL, ' +
-        '     INSTANTE_MODIF = NOW() ' +
-        ' WHERE ESTADO_VFCOLA = ''ERROR'' ' +
-        '   AND CONTADOR_INTENTOS_VFCOLA < :MAXINTENTOS';
-      Qry.ParamByName('MAXINTENTOS').AsInteger :=
-        FContexto.ParametrosApp.GetInt('appVerifactuMaxIntentos', 10);
-      Qry.Execute;
-      Qry.SQL.Text :=
-        ' SELECT ID_VFCOLA, SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, ' +
-        '        TIPO_OPERACION_VFCOLA, CONTADOR_INTENTOS_VFCOLA ' +
-        ' FROM fza_verifactu_cola ' +
-        ' WHERE ESTADO_VFCOLA = ''PENDIENTE'' ' +
-        '   AND (INSTANTE_PROXIMO_INTENTO_VFCOLA IS NULL ' +
-        '        OR INSTANTE_PROXIMO_INTENTO_VFCOLA <= NOW()) ' +
-        ' ORDER BY ID_VFCOLA ' +
-        ' LIMIT 25';
-      Qry.Open;
-      while (not Qry.Eof) and PuedeContinuar do
-      begin
-        iEspera := ProcesarFila(Qry.FieldByName(fidvfcola).AsLargeInt,
-                                Qry.FieldByName(fserievfcola).AsString,
-                                Qry.FieldByName(fnumerovfcola).AsString,
-                                Qry.FieldByName(ftipoopvfcola).AsString,
-                                Qry.FieldByName(fintentosvfcola).AsInteger);
-        // Un fallo de transporte abre el circuito hasta el ciclo siguiente;
-        // no se prueban las demás filas durante la misma caída.
-        if iEspera = CResultadoFilaSinConexion then
-          Break;
-        // Control de flujo de la AEAT entre envíos consecutivos
-        if iEspera > 0 then
-          EsperarSegundos(iEspera);
-        Qry.Next;
-      end;
+      VaciarCola;
     finally
-      FreeAndNil(Qry);
+      oTurno.Liberar;
     end;
   end;
 end;
+
+procedure THiloVerifactuCola.VaciarCola;
+var
+  Qry:     TUniQuery;
+  iEspera: Integer;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := FConn;
+    // Rescate de filas PROCESANDO huérfanas (cierre brusco de la app)
+    Qry.SQL.Text :=
+      ' UPDATE fza_verifactu_cola ' +
+      ' SET ESTADO_VFCOLA = ''PENDIENTE'', ' +
+      '     INSTANTE_MODIF = NOW() ' +
+      ' WHERE ESTADO_VFCOLA = ''PROCESANDO'' ' +
+      '   AND INSTANTE_MODIF < DATE_SUB(NOW(), INTERVAL 10 MINUTE)';
+    Qry.Execute;
+    // Reproceso: filas en ERROR con menos intentos que el máximo
+    // vigente vuelven a la cola (p.ej. tras corregir configuración,
+    // resetear intentos a mano o subir appVerifactuMaxIntentos)
+    Qry.SQL.Text :=
+      ' UPDATE fza_verifactu_cola ' +
+      ' SET ESTADO_VFCOLA = ''PENDIENTE'', ' +
+      '     INSTANTE_PROXIMO_INTENTO_VFCOLA = NULL, ' +
+      '     INSTANTE_MODIF = NOW() ' +
+      ' WHERE ESTADO_VFCOLA = ''ERROR'' ' +
+      '   AND CONTADOR_INTENTOS_VFCOLA < :MAXINTENTOS';
+    Qry.ParamByName('MAXINTENTOS').AsInteger :=
+      FContexto.ParametrosApp.GetInt('appVerifactuMaxIntentos', 10);
+    Qry.Execute;
+    Qry.SQL.Text :=
+      ' SELECT ID_VFCOLA, SERIE_FAC_VFCOLA, NUMERO_FAC_VFCOLA, ' +
+      '        TIPO_OPERACION_VFCOLA, CONTADOR_INTENTOS_VFCOLA ' +
+      ' FROM fza_verifactu_cola ' +
+      ' WHERE ESTADO_VFCOLA = ''PENDIENTE'' ' +
+      '   AND (INSTANTE_PROXIMO_INTENTO_VFCOLA IS NULL ' +
+      '        OR INSTANTE_PROXIMO_INTENTO_VFCOLA <= NOW()) ' +
+      ' ORDER BY ID_VFCOLA ' +
+      ' LIMIT 25';
+    Qry.Open;
+    while (not Qry.Eof) and PuedeContinuar do
+    begin
+      iEspera := ProcesarFila(Qry.FieldByName(fidvfcola).AsLargeInt,
+                              Qry.FieldByName(fserievfcola).AsString,
+                              Qry.FieldByName(fnumerovfcola).AsString,
+                              Qry.FieldByName(ftipoopvfcola).AsString,
+                              Qry.FieldByName(fintentosvfcola).AsInteger);
+      // Un fallo de transporte, o un bloqueo del encadenamiento, abren el
+      // circuito hasta el ciclo siguiente: no se prueban las demás filas
+      // durante la misma caída.
+      if iEspera < 0 then
+        Break;
+      // Control de flujo de la AEAT entre envíos consecutivos
+      if iEspera > 0 then
+        EsperarSegundos(iEspera);
+      Qry.Next;
+    end;
+  finally
+    FreeAndNil(Qry);
+  end;
+end;
+
 procedure THiloVerifactuCola.ConservarIntentoFallido(AIdCola: Int64;
   const ASerie, ANumero, ATipoOperacion: string;
   const AResultado: TResultadoEnvioVerifactu);
@@ -434,6 +461,25 @@ begin
           FContexto.RegistroLog, True,
           CSegundosReintentoSinConexion);
         Result := CResultadoFilaSinConexion;
+      end;
+      on E: EBloqueoBBDDTemporal do
+      begin
+        if FConn.InTransaction then
+          FConn.Rollback;
+        // Contención, no rechazo: la AEAT ni se ha enterado. La fila
+        // vuelve a PENDIENTE sin gastar intento, que si no una racha de
+        // esperas agotadas consumiría appVerifactuMaxIntentos y dejaría
+        // la factura parada hasta reponer el contador a mano.
+        oResultado.MensajeError := E.Message;
+        ConservarIntentoFallido(AIdCola, ASerie, ANumero,
+          ATipoOperacion, oResultado);
+        TResultadosVerifactuColaUniDAC.GuardarEnvioError(
+          FConn, FContexto.ParametrosApp, FContexto.ParametrosCaja,
+          FContexto.Usuario,
+          AIdCola, ASerie, ANumero, E.Message, AIntentos,
+          FContexto.RegistroLog, True,
+          CSegundosReintentoBloqueo);
+        Result := CResultadoFilaBloqueoBBDD;
       end;
       on E: Exception do
       begin

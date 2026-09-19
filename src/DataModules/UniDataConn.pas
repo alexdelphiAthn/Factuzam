@@ -50,6 +50,8 @@ type
 implementation
 
 uses
+  inLibConexionPerfilIntf,
+  inLibErroresBBDD,
   inLibMsgConexion,
   inLibRegistroLogNulo;
 
@@ -133,6 +135,15 @@ begin
   FRegistroLog.RegistrarError(
     FFabrica.FormatearError(E.ErrorCode, E.Message, True));
   Fail := False;
+  // Un bloqueo del motor no dice nada del dato ni de la petición: se
+  // distingue por su clase para que quien reintente no lo confunda
+  // con un rechazo y gaste intentos de más
+  if (FFabrica.Perfil.Motor = mbMariaDB) and
+     EsBloqueoTemporalBBDD(E.ErrorCode) then
+    raise EBloqueoBBDDTemporal.Create(
+      E.ErrorCode,
+      FFabrica.FormatearError(
+        E.ErrorCode, E.Message, bIncluirDetalle));
   raise Exception.Create(
     FFabrica.FormatearError(
       E.ErrorCode, E.Message, bIncluirDetalle));

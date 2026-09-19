@@ -1,24 +1,31 @@
 ﻿{******************************************************************************}
 {                                                                              }
-{  Módulo:       inLibGlobalVar                                                }
+{  Módulo:       inLibColaTurnoIntf                                            }
 {    Tipo:       Librería                                                      }
 { Versión:       1.0.0                                                         }
-{   Fecha:       11/05/2026                                                    }
+{   Fecha:       19/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Constantes generales de compatibilidad de la aplicación.                  }
+{    Contrato del turno de proceso de una cola: reparte entre los puestos el   }
+{    derecho a vaciarla para que solo uno la atienda a la vez.                 }
 {******************************************************************************}
-unit inLibGlobalVar;
+unit inLibColaTurnoIntf;
 
 interface
 
-const
-  oAppName = 'Fzam';
-  oVersion = '1.0.15.202609191810.beta';
-  oAll = 'Todos';
+type
+  { Turno de proceso de una cola.
+    Intentar devuelve False cuando otro puesto la está atendiendo: ese ciclo
+    se salta sin trabajo y sin error. Quien lo obtiene lo suelta al terminar,
+    y conviene hacerlo en un finally. }
+  ITurnoCola = interface
+    ['{2B936F2B-E644-49D8-9321-DB68A4BA300B}']
+    function Intentar: Boolean;
+    procedure Liberar;
+  end;
 
 implementation
 

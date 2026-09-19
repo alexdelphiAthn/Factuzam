@@ -20,6 +20,7 @@ uses
   inLibMsgCaja,
   inLibMsgCompras,
   inLibMsgComun,
+  inLibMsgColaTurno,
   inLibMsgConexion,
   inLibMsgConfiguracion,
   inLibMsgFacturas,
@@ -19173,6 +19174,30 @@ begin
     'src/Lib/inLibMsgComun.pas',
     @inLibMsgComun.
       SCaptionEsperaExportandoFilas);
+  ARegistrar(
+    'inLibMsgColaTurno.' +
+    'SErrorNombreTurnoColaNoValido',
+    'src/Lib/inLibMsgColaTurno.pas',
+    @inLibMsgColaTurno.
+      SErrorNombreTurnoColaNoValido);
+  ARegistrar(
+    'inLibMsgColaTurno.' +
+    'SAvisoTurnoColaSinRespuesta',
+    'src/Lib/inLibMsgColaTurno.pas',
+    @inLibMsgColaTurno.
+      SAvisoTurnoColaSinRespuesta);
+  ARegistrar(
+    'inLibMsgColaTurno.' +
+    'SAvisoTurnoColaNoDisponible',
+    'src/Lib/inLibMsgColaTurno.pas',
+    @inLibMsgColaTurno.
+      SAvisoTurnoColaNoDisponible);
+  ARegistrar(
+    'inLibMsgColaTurno.' +
+    'SAvisoTurnoColaNoLiberado',
+    'src/Lib/inLibMsgColaTurno.pas',
+    @inLibMsgColaTurno.
+      SAvisoTurnoColaNoLiberado);
 end;
 {$WARN SYMBOL_DEPRECATED ON}
 
