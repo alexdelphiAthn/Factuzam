@@ -202,10 +202,13 @@ function EsPerfilInstalacionDemoLocal(
   const AServidor, ABaseDatos, AUsuario: string;
   APuerto: Integer): Boolean;
 begin
+  { El puerto no se fija: el instalador usa 3306 y deja cambiarlo si ya esta
+    ocupado, y las instalaciones antiguas se quedaron en 3310 o 3311. Lo que
+    acota la marca es el perfil local completo mas su propio hash en el INI. }
   Result := SameText(Trim(AServidor), '127.0.0.1') and
     SameText(Trim(ABaseDatos), 'factuzam') and
     SameText(Trim(AUsuario), 'root') and
-    (APuerto = 3310);
+    (APuerto > 0);
 end;
 
 procedure CompletarNuevoEquipoPendienteEnIni(
