@@ -74,6 +74,14 @@ function CarpetaActualizaciones: string;
 function CarpetaDescargasActualizacion(const AVersion: string): string;
 function RutaEstadoActualizacion: string;
 function LeerEstadoActualizacion: TEstadoActualizacion;
+// Estado sobre el que anotar los scripts que se apliquen sin instalar
+// ninguna versión. Si el que hay ya habla de esta instalación se
+// conserva, para no perder con qué revertir la última actualización; si
+// habla de otra, se empieza uno nuevo sin ejecutables sustituidos.
+function EstadoParaScriptsSinInstalacion(
+  const AEstado: TEstadoActualizacion;
+  const AVersionInstalada, AVersionPublicada, AArquitectura: string):
+  TEstadoActualizacion;
 function GuardarEstadoActualizacion(
   const AEstado: TEstadoActualizacion;
   out AError: string): Boolean;
@@ -344,6 +352,27 @@ begin
     oPendientes.AddElement(oElemento);
   end;
   Result.AddPair('scripts_pendientes', oPendientes);
+end;
+
+function EstadoParaScriptsSinInstalacion(
+  const AEstado: TEstadoActualizacion;
+  const AVersionInstalada, AVersionPublicada, AArquitectura: string):
+  TEstadoActualizacion;
+begin
+  if AEstado.Existe and
+     not SameText(AEstado.Estado, cEstadoActualizacionRevertida) and
+     (SameText(Trim(AEstado.VersionDestino), Trim(AVersionInstalada)) or
+      SameText(Trim(AEstado.VersionDestino), Trim(AVersionPublicada))) then
+    Result := AEstado
+  else
+  begin
+    Result := Default(TEstadoActualizacion);
+    Result.VersionOrigen := Trim(AVersionInstalada);
+    Result.VersionDestino := Trim(AVersionInstalada);
+    Result.Arquitectura := Trim(AArquitectura);
+  end;
+  // Los pendientes los vuelve a decidir la comprobación de esta pasada.
+  Result.Pendientes := nil;
 end;
 
 function GuardarEstadoActualizacion(

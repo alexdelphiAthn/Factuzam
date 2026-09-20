@@ -29,7 +29,8 @@ uses
   inLibActualizacionScriptsLectura,
   inLibActualizacionScripts,
   inLibAnfitrionMtoIntf,
-  inLibParametrosIntf;
+  inLibParametrosIntf,
+  inLibVentanaEspera;
 
 const
   cMensajeEjecutarActualizacion = WM_APP + 121;
@@ -63,8 +64,10 @@ type
     function ConfirmarInstalacion(
       const AManifiesto: TManifiestoActualizacion): Boolean;
     function DecidirScripts(
-      const AFaltantes: TArray<TScriptFaltante>):
+      const AFaltantes: TArray<TScriptFaltante>;
+      AHayVersionNueva: Boolean):
       TDecisionScriptsActualizacion;
+    function CrearVentanaProceso(const ATitulo: string): IVentanaEspera;
     function SolicitarCopiaPrevia(out ARutaCopia: string): Boolean;
     function ConfirmarReversion(
       const AEstado: TEstadoActualizacion): Boolean;
@@ -188,18 +191,38 @@ begin
 end;
 
 function TfrmModalActualizacion.DecidirScripts(
-  const AFaltantes: TArray<TScriptFaltante>):
+  const AFaltantes: TArray<TScriptFaltante>;
+  AHayVersionNueva: Boolean):
   TDecisionScriptsActualizacion;
+var
+  sPregunta: string;
 begin
   TfrmModalMensajeTexto.Mostrar(Self, TextoScriptsFaltantes(AFaltantes));
+  // Sin versión nueva no hay que salir del programa al terminar, así que
+  // no se advierte de ello.
+  if AHayVersionNueva then
+    sPregunta := SPreguntaAplicarScriptsAhora
+  else
+    sPregunta := SPreguntaAplicarScriptsAhoraMismaVersion;
   if MessageDlg_fza(
-       Format(SPreguntaAplicarScriptsAhora, [Length(AFaltantes)]),
+       Format(sPregunta, [Length(AFaltantes)]),
        mtWarning,
        [mbYes, mbNo],
        0) = mrYes then
     Result := dsaAhora
   else
     Result := dsaAplazar;
+end;
+
+// La misma ventana que el generador de procesos: cronómetro, se puede
+// apartar y enseña el script que se está ejecutando.
+function TfrmModalActualizacion.CrearVentanaProceso(
+  const ATitulo: string): IVentanaEspera;
+begin
+  Result := CrearVentanaProcesoSegundoPlano(
+    Self.BoundsRect,
+    Self.CurrentPPI,
+    ATitulo);
 end;
 
 function TfrmModalActualizacion.SolicitarCopiaPrevia(
@@ -289,6 +312,7 @@ begin
   Result.SolicitarCopiaPrevia := SolicitarCopiaPrevia;
   Result.ConfirmarReversion := ConfirmarReversion;
   Result.ConsultarRestaurarCopia := ConsultarRestaurarCopia;
+  Result.CrearVentanaProceso := CrearVentanaProceso;
 end;
 
 procedure TfrmModalActualizacion.EjecutarProceso;

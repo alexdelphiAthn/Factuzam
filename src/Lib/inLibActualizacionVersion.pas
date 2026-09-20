@@ -15,6 +15,17 @@ unit inLibActualizacionVersion;
 
 interface
 
+type
+  // Qué toca hacer tras preguntarle al servicio por la última versión.
+  TCaminoComprobacionActualizacion = (
+    // El servicio todavía no ha publicado nada.
+    ccaSinVersiones,
+    // Lo publicado es más nuevo: se instala.
+    ccaInstalarVersion,
+    // No hay nada que instalar (la misma versión, o la de aquí va por
+    // delante): queda mirar si la base de datos tiene todos los scripts.
+    ccaSoloScripts);
+
 // Devuelve -1, 0 o 1. Los tramos numéricos se comparan como números; un
 // tramo de texto (alpha, beta) marca preestreno y queda por debajo de la
 // misma versión sin él. Replica el comparador del webservice.
@@ -23,6 +34,13 @@ function CompararVersionesAplicacion(
 function VersionAplicacionEsMayor(
   const ACandidata, AReferencia: string): Boolean;
 function VersionAplicacionValida(const AVersion: string): Boolean;
+// Decide con qué sigue la comprobación de actualizaciones. Sin versión
+// nueva que instalar no se acaba aquí: los scripts de esquema pueden
+// faltar igualmente, y así se pueden aplicar sin esperar a otra versión.
+function CaminoComprobacionActualizacion(
+  AHayVersion: Boolean;
+  const AVersionPublicada, AVersionInstalada: string):
+  TCaminoComprobacionActualizacion;
 
 implementation
 
@@ -137,6 +155,19 @@ begin
   Result := (Trim(ACandidata) <> '') and
     ((Trim(AReferencia) = '') or
      (CompararVersionesAplicacion(ACandidata, AReferencia) > 0));
+end;
+
+function CaminoComprobacionActualizacion(
+  AHayVersion: Boolean;
+  const AVersionPublicada, AVersionInstalada: string):
+  TCaminoComprobacionActualizacion;
+begin
+  if not AHayVersion or (Trim(AVersionPublicada) = '') then
+    Result := ccaSinVersiones
+  else if VersionAplicacionEsMayor(AVersionPublicada, AVersionInstalada) then
+    Result := ccaInstalarVersion
+  else
+    Result := ccaSoloScripts;
 end;
 
 function VersionAplicacionValida(const AVersion: string): Boolean;

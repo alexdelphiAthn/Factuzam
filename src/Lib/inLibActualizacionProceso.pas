@@ -20,7 +20,8 @@ uses
   inLibActualizacionEstado,
   inLibActualizacionIntf,
   inLibActualizacionScriptsLectura,
-  inLibActualizacionScripts;
+  inLibActualizacionScripts,
+  inLibVentanaEspera;
 
 type
   // Qué se le pide al proceso: comprobar e instalar, aplicar lo que
@@ -44,9 +45,19 @@ type
   TConfirmarInstalacionActualizacion = reference to function(
     const AManifiesto: TManifiestoActualizacion): Boolean;
 
+  // AHayVersionNueva distingue las dos situaciones: acompañar a una
+  // versión recién instalada, o poner al día la base sin cambiar el
+  // programa (misma versión). Lo que se le advierte al usuario cambia.
   TDecidirScriptsActualizacion = reference to function(
-    const AFaltantes: TArray<TScriptFaltante>):
+    const AFaltantes: TArray<TScriptFaltante>;
+    AHayVersionNueva: Boolean):
     TDecisionScriptsActualizacion;
+
+  // La pantalla abre la ventana del proceso (la misma que el generador);
+  // el dominio solo le va diciendo por dónde va. Puede no haberla: sin
+  // ella los scripts se aplican igual, solo que sin nada que mirar.
+  TCrearVentanaProcesoActualizacion = reference to function(
+    const ATitulo: string): IVentanaEspera;
 
   TSolicitarCopiaPreviaActualizacion = reference to function(
     out ARutaCopia: string): Boolean;
@@ -69,6 +80,8 @@ type
     SolicitarCopiaPrevia: TSolicitarCopiaPreviaActualizacion;
     ConfirmarReversion: TConfirmarReversionActualizacion;
     ConsultarRestaurarCopia: TConsultarRestaurarCopiaActualizacion;
+    // Opcional: sin pantalla (las pruebas) no hay ventana que abrir.
+    CrearVentanaProceso: TCrearVentanaProcesoActualizacion;
     function Completa: Boolean;
   end;
 
@@ -96,8 +109,10 @@ function RevertirActualizacion(
 implementation
 
 uses
+  System.Classes,
   System.IOUtils,
   System.SysUtils,
+  System.Threading,
   inLibActualizacionInstalacion,
   inLibActualizacionVersion,
   inLibMsgIntegraciones;
@@ -278,10 +293,109 @@ begin
   end;
 end;
 
+// La ventana del proceso es la del generador: cronómetro propio, se
+// puede apartar y enseña el script que se está ejecutando.
+function AbrirVentanaScripts(
+  const AInteraccion: TInteraccionActualizacion): IVentanaEspera;
+begin
+  Result := nil;
+  if Assigned(AInteraccion.CrearVentanaProceso) then
+    Result := AInteraccion.CrearVentanaProceso(
+      STituloProcesoScriptsActualizacion);
+  if Assigned(Result) then
+  begin
+    Result.Mostrar(SFaseAplicandoScriptsActualizacion);
+    Result.PermitirCancelar(True);
+  end;
+end;
+
+function TextoScriptEnMarcha(const ARuta: string): string;
+begin
+  try
+    Result := TextoScriptParaVentana(LeerTextoScriptSql(ARuta));
+  except
+    on E: Exception do
+      Result := E.Message;
+  end;
+end;
+
+// El script corre en su propio hilo para que la ventana se mueva y el
+// programa atienda lo que ese hilo le pida (el monitor SQL escribe en el
+// principal); no se despacha teclado ni ratón, así que nadie puede
+// reentrar en la pantalla mientras tanto.
+function EjecutarScriptEnSuHilo(
+  AConexion: TUniConnection;
+  const ARuta: string;
+  out AError: string): Boolean;
+var
+  bOk: Boolean;
+  sError: string;
+  Tarea: ITask;
+begin
+  bOk := False;
+  sError := '';
+  Tarea := TTask.Run(
+    procedure
+    begin
+      bOk := EjecutarScriptActualizacion(AConexion, ARuta, '', sError);
+    end);
+  EsperarTareaAtendiendoMensajes(Tarea);
+  AError := sError;
+  Result := bOk;
+end;
+
+procedure AnunciarScriptEnMarcha(
+  const AInteraccion: TInteraccionActualizacion;
+  const AVentana: IVentanaEspera;
+  const APendiente: TScriptPendienteActualizacion;
+  AIndice, ATotal: Integer);
+var
+  sTexto: string;
+begin
+  sTexto := Format(
+    SInfoAplicandoScriptActualizacion,
+    [APendiente.Nombre, AIndice, ATotal]);
+  AInteraccion.Progreso(sTexto, -1);
+  if Assigned(AVentana) then
+  begin
+    AVentana.ActualizarDetalle(sTexto);
+    AVentana.MostrarTexto(TextoScriptEnMarcha(APendiente.Ruta));
+  end;
+end;
+
+procedure AnotarScriptAplicado(
+  var AEstado: TEstadoActualizacion;
+  AIndice: Integer;
+  AOk: Boolean;
+  const ADetalle: string;
+  var AError: string);
+begin
+  if AOk then
+    AEstado.AnadirAplicado(
+      AEstado.Pendientes[AIndice].Nombre,
+      AEstado.Pendientes[AIndice].Orden,
+      cResultadoScriptActualizacionOk,
+      '',
+      AEstado.Pendientes[AIndice].RutaRollback)
+  else
+  begin
+    AError := Format(
+      SErrorAplicarScriptActualizacion,
+      [AEstado.Pendientes[AIndice].Nombre, ADetalle]);
+    AEstado.AnadirAplicado(
+      AEstado.Pendientes[AIndice].Nombre,
+      AEstado.Pendientes[AIndice].Orden,
+      cResultadoScriptActualizacionError,
+      ADetalle,
+      AEstado.Pendientes[AIndice].RutaRollback);
+  end;
+end;
+
 function AplicarPendientes(
   AConexion: TUniConnection;
   const AInteraccion: TInteraccionActualizacion;
   var AEstado: TEstadoActualizacion;
+  out ACancelado: Boolean;
   out AError: string): Boolean;
 var
   aRestantes: TArray<TScriptPendienteActualizacion>;
@@ -289,99 +403,225 @@ var
   iRestante: Integer;
   iTotal: Integer;
   sDetalle: string;
+  Ventana: IVentanaEspera;
 begin
   Result := True;
+  ACancelado := False;
   AError := '';
   aRestantes := nil;
   iTotal := Length(AEstado.Pendientes);
-  for iIndice := Low(AEstado.Pendientes) to High(AEstado.Pendientes) do
-  begin
-    if Result then
+  Ventana := AbrirVentanaScripts(AInteraccion);
+  try
+    for iIndice := Low(AEstado.Pendientes) to High(AEstado.Pendientes) do
     begin
-      AInteraccion.Progreso(
-        Format(
-          SInfoAplicandoScriptActualizacion,
-          [AEstado.Pendientes[iIndice].Nombre, iIndice + 1, iTotal]),
-        -1);
-      Result := EjecutarScriptActualizacion(
-        AConexion,
-        AEstado.Pendientes[iIndice].Ruta,
-        '',
-        sDetalle);
-      if Result then
-        AEstado.AnadirAplicado(
-          AEstado.Pendientes[iIndice].Nombre,
-          AEstado.Pendientes[iIndice].Orden,
-          cResultadoScriptActualizacionOk,
-          '',
-          AEstado.Pendientes[iIndice].RutaRollback)
-      else
+      if Result and not ACancelado then
       begin
-        AError := Format(
-          SErrorAplicarScriptActualizacion,
-          [AEstado.Pendientes[iIndice].Nombre, sDetalle]);
-        AEstado.AnadirAplicado(
-          AEstado.Pendientes[iIndice].Nombre,
-          AEstado.Pendientes[iIndice].Orden,
-          cResultadoScriptActualizacionError,
-          sDetalle,
-          AEstado.Pendientes[iIndice].RutaRollback);
+        // Cancelar no corta la sentencia en marcha: un cambio de esquema
+        // a medias no se deshace. Lo que hace es no empezar el siguiente.
+        ACancelado := Assigned(Ventana) and Ventana.Cancelado;
+        if not ACancelado then
+        begin
+          AnunciarScriptEnMarcha(
+            AInteraccion,
+            Ventana,
+            AEstado.Pendientes[iIndice],
+            iIndice + 1,
+            iTotal);
+          Result := EjecutarScriptEnSuHilo(
+            AConexion,
+            AEstado.Pendientes[iIndice].Ruta,
+            sDetalle);
+          AnotarScriptAplicado(AEstado, iIndice, Result, sDetalle, AError);
+        end;
+      end;
+      if not Result or ACancelado then
+      begin
+        // Lo que no ha llegado a aplicarse sigue pendiente.
+        iRestante := Length(aRestantes);
+        SetLength(aRestantes, iRestante + 1);
+        aRestantes[iRestante] := AEstado.Pendientes[iIndice];
       end;
     end;
-    if not Result then
-    begin
-      // Lo que no ha llegado a aplicarse sigue pendiente.
-      iRestante := Length(aRestantes);
-      SetLength(aRestantes, iRestante + 1);
-      aRestantes[iRestante] := AEstado.Pendientes[iIndice];
-    end;
+  finally
+    if Assigned(Ventana) then
+      Ventana.Ocultar;
+    Ventana := nil;
   end;
-  if Result then
+  if Result and not ACancelado then
     AEstado.Pendientes := nil
   else
     AEstado.Pendientes := aRestantes;
 end;
 
-function ComprobarEInstalarActualizacion(
+// Mensaje con el que se despide un intento de aplicar scripts que no
+// llega a ejecutarlos todos.
+function MensajeScriptsSinAplicar(
+  ACancelado: Boolean;
+  APendientes: Integer): string;
+begin
+  if ACancelado then
+    Result := Format(SInfoScriptsActualizacionCancelados, [APendientes])
+  else
+    Result := Format(SInfoScriptsActualizacionAplazados, [APendientes]);
+end;
+
+procedure AplicarFaltantesSinInstalacion(
   const AContexto: TContextoActualizacion;
+  const AInteraccion: TInteraccionActualizacion;
+  const AFaltantes: TArray<TScriptFaltante>;
+  var AEstado: TEstadoActualizacion;
+  var AResultado: TResultadoActualizacion);
+var
+  bCancelado: Boolean;
+  sError: string;
+begin
+  AResultado.Ok := True;
+  bCancelado := False;
+  if AInteraccion.DecidirScripts(AFaltantes, False) = dsaAplazar then
+    AResultado.Mensaje := MensajeScriptsSinAplicar(
+      False,
+      Length(AEstado.Pendientes))
+  else if not AInteraccion.SolicitarCopiaPrevia(AEstado.RutaCopiaPrevia) then
+  begin
+    AResultado.Cancelado := True;
+    AResultado.Mensaje := MensajeScriptsSinAplicar(
+      False,
+      Length(AEstado.Pendientes));
+  end
+  else
+  begin
+    AResultado.Ok := AplicarPendientes(
+      AContexto.Conexion,
+      AInteraccion,
+      AEstado,
+      bCancelado,
+      sError);
+    AResultado.Cancelado := bCancelado;
+    AResultado.Mensaje := sError;
+    // Sin ejecutable nuevo no hace falta salir del programa: lo que ha
+    // cambiado es la base de datos.
+    if AResultado.Ok and (AResultado.Mensaje = '') then
+    begin
+      if bCancelado then
+        AResultado.Mensaje := MensajeScriptsSinAplicar(
+          True,
+          Length(AEstado.Pendientes))
+      else
+        AResultado.Mensaje := SInfoScriptsPendientesAplicados;
+    end;
+  end;
+  if AEstado.HayScriptsPendientes then
+    AEstado.Estado := cEstadoActualizacionPendiente
+  else
+    AEstado.Estado := cEstadoActualizacionCompletada;
+  if not GuardarEstadoActualizacion(AEstado, sError) then
+    AResultado.Mensaje := AResultado.Mensaje + sLineBreak + sError;
+end;
+
+{ No hay versión nueva que instalar, pero la base de datos puede seguir
+  sin los cambios de esquema de la última publicada: se comprueban igual
+  y se ofrecen, que es la forma de poner al día una instalación sin
+  esperar a que salga otra versión. }
+function ComprobarScriptsSinInstalacion(
+  const AContexto: TContextoActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
   const AInteraccion: TInteraccionActualizacion): TResultadoActualizacion;
 var
   aFaltantes: TArray<TScriptFaltante>;
-  Decision: TDecisionScriptsActualizacion;
   Estado: TEstadoActualizacion;
-  Manifiesto: TManifiestoActualizacion;
   sError: string;
   sRutaComprobacion: string;
-  sRutaEjecutable: string;
 begin
   Result := Default(TResultadoActualizacion);
-  if not AInteraccion.Completa then
-    raise EArgumentException.Create(SErrorInteraccionActualizacionIncompleta);
-  Manifiesto := AContexto.Servicio.ConsultarUltima(
-    AContexto.VersionInstalada);
-  Result.Version := Manifiesto.Version;
-  if not Manifiesto.Ok then
-    Result.Mensaje := Manifiesto.Mensaje
-  else if not Manifiesto.HayVersion then
-  begin
-    Result.Ok := True;
-    Result.Mensaje := SInfoSinVersionesPublicadas;
-  end
-  else if not VersionAplicacionEsMayor(
-                Manifiesto.Version,
-                AContexto.VersionInstalada) then
+  Result.Version := AManifiesto.Version;
+  if not AManifiesto.Comprobacion.Declarada then
   begin
     Result.Ok := True;
     Result.Mensaje := Format(
       SInfoVersionInstaladaAlDia,
       [AContexto.VersionInstalada]);
   end
-  else if not Manifiesto.Ejecutable.Declarada then
+  else
+  begin
+    TDirectory.CreateDirectory(
+      CarpetaDescargasActualizacion(AManifiesto.Version));
+    sRutaComprobacion := RutaDescarga(
+      AManifiesto.Version,
+      AManifiesto.Comprobacion.Nombre);
+    if not AContexto.Servicio.DescargarEntrada(
+             AManifiesto.Version,
+             cTipoActualizacionComprobacion,
+             AManifiesto.Comprobacion,
+             sRutaComprobacion,
+             sError) then
+      Result.Mensaje := sError
+    else
+    begin
+      AInteraccion.Progreso(SInfoComprobandoScriptsAplicados, -1);
+      if not ConsultarScriptsFaltantes(
+               AContexto.Conexion,
+               LeerTextoScriptSql(sRutaComprobacion),
+               aFaltantes,
+               sError) then
+        Result.Mensaje := sError
+      else if Length(aFaltantes) = 0 then
+      begin
+        Result.Ok := True;
+        Result.Mensaje := Format(
+          SInfoVersionAlDiaSinScripts,
+          [AContexto.VersionInstalada]);
+      end
+      else
+      begin
+        // El estado que hubiera se conserva: aquí no se sustituye ningún
+        // ejecutable, así que no hay por qué perder con qué revertir.
+        Estado := EstadoParaScriptsSinInstalacion(
+          LeerEstadoActualizacion,
+          AContexto.VersionInstalada,
+          AManifiesto.Version,
+          AManifiesto.Arquitectura);
+        Estado.RutaComprobacion := sRutaComprobacion;
+        Estado.Instante := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
+        if not DescargarScriptsFaltantes(
+                 AContexto,
+                 AManifiesto,
+                 aFaltantes,
+                 Estado,
+                 sError) then
+          Result.Mensaje := sError
+        else
+          AplicarFaltantesSinInstalacion(
+            AContexto,
+            AInteraccion,
+            aFaltantes,
+            Estado,
+            Result);
+      end;
+    end;
+  end;
+end;
+
+function InstalarVersionPublicada(
+  const AContexto: TContextoActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
+  const AInteraccion: TInteraccionActualizacion): TResultadoActualizacion;
+var
+  aFaltantes: TArray<TScriptFaltante>;
+  bCancelado: Boolean;
+  Decision: TDecisionScriptsActualizacion;
+  Estado: TEstadoActualizacion;
+  sError: string;
+  sRutaComprobacion: string;
+  sRutaEjecutable: string;
+begin
+  Result := Default(TResultadoActualizacion);
+  Result.Version := AManifiesto.Version;
+  if not AManifiesto.Ejecutable.Declarada then
     Result.Mensaje := SErrorEntradaActualizacionNoDeclarada
   else
   begin
     Result.HayActualizacion := True;
-    if not AInteraccion.ConfirmarInstalacion(Manifiesto) then
+    if not AInteraccion.ConfirmarInstalacion(AManifiesto) then
     begin
       Result.Ok := True;
       Result.Cancelado := True;
@@ -390,28 +630,28 @@ begin
     begin
       Estado := Default(TEstadoActualizacion);
       Estado.VersionOrigen := AContexto.VersionInstalada;
-      Estado.VersionDestino := Manifiesto.Version;
-      Estado.Arquitectura := Manifiesto.Arquitectura;
+      Estado.VersionDestino := AManifiesto.Version;
+      Estado.Arquitectura := AManifiesto.Arquitectura;
       Estado.Instante := FormatDateTime('yyyy-mm-dd hh:nn:ss', Now);
       TDirectory.CreateDirectory(
-        CarpetaDescargasActualizacion(Manifiesto.Version));
+        CarpetaDescargasActualizacion(AManifiesto.Version));
       // Primero se descarga y se mira qué falta en la base: mientras no
       // esté todo en su sitio no se toca ningún ejecutable.
       if not DescargarEjecutables(
                AContexto,
-               Manifiesto,
+               AManifiesto,
                sRutaEjecutable,
                sError) then
         Result.Mensaje := sError
       else
       begin
         sRutaComprobacion := RutaDescarga(
-          Manifiesto.Version,
-          Manifiesto.Comprobacion.Nombre);
+          AManifiesto.Version,
+          AManifiesto.Comprobacion.Nombre);
         if not AContexto.Servicio.DescargarEntrada(
-                 Manifiesto.Version,
+                 AManifiesto.Version,
                  cTipoActualizacionComprobacion,
-                 Manifiesto.Comprobacion,
+                 AManifiesto.Comprobacion,
                  sRutaComprobacion,
                  sError) then
           Result.Mensaje := sError
@@ -427,14 +667,14 @@ begin
             Result.Mensaje := sError
           else if not DescargarScriptsFaltantes(
                         AContexto,
-                        Manifiesto,
+                        AManifiesto,
                         aFaltantes,
                         Estado,
                         sError) then
             Result.Mensaje := sError
           else if not SustituirEjecutables(
                         AContexto,
-                        Manifiesto,
+                        AManifiesto,
                         sRutaEjecutable,
                         AInteraccion,
                         Estado,
@@ -446,7 +686,7 @@ begin
             Estado.Estado := cEstadoActualizacionCompletada;
             if Estado.HayScriptsPendientes then
             begin
-              Decision := AInteraccion.DecidirScripts(aFaltantes);
+              Decision := AInteraccion.DecidirScripts(aFaltantes, True);
               if (Decision = dsaAhora) and
                  AInteraccion.SolicitarCopiaPrevia(
                    Estado.RutaCopiaPrevia) then
@@ -455,7 +695,9 @@ begin
                   AContexto.Conexion,
                   AInteraccion,
                   Estado,
+                  bCancelado,
                   sError);
+                Result.Cancelado := bCancelado;
                 Result.Mensaje := sError;
                 Result.RequiereSalir := True;
               end;
@@ -465,7 +707,7 @@ begin
             if Result.Mensaje = '' then
               Result.Mensaje := Format(
                 SInfoActualizacionInstalada,
-                [Manifiesto.Version]);
+                [AManifiesto.Version]);
             if not GuardarEstadoActualizacion(Estado, sError) then
               Result.Mensaje := Result.Mensaje + sLineBreak + sError;
           end;
@@ -475,10 +717,48 @@ begin
   end;
 end;
 
+function ComprobarEInstalarActualizacion(
+  const AContexto: TContextoActualizacion;
+  const AInteraccion: TInteraccionActualizacion): TResultadoActualizacion;
+var
+  Manifiesto: TManifiestoActualizacion;
+begin
+  Result := Default(TResultadoActualizacion);
+  if not AInteraccion.Completa then
+    raise EArgumentException.Create(SErrorInteraccionActualizacionIncompleta);
+  Manifiesto := AContexto.Servicio.ConsultarUltima(
+    AContexto.VersionInstalada);
+  Result.Version := Manifiesto.Version;
+  if not Manifiesto.Ok then
+    Result.Mensaje := Manifiesto.Mensaje
+  else
+    case CaminoComprobacionActualizacion(
+           Manifiesto.HayVersion,
+           Manifiesto.Version,
+           AContexto.VersionInstalada) of
+      ccaSinVersiones:
+        begin
+          Result.Ok := True;
+          Result.Mensaje := SInfoSinVersionesPublicadas;
+        end;
+      ccaSoloScripts:
+        Result := ComprobarScriptsSinInstalacion(
+          AContexto,
+          Manifiesto,
+          AInteraccion);
+      ccaInstalarVersion:
+        Result := InstalarVersionPublicada(
+          AContexto,
+          Manifiesto,
+          AInteraccion);
+    end;
+end;
+
 function AplicarScriptsPendientesActualizacion(
   AConexion: TUniConnection;
   const AInteraccion: TInteraccionActualizacion): TResultadoActualizacion;
 var
+  bCancelado: Boolean;
   Estado: TEstadoActualizacion;
   sError: string;
 begin
@@ -503,11 +783,21 @@ begin
       AConexion,
       AInteraccion,
       Estado,
+      bCancelado,
       sError);
+    Result.Cancelado := bCancelado;
     Result.Mensaje := sError;
-    Result.RequiereSalir := True;
+    // Solo hay que salir si estos scripts acompañan a un ejecutable
+    // nuevo; los de una base que se pone al día no obligan a nada.
+    Result.RequiereSalir := Length(Estado.Ejecutables) > 0;
     if Estado.HayScriptsPendientes then
-      Estado.Estado := cEstadoActualizacionPendiente
+    begin
+      Estado.Estado := cEstadoActualizacionPendiente;
+      if bCancelado and (Result.Mensaje = '') then
+        Result.Mensaje := MensajeScriptsSinAplicar(
+          True,
+          Length(Estado.Pendientes));
+    end
     else
     begin
       Estado.Estado := cEstadoActualizacionCompletada;

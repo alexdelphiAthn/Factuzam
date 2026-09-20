@@ -11519,6 +11519,48 @@ begin
       SInfoVersionInstaladaAlDia);
   ARegistrar(
     'inLibMsgIntegraciones.' +
+    'SInfoVersionAlDiaSinScripts',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoVersionAlDiaSinScripts);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoScriptsActualizacionAplazados',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoScriptsActualizacionAplazados);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoScriptsActualizacionCancelados',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoScriptsActualizacionCancelados);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SPreguntaAplicarScriptsAhoraMismaVersion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SPreguntaAplicarScriptsAhoraMismaVersion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'STituloProcesoScriptsActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      STituloProcesoScriptsActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SFaseAplicandoScriptsActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SFaseAplicandoScriptsActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SAvisoTextoScriptRecortado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SAvisoTextoScriptRecortado);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
     'SInfoActualizacionInstalada',
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.

@@ -1492,6 +1492,8 @@
             <Form>dmCajaOperacionesHist</Form>
             <DesignClass>TDataModule</DesignClass>
         </DCCReference>
+        <DCCReference Include="src\Caja\Lib\inLibCajaArticulosOperacionIntf.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataCajaArticulosOperacionRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibCajaOperacionesHistPersistenciaIntf.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataCajaOperacionesHistRepositorio.pas"/>
         <DCCReference Include="src\Caja\Forms\inMtoCajaArqueosHist.pas">
@@ -1676,6 +1678,7 @@
         <DCCReference Include="src\DataModules\UniDataFotosSesionRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibFotos.pas"/>
         <DCCReference Include="src\Lib\inLibFotosMiniaturasGridVcl.pas"/>
+        <DCCReference Include="src\Lib\inLibCajaFotosOperacionGridVcl.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajo.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoEstados.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoPresentacion.pas"/>

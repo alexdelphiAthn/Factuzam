@@ -142,6 +142,15 @@ resourcestring
     'El servicio todavía no ha publicado ninguna versión.';
   SInfoVersionInstaladaAlDia =
     'La versión instalada (%s) ya es la última publicada.';
+  SInfoVersionAlDiaSinScripts =
+    'La versión instalada (%s) ya es la última publicada y esta base de ' +
+    'datos tiene aplicados todos sus scripts.';
+  SInfoScriptsActualizacionAplazados =
+    'Quedan %d scripts sin aplicar. Se ofrecerán en el siguiente ' +
+    'arranque o desde Comprobar actualizaciones.';
+  SInfoScriptsActualizacionCancelados =
+    'Se ha cancelado la aplicación de scripts: quedan %d sin aplicar, ' +
+    'que se ofrecerán en el siguiente arranque.';
   SInfoActualizacionInstalada =
     'La versión %s queda instalada y entrará en el siguiente arranque.';
   SInfoAplicandoScriptActualizacion =
@@ -190,6 +199,20 @@ resourcestring
     'versión nueva.' + sLineBreak + sLineBreak +
     '¿Aplicarlos ahora? Si responde No quedarán guardados y se ' +
     'ofrecerán en el siguiente arranque.';
+  SPreguntaAplicarScriptsAhoraMismaVersion =
+    'Faltan %d scripts por aplicar en la base de datos.' +
+    sLineBreak + sLineBreak +
+    'No hay ninguna versión nueva del programa que instalar: es la base ' +
+    'de datos la que se pone al día, y hacerlo puede llevar bastante ' +
+    'tiempo.' + sLineBreak + sLineBreak +
+    '¿Aplicarlos ahora? Si responde No quedarán guardados y se ' +
+    'ofrecerán en el siguiente arranque.';
+  STituloProcesoScriptsActualizacion =
+    'Scripts de la base de datos';
+  SFaseAplicandoScriptsActualizacion =
+    'Aplicando los scripts que faltan en la base de datos...';
+  SAvisoTextoScriptRecortado =
+    '[...] El script sigue: aquí solo se ve el principio.';
   SAvisoCopiaPreviaObligatoria =
     'Antes de tocar la base de datos se hace una copia de seguridad. ' +
     'Elija dónde guardarla: es lo que permitirá revertir los cambios ' +
