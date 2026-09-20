@@ -245,6 +245,7 @@ type
     mnuErroresEnvios: TMenuItem;
     mnuComprobarActualizaciones: TMenuItem;
     mnuRevertirActualizacion: TMenuItem;
+    mnuServiciosOffLine: TMenuItem;
     mnuConsultaStocks: TMenuItem;
     mnuArticulosSimilares: TMenuItem;
     mnuColasEnvios: TMenuItem;
@@ -280,6 +281,7 @@ type
     procedure mnuForoSoporteClick(Sender: TObject);
     procedure mnuComprobarActualizacionesClick(Sender: TObject);
     procedure mnuRevertirActualizacionClick(Sender: TObject);
+    procedure mnuServiciosOffLineClick(Sender: TObject);
     procedure mnuConsultaStocksClick(Sender: TObject);
     procedure mnuArticulosSimilaresClick(Sender: TObject);
     function IsShortCut(var Message: TWMKey): Boolean; override;
@@ -433,7 +435,11 @@ uses
   inLibActualizacionEstado,
   inLibActualizacionInstalacion,
   inLibMsgIntegraciones,
-  inMtoModalActualizacion;
+  inMtoModalActualizacion,
+  inLibProgramadorTareasWindows,
+  inLibServiciosOffLine,
+  inLibServiciosOffLineIntf,
+  inMtoModalServiciosOffLine;
 
 function CrearContextoRestauracionCopiasVcl(
   AFormulario: TfrmMtoPrincipal): TContextoRestauracionCopiasVcl;
@@ -1843,6 +1849,27 @@ begin
   AbrirUrlAyuda(mnuForoSoporte.Caption, URL_FORO_SOPORTE);
 end;
 
+// Los servicios off line programan tareas de Windows para toda la
+// instalacion: solo el administrador los toca.
+procedure TfrmMtoPrincipal.mnuServiciosOffLineClick(Sender: TObject);
+var
+  Entorno: TEntornoServiciosOffLine;
+begin
+  inherited;
+  Entorno := Default(TEntornoServiciosOffLine);
+  Entorno.RutaEjecutable := ExpandFileName(ParamStr(0));
+  Entorno.PerfilIni := PerfilIniServiciosOffLine(
+    ParamStr(0),
+    ParamStr(1));
+  Entorno.Usuario := UsuarioWindowsActual;
+  Entorno.CarpetaCopiasPredeterminada := ParametrosApp.GetPath(
+    'appDirCopiasSeguridad');
+  TfrmModalServiciosOffLine.Ejecutar(
+    Self,
+    TProgramadorServiciosOffLineWindows.Create,
+    Entorno);
+end;
+
 procedure TfrmMtoPrincipal.ActualizarVisibilidadActualizaciones;
 var
   bAdministrador: Boolean;
@@ -1851,6 +1878,8 @@ begin
   mnuComprobarActualizaciones.Visible := bAdministrador;
   mnuComprobarActualizaciones.Enabled := bAdministrador;
   mnuRevertirActualizacion.Visible := bAdministrador;
+  mnuServiciosOffLine.Visible := bAdministrador;
+  mnuServiciosOffLine.Enabled := bAdministrador;
   mnuRevertirActualizacion.Enabled := bAdministrador and
     LeerEstadoActualizacion.SePuedeRevertir;
 end;

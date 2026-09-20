@@ -10,6 +10,8 @@
 {                                                                              }
 {  Descripción:                                                                }
 {    Persistencia y ejecución del generador de procesos.                       }
+{    El ejecutor corre en el hilo de la tarea sobre la conexión que se le      }
+{    entregue y admite que otro hilo corte la sentencia en marcha.             }
 {******************************************************************************}
 unit UniDataGeneradorProcesosRepositorio;
 
@@ -20,12 +22,17 @@ uses
   Uni,
   inLibGeneradorProcesosAplicacion;
 
-procedure CrearRepositorioGeneradorProcesosUniDAC(
+// Ejecutor de scripts sobre la conexión indicada. La pantalla le pasa una
+// conexión propia de segundo plano: así el script no ocupa la principal y
+// se puede cortar sin dejar atrapada la sesión del usuario.
+function CrearEjecutorProcesosUniDAC(
+  AConexion: TUniConnection): IRepositorioGeneradorProcesos;
+// Catálogo de la base de datos (metadatos, estructura y contenido)
+// sobre la conexión de la pantalla: esto sí va en el hilo principal.
+function CrearCatalogoGeneradorProcesosUniDAC(
   AConexion: TUniConnection;
   AMetadatos, AEstructura, AContenido: TUniQuery;
-  ARefresco: TUniStoredProc;
-  out ARepositorio: IRepositorioGeneradorProcesos;
-  out ACatalogo: ICatalogoGeneradorProcesos);
+  ARefresco: TUniStoredProc): ICatalogoGeneradorProcesos;
 function ExtraerDatosResultadoProceso(
   const AResultado: IResultadoSentenciaProceso): TDataSet;
 
@@ -34,6 +41,7 @@ implementation
 uses
   System.Classes,
   System.Diagnostics,
+  System.SyncObjs,
   System.SysUtils,
   inLibProteccionDatosFacturacion,
   UniScript;
@@ -63,16 +71,21 @@ type
     function MensajeError: string;
     function ExtraerDatos: TDataSet;
   end;
-  TRepositorioGeneradorProcesosUniDAC = class(
+  // Ejecuta el script y deja que otro hilo lo corte. El objeto que está
+  // trabajando se guarda bajo sección crítica: el hilo que cancela llama a
+  // BreakExec sin que el de ejecución lo libere a la vez.
+  TEjecutorProcesosUniDAC = class(
     TInterfacedObject,
-    IRepositorioGeneradorProcesos,
-    ICatalogoGeneradorProcesos)
+    IRepositorioGeneradorProcesos)
   private
+    FCancelacion: Integer;
     FConexion: TUniConnection;
-    FContenido: TUniQuery;
-    FEstructura: TUniQuery;
-    FMetadatos: TUniQuery;
-    FRefresco: TUniStoredProc;
+    FConsultaActiva: TUniQuery;
+    FScriptActivo: TUniScript;
+    FSeccion: TCriticalSection;
+    procedure AnotarConsultaActiva(AConsulta: TUniQuery);
+    procedure AnotarScriptActivo(AScript: TUniScript);
+    procedure CortarEjecucionActiva;
     procedure EjecutarComando(
       const ASentencia: string;
       AResultado: TResultadoSentenciaProcesoUniDAC);
@@ -80,15 +93,31 @@ type
       const ASentencia: string;
       AResultado: TResultadoSentenciaProcesoUniDAC);
   public
-    constructor Create(
-      AConexion: TUniConnection;
-      AMetadatos, AEstructura, AContenido: TUniQuery;
-      ARefresco: TUniStoredProc);
+    constructor Create(AConexion: TUniConnection);
+    destructor Destroy; override;
     function SepararSentencias(
       const AScript: string): TArray<string>;
     function EjecutarSentencia(
       const ASentencia: string;
       ATipo: TTipoSentenciaProceso): IResultadoSentenciaProceso;
+    procedure PedirCancelacion;
+    procedure OlvidarCancelacion;
+    function CancelacionPedida: Boolean;
+  end;
+  TCatalogoGeneradorProcesosUniDAC = class(
+    TInterfacedObject,
+    ICatalogoGeneradorProcesos)
+  private
+    FConexion: TUniConnection;
+    FContenido: TUniQuery;
+    FEstructura: TUniQuery;
+    FMetadatos: TUniQuery;
+    FRefresco: TUniStoredProc;
+  public
+    constructor Create(
+      AConexion: TUniConnection;
+      AMetadatos, AEstructura, AContenido: TUniQuery;
+      ARefresco: TUniStoredProc);
     procedure Refrescar(const ABaseDatos: string);
     function CargarEstructura(
       const ATipo, ANombre: string): string;
@@ -150,30 +179,74 @@ begin
   FConsulta := nil;
 end;
 
-constructor TRepositorioGeneradorProcesosUniDAC.Create(
-  AConexion: TUniConnection;
-  AMetadatos, AEstructura, AContenido: TUniQuery;
-  ARefresco: TUniStoredProc);
+constructor TEjecutorProcesosUniDAC.Create(AConexion: TUniConnection);
 begin
   inherited Create;
   if not Assigned(AConexion) then
     raise EArgumentNilException.Create('AConexion');
-  if not Assigned(AMetadatos) then
-    raise EArgumentNilException.Create('AMetadatos');
-  if not Assigned(AEstructura) then
-    raise EArgumentNilException.Create('AEstructura');
-  if not Assigned(AContenido) then
-    raise EArgumentNilException.Create('AContenido');
-  if not Assigned(ARefresco) then
-    raise EArgumentNilException.Create('ARefresco');
   FConexion := AConexion;
-  FMetadatos := AMetadatos;
-  FEstructura := AEstructura;
-  FContenido := AContenido;
-  FRefresco := ARefresco;
+  FSeccion := TCriticalSection.Create;
 end;
 
-function TRepositorioGeneradorProcesosUniDAC.SepararSentencias(
+destructor TEjecutorProcesosUniDAC.Destroy;
+begin
+  FreeAndNil(FSeccion);
+  inherited;
+end;
+
+procedure TEjecutorProcesosUniDAC.AnotarConsultaActiva(
+  AConsulta: TUniQuery);
+begin
+  FSeccion.Enter;
+  try
+    FConsultaActiva := AConsulta;
+  finally
+    FSeccion.Leave;
+  end;
+end;
+
+procedure TEjecutorProcesosUniDAC.AnotarScriptActivo(AScript: TUniScript);
+begin
+  FSeccion.Enter;
+  try
+    FScriptActivo := AScript;
+  finally
+    FSeccion.Leave;
+  end;
+end;
+
+// La llama el hilo que cancela. El de ejecución no puede liberar el objeto
+// mientras tanto porque lo desanota dentro de la misma sección.
+procedure TEjecutorProcesosUniDAC.CortarEjecucionActiva;
+begin
+  FSeccion.Enter;
+  try
+    if Assigned(FConsultaActiva) then
+      FConsultaActiva.BreakExec;
+    if Assigned(FScriptActivo) then
+      FScriptActivo.BreakExec;
+  finally
+    FSeccion.Leave;
+  end;
+end;
+
+procedure TEjecutorProcesosUniDAC.PedirCancelacion;
+begin
+  AtomicExchange(FCancelacion, 1);
+  CortarEjecucionActiva;
+end;
+
+procedure TEjecutorProcesosUniDAC.OlvidarCancelacion;
+begin
+  AtomicExchange(FCancelacion, 0);
+end;
+
+function TEjecutorProcesosUniDAC.CancelacionPedida: Boolean;
+begin
+  Result := AtomicCmpExchange(FCancelacion, 0, 0) <> 0;
+end;
+
+function TEjecutorProcesosUniDAC.SepararSentencias(
   const AScript: string): TArray<string>;
 var
   I: Integer;
@@ -212,7 +285,7 @@ begin
   end;
 end;
 
-procedure TRepositorioGeneradorProcesosUniDAC.EjecutarConsulta(
+procedure TEjecutorProcesosUniDAC.EjecutarConsulta(
   const ASentencia: string;
   AResultado: TResultadoSentenciaProcesoUniDAC);
 begin
@@ -221,7 +294,12 @@ begin
   AResultado.FConsulta.SQL.Text := ASentencia;
   AResultado.FConsulta.ReadOnly :=
     SqlReferenciaTablaFacturacionProtegida(ASentencia);
-  AResultado.FConsulta.Open;
+  AnotarConsultaActiva(AResultado.FConsulta);
+  try
+    AResultado.FConsulta.Open;
+  finally
+    AnotarConsultaActiva(nil);
+  end;
   AResultado.FTieneDatos := AResultado.FConsulta.FieldCount > 0;
   if AResultado.FTieneDatos then
     AResultado.FFilas := AResultado.FConsulta.RecordCount
@@ -229,7 +307,7 @@ begin
     AResultado.FFilas := AResultado.FConsulta.RowsAffected;
 end;
 
-procedure TRepositorioGeneradorProcesosUniDAC.EjecutarComando(
+procedure TEjecutorProcesosUniDAC.EjecutarComando(
   const ASentencia: string;
   AResultado: TResultadoSentenciaProcesoUniDAC);
 var
@@ -239,14 +317,19 @@ begin
   try
     Script.Connection := FConexion;
     Script.SQL.Text := ASentencia;
-    Script.Execute;
+    AnotarScriptActivo(Script);
+    try
+      Script.Execute;
+    finally
+      AnotarScriptActivo(nil);
+    end;
     AResultado.FFilas := Script.RowsAffected;
   finally
     Script.Free;
   end;
 end;
 
-function TRepositorioGeneradorProcesosUniDAC.EjecutarSentencia(
+function TEjecutorProcesosUniDAC.EjecutarSentencia(
   const ASentencia: string;
   ATipo: TTipoSentenciaProceso): IResultadoSentenciaProceso;
 var
@@ -265,6 +348,10 @@ begin
         except
           ResultadoUniDAC.FConsulta.Free;
           ResultadoUniDAC.FConsulta := nil;
+          // Una consulta cortada no se reintenta como comando: se deja
+          // subir el error para que el servicio cierre la ejecución.
+          if CancelacionPedida then
+            raise;
           EjecutarComando(ASentencia, ResultadoUniDAC);
         end;
       end
@@ -281,7 +368,30 @@ begin
   end;
 end;
 
-procedure TRepositorioGeneradorProcesosUniDAC.Refrescar(
+constructor TCatalogoGeneradorProcesosUniDAC.Create(
+  AConexion: TUniConnection;
+  AMetadatos, AEstructura, AContenido: TUniQuery;
+  ARefresco: TUniStoredProc);
+begin
+  inherited Create;
+  if not Assigned(AConexion) then
+    raise EArgumentNilException.Create('AConexion');
+  if not Assigned(AMetadatos) then
+    raise EArgumentNilException.Create('AMetadatos');
+  if not Assigned(AEstructura) then
+    raise EArgumentNilException.Create('AEstructura');
+  if not Assigned(AContenido) then
+    raise EArgumentNilException.Create('AContenido');
+  if not Assigned(ARefresco) then
+    raise EArgumentNilException.Create('ARefresco');
+  FConexion := AConexion;
+  FMetadatos := AMetadatos;
+  FEstructura := AEstructura;
+  FContenido := AContenido;
+  FRefresco := ARefresco;
+end;
+
+procedure TCatalogoGeneradorProcesosUniDAC.Refrescar(
   const ABaseDatos: string);
 begin
   FRefresco.ParamByName('pDATABASENAME').AsString := ABaseDatos;
@@ -292,7 +402,7 @@ begin
     FMetadatos.Open;
 end;
 
-function TRepositorioGeneradorProcesosUniDAC.CargarEstructura(
+function TCatalogoGeneradorProcesosUniDAC.CargarEstructura(
   const ATipo, ANombre: string): string;
 var
   CampoResultado: string;
@@ -326,7 +436,7 @@ begin
   end;
 end;
 
-procedure TRepositorioGeneradorProcesosUniDAC.CargarContenido(
+procedure TCatalogoGeneradorProcesosUniDAC.CargarContenido(
   const ANombre: string);
 begin
   FContenido.Close;
@@ -336,7 +446,7 @@ begin
   FContenido.Open;
 end;
 
-function TRepositorioGeneradorProcesosUniDAC.
+function TCatalogoGeneradorProcesosUniDAC.
   GenerarLlamadaProcedimiento(const ANombre: string): string;
 var
   Consulta: TUniQuery;
@@ -370,23 +480,23 @@ begin
   Result := Result + ');';
 end;
 
-procedure CrearRepositorioGeneradorProcesosUniDAC(
+function CrearEjecutorProcesosUniDAC(
+  AConexion: TUniConnection): IRepositorioGeneradorProcesos;
+begin
+  Result := TEjecutorProcesosUniDAC.Create(AConexion);
+end;
+
+function CrearCatalogoGeneradorProcesosUniDAC(
   AConexion: TUniConnection;
   AMetadatos, AEstructura, AContenido: TUniQuery;
-  ARefresco: TUniStoredProc;
-  out ARepositorio: IRepositorioGeneradorProcesos;
-  out ACatalogo: ICatalogoGeneradorProcesos);
-var
-  Adaptador: TRepositorioGeneradorProcesosUniDAC;
+  ARefresco: TUniStoredProc): ICatalogoGeneradorProcesos;
 begin
-  Adaptador := TRepositorioGeneradorProcesosUniDAC.Create(
+  Result := TCatalogoGeneradorProcesosUniDAC.Create(
     AConexion,
     AMetadatos,
     AEstructura,
     AContenido,
     ARefresco);
-  ARepositorio := Adaptador;
-  ACatalogo := Adaptador;
 end;
 
 function ExtraerDatosResultadoProceso(

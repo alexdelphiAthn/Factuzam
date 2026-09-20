@@ -27,6 +27,7 @@ uses
   inLibMsgFotos,
   inLibMsgIntegraciones,
   inLibMsgLogon,
+  inLibMsgServiciosOffLine,
   inLibMsgSql,
   inLibMsgSqlSeguro,
   inLibMsgTickets,
@@ -19198,6 +19199,276 @@ begin
     'src/Lib/inLibMsgColaTurno.pas',
     @inLibMsgColaTurno.
       SAvisoTurnoColaNoLiberado);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'STituloServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      STituloServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionIntroduccionServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionIntroduccionServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionGrupoCuentaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionGrupoCuentaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionUsuarioCuentaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionUsuarioCuentaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionContrasenaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionContrasenaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionGrupoCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionGrupoCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionGrupoPreciosServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionGrupoPreciosServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionInstalarCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionInstalarCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionInstalarPreciosServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionInstalarPreciosServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionCarpetaCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionCarpetaCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionNombreCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionNombreCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionHoraServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionHoraServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionTokensCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionTokensCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionPreciosServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionPreciosServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionUsuarioServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionUsuarioServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionInstalarServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionInstalarServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SCaptionCerrarServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SCaptionCerrarServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SSolicitudCarpetaCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SSolicitudCarpetaCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineNoInstalado',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineNoInstalado);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineInstalado',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineInstalado);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineInstaladoSinFecha',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineInstaladoSinFecha);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineDesactivado',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineDesactivado);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineOtroEjecutable',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineOtroEjecutable);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineConSesion',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineConSesion);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SEstadoServicioOffLineError',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SEstadoServicioOffLineError);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorPerfilServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorPerfilServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorEjecutableServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorEjecutableServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorCarpetaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorCarpetaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorNombreServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorNombreServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorExtensionServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorExtensionServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorRutaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorRutaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorHoraServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorHoraServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorUsuarioServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorUsuarioServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SPreguntaQuitarServicioOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SPreguntaQuitarServicioOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SAvisoSinCambiosServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SAvisoSinCambiosServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SInfoServicioOffLineInstalado',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SInfoServicioOffLineInstalado);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SInfoServicioOffLineQuitado',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SInfoServicioOffLineQuitado);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorInstalarServicioOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorInstalarServicioOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorQuitarServicioOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorQuitarServicioOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorPlanServiciosOffLineNoValido',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorPlanServiciosOffLineNoValido);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorElevacionServiciosOffLineSinRespuesta',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorElevacionServiciosOffLineSinRespuesta);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorElevacionServiciosOffLineRechazada',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorElevacionServiciosOffLineRechazada);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SErrorElevacionServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SErrorElevacionServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SDescripcionTareaCopiaServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SDescripcionTareaCopiaServiciosOffLine);
+  ARegistrar(
+    'inLibMsgServiciosOffLine.' +
+    'SDescripcionTareaPreciosServiciosOffLine',
+    'src/Lib/inLibMsgServiciosOffLine.pas',
+    @inLibMsgServiciosOffLine.
+      SDescripcionTareaPreciosServiciosOffLine);
 end;
 {$WARN SYMBOL_DEPRECATED ON}
 

@@ -859,6 +859,10 @@
         Caption = 'Revertir actualizaci'#243'n'
         OnClick = mnuRevertirActualizacionClick
       end
+      object mnuServiciosOffLine: TMenuItem
+        Caption = 'Establecer servicios off line'
+        OnClick = mnuServiciosOffLineClick
+      end
       object Acercade1: TMenuItem
         Caption = 'Acerca de'
         OnClick = mnuAcercadeClick

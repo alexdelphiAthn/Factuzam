@@ -275,6 +275,12 @@ uses
   inLibActualizacionServicio in 'src\Lib\inLibActualizacionServicio.pas',
   inLibActualizacionProceso in 'src\Lib\inLibActualizacionProceso.pas',
   inMtoModalActualizacion in 'src\Modals\inMtoModalActualizacion.pas' {frmModalActualizacion},
+  inLibMsgServiciosOffLine in 'src\Lib\inLibMsgServiciosOffLine.pas',
+  inLibServiciosOffLineIntf in 'src\Lib\inLibServiciosOffLineIntf.pas',
+  inLibServiciosOffLine in 'src\Lib\inLibServiciosOffLine.pas',
+  inLibProgramadorTareasWindows in 'src\Lib\inLibProgramadorTareasWindows.pas',
+  inLibServiciosOffLineElevacion in 'src\Lib\inLibServiciosOffLineElevacion.pas',
+  inMtoModalServiciosOffLine in 'src\Modals\inMtoModalServiciosOffLine.pas' {frmModalServiciosOffLine},
   inMtoModalListadoVentas in 'src\Modals\inMtoModalListadoVentas.pas' {frmModalListadoVentas},
   inMtoModalImpFac in 'src\Modals\inMtoModalImpFac.pas' {frmPrintFac},
   inMtoModalImpRecFac in 'src\Modals\inMtoModalImpRecFac.pas' {frmPrintRecFac},
@@ -620,6 +626,8 @@ uses
   inLibBuscarImpresora in 'src\Lib\inLibBuscarImpresora.pas',
   inLibDeteccionImpresora in 'src\Lib\inLibDeteccionImpresora.pas',
   inLibVentanaEspera in 'src\Lib\inLibVentanaEspera.pas',
+  inLibProcesoGeneradorEnMarcha in
+    'src\Lib\inLibProcesoGeneradorEnMarcha.pas',
   inLibWebView2Loader in 'src\Lib\inLibWebView2Loader.pas',
   inLibMensajesVcl in 'src\Lib\inLibMensajesVcl.pas',
   DelphiZXIngQRCode in 'src\Lib3par\DelphiZXIngQRCode.pas',
@@ -1244,6 +1252,9 @@ begin
   // Instancia lanzada con permisos de administrador solo para
   // sustituir los ejecutables: hace su trabajo y termina.
   ProcesarArranqueSustitucionElevada;
+  // Instancia elevada que solo registra las tareas de los servicios
+  // off line: hace su trabajo y termina.
+  ProcesarArranqueServiciosOffLineElevado;
   if EsProcesoComandoAyuda then
   begin
     CodigoSalidaComandoAyuda := EjecutarProcesoComandoAyuda;

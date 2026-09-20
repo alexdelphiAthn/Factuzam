@@ -35,6 +35,12 @@ type
     function EjecutarSentencia(
       const ASentencia: string;
       ATipo: TTipoSentenciaProceso): IResultadoSentenciaProceso;
+    // Cancelacion pedida desde otro hilo mientras la sentencia esta
+    // en marcha: corta la que se este ejecutando y el servicio no
+    // lanza las siguientes.
+    procedure PedirCancelacion;
+    procedure OlvidarCancelacion;
+    function CancelacionPedida: Boolean;
   end;
   ICatalogoGeneradorProcesos = interface
     ['{85545472-C12B-474E-8AC5-B18374569809}']
@@ -48,6 +54,12 @@ type
   TDecisionContinuarProceso = function(
     const AResultado: IResultadoSentenciaProceso;
     AIndice: Integer): Boolean of object;
+  // Aviso de por qué sentencia va el script y de lo que va a ejecutar.
+  // Lo llama el hilo que ejecuta, así que quien lo atienda no puede
+  // tocar la VCL.
+  TAvisoSentenciaProceso = procedure(
+    ANumero, ATotal: Integer;
+    const ASentencia: string) of object;
   TResultadoEjecucionProceso = record
     Resultados: TArray<IResultadoSentenciaProceso>;
     Cancelada: Boolean;
@@ -60,7 +72,8 @@ type
       const ARepositorio: IRepositorioGeneradorProcesos);
     function Ejecutar(
       const AScript: string;
-      ADecidirContinuacion: TDecisionContinuarProceso):
+      ADecidirContinuacion: TDecisionContinuarProceso;
+      AAvisarSentencia: TAvisoSentenciaProceso = nil):
       TResultadoEjecucionProceso;
   end;
 
@@ -125,7 +138,8 @@ end;
 
 function TServicioGeneradorProcesos.Ejecutar(
   const AScript: string;
-  ADecidirContinuacion: TDecisionContinuarProceso):
+  ADecidirContinuacion: TDecisionContinuarProceso;
+  AAvisarSentencia: TAvisoSentenciaProceso):
   TResultadoEjecucionProceso;
 var
   I: Integer;
@@ -133,6 +147,7 @@ var
   Sentencias: TArray<string>;
 begin
   Result := Default(TResultadoEjecucionProceso);
+  FRepositorio.OlvidarCancelacion;
   Sentencias := FRepositorio.SepararSentencias(Trim(AScript));
   // Se valida el lote completo antes de ejecutar la primera sentencia para
   // impedir que un script mixto deje cambios parciales antes del bloqueo.
@@ -142,17 +157,34 @@ begin
   begin
     if not Result.Cancelada then
     begin
-      Resultado := FRepositorio.EjecutarSentencia(
-        Sentencias[I],
-        TipoSentenciaProceso(Sentencias[I]));
-      SetLength(Result.Resultados, Length(Result.Resultados) + 1);
-      Result.Resultados[High(Result.Resultados)] := Resultado;
-      if not Resultado.Correcto then
+      if FRepositorio.CancelacionPedida then
+        Result.Cancelada := True
+      else
       begin
-        if Assigned(ADecidirContinuacion) then
-          Result.Cancelada := not ADecidirContinuacion(Resultado, I)
+        if Assigned(AAvisarSentencia) then
+          AAvisarSentencia(I + 1, Length(Sentencias), Sentencias[I]);
+        Resultado := FRepositorio.EjecutarSentencia(
+          Sentencias[I],
+          TipoSentenciaProceso(Sentencias[I]));
+        // El error de una sentencia cortada a proposito no se
+        // ensenia como fallo del script ni se pregunta por el.
+        if (not Resultado.Correcto) and
+           FRepositorio.CancelacionPedida then
+          Result.Cancelada := True
         else
-          Result.Cancelada := True;
+        begin
+          SetLength(Result.Resultados,
+            Length(Result.Resultados) + 1);
+          Result.Resultados[High(Result.Resultados)] := Resultado;
+          if not Resultado.Correcto then
+          begin
+            if Assigned(ADecidirContinuacion) then
+              Result.Cancelada :=
+                not ADecidirContinuacion(Resultado, I)
+            else
+              Result.Cancelada := True;
+          end;
+        end;
       end;
     end;
   end;

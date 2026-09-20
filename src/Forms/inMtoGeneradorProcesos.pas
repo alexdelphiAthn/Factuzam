@@ -11,6 +11,9 @@
 {  Descripción:                                                                }
 {    Generador de procesos parametrizables.                                    }
 {    Editor SQL y ejecucion de procesos almacenados sobre la BD.               }
+{    Cada script se lanza en su propio hilo, con su conexión y su ventana:     }
+{    se pueden tener varios a la vez, minimizarlos y cancelarlos, y la         }
+{    pantalla sigue usándose mientras trabajan.                                }
 {******************************************************************************}
 unit inMtoGeneradorProcesos;
 
@@ -37,13 +40,18 @@ uses
   UniDataGeneradorProcesos, cxCurrencyEdit, SynEditKeyCmds,
   SynDBEdit, SynEditTypes, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, JvExComCtrls, JvDBTreeView, System.Actions, Vcl.ActnList,
-  System.UITypes, inLibGeneradorProcesosAplicacion;
+  System.UITypes, Uni, inLibConexionesIntf, inLibVentanaEspera,
+  inLibProcesoGeneradorEnMarcha, inLibGeneradorProcesosAplicacion;
 
 const
   ecSelColumnMode = 2577;
   ecSelLineMode = 2578;
   // Tag que marca las pestañas de resultados creadas al ejecutar un script
   TAG_PESTANA_RESULTADO = 777;
+  // Escalón entre las ventanas de dos procesos lanzados a la vez
+  DESPLAZAMIENTO_VENTANA_PROCESO = 28;
+  // Cada cuánto se repasan los procesos en marcha
+  INTERVALO_REVISION_PROCESOS_MS = 200;
 
 type
   TfrmMtoGeneradorProcesos = class(TfrmMtoGen)
@@ -197,6 +205,7 @@ type
   public
     dmmGeneradorProcesos: TdmGeneradorProcesos;
     destructor Destroy; override;
+    function CloseQuery: Boolean; override;
     procedure CargarArbol;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -209,12 +218,17 @@ type
     FSearchEngine: TSynEditSearch;
     FEditorActualBusqueda: TCustomSynEdit;
     FAppEvents: TApplicationEvents;
-    FRepositorioProcesos: IRepositorioGeneradorProcesos;
     FCatalogoProcesos: ICatalogoGeneradorProcesos;
-    FServicioProcesos: TServicioGeneradorProcesos;
     FDatosVistaFija: TDataSet;
     FSqlVistaFija: string;
     FNombreContenidoMetadato: string;
+    // Procesos lanzados: cada uno con su hilo, su conexion propia y su
+    // ventana. El temporizador los repasa y los recoge al acabar.
+    FProcesos: TObjectList<TProcesoGeneradorEnMarcha>;
+    FConexionesResultados: TObjectList<TUniConnection>;
+    FTemporizadorProcesos: TTimer;
+    FContadorProcesos: Integer;
+    FRevisandoProcesos: Boolean;
     // Suscritos a los avisos del DM (el DM ya no toca la UI).
     procedure NuevoProcesoDesdeDM(Sender: TObject);
     procedure ProcesoCambiadoDesdeDM(Sender: TObject);
@@ -249,11 +263,21 @@ type
                                     ADatos: TDataSet): TcxTabSheet;
     function CrearPestanaComando(const ACaption: string;
                                  const ATexto: string): TcxTabSheet;
-    function ConfirmarContinuacionProceso(
+    function PreguntarErrorProceso(
+      ANumero: Integer;
       const AResultado: IResultadoSentenciaProceso;
       AIndice: Integer): Boolean;
-    procedure PresentarEjecucionProceso(
-      const AEjecucion: TResultadoEjecucionProceso);
+    function FabricarEjecutorProceso(
+      out ARecursos: TObject): IRepositorioGeneradorProcesos;
+    function PresentarEjecucionProceso(
+      const AEjecucion: TResultadoEjecucionProceso;
+      ANumero: Integer;
+      const AScript: string): Boolean;
+    procedure LanzarProceso(const AScript: string);
+    procedure RevisarProcesos(Sender: TObject);
+    procedure RecogerProceso(AIndice: Integer);
+    function HayProcesosEnMarcha: Boolean;
+    function ReferenciaVentanaProceso: TRect;
     procedure CopiarVistaPortapapeles(AVista: TcxGridDBTableView);
     procedure btnCopiarDatosDinClick(Sender: TObject);
   end;
@@ -279,6 +303,16 @@ uses
 resourcestring
   SOperacionEdicionTablaProtegida = 'EDICION';
   SNombreComandoScript = 'Command%d';
+  SFaseEjecutarProceso = 'Ejecutando el proceso...';
+  STituloProcesoGenerador = 'Proceso %d';
+  SNombreComandoProceso = 'Proceso %d / Command%d';
+  SAvisoProcesoLanzado = '-- Proceso %d lanzado.';
+  SAvisoProcesoTerminado = '-- Proceso %d:';
+  SErrorProcesoGenerador = '-- [ERROR] Proceso %d: %s';
+  SAvisoMaximoProcesos = 'Ya hay %d procesos en marcha. Espere a ' +
+    'que termine alguno antes de lanzar otro.';
+  SAvisoProcesosEnMarcha = 'Hay procesos en marcha. Cancélelos o ' +
+    'espere a que terminen antes de cerrar la pantalla.';
 
 procedure TfrmMtoGeneradorProcesos.ActionCortarExecute(Sender: TObject);
 begin
@@ -839,6 +873,10 @@ begin
       pcPestana.Pages[i].Free;
     end;
   end;
+  // Sin datos a la vista ya no hacen falta las conexiones que los
+  // sostenian.
+  if Assigned(FConexionesResultados) then
+    FConexionesResultados.Clear;
 end;
 
 function TfrmMtoGeneradorProcesos.CrearPestanaResultado(
@@ -985,7 +1023,17 @@ begin
   CopiarVistaPortapapeles(tvVista);
 end;
 
-function TfrmMtoGeneradorProcesos.ConfirmarContinuacionProceso(
+// Numero de procesos que se admiten a la vez: tantos como nucleos, que es
+// lo que el equipo puede llevar sin ahogarse, y nunca menos de cuatro.
+function MaximoProcesosSimultaneos: Integer;
+begin
+  Result := Max(4, TThread.ProcessorCount);
+end;
+
+// La pregunta llega desde el hilo de un proceso, ya puesta en el principal
+// por el propio proceso.
+function TfrmMtoGeneradorProcesos.PreguntarErrorProceso(
+  ANumero: Integer;
   const AResultado: IResultadoSentenciaProceso;
   AIndice: Integer): Boolean;
 var
@@ -997,25 +1045,158 @@ begin
   Result := MessageDlg_fza(
     Format(
       SPreguntaIgnorarErrorComandoScript,
-      [Format(SNombreComandoScript, [AIndice + 1]), MensajeCorto]),
+      [Format(SNombreComandoProceso, [ANumero, AIndice + 1]),
+       MensajeCorto]),
     mtError,
     [mbYes, mbNo],
     0) = mrYes;
 end;
 
-procedure TfrmMtoGeneradorProcesos.PresentarEjecucionProceso(
-  const AEjecucion: TResultadoEjecucionProceso);
+// Se llama desde el hilo del proceso: cada uno con su conexion, para que
+// no se estorben entre ellos ni ocupen la principal.
+function TfrmMtoGeneradorProcesos.FabricarEjecutorProceso(
+  out ARecursos: TObject): IRepositorioGeneradorProcesos;
+var
+  Conexion: TUniConnection;
+begin
+  ARecursos := nil;
+  if not Assigned(Conexiones) then
+    raise Exception.Create(SErrorServicioConexionesNoDisponible);
+  Conexion := Conexiones.CrearConexion(nil, uctSegundoPlano);
+  ARecursos := Conexion;
+  Result := CrearEjecutorProcesosUniDAC(Conexion);
+end;
+
+function TfrmMtoGeneradorProcesos.HayProcesosEnMarcha: Boolean;
+begin
+  Result := Assigned(FProcesos) and (FProcesos.Count > 0);
+end;
+
+// Las ventanas salen en cascada sobre la pantalla para que dos procesos a
+// la vez no se tapen.
+function TfrmMtoGeneradorProcesos.ReferenciaVentanaProceso: TRect;
+var
+  Desplazamiento: Integer;
+begin
+  if Self.Visible then
+    Result := Self.BoundsRect
+  else
+    Result := Screen.WorkAreaRect;
+  Desplazamiento := ScaleValue(DESPLAZAMIENTO_VENTANA_PROCESO) *
+    FProcesos.Count;
+  Result.Offset(Desplazamiento, Desplazamiento);
+end;
+
+procedure TfrmMtoGeneradorProcesos.LanzarProceso(const AScript: string);
+var
+  Proceso: TProcesoGeneradorEnMarcha;
+  Ventana: IVentanaEspera;
+begin
+  if FProcesos.Count >= MaximoProcesosSimultaneos then
+    ShowMessage_fza(
+      Format(SAvisoMaximoProcesos, [MaximoProcesosSimultaneos]))
+  else
+  begin
+    Inc(FContadorProcesos);
+    Ventana := CrearVentanaProcesoSegundoPlano(
+      ReferenciaVentanaProceso,
+      Self.CurrentPPI,
+      Format(STituloProcesoGenerador, [FContadorProcesos]));
+    Proceso := TProcesoGeneradorEnMarcha.Create(
+      FContadorProcesos,
+      AScript,
+      FabricarEjecutorProceso,
+      PreguntarErrorProceso,
+      Ventana);
+    FProcesos.Add(Proceso);
+    Ventana.Mostrar(SFaseEjecutarProceso);
+    Ventana.MostrarTexto(AScript);
+    Ventana.PermitirCancelar(True);
+    Proceso.Lanzar;
+    FTemporizadorProcesos.Enabled := True;
+    cxmResul.Lines.Add(Format(SAvisoProcesoLanzado, [FContadorProcesos]));
+  end;
+end;
+
+// Cada poco, en el hilo principal: mira los botones Cancelar de las
+// ventanas y recoge los procesos que ya han acabado.
+procedure TfrmMtoGeneradorProcesos.RevisarProcesos(Sender: TObject);
+var
+  i: Integer;
+begin
+  // Recoger un proceso puede abrir un mensaje, y con el mensaje abierto
+  // el temporizador sigue saltando: sin esta marca se recogeria dos veces.
+  if not FRevisandoProcesos then
+  begin
+    FRevisandoProcesos := True;
+    try
+      for i := FProcesos.Count - 1 downto 0 do
+      begin
+        FProcesos[i].VigilarCancelacion;
+        if FProcesos[i].Terminado then
+          RecogerProceso(i);
+      end;
+      FTemporizadorProcesos.Enabled := FProcesos.Count > 0;
+    finally
+      FRevisandoProcesos := False;
+    end;
+  end;
+end;
+
+procedure TfrmMtoGeneradorProcesos.RecogerProceso(AIndice: Integer);
+var
+  Proceso: TProcesoGeneradorEnMarcha;
+  QuedanDatos: Boolean;
+  Recursos: TObject;
+begin
+  Proceso := FProcesos[AIndice];
+  Proceso.Ventana.Ocultar;
+  QuedanDatos := False;
+  if Proceso.Bloqueado then
+  begin
+    cxmResul.Lines.Add('-- [BLOQUEADO] ' + Proceso.Error);
+    MessageDlg_fza(Proceso.Error, mtWarning, [mbOK], 0);
+  end
+  else if Proceso.Error <> '' then
+    cxmResul.Lines.Add(
+      Format(SErrorProcesoGenerador, [Proceso.Numero, Proceso.Error]))
+  else
+  begin
+    cxmResul.Lines.Add(Format(SAvisoProcesoTerminado, [Proceso.Numero]));
+    QuedanDatos := PresentarEjecucionProceso(
+      Proceso.Resultado, Proceso.Numero, Proceso.Script);
+  end;
+  // La conexion sostiene los datasets que se quedan a la vista; si no ha
+  // quedado ninguno, se cierra aqui mismo.
+  Recursos := Proceso.EntregarRecursos;
+  if QuedanDatos and (Recursos is TUniConnection) then
+    FConexionesResultados.Add(TUniConnection(Recursos))
+  else
+    Recursos.Free;
+  FProcesos.Delete(AIndice);
+end;
+
+// Las pestañas llevan el número del proceso, porque pueden convivir
+// las de varios. Devuelve si alguno de sus datos se queda a la vista:
+// de eso depende que haya que conservar su conexión.
+function TfrmMtoGeneradorProcesos.PresentarEjecucionProceso(
+  const AEjecucion: TResultadoEjecucionProceso;
+  ANumero: Integer;
+  const AScript: string): Boolean;
 var
   Comandos: Integer;
   Datos: TDataSet;
   I: Integer;
+  Prefijo: string;
   PrimeraPestana: TcxTabSheet;
   Resultado: IResultadoSentenciaProceso;
   Titulo: string;
   Vistas: Integer;
 begin
+  Result := False;
   Comandos := 0;
   Vistas := 0;
+  Prefijo := Format('P%d.', [ANumero]);
   PrimeraPestana := nil;
   for I := 0 to Length(AEjecucion.Resultados) - 1 do
   begin
@@ -1023,13 +1204,18 @@ begin
     if Resultado.Correcto and Resultado.TieneDatos then
     begin
       Inc(Vistas);
-      Titulo := 'VistaDatos' + IntToStr(Vistas);
+      Titulo := Prefijo + 'VistaDatos' + IntToStr(Vistas);
       Datos := ExtraerDatosResultadoProceso(Resultado);
       if Assigned(Datos) then
       begin
-        if Length(AEjecucion.Resultados) = 1 then
+        Result := True;
+        // La vista fija es una sola: se la queda el primer proceso
+        // que traiga un unico resultado y la tenga libre.
+        if (Length(AEjecucion.Resultados) = 1) and
+           (not Assigned(FDatosVistaFija)) then
         begin
           FDatosVistaFija := Datos;
+          FSqlVistaFija := AScript;
           tsVistaDatos.InsertComponent(FDatosVistaFija);
           dmmGeneradorProcesos.dsVista.DataSet := FDatosVistaFija;
           tvVista.ClearItems;
@@ -1051,7 +1237,7 @@ begin
     else
     begin
       Inc(Comandos);
-      Titulo := 'Command' + IntToStr(Comandos);
+      Titulo := Prefijo + 'Command' + IntToStr(Comandos);
       if Resultado.Correcto then
       begin
         CrearPestanaComando(
@@ -1083,7 +1269,6 @@ end;
 procedure TfrmMtoGeneradorProcesos.btnEjecutarClick(Sender: TObject);
 var
   EditorActivo: TCustomSynEdit;
-  Ejecucion: TResultadoEjecucionProceso;
   Script: string;
 begin
   inherited;
@@ -1099,21 +1284,11 @@ begin
     Script := EditorActivo.Lines.Text;
   if Trim(Script) <> '' then
   begin
-    LimpiarPestanasResultado;
-    FSqlVistaFija := Script;
-    try
-      Ejecucion := FServicioProcesos.Ejecutar(
-        Script,
-        ConfirmarContinuacionProceso);
-      PresentarEjecucionProceso(Ejecucion);
-    except
-      on E: EModificacionTablaFacturacionProtegida do
-      begin
-        FSqlVistaFija := '';
-        cxmResul.Lines.Add('-- [BLOQUEADO] ' + E.Message);
-        MessageDlg_fza(E.Message, mtWarning, [mbOK], 0);
-      end;
-    end;
+    // Con otro proceso trabajando no se borra lo que hay: sus
+    // pestañas y las nuevas conviven numeradas.
+    if not HayProcesosEnMarcha then
+      LimpiarPestanasResultado;
+    LanzarProceso(Script);
   end;
 end;
 
@@ -1249,16 +1424,18 @@ begin
   syndtEstructura.BeginUpdate;
   inherited;
   dmmGeneradorProcesos := tdmDataModule as TdmGeneradorProcesos;
-  CrearRepositorioGeneradorProcesosUniDAC(
+  FCatalogoProcesos := CrearCatalogoGeneradorProcesosUniDAC(
     ConexionPrincipal,
     dmmGeneradorProcesos.unqryMetadatos,
     dmmGeneradorProcesos.unqryEstructura,
     dmmGeneradorProcesos.unqryContenido,
-    dmmGeneradorProcesos.unstrdprcRefresh,
-    FRepositorioProcesos,
-    FCatalogoProcesos);
-  FServicioProcesos := TServicioGeneradorProcesos.Create(
-    FRepositorioProcesos);
+    dmmGeneradorProcesos.unstrdprcRefresh);
+  FProcesos := TObjectList<TProcesoGeneradorEnMarcha>.Create(True);
+  FConexionesResultados := TObjectList<TUniConnection>.Create(True);
+  FTemporizadorProcesos := TTimer.Create(Self);
+  FTemporizadorProcesos.Interval := INTERVALO_REVISION_PROCESOS_MS;
+  FTemporizadorProcesos.Enabled := False;
+  FTemporizadorProcesos.OnTimer := RevisarProcesos;
   dmmGeneradorProcesos.OnNuevoProceso := NuevoProcesoDesdeDM;
   dmmGeneradorProcesos.OnProcesoCambiado := ProcesoCambiadoDesdeDM;
   tvMetadatostvVista.DataController.DataSource :=
@@ -1291,10 +1468,27 @@ end;
 
 destructor TfrmMtoGeneradorProcesos.Destroy;
 begin
-  FreeAndNil(FServicioProcesos);
-  FRepositorioProcesos := nil;
+  if Assigned(FTemporizadorProcesos) then
+    FTemporizadorProcesos.Enabled := False;
+  // Al liberarse, cada proceso corta lo suyo y espera a su hilo.
+  FreeAndNil(FProcesos);
   FCatalogoProcesos := nil;
   inherited;
+  // Los datasets de los resultados cuelgan de estas conexiones: se
+  // cierran cuando el inherited ya los ha liberado.
+  FreeAndNil(FConexionesResultados);
+end;
+
+// No se cierra la pantalla con procesos trabajando: sus ventanas y
+// sus resultados dejarian de tener a donde volver.
+function TfrmMtoGeneradorProcesos.CloseQuery: Boolean;
+begin
+  Result := inherited CloseQuery;
+  if Result and HayProcesosEnMarcha then
+  begin
+    ShowMessage_fza(SAvisoProcesosEnMarcha);
+    Result := False;
+  end;
 end;
 
 procedure TfrmMtoGeneradorProcesos.cxdbtxtdtNOMBRE_METADATOPropertiesChange(

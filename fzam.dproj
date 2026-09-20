@@ -525,6 +525,14 @@
         <DCCReference Include="src\Modals\inMtoModalActualizacion.pas">
             <Form>frmModalActualizacion</Form>
         </DCCReference>
+        <DCCReference Include="src\Lib\inLibMsgServiciosOffLine.pas"/>
+        <DCCReference Include="src\Lib\inLibServiciosOffLineIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibServiciosOffLine.pas"/>
+        <DCCReference Include="src\Lib\inLibProgramadorTareasWindows.pas"/>
+        <DCCReference Include="src\Lib\inLibServiciosOffLineElevacion.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalServiciosOffLine.pas">
+            <Form>frmModalServiciosOffLine</Form>
+        </DCCReference>
         <DCCReference Include="src\Modals\inMtoModalListadoVentas.pas">
             <Form>frmModalListadoVentas</Form>
         </DCCReference>
@@ -1083,6 +1091,7 @@
         <DCCReference Include="src\Lib\inLibBuscarImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibDeteccionImpresora.pas"/>
         <DCCReference Include="src\Lib\inLibVentanaEspera.pas"/>
+        <DCCReference Include="src\Lib\inLibProcesoGeneradorEnMarcha.pas"/>
         <DCCReference Include="src\Lib\inLibWebView2Loader.pas"/>
         <DCCReference Include="src\Lib\inLibMensajesVcl.pas"/>
         <DCCReference Include="src\Lib3par\DelphiZXIngQRCode.pas"/>

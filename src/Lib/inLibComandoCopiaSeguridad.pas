@@ -53,6 +53,9 @@ function ResolverPlantillaCopiaSeguridad(
 function CodificarClaveCifradaParaRuta(
   const AClaveCifrada: string
 ): string;
+function ValidarRutaDestinoCopia(
+  const ARuta: string
+): TErrorComandoCopiaSeguridad;
 function InterpretarComandoCopiaSeguridad(
   const AParametros: TArray<string>;
   AInstante: TDateTime;
@@ -406,7 +409,7 @@ begin
   Result := Pos(':', sRutaSinUnidad) > 0;
 end;
 
-function ValidarRutaDestino(
+function ValidarRutaDestinoCopia(
   const ARuta: string): TErrorComandoCopiaSeguridad;
 var
   sDirectorio: string;
@@ -534,7 +537,7 @@ begin
         AClavesPredeterminadas,
         Result);
       if Result.Error = eccsNinguno then
-        Result.Error := ValidarRutaDestino(Result.RutaDestino);
+        Result.Error := ValidarRutaDestinoCopia(Result.RutaDestino);
       Result.EsValida := Result.Error = eccsNinguno;
     end
     else
