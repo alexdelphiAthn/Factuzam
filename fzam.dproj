@@ -1863,6 +1863,11 @@
         <DCCReference Include="src\Lib\inLibInspectorSkin.pas"/>
         <DCCReference Include="src\Lib\inLibCajaMenuTarjetaVcl.pas"/>
         <DCCReference Include="src\Lib\inLibCajaMenuMaquetaVcl.pas"/>
+        <DCCReference Include="src\Lib\inLibDistribucionTiendasIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibDistribucionTiendas.pas"/>
+        <DCCReference Include="src\Lib\inLibMsgDistribucionTiendas.pas"/>
+        <DCCReference Include="src\DataModules\UniDataDistribucionTiendasRepositorio.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataPropuestasTraspasoConfirmador.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

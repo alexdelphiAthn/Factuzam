@@ -61,6 +61,10 @@ type
     FConexion: TUniConnection;
     FModo: TModoTraspaso;
     FContextoSesion: IContextoSesionAplicacion;
+    // Propuesta de traspaso (Distribuir entre tiendas) que este traspaso
+    // confirma al grabarse; 0 = ninguna.
+    FIdPropuesta: Int64;
+    FUltimoDocumentoGrabado: TContextoGrabacionTraspaso;
     function GetIdentidadSesion: TIdentidadSesion;
     procedure ConfigurarEstructuraCabecera;
     procedure ConfigurarEstructuraLineas;
@@ -114,6 +118,12 @@ type
     // Suma lo servido a las líneas de la solicitud y recalcula su estado.
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
+    // Pasa la propuesta vinculada a CONFIRMADA con la referencia del
+    // traspaso y anota en sus líneas lo realmente traspasado.
+    procedure MarcarPropuestaConfirmada(
+      QryTrx: TUniQuery;
+      const AContexto: TContextoGrabacionTraspaso);
+    procedure AnotarLineasPropuestaTraspasadas(QryTrx: TUniQuery);
     function CrearContextoGrabacionTraspaso(
       const AAlmacenDestino: string): TContextoGrabacionTraspaso;
     function GrabarLineasTraspaso(
@@ -142,8 +152,14 @@ type
       AConexion: TUniConnection); reintroduce;
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     property Modo: TModoTraspaso read FModo write FModo;
+    property IdPropuesta: Int64 read FIdPropuesta;
     procedure PrepararNuevo(AModo: TModoTraspaso; const AEmpresa, AAlmacen,
                             ACaja: string; AFecha: TDateTime);
+    // El próximo GrabarTraspaso confirmará esta propuesta de traspaso en
+    // su misma transacción. PrepararNuevo la desvincula.
+    procedure VincularPropuesta(AIdPropuesta: Int64);
+    // Última referencia de documento grabada (tipo, serie y número).
+    function UltimoDocumentoGrabado: TContextoGrabacionTraspaso;
     function ObtenerCosteMedio(const ASku, AAlmacen: string): Currency;
     function ObtenerStock(const ASku, AAlmacen: string): Double;
     // Devuelve el detalle de las lineas que superan el stock del almacen.
@@ -196,6 +212,9 @@ implementation
 
 uses
   inLibMsgCaja,
+  inLibMsgDistribucionTiendas,
+  inLibDistribucionTiendasIntf,
+  inLibDocumentosTrabajoEstados,
   inLibPrestaShopColaSenal,
   UniDataMovimientosAlmacenRecalculo;
 
@@ -325,6 +344,7 @@ procedure TdmTraspaso.PrepararNuevo(AModo: TModoTraspaso; const AEmpresa,
                                     AAlmacen, ACaja: string; AFecha: TDateTime);
 begin
   FModo := AModo;
+  FIdPropuesta := 0;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
   cdsCabecera.Append;
@@ -337,6 +357,16 @@ begin
   cdsCabecera.FieldByName('CONTADOR_LINEAS').AsInteger := 0;
   cdsCabecera.FieldByName('TOTAL').AsCurrency := 0;
   cdsCabecera.Post;
+end;
+
+procedure TdmTraspaso.VincularPropuesta(AIdPropuesta: Int64);
+begin
+  FIdPropuesta := AIdPropuesta;
+end;
+
+function TdmTraspaso.UltimoDocumentoGrabado: TContextoGrabacionTraspaso;
+begin
+  Result := FUltimoDocumentoGrabado;
 end;
 
 procedure TdmTraspaso.CargarVentasReposicion(
@@ -1048,16 +1078,126 @@ procedure TdmTraspaso.RegistrarOperacionTraspaso(
   const AContexto: TContextoGrabacionTraspaso;
   ATotal: Currency;
   const ANumSolicitud, ASerieSolicitud: string);
+var
+  sSerieReferencia: string;
+  sNumeroReferencia: string;
 begin
+  // La operación referencia lo que la originó: la solicitud atendida o la
+  // propuesta de traspaso confirmada.
+  sSerieReferencia := ASerieSolicitud;
+  sNumeroReferencia := ANumSolicitud;
+  if FIdPropuesta > 0 then
+  begin
+    sSerieReferencia := SERIE_REFERENCIA_PROPUESTA_TRASPASO;
+    sNumeroReferencia := IntToStr(FIdPropuesta);
+  end;
   InsertarOperacionCaja(QryTrx, AContexto.Empresa,
     AContexto.AlmacenOrigen, AContexto.Caja, AContexto.NumeroOperacion,
     AContexto.TipoDocumento, ATotal, AContexto.FechaOperacion,
     AContexto.Empleado, 'Traspaso a ' + AContexto.AlmacenDestino,
-    ASerieSolicitud, ANumSolicitud, AContexto.EmpresaContra,
+    sSerieReferencia, sNumeroReferencia, AContexto.EmpresaContra,
     AContexto.AlmacenDestino, 'S', AContexto.NumeroDocumento,
     AContexto.SerieDocumento);
-  if Trim(ANumSolicitud) <> '' then
+  if FIdPropuesta > 0 then
+    MarcarPropuestaConfirmada(QryTrx, AContexto)
+  else if Trim(ANumSolicitud) <> '' then
     MarcarSolicitudAtendida(QryTrx, ANumSolicitud, ASerieSolicitud);
+end;
+
+// El predicado lleva estado, origen y destino: si otro usuario ya la
+// confirmó, o el destino elegido no es el suyo, no cuadra ninguna fila y
+// la excepción deshace el traspaso entero.
+procedure TdmTraspaso.MarcarPropuestaConfirmada(
+  QryTrx: TUniQuery;
+  const AContexto: TContextoGrabacionTraspaso);
+begin
+  QryTrx.SQL.Text :=
+    'UPDATE fza_traspasos_propuestas ' +
+    '   SET ESTADO_TRPRO = :CONFIRMADA, ' +
+    '       TIPO_DOC_TRPRO = :TIPO, ' +
+    '       SERIE_DOC_TRPRO = :SERIE, ' +
+    '       NUMERO_DOC_TRPRO = :NUMERO, ' +
+    '       NUMERO_OPERACION_TRPRO = :NUMOP, ' +
+    '       CODIGO_CAJA_TRPRO = :CAJA, ' +
+    '       INSTANTE_CONFIRMACION_TRPRO = NOW(), ' +
+    '       USUARIO_CONFIRMACION_TRPRO = :USUARIO, ' +
+    '       USUARIO_MODIF = :USUARIO ' +
+    ' WHERE ID_TRPRO = :ID_TRPRO ' +
+    '   AND ESTADO_TRPRO = :PENDIENTE ' +
+    '   AND CODIGO_ALM_ORIGEN_TRPRO = :ORIGEN ' +
+    '   AND CODIGO_ALM_DESTINO_TRPRO = :DESTINO';
+  QryTrx.ParamByName('CONFIRMADA').AsString :=
+    ESTADO_PROPUESTA_TRASPASO_CONFIRMADA;
+  QryTrx.ParamByName('PENDIENTE').AsString :=
+    ESTADO_PROPUESTA_TRASPASO_PENDIENTE;
+  QryTrx.ParamByName('TIPO').AsString := AContexto.TipoDocumento;
+  QryTrx.ParamByName('SERIE').AsString := AContexto.SerieDocumento;
+  QryTrx.ParamByName('NUMERO').AsString := AContexto.NumeroDocumento;
+  QryTrx.ParamByName('NUMOP').AsString := AContexto.NumeroOperacion;
+  QryTrx.ParamByName('CAJA').AsString := AContexto.Caja;
+  QryTrx.ParamByName('USUARIO').AsString := AContexto.Usuario;
+  QryTrx.ParamByName('ID_TRPRO').AsLargeInt := FIdPropuesta;
+  QryTrx.ParamByName('ORIGEN').AsString := AContexto.AlmacenOrigen;
+  QryTrx.ParamByName('DESTINO').AsString := AContexto.AlmacenDestino;
+  QryTrx.Execute;
+  if QryTrx.RowsAffected <> 1 then
+    raise EValidacionTraspaso.CreateFmt(
+      SErrorPropuestaTraspasoNoPendiente,
+      [FIdPropuesta, AContexto.AlmacenOrigen, AContexto.AlmacenDestino]);
+  AnotarLineasPropuestaTraspasadas(QryTrx);
+  // El documento de trabajo ya se ha materializado en un traspaso: queda
+  // como enviado para que no se editen sus líneas.
+  QryTrx.SQL.Text :=
+    'UPDATE fza_documentos_trabajo ' +
+    '   SET ESTADO_DTR = :ENVIADO, USUARIO_MODIF = :USUARIO ' +
+    ' WHERE ID_DTR = (SELECT P.ID_DTR_TRPRO ' +
+    '                   FROM fza_traspasos_propuestas P ' +
+    '                  WHERE P.ID_TRPRO = :ID_TRPRO) ' +
+    '   AND ' + CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR');
+  QryTrx.ParamByName('ENVIADO').AsString :=
+    ESTADO_DOCUMENTO_TRABAJO_ENVIADO;
+  QryTrx.ParamByName('USUARIO').AsString := AContexto.Usuario;
+  QryTrx.ParamByName('ID_TRPRO').AsLargeInt := FIdPropuesta;
+  QryTrx.Execute;
+end;
+
+// Lo traspasado puede no coincidir con lo propuesto: en caja se pueden
+// retocar las unidades o añadir alguna línea antes de grabar.
+procedure TdmTraspaso.AnotarLineasPropuestaTraspasadas(QryTrx: TUniQuery);
+begin
+  cdsLineas.First;
+  while not cdsLineas.Eof do
+  begin
+    if (Trim(cdsLineas.FieldByName('CODIGO_UNIDAD').AsString) <> '') and
+       (cdsLineas.FieldByName('CANTIDAD').AsFloat > 0) then
+    begin
+      QryTrx.SQL.Text :=
+        'INSERT INTO fza_traspasos_propuestas_lineas (' +
+        '  ID_TRPRO_TRPROLIN, CODIGO_UNIDAD_TRPROLIN, ' +
+        '  CODIGO_ART_TRPROLIN, DESCRIPCION_ARTICULO_TRPROLIN, ' +
+        '  CANTIDAD_TRPROLIN, CANTIDAD_TRASPASADA_TRPROLIN, ' +
+        '  INSTANTE_ALTA, USUARIO_ALTA, USUARIO_MODIF) ' +
+        'VALUES (' +
+        '  :ID_TRPRO, :SKU, :ARTICULO, :DESCRIPCION, 0, :CANTIDAD, ' +
+        '  NOW(), :USUARIO, :USUARIO) ' +
+        'ON DUPLICATE KEY UPDATE ' +
+        '  CANTIDAD_TRASPASADA_TRPROLIN = ' +
+        '    CANTIDAD_TRASPASADA_TRPROLIN + :CANTIDAD, ' +
+        '  USUARIO_MODIF = :USUARIO';
+      QryTrx.ParamByName('ID_TRPRO').AsLargeInt := FIdPropuesta;
+      QryTrx.ParamByName('SKU').AsString :=
+        cdsLineas.FieldByName('CODIGO_UNIDAD').AsString;
+      QryTrx.ParamByName('ARTICULO').AsString :=
+        cdsLineas.FieldByName('CODIGO_ART').AsString;
+      QryTrx.ParamByName('DESCRIPCION').AsString :=
+        cdsLineas.FieldByName('DESCRIPCION').AsString;
+      QryTrx.ParamByName('CANTIDAD').AsFloat :=
+        cdsLineas.FieldByName('CANTIDAD').AsFloat;
+      QryTrx.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+      QryTrx.Execute;
+    end;
+    cdsLineas.Next;
+  end;
 end;
 
 function TdmTraspaso.EjecutarGrabacionTraspaso(
@@ -1083,6 +1223,7 @@ begin
       RegistrarOperacionTraspaso(oConsulta, AContexto, cTotal,
         ANumSolicitud, ASerieSolicitud);
       FConexion.Commit;
+      FUltimoDocumentoGrabado := AContexto;
       SolicitarProcesadoPrestaShop;
       Result := True;
     except

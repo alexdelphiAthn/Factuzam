@@ -1164,7 +1164,12 @@ uses
   inLibVentanaBarraTareas in 'src\Lib\inLibVentanaBarraTareas.pas',
   inLibInspectorSkin in 'src\Lib\inLibInspectorSkin.pas',
   inLibCajaMenuTarjetaVcl in 'src\Lib\inLibCajaMenuTarjetaVcl.pas',
-  inLibCajaMenuMaquetaVcl in 'src\Lib\inLibCajaMenuMaquetaVcl.pas';
+  inLibCajaMenuMaquetaVcl in 'src\Lib\inLibCajaMenuMaquetaVcl.pas',
+  inLibDistribucionTiendasIntf in 'src\Lib\inLibDistribucionTiendasIntf.pas',
+  inLibDistribucionTiendas in 'src\Lib\inLibDistribucionTiendas.pas',
+  inLibMsgDistribucionTiendas in 'src\Lib\inLibMsgDistribucionTiendas.pas',
+  UniDataDistribucionTiendasRepositorio in 'src\DataModules\UniDataDistribucionTiendasRepositorio.pas',
+  UniDataPropuestasTraspasoConfirmador in 'src\Caja\DataModules\UniDataPropuestasTraspasoConfirmador.pas';
 
 {$R *.res}
 {$R fondo.res}
