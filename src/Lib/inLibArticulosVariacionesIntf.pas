@@ -40,6 +40,14 @@ type
   IGestorArticulosVariaciones = interface
     ['{BBF0B749-B893-423C-A356-D0C5F8AC705E}']
     procedure CargarVariaciones(const ACodigoArticulo: string);
+    // Pinta los selectores de tallaje del tipo de variación que tiene la
+    // ficha en pantalla, aunque el artículo aún no esté grabado (alta) o
+    // el tipo se acabe de cambiar. Conserva lo elegido en cada atributo.
+    procedure MostrarTipoVariacion(
+      const ACodigoArticulo, ATipoVariacion: string);
+    // Código con el que se graban las asignaciones (en un alta no se
+    // conoce hasta hacer Post de la ficha).
+    procedure AsignarCodigoArticulo(const ACodigoArticulo: string);
     function GuardarVariaciones: Boolean;
     function Validar: string;
     function ObtenerCodigoArticulo: string;

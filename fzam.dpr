@@ -1169,7 +1169,16 @@ uses
   inLibDistribucionTiendas in 'src\Lib\inLibDistribucionTiendas.pas',
   inLibMsgDistribucionTiendas in 'src\Lib\inLibMsgDistribucionTiendas.pas',
   UniDataDistribucionTiendasRepositorio in 'src\DataModules\UniDataDistribucionTiendasRepositorio.pas',
-  UniDataPropuestasTraspasoConfirmador in 'src\Caja\DataModules\UniDataPropuestasTraspasoConfirmador.pas';
+  UniDataPropuestasTraspasoConfirmador in 'src\Caja\DataModules\UniDataPropuestasTraspasoConfirmador.pas',
+  inLibInformePropuestasTraspaso in 'src\Lib\inLibInformePropuestasTraspaso.pas',
+  inMtoModalImpPropuestasTraspaso in 'src\Modals\inMtoModalImpPropuestasTraspaso.pas' {frmPrintPropuestasTraspaso},
+  inMtoModalRepartoAutomatico in 'src\Modals\inMtoModalRepartoAutomatico.pas' {frmModalRepartoAutomatico},
+  inMtoModalDistribucionTiendas in 'src\Modals\inMtoModalDistribucionTiendas.pas' {frmModalDistribucionTiendas},
+  UniDataDistribucionTiendasComposicion in 'src\Caja\DataModules\UniDataDistribucionTiendasComposicion.pas',
+  UniDataDistribucionTiendas in 'src\Caja\DataModules\UniDataDistribucionTiendas.pas' {dmDistribucionTiendas: TDataModule},
+  inMtoModalPrioridadesDistribucion in 'src\Modals\inMtoModalPrioridadesDistribucion.pas' {frmModalPrioridadesDistribucion},
+  inMtoModalSeleccionPropuestaTraspaso in 'src\Caja\Modals\inMtoModalSeleccionPropuestaTraspaso.pas' {frmModalSeleccionPropuestaTraspaso},
+  inMtoDistribucionTiendas in 'src\Caja\Forms\inMtoDistribucionTiendas.pas' {frmMtoDistribucionTiendas};
 
 {$R *.res}
 {$R fondo.res}

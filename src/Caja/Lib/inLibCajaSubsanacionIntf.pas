@@ -28,11 +28,18 @@ type
     NumeroFactura: string;
   end;
 
-  // Cobro vigente o nuevo, neto de cambio, en euros.
+  // Cobro vigente o nuevo, neto de cambio, en euros. Divisas y
+  // criptomonedas conservan además el importe en su moneda. Los vales
+  // (FormaPago VALE, Referencia = código, negativo si se emitió) no se
+  // pueden cambiar: la solicitud debe llevarlos tal cual.
   TPagoSubsanacionCaja = record
     FormaPago: string;
     Referencia: string;
     Importe: Currency;
+    CodigoDivisa: string;
+    RedBlockchain: string;
+    FactorCambio: Double;
+    ImporteDivisa: Double;
   end;
   TPagosSubsanacionCaja = TArray<TPagoSubsanacionCaja>;
 

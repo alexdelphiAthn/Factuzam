@@ -27,7 +27,8 @@ uses
   cxGridLevel, cxGridCustomView, cxGridCustomTableView, cxGridTableView,
   cxGridDBTableView, cxGrid, cxCustomData, cxFilter, cxData,
   cxDataStorage, cxEdit, cxNavigator, dxDateRanges, dxScrollbarAnnotations,
-  cxCheckBox, System.UITypes,
+  cxCheckBox, System.UITypes, cxContainer, cxLabel, cxTextEdit, cxMaskEdit,
+  cxDropDownEdit,
   inLibGeneracionSkus, inLibGeneracionSkusPersistenciaIntf;
 
 type
@@ -61,7 +62,13 @@ type
     tvDetalleID_ATRIBUTO_VA: TcxGridDBColumn;
     tvDetalleORDEN_AV: TcxGridDBColumn;
     actAnadirValor: TAction;
+    pnlConjunto: TPanel;
+    lblConjunto: TcxLabel;
+    cbConjunto: TcxComboBox;
+    btnMarcarTodas: TcxButton;
     procedure FormShow(Sender: TObject);
+    procedure cbConjuntoPropertiesChange(Sender: TObject);
+    procedure btnMarcarTodasClick(Sender: TObject);
     procedure btnAddValueClick(Sender: TObject);
     procedure tvMaestroDblClick(Sender: TObject);
     procedure tvDetalleCellDblClick(Sender: TcxCustomGridTableView;
@@ -89,6 +96,21 @@ type
     FMaestro: TDataSet;
     FDetalle: TDataSet;
     FResultado: TResultadoGenerarSkus;
+    // Conjunto (tallaje, paleta...) asignado a la dimensión activa.
+    FIdConjuntoActual: Integer;
+    FCargandoConjuntos: Boolean;
+    // Solo el propio modal añade filas al detalle; el Insert de la rejilla
+    // o del navegador pasa por el diálogo de añadir valor.
+    FAnadiendoFila: Boolean;
+    procedure ConfigurarNavegador;
+    procedure tvDetalleNavigatorButtonClick(Sender: TObject;
+      AButtonIndex: Integer; var ADone: Boolean);
+    procedure DetalleBeforeInsert(DataSet: TDataSet);
+    procedure CargarConjuntosDimension;
+    procedure MarcarValoresConjunto(
+      const AValores: TArray<TValorConjuntoSku>);
+    procedure PonerMarcaDimension(AMarca: Integer);
+    function TodosMarcados: Boolean;
     function HayDimensionSeleccionada: Boolean;
     function HayValorSeleccionado: Boolean;
     procedure MostrarDimensionActual;
@@ -179,6 +201,7 @@ begin
   dsMaestro.DataSet := FMaestro;
   dsDetalle.DataSet := FDetalle;
   tvMaestro.OnDblClick := tvMaestroDblClick;
+  ConfigurarNavegador;
   MostrarDimensionActual;
   // Se empieza eligiendo la dimensión cuyos valores se quieren marcar.
   if cxGrid1.CanFocus then
@@ -213,8 +236,209 @@ procedure TfrmMtoModalGenerarSKUS.MostrarDimensionActual;
 begin
   // La cabecera de abajo dice de qué dimensión son los valores listados.
   if HayDimensionSeleccionada then
+  begin
     tvDetalleNOMBRE_AC.Caption :=
       FMaestro.FieldByName('NOMBRE_ATRIBUTO').AsString;
+    CargarConjuntosDimension;
+  end;
+end;
+
+// ===========================================================================
+//   Navegador del detalle: "+" añade un valor y "-" lo quita de la lista
+// ===========================================================================
+
+procedure TfrmMtoModalGenerarSKUS.ConfigurarNavegador;
+begin
+  tvDetalle.Navigator.Buttons.PriorPage.Visible := False;
+  tvDetalle.Navigator.Buttons.NextPage.Visible := False;
+  tvDetalle.Navigator.Buttons.Append.Visible := False;
+  tvDetalle.Navigator.Buttons.Edit.Visible := False;
+  tvDetalle.Navigator.Buttons.Post.Visible := False;
+  tvDetalle.Navigator.Buttons.Cancel.Visible := False;
+  tvDetalle.Navigator.Buttons.Refresh.Visible := False;
+  tvDetalle.Navigator.Buttons.SaveBookmark.Visible := False;
+  tvDetalle.Navigator.Buttons.GotoBookmark.Visible := False;
+  tvDetalle.Navigator.Buttons.Filter.Visible := False;
+  tvDetalle.Navigator.Buttons.ConfirmDelete := False;
+  tvDetalle.Navigator.Buttons.OnButtonClick := tvDetalleNavigatorButtonClick;
+  FDetalle.BeforeInsert := DetalleBeforeInsert;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.tvDetalleNavigatorButtonClick(
+  Sender: TObject; AButtonIndex: Integer; var ADone: Boolean);
+begin
+  case AButtonIndex of
+    NBDI_INSERT, NBDI_APPEND:
+      begin
+        ADone := True;
+        btnAddValueClick(Sender);
+      end;
+    NBDI_DELETE:
+      begin
+        // Solo se quita de esta lista: el valor sigue existiendo y no se
+        // genera su SKU. La lista vive en memoria y nunca se graba.
+        ADone := True;
+        GrabarEdicionesPendientes;
+        if not FDetalle.IsEmpty then
+          FDetalle.Delete;
+      end;
+  end;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.DetalleBeforeInsert(DataSet: TDataSet);
+begin
+  if not FAnadiendoFila then
+    Abort;
+end;
+
+// ===========================================================================
+//   Conjunto de la dimensión activa (tallaje, paleta...)
+// ===========================================================================
+
+procedure TfrmMtoModalGenerarSKUS.CargarConjuntosDimension;
+var
+  oActual: TConjuntoAtributoSku;
+  oConjunto: TConjuntoAtributoSku;
+  sIdAtributo: string;
+  iIndice: Integer;
+begin
+  sIdAtributo := FMaestro.FieldByName('ID_ATB_VA').AsString;
+  oActual := FRepositorio.ObtenerConjuntoAtributo(
+    FCodigoArticulo, sIdAtributo);
+  FCargandoConjuntos := True;
+  try
+    cbConjunto.Properties.Items.Clear;
+    cbConjunto.Properties.Items.AddObject(SOpcionSinConjuntoSku, TObject(0));
+    for oConjunto in FRepositorio.ListarConjuntosAtributo(sIdAtributo) do
+      cbConjunto.Properties.Items.AddObject(
+        oConjunto.Nombre, TObject(NativeInt(oConjunto.Id)));
+    cbConjunto.ItemIndex := 0;
+    for iIndice := 1 to cbConjunto.Properties.Items.Count - 1 do
+      if Integer(NativeInt(cbConjunto.Properties.Items.Objects[iIndice])) =
+         oActual.Id then
+        cbConjunto.ItemIndex := iIndice;
+    // Un conjunto ya asignado pero desactivado se sigue enseñando.
+    if (oActual.Id > 0) and (cbConjunto.ItemIndex = 0) then
+      cbConjunto.ItemIndex := cbConjunto.Properties.Items.AddObject(
+        oActual.Nombre, TObject(NativeInt(oActual.Id)));
+    FIdConjuntoActual := oActual.Id;
+  finally
+    FCargandoConjuntos := False;
+  end;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.cbConjuntoPropertiesChange(
+  Sender: TObject);
+var
+  iIdConjunto: Integer;
+begin
+  if (not FCargandoConjuntos) and HayDimensionSeleccionada and
+     (cbConjunto.ItemIndex >= 0) then
+  begin
+    iIdConjunto := Integer(NativeInt(
+      cbConjunto.Properties.Items.Objects[cbConjunto.ItemIndex]));
+    if iIdConjunto <> FIdConjuntoActual then
+    begin
+      GrabarEdicionesPendientes;
+      // Queda asignado al artículo, como si se eligiera en su ficha.
+      FRepositorio.AsignarConjuntoArticulo(
+        FCodigoArticulo,
+        FMaestro.FieldByName('ID_ATB_VA').AsString,
+        iIdConjunto);
+      FIdConjuntoActual := iIdConjunto;
+      if iIdConjunto > 0 then
+        MarcarValoresConjunto(
+          FRepositorio.ListarValoresConjunto(iIdConjunto));
+    end;
+  end;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.MarcarValoresConjunto(
+  const AValores: TArray<TValorConjuntoSku>);
+var
+  oValor: TValorConjuntoSku;
+  sIdAtributo: string;
+begin
+  // Quedan marcados exactamente los valores del conjunto elegido: los que
+  // faltan en la lista se añaden y los demás de la dimensión se desmarcan.
+  sIdAtributo := FMaestro.FieldByName('ID_ATB_VA').AsString;
+  tvDetalle.BeginUpdate;
+  try
+    PonerMarcaDimension(0);
+    for oValor in AValores do
+    begin
+      if FDetalle.Locate('ID_AC', oValor.Id, []) or
+         FDetalle.Locate('NOMBRE_AC', oValor.Nombre, [loCaseInsensitive]) then
+      begin
+        FDetalle.Edit;
+        FDetalle.FieldByName('ASIGNADO').AsInteger := 1;
+        FDetalle.Post;
+      end
+      else
+      begin
+        FAnadiendoFila := True;
+        try
+          FDetalle.Append;
+          FDetalle.FieldByName('ID_ATB_VA').AsString := sIdAtributo;
+          FDetalle.FieldByName('ID_AC').AsInteger := oValor.Id;
+          FDetalle.FieldByName('NOMBRE_AC').AsString := oValor.Nombre;
+          FDetalle.FieldByName('ORDEN_AV').AsInteger := oValor.Orden;
+          FDetalle.FieldByName('ASIGNADO').AsInteger := 1;
+          FDetalle.Post;
+        finally
+          FAnadiendoFila := False;
+        end;
+      end;
+    end;
+    FDetalle.First;
+  finally
+    tvDetalle.EndUpdate;
+  end;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.PonerMarcaDimension(AMarca: Integer);
+begin
+  FDetalle.First;
+  while not FDetalle.Eof do
+  begin
+    if FDetalle.FieldByName('ASIGNADO').AsInteger <> AMarca then
+    begin
+      FDetalle.Edit;
+      FDetalle.FieldByName('ASIGNADO').AsInteger := AMarca;
+      FDetalle.Post;
+    end;
+    FDetalle.Next;
+  end;
+end;
+
+function TfrmMtoModalGenerarSKUS.TodosMarcados: Boolean;
+begin
+  Result := True;
+  FDetalle.First;
+  while Result and not FDetalle.Eof do
+  begin
+    Result := FDetalle.FieldByName('ASIGNADO').AsInteger = 1;
+    FDetalle.Next;
+  end;
+end;
+
+procedure TfrmMtoModalGenerarSKUS.btnMarcarTodasClick(Sender: TObject);
+begin
+  if HayDimensionSeleccionada then
+  begin
+    GrabarEdicionesPendientes;
+    tvDetalle.BeginUpdate;
+    try
+      // Con todas marcadas, el mismo botón las desmarca.
+      if TodosMarcados then
+        PonerMarcaDimension(0)
+      else
+        PonerMarcaDimension(1);
+      FDetalle.First;
+    finally
+      tvDetalle.EndUpdate;
+    end;
+  end;
 end;
 
 procedure TfrmMtoModalGenerarSKUS.EnfocarDetalle;
@@ -483,13 +707,18 @@ begin
       oValor.Id,
       ASolicitud.Orden);
   // La fila nace marcada y con el foco: es el valor que se va a combinar.
-  FDetalle.Append;
-  FDetalle.FieldByName('ID_ATB_VA').AsString := ASolicitud.IdAtributo;
-  FDetalle.FieldByName('ID_AC').AsInteger := oValor.Id;
-  FDetalle.FieldByName('NOMBRE_AC').AsString := oValor.Nombre;
-  FDetalle.FieldByName('ORDEN_AV').AsInteger := ASolicitud.Orden;
-  FDetalle.FieldByName('ASIGNADO').AsInteger := 1;
-  FDetalle.Post;
+  FAnadiendoFila := True;
+  try
+    FDetalle.Append;
+    FDetalle.FieldByName('ID_ATB_VA').AsString := ASolicitud.IdAtributo;
+    FDetalle.FieldByName('ID_AC').AsInteger := oValor.Id;
+    FDetalle.FieldByName('NOMBRE_AC').AsString := oValor.Nombre;
+    FDetalle.FieldByName('ORDEN_AV').AsInteger := ASolicitud.Orden;
+    FDetalle.FieldByName('ASIGNADO').AsInteger := 1;
+    FDetalle.Post;
+  finally
+    FAnadiendoFila := False;
+  end;
   EnfocarDetalle;
 end;
 

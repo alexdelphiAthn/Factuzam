@@ -23,6 +23,7 @@ uses
   DBAccess, System.Math, System.StrUtils,
   UniDataValoresAutomaticosRepositorio,
   inLibContextoSesionIntf,
+  inLibDistribucionTiendasIntf,
   inLibTraspasoOpePersistenciaIntf;
 
 type
@@ -118,7 +119,7 @@ type
     // Suma lo servido a las líneas de la solicitud y recalcula su estado.
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
-    // Pasa la propuesta vinculada a CONFIRMADA con la referencia del
+    // Pasa la propuesta vinculada a TRASLADADO con la referencia del
     // traspaso y anota en sus líneas lo realmente traspasado.
     procedure MarcarPropuestaConfirmada(
       QryTrx: TUniQuery;
@@ -158,6 +159,8 @@ type
     // El próximo GrabarTraspaso confirmará esta propuesta de traspaso en
     // su misma transacción. PrepararNuevo la desvincula.
     procedure VincularPropuesta(AIdPropuesta: Int64);
+    // Propuestas de la distribución entre tiendas, sobre esta conexión.
+    function CrearRepositorioPropuestas: IRepositorioDistribucionTiendas;
     // Última referencia de documento grabada (tipo, serie y número).
     function UltimoDocumentoGrabado: TContextoGrabacionTraspaso;
     function ObtenerCosteMedio(const ASku, AAlmacen: string): Currency;
@@ -187,7 +190,8 @@ type
     // Dataset para el modal de solicitudes abiertas. El llamante lo libera.
     function QuerySolicitudesAbiertas: TDataSet;
     // Historico de MIS peticiones (yo soy el destino que pide), todos los
-    // estados, para saber si se han servido/denegado. El llamante lo libera.
+    // estados, para saber si se han servido/denegado, mas las que me pidieron
+    // y denegue entera o en parte. El llamante lo libera.
     function QueryMisPeticiones(const APropio: string): TDataSet;
     // Detalle maestro/detalle de los articulos de una solicitud. El llamante
     // libera el dataset devuelto.
@@ -213,14 +217,18 @@ implementation
 uses
   inLibMsgCaja,
   inLibMsgDistribucionTiendas,
-  inLibDistribucionTiendasIntf,
   inLibDocumentosTrabajoEstados,
+  UniDataDistribucionTiendasRepositorio,
   inLibPrestaShopColaSenal,
   UniDataMovimientosAlmacenRecalculo;
 
 resourcestring
   SDetalleStockTraspasoInsuficiente =
     '  %s: pides %s, hay %s'#13#10;
+  SDireccionPeticionEnviada =
+    'Enviada';
+  SDireccionPeticionRecibida =
+    'Recibida';
 
 constructor TdmTraspaso.Create(
   AOwner: TComponent;
@@ -357,6 +365,12 @@ begin
   cdsCabecera.FieldByName('CONTADOR_LINEAS').AsInteger := 0;
   cdsCabecera.FieldByName('TOTAL').AsCurrency := 0;
   cdsCabecera.Post;
+end;
+
+function TdmTraspaso.CrearRepositorioPropuestas:
+  IRepositorioDistribucionTiendas;
+begin
+  Result := CrearRepositorioDistribucionTiendasUniDAC(FConexion);
 end;
 
 procedure TdmTraspaso.VincularPropuesta(AIdPropuesta: Int64);
@@ -1113,21 +1127,21 @@ procedure TdmTraspaso.MarcarPropuestaConfirmada(
 begin
   QryTrx.SQL.Text :=
     'UPDATE fza_traspasos_propuestas ' +
-    '   SET ESTADO_TRPRO = :CONFIRMADA, ' +
+    '   SET ESTADO_TRPRO = :TRASLADADO, ' +
     '       TIPO_DOC_TRPRO = :TIPO, ' +
     '       SERIE_DOC_TRPRO = :SERIE, ' +
     '       NUMERO_DOC_TRPRO = :NUMERO, ' +
     '       NUMERO_OPERACION_TRPRO = :NUMOP, ' +
     '       CODIGO_CAJA_TRPRO = :CAJA, ' +
-    '       INSTANTE_CONFIRMACION_TRPRO = NOW(), ' +
-    '       USUARIO_CONFIRMACION_TRPRO = :USUARIO, ' +
+    '       INSTANTE_RESOLUCION_TRPRO = NOW(), ' +
+    '       USUARIO_RESOLUCION_TRPRO = :USUARIO, ' +
     '       USUARIO_MODIF = :USUARIO ' +
     ' WHERE ID_TRPRO = :ID_TRPRO ' +
     '   AND ESTADO_TRPRO = :PENDIENTE ' +
     '   AND CODIGO_ALM_ORIGEN_TRPRO = :ORIGEN ' +
     '   AND CODIGO_ALM_DESTINO_TRPRO = :DESTINO';
-  QryTrx.ParamByName('CONFIRMADA').AsString :=
-    ESTADO_PROPUESTA_TRASPASO_CONFIRMADA;
+  QryTrx.ParamByName('TRASLADADO').AsString :=
+    ESTADO_PROPUESTA_TRASPASO_TRASLADADO;
   QryTrx.ParamByName('PENDIENTE').AsString :=
     ESTADO_PROPUESTA_TRASPASO_PENDIENTE;
   QryTrx.ParamByName('TIPO').AsString := AContexto.TipoDocumento;
@@ -1642,14 +1656,20 @@ var
 begin
   // Historico de MIS peticiones: yo soy el DESTINO que pidio. Salen TODOS los
   // estados (PENDIENTE / COMPLETADO TOTAL / COMPLETADO PARCIAL / DENEGADO TOTAL
-  // / CERRADA) para saber si se han servido o denegado. Devolvemos los nombres
-  // reales de columna (sin alias)
+  // / CERRADA) para saber si se han servido o denegado. Ademas salen las que me
+  // pidieron a mi (yo soy el origen) y denegue entera o en parte (alguna linea
+  // con motivo de rechazo), para que quien deniega tambien las vea;
+  // DIRECCION_TRSOL distingue enviadas de recibidas.
+  // Devolvemos los nombres reales de columna (sin alias)
   // para que el formateador (fza_config_campos) ponga los titulos; el origen
-  // es a quien pedi. El llamante libera el query.
+  // es a quien se pidio y el destino quien pidio. El llamante libera el query.
   oConsulta := TUniQuery.Create(nil);
   oConsulta.Connection := FConexion;
   oConsulta.SQL.Text :=
     'SELECT S.NUMERO_TRSOL, S.SERIE_TRSOL, S.FECHA_TRSOL,' +
+    '       CASE WHEN S.CODIGO_ALM_DESTINO_TRSOL = :PROPIO' +
+    '            THEN :ENVIADA ELSE :RECIBIDA END AS DIRECCION_TRSOL,' +
+    '       S.CODIGO_ALM_DESTINO_TRSOL,' +
     '       S.CODIGO_ALM_ORIGEN_TRSOL, S.TIPO_TRSOL,' +
     '       S.ESTADO_TRSOL,' +
     '       CASE WHEN S.TIPO_TRSOL = ''AUTO'' THEN 0 ELSE' +
@@ -1663,8 +1683,19 @@ begin
     '         AS LINEAS_PEND_TRSOL' +
     '  FROM fza_traspasos_solicitudes S' +
     ' WHERE S.CODIGO_ALM_DESTINO_TRSOL = :PROPIO' +
+    '    OR (S.CODIGO_ALM_ORIGEN_TRSOL = :PROPIO' +
+    '        AND (S.ESTADO_TRSOL = ''DENEGADO TOTAL''' +
+    '             OR EXISTS (SELECT 1' +
+    '                  FROM fza_traspasos_solicitudes_lineas LD' +
+    '                 WHERE LD.NUMERO_TRSOL_TRSOLLIN = S.NUMERO_TRSOL' +
+    '                   AND LD.SERIE_TRSOL_TRSOLLIN = S.SERIE_TRSOL' +
+    '                   AND NULLIF(TRIM(' +
+    '                       LD.MOTIVO_RECHAZO_TRSOLLIN), '''')' +
+    '                       IS NOT NULL)))' +
     ' ORDER BY S.FECHA_TRSOL DESC, S.NUMERO_TRSOL DESC';
   oConsulta.ParamByName('PROPIO').AsString := APropio;
+  oConsulta.ParamByName('ENVIADA').AsString := SDireccionPeticionEnviada;
+  oConsulta.ParamByName('RECIBIDA').AsString := SDireccionPeticionRecibida;
   Result := oConsulta;
 end;
 

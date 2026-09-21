@@ -240,7 +240,7 @@ begin
   Result := Default(TResultadoConfirmacionPropuesta);
   Propuesta := FRepositorio.LeerPropuesta(AIdPropuesta);
   if not Propuesta.EstaPendiente then
-    Result.Mensaje := Format(SInfoPropuestaYaConfirmada, [AIdPropuesta])
+    Result.Mensaje := Format(SInfoPropuestaYaNoPendiente, [AIdPropuesta])
   else if not TieneUnidades(Propuesta) then
     Result.Mensaje := Format(
       SErrorPropuestaTraspasoSinLineas, [AIdPropuesta])

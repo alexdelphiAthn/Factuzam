@@ -908,6 +908,13 @@ end;
 // AComoProforma titula el documento como proforma. Un borrador que aun no
 // esta registrado no puede salir del programa llamandose factura: quien lo
 // recibiera lo tomaria por un documento entregable.
+// Marca en Tag de los memos de titulo que ha reescrito este codigo. Un
+// 'FACTURA PROFORMA' sin la marca viene del diseno del formato (el usuario
+// ha hecho un formato de proforma) y se respeta; con la marca lo puso esta
+// rutina para un borrador y puede volver a 'FACTURA' en el siguiente registro.
+const
+  TAG_TITULO_FACTURA_AJUSTADO = 20260921;
+
 procedure AjustarTituloMemo(AMemo: TfrxMemoView; ADataSet: TDataSet;
   AComoProforma: Boolean);
 var
@@ -918,7 +925,8 @@ begin
   if ((sTexto = 'FACTURA') or
       (sTexto = 'FACTURA SIMPLIFICADA') or
       (sTexto = 'FACTURA RECTIFICATIVA') or
-      (sTexto = 'FACTURA PROFORMA')) and
+      ((sTexto = 'FACTURA PROFORMA') and
+       (AMemo.Tag = TAG_TITULO_FACTURA_AJUSTADO))) and
      (ADataSet <> nil) and
      (ADataSet.FindField('TIPO_FAC') <> nil) then
   begin
@@ -931,6 +939,7 @@ begin
       AMemo.Text := 'FACTURA RECTIFICATIVA'
     else
       AMemo.Text := 'FACTURA';
+    AMemo.Tag := TAG_TITULO_FACTURA_AJUSTADO;
   end;
 end;
 

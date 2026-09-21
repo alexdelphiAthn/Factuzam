@@ -33,6 +33,8 @@ type
     FGuardada: Boolean;
     procedure ActualizarTotal(ADataSet: TDataSet);
     procedure BloquearEstructura(ADataSet: TDataSet);
+    function EsColumnaEditable(AColumna: TObject): Boolean;
+    function EsLineaActualFija: Boolean;
     procedure ConfirmarEdicion;
     function LeerLineas: TLineasSubsanacionCaja;
   public
@@ -41,6 +43,8 @@ type
       const AOriginales: TLineasSubsanacionCaja);
     destructor Destroy; override;
     function LineasCorregidas: TLineasSubsanacionCaja;
+    // Columna editable en la línea actual: los abonos a cuenta y anticipos
+    // (líneas fijas) no se pueden corregir.
     function PermiteEditar(AColumna: TObject): Boolean;
     // Pide el motivo al grabar; False si el usuario cancela.
     function PedirMotivo(out AMotivo: string): Boolean;
@@ -52,7 +56,7 @@ implementation
 
 uses
   Vcl.Dialogs, cxEdit, inLibMensajesVcl, inLibMsgSubsanacionCaja,
-  UniDataCajaSubsanacionImportes;
+  inLibFacturas, UniDataCajaSubsanacionImportes;
 
 const
   LONGITUD_MOTIVO = 500;
@@ -78,10 +82,11 @@ begin
   FControles.Vista.OptionsView.NewItemRow := False;
   for i := 0 to FControles.Vista.ColumnCount - 1 do
     FControles.Vista.Columns[i].Options.Editing :=
-      PermiteEditar(FControles.Vista.Columns[i]);
+      EsColumnaEditable(FControles.Vista.Columns[i]);
 end;
 
-function TModoSubsanacionCajaVcl.PermiteEditar(AColumna: TObject): Boolean;
+function TModoSubsanacionCajaVcl.EsColumnaEditable(
+  AColumna: TObject): Boolean;
 var
   oColumna: TcxGridDBColumn;
 begin
@@ -89,6 +94,25 @@ begin
   if not FGuardada then
     for oColumna in FControles.ColumnasEditables do
       Result := Result or (oColumna = AColumna);
+end;
+
+function TModoSubsanacionCajaVcl.EsLineaActualFija: Boolean;
+var
+  sNumero: string;
+  oLinea: TLineaSubsanacionCaja;
+begin
+  Result := False;
+  if FControles.Lineas.Active and not FControles.Lineas.IsEmpty then
+  begin
+    sNumero := FControles.Lineas.FieldByName(fnrolin).AsString;
+    for oLinea in FOriginales do
+      Result := Result or (oLinea.Fija and (oLinea.Numero = sNumero));
+  end;
+end;
+
+function TModoSubsanacionCajaVcl.PermiteEditar(AColumna: TObject): Boolean;
+begin
+  Result := EsColumnaEditable(AColumna) and not EsLineaActualFija;
 end;
 
 destructor TModoSubsanacionCajaVcl.Destroy;

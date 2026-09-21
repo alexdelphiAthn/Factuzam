@@ -66,6 +66,7 @@ type
   private
     procedure AjustarAPantalla;
     procedure PreseleccionarAlmacen;
+    function AlmacenOrigenQueEsDeVenta(out AAlmacen: string): Boolean;
   public
     class function Ejecutar(
       AOwner: TComponent;
@@ -197,11 +198,47 @@ begin
         end;
       end;
     end;
+    // El almacen del documento es el origen del reparto: si la sesion esta
+    // en ese mismo almacen no puede quedar tambien como almacen de ventas.
+    for i := 0 to chkLstAlmacenesVentas.Items.Count - 1 do
+    begin
+      if (i < FCodigosAlmacenesVentas.Count) and
+         SameText(FCodigosAlmacenesVentas[i], FAlmacen) then
+      begin
+        chkLstAlmacenesVentas.Items[i].Checked := False;
+      end;
+    end;
+  end;
+end;
+
+function TfrmModalAddBlockDocumentoTrabajo.AlmacenOrigenQueEsDeVenta(
+  out AAlmacen: string): Boolean;
+var
+  sOrigen: string;
+  sVenta: string;
+begin
+  Result := False;
+  AAlmacen := '';
+  if chkFiltrarStockAlmacenVenta.Checked then
+  begin
+    for sVenta in RecogerCodigosAlmacenesVentasSeleccionados do
+    begin
+      for sOrigen in RecogerCodigosAlmacenesSeleccionados do
+      begin
+        if (not Result) and SameText(sOrigen, sVenta) then
+        begin
+          AAlmacen := sVenta;
+          Result := True;
+        end;
+      end;
+    end;
   end;
 end;
 
 function TfrmModalAddBlockDocumentoTrabajo.ValidarAntesDePrevisualizar(
   out AMensaje: string): Boolean;
+var
+  sAlmacen: string;
 begin
   Result := False;
   AMensaje := '';
@@ -218,6 +255,12 @@ begin
   else if Length(RecogerCodigosAlmacenesSeleccionados) = 0 then
   begin
     AMensaje := SErrorAlmacenesDocumentoTrabajoAddBlock;
+  end
+  else if AlmacenOrigenQueEsDeVenta(sAlmacen) then
+  begin
+    AMensaje := Format(
+      SErrorAlmacenOrigenYVentaDocumentoTrabajoAddBlock, [sAlmacen]);
+    pcFiltros.ActivePage := tsVentas;
   end
   else
   begin

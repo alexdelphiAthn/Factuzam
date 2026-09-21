@@ -120,6 +120,7 @@ type
     Movimientosdealmacn1: TMenuItem;
     mnuInventarios: TMenuItem;
     mnuDocumentosTrabajo: TMenuItem;
+    mnuDistribucionTiendas: TMenuItem;
     mnuPropiedades: TMenuItem;
     mnuVariaciones: TMenuItem;
     mnuAtributosConjuntos: TMenuItem;

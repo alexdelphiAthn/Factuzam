@@ -332,6 +332,7 @@ type
     FConexion: TUniConnection;
     function NuevaConsulta: TUniQuery;
     function SiguienteLinea(AIdDocumento: Int64): string;
+    function ExisteTablaPropuestasTraspaso: Boolean;
     procedure AsignarParametrosConsultaUltimos(AConsulta: TUniQuery;
       const AEmpresa, ATipoDocumento: string; ALimite: Integer);
     procedure AsignarParametrosOrigen(AConsulta: TUniQuery;
@@ -448,6 +449,23 @@ begin
   Result.Connection := FConexion;
 end;
 
+// El script de la distribución entre tiendas puede no estar aplicado
+// todavía: sin su tabla, el listado sigue ofreciendo el resto de los tipos.
+function TRepositorioDocumentosTrabajo.ExisteTablaPropuestasTraspaso:
+  Boolean;
+var
+  Consulta: TUniQuery;
+begin
+  Consulta := NuevaConsulta;
+  try
+    Consulta.SQL.Text := SqlExisteTablaPropuestasTraspaso;
+    Consulta.Open;
+    Result := Consulta.FieldByName('EXISTE').AsInteger > 0;
+  finally
+    FreeAndNil(Consulta);
+  end;
+end;
+
 procedure TRepositorioDocumentosTrabajo.AsignarParametrosConsultaUltimos(
   AConsulta: TUniQuery; const AEmpresa, ATipoDocumento: string;
   ALimite: Integer);
@@ -455,6 +473,7 @@ const
   SUFIJOS_TIPO: array[0..12] of string = (
     'AV', 'AB', 'PE', 'PC', 'FC', 'FP',
     'DC', 'VE', 'TR', 'TS', 'SE', 'IN', 'TARC');
+  SUFIJO_PROPUESTAS = 'PT';
 var
   i: Integer;
 begin
@@ -464,6 +483,14 @@ begin
       'EMPRESA_' + SUFIJOS_TIPO[i]).AsString := Trim(AEmpresa);
     AConsulta.ParamByName(
       'LIMITE_' + SUFIJOS_TIPO[i]).AsInteger := ALimite;
+  end;
+  // La rama de propuestas solo está si existe su tabla.
+  if AConsulta.FindParam('EMPRESA_' + SUFIJO_PROPUESTAS) <> nil then
+  begin
+    AConsulta.ParamByName(
+      'EMPRESA_' + SUFIJO_PROPUESTAS).AsString := Trim(AEmpresa);
+    AConsulta.ParamByName(
+      'LIMITE_' + SUFIJO_PROPUESTAS).AsInteger := ALimite;
   end;
   AConsulta.ParamByName('TIPO_FILTRO').AsString :=
     UpperCase(Trim(ATipoDocumento));
@@ -836,7 +863,8 @@ begin
   Consulta := NuevaConsulta;
   try
     Limite := NormalizarLimiteDocumentosOrigen(ALimite);
-    Consulta.SQL.Text := SqlConsultarUltimosDocumentosOrigen;
+    Consulta.SQL.Text := SqlConsultarUltimosDocumentosOrigen(
+      ExisteTablaPropuestasTraspaso);
     AsignarParametrosConsultaUltimos(
       Consulta,
       AEmpresa,

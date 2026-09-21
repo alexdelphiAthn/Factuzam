@@ -26,8 +26,11 @@ resourcestring
     'el cobro: forma de pago y descuento global.';
   SSubsanacionTituloCobro = 'Subsanación: forma de pago y descuento global';
   SSubsanacionCobroExacto =
-    'El cobro debe cuadrar con el total, sin cambio, vales ni importes ' +
-    'a cuenta.';
+    'El cobro debe cuadrar con el total, sin cambio, vales nuevos ni ' +
+    'importes a cuenta. Los vales del ticket se conservan tal cual.';
+  SSubsanacionSinLineasEditables =
+    'El ticket sólo tiene abonos a cuenta o anticipos, que no se pueden ' +
+    'corregir: cambie únicamente la forma de pago.';
   SSubsanacionMotivo = 'Motivo de la corrección';
   SSubsanacionLineasFijas =
     'En Subsanación no se pueden añadir o quitar líneas ni cambiar cantidades.';

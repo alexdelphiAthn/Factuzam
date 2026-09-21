@@ -756,8 +756,8 @@ resourcestring
     'Has activado "Solo con stock" pero no hay almacenes seleccionados en ' +
     'la pestana Almacenes.';
   SErrorAlmacenesVentasAddBlock =
-    'Selecciona al menos un almacen de ventas para aplicar los filtros ' +
-    'de ventas o de stock destino.';
+    'Selecciona al menos un almacen de ventas para aplicar el filtro ' +
+    'de historico de ventas.';
   SInfoArticulosYaCargadosAddBlock =
     'Todos los articulos del filtro ya estan cargados. Nada que insertar.';
   SInfoArticulosAnadidosAddBlock =
@@ -867,6 +867,8 @@ resourcestring
   SInfoValorSkuYaListado =
     'El valor "%s" ya estaba en la lista de "%s". Se ha marcado para ' +
     'generar sus SKU.';
+  SOpcionSinConjuntoSku =
+    '— Sin conjunto —';
   SPreguntaAltaValorAtributo =
     '¿Dar de alta el valor "%s"?';
   SPreguntaGuardarValorSkuGlobal =

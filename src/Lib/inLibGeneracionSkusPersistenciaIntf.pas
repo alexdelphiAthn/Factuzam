@@ -29,6 +29,13 @@ type
     Nombre: string;
   end;
 
+  // Valor de un conjunto (tallaje, paleta...) con el orden que tiene en él.
+  TValorConjuntoSku = record
+    Id: Integer;
+    Nombre: string;
+    Orden: Integer;
+  end;
+
   // Maestro: dimensiones del artículo. Detalle: valores de la dimensión
   // activa del maestro, con ASIGNADO editable solo en memoria.
   IDatosGeneracionSkus = interface
@@ -48,6 +55,15 @@ type
       const ACodigoArticulo: string;
       const AIdAtributo: string
     ): TConjuntoAtributoSku;
+    // Conjuntos activos que se pueden asignar a la dimensión.
+    function ListarConjuntosAtributo(
+      const AIdAtributo: string): TArray<TConjuntoAtributoSku>;
+    // AIdConjunto = 0 deja la dimensión del artículo sin conjunto.
+    procedure AsignarConjuntoArticulo(
+      const ACodigoArticulo, AIdAtributo: string;
+      AIdConjunto: Integer);
+    function ListarValoresConjunto(
+      AIdConjunto: Integer): TArray<TValorConjuntoSku>;
     function CalcularSiguienteOrdenValor(
       const AIdAtributo: string;
       AIdConjunto: Integer

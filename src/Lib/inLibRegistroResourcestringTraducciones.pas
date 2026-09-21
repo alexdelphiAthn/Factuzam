@@ -3289,6 +3289,12 @@ begin
       SInfoValorSkuYaListado);
   ARegistrar(
     'inLibMsgArticulos.' +
+    'SOpcionSinConjuntoSku',
+    'src/Lib/inLibMsgArticulos.pas',
+    @inLibMsgArticulos.
+      SOpcionSinConjuntoSku);
+  ARegistrar(
+    'inLibMsgArticulos.' +
     'SPreguntaAltaValorAtributo',
     'src/Lib/inLibMsgArticulos.pas',
     @inLibMsgArticulos.

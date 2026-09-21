@@ -97,7 +97,7 @@ const
   REFERENCIA_ARTICULO_PROVEEDOR =
     'fza_articulos_proveedores|CODIGO_ART_AP';
 
-  REFERENCIAS_ARTICULO: array[0..29] of string = (
+  REFERENCIAS_ARTICULO: array[0..30] of string = (
     'fza_articulos_atributos_basicos|CODIGO_ART_AAB',
     'fza_articulos_conjuntos_asign|CODIGO_ART_ACA',
     'fza_articulos_fotos|CODIGO_ART_FOT',
@@ -125,12 +125,13 @@ const
     'fza_albaranes_lineas|CODIGO_ART_ALBLIN',
     'fza_proformas_caja_lineas|CODIGO_ART_PROCLIN',
     'fza_tarifas_cambios_lineas|CODIGO_ART_TARCLIN',
+    'fza_traspasos_propuestas_lineas|CODIGO_ART_TRPROLIN',
     'fza_traspasos_solicitudes_lineas|CODIGO_ART_TRSOLLIN',
     'inv_catalogo|codigo_articulo',
     'inv_eventos|codigo_articulo'
   );
 
-  REFERENCIAS_UNIDAD: array[0..26] of string = (
+  REFERENCIAS_UNIDAD: array[0..27] of string = (
     'fza_articulos_fotos|CODIGO_UNIDAD_FOT',
     'fza_articulos_pdte_recibir|CODIGO_UNIDAD_PDR',
     'fza_articulos_propiedades|CODIGO_UNIDAD_ARTPROP',
@@ -155,6 +156,7 @@ const
     'fza_albaranes_lineas|CODIGO_UNIDAD_ALBLIN',
     'fza_proformas_caja_lineas|CODIGO_UNIDAD_PROCLIN',
     'fza_tarifas_cambios_lineas|CODIGO_UNIDAD_SKU_TARCLIN',
+    'fza_traspasos_propuestas_lineas|CODIGO_UNIDAD_TRPROLIN',
     'fza_traspasos_solicitudes_lineas|CODIGO_UNIDAD_TRSOLLIN',
     'inv_catalogo|codigo_unidad',
     'inv_eventos|codigo_unidad'

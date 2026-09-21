@@ -32,8 +32,11 @@ function CrearRepositorioDistribucionTiendasUniDAC(
 // SQL expuesto para las pruebas de contrato e integración.
 function SqlUnidadesDocumentoDistribucion: string;
 function SqlAlmacenesDistribucion: string;
-function SqlStocksDistribucion: string;
+function SqlStocksDistribucion(ANumeroSkus: Integer): string;
 function SqlAsignacionesDistribucion: string;
+function SqlFirmaPropuestasResueltas: string;
+function SqlRechazarPropuestaTraspaso: string;
+function SqlGuardarPrioridadAlmacen: string;
 function SqlCabecerasPropuestasTraspaso(const AFiltro: string): string;
 function SqlLineasPropuestasTraspaso(const AFiltro: string): string;
 function SqlInsertarPropuestaTraspaso: string;
@@ -52,7 +55,7 @@ const
 implementation
 
 uses
-  System.Math, System.Generics.Collections, Data.DB,
+  System.Generics.Collections, Data.DB,
   inLibMsgDistribucionTiendas;
 
 const
@@ -74,8 +77,10 @@ type
     function LeerAlmacenes(
       AConsulta: TUniQuery;
       AIdDocumento: Int64): TAlmacenesDistribucion;
-    function LeerStocks(
-      AConsulta: TUniQuery; AIdDocumento: Int64): TStocksDistribucion;
+    function LeerStocksConsulta(
+      AConsulta: TUniQuery;
+      AIdDocumento: Int64;
+      const ASkus: TArray<string>): TStocksDistribucion;
     function LeerAsignaciones(
       AConsulta: TUniQuery;
       AIdDocumento: Int64): TAsignacionesDistribucion;
@@ -87,10 +92,8 @@ type
       const AFiltro, AParametro: string;
       const AValor: Variant;
       var APropuestas: TPropuestasTraspaso);
-    procedure ComprobarConfirmadoSinCambios(
-      AConsulta: TUniQuery;
-      AIdDocumento: Int64;
-      const AAsignaciones: TAsignacionesDistribucion);
+    function LeerFirmaResueltas(
+      AConsulta: TUniQuery; AIdDocumento: Int64): string;
     procedure CargarPropuestasPendientes(
       AConsulta: TUniQuery;
       AIdDocumento: Int64;
@@ -109,34 +112,42 @@ type
     procedure SincronizarPropuestas(
       AConsulta: TUniQuery;
       AIdDocumento: Int64;
+      const AFirmaResueltas: string;
       const AAsignaciones: TAsignacionesDistribucion;
       const AUsuario: string);
   public
     constructor Create(AConexion: TUniConnection);
+    // Lecturas
     function CargarDocumento(
       AIdDocumento: Int64): TDocumentoDistribucion;
-    procedure GuardarPropuestas(
+    function ListarAlmacenesDestino: TAlmacenesDistribucion;
+    function LeerPropuesta(AIdPropuesta: Int64): TPropuestaTraspaso;
+    function LeerStocks(
       AIdDocumento: Int64;
-      const AAsignaciones: TAsignacionesDistribucion;
-      const AUsuario: string);
-    function ListarPropuestasDocumento(
-      AIdDocumento: Int64): TPropuestasTraspaso;
+      const ASkus: TArray<string>): TStocksDistribucion;
     function ListarPropuestasPendientesOrigen(
       const AAlmacenOrigen: string): TPropuestasTraspaso;
-    function LeerPropuesta(AIdPropuesta: Int64): TPropuestaTraspaso;
+    function ListarPropuestasDocumento(
+      AIdDocumento: Int64): TPropuestasTraspaso;
+    // Escrituras
+    procedure GuardarPrioridadesAlmacenes(
+      const APrioridades: TPrioridadesAlmacenDistribucion;
+      const AUsuario: string);
+    function RechazarPropuesta(
+      AIdPropuesta: Int64;
+      const AMotivo, AUsuario: string): Boolean;
     function EliminarPropuestaPendiente(AIdPropuesta: Int64): Boolean;
+    procedure GuardarPropuestas(
+      AIdDocumento: Int64;
+      const AFirmaResueltas: string;
+      const AAsignaciones: TAsignacionesDistribucion;
+      const AUsuario: string);
   end;
 
 function ClavePareja(const AOrigen, ADestino: string): string;
 begin
   Result := AnsiUpperCase(Trim(AOrigen)) + SEPARADOR_CLAVE +
     AnsiUpperCase(Trim(ADestino));
-end;
-
-function ClaveAsignacion(const AOrigen, ADestino, ASku: string): string;
-begin
-  Result := ClavePareja(AOrigen, ADestino) + SEPARADOR_CLAVE +
-    AnsiUpperCase(Trim(ASku));
 end;
 
 // ===========================================================================
@@ -210,17 +221,31 @@ begin
     ' ORDER BY L.CODIGO_ART, COLOR, ORDEN_TALLA, TALLA, L.CODIGO_ALM';
 end;
 
-// Tiendas activas de uso estándar y, además, cualquier almacén que el
-// documento use como origen aunque no lo sea.
+// Solo una tienda puede ser destino: almacén activo de uso estándar. Los
+// de taras, depósito o tránsito, nunca. El tipo vacío cuenta como estándar,
+// que es el valor por omisión de la columna.
+function CondicionSqlAlmacenAdmiteDestino: string;
+begin
+  Result :=
+    '(ALM.ESACTIVO_ALM = ''S'' ' +
+    ' AND COALESCE(NULLIF(TRIM(ALM.TIPO_USO_ALM), ''''), ''ESTANDAR'') ' +
+    '     IN (''ESTANDAR'', ''ESTANDARD''))';
+end;
+
+// Las tiendas y, además, cualquier almacén que el documento use como
+// origen o que ya figure como destino en sus propuestas, aunque no lo sea.
 function SqlAlmacenesDistribucion: string;
 begin
   Result :=
     'SELECT ALM.CODIGO_ALM_ALM, ' +
     '       COALESCE(ALM.NOMBRE_ALM_ALM, '''') AS NOMBRE_ALM_ALM, ' +
-    '       COALESCE(ALM.ORDEN_ALM, 0) AS ORDEN_ALM ' +
+    '       COALESCE(ALM.ORDEN_ALM, 0) AS ORDEN_ALM, ' +
+    '       COALESCE(ALM.ORDEN_DISTRIBUCION_ALM, 0) ' +
+    '         AS ORDEN_DISTRIBUCION_ALM, ' +
+    '       CASE WHEN ' + CondicionSqlAlmacenAdmiteDestino +
+    '            THEN ''S'' ELSE ''N'' END AS ADMITE_DESTINO ' +
     '  FROM fza_almacenes ALM ' +
-    ' WHERE (ALM.ESACTIVO_ALM = ''S'' ' +
-    '        AND ALM.TIPO_USO_ALM IN (''ESTANDAR'', ''ESTANDARD'')) ' +
+    ' WHERE ' + CondicionSqlAlmacenAdmiteDestino +
     '    OR EXISTS (SELECT 1 ' +
     '                 FROM fza_documentos_trabajo_lineas DTL ' +
     '                 JOIN fza_documentos_trabajo DTR ' +
@@ -229,32 +254,60 @@ begin
     '                  AND COALESCE(NULLIF(DTL.CODIGO_ALM_DTL, ''''), ' +
     '                               DTR.CODIGO_ALM_DTR) = ' +
     '                      ALM.CODIGO_ALM_ALM) ' +
+    '    OR EXISTS (SELECT 1 ' +
+    '                 FROM fza_traspasos_propuestas PRO ' +
+    '                WHERE PRO.ID_DTR_TRPRO = :ID_DTR ' +
+    '                  AND PRO.CODIGO_ALM_DESTINO_TRPRO = ' +
+    '                      ALM.CODIGO_ALM_ALM) ' +
     ' ORDER BY COALESCE(ALM.ORDEN_ALM, 0), ALM.CODIGO_ALM_ALM';
 end;
 
-function SqlStocksDistribucion: string;
+function NombreParametroSku(AIndice: Integer): string;
 begin
+  Result := 'SKU' + IntToStr(AIndice);
+end;
+
+// La clave del stock empieza por el almacén: se entra por almacén y SKU
+// (y en ese orden) para no recorrer la tabla entera. Con ANumeroSkus > 0
+// solo se leen esos SKU del documento (:SKU0, :SKU1...).
+function SqlStocksDistribucion(ANumeroSkus: Integer): string;
+var
+  i: Integer;
+  sFiltro: string;
+begin
+  sFiltro := '';
+  for i := 0 to ANumeroSkus - 1 do
+  begin
+    if i > 0 then
+      sFiltro := sFiltro + ', ';
+    sFiltro := sFiltro + ':' + NombreParametroSku(i);
+  end;
+  if sFiltro <> '' then
+    sFiltro := ' AND DTL.CODIGO_UNIDAD_DTL IN (' + sFiltro + ') ';
   Result :=
-    'SELECT STK.CODIGO_ALM_STK, STK.CODIGO_UNIDAD_STK, ' +
+    'SELECT STRAIGHT_JOIN STK.CODIGO_ALM_STK, STK.CODIGO_UNIDAD_STK, ' +
     '       SUM(STK.CANTIDAD_STK) AS CANTIDAD ' +
-    '  FROM fza_articulos_stockactual STK ' +
-    '  JOIN (SELECT DISTINCT DTL.CODIGO_UNIDAD_DTL AS CODIGO_UNIDAD ' +
+    '  FROM (SELECT DISTINCT DTL.CODIGO_UNIDAD_DTL AS CODIGO_UNIDAD ' +
     '          FROM fza_documentos_trabajo_lineas DTL ' +
     '         WHERE DTL.ID_DTR_DTL = :ID_DTR ' +
-    '           AND DTL.CODIGO_UNIDAD_DTL <> '''') D ' +
-    '    ON D.CODIGO_UNIDAD = STK.CODIGO_UNIDAD_STK ' +
+    '           AND DTL.CODIGO_UNIDAD_DTL <> '''' ' + sFiltro + ') D ' +
+    ' CROSS JOIN fza_almacenes ALM ' +
+    '  JOIN fza_articulos_stockactual STK ' +
+    '    ON STK.CODIGO_ALM_STK = ALM.CODIGO_ALM_ALM ' +
+    '   AND STK.CODIGO_UNIDAD_STK = D.CODIGO_UNIDAD ' +
     ' GROUP BY STK.CODIGO_ALM_STK, STK.CODIGO_UNIDAD_STK';
 end;
 
-// Lo confirmado cuenta por lo realmente traspasado; lo pendiente, por lo
-// propuesto.
+// Lo trasladado cuenta por lo realmente traspasado; lo pendiente, por lo
+// propuesto. Lo no aceptado no cuenta: sus unidades vuelven a estar por
+// repartir.
 function SqlAsignacionesDistribucion: string;
 begin
   Result :=
     'SELECT P.CODIGO_ALM_ORIGEN_TRPRO AS ORIGEN, ' +
     '       P.CODIGO_ALM_DESTINO_TRPRO AS DESTINO, ' +
     '       L.CODIGO_UNIDAD_TRPROLIN AS CODIGO_UNIDAD, ' +
-    '       SUM(CASE WHEN P.ESTADO_TRPRO = ''CONFIRMADA'' ' +
+    '       SUM(CASE WHEN P.ESTADO_TRPRO = ''TRASLADADO'' ' +
     '                THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
     '                ELSE 0 END) AS CONFIRMADA, ' +
     '       SUM(CASE WHEN P.ESTADO_TRPRO = ''PENDIENTE'' ' +
@@ -264,8 +317,53 @@ begin
     '  JOIN fza_traspasos_propuestas_lineas L ' +
     '    ON L.ID_TRPRO_TRPROLIN = P.ID_TRPRO ' +
     ' WHERE P.ID_DTR_TRPRO = :ID_DTR ' +
+    '   AND P.ESTADO_TRPRO IN (''PENDIENTE'', ''TRASLADADO'') ' +
     ' GROUP BY P.CODIGO_ALM_ORIGEN_TRPRO, P.CODIGO_ALM_DESTINO_TRPRO, ' +
     '          L.CODIGO_UNIDAD_TRPROLIN';
+end;
+
+// Huella de las propuestas que ya no están pendientes: cuántas son, la
+// última y cuándo se resolvió. Cambia en cuanto se traslada o se rechaza
+// cualquiera.
+function SqlFirmaPropuestasResueltas: string;
+begin
+  Result :=
+    'SELECT CONCAT(COUNT(*), ''|'', COALESCE(MAX(P.ID_TRPRO), 0), ''|'', ' +
+    '              COALESCE(DATE_FORMAT(' +
+    '                MAX(P.INSTANTE_RESOLUCION_TRPRO), ' +
+    '                ''%Y%m%d%H%i%s''), '''')) AS FIRMA ' +
+    '  FROM fza_traspasos_propuestas P ' +
+    ' WHERE P.ID_DTR_TRPRO = :ID_DTR ' +
+    '   AND P.ESTADO_TRPRO <> ''PENDIENTE''';
+end;
+
+// El estado va en el predicado: si ya se trasladó o se rechazó, no cuadra
+// ninguna fila.
+function SqlRechazarPropuestaTraspaso: string;
+begin
+  Result :=
+    'UPDATE fza_traspasos_propuestas ' +
+    '   SET ESTADO_TRPRO = ''NO ACEPTADO'', ' +
+    '       MOTIVO_RECHAZO_TRPRO = :MOTIVO, ' +
+    '       INSTANTE_RESOLUCION_TRPRO = NOW(), ' +
+    '       USUARIO_RESOLUCION_TRPRO = :USUARIO, ' +
+    '       USUARIO_MODIF = :USUARIO ' +
+    ' WHERE ID_TRPRO = :ID_TRPRO ' +
+    '   AND ESTADO_TRPRO = ''PENDIENTE''';
+end;
+
+// Cero o negativo = sin número: el almacén no recibe traspasos desde la
+// distribución. A un almacén que no es tienda no se le guarda número.
+function SqlGuardarPrioridadAlmacen: string;
+begin
+  Result :=
+    'UPDATE fza_almacenes ALM ' +
+    '   SET ALM.ORDEN_DISTRIBUCION_ALM = ' +
+    '         CASE WHEN :PRIORIDAD > 0 AND ' +
+    CondicionSqlAlmacenAdmiteDestino +
+    '              THEN :PRIORIDAD ELSE NULL END, ' +
+    '       ALM.USUARIO_MODIF = :USUARIO ' +
+    ' WHERE ALM.CODIGO_ALM_ALM = :ALMACEN';
 end;
 
 function SqlCabecerasPropuestasTraspaso(const AFiltro: string): string;
@@ -282,7 +380,9 @@ begin
     '       COALESCE(P.SERIE_DOC_TRPRO, '''') AS SERIE_DOC_TRPRO, ' +
     '       COALESCE(P.NUMERO_DOC_TRPRO, '''') AS NUMERO_DOC_TRPRO, ' +
     '       COALESCE(P.NUMERO_OPERACION_TRPRO, '''') ' +
-    '         AS NUMERO_OPERACION_TRPRO ' +
+    '         AS NUMERO_OPERACION_TRPRO, ' +
+    '       COALESCE(P.MOTIVO_RECHAZO_TRPRO, '''') ' +
+    '         AS MOTIVO_RECHAZO_TRPRO ' +
     '  FROM fza_traspasos_propuestas P ' +
     '  LEFT JOIN fza_documentos_trabajo DTR ' +
     '    ON DTR.ID_DTR = P.ID_DTR_TRPRO ' +
@@ -474,6 +574,10 @@ begin
       Almacen.Codigo := AConsulta.FieldByName('CODIGO_ALM_ALM').AsString;
       Almacen.Nombre := AConsulta.FieldByName('NOMBRE_ALM_ALM').AsString;
       Almacen.Orden := AConsulta.FieldByName('ORDEN_ALM').AsInteger;
+      Almacen.Prioridad :=
+        AConsulta.FieldByName('ORDEN_DISTRIBUCION_ALM').AsInteger;
+      Almacen.AdmiteDestino := SameText(
+        AConsulta.FieldByName('ADMITE_DESTINO').AsString, 'S');
       Lista.Add(Almacen);
       AConsulta.Next;
     end;
@@ -485,16 +589,36 @@ begin
 end;
 
 function TRepositorioDistribucionTiendasUniDAC.LeerStocks(
-  AConsulta: TUniQuery; AIdDocumento: Int64): TStocksDistribucion;
+  AIdDocumento: Int64;
+  const ASkus: TArray<string>): TStocksDistribucion;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    Result := LeerStocksConsulta(oConsulta, AIdDocumento, ASkus);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioDistribucionTiendasUniDAC.LeerStocksConsulta(
+  AConsulta: TUniQuery;
+  AIdDocumento: Int64;
+  const ASkus: TArray<string>): TStocksDistribucion;
 var
   Lista: TList<TStockDistribucion>;
   Stock: TStockDistribucion;
+  i: Integer;
 begin
   Lista := TList<TStockDistribucion>.Create;
   try
     AConsulta.Close;
-    AConsulta.SQL.Text := SqlStocksDistribucion;
+    AConsulta.SQL.Text := SqlStocksDistribucion(Length(ASkus));
     AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+    for i := 0 to High(ASkus) do
+      AConsulta.ParamByName(NombreParametroSku(i)).AsString :=
+        Trim(ASkus[i]);
     AConsulta.Open;
     while not AConsulta.Eof do
     begin
@@ -558,7 +682,10 @@ begin
     Result.Titulo := LeerTitulo(oConsulta, AIdDocumento);
     Result.Unidades := LeerUnidades(oConsulta, AIdDocumento);
     Result.Almacenes := LeerAlmacenes(oConsulta, AIdDocumento);
-    Result.Stocks := LeerStocks(oConsulta, AIdDocumento);
+    Result.Stocks := LeerStocksConsulta(oConsulta, AIdDocumento, nil);
+    // La firma va antes que las asignaciones: si alguien resuelve una
+    // propuesta entre las dos lecturas, el guardado posterior se rechaza.
+    Result.FirmaResueltas := LeerFirmaResueltas(oConsulta, AIdDocumento);
     Result.Asignaciones := LeerAsignaciones(oConsulta, AIdDocumento);
   finally
     FreeAndNil(oConsulta);
@@ -661,6 +788,8 @@ begin
         oConsulta.FieldByName('NUMERO_DOC_TRPRO').AsString;
       Propuesta.NumeroOperacion :=
         oConsulta.FieldByName('NUMERO_OPERACION_TRPRO').AsString;
+      Propuesta.MotivoRechazo :=
+        oConsulta.FieldByName('MOTIVO_RECHAZO_TRPRO').AsString;
       Lista.Add(Propuesta);
       oConsulta.Next;
     end;
@@ -704,61 +833,15 @@ end;
 //   Propuestas: escritura
 // ===========================================================================
 
-procedure TRepositorioDistribucionTiendasUniDAC.
-  ComprobarConfirmadoSinCambios(
-  AConsulta: TUniQuery;
-  AIdDocumento: Int64;
-  const AAsignaciones: TAsignacionesDistribucion);
-var
-  Esperado: TDictionary<string, Double>;
-  Actuales: TAsignacionesDistribucion;
-  i: Integer;
-  sClave: string;
-  dEsperado, dTotalEsperado, dTotalActual: Double;
-  bCoincide: Boolean;
+function TRepositorioDistribucionTiendasUniDAC.LeerFirmaResueltas(
+  AConsulta: TUniQuery; AIdDocumento: Int64): string;
 begin
-  Esperado := TDictionary<string, Double>.Create;
-  try
-    dTotalEsperado := 0;
-    for i := 0 to High(AAsignaciones) do
-    begin
-      if AAsignaciones[i].CantidadConfirmada > TOLERANCIA_CANTIDAD then
-      begin
-        Esperado.AddOrSetValue(
-          ClaveAsignacion(
-            AAsignaciones[i].AlmacenOrigen,
-            AAsignaciones[i].AlmacenDestino,
-            AAsignaciones[i].CodigoSku),
-          AAsignaciones[i].CantidadConfirmada);
-        dTotalEsperado := dTotalEsperado +
-          AAsignaciones[i].CantidadConfirmada;
-      end;
-    end;
-    Actuales := LeerAsignaciones(AConsulta, AIdDocumento);
-    bCoincide := True;
-    dTotalActual := 0;
-    for i := 0 to High(Actuales) do
-    begin
-      if Actuales[i].CantidadConfirmada > TOLERANCIA_CANTIDAD then
-      begin
-        sClave := ClaveAsignacion(
-          Actuales[i].AlmacenOrigen,
-          Actuales[i].AlmacenDestino,
-          Actuales[i].CodigoSku);
-        dTotalActual := dTotalActual + Actuales[i].CantidadConfirmada;
-        if not Esperado.TryGetValue(sClave, dEsperado) or
-           not SameValue(dEsperado, Actuales[i].CantidadConfirmada,
-             TOLERANCIA_CANTIDAD) then
-          bCoincide := False;
-      end;
-    end;
-    if not bCoincide or
-       not SameValue(dTotalEsperado, dTotalActual, TOLERANCIA_CANTIDAD) then
-      raise EDistribucionTiendasDesactualizada.Create(
-        SErrorDistribucionTiendasDesactualizada);
-  finally
-    FreeAndNil(Esperado);
-  end;
+  AConsulta.Close;
+  AConsulta.SQL.Text := SqlFirmaPropuestasResueltas;
+  AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
+  AConsulta.Open;
+  Result := AConsulta.FieldByName('FIRMA').AsString;
+  AConsulta.Close;
 end;
 
 procedure TRepositorioDistribucionTiendasUniDAC.CargarPropuestasPendientes(
@@ -842,6 +925,7 @@ end;
 procedure TRepositorioDistribucionTiendasUniDAC.SincronizarPropuestas(
   AConsulta: TUniQuery;
   AIdDocumento: Int64;
+  const AFirmaResueltas: string;
   const AAsignaciones: TAsignacionesDistribucion;
   const AUsuario: string);
 var
@@ -850,8 +934,12 @@ var
 begin
   Pendientes := TDictionary<string, Int64>.Create;
   try
+    // Con las pendientes ya bloqueadas, nadie puede resolver otra hasta
+    // que esta transacción termine.
     CargarPropuestasPendientes(AConsulta, AIdDocumento, Pendientes);
-    ComprobarConfirmadoSinCambios(AConsulta, AIdDocumento, AAsignaciones);
+    if LeerFirmaResueltas(AConsulta, AIdDocumento) <> AFirmaResueltas then
+      raise EDistribucionTiendasDesactualizada.Create(
+        SErrorDistribucionTiendasDesactualizada);
     AConsulta.Close;
     AConsulta.SQL.Text := SqlBorrarLineasPropuestasPendientes;
     AConsulta.ParamByName('ID_DTR').AsLargeInt := AIdDocumento;
@@ -879,6 +967,7 @@ end;
 
 procedure TRepositorioDistribucionTiendasUniDAC.GuardarPropuestas(
   AIdDocumento: Int64;
+  const AFirmaResueltas: string;
   const AAsignaciones: TAsignacionesDistribucion;
   const AUsuario: string);
 var
@@ -892,7 +981,7 @@ begin
       FConexion.StartTransaction;
     try
       SincronizarPropuestas(
-        oConsulta, AIdDocumento, AAsignaciones, AUsuario);
+        oConsulta, AIdDocumento, AFirmaResueltas, AAsignaciones, AUsuario);
       if bTransaccionPropia then
         FConexion.Commit;
     except
@@ -900,6 +989,76 @@ begin
         FConexion.Rollback;
       raise;
     end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioDistribucionTiendasUniDAC.RechazarPropuesta(
+  AIdPropuesta: Int64;
+  const AMotivo, AUsuario: string): Boolean;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    oConsulta.SQL.Text := SqlRechazarPropuestaTraspaso;
+    oConsulta.ParamByName('MOTIVO').AsString := Copy(Trim(AMotivo), 1, 255);
+    oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+    oConsulta.ParamByName('ID_TRPRO').AsLargeInt := AIdPropuesta;
+    oConsulta.Execute;
+    Result := oConsulta.RowsAffected = 1;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TRepositorioDistribucionTiendasUniDAC.GuardarPrioridadesAlmacenes(
+  const APrioridades: TPrioridadesAlmacenDistribucion;
+  const AUsuario: string);
+var
+  oConsulta: TUniQuery;
+  bTransaccionPropia: Boolean;
+  i: Integer;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    bTransaccionPropia := not FConexion.InTransaction;
+    if bTransaccionPropia then
+      FConexion.StartTransaction;
+    try
+      oConsulta.SQL.Text := SqlGuardarPrioridadAlmacen;
+      for i := 0 to High(APrioridades) do
+      begin
+        oConsulta.ParamByName('PRIORIDAD').AsInteger :=
+          APrioridades[i].Prioridad;
+        oConsulta.ParamByName('USUARIO').AsString := AUsuario;
+        oConsulta.ParamByName('ALMACEN').AsString :=
+          Trim(APrioridades[i].CodigoAlmacen);
+        oConsulta.Execute;
+      end;
+      if bTransaccionPropia then
+        FConexion.Commit;
+    except
+      if bTransaccionPropia then
+        FConexion.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+// Sin documento solo cuadran las tiendas: los almacenes que admiten ser
+// destino.
+function TRepositorioDistribucionTiendasUniDAC.ListarAlmacenesDestino:
+  TAlmacenesDistribucion;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := NuevaConsulta;
+  try
+    Result := LeerAlmacenes(oConsulta, 0);
   finally
     FreeAndNil(oConsulta);
   end;

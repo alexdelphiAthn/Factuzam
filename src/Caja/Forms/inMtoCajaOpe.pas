@@ -3319,6 +3319,7 @@ begin
   oSolicitud.Original := FOperacionSubsanacion;
   Result := TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
     CrearContextoCierreVentaCajaVcl(Self), FOperacionSubsanacion.Pagos,
+    HayLineasFijasSubsanacion(FOperacionSubsanacion.Lineas),
     dDescuento, oSolicitud.Pagos, AImprimirTicket);
   if Result then
   begin

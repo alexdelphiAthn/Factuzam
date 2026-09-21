@@ -119,6 +119,7 @@ type
     FImporteDejarCuenta: Currency;
     FImporteValeRecogido: Currency;
     FImporteValeEmitido: Currency;
+    FImporteValesFijos: Currency;
     FHayCliente: Boolean;
     FPermiteDeuda: Boolean;
     FCalculandoTotales: Boolean;
@@ -133,6 +134,8 @@ type
     procedure InicializarTotalesPorDefecto;
     function ValidarDeuda: TResultadoValidacion;
     function ValidarVale: TResultadoValidacion;
+    function ImporteEfectivoEuros: Currency;
+    function ValidarLimiteEfectivo: TResultadoValidacion;
     function ObtenerFormaPagoInfo(const ACodigo: string): TFormaPagoInfo;
     function ObtenerCurrencySafe(const ANombreCampo: string;
                                  const ADefault: Currency = 0): Currency;
@@ -164,6 +167,9 @@ type
     function PuedeEmitirVale: Boolean;
     function EmitirVale(AImporte: Currency): TResultadoValidacion;
     procedure RegistrarValeRecogido(ACodigoVale: string; AImporte: Currency);
+    // Subsanación: neto de los vales ya grabados en el ticket (canjeados
+    // menos emitidos). Cubre parte del total sin filas en la rejilla.
+    procedure EstablecerValesFijos(AImporte: Currency);
     function EsDevolucionEconomica: Boolean;
     function TieneArticulosDevueltos: Boolean;
     function ValidarParaCobro: TResultadoValidacion;
@@ -229,6 +235,18 @@ resourcestring
   SAdvertenciaCobroIncompleto =
     'Cobro incompleto. Pendiente: %m' + sLineBreak +
     '¿Desea dejarlo en cuenta?';
+  SErrorLimitePagoEfectivo =
+    'No se puede cobrar en efectivo %m.' + sLineBreak + sLineBreak +
+    'La Ley 7/2012 (art. 7, en la redacción de la Ley 11/2021) prohíbe ' +
+    'pagar en efectivo operaciones de %m o más cuando una de las partes ' +
+    'es empresario o profesional.' + sLineBreak + sLineBreak +
+    'El efectivo en euros no puede llegar a %m: cobre el resto (%m como ' +
+    'mínimo) con tarjeta, transferencia u otra forma de pago.';
+
+const
+  // Límite legal de pago en efectivo (Ley 7/2012, art. 7): se prohíben los
+  // pagos en efectivo de 1.000 euros o más.
+  LIMITE_PAGO_EFECTIVO_EUROS = 1000;
 
 { TDatosCliente }
 
@@ -545,6 +563,12 @@ begin
   end;
 end;
 
+procedure TDatosFaseCobro.EstablecerValesFijos(AImporte: Currency);
+begin
+  FImporteValesFijos := AImporte;
+  Recalcular;
+end;
+
 function TDatosFaseCobro.TieneArticulosDevueltos: Boolean;
 begin
   if Assigned(FTotalesFactura) then
@@ -609,6 +633,7 @@ begin
   Result.ImporteDescuentoFijado := FImporteDescuentoFijado;
   Result.ImporteDejarCuenta := FImporteDejarCuenta;
   Result.ImporteValeEmitido := FImporteValeEmitido;
+  Result.TotalValesRecogidos := FImporteValesFijos;
   FMemTablePagos.DisableControls;
   oMarcador := FMemTablePagos.GetBookmark;
   try
@@ -786,6 +811,62 @@ begin
   end;
 end;
 
+// Efectivo en euros que se queda la caja: lo entregado en las formas de pago
+// de efectivo (EFE, o las que dan cambio y abren el cajón) menos el cambio
+// devuelto. Las divisas, las criptomonedas y los vales no cuentan.
+function TDatosFaseCobro.ImporteEfectivoEuros: Currency;
+var
+  oMarcador: TBookmark;
+  bEfectivo: Boolean;
+begin
+  Result := 0;
+  if Assigned(FMemTablePagos) and FMemTablePagos.Active and
+     not FMemTablePagos.IsEmpty then
+  begin
+    FMemTablePagos.DisableControls;
+    oMarcador := FMemTablePagos.GetBookmark;
+    try
+      FMemTablePagos.First;
+      while not FMemTablePagos.Eof do
+      begin
+        bEfectivo :=
+          (ObtenerStringSafe('ESDIVISA_FORMA_PAGO_CFP', 'N') <> 'S') and
+          (ObtenerStringSafe('ESCRIPTO_FORMA_PAGO_CFP', 'N') <> 'S') and
+          (ObtenerStringSafe('CODIGO_FP_CFP', '') <> 'VALE') and
+          (SameText(ObtenerStringSafe('CODIGO_FP_CFP', ''), 'EFE') or
+           ((ObtenerStringSafe('ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP', 'N') =
+             'S') and
+            (ObtenerStringSafe('ESABRE_CAJON_FORMA_PAGO_CFP', 'N') = 'S')));
+        if bEfectivo then
+          Result := Result + ObtenerCurrencySafe('IMPORTE_ENTREGADO', 0);
+        FMemTablePagos.Next;
+      end;
+    finally
+      if FMemTablePagos.BookmarkValid(oMarcador) then
+        FMemTablePagos.GotoBookmark(oMarcador);
+      FMemTablePagos.FreeBookmark(oMarcador);
+      FMemTablePagos.EnableControls;
+    end;
+  end;
+  // El cambio sólo sale de formas de pago que lo devuelven (el efectivo).
+  if Result > 0 then
+    Result := Result - Min(FImporteCambio, Result);
+end;
+
+function TDatosFaseCobro.ValidarLimiteEfectivo: TResultadoValidacion;
+var
+  dEfectivo: Currency;
+begin
+  Result := TResultadoValidacion.OK;
+  dEfectivo := ImporteEfectivoEuros;
+  if dEfectivo >= LIMITE_PAGO_EFECTIVO_EUROS then
+    Result := TResultadoValidacion.Error(
+      Format(SErrorLimitePagoEfectivo,
+             [dEfectivo, Currency(LIMITE_PAGO_EFECTIVO_EUROS),
+              Currency(LIMITE_PAGO_EFECTIVO_EUROS),
+              dEfectivo - LIMITE_PAGO_EFECTIVO_EUROS + 0.01]));
+end;
+
 function TDatosFaseCobro.ValidarParaCobro: TResultadoValidacion;
 var
   TotalCobrado: Currency;
@@ -805,6 +886,8 @@ begin
     Result := ValidarDeuda;
     if Result.Valido then
       Result := ValidarVale;
+    if Result.Valido then
+      Result := ValidarLimiteEfectivo;
     if Result.Valido then
     begin
       TotalCobrado := FImporteEntregado + FImporteDejarCuenta;

@@ -51,6 +51,7 @@ type
     btnModoSolicitar: TcxButton;
     btnModoAtender: TcxButton;
     btnMisPeticiones: TcxButton;
+    btnConfirmarPropuesta: TcxButton;
     pnlTop: TPanel;
     lblOrigen: TcxLabel;
     txtOrigen: TcxTextEdit;
@@ -98,6 +99,7 @@ type
     procedure dteVentasPropertiesChange(Sender: TObject);
     procedure btnCargarVentasClick(Sender: TObject);
     procedure btnMisPeticionesClick(Sender: TObject);
+    procedure btnConfirmarPropuestaClick(Sender: TObject);
   private
     FDatos: TdmTraspaso;
     FGridCtrl: TGridArticulosLineas;
@@ -297,7 +299,8 @@ uses
   UniDataGridArticulosRepositorio, UniDataColumnasSkuServicios,
   UniDataColumnasDocumentoRepositorio, inLibColumnasDocumento,
   inLibMsgArticulos, inLibCajaEstiloVcl, System.Math,
-  inLibPosicionFormulario;
+  inLibPosicionFormulario,
+  inLibMsgDistribucionTiendas, inMtoModalSeleccionPropuestaTraspaso;
 
 const
   ALTO_CABECERA_NORMAL_96_DPI = 89;
@@ -317,9 +320,11 @@ resourcestring
   SCaptionArticulosPeticionTraspaso =
     'Artículos de la petición';
   SCaptionPeticionesRealizadasTraspaso =
-    'Peticiones realizadas';
+    'Peticiones realizadas y denegadas';
   SCaptionTipoPeticionTraspaso =
     'Tipo';
+  SCaptionDireccionPeticionTraspaso =
+    'Dirección';
   SCaptionAlmacenSolicitadoTraspaso =
     'Solicitado a (almacén)';
   SCaptionLineasPendientesTraspaso =
@@ -1384,19 +1389,20 @@ begin
   Estilo.EstilarRejilla(FView);
   Estilo.EstilarRejilla(FStockView);
   for Boton in TArray<TcxButton>.Create(btnModoTraspaso, btnModoReposicion,
-    btnModoSolicitar, btnModoAtender, btnMisPeticiones, btnCargarVentas,
-    btnF8, btnF11, btnF12) do
+    btnModoSolicitar, btnModoAtender, btnMisPeticiones,
+    btnConfirmarPropuesta, btnCargarVentas, btnF8, btnF11, btnF12) do
     Estilo.EstilarBoton(Boton, '', nil, ALTO_FUENTE_BOTON_CAJA);
 
   iMargen := EscalarCaja(Self, 8);
   iAlto := EscalarCaja(Self, ALTO_BOTON_CAJA_96_DPI);
   pnlModos.Height := iAlto + 2 * iMargen;
   for Boton in TArray<TcxButton>.Create(btnModoTraspaso, btnModoReposicion,
-    btnModoSolicitar, btnModoAtender, btnMisPeticiones) do
+    btnModoSolicitar, btnModoAtender, btnMisPeticiones,
+    btnConfirmarPropuesta) do
     Boton.Width := 0;
   ColocarFilaBotonesCaja([btnModoTraspaso, btnModoReposicion,
-    btnModoSolicitar, btnModoAtender, btnMisPeticiones], iMargen, iMargen,
-    iAlto, ALTO_FUENTE_BOTON_CAJA);
+    btnModoSolicitar, btnModoAtender, btnMisPeticiones,
+    btnConfirmarPropuesta], iMargen, iMargen, iAlto, ALTO_FUENTE_BOTON_CAJA);
   btnCargarVentas.Width := 0;
   ColocarFilaBotonesCaja([btnCargarVentas], btnCargarVentas.Left,
     btnCargarVentas.Top, btnCargarVentas.Height, ALTO_FUENTE_BOTON_CAJA);
@@ -1745,6 +1751,28 @@ begin
   AbrirMisPeticiones;
 end;
 
+// Propuesta de la distribución con origen en este almacén: se carga como un
+// traspaso con el destino fijo y al grabarlo (F12) queda trasladada.
+procedure TfrmMtoOpeTraspaso.btnConfirmarPropuestaClick(Sender: TObject);
+var
+  Seleccion: TResultadoSeleccionPropuesta;
+begin
+  Seleccion := TfrmModalSeleccionPropuestaTraspaso.Ejecutar(
+    Self, FDatos.CrearRepositorioPropuestas, FAlmacen,
+    FDatos.IdentidadSesion.Usuario);
+  if Seleccion.Cargar then
+  begin
+    AplicarModo(mtTraspaso);
+    CargarLineasExternas(Seleccion.Lineas);
+    cboDestino.ItemIndex :=
+      FComboCodigos.IndexOf(Seleccion.Propuesta.AlmacenDestino);
+    cboDestino.Properties.ReadOnly := True;
+    FDatos.VincularPropuesta(Seleccion.Propuesta.IdPropuesta);
+    ShowMessage_fza(Format(SInfoPropuestaCargadaEnTraspaso, [
+      Seleccion.Propuesta.IdPropuesta, Seleccion.Propuesta.AlmacenDestino]));
+  end;
+end;
+
 procedure TfrmMtoOpeTraspaso.CargarCombo;
 begin
   cboDestino.Properties.Items.Clear;
@@ -2036,7 +2064,10 @@ begin
       AVista.Columns[iColumna].Caption :=
         SCaptionLineasPendientesTraspaso
     else if SameText(sCampo, 'TIPO_TRSOL') then
-      AVista.Columns[iColumna].Caption := SCaptionTipoPeticionTraspaso;
+      AVista.Columns[iColumna].Caption := SCaptionTipoPeticionTraspaso
+    else if SameText(sCampo, 'DIRECCION_TRSOL') then
+      AVista.Columns[iColumna].Caption :=
+        SCaptionDireccionPeticionTraspaso;
   end;
 end;
 

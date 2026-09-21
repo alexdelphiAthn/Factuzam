@@ -81,10 +81,12 @@ type
       const AContexto: TContextoCierreVentaCajaVcl); static;
     // Pantalla de Cobro en modo subsanación: devuelve el descuento global
     // y los cobros nuevos sin grabar nada. AImprimirTicket es False cuando
-    // el usuario subsana con F11 (sin ticket).
+    // el usuario subsana con F11 (sin ticket). AHayLineasFijas (abonos a
+    // cuenta de depósitos) impide el descuento global, como en la venta.
     class function EjecutarCobroSubsanacion(
       const AContexto: TContextoCierreVentaCajaVcl;
       const APagos: TPagosSubsanacionCaja;
+      AHayLineasFijas: Boolean;
       out ADescuentoGlobal: Currency;
       out APagosNuevos: TPagosSubsanacionCaja;
       out AImprimirTicket: Boolean): Boolean; static;
@@ -316,6 +318,7 @@ end;
 class function TCoordinadorCierreVentaCajaVcl.EjecutarCobroSubsanacion(
   const AContexto: TContextoCierreVentaCajaVcl;
   const APagos: TPagosSubsanacionCaja;
+  AHayLineasFijas: Boolean;
   out ADescuentoGlobal: Currency;
   out APagosNuevos: TPagosSubsanacionCaja;
   out AImprimirTicket: Boolean): Boolean;
@@ -340,7 +343,7 @@ begin
       AContexto.Propietario,
       AContexto.DependenciasFaseCobro);
     ConfigurarFaseCobro(AContexto, oFormulario, oTotales);
-    oFormulario.ConfigurarSubsanacion(APagos);
+    oFormulario.ConfigurarSubsanacion(APagos, AHayLineasFijas);
     Result := oFormulario.ShowModal = mrOk;
     if Result then
     begin

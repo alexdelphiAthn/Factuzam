@@ -313,6 +313,8 @@ begin
   AddSuf('fza_tipos_documentos',                'TD');
   AddSuf('fza_tipos_efecto',                    'TEFE');
   AddSuf('fza_traducciones',                    'TRAD');
+  AddSuf('fza_traspasos_propuestas',            'TRPRO');
+  AddSuf('fza_traspasos_propuestas_lineas',     'TRPROLIN');
   AddSuf('fza_traspasos_solicitudes',           'TRSOL');
   AddSuf('fza_traspasos_solicitudes_lineas',    'TRSOLLIN');
   AddSuf('fza_unidades_medida',                 'UNIMED');

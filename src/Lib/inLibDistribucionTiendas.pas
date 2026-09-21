@@ -9,11 +9,13 @@
 {  Copyright (c) Alejandro Laorden Hidalgo.                                    }
 {  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
-{    Modelo puro de la distribución entre tiendas. Las unidades del            }
-{    documento de trabajo están en sus almacenes de origen; al indicar las     }
-{    unidades de una tienda se descuentan del origen que más tenga (o del      }
-{    fijado), respetando el mínimo en origen y lo ya confirmado. Incluye el    }
-{    reparto automático parametrizable. Sin VCL ni acceso a datos.             }
+{    Modelo puro de la distribución entre tiendas. El documento de trabajo     }
+{    dice qué se reparte y desde qué almacén (el origen, donde se recibió la   }
+{    mercancía). Al indicar las unidades de una tienda se descuentan del       }
+{    origen que más tenga (o del fijado): se reparte lo que el origen tiene    }
+{    en existencias, sin bajar del mínimo en origen; con cero o negativo no    }
+{    hay nada que repartir. El reparto automático, parametrizable, reparte     }
+{    solo lo recibido en el documento. Sin VCL ni acceso a datos.              }
 {******************************************************************************}
 unit inLibDistribucionTiendas;
 
@@ -24,13 +26,18 @@ uses
   inLibDistribucionTiendasIntf;
 
 type
+  // En los dos criterios, a igualdad gana la tienda de mayor prioridad
+  // (número más bajo) y, después, la primera del catálogo.
   TCriterioRepartoAutomatico = (
+    // En ronda: siempre a la tienda que menos lleva asignado.
     craOrdenAlmacen,
+    // A la tienda que menos tendría contando sus existencias.
     craMenorStock
   );
 
   TParametrosRepartoAutomatico = record
-    // Vacío: todas las tiendas que no sean origen del SKU.
+    // Vacío: todas las tiendas que reciben traspasos y no son origen
+    // del SKU.
     Destinos: TArray<string>;
     // Unidades de cada SKU que como mucho recibe una tienda; 0 = sin tope.
     MaximoPorDestino: Double;
@@ -43,16 +50,23 @@ type
   TOpcionesOrigenDistribucion = record
     // Vacío: se descuenta del origen con más unidades.
     AlmacenFijado: string;
-    // Unidades de cada SKU que se quedan sin repartir en cada origen.
+    // Existencias de cada SKU que como poco se quedan en cada origen.
     MinimoEnOrigen: Double;
   end;
 
   TMotivoAsignacionParcial = (
     mapNinguno,
+    // Ningún origen admitido tiene esa talla (el origen fijado no la trae).
     mapSinUnidades,
+    // Al origen no le quedan más existencias que repartir sin bajar del
+    // mínimo en origen.
+    mapSinExistencias,
     mapSueloConfirmado,
     mapEsOrigen,
-    mapSkuDesconocido
+    mapSkuDesconocido,
+    // El almacén no tiene número de prioridad o no es una tienda (taras,
+    // depósito, tránsito): desde la distribución no recibe traspasos.
+    mapNoRecibeTraspasos
   );
 
   TResultadoAsignacion = record
@@ -67,8 +81,10 @@ type
     DescripcionArticulo: string;
     Color: string;
     UnidadesDocumento: Double;
+    // Puede pasar de lo recibido: se reparte lo que hay en el origen.
     UnidadesRepartidas: Double;
-    function UnidadesPorRepartir: Double;
+    // Lo recibido que falta por repartir; nunca negativo.
+    UnidadesPorRepartir: Double;
   end;
   TGruposDistribucion = TArray<TGrupoDistribucion>;
 
@@ -100,11 +116,13 @@ type
     FRestanteOrigen: TDictionary<string, Double>;
     FRecibidoDestino: TDictionary<string, Double>;
     FConfirmadoDestino: TDictionary<string, Double>;
+    FPendienteOrigen: TDictionary<string, Double>;
     FStock: TDictionary<string, Double>;
     FAsignaciones: TList<TAsignacionDistribucion>;
     FIndiceAsignacion: TDictionary<string, Integer>;
     FOpciones: TOpcionesOrigenDistribucion;
     FModificado: Boolean;
+    FUnidadesRecortadasAlCargar: Double;
     procedure CargarAlmacenes(const AAlmacenes: TAlmacenesDistribucion);
     procedure AsegurarAlmacen(const ACodigo: string);
     procedure CargarUnidades(
@@ -126,7 +144,20 @@ type
       const AOrigen, ADestino, ASku: string; ACantidad: Double);
     function PendienteDe(const AOrigen, ADestino, ASku: string): Double;
     function DisponibleEnOrigen(const AOrigen, ASku: string): Double;
-    function ElegirOrigenParaTomar(const ASku: string): string;
+    function RestanteDocumentoEnOrigen(const AOrigen, ASku: string): Double;
+    function DisponibleAutomatico(const AOrigen, ASku: string): Double;
+    function ExistenciasLibresEnOrigen(
+      const AOrigen, ASku: string): Double;
+    function HayOrigenAdmitido(const ASku: string): Boolean;
+    function ExcesoEnOrigen(const AOrigen, ASku: string): Double;
+    function DestinoConMasPendiente(const AOrigen, ASku: string): string;
+    function RecortarPendientesExcedidos: Double;
+    function PrioridadEfectiva(AIndiceAlmacen: Integer): Integer;
+    function PendienteRecibido(const ADestino, ASku: string): Double;
+    function ReasignarEntreTiendas(
+      const ADesde, AHasta, ASku: string; ACantidad: Double): Double;
+    function ElegirOrigenParaTomar(
+      const ASku: string; AAutomatico: Boolean): string;
     function ElegirOrigenParaDevolver(
       const ADestino, ASku: string): string;
     function TomarDeOrigenes(
@@ -159,21 +190,56 @@ type
     function UnidadesEnAlmacen(const AAlmacen, ASku: string): Double;
     function UnidadesConfirmadas(const AAlmacen, ASku: string): Double;
     function UnidadesDocumento(const AAlmacen, ASku: string): Double;
+    // Lo recibido de esa talla que falta por repartir, sumando todos sus
+    // origenes. Nunca negativo: se puede repartir más de lo recibido.
+    function UnidadesPorRepartir(const ASku: string): Double;
+    // Almacenes que son origen de alguna unidad, en el orden del catalogo.
+    function AlmacenesOrigen: TAlmacenesDistribucion;
     function Stock(const AAlmacen, ASku: string): Double;
     function FijarUnidadesDestino(
       const AAlmacen, ASku: string;
       ACantidad: Double): TResultadoAsignacion;
+    // Arrastrar y soltar: mueve unidades entre dos almacenes concretos.
+    // De origen a tienda asigna desde ESE origen; de tienda a origen
+    // devuelve lo pendiente; entre tiendas cambia el destino. Devuelve lo
+    // realmente movido.
+    function MoverUnidades(
+      const ADesde, AHasta, ASku: string; ACantidad: Double): Double;
+    // Prioridad de reparto de un almacén. Sin número (0) no recibe
+    // traspasos: ni tecleando, ni arrastrando, ni en el automático. Los
+    // almacenes que no admiten ser destino se quedan siempre sin número.
+    procedure FijarPrioridad(const AAlmacen: string; APrioridad: Integer);
+    function RecibeTraspasos(const AAlmacen: string): Boolean;
+    function HayDestinos: Boolean;
+    // Almacenes a los que se les puede dar número, lo tengan o no.
+    function AlmacenesDestinoPosible: TAlmacenesDistribucion;
+    // Filas del cuadrante: las tiendas con número, los orígenes del
+    // documento y cualquier almacén que ya lleve reparto.
+    function AlmacenesDelCuadrante: TAlmacenesDistribucion;
+    // Las tiendas que reciben traspasos, por prioridad.
+    function AlmacenesQueReciben: TAlmacenesDistribucion;
+    // Sustituye las existencias de esos SKU (vacío: todos) por las recién
+    // leídas. Devuelve las unidades pendientes retiradas porque el origen
+    // ya no las cubre: tampoco así queda en negativo.
+    function RefrescarStocks(
+      const ASkus: TArray<string>;
+      const AStocks: TStocksDistribucion): Double;
+    // Lo que se podría arrastrar ahora mismo desde ese almacén.
+    function UnidadesMovibles(const AAlmacen, ASku: string): Double;
     function RepartirAutomaticamente(
       const AParametros: TParametrosRepartoAutomatico): Double;
     procedure QuitarPendientes;
     function Asignaciones: TAsignacionesDistribucion;
-    // Cierto si algún origen tiene repartidas más unidades de las que el
-    // documento le atribuye (se rebajó el documento después de repartir).
-    function HayOrigenExcedido: Boolean;
+    // Existencias del origen descontado lo pendiente de salir.
+    function StockProyectado(const AAlmacen, ASku: string): Double;
     procedure MarcarGuardado;
     property Opciones: TOpcionesOrigenDistribucion
       read FOpciones write FOpciones;
     property Modificado: Boolean read FModificado;
+    // Unidades pendientes retiradas al cargar porque el documento o las
+    // existencias del origen ya no las cubrían.
+    property UnidadesRecortadasAlCargar: Double
+      read FUnidadesRecortadasAlCargar;
   end;
 
 const
@@ -224,11 +290,6 @@ begin
   Result := Motivo = mapNinguno;
 end;
 
-function TGrupoDistribucion.UnidadesPorRepartir: Double;
-begin
-  Result := UnidadesDocumento - UnidadesRepartidas;
-end;
-
 // ===========================================================================
 //   Carga del documento
 // ===========================================================================
@@ -247,6 +308,7 @@ begin
   FRestanteOrigen := TDictionary<string, Double>.Create;
   FRecibidoDestino := TDictionary<string, Double>.Create;
   FConfirmadoDestino := TDictionary<string, Double>.Create;
+  FPendienteOrigen := TDictionary<string, Double>.Create;
   FStock := TDictionary<string, Double>.Create;
   FAsignaciones := TList<TAsignacionDistribucion>.Create;
   FIndiceAsignacion := TDictionary<string, Integer>.Create;
@@ -256,6 +318,7 @@ begin
   CargarAsignaciones(ADocumento.Asignaciones);
   CargarStocks(ADocumento.Stocks);
   FModificado := False;
+  FUnidadesRecortadasAlCargar := RecortarPendientesExcedidos;
 end;
 
 destructor TDistribucionTiendas.Destroy;
@@ -263,6 +326,7 @@ begin
   FreeAndNil(FIndiceAsignacion);
   FreeAndNil(FAsignaciones);
   FreeAndNil(FStock);
+  FreeAndNil(FPendienteOrigen);
   FreeAndNil(FConfirmadoDestino);
   FreeAndNil(FRecibidoDestino);
   FreeAndNil(FRestanteOrigen);
@@ -287,6 +351,7 @@ begin
       FOrdenAlmacen.Add(
         Normalizar(AAlmacenes[i].Codigo), FAlmacenes.Count);
       FAlmacenes.Add(AAlmacenes[i]);
+      FijarPrioridad(AAlmacenes[i].Codigo, AAlmacenes[i].Prioridad);
     end;
   end;
 end;
@@ -411,6 +476,8 @@ begin
       SumarEnDiccionario(FRecibidoDestino, sClaveDestino,
         Max(AAsignaciones[i].CantidadConfirmada, 0) +
         Max(AAsignaciones[i].CantidadPendiente, 0));
+      SumarEnDiccionario(FPendienteOrigen, sClaveOrigen,
+        Max(AAsignaciones[i].CantidadPendiente, 0));
     end;
   end;
 end;
@@ -465,6 +532,45 @@ begin
   if not FUnidadesOrigen.TryGetValue(
     ClaveAlmacenSku(AAlmacen, ASku), Result) then
     Result := 0;
+end;
+
+function TDistribucionTiendas.UnidadesPorRepartir(
+  const ASku: string): Double;
+var
+  Origenes: TList<string>;
+  i: Integer;
+begin
+  Result := 0;
+  if FOrigenesSku.TryGetValue(Normalizar(ASku), Origenes) then
+  begin
+    for i := 0 to Origenes.Count - 1 do
+      Result := Result + RestanteDocumentoEnOrigen(Origenes[i], ASku);
+  end;
+end;
+
+function TDistribucionTiendas.AlmacenesOrigen: TAlmacenesDistribucion;
+var
+  Lista: TList<TAlmacenDistribucion>;
+  i, j: Integer;
+  bEsOrigen: Boolean;
+begin
+  Lista := TList<TAlmacenDistribucion>.Create;
+  try
+    for i := 0 to FAlmacenes.Count - 1 do
+    begin
+      bEsOrigen := False;
+      for j := 0 to FSkus.Count - 1 do
+      begin
+        if EsOrigen(FAlmacenes[i].Codigo, FSkus[j].CodigoSku) then
+          bEsOrigen := True;
+      end;
+      if bEsOrigen then
+        Lista.Add(FAlmacenes[i]);
+    end;
+    Result := Lista.ToArray;
+  finally
+    FreeAndNil(Lista);
+  end;
 end;
 
 function TDistribucionTiendas.Stock(const AAlmacen, ASku: string): Double;
@@ -543,6 +649,8 @@ begin
         Grupo.UnidadesDocumento := Grupo.UnidadesDocumento + dDocumento;
         Grupo.UnidadesRepartidas := Grupo.UnidadesRepartidas +
           (dDocumento - dRestante);
+        Grupo.UnidadesPorRepartir := Grupo.UnidadesPorRepartir +
+          Max(dRestante, 0);
       end;
       Lista[iGrupo] := Grupo;
     end;
@@ -655,24 +763,84 @@ begin
     FRestanteOrigen[sClaveOrigen] - ACantidad;
   SumarEnDiccionario(
     FRecibidoDestino, ClaveAlmacenSku(ADestino, ASku), ACantidad);
+  SumarEnDiccionario(FPendienteOrigen, sClaveOrigen, ACantidad);
   FModificado := True;
 end;
 
+function TDistribucionTiendas.StockProyectado(
+  const AAlmacen, ASku: string): Double;
+var
+  dPendiente: Double;
+begin
+  if not FPendienteOrigen.TryGetValue(
+    ClaveAlmacenSku(AAlmacen, ASku), dPendiente) then
+    dPendiente := 0;
+  Result := Stock(AAlmacen, ASku) - dPendiente;
+end;
+
+function TDistribucionTiendas.ExistenciasLibresEnOrigen(
+  const AOrigen, ASku: string): Double;
+begin
+  Result := StockProyectado(AOrigen, ASku) -
+    Max(FOpciones.MinimoEnOrigen, 0);
+end;
+
+// Lo que un origen puede dar: sus existencias, descontado lo que ya sale y
+// el mínimo en origen. No se limita a lo recibido: con dos en el origen
+// pueden ir una a cada tienda aunque el documento trajera una. Con cero o
+// negativo no hay nada.
 function TDistribucionTiendas.DisponibleEnOrigen(
   const AOrigen, ASku: string): Double;
 begin
   Result := 0;
   if EsOrigen(AOrigen, ASku) then
-    Result := FRestanteOrigen[ClaveAlmacenSku(AOrigen, ASku)] -
-      Max(FOpciones.MinimoEnOrigen, 0);
+    Result := ExistenciasLibresEnOrigen(AOrigen, ASku);
   if Result < 0 then
     Result := 0;
+end;
+
+// Lo recibido en ese origen que aún no se ha repartido. Nunca negativo.
+function TDistribucionTiendas.RestanteDocumentoEnOrigen(
+  const AOrigen, ASku: string): Double;
+begin
+  Result := 0;
+  if EsOrigen(AOrigen, ASku) then
+    Result := Max(FRestanteOrigen[ClaveAlmacenSku(AOrigen, ASku)], 0);
+end;
+
+// El reparto automático reparte lo recibido, no todo el almacén.
+function TDistribucionTiendas.DisponibleAutomatico(
+  const AOrigen, ASku: string): Double;
+begin
+  Result := Min(
+    DisponibleEnOrigen(AOrigen, ASku),
+    RestanteDocumentoEnOrigen(AOrigen, ASku));
+end;
+
+// Distingue por qué no se ha podido asignar todo: si hay un origen admitido
+// para esa talla, lo que le falta son existencias.
+function TDistribucionTiendas.HayOrigenAdmitido(
+  const ASku: string): Boolean;
+var
+  Origenes: TList<string>;
+  i: Integer;
+begin
+  Result := False;
+  if FOrigenesSku.TryGetValue(Normalizar(ASku), Origenes) then
+  begin
+    for i := 0 to Origenes.Count - 1 do
+    begin
+      if (Trim(FOpciones.AlmacenFijado) = '') or
+         SameText(Origenes[i], Normalizar(FOpciones.AlmacenFijado)) then
+        Result := True;
+    end;
+  end;
 end;
 
 // El origen del que se descuenta: el fijado o, si no hay, el que más
 // unidades disponibles tenga (a igualdad, el primero del catálogo).
 function TDistribucionTiendas.ElegirOrigenParaTomar(
-  const ASku: string): string;
+  const ASku: string; AAutomatico: Boolean): string;
 var
   Origenes: TList<string>;
   i: Integer;
@@ -687,7 +855,10 @@ begin
       if (Trim(FOpciones.AlmacenFijado) = '') or
          SameText(Origenes[i], Normalizar(FOpciones.AlmacenFijado)) then
       begin
-        dDisponible := DisponibleEnOrigen(Origenes[i], ASku);
+        if AAutomatico then
+          dDisponible := DisponibleAutomatico(Origenes[i], ASku)
+        else
+          dDisponible := DisponibleEnOrigen(Origenes[i], ASku);
         if EsPositiva(dDisponible) and
            ((Result = '') or
             (dDisponible > dMejor + TOLERANCIA_UNIDADES_DISTRIBUCION) or
@@ -740,7 +911,7 @@ var
 begin
   Result := 0;
   dFalta := ACantidad;
-  sOrigen := ElegirOrigenParaTomar(ASku);
+  sOrigen := ElegirOrigenParaTomar(ASku, False);
   while EsPositiva(dFalta) and (sOrigen <> '') do
   begin
     dPaso := Min(dFalta,
@@ -748,7 +919,7 @@ begin
     SumarPendiente(sOrigen, ADestino, ASku, dPaso);
     Result := Result + dPaso;
     dFalta := dFalta - dPaso;
-    sOrigen := ElegirOrigenParaTomar(ASku);
+    sOrigen := ElegirOrigenParaTomar(ASku, False);
   end;
 end;
 
@@ -783,7 +954,6 @@ begin
     Result.Motivo := mapEsOrigen
   else
   begin
-    AsegurarAlmacen(AAlmacen);
     dDeseada := Max(ACantidad, 0);
     dSuelo := UnidadesConfirmadas(AAlmacen, ASku);
     if dDeseada < dSuelo - TOLERANCIA_UNIDADES_DISTRIBUCION then
@@ -792,12 +962,20 @@ begin
       Result.Motivo := mapSueloConfirmado;
     end;
     dActual := UnidadesEnAlmacen(AAlmacen, ASku);
-    if dDeseada > dActual + TOLERANCIA_UNIDADES_DISTRIBUCION then
+    if (dDeseada > dActual + TOLERANCIA_UNIDADES_DISTRIBUCION) and
+       not RecibeTraspasos(AAlmacen) then
+      Result.Motivo := mapNoRecibeTraspasos
+    else if dDeseada > dActual + TOLERANCIA_UNIDADES_DISTRIBUCION then
     begin
       dTomado := TomarDeOrigenes(AAlmacen, ASku, dDeseada - dActual);
       if dTomado < (dDeseada - dActual) -
          TOLERANCIA_UNIDADES_DISTRIBUCION then
-        Result.Motivo := mapSinUnidades;
+      begin
+        if HayOrigenAdmitido(ASku) then
+          Result.Motivo := mapSinExistencias
+        else
+          Result.Motivo := mapSinUnidades;
+      end;
     end
     else if dDeseada < dActual - TOLERANCIA_UNIDADES_DISTRIBUCION then
       DevolverAOrigenes(AAlmacen, ASku, dActual - dDeseada);
@@ -806,6 +984,80 @@ begin
     Result.CantidadAplicada := 0
   else
     Result.CantidadAplicada := UnidadesEnAlmacen(AAlmacen, ASku);
+end;
+
+function TDistribucionTiendas.PendienteRecibido(
+  const ADestino, ASku: string): Double;
+begin
+  Result := UnidadesEnAlmacen(ADestino, ASku) -
+    UnidadesConfirmadas(ADestino, ASku);
+  if Result < 0 then
+    Result := 0;
+end;
+
+function TDistribucionTiendas.UnidadesMovibles(
+  const AAlmacen, ASku: string): Double;
+begin
+  Result := 0;
+  if ConoceSku(ASku) then
+  begin
+    if EsOrigen(AAlmacen, ASku) then
+      Result := DisponibleEnOrigen(AAlmacen, ASku)
+    else
+      Result := PendienteRecibido(AAlmacen, ASku);
+  end;
+end;
+
+// Lo pendiente de una tienda pasa a otra conservando su origen.
+function TDistribucionTiendas.ReasignarEntreTiendas(
+  const ADesde, AHasta, ASku: string; ACantidad: Double): Double;
+var
+  Origenes: TList<string>;
+  i: Integer;
+  dPaso: Double;
+begin
+  Result := 0;
+  if FOrigenesSku.TryGetValue(Normalizar(ASku), Origenes) then
+  begin
+    for i := 0 to Origenes.Count - 1 do
+    begin
+      dPaso := Min(ACantidad - Result,
+        PendienteDe(Origenes[i], ADesde, ASku));
+      if EsPositiva(dPaso) then
+      begin
+        SumarPendiente(Origenes[i], ADesde, ASku, -dPaso);
+        SumarPendiente(Origenes[i], AHasta, ASku, dPaso);
+        Result := Result + dPaso;
+      end;
+    end;
+  end;
+end;
+
+function TDistribucionTiendas.MoverUnidades(
+  const ADesde, AHasta, ASku: string; ACantidad: Double): Double;
+begin
+  Result := 0;
+  if ConoceSku(ASku) and EsPositiva(ACantidad) and
+     not SameText(Normalizar(ADesde), Normalizar(AHasta)) then
+  begin
+    if EsOrigen(ADesde, ASku) and not EsOrigen(AHasta, ASku) then
+    begin
+      if RecibeTraspasos(AHasta) then
+        Result := Min(ACantidad, DisponibleEnOrigen(ADesde, ASku));
+      if EsPositiva(Result) then
+        SumarPendiente(ADesde, AHasta, ASku, Result);
+    end
+    else if EsOrigen(AHasta, ASku) and not EsOrigen(ADesde, ASku) then
+    begin
+      Result := Min(ACantidad, PendienteDe(AHasta, ADesde, ASku));
+      if EsPositiva(Result) then
+        SumarPendiente(AHasta, ADesde, ASku, -Result);
+    end
+    else if not EsOrigen(ADesde, ASku) and RecibeTraspasos(AHasta) then
+      Result := ReasignarEntreTiendas(ADesde, AHasta, ASku, ACantidad);
+  end;
+  if Result < 0 then
+    Result := 0;
 end;
 
 procedure TDistribucionTiendas.QuitarPendientes;
@@ -844,15 +1096,70 @@ begin
   end;
 end;
 
-function TDistribucionTiendas.HayOrigenExcedido: Boolean;
-var
-  dRestante: Double;
+// Unidades pendientes que sobran en un origen: las que ya no cubren sus
+// existencias (se vendieron después de repartir).
+function TDistribucionTiendas.ExcesoEnOrigen(
+  const AOrigen, ASku: string): Double;
 begin
-  Result := False;
-  for dRestante in FRestanteOrigen.Values do
+  Result := -StockProyectado(AOrigen, ASku);
+  if Result < 0 then
+    Result := 0;
+end;
+
+function TDistribucionTiendas.DestinoConMasPendiente(
+  const AOrigen, ASku: string): string;
+var
+  i: Integer;
+  dMayor: Double;
+begin
+  Result := '';
+  dMayor := 0;
+  for i := 0 to FAsignaciones.Count - 1 do
   begin
-    if dRestante < -TOLERANCIA_UNIDADES_DISTRIBUCION then
-      Result := True;
+    if SameText(Normalizar(FAsignaciones[i].AlmacenOrigen),
+         Normalizar(AOrigen)) and
+       SameText(Normalizar(FAsignaciones[i].CodigoSku),
+         Normalizar(ASku)) and
+       (FAsignaciones[i].CantidadPendiente >
+        dMayor + TOLERANCIA_UNIDADES_DISTRIBUCION) then
+    begin
+      Result := FAsignaciones[i].AlmacenDestino;
+      dMayor := FAsignaciones[i].CantidadPendiente;
+    end;
+  end;
+end;
+
+// Si el documento se rebajó o el origen vendió unidades después de guardar
+// el reparto, lo pendiente ya no cabe: se retira, unidad a unidad, de la
+// tienda que más lleva. Lo confirmado es historia y no se toca.
+function TDistribucionTiendas.RecortarPendientesExcedidos: Double;
+var
+  Origenes: TList<string>;
+  i, j: Integer;
+  sDestino: string;
+  dPaso: Double;
+begin
+  Result := 0;
+  for i := 0 to FSkus.Count - 1 do
+  begin
+    Origenes := FOrigenesSku[Normalizar(FSkus[i].CodigoSku)];
+    for j := 0 to Origenes.Count - 1 do
+    begin
+      sDestino := DestinoConMasPendiente(Origenes[j], FSkus[i].CodigoSku);
+      while EsPositiva(ExcesoEnOrigen(Origenes[j], FSkus[i].CodigoSku)) and
+            (sDestino <> '') do
+      begin
+        dPaso := Min(
+          ExcesoEnOrigen(Origenes[j], FSkus[i].CodigoSku),
+          Min(PASO_UNIDAD,
+            PendienteDe(Origenes[j], sDestino, FSkus[i].CodigoSku)));
+        SumarPendiente(
+          Origenes[j], sDestino, FSkus[i].CodigoSku, -dPaso);
+        Result := Result + dPaso;
+        sDestino := DestinoConMasPendiente(
+          Origenes[j], FSkus[i].CodigoSku);
+      end;
+    end;
   end;
 end;
 
@@ -871,7 +1178,7 @@ function TDistribucionTiendas.DestinoAdmitido(
 var
   i: Integer;
 begin
-  Result := not EsOrigen(AAlmacen, ASku);
+  Result := not EsOrigen(AAlmacen, ASku) and RecibeTraspasos(AAlmacen);
   if Result and (Length(AParametros.Destinos) > 0) then
   begin
     Result := False;
@@ -902,17 +1209,169 @@ begin
     Result := 0;
 end;
 
+function TDistribucionTiendas.PrioridadEfectiva(
+  AIndiceAlmacen: Integer): Integer;
+begin
+  Result := FAlmacenes[AIndiceAlmacen].Prioridad;
+  if Result <= 0 then
+    Result := MaxInt;
+end;
+
+procedure TDistribucionTiendas.FijarPrioridad(
+  const AAlmacen: string; APrioridad: Integer);
+var
+  iIndice: Integer;
+  Almacen: TAlmacenDistribucion;
+begin
+  iIndice := OrdenDeAlmacen(AAlmacen);
+  if iIndice < FAlmacenes.Count then
+  begin
+    Almacen := FAlmacenes[iIndice];
+    if Almacen.AdmiteDestino then
+      Almacen.Prioridad := Max(APrioridad, 0)
+    else
+      Almacen.Prioridad := 0;
+    FAlmacenes[iIndice] := Almacen;
+  end;
+end;
+
+function TDistribucionTiendas.RecibeTraspasos(
+  const AAlmacen: string): Boolean;
+var
+  iIndice: Integer;
+begin
+  iIndice := OrdenDeAlmacen(AAlmacen);
+  Result := (iIndice < FAlmacenes.Count) and
+    FAlmacenes[iIndice].AdmiteDestino and
+    (FAlmacenes[iIndice].Prioridad > 0);
+end;
+
+function TDistribucionTiendas.HayDestinos: Boolean;
+var
+  i: Integer;
+begin
+  Result := False;
+  for i := 0 to FAlmacenes.Count - 1 do
+  begin
+    if RecibeTraspasos(FAlmacenes[i].Codigo) then
+      Result := True;
+  end;
+end;
+
+function TDistribucionTiendas.AlmacenesDestinoPosible:
+  TAlmacenesDistribucion;
+var
+  Lista: TList<TAlmacenDistribucion>;
+  i: Integer;
+begin
+  Lista := TList<TAlmacenDistribucion>.Create;
+  try
+    for i := 0 to FAlmacenes.Count - 1 do
+    begin
+      if FAlmacenes[i].AdmiteDestino then
+        Lista.Add(FAlmacenes[i]);
+    end;
+    Result := Lista.ToArray;
+  finally
+    FreeAndNil(Lista);
+  end;
+end;
+
+function TDistribucionTiendas.AlmacenesQueReciben:
+  TAlmacenesDistribucion;
+var
+  Lista: TList<TAlmacenDistribucion>;
+  i: Integer;
+begin
+  Lista := TList<TAlmacenDistribucion>.Create;
+  try
+    for i := 0 to FAlmacenes.Count - 1 do
+    begin
+      if RecibeTraspasos(FAlmacenes[i].Codigo) then
+        Lista.Add(FAlmacenes[i]);
+    end;
+    Lista.Sort(TComparer<TAlmacenDistribucion>.Construct(
+      function(const AIzquierda,
+        ADerecha: TAlmacenDistribucion): Integer
+      begin
+        Result := CompareValue(AIzquierda.Prioridad, ADerecha.Prioridad);
+        if Result = 0 then
+          Result := CompareValue(
+            OrdenDeAlmacen(AIzquierda.Codigo),
+            OrdenDeAlmacen(ADerecha.Codigo));
+      end));
+    Result := Lista.ToArray;
+  finally
+    FreeAndNil(Lista);
+  end;
+end;
+
+function TDistribucionTiendas.RefrescarStocks(
+  const ASkus: TArray<string>;
+  const AStocks: TStocksDistribucion): Double;
+var
+  Claves: TArray<string>;
+  i, j: Integer;
+begin
+  if Length(ASkus) = 0 then
+    FStock.Clear
+  else
+  begin
+    Claves := FStock.Keys.ToArray;
+    for i := 0 to High(Claves) do
+    begin
+      for j := 0 to High(ASkus) do
+      begin
+        if Claves[i].EndsWith(SEPARADOR_CLAVE + Normalizar(ASkus[j])) then
+          FStock.Remove(Claves[i]);
+      end;
+    end;
+  end;
+  CargarStocks(AStocks);
+  Result := RecortarPendientesExcedidos;
+end;
+
+function TDistribucionTiendas.AlmacenesDelCuadrante:
+  TAlmacenesDistribucion;
+var
+  Lista: TList<TAlmacenDistribucion>;
+  i, j: Integer;
+  bVisible: Boolean;
+begin
+  Lista := TList<TAlmacenDistribucion>.Create;
+  try
+    for i := 0 to FAlmacenes.Count - 1 do
+    begin
+      bVisible := RecibeTraspasos(FAlmacenes[i].Codigo);
+      for j := 0 to FSkus.Count - 1 do
+      begin
+        if EsOrigen(FAlmacenes[i].Codigo, FSkus[j].CodigoSku) or
+           EsPositiva(UnidadesEnAlmacen(
+             FAlmacenes[i].Codigo, FSkus[j].CodigoSku)) then
+          bVisible := True;
+      end;
+      if bVisible then
+        Lista.Add(FAlmacenes[i]);
+    end;
+    Result := Lista.ToArray;
+  finally
+    FreeAndNil(Lista);
+  end;
+end;
+
 // Por orden: la tienda que menos lleva asignado (ronda). Por menor stock:
-// la que menos tendría contando lo asignado. A igualdad, la primera.
+// la que menos tendría contando lo asignado. A igualdad, la de mayor
+// prioridad (número más bajo) y, después, la primera del catálogo.
 function TDistribucionTiendas.ElegirDestinoAutomatico(
   const AParametros: TParametrosRepartoAutomatico;
   const ASku: string): string;
 var
-  i: Integer;
+  i, iMejor: Integer;
   dMejor, dValor: Double;
 begin
   Result := '';
   dMejor := 0;
+  iMejor := -1;
   for i := 0 to FAlmacenes.Count - 1 do
   begin
     if DestinoAdmitido(AParametros, FAlmacenes[i].Codigo, ASku) and
@@ -922,11 +1381,14 @@ begin
       dValor := UnidadesEnAlmacen(FAlmacenes[i].Codigo, ASku);
       if AParametros.Criterio = craMenorStock then
         dValor := dValor + Stock(FAlmacenes[i].Codigo, ASku);
-      if (Result = '') or
-         (dValor < dMejor - TOLERANCIA_UNIDADES_DISTRIBUCION) then
+      if (iMejor < 0) or
+         (dValor < dMejor - TOLERANCIA_UNIDADES_DISTRIBUCION) or
+         (SameValue(dValor, dMejor, TOLERANCIA_UNIDADES_DISTRIBUCION) and
+          (PrioridadEfectiva(i) < PrioridadEfectiva(iMejor))) then
       begin
         Result := FAlmacenes[i].Codigo;
         dMejor := dValor;
+        iMejor := i;
       end;
     end;
   end;
@@ -940,15 +1402,15 @@ var
   dPaso: Double;
 begin
   Result := 0;
-  sOrigen := ElegirOrigenParaTomar(ASku);
+  sOrigen := ElegirOrigenParaTomar(ASku, True);
   sDestino := ElegirDestinoAutomatico(AParametros, ASku);
   while (sOrigen <> '') and (sDestino <> '') do
   begin
-    dPaso := Min(PASO_UNIDAD, DisponibleEnOrigen(sOrigen, ASku));
+    dPaso := Min(PASO_UNIDAD, DisponibleAutomatico(sOrigen, ASku));
     dPaso := Min(dPaso, HuecoEnDestino(AParametros, sDestino, ASku));
     SumarPendiente(sOrigen, sDestino, ASku, dPaso);
     Result := Result + dPaso;
-    sOrigen := ElegirOrigenParaTomar(ASku);
+    sOrigen := ElegirOrigenParaTomar(ASku, True);
     sDestino := ElegirDestinoAutomatico(AParametros, ASku);
   end;
 end;

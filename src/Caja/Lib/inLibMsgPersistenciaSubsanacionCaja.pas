@@ -26,11 +26,19 @@ resourcestring
     'El ticket debe tener un registro aceptado en VeriFactu y no tener ' +
     'envíos o anulaciones pendientes.';
   SSubsanacionOperacionCompleja =
-    'Esta subsanación admite ventas simples sin depósitos, devoluciones, ' +
-    'vales, deuda ni recibos asociados.';
-  SSubsanacionPagoUnico =
-    'Esta subsanación requiere cobros en euros, sin divisas, ' +
-    'criptomonedas, vales ni deuda.';
+    'Esta subsanación admite ventas, también de depósitos y con vales, ' +
+    'pero no devoluciones, cancelaciones de depósito, recibos ni ' +
+    'facturas relacionadas.';
+  SSubsanacionPagoUnico = 'La operación no tiene cobros registrados.';
+  SSubsanacionValesFijos =
+    'Los vales y la deuda del ticket no se pueden modificar: conserve ' +
+    'los mismos importes y códigos.';
+  SSubsanacionLineaFija =
+    'La línea %s es un abono a cuenta o un anticipo que deja deuda y no ' +
+    'se puede corregir.';
+  SSubsanacionPrendaBajoAnticipo =
+    'La línea %s es una prenda de depósito: su importe no puede ser ' +
+    'inferior al anticipo ya entregado (%s).';
   SSubsanacionPagosInvalidos =
     'Indique cobros positivos, con dos decimales como máximo, que sumen ' +
     'el total corregido del ticket.';
@@ -50,7 +58,8 @@ resourcestring
   SSubsanacionMotivoObligatorio =
     'Indique el motivo de la subsanación, con un máximo de 500 caracteres.';
   SSubsanacionMedioInvalido =
-    'Seleccione una forma de pago activa en euros, sin vales ni deuda.';
+    'Seleccione una forma de pago activa; los vales y la deuda no se ' +
+    'pueden añadir en una subsanación.';
   SSubsanacionReferenciaInvalida =
     'La forma de pago requiere referencia o supera los 100 caracteres.';
   SSubsanacionSinCambios =

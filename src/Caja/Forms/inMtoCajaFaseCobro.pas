@@ -211,6 +211,7 @@ type
     FHayLineasDeposito: Boolean;
     FModoSubsanacion: Boolean;
     FPagosSubsanacion: TPagosSubsanacionCaja;
+    FPagosFijosSubsanacion: TPagosSubsanacionCaja;
     procedure PrepararModoSubsanacion;
     function ValidarCobroSubsanacion: Boolean;
     function ValidaryConfirmar:boolean;
@@ -249,8 +250,10 @@ type
     property EmailEnvio: string read FEmailEnvio;
     procedure Configurar(const AEntrada: TEntradaFaseCobro);
     // Subsanación: sólo forma de pago y descuento global, con los cobros
-    // vigentes precargados y sin emitir documento.
-    procedure ConfigurarSubsanacion(const APagos: TPagosSubsanacionCaja);
+    // vigentes precargados y sin emitir documento. Los vales y la deuda se
+    // conservan; con líneas fijas (depósitos) no hay descuento global.
+    procedure ConfigurarSubsanacion(const APagos: TPagosSubsanacionCaja;
+      AHayLineasFijas: Boolean);
     function PagosSubsanacion: TPagosSubsanacionCaja;
     function ObtenerResultado: TResultadoFaseCobro;
     procedure CargarDatosDesdeFactura(TotalesFactura: TFacturaTotales);
@@ -304,10 +307,19 @@ begin
 end;
 
 procedure TfrmMtoCajaFaseCobro.ConfigurarSubsanacion(
-  const APagos: TPagosSubsanacionCaja);
+  const APagos: TPagosSubsanacionCaja; AHayLineasFijas: Boolean);
+var
+  oPago: TPagoSubsanacionCaja;
 begin
   FModoSubsanacion := True;
-  FPagosSubsanacion := Copy(APagos);
+  FPagosSubsanacion := nil;
+  FPagosFijosSubsanacion := nil;
+  for oPago in APagos do
+    if MatchText(Trim(oPago.FormaPago), ['VALE', 'DEUDA']) then
+      FPagosFijosSubsanacion := FPagosFijosSubsanacion + [oPago]
+    else
+      FPagosSubsanacion := FPagosSubsanacion + [oPago];
+  FHayLineasDeposito := FHayLineasDeposito or AHayLineasFijas;
 end;
 
 procedure TfrmMtoCajaFaseCobro.PrepararModoSubsanacion;
@@ -315,7 +327,7 @@ var
   oControl: TControl;
   oPago: TPagoSubsanacionCaja;
   sCodigo: string;
-  dRestante, dImporte: Currency;
+  dRestante, dImporte, dVales: Currency;
   i: Integer;
 begin
   Caption := SSubsanacionTituloCobro;
@@ -328,22 +340,24 @@ begin
   btnSinTicket.Caption := SSubsanacionBotonSinTicket;
   FMemTablePagos.DisableControls;
   try
-    // Sólo medios simples en euros, como admite la subsanación.
+    // Cualquier forma de pago (divisas, criptomonedas y bonos incluidos)
+    // salvo vales y deuda: los del ticket se conservan y no se añaden.
     FMemTablePagos.First;
     while not FMemTablePagos.Eof do
     begin
       sCodigo := FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
-      if (FMemTablePagos.FieldByName('ESDIVISA_FORMA_PAGO_CFP').AsString =
-          'S') or
-         (FMemTablePagos.FieldByName('ESCRIPTO_FORMA_PAGO_CFP').AsString =
-          'S') or MatchText(sCodigo, ['VALE', 'BONO', 'DEUDA']) then
+      if MatchText(sCodigo, ['VALE', 'DEUDA']) then
         FMemTablePagos.Delete
       else
         FMemTablePagos.Next;
     end;
+    dVales := 0;
+    for oPago in FPagosFijosSubsanacion do
+      dVales := dVales + oPago.Importe;
+    FDatosCobro.EstablecerValesFijos(dVales);
     // Los cobros vigentes se precargan hasta el total corregido: si bajó,
     // se recortan en orden; si subió, la diferencia va al último.
-    dRestante := FDatosCobro.ImporteTotalPagar;
+    dRestante := FDatosCobro.ImporteTotalPagar - dVales;
     for i := 0 to High(FPagosSubsanacion) do
     begin
       oPago := FPagosSubsanacion[i];
@@ -361,6 +375,23 @@ begin
         if Trim(oPago.Referencia) <> '' then
           FMemTablePagos.FieldByName('REFERENCIA').AsString :=
             oPago.Referencia;
+        // Divisa o cripto: se conserva la moneda y el importe entregado en
+        // ella, en proporción si el cobro en euros se ha recortado.
+        if Trim(oPago.CodigoDivisa) <> '' then
+          FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString :=
+            oPago.CodigoDivisa;
+        FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString :=
+          oPago.RedBlockchain;
+        if oPago.FactorCambio > 0 then
+          FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsFloat :=
+            oPago.FactorCambio;
+        if (oPago.ImporteDivisa <> 0) and (oPago.Importe <> 0) then
+        begin
+          FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat :=
+            FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat +
+            oPago.ImporteDivisa * (dImporte / oPago.Importe);
+          FMemTablePagos.FieldByName('ESIMPORTE_DIVISA').AsString := 'N';
+        end;
         FMemTablePagos.Post;
       end;
     end;
@@ -372,11 +403,13 @@ end;
 
 function TfrmMtoCajaFaseCobro.ValidarCobroSubsanacion: Boolean;
 begin
+  // Los vales del ticket ya están en ImporteValeRecogido; no se admiten
+  // vales nuevos (ni el que se emitiría por exceso) ni dejar a cuenta.
   Result := (Abs(FDatosCobro.ImportePendiente) < 0.01) and
     (Abs(FDatosCobro.ImporteCambio) < 0.01) and
-    (FDatosCobro.ImporteValeRecogido = 0) and
     (FDatosCobro.ImporteValeEmitido = 0) and
-    (FDatosCobro.ImporteDejarCuenta = 0);
+    (FDatosCobro.ImporteDejarCuenta = 0) and
+    (FDatosCobro.ValesRecogidos.Count = 0);
   if not Result then
     MessageDlg_fza(SSubsanacionCobroExacto, mtError, [mbOK], 0);
 end;
@@ -385,12 +418,14 @@ function TfrmMtoCajaFaseCobro.PagosSubsanacion: TPagosSubsanacionCaja;
 var
   oPago: TPagoSubsanacionCaja;
 begin
-  Result := nil;
+  // Vales y deuda del ticket, tal cual, y los cobros de la rejilla.
+  Result := Copy(FPagosFijosSubsanacion);
   FMemTablePagos.DisableControls;
   try
     FMemTablePagos.First;
     while not FMemTablePagos.Eof do
     begin
+      oPago := Default(TPagoSubsanacionCaja);
       oPago.FormaPago :=
         FMemTablePagos.FieldByName('CODIGO_FP_CFP').AsString;
       oPago.Referencia := Trim(
@@ -398,6 +433,14 @@ begin
       oPago.Importe := SimpleRoundTo(
         FMemTablePagos.FieldByName('IMPORTE_ENTREGADO').AsFloat -
         FMemTablePagos.FieldByName('IMPORTE_CAMBIO').AsCurrency, -2);
+      oPago.CodigoDivisa :=
+        FMemTablePagos.FieldByName('CODIGO_DIVISA').AsString;
+      oPago.RedBlockchain :=
+        FMemTablePagos.FieldByName('RED_BLOCKCHAIN').AsString;
+      oPago.FactorCambio :=
+        FMemTablePagos.FieldByName('FACTOR_CAMBIO').AsFloat;
+      oPago.ImporteDivisa :=
+        FMemTablePagos.FieldByName('IMPORTE_DIVISA').AsFloat;
       if oPago.Importe <> 0 then
         Result := Result + [oPago];
       FMemTablePagos.Next;

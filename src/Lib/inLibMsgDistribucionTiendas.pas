@@ -54,15 +54,30 @@ resourcestring
   SCaptionColNombreAlmacenDistribucion = 'Nombre';
   SCaptionColTotalDistribucion = 'Total';
   SCaptionColSinTallaDistribucion = 'Uds.';
+  SCaptionColTallaDistribucion = 'Talla';
+  SCaptionGuardarCerrarDistribucion = 'Guardar y cerrar (F12)';
+  SCaptionCerrarDistribucion = '&Cerrar (ESC)';
+  STextoFilaPorRepartirDistribucion = 'Por repartir del documento';
   SAvisoDistribucionSinUnidades =
-    'No quedaban unidades suficientes: se han asignado %s.';
+    'El origen fijado no tiene esa talla: se han asignado %s.';
+  SAvisoDistribucionSinExistencias =
+    'No hay más existencias en el origen (%s; mínimo en origen %s): se ' +
+    'han asignado %s.';
+  SFormatoExistenciasOrigenDistribucion = '%s tiene %s y ya salen %s';
+  SAvisoDistribucionRecortada =
+    'Las existencias del origen ya no cubrían todo el reparto ' +
+    'pendiente: se han retirado %s unidades. Revise el reparto y ' +
+    'guárdelo.';
+  SAvisoDistribucionNadaQueArrastrar =
+    'Esa celda no tiene unidades que se puedan mover.';
+  SAvisoDistribucionArrastreNoValido =
+    'No se ha movido nada: compruebe el origen, su mínimo y sus ' +
+    'existencias.';
+  SInfoDistribucionArrastrado = '%s unidades de %s a %s.';
   SAvisoDistribucionSueloConfirmado =
     'Esa tienda ya tiene %s unidades traspasadas: no se puede bajar de ahí.';
   SAvisoDistribucionEsOrigen =
     'Ese almacén es origen de la talla: muestra lo que le queda.';
-  SAvisoDistribucionOrigenExcedido =
-    'El documento tiene ahora menos unidades de las que ya se habían ' +
-    'repartido. Las celdas en negativo indican dónde sobra reparto.';
   SInfoDistribucionSinLineas =
     'El documento de trabajo no tiene unidades con talla y almacén para ' +
     'repartir.';
@@ -77,6 +92,29 @@ resourcestring
     'Hay cambios sin guardar en el reparto. ¿Desea guardarlos?';
   SPreguntaVaciarDistribucion =
     '¿Desea quitar todo el reparto pendiente? Lo ya confirmado se conserva.';
+  SCaptionColPrioridadDistribucion = 'Prioridad';
+  STextoOrigenCuadranteDistribucion = 'ORIGEN';
+  SAvisoDistribucionNoRecibeTraspasos =
+    'El almacén %s no recibe traspasos desde la distribución: no tiene ' +
+    'número de prioridad. Asígneselo en Prioridades.';
+  SAvisoDistribucionStockRefrescado =
+    'Las existencias del origen han bajado: se han retirado %s unidades ' +
+    'del reparto pendiente. Revíselo y guárdelo.';
+  SPreguntaDistribucionSinDestinos =
+    'Ningún almacén tiene número de prioridad, así que ninguno puede ' +
+    'recibir traspasos desde la distribución. ¿Desea asignar ahora las ' +
+    'prioridades?';
+
+  // --- Prioridades de los almacenes ----------------------------------------
+  STituloPrioridadesDistribucion = 'Prioridades de distribución';
+  STextoAyudaPrioridadesDistribucion =
+    'El 1 se repone primero; dos tiendas pueden compartir número. Un ' +
+    'almacén sin número (o con 0) no recibe traspasos desde la ' +
+    'distribución: déjelo así en el almacén central. Los almacenes de ' +
+    'taras, depósito o tránsito nunca son destino y no aparecen aquí.';
+  SInfoPrioridadesDistribucionSinAlmacenes =
+    'No hay almacenes activos de uso estándar a los que dar prioridad.';
+  SFormatoDestinoRepartoAutomatico = '%d · %s';
 
   // --- Propuestas -----------------------------------------------------------
   SCaptionColNumeroPropuesta = 'Propuesta';
@@ -88,13 +126,16 @@ resourcestring
   SCaptionColEstadoPropuesta = 'Estado';
   SCaptionColTraspasoPropuesta = 'Traspaso';
   SCaptionColOperacionPropuesta = 'Operación';
+  SCaptionColMotivoPropuesta = 'Motivo';
+  SCaptionColResolucionPropuesta = 'Resuelta';
   STextoEstadoPropuestaPendiente = 'Pendiente';
-  STextoEstadoPropuestaConfirmada = 'Confirmada';
+  STextoEstadoPropuestaTrasladada = 'Trasladado';
+  STextoEstadoPropuestaNoAceptada = 'No aceptado';
   SFormatoTraspasoPropuesta = '%s %s/%s';
   SInfoSeleccionarPropuesta =
     'Seleccione una propuesta de traspaso.';
-  SInfoPropuestaYaConfirmada =
-    'La propuesta %d ya está confirmada.';
+  SInfoPropuestaYaNoPendiente =
+    'La propuesta %d ya no está pendiente.';
   SPreguntaConfirmarPropuesta =
     'Se va a traspasar la propuesta %d: %s unidades de %s a %s. ' +
     'El traspaso mueve el stock y no se puede deshacer desde aquí. ' +
@@ -111,6 +152,14 @@ resourcestring
     'La propuesta %d no se ha podido confirmar: %s';
   SPreguntaEliminarPropuesta =
     '¿Desea eliminar la propuesta pendiente %d?';
+  STituloNoAceptarPropuesta = 'No aceptar la propuesta %d';
+  SPreguntaMotivoNoAceptarPropuesta = 'Motivo';
+  SInfoPropuestaNoAceptada =
+    'La propuesta %d queda como no aceptada: sus unidades vuelven a ' +
+    'estar por repartir.';
+  SCaptionNoAceptarPropuesta = 'No aceptar';
+  SCaptionCargarPropuestaEnTraspaso = 'Cargar en el traspaso';
+  SCaptionSalirSeleccionPropuesta = 'Salir (ESC)';
   SInfoNoHayPropuestasPendientes =
     'No hay propuestas pendientes.';
   SInfoNoHayPropuestasPendientesOrigen =
@@ -129,16 +178,49 @@ resourcestring
   SErrorAlbaranCompraSinLineasDistribuir =
     'El albarán de compra no tiene líneas con artículo y cantidad que ' +
     'distribuir.';
+  SCaptionDistribuirAlbaranCompra = 'Distribuir';
+  SPreguntaAlbaranCompraYaDistribuido =
+    'El albarán %s/%s ya tiene una distribución: el documento de trabajo ' +
+    '%d. ¿Desea abrirla? Si responde No se creará otro documento de ' +
+    'trabajo con las líneas del albarán.';
   STituloElegirDocumentoDistribucion =
     'Documento de trabajo que se va a distribuir';
 
+  // --- Pantalla del historial ------------------------------------------------
+  STituloHistorialDistribucionTiendas = 'Distribuir entre tiendas';
+  SCaptionDocumentoDistribucion = 'Documento de trabajo';
+  SCaptionDistribuirDocumento = 'Distribuir...';
+  SCaptionAbrirDistribucion = 'Abrir distribución';
+  SCaptionImprimirPropuesta = 'Imprimir';
+  SCaptionPrioridadesDistribucion = 'Prioridades...';
+  SCaptionRefrescarHistorialDistribucion = 'Refrescar';
+  SCaptionColUsuarioPropuesta = 'Usuario';
+  SCaptionColUsuarioResolucionPropuesta = 'Resuelta por';
+  STextoAyudaHistorialDistribucion =
+    'Elija un documento de trabajo y pulse Distribuir para repartirlo ' +
+    'entre las tiendas. Debajo, el historial de las propuestas de ' +
+    'traspaso y su estado: pendiente, trasladado o no aceptado.';
+  SInfoElegirDocumentoDistribucion =
+    'Elija el documento de trabajo que quiere distribuir.';
+  SErrorMotivoNoAceptarObligatorio =
+    'Indique el motivo por el que no se acepta la propuesta.';
+
   // --- Reparto automático ---------------------------------------------------
   STituloRepartoAutomatico = 'Reparto automático';
+  SErrorRepartoAutomaticoSinDestinos =
+    'Marque al menos una tienda para el reparto automático.';
   SCaptionCriterioOrdenAlmacen = 'En ronda, por orden de almacén';
   SCaptionCriterioMenorStock = 'Primero la tienda con menos existencias';
+  SAyudaRepartoAutomatico =
+    'Reparte lo recibido que queda por repartir. Se añade a lo ya ' +
+    'repartido y respeta el origen fijado y el mínimo en origen.';
 
   // --- Informe --------------------------------------------------------------
   STituloInformePropuestaTraspaso = 'Propuesta de traspaso';
+  STituloImprimirPropuestasTraspaso = 'Imprimir propuestas de traspaso';
+  STextoImprimirPropuestasTraspaso =
+    'Una hoja por cada origen y destino, con los artículos por color y ' +
+    'sus tallas.';
   SFormatoNumeroInformePropuesta = 'Propuesta nº %d';
   SFormatoOrigenInformePropuesta = 'Origen: %s';
   SFormatoDestinoInformePropuesta = 'Destino: %s';

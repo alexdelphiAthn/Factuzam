@@ -97,6 +97,21 @@ const
     'LEFT JOIN fza_atributos_conjuntos ac ON ac.ID_AC = aca.ID_AC_ACA ' +
     'WHERE aca.CODIGO_ART_ACA = :Articulo ' +
     'AND aca.ID_VA_ACA = :Atributo';
+  SQL_LISTAR_CONJUNTOS =
+    'SELECT ID_AC, NOMBRE_AC FROM fza_atributos_conjuntos ' +
+    'WHERE ID_VA_AC = :Atributo AND ESACTIVO_AC = ''S'' ' +
+    'ORDER BY NOMBRE_AC';
+  // La fila existe siempre: PrepararDatos la asegura con ID_AC_ACA = 0.
+  SQL_ASIGNAR_CONJUNTO =
+    'UPDATE fza_articulos_conjuntos_asign ' +
+    'SET ID_AC_ACA = :Conj, USUARIO_MODIF = ''SISTEMA'' ' +
+    'WHERE CODIGO_ART_ACA = :Articulo AND ID_VA_ACA = :Atributo';
+  SQL_VALORES_CONJUNTO =
+    'SELECT val.ID_AV, val.AV, ' +
+    'COALESCE(det.ORDEN_ACD, val.ORDEN_AV) AS ORDEN ' +
+    'FROM fza_atributos_conjuntos_det det ' +
+    'JOIN fza_atributos_valores val ON val.ID_AV = det.ID_AV_ACD ' +
+    'WHERE det.ID_AC_ACD = :Conj ORDER BY ORDEN, val.AV';
   SQL_SIGUIENTE_ORDEN_CONJUNTO =
     'SELECT (FLOOR(COALESCE(MAX(ORDEN_ACD), 0) / 10) + 1) * 10 ' +
     'AS SIGUIENTE_ORDEN FROM fza_atributos_conjuntos_det ' +
@@ -191,6 +206,13 @@ type
       const ACodigoArticulo: string;
       const AIdAtributo: string
     ): TConjuntoAtributoSku;
+    function ListarConjuntosAtributo(
+      const AIdAtributo: string): TArray<TConjuntoAtributoSku>;
+    procedure AsignarConjuntoArticulo(
+      const ACodigoArticulo, AIdAtributo: string;
+      AIdConjunto: Integer);
+    function ListarValoresConjunto(
+      AIdConjunto: Integer): TArray<TValorConjuntoSku>;
     function CalcularSiguienteOrdenValor(
       const AIdAtributo: string;
       AIdConjunto: Integer
@@ -335,6 +357,66 @@ begin
     begin
       Result.Id := oConsulta.FieldByName('ID_AC_ACA').AsInteger;
       Result.Nombre := oConsulta.FieldByName('NOMBRE_AC').AsString;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioGeneracionSkusUniDAC.ListarConjuntosAtributo(
+  const AIdAtributo: string): TArray<TConjuntoAtributoSku>;
+var
+  oConsulta: TUniQuery;
+  oConjunto: TConjuntoAtributoSku;
+begin
+  Result := nil;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_LISTAR_CONJUNTOS;
+    oConsulta.ParamByName('Atributo').AsString := AIdAtributo;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      oConjunto.Id := oConsulta.FieldByName('ID_AC').AsInteger;
+      oConjunto.Nombre := oConsulta.FieldByName('NOMBRE_AC').AsString;
+      Result := Result + [oConjunto];
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TRepositorioGeneracionSkusUniDAC.AsignarConjuntoArticulo(
+  const ACodigoArticulo, AIdAtributo: string;
+  AIdConjunto: Integer);
+begin
+  FConexion.ExecSQL(
+    SQL_ASIGNAR_CONJUNTO,
+    [AIdConjunto, ACodigoArticulo, AIdAtributo]);
+end;
+
+function TRepositorioGeneracionSkusUniDAC.ListarValoresConjunto(
+  AIdConjunto: Integer): TArray<TValorConjuntoSku>;
+var
+  oConsulta: TUniQuery;
+  oValor: TValorConjuntoSku;
+begin
+  Result := nil;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_VALORES_CONJUNTO;
+    oConsulta.ParamByName('Conj').AsInteger := AIdConjunto;
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      oValor.Id := oConsulta.FieldByName('ID_AV').AsInteger;
+      oValor.Nombre := oConsulta.FieldByName('AV').AsString;
+      oValor.Orden := oConsulta.FieldByName('ORDEN').AsInteger;
+      Result := Result + [oValor];
+      oConsulta.Next;
     end;
   finally
     FreeAndNil(oConsulta);

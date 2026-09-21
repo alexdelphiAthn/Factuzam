@@ -954,8 +954,11 @@ begin
   Result.AplicarFechaAlta := chkAplicarFechaAlta.Checked;
   Result.FiltrarVentas := chkConVenta.Checked;
   Result.ConVentas := rgConSinVenta.ItemIndex = 0;
+  // Sin almacenes de ventas marcados no hay destino con el que comparar el
+  // stock: el filtro no se aplica en lugar de exigir que se marque uno.
   Result.FiltrarStockAlmacenVenta :=
-    chkFiltrarStockAlmacenVenta.Checked;
+    chkFiltrarStockAlmacenVenta.Checked and
+    (Length(RecogerCodigosAlmacenesVentasSeleccionados) > 0);
   Result.FechaAltaDesde := dtAltaDesde.Date;
   Result.FechaAltaHasta := dtAltaHasta.Date;
   Result.VentaDesde := dtVtaDesde.Date;
@@ -1007,8 +1010,7 @@ begin
     ShowMessage_fza(SErrorAlmacenesSoloStockAddBlock);
     pcFiltros.ActivePage := tsAlmacenes;
   end
-  else if chkLstAlmacenesVentas.Visible and
-          (chkConVenta.Checked or chkFiltrarStockAlmacenVenta.Checked) and
+  else if chkLstAlmacenesVentas.Visible and chkConVenta.Checked and
           (Length(RecogerCodigosAlmacenesVentasSeleccionados) = 0) then
   begin
     ShowMessage_fza(SErrorAlmacenesVentasAddBlock);

@@ -1384,6 +1384,15 @@
       TabOrder = 4
       OnClick = btnPegatinasClick
     end
+    object btnDistribuir: TcxButton
+      Left = 0
+      Top = 154
+      Width = 137
+      Height = 43
+      Caption = 'Distribuir'
+      TabOrder = 5
+      OnClick = btnDistribuirClick
+    end
   end
   inherited pmFiltros: TPopupMenu
     Left = 552

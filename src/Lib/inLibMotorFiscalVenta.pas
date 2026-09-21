@@ -50,6 +50,9 @@ type
     ImporteIva: Double;
     PorcentajeRecargo: Double;
     ImporteRecargo: Double;
+    // Líneas con impuestos incluidos: se desglosan al cerrar el tipo.
+    TotalConIvaIncluido: Double;
+    BaseLineasIvaIncluido: Double;
   end;
 
   TResultadoMotorFiscalVenta = record
@@ -118,7 +121,15 @@ begin
     ALinea.TotalConIva, AConfiguracion.RedondearPorLinea);
   if ALinea.ImpuestosIncluidos and
      AConfiguracion.CalcularIvaIncluidoPorDiferencia then
-    ImporteIva := TotalConIva - Base
+  begin
+    // La cuota sale de desglosar el total del tipo (DesglosarIvaIncluido);
+    // restar línea a línea bases ya redondeadas descuadra base x tipo.
+    ImporteIva := 0;
+    AResultado.TotalConIvaIncluido :=
+      AResultado.TotalConIvaIncluido + TotalConIva;
+    AResultado.BaseLineasIvaIncluido :=
+      AResultado.BaseLineasIvaIncluido + Base;
+  end
   else
     ImporteIva := Base * ALinea.PorcentajeIva / 100;
   ImporteIva := RedondearImporteMotor(
@@ -166,6 +177,31 @@ begin
     AResultado.TieneImportesNegativos := True;
 end;
 
+procedure DesglosarIvaIncluido(
+  var AResultado: TResultadoTipoIvaVenta;
+  const AConfiguracion: TConfiguracionMotorFiscalVenta);
+var
+  Base: Double;
+begin
+  if (AResultado.TotalConIvaIncluido <> 0) or
+     (AResultado.BaseLineasIvaIncluido <> 0) then
+  begin
+    // 4.600,00 al 21 %: base 3.801,65 y cuota 798,35 (no 3.801,66 +
+    // 798,34 sumando las bases redondeadas de cada línea).
+    Base := RedondearImporteMotor(
+      AResultado.TotalConIvaIncluido /
+        (1 + AResultado.PorcentajeIva / 100),
+      AConfiguracion.RedondearPorLinea);
+    AResultado.Base :=
+      AResultado.Base - AResultado.BaseLineasIvaIncluido + Base;
+    AResultado.ImporteIva :=
+      AResultado.ImporteIva +
+      RedondearImporteMotor(
+        AResultado.TotalConIvaIncluido - Base,
+        AConfiguracion.RedondearPorLinea);
+  end;
+end;
+
 procedure CalcularResumen(
   var AResultado: TResultadoMotorFiscalVenta;
   const AConfiguracion: TConfiguracionMotorFiscalVenta);
@@ -173,6 +209,10 @@ var
   BaseRetencion: Double;
   PuedeAplicarRetencion: Boolean;
 begin
+  DesglosarIvaIncluido(AResultado.Normal, AConfiguracion);
+  DesglosarIvaIncluido(AResultado.Reducido, AConfiguracion);
+  DesglosarIvaIncluido(AResultado.SuperReducido, AConfiguracion);
+  DesglosarIvaIncluido(AResultado.Exento, AConfiguracion);
   AResultado.TotalBases :=
     AResultado.Normal.Base +
     AResultado.Reducido.Base +

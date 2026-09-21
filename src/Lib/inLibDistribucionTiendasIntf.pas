@@ -19,7 +19,11 @@ interface
 
 const
   ESTADO_PROPUESTA_TRASPASO_PENDIENTE = 'PENDIENTE';
-  ESTADO_PROPUESTA_TRASPASO_CONFIRMADA = 'CONFIRMADA';
+  // Confirmada: ya es un traspaso real.
+  ESTADO_PROPUESTA_TRASPASO_TRASLADADO = 'TRASLADADO';
+  // Quien debía servirla no la acepta: sus unidades vuelven a estar
+  // por repartir y la propuesta queda en el historial.
+  ESTADO_PROPUESTA_TRASPASO_NO_ACEPTADO = 'NO ACEPTADO';
   // Serie con la que el traspaso de caja referencia a su propuesta
   // (SERIE_REF_ORIGEN_OPCAJA; el número es el identificador).
   SERIE_REFERENCIA_PROPUESTA_TRASPASO = 'PT';
@@ -42,8 +46,21 @@ type
     Codigo: string;
     Nombre: string;
     Orden: Integer;
+    // A quién repone primero el reparto: 1 va antes que 2 y dos tiendas
+    // pueden compartir número. Sin número (0) el almacén no recibe
+    // traspasos desde la distribución: es lo que lleva el almacén central.
+    Prioridad: Integer;
+    // Solo las tiendas (almacenes activos de uso estándar) pueden ser
+    // destino: los de taras, depósito o tránsito, nunca.
+    AdmiteDestino: Boolean;
   end;
   TAlmacenesDistribucion = TArray<TAlmacenDistribucion>;
+
+  TPrioridadAlmacenDistribucion = record
+    CodigoAlmacen: string;
+    Prioridad: Integer;
+  end;
+  TPrioridadesAlmacenDistribucion = TArray<TPrioridadAlmacenDistribucion>;
 
   // Unidades de un SKU que van de un origen a un destino. Lo confirmado
   // ya es un traspaso y no se puede rebajar; lo pendiente es editable.
@@ -70,6 +87,10 @@ type
     Almacenes: TAlmacenesDistribucion;
     Asignaciones: TAsignacionesDistribucion;
     Stocks: TStocksDistribucion;
+    // Huella de las propuestas ya resueltas (trasladadas o no aceptadas)
+    // al cargar. Si al guardar ha cambiado, alguien resolvió una propuesta
+    // mientras se editaba y lo cargado ya no vale.
+    FirmaResueltas: string;
   end;
 
   TLineaPropuestaTraspaso = record
@@ -98,8 +119,12 @@ type
     SerieDocumento: string;
     NumeroDocumento: string;
     NumeroOperacion: string;
+    MotivoRechazo: string;
     Lineas: TLineasPropuestaTraspaso;
     function EstaPendiente: Boolean;
+    function EstaTrasladada: Boolean;
+    // Lo trasladado cuenta por lo realmente traspasado; lo pendiente y lo
+    // no aceptado, por lo que se propuso.
     function TotalUnidades: Double;
   end;
   TPropuestasTraspaso = TArray<TPropuestaTraspaso>;
@@ -118,10 +143,16 @@ type
     ['{6F3B7E0A-5C0F-4B7E-9A55-1B8B0B6D2C41}']
     function CargarDocumento(
       AIdDocumento: Int64): TDocumentoDistribucion;
+    // Existencias de ahora mismo, para refrescar el cuadrante al cambiar
+    // de artículo-color. Sin SKU, las de todo el documento.
+    function LeerStocks(
+      AIdDocumento: Int64;
+      const ASkus: TArray<string>): TStocksDistribucion;
     // Sincroniza las propuestas PENDIENTES del documento con lo asignado:
     // crea las que falten, actualiza sus líneas y retira las vacías.
     procedure GuardarPropuestas(
       AIdDocumento: Int64;
+      const AFirmaResueltas: string;
       const AAsignaciones: TAsignacionesDistribucion;
       const AUsuario: string);
     function ListarPropuestasDocumento(
@@ -130,6 +161,15 @@ type
       const AAlmacenOrigen: string): TPropuestasTraspaso;
     function LeerPropuesta(AIdPropuesta: Int64): TPropuestaTraspaso;
     function EliminarPropuestaPendiente(AIdPropuesta: Int64): Boolean;
+    // Pasa una propuesta pendiente a NO ACEPTADO. False si ya no lo estaba.
+    function RechazarPropuesta(
+      AIdPropuesta: Int64;
+      const AMotivo, AUsuario: string): Boolean;
+    procedure GuardarPrioridadesAlmacenes(
+      const APrioridades: TPrioridadesAlmacenDistribucion;
+      const AUsuario: string);
+    // Los almacenes que pueden ser destino, con su prioridad.
+    function ListarAlmacenesDestino: TAlmacenesDistribucion;
   end;
 
   // Convierte una propuesta pendiente en un traspaso real.
@@ -156,6 +196,11 @@ begin
   Result := SameText(Estado, ESTADO_PROPUESTA_TRASPASO_PENDIENTE);
 end;
 
+function TPropuestaTraspaso.EstaTrasladada: Boolean;
+begin
+  Result := SameText(Estado, ESTADO_PROPUESTA_TRASPASO_TRASLADADO);
+end;
+
 function TPropuestaTraspaso.TotalUnidades: Double;
 var
   i: Integer;
@@ -163,10 +208,10 @@ begin
   Result := 0;
   for i := 0 to High(Lineas) do
   begin
-    if EstaPendiente then
-      Result := Result + Lineas[i].Cantidad
+    if EstaTrasladada then
+      Result := Result + Lineas[i].CantidadTraspasada
     else
-      Result := Result + Lineas[i].CantidadTraspasada;
+      Result := Result + Lineas[i].Cantidad;
   end;
 end;
 

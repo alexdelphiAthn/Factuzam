@@ -20,8 +20,14 @@ uses
   inLibDocumentosTrabajo;
 
 function NormalizarLimiteDocumentosOrigen(ALimite: Integer): Integer;
-function SqlConsultarUltimosDocumentosOrigen: string;
-function SqlCabecerasRecientesDocumentosOrigen: string;
+// Las propuestas de traspaso solo entran en el listado si se pide: su
+// tabla llega con el script de la distribución entre tiendas y, mientras no
+// se aplique, el resto de los tipos tiene que seguir funcionando.
+function SqlConsultarUltimosDocumentosOrigen(
+  AIncluirPropuestasTraspaso: Boolean = False): string;
+function SqlCabecerasRecientesDocumentosOrigen(
+  AIncluirPropuestasTraspaso: Boolean = False): string;
+function SqlExisteTablaPropuestasTraspaso: string;
 function SqlTotalesUltimosDocumentosOrigen: string;
 function SqlPrevisualizarLineasAlbaranVenta: string;
 function SqlPrevisualizarLineasAlbaranCompra: string;
@@ -661,6 +667,43 @@ begin
     '   AND H.SERIE_TRSOL = :SERIE AND H.NUMERO_TRSOL = :NUMERO ' +
     '   AND NULLIF(TRIM(L.CODIGO_ART_TRSOLLIN), '''') IS NOT NULL ' +
     '   AND COALESCE(L.CANTIDAD_PEDIDA_TRSOLLIN, 0) <> 0';
+end;
+
+// Las unidades van al almacén de destino de la propuesta. La empresa es la
+// del almacén de origen; lo trasladado cuenta por lo realmente traspasado.
+function SqlLineasPropuestaTraspasoBase: string;
+begin
+  Result :=
+    'SELECT AO.CODIGO_EMP_ALM AS EMPRESA_DOCUMENTO, ' +
+    '       ''PT'' AS TIPO_DOCUMENTO, ''PT'' AS SERIE_DOCUMENTO, ' +
+    '       CAST(H.ID_TRPRO AS CHAR) AS NUMERO_DOCUMENTO, ' +
+    '       CONCAT(''U:'', L.CODIGO_UNIDAD_TRPROLIN) AS LINEA_DOCUMENTO, ' +
+    '       0 AS ORDEN_LINEA, 0 AS ORDEN_FILA, 0 AS ORDEN_PIVOTE, ' +
+    '       H.CODIGO_ALM_DESTINO_TRPRO AS ORDEN_ALMACEN, ' +
+    '       L.CODIGO_ART_TRPROLIN AS CODIGO_ARTICULO, ' +
+    '       ' + SqlSkuDirecto(
+      'L.CODIGO_ART_TRPROLIN', 'L.CODIGO_UNIDAD_TRPROLIN') +
+    '         AS CODIGO_SKU, ' +
+    '       H.CODIGO_ALM_DESTINO_TRPRO AS CODIGO_ALMACEN, ' +
+    '       '''' AS LOTE, NULL AS FECHA_CADUCIDAD, ' +
+    '       COALESCE(L.DESCRIPCION_ARTICULO_TRPROLIN, '''') ' +
+    '         AS DESCRIPCION_ARTICULO, ' +
+    '       CASE WHEN H.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    '            THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
+    '            ELSE L.CANTIDAD_TRPROLIN END AS CANTIDAD ' +
+    '  FROM fza_traspasos_propuestas H ' +
+    '  JOIN fza_almacenes AO ' +
+    '    ON AO.CODIGO_ALM_ALM = H.CODIGO_ALM_ORIGEN_TRPRO ' +
+    '  JOIN fza_traspasos_propuestas_lineas L ' +
+    '    ON L.ID_TRPRO_TRPROLIN = H.ID_TRPRO ' +
+    ' WHERE AO.CODIGO_EMP_ALM = :EMPRESA ' +
+    '   AND :SERIE = ''PT'' ' +
+    '   AND H.ID_TRPRO = CAST(:NUMERO AS UNSIGNED) ' +
+    '   AND CAST(H.ID_TRPRO AS CHAR) = :NUMERO ' +
+    '   AND NULLIF(TRIM(L.CODIGO_ART_TRPROLIN), '''') IS NOT NULL ' +
+    '   AND CASE WHEN H.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    '            THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
+    '            ELSE L.CANTIDAD_TRPROLIN END <> 0';
 end;
 
 function SqlSkuCeldaSesion: string;
@@ -1390,7 +1433,44 @@ begin
     ':EMPRESA_TARC <> ''''', 'LIMITE_TARC');
 end;
 
-function SqlCabecerasRecientesDocumentosOrigen: string;
+function SqlExisteTablaPropuestasTraspaso: string;
+begin
+  Result :=
+    'SELECT COUNT(*) AS EXISTE ' +
+    '  FROM information_schema.TABLES ' +
+    ' WHERE TABLE_SCHEMA = DATABASE() ' +
+    '   AND TABLE_NAME = ''fza_traspasos_propuestas''';
+end;
+
+function SqlCabeceraPropuestasTraspaso: string;
+var
+  Lineas: string;
+  Unidades: string;
+begin
+  Lineas :=
+    '(SELECT COUNT(*) FROM fza_traspasos_propuestas_lineas L ' +
+    'WHERE L.ID_TRPRO_TRPROLIN = H.ID_TRPRO)';
+  Unidades := StringReplace(Lineas, 'COUNT(*)',
+    'COALESCE(SUM(CASE WHEN H.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    'THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
+    'ELSE L.CANTIDAD_TRPROLIN END), 0)', []);
+  Result := SqlRamaCabecera('PT', 'PT',
+    'fza_traspasos_propuestas',
+    '(SELECT AO.CODIGO_EMP_ALM FROM fza_almacenes AO ' +
+    'WHERE AO.CODIGO_ALM_ALM = H.CODIGO_ALM_ORIGEN_TRPRO)',
+    '''PT''', 'CAST(H.ID_TRPRO AS CHAR)',
+    '''PT''', 'CAST(H.ID_TRPRO AS CHAR)',
+    'DATE(H.INSTANTE_PROPUESTA_TRPRO)',
+    'H.INSTANTE_ALTA', 'H.ESTADO_TRPRO',
+    'CONCAT(H.CODIGO_ALM_ORIGEN_TRPRO, '' / '', ' +
+    'H.CODIGO_ALM_DESTINO_TRPRO)', Lineas, Unidades,
+    'EXISTS (SELECT 1 FROM fza_almacenes AE ' +
+    'WHERE AE.CODIGO_ALM_ALM = H.CODIGO_ALM_ORIGEN_TRPRO ' +
+    'AND AE.CODIGO_EMP_ALM = :EMPRESA_PT)', 'LIMITE_PT');
+end;
+
+function SqlCabecerasRecientesDocumentosOrigen(
+  AIncluirPropuestasTraspaso: Boolean): string;
 begin
   Result :=
     SqlCabecerasAlbaranesPedidos + ' UNION ALL ' +
@@ -1399,6 +1479,8 @@ begin
     SqlCabecerasTraspasosSesiones + ' UNION ALL ' +
     SqlCabeceraInventario + ' UNION ALL ' +
     SqlCabeceraTarifas;
+  if AIncluirPropuestasTraspaso then
+    Result := Result + ' UNION ALL ' + SqlCabeceraPropuestasTraspaso;
 end;
 
 function SqlLineasTotalesUltimosAlbaranesVenta: string;
@@ -1481,11 +1563,12 @@ begin
     '  FROM ULTIMOS U';
 end;
 
-function SqlConsultarUltimosDocumentosOrigen: string;
+function SqlConsultarUltimosDocumentosOrigen(
+  AIncluirPropuestasTraspaso: Boolean): string;
 begin
   Result :=
     'WITH CANDIDATOS AS (' +
-    SqlCabecerasRecientesDocumentosOrigen +
+    SqlCabecerasRecientesDocumentosOrigen(AIncluirPropuestasTraspaso) +
     '), ULTIMOS AS (SELECT C.* FROM CANDIDATOS C ' +
     ' ORDER BY ' + SqlInstanteOrden(
       'C.INSTANTE_ALTA', 'C.FECHA') + ' DESC, ' +
@@ -1617,6 +1700,10 @@ begin
   begin
     Result := SqlLineasElegiblesBase(SqlLineasPeticionTraspasoBase);
   end
+  else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PROPUESTA_TRASPASO then
+  begin
+    Result := SqlLineasElegiblesBase(SqlLineasPropuestaTraspasoBase);
+  end
   else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_SESION_COMPRA then
   begin
     Result := SqlLineasElegiblesBase(SqlLineasSesionCompraBase);
@@ -1682,6 +1769,10 @@ begin
   else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PETICION_TRASPASO then
   begin
     Result := SqlLineasResueltasBase(SqlLineasPeticionTraspasoBase);
+  end
+  else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PROPUESTA_TRASPASO then
+  begin
+    Result := SqlLineasResueltasBase(SqlLineasPropuestaTraspasoBase);
   end
   else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_SESION_COMPRA then
   begin
@@ -1874,6 +1965,17 @@ begin
       'FROM fza_traspasos_solicitudes ' +
       ' WHERE CODIGO_EMP_TRSOL = :EMPRESA AND SERIE_TRSOL = :SERIE ' +
       '   AND NUMERO_TRSOL = :NUMERO FOR UPDATE';
+  end
+  else if ATipoDocumento = TIPO_DOCUMENTO_ORIGEN_PROPUESTA_TRASPASO then
+  begin
+    // Una propuesta no aceptada también se puede cargar: sus unidades
+    // siguen en el origen y hay que volver a decidir qué se hace con ellas.
+    ASql :=
+      'SELECT H.ESTADO_TRPRO AS ESTADO ' +
+      '  FROM fza_traspasos_propuestas H ' +
+      ' WHERE H.ID_TRPRO = CAST(:NUMERO AS UNSIGNED) ' +
+      '   AND CAST(H.ID_TRPRO AS CHAR) = :NUMERO ' +
+      '   AND :SERIE = ''PT'' AND :EMPRESA <> '''' FOR UPDATE';
   end
   else if ATipoDocumento = TIPO_DOCUMENTO_ORIGEN_SESION_COMPRA then
   begin

@@ -56,11 +56,14 @@ const
   SQL_CLAVE_PAGO =
     'CODIGO_EMP_PAGO = :EMP AND CODIGO_ALM_PAGO = :ALM ' +
     'AND CODIGO_CAJA_PAGO = :CAJA AND NUMERO_OPERACION_PAGO = :OPE ';
-  SQL_MEDIO_SIMPLE =
-    'COALESCE(ESCRIPTO_FORMA_PAGO_CFP, ''N'') <> ''S'' ' +
-    'AND COALESCE(ESDIVISA_FORMA_PAGO_CFP, ''N'') <> ''S'' ' +
-    'AND CODIGO_FP_CFP NOT IN (''VALE'', ''BONO'', ''DEUDA'') ' +
+  // Cualquier forma de pago (también divisas, criptomonedas y bonos) salvo
+  // vales y deuda, que no se cambian en una subsanación.
+  SQL_MEDIO_ADMITIDO =
+    'CODIGO_FP_CFP NOT IN (''VALE'', ''DEUDA'') ' +
     'AND CHAR_LENGTH(CODIGO_FP_CFP) <= 10 ';
+  // Líneas que el TPV graba al consumir o dejar un anticipo de depósito.
+  ARTICULO_ABONO_CUENTA = 'ACUENTA';
+  ARTICULO_ANTICIPO = 'ANTICIPO';
   CAMPOS_TOTALES =
     'TOTAL_BASEI_IVAN_FAC,TOTAL_BASEI_IVAR_FAC,' +
     'TOTAL_BASEI_IVAS_FAC,TOTAL_BASEI_IVAE_FAC,TOTAL_BASES_FAC,' +
@@ -96,6 +99,10 @@ const
     'PORCENTAJE_IVA_FACLIN,INSTANTE_MODIF,' + CAMPOS_IMPORTES_LINEA;
 
 type
+  // Papel de cada fila de fza_caja_operaciones de la venta.
+  TFilaOperacionSubsanacion = (fosVentaNormal, fosVentaDeposito,
+    fosCierreDeposito, fosConsumoAnticipo, fosAnticipo, fosVale, fosOtra);
+
   TDatosSubsanacionCaja = class
   public
     Cabecera: TClientDataSet;
@@ -103,6 +110,17 @@ type
     Operacion: TClientDataSet;
     Pagos: TClientDataSet;
     PagosFactura: TClientDataSet;
+    Depositos: TClientDataSet;
+    // Formas de pago que devuelven cambio (tickets con el cambio sin grabar).
+    FormasConCambio: TDictionary<string, Boolean>;
+    // Resultado de AnalizarLineas: líneas que no se pueden corregir, venta
+    // de depósito (ID_OPCAJA) y anticipo consumido de cada prenda, y la fila
+    // de la venta del resto de líneas.
+    LineasFijas: TDictionary<string, Boolean>;
+    VentaDepositoLinea: TDictionary<string, Integer>;
+    AnticipoLinea: TDictionary<string, Currency>;
+    IdVentaNormal: Integer;
+    constructor Create;
     destructor Destroy; override;
     function ComoJson: string;
   end;
@@ -132,10 +150,17 @@ type
       const AClave: TClaveOperacionSubsanacionCaja);
     function EsSinVerifactu: Boolean;
     procedure ValidarCabecera(ADatos: TDatosSubsanacionCaja);
+    procedure ValidarOperaciones(ADatos: TDatosSubsanacionCaja;
+      const AClave: TClaveOperacionSubsanacionCaja);
+    procedure AnalizarLineas(ADatos: TDatosSubsanacionCaja);
+    procedure LeerFormasConCambio(ADatos: TDatosSubsanacionCaja);
     procedure ValidarPago(ADatos: TDatosSubsanacionCaja);
     procedure ValidarMedio(const ASolicitud: TSolicitudSubsanacionCaja);
     procedure ValidarSolicitud(const ASolicitud: TSolicitudSubsanacionCaja;
-      const AActual: TOperacionSubsanacionCaja);
+      const AActual: TOperacionSubsanacionCaja;
+      ADatos: TDatosSubsanacionCaja);
+    procedure GuardarOperacionesVenta(ADatos: TDatosSubsanacionCaja;
+      const ASolicitud: TSolicitudSubsanacionCaja);
     procedure Recalcular(ADatos: TDatosSubsanacionCaja;
       const ASolicitud: TSolicitudSubsanacionCaja);
     procedure ValidarLineasCalculadas(ADatos: TDatosSubsanacionCaja;
@@ -231,10 +256,19 @@ begin
     begin
       if EsCobroVigente(APagos, oCompensados) then
       begin
+        oPago := Default(TPagoSubsanacionCaja);
         oPago.FormaPago := APagos.FieldByName(fforma).AsString;
         oPago.Referencia := APagos.FieldByName(fref).AsString;
         oPago.Importe := APagos.FieldByName(fentregado).AsCurrency -
           APagos.FieldByName(fcambio).AsCurrency;
+        oPago.CodigoDivisa :=
+          APagos.FieldByName('CODIGO_DIVISA_PAGO').AsString;
+        oPago.RedBlockchain :=
+          APagos.FieldByName('RED_BLOCKCHAIN_PAGO').AsString;
+        oPago.FactorCambio :=
+          APagos.FieldByName('FACTOR_CAMBIO_PAGO').AsFloat;
+        oPago.ImporteDivisa :=
+          APagos.FieldByName('IMPORTE_DIVISA_PAGO').AsFloat;
         oLista.Add(oPago);
       end;
       APagos.Next;
@@ -256,6 +290,124 @@ begin
     Result := Result + oPago.Importe;
 end;
 
+// Vales y deuda se conservan: ni se compensan ni se dan de alta de nuevo.
+function EsCobroFijo(const AFormaPago: string): Boolean;
+begin
+  Result := MatchText(Trim(AFormaPago), ['VALE', 'DEUDA']);
+end;
+
+// Hasta 2026-09-21 la caja grababa lo entregado sin el cambio: el exceso
+// sobre el total es el cambio que se devolvió con las formas que lo dan.
+function DescontarCambioNoGrabado(const APagos: TPagosSubsanacionCaja;
+  ATotal: Currency; AFormasConCambio: TDictionary<string, Boolean>):
+  TPagosSubsanacionCaja;
+var
+  dExceso, dCambio: Currency;
+  i: Integer;
+begin
+  Result := Copy(APagos);
+  dExceso := TotalCobros(Result) - ATotal;
+  for i := 0 to High(Result) do
+    if (dExceso > 0) and (Result[i].Importe > 0) and
+       AFormasConCambio.ContainsKey(UpperCase(Trim(Result[i].FormaPago))) then
+    begin
+      dCambio := Min(dExceso, Result[i].Importe);
+      Result[i].Importe := Result[i].Importe - dCambio;
+      dExceso := dExceso - dCambio;
+    end;
+end;
+
+function ClasificarFilaOperacion(AOperacion: TDataSet):
+  TFilaOperacionSubsanacion;
+var
+  sTipo: string;
+  bDeposito: Boolean;
+  dImporte: Currency;
+begin
+  sTipo := AOperacion.FieldByName('TIPO_OPERACION_OPCAJA').AsString;
+  bDeposito := AOperacion.FieldByName('ID_DEPOSITO_OPCAJA').AsString <> '';
+  dImporte := AOperacion.FieldByName(ftotalope).AsCurrency;
+  if sTipo = 'VE' then
+  begin
+    if bDeposito then
+      Result := fosVentaDeposito
+    else
+      Result := fosVentaNormal;
+  end
+  // Liquidación de un depósito: el préstamo se cierra (DE negativo, no
+  // cuenta en el total) y el anticipo se consume (CB negativo).
+  else if bDeposito and (sTipo = 'DE') and (dImporte < 0) then
+    Result := fosCierreDeposito
+  else if bDeposito and (sTipo = 'CB') and (dImporte < 0) then
+    Result := fosConsumoAnticipo
+  // Depósito nuevo o aumentado: anticipo que deja deuda al cliente.
+  else if bDeposito and MatchText(sTipo, ['DE', 'CB']) then
+    Result := fosAnticipo
+  else if MatchText(sTipo, ['VR', 'VL']) then
+    Result := fosVale
+  else
+    Result := fosOtra;
+end;
+
+// Importe de la fila que forma parte del total del ticket.
+function ImporteFiscalFila(AOperacion: TDataSet): Currency;
+begin
+  Result := 0;
+  if ClasificarFilaOperacion(AOperacion) in [fosVentaNormal,
+     fosVentaDeposito, fosConsumoAnticipo, fosAnticipo] then
+    Result := AOperacion.FieldByName(ftotalope).AsCurrency;
+end;
+
+function ContarCobrosFijos(const APagos: TPagosSubsanacionCaja):
+  TDictionary<string, Integer>;
+var
+  oPago: TPagoSubsanacionCaja;
+  sClave: string;
+  iVeces: Integer;
+begin
+  Result := TDictionary<string, Integer>.Create;
+  for oPago in APagos do
+    if EsCobroFijo(oPago.FormaPago) then
+    begin
+      sClave := UpperCase(Trim(oPago.FormaPago)) + #9 +
+        Trim(oPago.Referencia) + #9 + CurrToStr(oPago.Importe);
+      if not Result.TryGetValue(sClave, iVeces) then
+        iVeces := 0;
+      Result.AddOrSetValue(sClave, iVeces + 1);
+    end;
+end;
+
+// Los vales y la deuda del ticket deben llegar sin cambios.
+procedure ValidarCobrosFijos(const AActuales, ANuevos: TPagosSubsanacionCaja);
+var
+  oActuales, oNuevos: TDictionary<string, Integer>;
+  oPar: TPair<string, Integer>;
+  iVeces: Integer;
+  bIguales: Boolean;
+begin
+  oActuales := ContarCobrosFijos(AActuales);
+  oNuevos := ContarCobrosFijos(ANuevos);
+  try
+    bIguales := oActuales.Count = oNuevos.Count;
+    for oPar in oActuales do
+      bIguales := bIguales and oNuevos.TryGetValue(oPar.Key, iVeces) and
+        (iVeces = oPar.Value);
+    if not bIguales then
+      raise EArgumentException.Create(SSubsanacionValesFijos);
+  finally
+    FreeAndNil(oNuevos);
+    FreeAndNil(oActuales);
+  end;
+end;
+
+// Los cobros antiguos no guardaban la divisa: vacía equivale a euros.
+function DivisaCobro(const APago: TPagoSubsanacionCaja): string;
+begin
+  Result := UpperCase(Trim(APago.CodigoDivisa));
+  if Result = '' then
+    Result := 'EUR';
+end;
+
 // Mismo importe por forma de pago y referencia: el cobro no se toca.
 function CobrosDistintos(const AActuales,
   ANuevos: TPagosSubsanacionCaja): Boolean;
@@ -267,7 +419,8 @@ var
   var
     sClave: string;
   begin
-    sClave := UpperCase(Trim(APago.FormaPago)) + #9 + Trim(APago.Referencia);
+    sClave := UpperCase(Trim(APago.FormaPago)) + #9 + Trim(APago.Referencia) +
+      #9 + DivisaCobro(APago) + #9 + Trim(APago.RedBlockchain);
     if not oSaldos.TryGetValue(sClave, dSaldo) then
       dSaldo := 0;
     oSaldos.AddOrSetValue(sClave, dSaldo + ASigno * APago.Importe);
@@ -296,7 +449,9 @@ begin
     raise EArgumentException.Create(SSubsanacionPagosInvalidos);
   for oPago in APagos do
   begin
-    if (Trim(oPago.FormaPago) = '') or (oPago.Importe <= 0) or
+    // Los vales emitidos son negativos; se validan aparte (sin cambios).
+    if (Trim(oPago.FormaPago) = '') or
+       ((oPago.Importe <= 0) and not EsCobroFijo(oPago.FormaPago)) or
        (Frac(oPago.Importe * 100) <> 0) then
       raise EArgumentException.Create(SSubsanacionPagosInvalidos);
     if Length(oPago.Referencia) > 100 then
@@ -344,6 +499,15 @@ begin
   end;
 end;
 
+constructor TDatosSubsanacionCaja.Create;
+begin
+  inherited Create;
+  FormasConCambio := TDictionary<string, Boolean>.Create;
+  LineasFijas := TDictionary<string, Boolean>.Create;
+  VentaDepositoLinea := TDictionary<string, Integer>.Create;
+  AnticipoLinea := TDictionary<string, Currency>.Create;
+end;
+
 destructor TDatosSubsanacionCaja.Destroy;
 begin
   FreeAndNil(Cabecera);
@@ -351,6 +515,11 @@ begin
   FreeAndNil(Operacion);
   FreeAndNil(Pagos);
   FreeAndNil(PagosFactura);
+  FreeAndNil(Depositos);
+  FreeAndNil(FormasConCambio);
+  FreeAndNil(LineasFijas);
+  FreeAndNil(VentaDepositoLinea);
+  FreeAndNil(AnticipoLinea);
   inherited;
 end;
 
@@ -531,9 +700,38 @@ begin
       'FECHA_FACPAG,INSTANTE_MODIF FROM fza_facturas_pagos ' +
       'WHERE SERIE_FAC_FACPAG = :SERIE AND NUMERO_FAC_FACPAG = :NUMERO ' +
       'ORDER BY LINEA_FACPAG', AClave, ABloquear);
+    // Depósitos liquidados o anticipados en la venta: sólo se leen.
+    Result.Depositos := LeerCopia(
+      'SELECT ID_DEPOSITO_DEP,CODIGO_UNIDAD_DEP,ESTADO_DEP ' +
+      'FROM fza_depositos_cliente WHERE ID_DEPOSITO_DEP IN (' +
+      'SELECT ID_DEPOSITO_OPCAJA FROM fza_caja_operaciones WHERE ' +
+      SQL_CLAVE_OPE + ') ORDER BY ID_DEPOSITO_DEP', AClave, False);
+    LeerFormasConCambio(Result);
   except
     FreeAndNil(Result);
     raise;
+  end;
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.LeerFormasConCambio(
+  ADatos: TDatosSubsanacionCaja);
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := Consulta(
+    'SELECT CODIGO_FP_CFP FROM fza_caja_formas_pago ' +
+    'WHERE COALESCE(ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP, ''S'') = ''S''',
+    Default(TClaveOperacionSubsanacionCaja));
+  try
+    oConsulta.Open;
+    while not oConsulta.Eof do
+    begin
+      ADatos.FormasConCambio.AddOrSetValue(
+        UpperCase(Trim(oConsulta.FieldByName(fforma).AsString)), True);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
   end;
 end;
 
@@ -609,16 +807,15 @@ procedure TServicioSubsanacionCajaUniDAC.ValidarVinculos(
 var
   oConsulta: TUniQuery;
 begin
+  // Los vales emitidos o canjeados no impiden subsanar: se conservan.
+  // Sí lo impide una devolución posterior que haga referencia al ticket.
   oConsulta := Consulta(
     'SELECT 1 AS VINCULO FROM fza_recibos ' +
     'WHERE SERIE_FAC_REC = :SERIE AND NUMERO_FAC_REC = :NUMERO ' +
-    'UNION ALL SELECT 1 FROM fza_caja_vales WHERE ' +
-    '(CODIGO_EMP_EMI_VL = :EMP AND CODIGO_ALM_EMI_VL = :ALM ' +
-    'AND CODIGO_CAJA_EMI_VL = :CAJA ' +
-    'AND NUMERO_OPERACION_EMI_VL = :OPE) OR ' +
-    '(CODIGO_EMP_RED_VL = :EMP AND CODIGO_ALM_RED_VL = :ALM ' +
-    'AND CODIGO_CAJA_RED_VL = :CAJA ' +
-    'AND NUMERO_OPERACION_RED_VL = :OPE) ' +
+    'UNION ALL SELECT 1 FROM fza_caja_operaciones ' +
+    'WHERE TIPO_OPERACION_OPCAJA = ''DV'' ' +
+    'AND SERIE_REF_ORIGEN_OPCAJA = :SERIE ' +
+    'AND NUMERO_REF_ORIGEN_OPCAJA = :NUMERO ' +
     'UNION ALL SELECT 1 FROM fza_facturas_relaciones ' +
     'WHERE SERIE_FAC_ORIGEN_FACREL = :SERIE ' +
     'AND NUMERO_FAC_ORIGEN_FACREL = :NUMERO', AClave);
@@ -663,40 +860,200 @@ end;
 
 procedure TServicioSubsanacionCajaUniDAC.ValidarPago(
   ADatos: TDatosSubsanacionCaja);
-var
-  oPago: TDataSet;
-  oConsulta: TUniQuery;
 begin
-  // Admite varios cobros, también los de correcciones anteriores, siempre
-  // en euros y con medios simples: sin divisas, cripto, vales ni deuda.
-  oPago := ADatos.Pagos;
-  if oPago.IsEmpty then
+  // Admite cualquier forma de pago, varios cobros y los de correcciones
+  // anteriores; los vales y la deuda se conservan sin tocarlos.
+  if ADatos.Pagos.IsEmpty then
     raise EInvalidOpException.Create(SSubsanacionPagoUnico);
-  oConsulta := Consulta(
-    'SELECT CODIGO_FP_CFP FROM fza_caja_formas_pago WHERE ' +
-    SQL_MEDIO_SIMPLE + 'AND CODIGO_FP_CFP = :FP',
-    Default(TClaveOperacionSubsanacionCaja));
-  try
-    oPago.First;
-    while not oPago.Eof do
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.ValidarOperaciones(
+  ADatos: TDatosSubsanacionCaja;
+  const AClave: TClaveOperacionSubsanacionCaja);
+var
+  oOperacion: TDataSet;
+  eFila: TFilaOperacionSubsanacion;
+  iVentasNormales: Integer;
+begin
+  // Una venta del TPV puede dejar varias filas: la venta de las líneas
+  // normales, una por prenda de depósito con su cierre y consumo de
+  // anticipo, los anticipos que dejan deuda y los vales. Devoluciones y
+  // cualquier otro movimiento quedan fuera.
+  oOperacion := ADatos.Operacion;
+  if oOperacion.IsEmpty then
+    raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+  iVentasNormales := 0;
+  ADatos.IdVentaNormal := 0;
+  oOperacion.First;
+  while not oOperacion.Eof do
+  begin
+    eFila := ClasificarFilaOperacion(oOperacion);
+    if (eFila = fosOtra) or
+       (oOperacion.FieldByName('SERIE_FAC_OPCAJA').AsString <>
+         AClave.SerieFactura) or
+       (oOperacion.FieldByName('NUMERO_FAC_OPCAJA').AsString <>
+         AClave.NumeroFactura) or
+       (oOperacion.FieldByName('IMPORTE_DEVUELTO_ACUM_OPCAJA').AsCurrency
+         <> 0) then
+      raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+    if eFila = fosVentaNormal then
     begin
-      if not MatchText(oPago.FieldByName('CODIGO_DIVISA_PAGO').AsString,
-           ['', 'EUR']) or
-         (oPago.FieldByName('RED_BLOCKCHAIN_PAGO').AsString <> '') or
-         (oPago.FieldByName('FACTOR_CAMBIO_PAGO').AsFloat <> 1) or
-         (oPago.FieldByName('IMPORTE_DIVISA_PAGO').AsCurrency <> 0) then
-        raise EInvalidOpException.Create(SSubsanacionPagoUnico);
-      oConsulta.Close;
-      oConsulta.ParamByName('FP').AsString :=
-        oPago.FieldByName(fforma).AsString;
-      oConsulta.Open;
-      if oConsulta.IsEmpty then
-        raise EInvalidOpException.Create(SSubsanacionPagoUnico);
-      oPago.Next;
+      Inc(iVentasNormales);
+      ADatos.IdVentaNormal := oOperacion.FieldByName('ID_OPCAJA').AsInteger;
     end;
-    oPago.First;
+    oOperacion.Next;
+  end;
+  oOperacion.First;
+  if iVentasNormales > 1 then
+    raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+end;
+
+// Relaciona cada línea con su fila de caja: abonos a cuenta con el consumo
+// de anticipo, anticipos con su depósito y prendas con su venta de depósito.
+// Las líneas restantes suman la venta normal.
+procedure TServicioSubsanacionCajaUniDAC.AnalizarLineas(
+  ADatos: TDatosSubsanacionCaja);
+var
+  oLineas, oOperacion: TDataSet;
+  oConsumos, oAnticipos: TList<Integer>;
+  oConsumoDeposito: TDictionary<string, Currency>;
+  oAsignadas: TDictionary<string, Boolean>;
+  sArticulo, sLinea, sDeposito: string;
+  dImporte, dVentaNormal, dNormales: Currency;
+  iAbonos, iAnticipos: Integer;
+  bEncontrada: Boolean;
+
+  function ImporteFila(AId: Integer): Currency;
+  begin
+    if not oOperacion.Locate('ID_OPCAJA', AId, []) then
+      raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+    Result := oOperacion.FieldByName(ftotalope).AsCurrency;
+  end;
+
+begin
+  oLineas := ADatos.Lineas;
+  oOperacion := ADatos.Operacion;
+  ADatos.LineasFijas.Clear;
+  ADatos.VentaDepositoLinea.Clear;
+  ADatos.AnticipoLinea.Clear;
+  oConsumos := TList<Integer>.Create;
+  oAnticipos := TList<Integer>.Create;
+  oConsumoDeposito := TDictionary<string, Currency>.Create;
+  oAsignadas := TDictionary<string, Boolean>.Create;
+  try
+    dVentaNormal := 0;
+    oOperacion.First;
+    while not oOperacion.Eof do
+    begin
+      dImporte := oOperacion.FieldByName(ftotalope).AsCurrency;
+      sDeposito := oOperacion.FieldByName('ID_DEPOSITO_OPCAJA').AsString;
+      case ClasificarFilaOperacion(oOperacion) of
+        fosVentaNormal:
+          dVentaNormal := dImporte;
+        fosConsumoAnticipo:
+          begin
+            oConsumos.Add(oOperacion.FieldByName('ID_OPCAJA').AsInteger);
+            oConsumoDeposito.AddOrSetValue(sDeposito, -dImporte);
+          end;
+        // Un depósito nuevo sin anticipo graba la fila a cero sin línea.
+        fosAnticipo:
+          if dImporte <> 0 then
+            oAnticipos.Add(oOperacion.FieldByName('ID_OPCAJA').AsInteger);
+      end;
+      oOperacion.Next;
+    end;
+    // Abonos a cuenta y anticipos, en el mismo orden en que se grabaron.
+    iAbonos := 0;
+    iAnticipos := 0;
+    oLineas.First;
+    while not oLineas.Eof do
+    begin
+      sLinea := oLineas.FieldByName('LINEA_FACLIN').AsString;
+      sArticulo := oLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
+      dImporte := oLineas.FieldByName('TOTAL_FACLIN').AsCurrency;
+      if SameText(sArticulo, ARTICULO_ABONO_CUENTA) then
+      begin
+        if (iAbonos >= oConsumos.Count) or
+           (ImporteFila(oConsumos[iAbonos]) <> dImporte) then
+          raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+        Inc(iAbonos);
+        ADatos.LineasFijas.Add(sLinea, True);
+      end
+      else if SameText(sArticulo, ARTICULO_ANTICIPO) then
+      begin
+        if (iAnticipos >= oAnticipos.Count) or
+           (ImporteFila(oAnticipos[iAnticipos]) <> dImporte) then
+          raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+        Inc(iAnticipos);
+        ADatos.LineasFijas.Add(sLinea, True);
+      end;
+      oLineas.Next;
+    end;
+    if (iAbonos <> oConsumos.Count) or (iAnticipos <> oAnticipos.Count) then
+      raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+    // Cada venta de depósito, con la línea de su prenda (mismo SKU e importe).
+    oOperacion.First;
+    while not oOperacion.Eof do
+    begin
+      if ClasificarFilaOperacion(oOperacion) = fosVentaDeposito then
+      begin
+        sDeposito := oOperacion.FieldByName('ID_DEPOSITO_OPCAJA').AsString;
+        dImporte := oOperacion.FieldByName(ftotalope).AsCurrency;
+        if not ADatos.Depositos.Locate('ID_DEPOSITO_DEP', sDeposito, []) or
+           (ADatos.Depositos.FieldByName('ESTADO_DEP').AsString <>
+             'CERRADO') then
+          raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+        bEncontrada := False;
+        oLineas.First;
+        while not oLineas.Eof and not bEncontrada do
+        begin
+          sLinea := oLineas.FieldByName('LINEA_FACLIN').AsString;
+          bEncontrada := not ADatos.LineasFijas.ContainsKey(sLinea) and
+            not oAsignadas.ContainsKey(sLinea) and
+            (oLineas.FieldByName('CANTIDAD_FACLIN').AsFloat > 0) and
+            SameText(oLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString,
+              ADatos.Depositos.FieldByName('CODIGO_UNIDAD_DEP').AsString) and
+            (oLineas.FieldByName('TOTAL_FACLIN').AsCurrency = dImporte);
+          if not bEncontrada then
+            oLineas.Next;
+        end;
+        if not bEncontrada then
+          raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+        oAsignadas.Add(sLinea, True);
+        ADatos.VentaDepositoLinea.Add(sLinea,
+          oOperacion.FieldByName('ID_OPCAJA').AsInteger);
+        if not oConsumoDeposito.TryGetValue(sDeposito, dImporte) then
+          dImporte := 0;
+        ADatos.AnticipoLinea.Add(sLinea, dImporte);
+      end;
+      oOperacion.Next;
+    end;
+    oOperacion.First;
+    // El resto son ventas normales: positivas y sumando su fila de caja.
+    dNormales := 0;
+    oLineas.First;
+    while not oLineas.Eof do
+    begin
+      sLinea := oLineas.FieldByName('LINEA_FACLIN').AsString;
+      if not ADatos.LineasFijas.ContainsKey(sLinea) and
+         not oAsignadas.ContainsKey(sLinea) then
+      begin
+        if (oLineas.FieldByName('CANTIDAD_FACLIN').AsFloat < 0) or
+           (oLineas.FieldByName('TOTAL_FACLIN').AsCurrency < 0) then
+          raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+        dNormales := dNormales + oLineas.FieldByName('TOTAL_FACLIN').AsCurrency;
+      end;
+      oLineas.Next;
+    end;
+    oLineas.First;
+    if (dNormales <> dVentaNormal) or
+       ((dNormales <> 0) and (ADatos.IdVentaNormal = 0)) then
+      raise EInvalidOpException.Create(SSubsanacionDescuadreOriginal);
   finally
-    FreeAndNil(oConsulta);
+    FreeAndNil(oAsignadas);
+    FreeAndNil(oConsumoDeposito);
+    FreeAndNil(oAnticipos);
+    FreeAndNil(oConsumos);
   end;
 end;
 
@@ -705,36 +1062,31 @@ procedure TServicioSubsanacionCajaUniDAC.ValidarDatos(
   const AClave: TClaveOperacionSubsanacionCaja);
 var
   oOperacion: TDataSet;
-  dTotal, dTotalFactura: Currency;
-  oLinea: TLineaSubsanacionCaja;
+  dTotal, dTotalFactura, dTotalOperacion: Currency;
 begin
   ValidarCabecera(ADatos);
-  oOperacion := ADatos.Operacion;
-  if (oOperacion.RecordCount <> 1) or
-     (oOperacion.FieldByName('TIPO_OPERACION_OPCAJA').AsString <> 'VE') or
-     (oOperacion.FieldByName('ID_DEPOSITO_OPCAJA').AsString <> '') or
-     (oOperacion.FieldByName('SERIE_FAC_OPCAJA').AsString <>
-       AClave.SerieFactura) or
-     (oOperacion.FieldByName('NUMERO_FAC_OPCAJA').AsString <>
-       AClave.NumeroFactura) or
-     (oOperacion.FieldByName('IMPORTE_DEVUELTO_ACUM_OPCAJA').AsCurrency
-       <> 0) then
-    raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+  ValidarOperaciones(ADatos, AClave);
   if not EsSinVerifactu then
     ValidarFiscal(AClave);
   ValidarVinculos(AClave);
   ValidarArqueo(ADatos, AClave);
   ValidarPago(ADatos);
+  AnalizarLineas(ADatos);
   dTotal := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
-  for oLinea in LeerImportesSubsanacion(ADatos.Lineas) do
+  dTotalOperacion := 0;
+  oOperacion := ADatos.Operacion;
+  oOperacion.First;
+  while not oOperacion.Eof do
   begin
-    if (oLinea.Cantidad < 0) or (oLinea.Importe < 0) then
-      raise EInvalidOpException.Create(SSubsanacionOperacionCompleja);
+    dTotalOperacion := dTotalOperacion + ImporteFiscalFila(oOperacion);
+    oOperacion.Next;
   end;
+  oOperacion.First;
   if (dTotal < 0) or
      (TotalSubsanacion(LeerImportesSubsanacion(ADatos.Lineas)) <> dTotal) or
-     (oOperacion.FieldByName(ftotalope).AsCurrency <> dTotal) or
-     (TotalCobros(LeerCobrosVigentes(ADatos.Pagos)) <> dTotal) then
+     (dTotalOperacion <> dTotal) or
+     (TotalCobros(DescontarCambioNoGrabado(LeerCobrosVigentes(ADatos.Pagos),
+       dTotal, ADatos.FormasConCambio)) <> dTotal) then
     raise EInvalidOpException.Create(SSubsanacionDescuadreOriginal);
   dTotalFactura := 0;
   ADatos.PagosFactura.First;
@@ -752,13 +1104,19 @@ end;
 function TServicioSubsanacionCajaUniDAC.CrearSnapshot(
   const AClave: TClaveOperacionSubsanacionCaja;
   ADatos: TDatosSubsanacionCaja): TOperacionSubsanacionCaja;
+var
+  i: Integer;
 begin
   Result := Default(TOperacionSubsanacionCaja);
   Result.Clave := AClave;
   Result.FechaFactura := ADatos.Cabecera.FieldByName('FECHA_FAC').AsDateTime;
   Result.Lineas := LeerImportesSubsanacion(ADatos.Lineas);
+  for i := 0 to High(Result.Lineas) do
+    Result.Lineas[i].Fija :=
+      ADatos.LineasFijas.ContainsKey(Result.Lineas[i].Numero);
   Result.Total := ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
-  Result.Pagos := LeerCobrosVigentes(ADatos.Pagos);
+  Result.Pagos := DescontarCambioNoGrabado(LeerCobrosVigentes(ADatos.Pagos),
+    Result.Total, ADatos.FormasConCambio);
   Result.Version := THashSHA2.GetHashString(ADatos.ComoJson);
 end;
 
@@ -781,11 +1139,13 @@ end;
 
 procedure TServicioSubsanacionCajaUniDAC.ValidarSolicitud(
   const ASolicitud: TSolicitudSubsanacionCaja;
-  const AActual: TOperacionSubsanacionCaja);
+  const AActual: TOperacionSubsanacionCaja;
+  ADatos: TDatosSubsanacionCaja);
 var
   oLineas: TDictionary<string, TLineaSubsanacionCaja>;
   oLinea, oActual: TLineaSubsanacionCaja;
   bCambio: Boolean;
+  dAnticipo: Currency;
 begin
   if (Trim(ASolicitud.Motivo) = '') or
      (Length(ASolicitud.Motivo) > 500) then
@@ -800,6 +1160,7 @@ begin
     raise EArgumentException.Create(SSubsanacionTotalInvalido);
   ValidarCobrosSolicitud(ASolicitud.Pagos,
     TotalSubsanacion(ASolicitud.Lineas));
+  ValidarCobrosFijos(AActual.Pagos, ASolicitud.Pagos);
   bCambio := CobrosDistintos(AActual.Pagos, ASolicitud.Pagos);
   oLineas := TDictionary<string, TLineaSubsanacionCaja>.Create;
   try
@@ -813,6 +1174,16 @@ begin
          (oLinea.ImporteOriginal <> oActual.ImporteOriginal) or
          (oLinea.PrecioSalidaOriginal <> oActual.PrecioSalidaOriginal) then
         raise EInvalidOpException.Create(SSubsanacionConflicto);
+      // El abono a cuenta y el anticipo ya se declararon en su ticket.
+      if ADatos.LineasFijas.ContainsKey(oLinea.Numero) and
+         LineaSubsanacionModificada(oLinea) then
+        raise EArgumentException.CreateFmt(SSubsanacionLineaFija,
+          [oLinea.Numero]);
+      // La prenda de un depósito no puede bajar del anticipo ya consumido.
+      if ADatos.AnticipoLinea.TryGetValue(oLinea.Numero, dAnticipo) and
+         (oLinea.Importe < dAnticipo) then
+        raise EArgumentException.CreateFmt(SSubsanacionPrendaBajoAnticipo,
+          [oLinea.Numero, CurrToStrF(dAnticipo, ffCurrency, 2)]);
       bCambio := bCambio or LineaSubsanacionModificada(oLinea);
       oLineas.Remove(oLinea.Numero);
     end;
@@ -831,12 +1202,15 @@ var
 begin
   oConsulta := Consulta(
     'SELECT CODIGO_FP_CFP,ESREQ_REFERENCIA_FORMA_PAGO_CFP ' +
-    'FROM fza_caja_formas_pago WHERE ' + SQL_MEDIO_SIMPLE +
+    'FROM fza_caja_formas_pago WHERE ' + SQL_MEDIO_ADMITIDO +
     'AND ESACTIVO_FORMA_PAGO_CFP = ''S'' AND CODIGO_FP_CFP = :FP ' +
     'FOR UPDATE', ASolicitud.Original.Clave);
   try
     for oPago in ASolicitud.Pagos do
     begin
+      // Los vales y la deuda llegan tal cual (ValidarCobrosFijos).
+      if EsCobroFijo(oPago.FormaPago) then
+        Continue;
       oConsulta.Close;
       oConsulta.ParamByName('FP').AsString := oPago.FormaPago;
       oConsulta.Open;
@@ -960,12 +1334,64 @@ begin
   ActualizarCampos('fza_facturas',
     'SERIE_FAC = :SERIE AND NUMERO_FAC = :NUMERO',
     CAMPOS_TOTALES, ADatos.Cabecera, oClave);
-  ADatos.Operacion.Edit;
-  ADatos.Operacion.FieldByName(ftotalope).AsCurrency :=
-    ADatos.Cabecera.FieldByName(ftotal).AsCurrency;
-  ADatos.Operacion.Post;
-  ActualizarCampos('fza_caja_operaciones', SQL_CLAVE_OPE,
-    ftotalope, ADatos.Operacion, oClave);
+  GuardarOperacionesVenta(ADatos, ASolicitud);
+end;
+
+procedure TServicioSubsanacionCajaUniDAC.GuardarOperacionesVenta(
+  ADatos: TDatosSubsanacionCaja;
+  const ASolicitud: TSolicitudSubsanacionCaja);
+var
+  oImportes: TDictionary<Integer, Currency>;
+  oLinea: TLineaSubsanacionCaja;
+  oPar: TPair<Integer, Currency>;
+  oConsulta: TUniQuery;
+  iId: Integer;
+  dNormal: Currency;
+begin
+  // Cada fila de venta toma el importe de sus líneas: la de la prenda de
+  // depósito, el de su línea; la venta normal, la suma del resto. El
+  // cierre del depósito, el consumo de anticipo, los anticipos y los vales
+  // no cambian.
+  oImportes := TDictionary<Integer, Currency>.Create;
+  try
+    dNormal := 0;
+    for oLinea in ASolicitud.Lineas do
+    begin
+      if ADatos.VentaDepositoLinea.TryGetValue(oLinea.Numero, iId) then
+        oImportes.Add(iId, oLinea.Importe)
+      else if not ADatos.LineasFijas.ContainsKey(oLinea.Numero) then
+        dNormal := dNormal + oLinea.Importe;
+    end;
+    if ADatos.IdVentaNormal <> 0 then
+      oImportes.Add(ADatos.IdVentaNormal, dNormal)
+    else if dNormal <> 0 then
+      raise EInvalidOpException.Create(SSubsanacionConflicto);
+    oConsulta := Consulta(
+      'UPDATE fza_caja_operaciones SET IMPORTE_TOTAL_OPCAJA = :IMPORTE,' +
+      'INSTANTE_MODIF = NOW(),USUARIO_MODIF = :USUARIO ' +
+      'WHERE ID_OPCAJA = :ID AND ' + SQL_CLAVE_OPE,
+      ASolicitud.Original.Clave);
+    try
+      for oPar in oImportes do
+      begin
+        if not ADatos.Operacion.Locate('ID_OPCAJA', oPar.Key, []) then
+          raise EInvalidOpException.Create(SSubsanacionConflicto);
+        if ADatos.Operacion.FieldByName(ftotalope).AsCurrency <>
+           oPar.Value then
+        begin
+          oConsulta.ParamByName('ID').AsInteger := oPar.Key;
+          oConsulta.ParamByName('IMPORTE').AsCurrency := oPar.Value;
+          oConsulta.Execute;
+          if oConsulta.RowsAffected <> 1 then
+            raise EInvalidOpException.Create(SSubsanacionConflicto);
+        end;
+      end;
+    finally
+      FreeAndNil(oConsulta);
+    end;
+  finally
+    FreeAndNil(oImportes);
+  end;
 end;
 
 procedure TServicioSubsanacionCajaUniDAC.InsertarCompensacion(
@@ -1018,12 +1444,20 @@ begin
     'IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO,REFERENCIA_FACPAG,' +
     'OBSERVACIONES_PAGO,INSTANTE_ALTA,INSTANTE_MODIF,USUARIO_ALTA,' +
     'NUMERO_LINEA_ORIGEN_PAGO,TIPO_CORRECCION_PAGO) VALUES (' +
-    ':EMP,:ALM,:CAJA,:SERIEP,:OPE,:LINEA,:FP,''EUR'',NULL,1,0,:IMPORTE,0,' +
+    ':EMP,:ALM,:CAJA,:SERIEP,:OPE,:LINEA,:FP,:DIVISA,NULLIF(:RED, ''''),' +
+    ':FACTOR,:IMPDIVISA,:IMPORTE,0,' +
     'NULLIF(:REF, ''''),:OBS,NOW(),NOW(),:USUARIO,NULL,''P'')', AClave);
   try
     oConsulta.ParamByName('SERIEP').AsString := ASerie;
     oConsulta.ParamByName('LINEA').AsInteger := ALinea;
     oConsulta.ParamByName('FP').AsString := APago.FormaPago;
+    oConsulta.ParamByName('DIVISA').AsString := DivisaCobro(APago);
+    oConsulta.ParamByName('RED').AsString := Trim(APago.RedBlockchain);
+    if APago.FactorCambio > 0 then
+      oConsulta.ParamByName('FACTOR').AsFloat := APago.FactorCambio
+    else
+      oConsulta.ParamByName('FACTOR').AsFloat := 1;
+    oConsulta.ParamByName('IMPDIVISA').AsFloat := APago.ImporteDivisa;
     oConsulta.ParamByName('IMPORTE').AsCurrency := APago.Importe;
     oConsulta.ParamByName('REF').AsString := Trim(APago.Referencia);
     oConsulta.ParamByName('OBS').AsString := AObservacion;
@@ -1071,7 +1505,9 @@ begin
     oPagos.First;
     while not oPagos.Eof do
     begin
-      if EsCobroVigente(oPagos, oCompensados) then
+      // Vales y deuda siguen vigentes: no se compensan.
+      if EsCobroVigente(oPagos, oCompensados) and
+         not EsCobroFijo(oPagos.FieldByName(fforma).AsString) then
       begin
         sSerie := oPagos.FieldByName('SERIE_OPERACION_PAGO').AsString;
         iLinea := oUltimas[sSerie] + 1;
@@ -1085,6 +1521,8 @@ begin
     oPagos.First;
     for oPago in ASolicitud.Pagos do
     begin
+      if EsCobroFijo(oPago.FormaPago) then
+        Continue;
       iLinea := oUltimas[sSerieNueva] + 1;
       oUltimas[sSerieNueva] := iLinea;
       InsertarPago(ASolicitud.Original.Clave, sSerieNueva, iLinea, oPago,
@@ -1124,10 +1562,12 @@ begin
     'INSERT INTO fza_facturas_pagos (SERIE_FAC_FACPAG,NUMERO_FAC_FACPAG,' +
     'LINEA_FACPAG,TIPO_FACPAG,IMPORTE_FACPAG,REFERENCIA_FACPAG,' +
     'DESCRIPCION_FACPAG,ENTIDAD_FACPAG,FECHA_FACPAG,INSTANTE_ALTA,' +
-    'USUARIO_ALTA,USUARIO_MODIF) SELECT :SERIE,:NUMERO,:LINEAP,' +
-    'fp.CODIGO_FP_CFP,:IMPORTE,NULLIF(:REF, ''''),' +
-    'fp.DESCRIPCION_FORMA_PAGO_CFP,NULL,:FECHA,NOW(),:USUARIO,:USUARIO ' +
-    'FROM fza_caja_formas_pago fp WHERE fp.CODIGO_FP_CFP = :FP',
+    'USUARIO_ALTA,USUARIO_MODIF) VALUES (:SERIE,:NUMERO,:LINEAP,' +
+    ':FP,:IMPORTE,NULLIF(:REF, ''''),' +
+    // Los vales no tienen por qué figurar como forma de pago.
+    'COALESCE((SELECT fp.DESCRIPCION_FORMA_PAGO_CFP ' +
+    'FROM fza_caja_formas_pago fp WHERE fp.CODIGO_FP_CFP = :FP), :FP),' +
+    'NULL,:FECHA,NOW(),:USUARIO,:USUARIO)',
     ASolicitud.Original.Clave);
   try
     iLinea := 0;
@@ -1194,7 +1634,7 @@ begin
       oDatos := LeerDatos(ASolicitud.Original.Clave, True);
       ValidarDatos(oDatos, ASolicitud.Original.Clave);
       oActual := CrearSnapshot(ASolicitud.Original.Clave, oDatos);
-      ValidarSolicitud(ASolicitud, oActual);
+      ValidarSolicitud(ASolicitud, oActual, oDatos);
       ValidarMedio(ASolicitud);
       sAntes := oDatos.ComoJson;
       if HayImportesModificados(ASolicitud.Lineas) then

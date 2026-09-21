@@ -53,6 +53,9 @@ type
       const AUsuario: string);
     destructor Destroy; override;
     procedure CargarVariaciones(const CodigoArticulo: string);
+    procedure MostrarTipoVariacion(
+      const CodigoArticulo, TipoVariacion: string);
+    procedure AsignarCodigoArticulo(const CodigoArticulo: string);
     function GuardarVariaciones: Boolean;
     function Validar: string;
     property CodigoArticulo: string read GetCodigoArticulo;
@@ -97,6 +100,18 @@ procedure TGestorVariaciones.CargarVariaciones(
   const CodigoArticulo: string);
 begin
   FServicio.CargarVariaciones(CodigoArticulo);
+end;
+
+procedure TGestorVariaciones.MostrarTipoVariacion(
+  const CodigoArticulo, TipoVariacion: string);
+begin
+  FServicio.MostrarTipoVariacion(CodigoArticulo, TipoVariacion);
+end;
+
+procedure TGestorVariaciones.AsignarCodigoArticulo(
+  const CodigoArticulo: string);
+begin
+  FServicio.AsignarCodigoArticulo(CodigoArticulo);
 end;
 
 function TGestorVariaciones.GuardarVariaciones: Boolean;

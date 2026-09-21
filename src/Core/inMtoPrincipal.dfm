@@ -696,6 +696,10 @@
         ShortCut = 16471
         OnClick = MenuGenericoClick
       end
+      object mnuDistribucionTiendas: TMenuItem
+        Caption = 'Distribuir entre tiendas'
+        OnClick = MenuGenericoClick
+      end
       object mnuAlmacenInformes: TMenuItem
         Caption = 'Informes'
         object mnuBalanceAlmacenHorizontal: TMenuItem

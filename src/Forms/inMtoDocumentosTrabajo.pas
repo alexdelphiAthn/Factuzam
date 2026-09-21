@@ -119,6 +119,7 @@ type
     miEnviarDevolucionCompraDTR: TMenuItem;
     miEnviarTraspasoCajaDTR: TMenuItem;
     miEnviarPeticionTraspasoDTR: TMenuItem;
+    miEnviarDistribucionDTR: TMenuItem;
     miEnviarInventarioDTR: TMenuItem;
     miEnviarTarifasDTR: TMenuItem;
     pmCargarDTR: TPopupMenu;
@@ -138,6 +139,7 @@ type
     procedure miEnviarDevolucionCompraDTRClick(Sender: TObject);
     procedure miEnviarTraspasoCajaDTRClick(Sender: TObject);
     procedure miEnviarPeticionTraspasoDTRClick(Sender: TObject);
+    procedure miEnviarDistribucionDTRClick(Sender: TObject);
     procedure miEnviarInventarioDTRClick(Sender: TObject);
     procedure miEnviarTarifasDTRClick(Sender: TObject);
     procedure btnListadoDTRClick(Sender: TObject);
@@ -242,6 +244,8 @@ uses
   UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
   inMtoModalEnviarDestino, inMtoModalCajDef,
+  // Reparto del documento entre las tiendas (propuestas de traspaso).
+  inMtoModalDistribucionTiendas, UniDataDistribucionTiendasComposicion,
   // Listado del documento con una foto de 150 x 150 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
   inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
@@ -1565,6 +1569,35 @@ procedure TfrmMtoDocumentosTrabajo.miEnviarPeticionTraspasoDTRClick(
   Sender: TObject);
 begin
   AbrirTraspasoCaja(mvtPeticion);
+end;
+
+// El documento no se materializa en otro: se reparte entre las tiendas y
+// sale en propuestas de traspaso. Pasa a enviado cuando se confirma la
+// primera, en la misma transacción del traspaso.
+procedure TfrmMtoDocumentosTrabajo.miEnviarDistribucionDTRClick(
+  Sender: TObject);
+var
+  Configuracion: TConfiguracionDistribucionTiendas;
+  ds: TDataSet;
+begin
+  Configuracion := Default(TConfiguracionDistribucionTiendas);
+  Configuracion.IdDocumento := PrepararEnvio;
+  if Configuracion.IdDocumento > 0 then
+  begin
+    ds := dmmDocumentosTrabajo.unqryTablaG;
+    Configuracion.Servicios := CrearServiciosDistribucionTiendasUniDAC(
+      dmmDocumentosTrabajo, dmmDocumentosTrabajo.unqryTablaG.Connection,
+      UbicacionSesion);
+    Configuracion.Usuario := Trim(IdentidadSesion.Usuario);
+    Configuracion.PuedeImprimir := True;
+    if TfrmModalDistribucionTiendas.Ejecutar(
+         Self, Configuracion).HuboCambios and
+       ds.Active and not ds.IsEmpty and (ds.State = dsBrowse) then
+    begin
+      dmmDocumentosTrabajo.unqryTablaG.RefreshRecord;
+      AplicarEstadoAmbito;
+    end;
+  end;
 end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarInventarioDTRClick(

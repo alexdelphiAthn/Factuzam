@@ -116,6 +116,9 @@ type
     destructor Destroy; override;
     procedure CargarPropiedades(const ACodigoArticulo: string);
     procedure CargarPropiedadesPorFamilia(const ACodigoFamilia: string);
+    // En un alta el gestor se carga sin código; al grabar la ficha recibe
+    // el definitivo sin recargar, para no perder lo que hay en pantalla.
+    procedure AsignarCodigoArticulo(const ACodigoArticulo: string);
     procedure AbrirSelectorPropiedades;
     function GuardarPropiedades: Boolean;
     function Validar: string;
@@ -537,6 +540,12 @@ begin
       FCargando := False;
     end;
   end;
+end;
+
+procedure TGestorPropiedades.AsignarCodigoArticulo(
+  const ACodigoArticulo: string);
+begin
+  FCodigoArticulo := ACodigoArticulo;
 end;
 
 procedure TGestorPropiedades.CargarPropiedadesPorFamilia(

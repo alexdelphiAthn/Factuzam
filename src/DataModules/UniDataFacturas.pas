@@ -115,6 +115,9 @@ private
     // puramente descriptivo que NO debe disparar numeracion, creacion
     // de articulos ni recalculos (cascada por linea al navegar).
     FDesempaquetandoAtributos: Boolean;
+    // True mientras se graban los totales recalculados tras el Post de la
+    // cabecera: ese segundo Post no vuelve a procesar la factura.
+    FGrabandoTotalesTrasPost: Boolean;
     FRepositorio: IRepositorioFacturas;
     FArticulosResolver: IArticulosResolver;
     FValidadorFiscal: IValidadorFiscalFactura;
@@ -1500,7 +1503,8 @@ end;
 procedure TdmFacturas.unqryFacAfterPost(DataSet: TDataSet);
 begin
   inherited;
-  ProcesarFacturaPosteada(DataSet);
+  if not FGrabandoTotalesTrasPost then
+    ProcesarFacturaPosteada(DataSet);
 end;
 
 procedure TdmFacturas.ProcesarFacturaPosteada(ADataSet: TDataSet);
@@ -1515,6 +1519,22 @@ begin
       // El DFM es anterior a estos campos; se persisten expresamente.
       GuardarOpcionMovimientosFactura(ADataSet);
       NotificarResultadoOperacion(CalcularFactura);
+      // El cálculo deja la cabecera en dsEdit con los totales nuevos. Se
+      // graban ya: si se queda editando, el Refresh del navegador recarga
+      // los registros de UniDAC por debajo y su Post escribe en un búfer
+      // liberado (EAssertionFailed "DisposeBuf failed").
+      if ADataSet.State = dsEdit then
+      begin
+        FGrabandoTotalesTrasPost := True;
+        try
+          if ADataSet.Modified then
+            ADataSet.Post
+          else
+            ADataSet.Cancel;
+        finally
+          FGrabandoTotalesTrasPost := False;
+        end;
+      end;
       GuardarParametrosEDocFactura(ADataSet);
       if bTransaccionPropia and ConexionEscritura.InTransaction then
         ConexionEscritura.Commit;

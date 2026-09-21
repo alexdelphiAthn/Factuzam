@@ -495,6 +495,10 @@ type
     procedure TrasPrecargaAsync; override;
   private
     FGestorProp  : TGestorPropiedades;
+    // Alta: las propiedades esperan a que la ficha tenga Post (no hay
+    // código de artículo con el que grabarlas hasta entonces).
+    FPropiedadesAltaPendientes: Boolean;
+    FErrorPropiedadesAlta: Boolean;
     FArticuloCargado: string;
     FScrollProp  : TScrollBox;
     FBtnAddProp  : TcxButton;
@@ -533,6 +537,7 @@ type
       const ADependencias: TContextoDependenciasArticulos); reintroduce;
       overload;
     procedure ActualizarVisibilidadVariaciones;
+    procedure TipoVariacionEditValueChanged(Sender: TObject);
     procedure ActualizarVisibilidadColumnaSku;
     procedure AsegurarSkuArticuloSinVariaciones(const aCodArticulo: string);
     procedure AsegurarSkuArticulo(const aCodArticulo: string);
@@ -619,7 +624,10 @@ begin
     begin
       Result := True;
       AMensajeError := '';
-      if Assigned(AFormulario.FGestorProp) then
+      AFormulario.FPropiedadesAltaPendientes :=
+        AFormulario.dmmArticulos.unqryTablaG.State = dsInsert;
+      if Assigned(AFormulario.FGestorProp) and
+         not AFormulario.FPropiedadesAltaPendientes then
       begin
         try
           AFormulario.FGestorProp.GuardarPropiedades;
@@ -656,9 +664,35 @@ begin
     begin
       Result := True;
       AMensajeError := '';
-      if Assigned(AFormulario.FGestorVar) then
+      // Propiedades de un alta, ya con la ficha grabada y su código.
+      if AFormulario.FPropiedadesAltaPendientes then
+      begin
+        AFormulario.FPropiedadesAltaPendientes := False;
+        if Assigned(AFormulario.FGestorProp) then
+        begin
+          AFormulario.FGestorProp.AsignarCodigoArticulo(
+            AFormulario.dmmArticulos.unqryTablaG.FieldByName(
+              'CODIGO_ART_ART').AsString);
+          try
+            AFormulario.FGestorProp.GuardarPropiedades;
+          except
+            on E: Exception do
+            begin
+              Result := False;
+              AMensajeError := E.Message;
+              AFormulario.FErrorPropiedadesAlta := True;
+            end;
+          end;
+        end;
+      end;
+      if Result and Assigned(AFormulario.FGestorVar) then
       begin
         try
+          // En un alta el gestor aún no sabe el código: la ficha ya tiene
+          // Post (GuardarEdicionesPendientes) y el código es el definitivo.
+          AFormulario.FGestorVar.AsignarCodigoArticulo(
+            AFormulario.dmmArticulos.unqryTablaG.FieldByName(
+              'CODIGO_ART_ART').AsString);
           AFormulario.FGestorVar.GuardarVariaciones;
         except
           on E: Exception do
@@ -677,7 +711,7 @@ end;
 procedure TfrmMtoArticulos.ActualizarVisibilidadVariaciones;
 var
   HayVars, EsEstandar: Boolean;
-  Tipo: string;
+  Tipo, CodArticulo: string;
 begin
   HayVars := False;
   EsEstandar := True;
@@ -692,6 +726,24 @@ begin
   end;
   FPnlTopVariaciones.Visible := HayVars;
   FScrollVarAtrib.Visible := HayVars;
+  // Selectores de tallaje según la ficha en pantalla, no según la BBDD:
+  // en un alta el artículo aún no existe y antes solo salían tras grabar
+  // y mover el dataset. Si no cambia nada, el gestor no repinta.
+  if Assigned(FGestorVar) and Assigned(dmmArticulos) and
+     dmmArticulos.unqryTablaG.Active and
+     not dmmArticulos.unqryTablaG.IsEmpty then
+  begin
+    if dmmArticulos.unqryTablaG.State = dsInsert then
+      CodArticulo := ''
+    else
+      CodArticulo := dmmArticulos.unqryTablaG.FieldByName(
+        'CODIGO_ART_ART').AsString;
+    if HayVars then
+      FGestorVar.MostrarTipoVariacion(CodArticulo,
+        dmmArticulos.unqryTablaG.FieldByName('TIPO_VARIACION_ART').AsString)
+    else
+      FGestorVar.MostrarTipoVariacion(CodArticulo, '');
+  end;
   // Pestaña "Códigos de Barras" siempre visible (incluso para artículos
   // sin variaciones, con un único SKU = código del artículo).
   tsSKUS.TabVisible  := True;
@@ -703,6 +755,19 @@ begin
   tvSkusSTOCK_TOTAL.Visible := EsEstandar;
   tsMovimientos.TabVisible  := EsEstandar;
   cxTabSheet3.TabVisible    := EsEstandar; // pestaña Stock
+end;
+
+procedure TfrmMtoArticulos.TipoVariacionEditValueChanged(Sender: TObject);
+begin
+  // Solo cambios del usuario: al navegar el dataset ya repinta el
+  // AfterScroll.
+  if Assigned(dmmArticulos) and dmmArticulos.unqryTablaG.Active and
+     not dmmArticulos.unqryTablaG.ControlsDisabled and
+     (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
+  begin
+    FCbbTipoVariacion.PostEditValue;
+    ActualizarVisibilidadVariaciones;
+  end;
 end;
 
 procedure TfrmMtoArticulos.ActualizarVisibilidadColumnaSku;
@@ -759,12 +824,18 @@ begin
     FCbbTipoVariacion.SetFocus;
   end;
   if (CodArticulo <> '') and (TipoVariacion <> '') then
+  begin
     dmmArticulos.RecargarSkusGenerados(
       TfrmMtoModalGenerarSKUs.Ejecutar(
         Self,
         CodArticulo,
         TipoVariacion,
         FDependencias.GeneracionSkus).SkusCreados);
+    // El modal puede haber asignado el tallaje: la pestaña General lo
+    // enseña al día (y no lo pisa al grabar con lo que tenía antes).
+    if Assigned(FGestorVar) then
+      FGestorVar.CargarVariaciones(CodArticulo);
+  end;
 end;
 
 procedure TfrmMtoArticulos.actClientesExecute(Sender: TObject);
@@ -1029,6 +1100,8 @@ begin
   try
     dmmArticulos.PrepararCambioMarcaWeb;
     dmmArticulos.IniciarAplazamientoVisibilidadPrestaShop;
+    FPropiedadesAltaPendientes := False;
+    FErrorPropiedadesAlta := False;
     Resultado := FAplicacionGuardado.Ejecutar;
     case Resultado.Error of
       egaRevisionPropiedades:
@@ -1041,9 +1114,14 @@ begin
           SErrorGuardarPropiedadesArticulo,
           [Resultado.Mensaje]));
       egaGuardadoVariaciones:
-        ShowMessage_fza(Format(
-          SErrorGuardarVariacionesArticulo,
-          [Resultado.Mensaje]));
+        if FErrorPropiedadesAlta then
+          ShowMessage_fza(Format(
+            SErrorGuardarPropiedadesArticulo,
+            [Resultado.Mensaje]))
+        else
+          ShowMessage_fza(Format(
+            SErrorGuardarVariacionesArticulo,
+            [Resultado.Mensaje]));
     end;
     dmmArticulos.FinalizarVisibilidadPrestaShopAplazada(
       Resultado.Error = egaNinguno,
@@ -1656,6 +1734,8 @@ begin
   // por defecto solo lectura
   FCbbTipoVariacion.Properties.ReadOnly       := True;
   FCbbTipoVariacion.Properties.ListOptions.ShowHeader := False;
+  FCbbTipoVariacion.Properties.OnEditValueChanged :=
+    TipoVariacionEditValueChanged;
   // ── Zona atributos (scroll) ──
   FScrollVarAtrib := TScrollBox.Create(Self);
   FScrollVarAtrib.Parent      := tsGeneral;
@@ -1685,8 +1765,15 @@ begin
   if (dmmArticulos.unqryTablaG.State in [dsInsert, dsEdit]) then
     dmmArticulos.unqryTablaG.Post;
 
+  // Tras el alta el gestor aún tiene el código vacío (no ha habido
+  // AfterScroll): se le da el grabado, sin recargar lo que hay en pantalla.
   if Assigned(FGestorProp) then
+  begin
+    if not dmmArticulos.unqryTablaG.IsEmpty then
+      FGestorProp.AsignarCodigoArticulo(
+        dmmArticulos.unqryTablaG.FieldByName('CODIGO_ART_ART').AsString);
     FGestorProp.AbrirSelectorPropiedades;
+  end;
 end;
 
 procedure TfrmMtoArticulos.OnAfterScrollArticulos(DataSet: TDataSet);

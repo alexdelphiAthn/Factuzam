@@ -26,11 +26,16 @@ type
     // importe queda como descuento de la línea.
     PrecioSalidaOriginal: Currency;
     PrecioSalida: Currency;
+    // Abono a cuenta de un depósito o anticipo que deja deuda: su importe
+    // ya se declaró en otro ticket y no se puede corregir.
+    Fija: Boolean;
   end;
   TLineasSubsanacionCaja = TArray<TLineaSubsanacionCaja>;
 
 function LineaSubsanacionModificada(
   const ALinea: TLineaSubsanacionCaja): Boolean;
+function HayLineasFijasSubsanacion(
+  const ALineas: TLineasSubsanacionCaja): Boolean;
 
 function TotalSubsanacion(
   const ALineas: TLineasSubsanacionCaja): Currency;
@@ -97,6 +102,16 @@ function LineaSubsanacionModificada(
 begin
   Result := (ALinea.Importe <> ALinea.ImporteOriginal) or
     (ALinea.PrecioSalida <> ALinea.PrecioSalidaOriginal);
+end;
+
+function HayLineasFijasSubsanacion(
+  const ALineas: TLineasSubsanacionCaja): Boolean;
+var
+  rLinea: TLineaSubsanacionCaja;
+begin
+  Result := False;
+  for rLinea in ALineas do
+    Result := Result or rLinea.Fija;
 end;
 
 function TotalSubsanacion(
@@ -173,17 +188,36 @@ function RepartirTotalSubsanacion(
   const ALineas: TLineasSubsanacionCaja;
   ATotal: Currency): TLineasSubsanacionCaja;
 var
-  dTotalActual: Currency;
+  dTotalActual, dTotalFijo: Currency;
+  oLibres: TLineasSubsanacionCaja;
+  i, j: Integer;
 begin
   ValidarImportesSubsanacion(ALineas);
   if TieneDecimalesDeCentimo(ATotal) then
     raise EArgumentException.Create(SSubsanacionDecimalesTotal);
-  Result := Copy(ALineas);
-  dTotalActual := TotalSubsanacion(ALineas);
+  // Las líneas fijas conservan su importe: el total se reparte en el resto.
+  dTotalFijo := 0;
+  oLibres := nil;
+  for i := 0 to High(ALineas) do
+    if ALineas[i].Fija then
+      dTotalFijo := dTotalFijo + ALineas[i].Importe
+    else
+      oLibres := oLibres + [ALineas[i]];
+  if Length(oLibres) = 0 then
+    raise EArgumentException.Create(SSubsanacionSinLineasEditables);
+  dTotalActual := TotalSubsanacion(oLibres);
   if dTotalActual = 0 then
-    RepartirDesdeCero(Result, ATotal)
+    RepartirDesdeCero(oLibres, ATotal - dTotalFijo)
   else
-    RepartirProporcionalmente(Result, dTotalActual, ATotal);
+    RepartirProporcionalmente(oLibres, dTotalActual, ATotal - dTotalFijo);
+  Result := Copy(ALineas);
+  j := 0;
+  for i := 0 to High(Result) do
+    if not Result[i].Fija then
+    begin
+      Result[i] := oLibres[j];
+      Inc(j);
+    end;
   ValidarImportesSubsanacion(Result);
 end;
 

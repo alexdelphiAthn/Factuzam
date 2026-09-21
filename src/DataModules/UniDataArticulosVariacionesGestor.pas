@@ -67,6 +67,10 @@ type
     FSlots: TList<TSlotVariacionUniDAC>;
     FModificado: Boolean;
     procedure LimpiarAtributos;
+    procedure PintarVariaciones;
+    function LeerSeleccion: TDictionary<string, Integer>;
+    procedure AplicarSeleccion(
+      ASeleccion: TDictionary<string, Integer>);
     procedure CargarAtributos;
     procedure ReconstruirAtributos;
     procedure CrearFilaAtributo(
@@ -83,6 +87,10 @@ type
       const AUsuario: string);
     destructor Destroy; override;
     procedure CargarVariaciones(
+      const ACodigoArticulo: string);
+    procedure MostrarTipoVariacion(
+      const ACodigoArticulo, ATipoVariacion: string);
+    procedure AsignarCodigoArticulo(
       const ACodigoArticulo: string);
     function GuardarVariaciones: Boolean;
     function Validar: string;
@@ -128,7 +136,6 @@ procedure TGestorArticulosVariacionesUniDAC.CargarVariaciones(
   const ACodigoArticulo: string);
 var
   Consulta: TUniQuery;
-  Etiqueta: TcxLabel;
 begin
   FCodigoArticulo := ACodigoArticulo;
   FTipoVariacion := '';
@@ -159,22 +166,113 @@ begin
     finally
       Consulta.Free;
     end;
-    if FTipoVariacion = '' then
-    begin
-      Etiqueta := TcxLabel.Create(FPanelAtributos);
-      Etiqueta.Parent := FPanelAtributos;
-      Etiqueta.Left := MARGEN_H;
-      Etiqueta.Top := MARGEN_V;
-      Etiqueta.Caption :=
-        'Este artículo no tiene variaciones activadas.';
-      Etiqueta.Transparent := True;
-    end
-    else
-    begin
-      CargarAtributos;
-      ReconstruirAtributos;
+    PintarVariaciones;
+  end;
+end;
+
+procedure TGestorArticulosVariacionesUniDAC.PintarVariaciones;
+var
+  Etiqueta: TcxLabel;
+begin
+  if FTipoVariacion = '' then
+  begin
+    Etiqueta := TcxLabel.Create(FPanelAtributos);
+    Etiqueta.Parent := FPanelAtributos;
+    Etiqueta.Left := MARGEN_H;
+    Etiqueta.Top := MARGEN_V;
+    Etiqueta.Caption :=
+      'Este artículo no tiene variaciones activadas.';
+    Etiqueta.Transparent := True;
+  end
+  else
+  begin
+    CargarAtributos;
+    ReconstruirAtributos;
+  end;
+end;
+
+procedure TGestorArticulosVariacionesUniDAC.MostrarTipoVariacion(
+  const ACodigoArticulo, ATipoVariacion: string);
+var
+  Consulta: TUniQuery;
+  Seleccion: TDictionary<string, Integer>;
+  sTipo: string;
+begin
+  sTipo := Trim(ATipoVariacion);
+  // Sin cambios: no se repinta para no perder el foco ni lo elegido.
+  if (ACodigoArticulo <> FCodigoArticulo) or
+     not SameText(sTipo, FTipoVariacion) then
+  begin
+    // Lo elegido solo se arrastra si sigue siendo el mismo artículo
+    // (un alta sin grabar o un cambio de tipo en edición).
+    Seleccion := nil;
+    if ACodigoArticulo = FCodigoArticulo then
+      Seleccion := LeerSeleccion;
+    try
+      FCodigoArticulo := ACodigoArticulo;
+      FTipoVariacion := sTipo;
+      FNombreVariacion := '';
+      LimpiarAtributos;
+      if sTipo <> '' then
+      begin
+        Consulta := TUniQuery.Create(nil);
+        try
+          Consulta.Connection := FConexion;
+          Consulta.SQL.Text :=
+            'SELECT NOMBRE_VAR FROM fza_variaciones ' +
+            'WHERE CODIGO_VAR = :tipo';
+          Consulta.ParamByName('tipo').AsString := sTipo;
+          Consulta.Open;
+          if not Consulta.Eof then
+            FNombreVariacion := Consulta.FieldByName(
+              'NOMBRE_VAR').AsString;
+        finally
+          Consulta.Free;
+        end;
+      end;
+      PintarVariaciones;
+      if Assigned(Seleccion) then
+        AplicarSeleccion(Seleccion);
+    finally
+      Seleccion.Free;
     end;
   end;
+end;
+
+procedure TGestorArticulosVariacionesUniDAC.AsignarCodigoArticulo(
+  const ACodigoArticulo: string);
+begin
+  FCodigoArticulo := ACodigoArticulo;
+end;
+
+function TGestorArticulosVariacionesUniDAC.LeerSeleccion:
+  TDictionary<string, Integer>;
+var
+  Slot: TSlotVariacionUniDAC;
+begin
+  Result := TDictionary<string, Integer>.Create;
+  for Slot in FSlots do
+    if Assigned(Slot.Control) and (Slot.Control.ItemIndex >= 0) then
+      Result.AddOrSetValue(Slot.IdAtributo, Integer(NativeInt(
+        Slot.Control.Properties.Items.Objects[
+          Slot.Control.ItemIndex])));
+end;
+
+procedure TGestorArticulosVariacionesUniDAC.AplicarSeleccion(
+  ASeleccion: TDictionary<string, Integer>);
+var
+  Slot: TSlotVariacionUniDAC;
+  IdConjunto: Integer;
+  Indice: Integer;
+begin
+  for Slot in FSlots do
+    if Assigned(Slot.Control) and
+       ASeleccion.TryGetValue(Slot.IdAtributo, IdConjunto) then
+      for Indice := 0 to Slot.Control.Properties.Items.Count - 1 do
+        if Integer(NativeInt(
+             Slot.Control.Properties.Items.Objects[Indice])) =
+           IdConjunto then
+          Slot.Control.ItemIndex := Indice;
 end;
 
 procedure TGestorArticulosVariacionesUniDAC.CargarAtributos;

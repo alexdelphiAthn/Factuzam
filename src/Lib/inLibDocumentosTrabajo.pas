@@ -36,6 +36,10 @@ const
   TIPO_DOCUMENTO_ORIGEN_SESION_COMPRA = 'SE';
   TIPO_DOCUMENTO_ORIGEN_INVENTARIO = 'IN';
   TIPO_DOCUMENTO_ORIGEN_SESION_TARIFAS = 'TARC';
+  // Propuesta de la distribución entre tiendas: serie fija y, como
+  // número, su identificador.
+  TIPO_DOCUMENTO_ORIGEN_PROPUESTA_TRASPASO = 'PT';
+  SERIE_DOCUMENTO_ORIGEN_PROPUESTA_TRASPASO = 'PT';
   LIMITE_DOCUMENTOS_ORIGEN_DEFECTO = 100;
   LIMITE_DOCUMENTOS_ORIGEN_MAXIMO = 1000;
 
@@ -234,7 +238,7 @@ end;
 
 function TiposDocumentoTrabajoOrigen: TTiposDocumentoTrabajoOrigen;
 begin
-  SetLength(Result, 13);
+  SetLength(Result, 14);
   AsignarTipoDocumentoOrigen(Result[0],
     TIPO_DOCUMENTO_ORIGEN_ALBARAN_VENTA,
     SDescripcionTipoOrigenAlbaranVentaDocumentoTrabajo);
@@ -274,6 +278,9 @@ begin
   AsignarTipoDocumentoOrigen(Result[12],
     TIPO_DOCUMENTO_ORIGEN_SESION_TARIFAS,
     SDescripcionTipoOrigenSesionTarifasDocumentoTrabajo);
+  AsignarTipoDocumentoOrigen(Result[13],
+    TIPO_DOCUMENTO_ORIGEN_PROPUESTA_TRASPASO,
+    SDescripcionTipoOrigenPropuestaTraspasoDocumentoTrabajo);
 end;
 
 function EsTipoDocumentoOrigenSoportado(

@@ -114,20 +114,54 @@
         Control = pnlBodyCab
         ExplicitWidth = 726
       end
-      object cxGrid2: TcxGrid
+      object pnlConjunto: TPanel
         Left = 1
         Top = 11
         Width = 728
-        Height = 292
+        Height = 44
+        Align = alTop
+        BevelOuter = bvNone
+        TabOrder = 2
+        object lblConjunto: TcxLabel
+          Left = 8
+          Top = 11
+          Caption = 'Conjunto:'
+          Transparent = True
+        end
+        object cbConjunto: TcxComboBox
+          Left = 96
+          Top = 8
+          Properties.DropDownListStyle = lsFixedList
+          Properties.DropDownRows = 12
+          Properties.OnChange = cbConjuntoPropertiesChange
+          TabOrder = 0
+          Width = 320
+        end
+        object btnMarcarTodas: TcxButton
+          Left = 432
+          Top = 6
+          Width = 200
+          Height = 32
+          Caption = 'Marcar/desmarcar todas'
+          TabOrder = 1
+          OnClick = btnMarcarTodasClick
+        end
+      end
+      object cxGrid2: TcxGrid
+        Left = 1
+        Top = 55
+        Width = 728
+        Height = 248
         Align = alClient
         TabOrder = 1
         ExplicitWidth = 726
         ExplicitHeight = 284
         object tvDetalle: TcxGridDBTableView
           OnCellDblClick = tvDetalleCellDblClick
+          Navigator.Buttons.CustomButtons = <>
+          Navigator.Visible = True
           DataController.DataSource = dsDetalle
-          OptionsData.Deleting = False
-          OptionsData.Inserting = False
+          OptionsData.DeletingConfirmation = False
           OptionsView.GroupByBox = False
           object tvDetalleID_ATRIBUTO_AC: TcxGridDBColumn
             DataBinding.FieldName = 'ID_VA_AC'

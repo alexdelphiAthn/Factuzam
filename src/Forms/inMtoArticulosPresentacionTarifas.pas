@@ -76,6 +76,7 @@ type
 implementation
 
 uses
+  System.Math,
   inLibMensajesVcl,
   Vcl.Dialogs,
   inMtoModalArtTar,
@@ -143,23 +144,24 @@ end;
 procedure TPresentadorTarifasArticulo.RecalcularDesdePrecioFinal(
   ASender: TObject);
 var
-  dPorcentaje: Double;
+  dSalida, dFinal: Double;
 begin
   if EnEdicion then
   begin
     FTarifas.FindField('PRECIO_FINAL_ARTTAR').AsString :=
       ValorEditado(ASender);
-    dPorcentaje := FTarifas.FindField('PORCENTAJE_DTO_ARTTAR').AsFloat;
-    // Mantener el % fijo: salida = final / (1 - pct/100). Fuera de
-    // (0,100) no se puede derivar la salida: fila sin descuento.
-    if (dPorcentaje > 0) and (dPorcentaje < 100) then
+    dSalida := FTarifas.FindField('PRECIO_SALIDA_ARTTAR').AsFloat;
+    dFinal := FTarifas.FindField('PRECIO_FINAL_ARTTAR').AsFloat;
+    // Precio de salida fijo: el descuento sale de la diferencia entre los
+    // dos precios. Sin salida, o con un final por encima (no hay recargos),
+    // la salida pasa a ser el final y la fila queda sin descuento.
+    if (dSalida > 0) and (dFinal <= dSalida) then
     begin
-      FTarifas.FindField('PRECIO_SALIDA_ARTTAR').AsFloat :=
-        FTarifas.FindField('PRECIO_FINAL_ARTTAR').AsFloat /
-        (1 - (dPorcentaje / 100));
+      // Seis decimales, los de la columna: 19,99 - 15,99 no deja 3,999...
       FTarifas.FindField('PRECIO_DTO_ARTTAR').AsFloat :=
-        FTarifas.FindField('PRECIO_SALIDA_ARTTAR').AsFloat -
-        FTarifas.FindField('PRECIO_FINAL_ARTTAR').AsFloat;
+        RoundTo(dSalida - dFinal, -6);
+      FTarifas.FindField('PORCENTAJE_DTO_ARTTAR').AsFloat :=
+        RoundTo(((dSalida - dFinal) / dSalida) * 100, -6);
     end
     else
     begin

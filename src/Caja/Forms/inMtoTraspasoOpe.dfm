@@ -61,11 +61,20 @@
     object btnMisPeticiones: TcxButton
       Left = 698
       Top = 6
-      Width = 190
+      Width = 96
       Height = 28
       Caption = 'Mis peticiones'
       TabOrder = 4
       OnClick = btnMisPeticionesClick
+    end
+    object btnConfirmarPropuesta: TcxButton
+      Left = 798
+      Top = 6
+      Width = 92
+      Height = 28
+      Caption = 'Confirmar propuesta'
+      TabOrder = 5
+      OnClick = btnConfirmarPropuestaClick
     end
   end
   object pnlTop: TPanel [1]

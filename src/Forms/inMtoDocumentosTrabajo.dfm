@@ -430,6 +430,10 @@
       Caption = 'Petición de traspaso...'
       OnClick = miEnviarPeticionTraspasoDTRClick
     end
+    object miEnviarDistribucionDTR: TMenuItem
+      Caption = 'Distribución entre almacenes...'
+      OnClick = miEnviarDistribucionDTRClick
+    end
     object miEnviarInventarioDTR: TMenuItem
       Caption = 'Inventario...'
       OnClick = miEnviarInventarioDTRClick

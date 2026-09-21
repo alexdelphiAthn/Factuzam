@@ -1817,8 +1817,12 @@ var
   dImporte: Double;
   dFactor: Double;
   dImporteDivisa: Double;
+  dCambioPendiente, dCambio: Currency;
 begin
   FNumeroLineaPago := 0;
+  // El cambio calculado en el cobro se reparte entre las formas de pago que
+  // lo devuelven (efectivo): así lo entregado menos el cambio es lo cobrado.
+  dCambioPendiente := FDatosCobro.ImporteCambio;
   FDatosCobro.MemTablePagos.First;
   while not FDatosCobro.MemTablePagos.Eof do
   begin
@@ -1841,12 +1845,19 @@ begin
         'IMPORTE_DIVISA').AsFloat;
       sReferencia := FDatosCobro.MemTablePagos.FieldByName(
         'REFERENCIA').AsString;
+      dCambio := FDatosCobro.MemTablePagos.FieldByName(
+        'IMPORTE_CAMBIO').AsCurrency;
+      if (dCambioPendiente > 0) and (dImporte > 0) and
+         (FDatosCobro.MemTablePagos.FieldByName(
+            'ESDEVUELVE_CAMBIO_FORMA_PAGO_CFP').AsString = 'S') then
+      begin
+        dCambio := Min(dCambioPendiente, Currency(dImporte));
+        dCambioPendiente := dCambioPendiente - dCambio;
+      end;
       FPersistencia.GuardarPago(
         FQuery, FEmpresa, FAlmacen, FCaja,
         FSerieGenerada, FNumeroOperacion, FNumeroLineaPago,
-        sCodigoFormaPago, dImporte,
-        FDatosCobro.MemTablePagos.FieldByName(
-          'IMPORTE_CAMBIO').AsCurrency,
+        sCodigoFormaPago, dImporte, dCambio,
         sDivisa, sRedBlockchain, dFactor, dImporteDivisa, sReferencia);
     end;
     FDatosCobro.MemTablePagos.Next;

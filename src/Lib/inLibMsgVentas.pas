@@ -229,6 +229,8 @@ resourcestring
     'Traspaso';
   SDescripcionTipoOrigenPeticionTraspasoDocumentoTrabajo =
     'Petición de traspaso';
+  SDescripcionTipoOrigenPropuestaTraspasoDocumentoTrabajo =
+    'Propuesta de traspaso';
   SDescripcionTipoOrigenSesionCompraDocumentoTrabajo =
     'Sesión de compra';
   SDescripcionTipoOrigenInventarioDocumentoTrabajo =
@@ -433,6 +435,13 @@ resourcestring
     'No se ha recibido el Documento de Trabajo destino.';
   SErrorAlmacenesDocumentoTrabajoAddBlock =
     'Seleccione al menos un almacen para cargar articulos.';
+  SErrorAlmacenOrigenYVentaDocumentoTrabajoAddBlock =
+    'El almacén %s está marcado a la vez como origen (pestaña 4) y como ' +
+    'almacén de ventas (pestaña 6).' + sLineBreak +
+    'Con "Cargar artículos sin stock en almacén de ventas" no puede salir ' +
+    'ningún SKU: se pide stock en origen y ninguno en ese mismo almacén.' +
+    sLineBreak + sLineBreak +
+    'Marque en la pestaña 6 las tiendas destino o desmarque esa casilla.';
   SPreguntaConfirmarDocumentoTrabajoAddBlock =
     'Se van a cargar %d SKU en el Documento de Trabajo "%s".' +
     sLineBreak +

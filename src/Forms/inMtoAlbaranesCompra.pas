@@ -151,6 +151,8 @@ type
     btnImprimirH: TcxButton;
     btnImprimirV: TcxButton;
     btnPegatinas: TcxButton;
+    // Reparte la mercancia recibida entre las tiendas.
+    btnDistribuir: TcxButton;
     // Boton para saltar al pedido de compra de origen del albaran
     // (atajo Ctrl+May+A via actIrDocumento).
     btnIrDocumento: TcxButton;
@@ -171,6 +173,7 @@ type
     procedure btnImprimirHClick(Sender: TObject);
     procedure btnImprimirVClick(Sender: TObject);
     procedure btnPegatinasClick(Sender: TObject);
+    procedure btnDistribuirClick(Sender: TObject);
     // Eventos del grid de lineas — mismos handlers que en Sesiones de compra:
     // sin esto, las celdas talla quedan vacias al navegar, no se sombrean
     // las celdas fuera del conjunto pivot y Enter no salta de celda.
@@ -329,6 +332,9 @@ uses
   inMtoModalImpAlbCompra,
   inMtoModalImpAlbCompraV,
   inMtoModalEtiqAlb, inLibShowMto, inLibGenBusq,
+  // Distribucion de la mercancia recibida entre las tiendas.
+  inLibMsgDistribucionTiendas, inMtoModalDistribucionTiendas,
+  UniDataDistribucionTiendasComposicion,
   // Factoria del contrato de entrada ColumnSKUcxGrid.
   inLibColumnasSku,
   // Composicion del puerto de persistencia del pivote (V2).
@@ -850,6 +856,71 @@ begin
   end;
 end;
 
+
+// La mercancía recibida se reparte sobre un documento de trabajo: se crea
+// con las líneas del albarán (o se reabre el que ya tuviera) y con él se
+// abre la distribución entre almacenes.
+procedure TfrmMtoAlbaranesCompra.btnDistribuirClick(Sender: TObject);
+var
+  ds: TDataSet;
+  Albaran: TAlbaranCompraDistribucion;
+  Configuracion: TConfiguracionDistribucionTiendas;
+  sTitulo: string;
+  iRespuesta: Integer;
+begin
+  inherited;
+  if dmmAlbaranesCompra <> nil then
+  begin
+    ds := dmmAlbaranesCompra.unqryTablaG;
+    if ds.IsEmpty then
+      ShowMessage_fza(SErrorAlbaranCompraNoActivo)
+    else if (ds.State in [dsEdit, dsInsert]) or
+            (dmmAlbaranesCompra.unqryAlbaranesCompraLineas.State in
+             [dsEdit, dsInsert]) then
+      ShowMessage_fza(SErrorAlbaranCompraSinGrabarDistribuir)
+    else if dmmAlbaranesCompra.unqryAlbaranesCompraLineas.IsEmpty then
+      ShowMessage_fza(SErrorAlbaranCompraSinLineasDistribuir)
+    else
+    begin
+      Albaran.Empresa := ds.FieldByName('CODIGO_EMP_ALBC').AsString;
+      Albaran.Almacen := ds.FieldByName('CODIGO_ALM_ALBC').AsString;
+      Albaran.Serie := ds.FieldByName('SERIE_ALBC').AsString;
+      Albaran.Numero := ds.FieldByName('NUMERO_ALBC').AsString;
+      sTitulo := Format(STituloDocumentoDistribucionAlbaran, [
+        Albaran.Serie, Albaran.Numero]);
+      Configuracion := Default(TConfiguracionDistribucionTiendas);
+      Configuracion.IdDocumento :=
+        BuscarDocumentoDistribucionAlbaranCompra(
+          dmmAlbaranesCompra.unqryTablaG.Connection, Albaran, sTitulo);
+      iRespuesta := mrNo;
+      if Configuracion.IdDocumento > 0 then
+        iRespuesta := MessageDlg_fza(
+          Format(SPreguntaAlbaranCompraYaDistribuido, [
+            Albaran.Serie, Albaran.Numero, Configuracion.IdDocumento]),
+          mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+      if iRespuesta = mrNo then
+        Configuracion.IdDocumento :=
+          CrearDocumentoDistribucionAlbaranCompra(
+            dmmAlbaranesCompra.unqryTablaG.Connection, Albaran, sTitulo,
+            Trim(IdentidadSesion.Usuario));
+      if iRespuesta <> mrCancel then
+      begin
+        if Configuracion.IdDocumento <= 0 then
+          ShowMessage_fza(SErrorAlbaranCompraSinLineasDistribuir)
+        else
+        begin
+          Configuracion.Servicios :=
+            CrearServiciosDistribucionTiendasUniDAC(
+              dmmAlbaranesCompra,
+              dmmAlbaranesCompra.unqryTablaG.Connection, UbicacionSesion);
+          Configuracion.Usuario := Trim(IdentidadSesion.Usuario);
+          Configuracion.PuedeImprimir := PuedeImprimir;
+          TfrmModalDistribucionTiendas.Ejecutar(Self, Configuracion);
+        end;
+      end;
+    end;
+  end;
+end;
 
 procedure TfrmMtoAlbaranesCompra.btnPegatinasClick(Sender: TObject);
 var

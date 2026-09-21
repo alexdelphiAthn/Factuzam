@@ -1868,6 +1868,30 @@
         <DCCReference Include="src\Lib\inLibMsgDistribucionTiendas.pas"/>
         <DCCReference Include="src\DataModules\UniDataDistribucionTiendasRepositorio.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataPropuestasTraspasoConfirmador.pas"/>
+        <DCCReference Include="src\Lib\inLibInformePropuestasTraspaso.pas"/>
+        <DCCReference Include="src\Modals\inMtoModalImpPropuestasTraspaso.pas">
+            <Form>frmPrintPropuestasTraspaso</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalRepartoAutomatico.pas">
+            <Form>frmModalRepartoAutomatico</Form>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalDistribucionTiendas.pas">
+            <Form>frmModalDistribucionTiendas</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\DataModules\UniDataDistribucionTiendasComposicion.pas"/>
+        <DCCReference Include="src\Caja\DataModules\UniDataDistribucionTiendas.pas">
+            <Form>dmDistribucionTiendas</Form>
+            <DesignClass>TDataModule</DesignClass>
+        </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalPrioridadesDistribucion.pas">
+            <Form>frmModalPrioridadesDistribucion</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Modals\inMtoModalSeleccionPropuestaTraspaso.pas">
+            <Form>frmModalSeleccionPropuestaTraspaso</Form>
+        </DCCReference>
+        <DCCReference Include="src\Caja\Forms\inMtoDistribucionTiendas.pas">
+            <Form>frmMtoDistribucionTiendas</Form>
+        </DCCReference>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
