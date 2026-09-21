@@ -100,6 +100,14 @@ procedure EsperarTareaAtendiendoMensajes(
   const ATarea: ITask;
   const AVigilar: TProc); overload;
 
+// Despacha las órdenes de minimizar y restaurar que la barra de tareas haya
+// dejado en la cola de este hilo, y descarta las demás órdenes de sistema
+// (cerrar, mover). Es para llamarla desde AVigilar en las esperas largas:
+// sin ella la orden se queda en cola, el programa no se aparta cuando se
+// le pide y se minimiza por sorpresa al terminar. No despacha nada más, así
+// que sigue sin haber reentrada en la pantalla.
+procedure AtenderMinimizarYRestaurar;
+
 // Tiempo transcurrido en m:ss, o h:mm:ss a partir de la hora: es lo que la
 // ventana de espera pinta junto al botón.
 function TextoTiempoEspera(AMilisegundos: UInt64): string;
@@ -962,6 +970,20 @@ begin
       CheckSynchronize(INTERVALO_SONDEO_TAREA_MS);
       if Assigned(AVigilar) then
         AVigilar();
+    end;
+end;
+
+procedure AtenderMinimizarYRestaurar;
+var
+  oMensaje: TMsg;
+begin
+  // Solo se retiran de la cola las órdenes de sistema: teclado, ratón y
+  // temporizadores siguen sin despacharse mientras dura la espera.
+  while PeekMessage(
+          oMensaje, 0, WM_SYSCOMMAND, WM_SYSCOMMAND, PM_REMOVE) do
+    case oMensaje.wParam and $FFF0 of
+      SC_MINIMIZE, SC_RESTORE:
+        DispatchMessage(oMensaje);
     end;
 end;
 

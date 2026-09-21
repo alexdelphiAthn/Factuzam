@@ -213,6 +213,13 @@ resourcestring
     'Aplicando los scripts que faltan en la base de datos...';
   SAvisoTextoScriptRecortado =
     '[...] El script sigue: aquí solo se ve el principio.';
+  SFaseDescargandoVersionActualizacion =
+    'Descargando la versión nueva...';
+  SFaseDescargandoScriptsActualizacion =
+    'Descargando los scripts que faltan...';
+  SInfoComprobacionScriptsCancelada =
+    'Se ha cancelado la comprobación de los scripts de la base de datos. ' +
+    'No se ha cambiado nada.';
   SAvisoCopiaPreviaObligatoria =
     'Antes de tocar la base de datos se hace una copia de seguridad. ' +
     'Elija dónde guardarla: es lo que permitirá revertir los cambios ' +

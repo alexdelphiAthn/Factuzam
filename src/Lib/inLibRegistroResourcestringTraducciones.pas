@@ -11561,6 +11561,24 @@ begin
       SAvisoTextoScriptRecortado);
   ARegistrar(
     'inLibMsgIntegraciones.' +
+    'SFaseDescargandoVersionActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SFaseDescargandoVersionActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SFaseDescargandoScriptsActualizacion',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SFaseDescargandoScriptsActualizacion);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SInfoComprobacionScriptsCancelada',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SInfoComprobacionScriptsCancelada);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
     'SInfoActualizacionInstalada',
     'src/Lib/inLibMsgIntegraciones.pas',
     @inLibMsgIntegraciones.

@@ -68,6 +68,7 @@ type
       AHayVersionNueva: Boolean):
       TDecisionScriptsActualizacion;
     function CrearVentanaProceso(const ATitulo: string): IVentanaEspera;
+    function CrearVentanaEsperaPantalla: IVentanaEspera;
     function SolicitarCopiaPrevia(out ARutaCopia: string): Boolean;
     function ConfirmarReversion(
       const AEstado: TEstadoActualizacion): Boolean;
@@ -225,6 +226,18 @@ begin
     ATitulo);
 end;
 
+// La espera en movimiento de lo que tarda sin poder decir cuánto: mirar
+// qué le falta a la base y las descargas. Vigila la ventana principal: si
+// se minimiza el programa este modal se va con ella y la espera también,
+// en vez de quedarse sola sobre el escritorio; al restaurarlo vuelven.
+function TfrmModalActualizacion.CrearVentanaEsperaPantalla: IVentanaEspera;
+begin
+  Result := CrearVentanaEspera(
+    Self.BoundsRect,
+    Self.CurrentPPI,
+    Application.MainFormHandle);
+end;
+
 function TfrmModalActualizacion.SolicitarCopiaPrevia(
   out ARutaCopia: string): Boolean;
 begin
@@ -313,6 +326,7 @@ begin
   Result.ConfirmarReversion := ConfirmarReversion;
   Result.ConsultarRestaurarCopia := ConsultarRestaurarCopia;
   Result.CrearVentanaProceso := CrearVentanaProceso;
+  Result.CrearVentanaEspera := CrearVentanaEsperaPantalla;
 end;
 
 procedure TfrmModalActualizacion.EjecutarProceso;

@@ -225,9 +225,24 @@ end;
 procedure TServicioActualizaciones.Notificar(
   const ATexto: string;
   APorcentaje: Integer);
+var
+  Progreso: TProgresoActualizacion;
 begin
-  if Assigned(FProgreso) then
-    FProgreso(ATexto, APorcentaje);
+  Progreso := FProgreso;
+  if Assigned(Progreso) then
+  begin
+    if TThread.CurrentThread.ThreadID = MainThreadID then
+      Progreso(ATexto, APorcentaje)
+    else
+      // Las descargas corren en su propio hilo y la pantalla solo se toca
+      // desde el principal, que mientras espera atiende estas peticiones.
+      TThread.Synchronize(
+        nil,
+        procedure
+        begin
+          Progreso(ATexto, APorcentaje);
+        end);
+  end;
 end;
 
 function TServicioActualizaciones.Configurado: Boolean;
