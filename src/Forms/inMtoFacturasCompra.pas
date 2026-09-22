@@ -307,7 +307,7 @@ function CrearFacturasCompraInyectada(
 implementation
 
 uses
-  inLibMensajesVcl,
+  inLibMensajesVcl, inLibCorreoTickets,
   System.StrUtils,
   inLibFiltroUsuario,
   UniDataAplicacionArticuloCompra,
@@ -763,6 +763,8 @@ begin
       form.dmFacc         := dmmFacturasCompra;
       form.edtSerie.Text  := sSerie;
       form.edtNumero.Text := sNumero;
+      form.ConfigurarDocumentoCorreo(
+        tdcFacturaCompra, sSerie, sNumero);
       form.ShowModal;
     finally
       FreeAndNil(form);
@@ -799,6 +801,8 @@ begin
       form.dmFacc         := dmmFacturasCompra;
       form.edtSerie.Text  := sSerie;
       form.edtNumero.Text := sNumero;
+      form.ConfigurarDocumentoCorreo(
+        tdcFacturaCompra, sSerie, sNumero);
       form.ShowModal;
     finally
       FreeAndNil(form);

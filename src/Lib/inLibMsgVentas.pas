@@ -237,6 +237,8 @@ resourcestring
     'Inventario';
   SDescripcionTipoOrigenSesionTarifasDocumentoTrabajo =
     'Sesión de cambio de tarifas';
+  SDescripcionTipoOrigenPresupuestoVentaDocumentoTrabajo =
+    'Presupuesto';
   SErrorServicioCargaOrigenDocumentoTrabajo =
     'No está disponible el servicio de carga desde documentos.';
   SErrorOrigenDocumentoTrabajoNoSeleccionado =

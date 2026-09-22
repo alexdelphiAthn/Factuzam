@@ -96,7 +96,7 @@
       Left = 16
       Top = 150
       Caption =
-        'Tokens: yyyy = a'#241'o | q = trimestre | mm = mes | dd = d'#237'a'
+        'Tokens: yyyy = 2026 | yy = 26 | q = trimestre | mm = mes | dd = d'#237'a'
       Style.TextColor = clGrayText
       Style.Font.Size = 8
       TabOrder = 10

@@ -471,6 +471,20 @@ begin
     'CANTIDAD_PEDCEL', AFiltro);
 end;
 
+function SqlLineasPresupuestoVentaBase(const AFiltro: string): string;
+begin
+  Result := SqlLineasConCeldasBase('PR', 'fza_presupuestos',
+    'CODIGO_EMP_PRE', 'SERIE_PRE', 'NUMERO_PRE', 'CODIGO_ALM_PRE',
+    'fza_presupuestos_lineas', 'SERIE_PRE_PRELIN',
+    'NUMERO_PRE_PRELIN', 'LINEA_PRELIN', 'CODIGO_ART_PRELIN',
+    'CODIGO_UNIDAD_PRELIN', 'L.CODIGO_ALMACEN_PRELIN', '''''',
+    'NULL', 'COALESCE(L.DESCRIPCION_ARTICULO_PRELIN, '''')',
+    'L.CANTIDAD_PRELIN', 'fza_presupuestos_celdas',
+    'SERIE_PRE_PRECEL', 'NUMERO_PRE_PRECEL', 'LINEA_PRECEL',
+    'ID_FILA_PRECEL', 'ID_AV_PIVOT_PRECEL', 'C.CODIGO_ALM_PRECEL',
+    'CANTIDAD_PRECEL', AFiltro);
+end;
+
 function SqlLineasPedidoCompraBase(const AFiltro: string): string;
 begin
   Result := SqlLineasConCeldasBase('PC', 'fza_pedidos_compra',
@@ -688,7 +702,8 @@ begin
     '       '''' AS LOTE, NULL AS FECHA_CADUCIDAD, ' +
     '       COALESCE(L.DESCRIPCION_ARTICULO_TRPROLIN, '''') ' +
     '         AS DESCRIPCION_ARTICULO, ' +
-    '       CASE WHEN H.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    '       CASE WHEN H.ESTADO_TRPRO IN (''TRASLADADO'', ' +
+    '                                ''TRASLADADO PARCIAL'') ' +
     '            THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
     '            ELSE L.CANTIDAD_TRPROLIN END AS CANTIDAD ' +
     '  FROM fza_traspasos_propuestas H ' +
@@ -701,7 +716,8 @@ begin
     '   AND H.ID_TRPRO = CAST(:NUMERO AS UNSIGNED) ' +
     '   AND CAST(H.ID_TRPRO AS CHAR) = :NUMERO ' +
     '   AND NULLIF(TRIM(L.CODIGO_ART_TRPROLIN), '''') IS NOT NULL ' +
-    '   AND CASE WHEN H.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    '   AND CASE WHEN H.ESTADO_TRPRO IN (''TRASLADADO'', ' +
+    '                                ''TRASLADADO PARCIAL'') ' +
     '            THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
     '            ELSE L.CANTIDAD_TRPROLIN END <> 0';
 end;
@@ -917,6 +933,13 @@ begin
     'AND H.NUMERO_PED = :NUMERO'));
 end;
 
+function SqlLineasPresupuestoVenta: string;
+begin
+  Result := SqlLineasElegibles(SqlLineasPresupuestoVentaBase(
+    'H.CODIGO_EMP_PRE = :EMPRESA AND H.SERIE_PRE = :SERIE ' +
+    'AND H.NUMERO_PRE = :NUMERO'));
+end;
+
 function SqlLineasPedidoCompra: string;
 begin
   Result := SqlLineasElegibles(SqlLineasPedidoCompraBase(
@@ -950,6 +973,13 @@ begin
   Result := SqlLineasResueltas(SqlLineasPedidoVentaBase(
     'H.CODIGO_EMP_PED = :EMPRESA AND H.SERIE_PED = :SERIE ' +
     'AND H.NUMERO_PED = :NUMERO'));
+end;
+
+function SqlLineasResueltasPresupuestoVenta: string;
+begin
+  Result := SqlLineasResueltas(SqlLineasPresupuestoVentaBase(
+    'H.CODIGO_EMP_PRE = :EMPRESA AND H.SERIE_PRE = :SERIE ' +
+    'AND H.NUMERO_PRE = :NUMERO'));
 end;
 
 function SqlLineasResueltasPedidoCompra: string;
@@ -1156,6 +1186,20 @@ begin
     'COALESCE(NULLIF(H.RAZON_SOCIAL_PRV_PEDC, ''''), ' +
     'H.CODIGO_PRV_PEDC, '''')', Lineas, Unidades,
     'H.CODIGO_EMP_PEDC = :EMPRESA_PC', 'LIMITE_PC');
+
+  SqlTotalesCabeceraConCeldas('fza_presupuestos_lineas',
+    'SERIE_PRE_PRELIN', 'NUMERO_PRE_PRELIN', 'CODIGO_ART_PRELIN',
+    'L.CANTIDAD_PRELIN', 'fza_presupuestos_celdas',
+    'SERIE_PRE_PRECEL', 'NUMERO_PRE_PRECEL', 'LINEA_PRELIN',
+    'LINEA_PRECEL', 'CANTIDAD_PRECEL', 'H.SERIE_PRE',
+    'H.NUMERO_PRE', '', Lineas, Unidades);
+  Result := Result + ' UNION ALL ' + SqlRamaCabecera('PR', 'PR',
+    'fza_presupuestos', 'H.CODIGO_EMP_PRE',
+    'H.SERIE_PRE', 'H.NUMERO_PRE', 'H.SERIE_PRE', 'H.NUMERO_PRE',
+    'H.FECHA_PRE', 'H.INSTANTE_ALTA', 'H.ESTADO_PRE',
+    'COALESCE(NULLIF(H.RAZON_SOCIAL_CLIENTE_PRE, ''''), ' +
+    'H.CODIGO_CLI_PRE, '''')', Lineas, Unidades,
+    'H.CODIGO_EMP_PRE = :EMPRESA_PR', 'LIMITE_PR');
 end;
 
 function SqlCabecerasFacturas: string;
@@ -1451,7 +1495,8 @@ begin
     '(SELECT COUNT(*) FROM fza_traspasos_propuestas_lineas L ' +
     'WHERE L.ID_TRPRO_TRPROLIN = H.ID_TRPRO)';
   Unidades := StringReplace(Lineas, 'COUNT(*)',
-    'COALESCE(SUM(CASE WHEN H.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    'COALESCE(SUM(CASE WHEN H.ESTADO_TRPRO IN (''TRASLADADO'', ' +
+    '''TRASLADADO PARCIAL'') ' +
     'THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
     'ELSE L.CANTIDAD_TRPROLIN END), 0)', []);
   Result := SqlRamaCabecera('PT', 'PT',
@@ -1672,6 +1717,10 @@ begin
   begin
     Result := SqlLineasPedidoVenta;
   end
+  else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PRESUPUESTO_VENTA then
+  begin
+    Result := SqlLineasPresupuestoVenta;
+  end
   else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PEDIDO_COMPRA then
   begin
     Result := SqlLineasPedidoCompra;
@@ -1741,6 +1790,10 @@ begin
   else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PEDIDO_VENTA then
   begin
     Result := SqlLineasResueltasPedidoVenta;
+  end
+  else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PRESUPUESTO_VENTA then
+  begin
+    Result := SqlLineasResueltasPresupuestoVenta;
   end
   else if TipoDocumento = TIPO_DOCUMENTO_ORIGEN_PEDIDO_COMPRA then
   begin
@@ -1888,6 +1941,15 @@ begin
       'ELSE ESTADO_PED END AS ESTADO FROM fza_pedidos ' +
       ' WHERE CODIGO_EMP_PED = :EMPRESA AND SERIE_PED = :SERIE ' +
       '   AND NUMERO_PED = :NUMERO FOR UPDATE';
+  end
+  else if ATipoDocumento = TIPO_DOCUMENTO_ORIGEN_PRESUPUESTO_VENTA then
+  begin
+    ASql :=
+      'SELECT CASE WHEN UPPER(COALESCE(ESTADO_PRE, '''')) IN ' +
+      '(''CANCELADA'', ''CANCELADO'', ''ANULADA'') THEN ''CANCELADO'' ' +
+      'ELSE ESTADO_PRE END AS ESTADO FROM fza_presupuestos ' +
+      ' WHERE CODIGO_EMP_PRE = :EMPRESA AND SERIE_PRE = :SERIE ' +
+      '   AND NUMERO_PRE = :NUMERO FOR UPDATE';
   end
   else if ATipoDocumento = TIPO_DOCUMENTO_ORIGEN_PEDIDO_COMPRA then
   begin

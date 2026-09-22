@@ -38,7 +38,8 @@ uses
   dxScrollbarAnnotations, inLibCajaVentaIntf, inLibCajaVentanasIntf,
   inLibTraspasoOpePersistenciaIntf, inLibArticulosAtributosIntf,
   inLibTraspasoTicketIntf, inLibCajaPantallaInyeccion,
-  inLibColumnasSkuIntf, inLibColumnasSkuModoSku;
+  inLibColumnasSkuIntf, inLibColumnasSkuModoSku,
+  inLibDistribucionTiendasIntf;
 
 const
   WM_REVISAR_ENTER_AS_TAB_TRASPASO = WM_APP + 109;
@@ -102,6 +103,9 @@ type
     procedure btnConfirmarPropuestaClick(Sender: TObject);
   private
     FDatos: TdmTraspaso;
+    // La cargada con Confirmar propuesta; vale mientras FDatos.IdPropuesta
+    // sea la suya.
+    FPropuestaCargada: TPropuestaTraspaso;
     FGridCtrl: TGridArticulosLineas;
     FModoSku: TModoEntradaSku;
     FModoEntradaSel: TModoColumnasSku;
@@ -246,6 +250,7 @@ type
     procedure QuitarLinea;
     procedure EjecutarTraspaso(AConTicket: Boolean);
     procedure EjecutarTraspasoInterno(AConTicket: Boolean);
+    function ElegirEstadoPropuesta: Boolean;
     procedure AvisarStockSolicitud(const AAlmacenOrigen: string);
     procedure EnviarSolicitud;
     function ValidarEmpleadoActual(
@@ -1752,7 +1757,8 @@ begin
 end;
 
 // Propuesta de la distribución con origen en este almacén: se carga como un
-// traspaso con el destino fijo y al grabarlo (F12) queda trasladada.
+// traspaso con el destino fijo y lo que falte por traspasar; al grabarlo
+// (F12) se pregunta si queda trasladada o trasladada en parte.
 procedure TfrmMtoOpeTraspaso.btnConfirmarPropuestaClick(Sender: TObject);
 var
   Seleccion: TResultadoSeleccionPropuesta;
@@ -1768,6 +1774,7 @@ begin
       FComboCodigos.IndexOf(Seleccion.Propuesta.AlmacenDestino);
     cboDestino.Properties.ReadOnly := True;
     FDatos.VincularPropuesta(Seleccion.Propuesta.IdPropuesta);
+    FPropuestaCargada := Seleccion.Propuesta;
     ShowMessage_fza(Format(SInfoPropuestaCargadaEnTraspaso, [
       Seleccion.Propuesta.IdPropuesta, Seleccion.Propuesta.AlmacenDestino]));
   end;
@@ -2786,7 +2793,8 @@ begin
       sDestino := DestinoSeleccionado;
       if sDestino = '' then
         ShowMessage_fza(SErrorAlmacenDestinoTraspasoNoSeleccionado)
-      else if FDatos.GrabarTraspaso(sDestino, sNumOp) then
+      else if ElegirEstadoPropuesta and
+              FDatos.GrabarTraspaso(sDestino, sNumOp) then
       begin
         ShowMessage_fza(Format(SInfoTraspasoGrabado, [sNumOp]));
         if AConTicket then
@@ -2800,6 +2808,22 @@ begin
         AplicarModo(mtTraspaso);
       end;
     end;
+  end;
+end;
+
+// Sin propuesta cargada no hay nada que preguntar. Cancelar no graba.
+function TfrmMtoOpeTraspaso.ElegirEstadoPropuesta: Boolean;
+var
+  sEstado: string;
+begin
+  Result := (FDatos.IdPropuesta = 0) or
+    (FDatos.IdPropuesta <> FPropuestaCargada.IdPropuesta);
+  if not Result then
+  begin
+    Result := PreguntarEstadoPropuestaAlGrabar(
+      FPropuestaCargada, FDatos.cdsLineas, sEstado);
+    if Result then
+      FDatos.EstablecerEstadoPropuestaAlGrabar(sEstado);
   end;
 end;
 

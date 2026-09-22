@@ -42,6 +42,10 @@ resourcestring
     'contador PV de la serie %s y empresa %s.';
   SErrorLineaPresupuestoSinArticulo =
     'La línea del presupuesto no tiene artículo; no se puede guardar.';
+  SPreguntaLineaLibrePresupuesto =
+    'Artículo/SKU no encontrado: %s' + sLineBreak +
+    '¿Añadirlo al presupuesto como línea libre (sin artículo del ' +
+    'catálogo)?';
 
   STituloBuscarArticulosLineasPresupuesto =
     'Búsqueda de Artículos en Líneas de Presupuesto';
@@ -78,6 +82,15 @@ resourcestring
     'Pasar a albarán';
   SCaptionPasarPresupuestoPedido =
     'Pasar a pedido';
+  SCaptionEnviarPresupuestoCaja =
+    'Enviar a caja';
+  SErrorPresupuestoSinLineasCaja =
+    'El presupuesto no tiene líneas que enviar a caja.';
+  SInfoLineasPresupuestoVolcadasCaja =
+    '%d líneas enviadas a la venta de caja.';
+  SAvisoLineasPresupuestoNoVolcadasCaja =
+    '%d líneas enviadas a la venta de caja; %d no se han podido ' +
+    'cargar (sin SKU, artículo inexistente o descatalogado).';
   SErrorSeleccionePresupuesto =
     'Seleccione un presupuesto.';
   SErrorPresupuestoNoExiste =
@@ -95,10 +108,24 @@ resourcestring
   SErrorDocumentoImpresionNoExiste =
     'El documento que desea imprimir no existe.';
 
+  SInformeNumeroDocumento =
+    'Número: [Cabecera."SERIE"] / [Cabecera."NUMERO"]';
   SInformeFechaDocumento =
     'Fecha: [Cabecera."FECHA"]';
-  SInformeArticuloDocumento =
-    'Artículo / Descripción / Variante';
+  SInformeValidezDocumento =
+    'Válido hasta: ';
+  SInformeEmisorDocumento =
+    'Emisor';
+  SInformeClienteDocumento =
+    'Cliente';
+  SInformeProveedorDocumento =
+    'Proveedor';
+  SInformeNifDocumento =
+    'NIF: ';
+  SInformeCodigoDocumento =
+    'Código';
+  SInformeDescripcionDocumento =
+    'Descripción';
   SInformeCantidadDocumento =
     'Cantidad';
   SInformePrecioDocumento =
@@ -107,16 +134,33 @@ resourcestring
     'IVA %';
   SInformeImporteDocumento =
     'Importe';
-  SInformeBaseDocumento =
-    'Base: [FormatFloat(''0.00'', <Cabecera."BASES">)]';
-  SInformeImpuestosDocumento =
-    'Impuestos: [FormatFloat(''0.00'', <Cabecera."IMPUESTOS">)]';
-  SInformeRetencionDocumento =
-    'Retención: [FormatFloat(''0.00'', <Cabecera."RETENCION">)]';
-  SInformeTotalDocumento =
-    'TOTAL: [FormatFloat(''0.00'', <Cabecera."TOTAL">)]';
-  SInformeFormaPagoDocumento =
-    'Forma de pago: [Cabecera."FORMA_PAGO"]';
+  SInformeTipoIvaDocumento =
+    'Tipo';
+  SInformeBaseImponibleDocumento =
+    'Base imponible';
+  SInformePorcentajeIvaDocumento =
+    '% IVA';
+  SInformeCuotaIvaDocumento =
+    'Cuota';
+  SInformeIvaNormalDocumento =
+    'Normal';
+  SInformeIvaReducidoDocumento =
+    'Reducido';
+  SInformeIvaSuperreducidoDocumento =
+    'Superreducido';
+  SInformeIvaExentoDocumento =
+    'Exento';
+  SInformeTotalIvaDocumento =
+    'Total IVA';
+  SInformeRetencionIrpfDocumento =
+    'Retención IRPF ' +
+    '[FormatFloat(''0.##'', <Cabecera."PORCENTAJE_RETENCION">)] %';
+  SInformeTotalLiquidoDocumento =
+    'TOTAL';
+  SInformeFormaPagoDescDocumento =
+    'Forma de pago: [Cabecera."FORMA_PAGO_DESCRIPCION"]';
+  SInformeObservacionesDocumento =
+    'Observaciones';
   SInformePaginaDocumento =
     'Página [Page#] de [TotalPages#]';
   STituloImprimirDocumento =

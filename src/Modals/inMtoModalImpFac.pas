@@ -100,12 +100,6 @@ type
     procedure EjecutarEnvioEmailConfigurado;
     procedure EnviarPdfPorCorreo(const ARutaPdf: string);
     procedure EnviarCorreoIndividualPreparado;
-    function IntentarEliminarPdfTemporal(
-      const ARutaPdf: string;
-      out ADetalle: string): Boolean;
-    procedure NotificarPdfTemporalNoEliminado(
-      const ARutaPdf, ADetalle: string);
-    procedure EliminarPdfTemporalSeguro(const ARutaPdf: string);
     procedure WMIniciarEnvioEmailFactura(
       var Message: TMessage); message WM_INICIAR_ENVIO_EMAIL_FACTURA;
     function PrepararLote(
@@ -145,23 +139,14 @@ implementation
 
 uses
   inLibMensajesVcl,
-  System.IOUtils,
   inMtoPreviewExcel, inLibFacturaExcel, inLibVerifactu,
   inLibFormatoDocumento, inLibVentasWsCola, inLibFacturaPdfBlob,
   inLibDir, inLibFacturasPersistenciaIntf,
   UniDataFacturasOperaciones, UniDataVentasWsCola,
   UniDataInformeFacturaRepositorio, inLibMsgFacturas,
-  inLibCorreoTickets, inLibCorreoValidacion;
+  inLibCorreoTickets, inLibCorreoDocumentoVcl;
 
 resourcestring
-  STituloEnviarFacturaCorreo = 'Enviar factura por correo electrónico';
-  SSolicitudEmailFactura = 'Correo electrónico:';
-  SBotonConfirmarEnvioFactura = 'Confirmar envío';
-  SBotonCancelarEnvioFactura = 'Cancelar';
-  SErrorEmailFacturaVacio =
-    'Indique una dirección de correo electrónico.';
-  SErrorEmailFacturaInvalido =
-    'La dirección de correo electrónico no es válida.';
   SErrorServicioCorreoFacturaNoDisponible =
     'No está disponible el servicio de envío de facturas por correo.';
   SInfoFacturaEnviadaCorreo =
@@ -171,119 +156,6 @@ resourcestring
   SErrorPdfTemporalCorreoFactura =
     'No se pudo generar el PDF temporal para enviar la factura por ' +
     'correo electrónico.';
-  SAvisoPdfTemporalCorreoNoEliminado =
-    'No se pudo eliminar el PDF temporal usado para el correo: %s';
-
-procedure InformarFalloSecundarioEnDepurador(
-  const AContexto: PChar;
-  E: Exception);
-begin
-  try
-    OutputDebugString(PChar(
-      string(AContexto) + ': ' + E.ClassName + ': ' + E.Message));
-  except
-    OutputDebugString(AContexto);
-  end;
-end;
-
-type
-  TfrmConfirmarCorreoFactura = class(TForm)
-  private
-    FEmail: TEdit;
-    procedure ConfirmarClick(Sender: TObject);
-    function EmailPuedeConfirmarse: Boolean;
-  public
-    constructor Create(AOwner: TComponent); override;
-    function Ejecutar(
-      const AEmailInicial: string;
-      out AEmail: string): Boolean;
-  end;
-
-{ TfrmConfirmarCorreoFactura }
-
-constructor TfrmConfirmarCorreoFactura.Create(AOwner: TComponent);
-var
-  BotonCancelar: TButton;
-  BotonConfirmar: TButton;
-  EtiquetaEmail: TLabel;
-begin
-  inherited CreateNew(AOwner);
-  BorderIcons := [biSystemMenu];
-  BorderStyle := bsDialog;
-  Caption := STituloEnviarFacturaCorreo;
-  ClientHeight := 132;
-  ClientWidth := 424;
-  Font.Assign(Screen.MessageFont);
-  Position := poScreenCenter;
-  if AOwner is TCustomForm then
-  begin
-    PopupMode := pmExplicit;
-    PopupParent := TCustomForm(AOwner);
-  end;
-
-  EtiquetaEmail := TLabel.Create(Self);
-  EtiquetaEmail.Parent := Self;
-  EtiquetaEmail.Caption := SSolicitudEmailFactura;
-  EtiquetaEmail.SetBounds(16, 14, 392, 20);
-
-  FEmail := TEdit.Create(Self);
-  FEmail.Parent := Self;
-  FEmail.SetBounds(16, 36, 392, 25);
-  FEmail.Anchors := [akLeft, akTop, akRight];
-
-  BotonConfirmar := TButton.Create(Self);
-  BotonConfirmar.Parent := Self;
-  BotonConfirmar.Caption := SBotonConfirmarEnvioFactura;
-  BotonConfirmar.Default := True;
-  BotonConfirmar.SetBounds(136, 84, 144, 30);
-  BotonConfirmar.OnClick := ConfirmarClick;
-
-  BotonCancelar := TButton.Create(Self);
-  BotonCancelar.Parent := Self;
-  BotonCancelar.Cancel := True;
-  BotonCancelar.Caption := SBotonCancelarEnvioFactura;
-  BotonCancelar.ModalResult := mrCancel;
-  BotonCancelar.SetBounds(288, 84, 120, 30);
-end;
-
-procedure TfrmConfirmarCorreoFactura.ConfirmarClick(Sender: TObject);
-begin
-  if EmailPuedeConfirmarse then
-    ModalResult := mrOk;
-end;
-
-function TfrmConfirmarCorreoFactura.EmailPuedeConfirmarse: Boolean;
-begin
-  Result := Trim(FEmail.Text) <> '';
-  if not Result then
-  begin
-    ShowMessage_fza(SErrorEmailFacturaVacio);
-    FEmail.SetFocus;
-  end
-  else
-  begin
-    Result := EmailDocumentoValido(FEmail.Text);
-    if not Result then
-    begin
-      ShowMessage_fza(SErrorEmailFacturaInvalido);
-      FEmail.SetFocus;
-    end;
-  end;
-end;
-
-function TfrmConfirmarCorreoFactura.Ejecutar(
-  const AEmailInicial: string;
-  out AEmail: string): Boolean;
-begin
-  FEmail.Text := AEmailInicial;
-  ActiveControl := FEmail;
-  FEmail.SelectAll;
-  Result := ShowModal = mrOk;
-  if Result then
-    AEmail := Trim(FEmail.Text)
-  else
-    AEmail := '';
-end;
 
 { TfrmPrintFac }
 
@@ -352,15 +224,13 @@ end;
 
 function TfrmPrintFac.SolicitarEmailIndividual: Boolean;
 var
-  Formulario: TfrmConfirmarCorreoFactura;
   sEmail: string;
 begin
-  Formulario := TfrmConfirmarCorreoFactura.Create(Self);
-  try
-    Result := Formulario.Ejecutar(FEmailInicial, sEmail);
-  finally
-    Formulario.Free;
-  end;
+  Result := SolicitarEmailDocumento(
+    Self,
+    TituloEnvioDocumentoCorreo(NombreDocumentoCorreo(tdcFactura)),
+    FEmailInicial,
+    sEmail);
   if Result then
     FEmailEnvio := sEmail
   else
@@ -515,9 +385,10 @@ procedure TfrmPrintFac.EnviarCorreoIndividualPreparado;
 var
   sRutaPdf: string;
 begin
-  sRutaPdf := Trim(TPath.Combine(
-    TPath.GetTempPath,
-    TPath.ChangeExtension(TPath.GetRandomFileName, '.pdf')));
+  sRutaPdf := CrearRutaPdfTemporalCorreo(
+    tdcFactura,
+    edtSerie.Text,
+    edtNroFac.Text);
   try
     try
       if ExportarPdfPreparado(sRutaPdf, False) then
@@ -538,71 +409,7 @@ begin
           0);
     end;
   finally
-    EliminarPdfTemporalSeguro(sRutaPdf);
-  end;
-end;
-
-function TfrmPrintFac.IntentarEliminarPdfTemporal(
-  const ARutaPdf: string;
-  out ADetalle: string): Boolean;
-var
-  iError: Cardinal;
-begin
-  ADetalle := '';
-  try
-    Result := not FileExists(ARutaPdf);
-    if not Result then
-    begin
-      SetLastError(ERROR_SUCCESS);
-      Result := System.SysUtils.DeleteFile(ARutaPdf);
-      if not Result then
-      begin
-        iError := GetLastError;
-        // Si otro proceso terminó de borrarlo entre FileExists y DeleteFile,
-        // la limpieza también se considera completada.
-        Result := not FileExists(ARutaPdf);
-        if not Result and (iError <> ERROR_SUCCESS) then
-          ADetalle := SysErrorMessage(iError);
-      end;
-    end;
-  except
-    on E: Exception do
-    begin
-      Result := False;
-      ADetalle := E.ClassName + ': ' + E.Message;
-    end;
-  end;
-end;
-
-procedure TfrmPrintFac.NotificarPdfTemporalNoEliminado(
-  const ARutaPdf, ADetalle: string);
-var
-  sMensaje: string;
-begin
-  sMensaje := Format(SAvisoPdfTemporalCorreoNoEliminado, [ARutaPdf]);
-  if Trim(ADetalle) <> '' then
-    sMensaje := sMensaje + sLineBreak + ADetalle;
-  try
-    if Assigned(RegistroLog) then
-      RegistroLog.RegistrarAviso(sMensaje);
-  except
-    on E: Exception do
-      InformarFalloSecundarioEnDepurador(
-        'inMtoModalImpFac.NotificarPdfTemporalNoEliminado.Log', E);
-  end;
-  MessageDlg_fza(sMensaje, mtWarning, [mbOK], 0);
-end;
-
-procedure TfrmPrintFac.EliminarPdfTemporalSeguro(const ARutaPdf: string);
-var
-  sDetalle: string;
-  sRutaPdf: string;
-begin
-  sRutaPdf := Trim(ARutaPdf);
-  if sRutaPdf <> '' then
-  begin
-    if not IntentarEliminarPdfTemporal(sRutaPdf, sDetalle) then
-      NotificarPdfTemporalNoEliminado(sRutaPdf, sDetalle);
+    EliminarPdfTemporalCorreo(sRutaPdf, RegistroLog);
   end;
 end;
 

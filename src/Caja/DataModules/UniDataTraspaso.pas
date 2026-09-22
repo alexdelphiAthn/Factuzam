@@ -65,6 +65,9 @@ type
     // Propuesta de traspaso (Distribuir entre tiendas) que este traspaso
     // confirma al grabarse; 0 = ninguna.
     FIdPropuesta: Int64;
+    // Estado en que queda la propuesta al grabar: TRASLADADO o
+    // TRASLADADO PARCIAL.
+    FEstadoPropuestaAlGrabar: string;
     FUltimoDocumentoGrabado: TContextoGrabacionTraspaso;
     function GetIdentidadSesion: TIdentidadSesion;
     procedure ConfigurarEstructuraCabecera;
@@ -119,8 +122,8 @@ type
     // Suma lo servido a las líneas de la solicitud y recalcula su estado.
     procedure MarcarSolicitudAtendida(QryTrx: TUniQuery;
                              const ANumero, ASerie: string);
-    // Pasa la propuesta vinculada a TRASLADADO con la referencia del
-    // traspaso y anota en sus líneas lo realmente traspasado.
+    // Pasa la propuesta vinculada a TRASLADADO (o TRASLADADO PARCIAL) con
+    // la referencia del traspaso y anota en sus líneas lo realmente traspasado.
     procedure MarcarPropuestaConfirmada(
       QryTrx: TUniQuery;
       const AContexto: TContextoGrabacionTraspaso);
@@ -159,6 +162,9 @@ type
     // El próximo GrabarTraspaso confirmará esta propuesta de traspaso en
     // su misma transacción. PrepararNuevo la desvincula.
     procedure VincularPropuesta(AIdPropuesta: Int64);
+    // Cómo queda la propuesta vinculada al grabar (TRASLADADO, por omisión,
+    // o TRASLADADO PARCIAL, que la deja abierta con lo que falte).
+    procedure EstablecerEstadoPropuestaAlGrabar(const AEstado: string);
     // Propuestas de la distribución entre tiendas, sobre esta conexión.
     function CrearRepositorioPropuestas: IRepositorioDistribucionTiendas;
     // Última referencia de documento grabada (tipo, serie y número).
@@ -353,6 +359,7 @@ procedure TdmTraspaso.PrepararNuevo(AModo: TModoTraspaso; const AEmpresa,
 begin
   FModo := AModo;
   FIdPropuesta := 0;
+  FEstadoPropuestaAlGrabar := ESTADO_PROPUESTA_TRASPASO_TRASLADADO;
   ConfigurarEstructuraCabecera;
   ConfigurarEstructuraLineas;
   cdsCabecera.Append;
@@ -376,6 +383,18 @@ end;
 procedure TdmTraspaso.VincularPropuesta(AIdPropuesta: Int64);
 begin
   FIdPropuesta := AIdPropuesta;
+  FEstadoPropuestaAlGrabar := ESTADO_PROPUESTA_TRASPASO_TRASLADADO;
+end;
+
+procedure TdmTraspaso.EstablecerEstadoPropuestaAlGrabar(
+  const AEstado: string);
+begin
+  if not (SameText(AEstado, ESTADO_PROPUESTA_TRASPASO_TRASLADADO) or
+          SameText(AEstado,
+            ESTADO_PROPUESTA_TRASPASO_TRASLADADO_PARCIAL)) then
+    raise EArgumentException.CreateFmt(
+      'Estado de propuesta no válido al grabar: %s', [AEstado]);
+  FEstadoPropuestaAlGrabar := AEstado;
 end;
 
 function TdmTraspaso.UltimoDocumentoGrabado: TContextoGrabacionTraspaso;
@@ -1119,15 +1138,16 @@ begin
 end;
 
 // El predicado lleva estado, origen y destino: si otro usuario ya la
-// confirmó, o el destino elegido no es el suyo, no cuadra ninguna fila y
-// la excepción deshace el traspaso entero.
+// cerró, o el destino elegido no es el suyo, no cuadra ninguna fila y
+// la excepción deshace el traspaso entero. Una trasladada en parte se
+// puede volver a traspasar hasta que se dé por trasladada.
 procedure TdmTraspaso.MarcarPropuestaConfirmada(
   QryTrx: TUniQuery;
   const AContexto: TContextoGrabacionTraspaso);
 begin
   QryTrx.SQL.Text :=
     'UPDATE fza_traspasos_propuestas ' +
-    '   SET ESTADO_TRPRO = :TRASLADADO, ' +
+    '   SET ESTADO_TRPRO = :ESTADO, ' +
     '       TIPO_DOC_TRPRO = :TIPO, ' +
     '       SERIE_DOC_TRPRO = :SERIE, ' +
     '       NUMERO_DOC_TRPRO = :NUMERO, ' +
@@ -1137,13 +1157,14 @@ begin
     '       USUARIO_RESOLUCION_TRPRO = :USUARIO, ' +
     '       USUARIO_MODIF = :USUARIO ' +
     ' WHERE ID_TRPRO = :ID_TRPRO ' +
-    '   AND ESTADO_TRPRO = :PENDIENTE ' +
+    '   AND ESTADO_TRPRO IN (:PENDIENTE, :PARCIAL) ' +
     '   AND CODIGO_ALM_ORIGEN_TRPRO = :ORIGEN ' +
     '   AND CODIGO_ALM_DESTINO_TRPRO = :DESTINO';
-  QryTrx.ParamByName('TRASLADADO').AsString :=
-    ESTADO_PROPUESTA_TRASPASO_TRASLADADO;
+  QryTrx.ParamByName('ESTADO').AsString := FEstadoPropuestaAlGrabar;
   QryTrx.ParamByName('PENDIENTE').AsString :=
     ESTADO_PROPUESTA_TRASPASO_PENDIENTE;
+  QryTrx.ParamByName('PARCIAL').AsString :=
+    ESTADO_PROPUESTA_TRASPASO_TRASLADADO_PARCIAL;
   QryTrx.ParamByName('TIPO').AsString := AContexto.TipoDocumento;
   QryTrx.ParamByName('SERIE').AsString := AContexto.SerieDocumento;
   QryTrx.ParamByName('NUMERO').AsString := AContexto.NumeroDocumento;

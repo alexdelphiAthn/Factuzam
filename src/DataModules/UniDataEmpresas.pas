@@ -86,7 +86,7 @@ type
 implementation
 
 uses
-  inLibCadenas, inLibDatasets,
+  inLibCadenas, inLibDatasets, inLibSerieTokenizada,
   UniDataValoresAutomaticosRepositorio,
   System.Diagnostics,
   UniDataAperturaConsultas,
@@ -190,9 +190,16 @@ begin
       unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * ' +
         '  FROM vi_empresas_retenciones ' +
-        ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP';
+        ' WHERE CODIGO_EMP_EMPRET = :CODIGO_EMP_EMP' +
+        '   AND CODIGO_RETENCION_EMPRET <> :CODIGO_PROPIO';
       unqrySol.ParamByName('CODIGO_EMP_EMP').AsString :=
         FindField('CODIGO_EMP_EMPRET').AsString;
+      // Sin el propio registro: al editar se comparaba consigo mismo
+      if DataSet.State = dsEdit then
+        unqrySol.ParamByName('CODIGO_PROPIO').AsString :=
+          VarToStr(FindField('CODIGO_RETENCION_EMPRET').OldValue)
+      else
+        unqrySol.ParamByName('CODIGO_PROPIO').AsString := '';
       unqrySol.Open;
       if not ExistePeriodoUnico(
            unqrySol,
@@ -390,20 +397,7 @@ begin
 end;
 
 procedure TdmEmpresas.ValidarSerieTokenizada;
-const
-  TOKEN_EJERCICIO = 'yyyy';
-  TOKEN_TRIMESTRE = 'q';
-  TOKEN_MES = 'mm';
-  TOKEN_DIA = 'dd';
 var
-  iAnioActual: Word;
-  iDiaActual: Word;
-  iDias: Integer;
-  iEjercicios: Integer;
-  iMesActual: Word;
-  iMeses: Integer;
-  iTrimestres: Integer;
-  sSerieResuelta: string;
   sSerieTokenizada: string;
 begin
   sSerieTokenizada := Trim(
@@ -412,23 +406,7 @@ begin
     sSerieTokenizada;
   if sSerieTokenizada <> '' then
   begin
-    iEjercicios := ContarOcurrenciasAnsi(
-      sSerieTokenizada,
-      TOKEN_EJERCICIO);
-    iTrimestres := ContarOcurrenciasAnsi(
-      sSerieTokenizada,
-      TOKEN_TRIMESTRE);
-    iMeses := ContarOcurrenciasAnsi(
-      sSerieTokenizada,
-      TOKEN_MES);
-    iDias := ContarOcurrenciasAnsi(
-      sSerieTokenizada,
-      TOKEN_DIA);
-    if (iEjercicios > 1) or
-       (iTrimestres > 1) or
-       (iMeses > 1) or
-       (iDias > 1) or
-       (iEjercicios + iTrimestres + iMeses + iDias = 0) then
+    if not EsSerieTokenizadaValida(sSerieTokenizada) then
     begin
       raise ERangeError.CreateFmt(
         SErrorSerieTokenizadaEmpresa,
@@ -441,30 +419,8 @@ begin
         SErrorSerieTokenizadaCalendarioNoNatural);
     end;
     if Trim(unqrySeries.FieldByName('EMPSER').AsString) = '' then
-    begin
-      DecodeDate(Date, iAnioActual, iMesActual, iDiaActual);
-      sSerieResuelta := StringReplace(
-        sSerieTokenizada,
-        TOKEN_EJERCICIO,
-        Format('%.4d', [iAnioActual]),
-        [rfReplaceAll]);
-      sSerieResuelta := StringReplace(
-        sSerieResuelta,
-        TOKEN_MES,
-        Format('%.2d', [iMesActual]),
-        [rfReplaceAll]);
-      sSerieResuelta := StringReplace(
-        sSerieResuelta,
-        TOKEN_DIA,
-        Format('%.2d', [iDiaActual]),
-        [rfReplaceAll]);
-      sSerieResuelta := StringReplace(
-        sSerieResuelta,
-        TOKEN_TRIMESTRE,
-        IntToStr(((iMesActual - 1) div 3) + 1),
-        [rfReplaceAll]);
-      unqrySeries.FieldByName('EMPSER').AsString := sSerieResuelta;
-    end;
+      unqrySeries.FieldByName('EMPSER').AsString :=
+        ResolverSerieTokenizada(sSerieTokenizada, Date);
   end;
 end;
 

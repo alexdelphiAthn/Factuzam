@@ -39,7 +39,7 @@ implementation
 
 uses
   System.SysUtils, Vcl.Forms, inLibInformeDocumento,
-  inLibDocumento, UniDataFacturas, inMtoModalImpFac;
+  inLibDocumento, inLibCorreoTickets, UniDataFacturas, inMtoModalImpFac;
 
 {$R *.dfm}
 
@@ -111,10 +111,35 @@ begin
   end;
 end;
 
+function TipoDocumentoCorreo(ATipo: TTipoDocumento;
+  ASentido: TSentidoDocumento;
+  out ATipoCorreo: TTipoDocumentoCorreo): Boolean;
+begin
+  Result := True;
+  ATipoCorreo := tdcPresupuesto;
+  case ATipo of
+    tdPedido:
+      if ASentido = sdCompra then
+        ATipoCorreo := tdcPedidoCompra
+      else
+        ATipoCorreo := tdcPedido;
+    tdAlbaran:
+      if ASentido = sdCompra then
+        ATipoCorreo := tdcAlbaranCompra
+      else
+        ATipoCorreo := tdcAlbaran;
+    tdPresupuesto:
+      ATipoCorreo := tdcPresupuesto;
+  else
+    Result := False;
+  end;
+end;
+
 class procedure TfrmPrintDocumento.EjecutarReferencia(AOwner: TComponent;
   ATipo: TTipoDocumento; ASentido: TSentidoDocumento;
   const ASerie, ANumero: string);
 var
+  eTipoCorreo: TTipoDocumentoCorreo;
   oFormulario: TfrmPrintDocumento;
 begin
   if ATipo = tdFactura then
@@ -133,6 +158,8 @@ begin
       oFormulario.Caption := Format(STituloImprimirDocumento,
         [NombreInformeDocumento(ATipo, ASentido)]);
       oFormulario.CrearInforme;
+      if TipoDocumentoCorreo(ATipo, ASentido, eTipoCorreo) then
+        oFormulario.ConfigurarDocumentoCorreo(eTipoCorreo, ASerie, ANumero);
       oFormulario.ShowModal;
     finally
       FreeAndNil(oFormulario);
@@ -141,10 +168,15 @@ begin
 end;
 
 procedure TfrmPrintDocumento.CrearInforme;
+var
+  sTercero: string;
 begin
+  sTercero := SInformeClienteDocumento;
+  if FConfiguracion.Sentido = sdCompra then
+    sTercero := SInformeProveedorDocumento;
   CrearInformeDocumento(frxrprt1, FDatos.Cabecera, FDatos.Lineas,
-    NombreInformeDocumento(FConfiguracion.TipoDocumento,
-      FConfiguracion.Sentido));
+    FDatos.Impuestos, NombreInformeDocumento(
+      FConfiguracion.TipoDocumento, FConfiguracion.Sentido), sTercero);
   frxReportOrigen.AssignAll(frxrprt1);
 end;
 
@@ -162,15 +194,20 @@ begin
   frxrprt1.EnabledDataSets.Clear;
   frxrprt1.EnabledDataSets.Add(FDatos.Cabecera);
   frxrprt1.EnabledDataSets.Add(FDatos.Lineas);
+  frxrprt1.EnabledDataSets.Add(FDatos.Impuestos);
   frxrprt1.DataSets.Clear;
   frxrprt1.DataSets.Add(FDatos.Cabecera);
   frxrprt1.DataSets.Add(FDatos.Lineas);
+  frxrprt1.DataSets.Add(FDatos.Impuestos);
   for iObjeto := 0 to frxrprt1.AllObjects.Count - 1 do
   begin
     oObjeto := TfrxComponent(frxrprt1.AllObjects[iObjeto]);
     if (oObjeto is TfrxDataBand) and
        SameText(TfrxDataBand(oObjeto).DataSetName, 'Lineas') then
-      TfrxDataBand(oObjeto).DataSet := FDatos.Lineas;
+      TfrxDataBand(oObjeto).DataSet := FDatos.Lineas
+    else if (oObjeto is TfrxDataBand) and
+       SameText(TfrxDataBand(oObjeto).DataSetName, 'Impuestos') then
+      TfrxDataBand(oObjeto).DataSet := FDatos.Impuestos;
   end;
 end;
 

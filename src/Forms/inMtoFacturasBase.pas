@@ -69,6 +69,9 @@ uses
   inMtoFacturasPresentadorCabeceraVcl,
   inMtoFacturasPresentadorLineasVcl;
 
+const
+  WM_REVISAR_ENTER_AS_TAB_FACTURA = WM_APP + 256;
+
 type
   TDependenciasPresentacionFacturas = record
     Vista: IVistaFactura;
@@ -574,6 +577,12 @@ type
     procedure ConstruirModoEntrada;
     procedure CrearColumnasHostFactura(AClasico: Boolean);
     procedure cxgrdLineasFacturaEnter(Sender: TObject);
+    procedure cxgrdLineasFacturaExit(Sender: TObject);
+    // Salida del editor de articulo/atributo/SKU: restaura el EnterAsTab
+    // y, si el foco sigue en la rejilla, lo vuelve a apagar (diferido).
+    procedure SalirEdicionModoEntrada(Sender: TObject);
+    procedure WMRevisarEnterAsTabFactura(var Msg: TMessage);
+      message WM_REVISAR_ENTER_AS_TAB_FACTURA;
     procedure dsTablaGDataChange(Sender: TObject; Field: TField);
     // Graba el borrador pendiente antes de sacar la copia impresa.
     procedure GuardarPendienteAntesDeImprimir;
@@ -895,7 +904,7 @@ begin
       Result := AFormulario.FConstruyendoModo;
     end;
   Result.DesactivarEnterAsTab := AFormulario.DesactivarEnterAsTabTemporal;
-  Result.RestaurarEnterAsTab := AFormulario.RestaurarEnterAsTabTemporal;
+  Result.RestaurarEnterAsTab := AFormulario.SalirEdicionModoEntrada;
 end;
 
 function CrearContextoCabeceraFacturaVcl(
@@ -1961,6 +1970,7 @@ begin
   cbbCanalIVA.Properties.ListSource := dmmFacturas.dsIvas;
   cbbFORMAPAGO.Properties.ListSource := dmmFacturas.dsFormasPago;
   cxgrdLineasFactura.OnEnter := cxgrdLineasFacturaEnter;
+  cxgrdLineasFactura.OnExit := cxgrdLineasFacturaExit;
   // Contrato de entrada ColumnSKUcxGrid: Auto (desglose) por defecto;
   // F1 cicla los modos. La primera construccion se hace al abrir la
   // pantalla.
@@ -2355,6 +2365,11 @@ end;
 
 procedure TfrmMtoFacturasBase.cxgrdLineasFacturaEnter(Sender: TObject);
 begin
+  // Rejilla solo en edicion (sin busqueda incremental) y Enter de celda
+  // en celda: con el EnterAsTab del formulario activo, el Enter en una
+  // cantidad sacaba el foco de la rejilla y la linea se perdia.
+  DesactivarEnterAsTabTemporal(Sender);
+  ConfigurarEdicionExcelLineasDocumento(tvLineasFactura);
   FPresentadorLineas.AsegurarPrimeraLinea;
   // Contrato de entrada: primera construccion al entrar en el grid (las
   // lineas ya estan abiertas como detail de la factura). El teardown
@@ -2366,6 +2381,38 @@ begin
   end;
   if FModoEntrada <> nil then
     FModoEntrada.MostrarEditor;
+end;
+
+procedure TfrmMtoFacturasBase.cxgrdLineasFacturaExit(Sender: TObject);
+var
+  Editor: TcxCustomEdit;
+begin
+  Editor := nil;
+  if Assigned(tvLineasFactura.Controller.EditingController) and
+     tvLineasFactura.Controller.EditingController.IsEditing then
+    Editor := tvLineasFactura.Controller.EditingController.Edit;
+  if Editor is TcxCustomDropDownEdit then
+    RestaurarEnterAsTabTemporal(Editor)
+  else
+    RestaurarEnterAsTabTemporal(Sender);
+end;
+
+procedure TfrmMtoFacturasBase.SalirEdicionModoEntrada(Sender: TObject);
+begin
+  RestaurarEnterAsTabTemporal(Sender);
+  if not (csDestroying in ComponentState) and HandleAllocated then
+    PostMessage(Handle, WM_REVISAR_ENTER_AS_TAB_FACTURA, 0, 0);
+end;
+
+procedure TfrmMtoFacturasBase.WMRevisarEnterAsTabFactura(var Msg: TMessage);
+var
+  ControlActivo: TWinControl;
+begin
+  ControlActivo := Screen.ActiveControl;
+  if (ControlActivo <> nil) and
+     ((ControlActivo = cxgrdLineasFactura) or
+      cxgrdLineasFactura.ContainsControl(ControlActivo)) then
+    DesactivarEnterAsTabTemporal(ControlActivo);
 end;
 
 procedure TfrmMtoFacturasBase.
@@ -2562,7 +2609,7 @@ begin
         // host despues no los pisa.
         ConstruirModoEntradaDocumento(FModoEntrada,
           FPresentadorLineas.ModoEntradaResuelto,
-          DesactivarEnterAsTabTemporal, RestaurarEnterAsTabTemporal,
+          DesactivarEnterAsTabTemporal, SalirEdicionModoEntrada,
           FModoEntradaSel, [], '');
         CrearColumnasHostFactura(False);
         AplicarTituloModoEntradaFacturaVcl(Self, Cfg);

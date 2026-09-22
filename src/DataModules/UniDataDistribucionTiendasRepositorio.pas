@@ -47,9 +47,10 @@ function SqlBloquearPropuestasPendientes: string;
 
 const
   FILTRO_PROPUESTAS_DOCUMENTO = 'P.ID_DTR_TRPRO = :ID_DTR';
+  // Las que caja aún puede traspasar: pendientes y trasladadas en parte.
   FILTRO_PROPUESTAS_PENDIENTES_ORIGEN =
     'P.CODIGO_ALM_ORIGEN_TRPRO = :ORIGEN ' +
-    'AND P.ESTADO_TRPRO = ''PENDIENTE''';
+    'AND P.ESTADO_TRPRO IN (''PENDIENTE'', ''TRASLADADO PARCIAL'')';
   FILTRO_PROPUESTA_POR_ID = 'P.ID_TRPRO = :ID_TRPRO';
 
 implementation
@@ -299,8 +300,10 @@ begin
 end;
 
 // Lo trasladado cuenta por lo realmente traspasado; lo pendiente, por lo
-// propuesto. Lo no aceptado no cuenta: sus unidades vuelven a estar por
-// repartir.
+// propuesto. Lo trasladado en parte sigue en marcha en caja: cuenta entero
+// (o lo traspasado, si pasa de lo propuesto) y no se puede rebajar hasta
+// que se dé por trasladado. Lo no aceptado no cuenta: sus unidades vuelven
+// a estar por repartir.
 function SqlAsignacionesDistribucion: string;
 begin
   Result :=
@@ -309,6 +312,9 @@ begin
     '       L.CODIGO_UNIDAD_TRPROLIN AS CODIGO_UNIDAD, ' +
     '       SUM(CASE WHEN P.ESTADO_TRPRO = ''TRASLADADO'' ' +
     '                THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
+    '                WHEN P.ESTADO_TRPRO = ''TRASLADADO PARCIAL'' ' +
+    '                THEN GREATEST(L.CANTIDAD_TRPROLIN, ' +
+    '                              L.CANTIDAD_TRASPASADA_TRPROLIN) ' +
     '                ELSE 0 END) AS CONFIRMADA, ' +
     '       SUM(CASE WHEN P.ESTADO_TRPRO = ''PENDIENTE'' ' +
     '                THEN L.CANTIDAD_TRPROLIN ' +
@@ -317,7 +323,8 @@ begin
     '  JOIN fza_traspasos_propuestas_lineas L ' +
     '    ON L.ID_TRPRO_TRPROLIN = P.ID_TRPRO ' +
     ' WHERE P.ID_DTR_TRPRO = :ID_DTR ' +
-    '   AND P.ESTADO_TRPRO IN (''PENDIENTE'', ''TRASLADADO'') ' +
+    '   AND P.ESTADO_TRPRO IN (''PENDIENTE'', ''TRASLADADO'', ' +
+    '                          ''TRASLADADO PARCIAL'') ' +
     ' GROUP BY P.CODIGO_ALM_ORIGEN_TRPRO, P.CODIGO_ALM_DESTINO_TRPRO, ' +
     '          L.CODIGO_UNIDAD_TRPROLIN';
 end;
@@ -338,18 +345,22 @@ begin
 end;
 
 // El estado va en el predicado: si ya se trasladó o se rechazó, no cuadra
-// ninguna fila.
+// ninguna fila. Una trasladada en parte no se puede deshacer: no aceptar
+// lo que falta la da por trasladada con lo ya traspasado (el CASE lee el
+// estado anterior a la asignación).
 function SqlRechazarPropuestaTraspaso: string;
 begin
   Result :=
     'UPDATE fza_traspasos_propuestas ' +
-    '   SET ESTADO_TRPRO = ''NO ACEPTADO'', ' +
+    '   SET ESTADO_TRPRO = CASE WHEN ESTADO_TRPRO = ''TRASLADADO PARCIAL'' ' +
+    '                           THEN ''TRASLADADO'' ' +
+    '                           ELSE ''NO ACEPTADO'' END, ' +
     '       MOTIVO_RECHAZO_TRPRO = :MOTIVO, ' +
     '       INSTANTE_RESOLUCION_TRPRO = NOW(), ' +
     '       USUARIO_RESOLUCION_TRPRO = :USUARIO, ' +
     '       USUARIO_MODIF = :USUARIO ' +
     ' WHERE ID_TRPRO = :ID_TRPRO ' +
-    '   AND ESTADO_TRPRO = ''PENDIENTE''';
+    '   AND ESTADO_TRPRO IN (''PENDIENTE'', ''TRASLADADO PARCIAL'')';
 end;
 
 // Cero o negativo = sin número: el almacén no recibe traspasos desde la

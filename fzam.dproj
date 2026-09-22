@@ -202,6 +202,7 @@
         <DCCReference Include="src\Lib\inLibLog.pas"/>
         <DCCReference Include="src\Lib\inLibDiag.pas"/>
         <DCCReference Include="src\Lib\inLibCadenas.pas"/>
+        <DCCReference Include="src\Lib\inLibSerieTokenizada.pas"/>
         <DCCReference Include="src\Lib\inLibCifrado.pas"/>
         <DCCReference Include="src\Lib\inLibCifradoCopias.pas"/>
         <DCCReference Include="src\Lib\inLibComandoCopiaSeguridad.pas"/>
@@ -1155,6 +1156,9 @@
         <DCCReference Include="src\DataModules\UniDataCargaMasivaArticulosRepositorio.pas"/>
         <DCCReference Include="src\Lib\inLibGenerarTicketBD.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoTickets.pas"/>
+        <DCCReference Include="src\Lib\inLibCorreoDocumentoIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibCorreoDocumentoVcl.pas"/>
+        <DCCReference Include="src\DataModules\UniDataCorreoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoValidacion.pas"/>
         <DCCReference Include="src\Lib\inLibFactuzamApi.pas"/>
         <DCCReference Include="src\Lib\inLibErroresHttp.pas"/>
@@ -1742,6 +1746,7 @@
         <DCCReference Include="src\Forms\inMtoComprasSesionesPresentacionTallas.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasPresentadorCabeceraVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoFacturasPresentadorLineasVcl.pas"/>
+        <DCCReference Include="src\Forms\inMtoEnvioVentaCajaVcl.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionBusquedas.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionColumnas.pas"/>
         <DCCReference Include="src\Forms\inMtoInventariosPresentacionEntrada.pas"/>

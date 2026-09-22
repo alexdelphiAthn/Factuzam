@@ -54,9 +54,9 @@ resourcestring
   SErrorSerieEmpresa =
     '%s no es un valor válido  para serie por Empresa ';
   SErrorSerieTokenizadaEmpresa =
-    'La serie tokenizada %s debe contener yyyy, q, mm, dd o una ' +
-    'combinación de ellos, sin repetir ningún token. Ejemplos: ' +
-    'A1.yyyy, yyyy.Tq.A1 y yyyy.mm.dd.';
+    'La serie tokenizada %s debe contener yyyy (2026), yy (26), q, mm, ' +
+    'dd o una combinación de ellos, sin repetir ningún token ni mezclar ' +
+    'yyyy con yy. Ejemplos: A1.yyyy, A1.yy, yyyy.Tq.A1 y yyyy.mm.dd.';
   SErrorSerieTokenizadaCalendarioNoNatural =
     'La empresa debe tener marcado "Hacer coincidir calendario natural ' +
     'con tokens" antes de usar una serie tokenizada.';

@@ -313,7 +313,7 @@ function CrearAlbaranesCompraInyectada(
 implementation
 
 uses
-  inLibMensajesVcl,
+  inLibMensajesVcl, inLibCorreoTickets,
   System.StrUtils,
   inLibFiltroUsuario,
 
@@ -811,6 +811,8 @@ begin
         form.dmAlbc := dmmAlbaranesCompra;
         form.edtSerie.Text := sSerie;
         form.edtNumero.Text := sNumero;
+        form.ConfigurarDocumentoCorreo(
+          tdcAlbaranCompra, sSerie, sNumero);
         form.ShowModal;
       finally
         FreeAndNil(form);
@@ -848,6 +850,8 @@ begin
         form.dmAlbc := dmmAlbaranesCompra;
         form.edtSerie.Text := sSerie;
         form.edtNumero.Text := sNumero;
+        form.ConfigurarDocumentoCorreo(
+          tdcAlbaranCompra, sSerie, sNumero);
         form.ShowModal;
       finally
         FreeAndNil(form);

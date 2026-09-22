@@ -16,6 +16,7 @@ unit inMtoPrincipalPresentacionInicio;
 interface
 
 uses
+  Winapi.Messages,
   System.Classes,
   Vcl.Controls,
   Vcl.Forms,
@@ -41,6 +42,8 @@ type
     FInstanteSplash: TDateTime;
     FNombre: TcxLabel;
     FVersion: TcxLabel;
+    FWindowProcPagina: TWndMethod;
+    procedure WindowProcPagina(var AMensaje: TMessage);
     procedure AplicarTema(
       const AParametros: IParametrosAplicacion);
     procedure CrearEtiquetas(const AVersion: string);
@@ -98,15 +101,30 @@ begin
   FLookAndFeel := ALookAndFeel;
   FSkin := ASkin;
   FRegistroLog := ARegistroLog;
+  // La página cambia de alto sin que cambie el formulario (barra de
+  // progreso de pnlPPBottom, monitor SQL): el logo y las etiquetas se
+  // recolocan con su WM_SIZE, no solo con el OnResize del formulario.
+  FWindowProcPagina := FPagina.WindowProc;
+  FPagina.WindowProc := WindowProcPagina;
 end;
 
 destructor TPresentacionInicioPrincipal.Destroy;
 begin
+  if Assigned(FPagina) and Assigned(FWindowProcPagina) then
+    FPagina.WindowProc := FWindowProcPagina;
   FreeAndNil(FSplash);
   FreeAndNil(FNombre);
   FreeAndNil(FVersion);
   FRegistroLog := nil;
   inherited;
+end;
+
+procedure TPresentacionInicioPrincipal.WindowProcPagina(
+  var AMensaje: TMessage);
+begin
+  FWindowProcPagina(AMensaje);
+  if AMensaje.Msg = WM_SIZE then
+    CentrarFondo;
 end;
 
 procedure TPresentacionInicioPrincipal.MostrarSplash;
@@ -165,7 +183,7 @@ begin
   AplicarTema(AParametros);
   CargarFondo;
   FImagenFondo.Parent := FPagina;
-  FImagenFondo.Anchors := [akTop, akRight];
+  FImagenFondo.Anchors := [akLeft, akTop];
   FImagenFondo.Proportional := True;
   FImagenFondo.Stretch := True;
   FImagenFondo.Center := True;
@@ -222,7 +240,6 @@ begin
     iCentroY := (iAltoCliente - iAlto - 80) div 2;
     if iCentroY < 20 then
       iCentroY := 20;
-    FImagenFondo.Anchors := [];
     FImagenFondo.SetBounds(
       iCentroX, iCentroY, iAncho, iAlto);
     if Assigned(FNombre) then

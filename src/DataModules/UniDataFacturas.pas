@@ -465,7 +465,7 @@ begin
         '        OR (E.ESTOKENS_CALENDARIO_NATURAL_EMP = ''S'' ' +
         '        AND NULLIF(TRIM(S.SERIE_TOKENIZADA_EMPSER), '''') ' +
         '            IS NOT NULL ' +
-        '        AND (LOCATE(BINARY ''yyyy'', BINARY ' +
+        '        AND (LOCATE(BINARY ''yy'', BINARY ' +
         '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
         '          OR LOCATE(BINARY ''q'', BINARY ' +
         '             TRIM(S.SERIE_TOKENIZADA_EMPSER)) > 0 ' +
@@ -477,6 +477,16 @@ begin
         '            CHAR_LENGTH(REPLACE(' +
         '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
         '            ''yyyy'', '''')) IN (0, 4) ' +
+        // yy se cuenta fuera de los yyyy y no se mezcla con ellos
+        '        AND CHAR_LENGTH(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ''yyyy'', '''')) - ' +
+        '            CHAR_LENGTH(REPLACE(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ''yyyy'', ''''), ' +
+        '            ''yy'', '''')) IN (0, 2) ' +
+        '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
+        '            CHAR_LENGTH(REPLACE(REPLACE(' +
+        '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ''yyyy'', ''''), ' +
+        '            ''yy'', '''')) IN (0, 2, 4) ' +
         '        AND CHAR_LENGTH(TRIM(S.SERIE_TOKENIZADA_EMPSER)) - ' +
         '            CHAR_LENGTH(REPLACE(' +
         '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
@@ -489,9 +499,10 @@ begin
         '            CHAR_LENGTH(REPLACE(' +
         '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
         '            ''dd'', '''')) IN (0, 2) ' +
-        '        AND REPLACE(REPLACE(REPLACE(REPLACE(' +
+        '        AND REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(' +
         '            TRIM(S.SERIE_TOKENIZADA_EMPSER), ' +
         '            ''yyyy'', CAST(YEAR(:FECHA) AS CHAR)), ' +
+        '            ''yy'', DATE_FORMAT(:FECHA, ''%y'')), ' +
         '            ''mm'', DATE_FORMAT(:FECHA, ''%m'')), ' +
         '            ''dd'', DATE_FORMAT(:FECHA, ''%d'')), ' +
         '            ''q'', CAST(QUARTER(:FECHA) AS CHAR)) = :SERIE)) ' +

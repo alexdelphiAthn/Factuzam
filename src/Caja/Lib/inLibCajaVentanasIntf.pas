@@ -35,6 +35,13 @@ type
     NombresAtributos: TAtributosCargaTraspaso;
   end;
   TLineasCargaTraspaso = TArray<TLineaCargaTraspaso>;
+  // Linea que otro documento vuelca en una venta de caja: SKU y cantidad.
+  // El precio lo pone la caja con su tarifa, como en una lectura.
+  TLineaVentaCajaExterna = record
+    CodigoSku: string;
+    Cantidad: Double;
+  end;
+  TLineasVentaCajaExterna = TArray<TLineaVentaCajaExterna>;
 
   IOperacionCaja = interface
     ['{3C44C353-D264-4F82-8245-6F25AE19E4A0}']

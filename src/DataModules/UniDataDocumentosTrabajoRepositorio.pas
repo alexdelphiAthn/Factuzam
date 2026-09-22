@@ -470,9 +470,9 @@ procedure TRepositorioDocumentosTrabajo.AsignarParametrosConsultaUltimos(
   AConsulta: TUniQuery; const AEmpresa, ATipoDocumento: string;
   ALimite: Integer);
 const
-  SUFIJOS_TIPO: array[0..12] of string = (
+  SUFIJOS_TIPO: array[0..13] of string = (
     'AV', 'AB', 'PE', 'PC', 'FC', 'FP',
-    'DC', 'VE', 'TR', 'TS', 'SE', 'IN', 'TARC');
+    'DC', 'VE', 'TR', 'TS', 'SE', 'IN', 'TARC', 'PR');
   SUFIJO_PROPUESTAS = 'PT';
 var
   i: Integer;

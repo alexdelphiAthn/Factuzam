@@ -39,6 +39,7 @@ uses
 
 const
   WM_REVISAR_ENTER_AS_TAB_PRESUPUESTO = WM_APP + 250;
+  WM_CONFIRMAR_LINEA_LIBRE_PRESUPUESTO = WM_APP + 251;
 
 type
   TfrmMtoPresupuestos = class(TfrmMtoDocumento)
@@ -189,6 +190,7 @@ type
     btnCrearPedido: TcxButton;
     btnCrearAlbaran: TcxButton;
     btnCrearFactura: TcxButton;
+    btnEnviarCaja: TcxButton;
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
     FOldLineasAfterPost: TDataSetNotifyEvent;
@@ -199,14 +201,20 @@ type
     FColsModoConstruido: Boolean;
     FContextoVentas: TContextoAlbaranesVentasPantalla;
     FLectorDocumento: TLectorDocumento;
+    // Codigo fuera de catalogo recien aceptado que falta confirmar.
+    FLineaLibrePendiente: string;
     procedure ConfigurarLectorDocumento;
     procedure SalirEdicionModoEntrada(Sender: TObject);
     procedure WMRevisarEnterAsTabAlbaran(var Msg: TMessage);
       message WM_REVISAR_ENTER_AS_TAB_PRESUPUESTO;
+    procedure WMConfirmarLineaLibre(var Msg: TMessage);
+      message WM_CONFIRMAR_LINEA_LIBRE_PRESUPUESTO;
+    procedure DescartarLineaLibre(const ACodigoArt: string);
     function BuscarArticuloAlbaran: string;
     function BuscarSkuAlbaran(const ACodigoArt: string): string;
     function ArticuloLineaActivaAlbaran: string;
     procedure AplicarArticuloAlbaran(const ACodigoArt: string);
+    procedure AplicarLineaNoCatalogo(const ACodigoArt: string);
     function ResolverAplicacionArticuloAlbaran(
       const ACodigoArt: string): TResultadoArticuloAlbaranVenta;
     procedure AsignarStringLinea(
@@ -254,6 +262,8 @@ type
     procedure CrearPedidoClick(Sender: TObject);
     procedure CrearAlbaranClick(Sender: TObject);
     procedure CrearFacturaClick(Sender: TObject);
+    procedure EnviarCajaClick(Sender: TObject);
+    procedure EnviarPresupuestoCaja;
   protected
     procedure KeyDown(var Key: Word; Shift: TShiftState); override;
   public
@@ -278,7 +288,10 @@ uses
   UniDataGen,
   inLibValidacionDocumento, inLibPresentacionDocumento,
   inLibMsgArticulos, inLibMsgComun, inLibMsgFacturas, inLibMsgVentas,
-  UniDataVentasPantallaComposicion;
+  UniDataVentasPantallaComposicion,
+  // Volcado del presupuesto en una venta de caja.
+  inLibCajaVentanasIntf, inMtoEnvioVentaCajaVcl,
+  UniDataCajasDefectoRepositorio;
 
 {$R *.dfm}
 
@@ -590,6 +603,113 @@ begin
     end;
   end;
 end;
+
+// Linea con un codigo que no esta en el catalogo: el presupuesto la
+// admite como concepto libre (sin SKU, no mueve stock al pasar a
+// albaran). Descripcion y precio se teclean en la rejilla; el IVA es
+// el normal y la tarifa, la del cliente.
+procedure TfrmMtoPresupuestos.AplicarLineaNoCatalogo(
+  const ACodigoArt: string);
+var
+  DataSetLineas: TDataSet;
+  sCodigo: string;
+begin
+  sCodigo := Trim(ACodigoArt);
+  if (sCodigo <> '') and Assigned(dmmPresupuestos) and
+     (not FAplicandoArticulo) then
+  begin
+    DataSetLineas := dmmPresupuestos.unqryAlbaranesLineas;
+    if Assigned(DataSetLineas) and DataSetLineas.Active then
+    begin
+      FAplicandoArticulo := True;
+      try
+        if not (DataSetLineas.State in dsEditModes) then
+          DataSetLineas.Edit;
+        AsignarStringLinea(DataSetLineas, 'CODIGO_ART_PRELIN', sCodigo);
+        LimpiarCampoLinea(DataSetLineas, 'CODIGO_UNIDAD_PRELIN');
+        LimpiarCampoLinea(DataSetLineas, 'DESCRIPCION_VARIACION_PRELIN');
+        LimpiarCampoLinea(DataSetLineas, 'CODIGO_FAM_PRELIN');
+        LimpiarCampoLinea(DataSetLineas, 'NOMBRE_FAM_PRELIN');
+        LimpiarCampoLinea(DataSetLineas, 'LOTE_PRELIN');
+        LimpiarCampoLinea(DataSetLineas, 'FECHA_CADUCIDAD_PRELIN');
+        if Trim(DataSetLineas.FieldByName(
+             'DESCRIPCION_ARTICULO_PRELIN').AsString) = '' then
+          AsignarStringLinea(DataSetLineas,
+            'DESCRIPCION_ARTICULO_PRELIN', sCodigo);
+        AsignarStringLinea(DataSetLineas, 'TIPO_IVA_ARTICULO_PRELIN', 'N');
+        AsignarStringLinea(DataSetLineas, 'CODIGO_TAR_PRELIN',
+          dmmPresupuestos.unqryTablaG.FieldByName(
+            'TARIFA_ARTICULO_CLIENTE_PRE').AsString);
+        AsignarStringLinea(DataSetLineas, 'ESIMP_INCL_TARIFA_PRELIN',
+          dmmPresupuestos.unqryTablaG.FieldByName(
+            'ESIMP_INCL_TARIFA_CLIENTE_PRE').AsString);
+        AsignarNumeroLinea(
+          DataSetLineas, 'PRECIO_VENTA_SIVA_ARTICULO_PRELIN', 0);
+        AsignarNumeroLinea(
+          DataSetLineas, 'PRECIO_VENTA_CIVA_ARTICULO_PRELIN', 0);
+        if DataSetLineas.FieldByName('CANTIDAD_PRELIN').AsFloat = 0 then
+          AsignarNumeroLinea(DataSetLineas, 'CANTIDAD_PRELIN', 1);
+        PrepararLineaFiscalVenta(
+          CrearLecturasImpuestos(dmmPresupuestos.unqryTablaG.Connection),
+          dmmPresupuestos.unqryTablaG,
+          DataSetLineas,
+          'PRE',
+          'PRELIN',
+          'TOTAL_PRELIN');
+        ActualizarColumnasOpcionalesLinea;
+      finally
+        FAplicandoArticulo := False;
+      end;
+      // La pregunta se difiere: la resolucion llega desde temporizadores
+      // y validaciones del editor, y un modal aqui la haria reentrar.
+      FLineaLibrePendiente := sCodigo;
+      if HandleAllocated then
+        PostMessage(Handle, WM_CONFIRMAR_LINEA_LIBRE_PRESUPUESTO, 0, 0);
+    end;
+  end;
+end;
+
+procedure TfrmMtoPresupuestos.WMConfirmarLineaLibre(var Msg: TMessage);
+var
+  sCodigo: string;
+begin
+  sCodigo := FLineaLibrePendiente;
+  FLineaLibrePendiente := '';
+  if (sCodigo <> '') and not (csDestroying in ComponentState) and
+     (MessageDlg_fza(Format(SPreguntaLineaLibrePresupuesto, [sCodigo]),
+       mtConfirmation, [mbYes, mbNo], 0) <> mrYes) then
+    DescartarLineaLibre(sCodigo);
+end;
+
+// Deshace la linea libre rechazada: sin grabar se cancela la edicion
+// (una linea existente recupera sus valores); si ya se grabo, se borra.
+// El editor de entrada queda abierto para corregir el codigo.
+procedure TfrmMtoPresupuestos.DescartarLineaLibre(const ACodigoArt: string);
+var
+  ds: TDataSet;
+  bNueva: Boolean;
+begin
+  if Assigned(dmmPresupuestos) then
+  begin
+    ds := dmmPresupuestos.unqryAlbaranesLineas;
+    if ds.Active and SameText(
+         Trim(ds.FieldByName('CODIGO_ART_PRELIN').AsString), ACodigoArt) and
+       (Trim(ds.FieldByName('CODIGO_UNIDAD_PRELIN').AsString) = '') then
+    begin
+      if tvLineasAlbaran.Controller.EditingController.IsEditing then
+        tvLineasAlbaran.Controller.EditingController.HideEdit(False);
+      bNueva := ds.State = dsInsert;
+      if ds.State in dsEditModes then
+        ds.Cancel
+      else
+        ds.Delete;
+      if bNueva or ds.IsEmpty then
+        ds.Append;
+      if Assigned(FModoEntrada) then
+        FModoEntrada.MostrarEditor;
+    end;
+  end;
+end;
 procedure TfrmMtoPresupuestos.ConfigurarLectorDocumento;
 begin
   FLectorDocumento := CrearLectorDocumentoGrid(
@@ -620,7 +740,11 @@ procedure TfrmMtoPresupuestos.ModoEntradaResuelto(const ACodArt, ASku,
   ADescripcion: string; ACompleto: Boolean);
 begin
   if ACompleto and (ASku <> '') then
-    AplicarArticuloAlbaran(ASku);
+    AplicarArticuloAlbaran(ASku)
+  else if ACompleto and (ACodArt <> '') then
+    // ASku vacio con resolucion completa = codigo fuera de catalogo
+    // aceptado por el modo (AceptarNoCatalogo): linea libre.
+    AplicarLineaNoCatalogo(ACodArt);
 end;
 
 function TfrmMtoPresupuestos.PorcentajeIvaAlbaran(
@@ -710,6 +834,9 @@ begin
   Cfg.LookupAtributos := FContextoVentas.AtributosArticulos;
   Cfg.UsarCombosAtributos := True;
   Cfg.BuscarSoloPadresEnDesglose := True;
+  // El presupuesto admite conceptos fuera de catalogo: el codigo
+  // tecleado queda como linea libre (sin SKU).
+  Cfg.AceptarNoCatalogo := True;
   Cfg.ObtenerPrecioSku := PrecioSkuTallasAlb;
   if FModoEntradaSel = mcsTallasInline then
   begin
@@ -783,8 +910,9 @@ var
   PropiedadesCheck: TcxCheckBoxProperties;
 begin
   ColLinea := Col(SCaptionLineaPresupuesto, 'LINEA_PRELIN', 60, False);
+  // Editable: las lineas libres necesitan su propio texto.
   Col(SCaptionDescripcionPresupuesto, 'DESCRIPCION_ARTICULO_PRELIN', 220,
-    False);
+    True);
   ColCant := Col(SCaptionCantidadPresupuesto, 'CANTIDAD_PRELIN', 80,
                  FModoEntradaSel <> mcsTallasInline);
   ColTipo := Col('', 'TIPO_CANTIDAD_ARTICULO_PRELIN', 20, False);
@@ -1461,6 +1589,9 @@ begin
     btnCrearPedido := CrearBoton(SCaptionPasarPresupuestoPedido,
       CrearPedidoClick);
     btnCrearPedido.Top := 306;
+    btnEnviarCaja := CrearBoton(SCaptionEnviarPresupuestoCaja,
+      EnviarCajaClick);
+    btnEnviarCaja.Top := 210;
   end;
 end;
 
@@ -1505,6 +1636,41 @@ end;
 procedure TfrmMtoPresupuestos.CrearFacturaClick(Sender: TObject);
 begin
   ConvertirPresupuesto(dpFactura);
+end;
+
+procedure TfrmMtoPresupuestos.EnviarCajaClick(Sender: TObject);
+begin
+  EnviarPresupuestoCaja;
+end;
+
+// La venta queda abierta en caja sin grabar: el presupuesto no cambia
+// de estado, el usuario cobra o cancela la venta alli.
+procedure TfrmMtoPresupuestos.EnviarPresupuestoCaja;
+var
+  aLineas: TLineasVentaCajaExterna;
+  rResultado: TResultadoEnvioVentaCaja;
+begin
+  if dmmPresupuestos.unqryTablaG.IsEmpty then
+    ShowMessage_fza(SErrorSeleccionePresupuesto)
+  else
+  begin
+    dmmPresupuestos.GuardarDocumento;
+    aLineas := dmmPresupuestos.LineasVentaCaja;
+    if Length(aLineas) = 0 then
+      ShowMessage_fza(SErrorPresupuestoSinLineasCaja)
+    else if EnviarLineasVentaCaja(Self,
+      CrearRepositorioCajasDefectoUniDAC(
+        dmmPresupuestos.unqryTablaG.Connection),
+      aLineas, rResultado) then
+    begin
+      if rResultado.LineasNoVolcadas = 0 then
+        ShowMessage_fza(Format(SInfoLineasPresupuestoVolcadasCaja,
+          [rResultado.LineasVolcadas]))
+      else
+        ShowMessage_fza(Format(SAvisoLineasPresupuestoNoVolcadasCaja,
+          [rResultado.LineasVolcadas, rResultado.LineasNoVolcadas]));
+    end;
+  end;
 end;
 
 initialization

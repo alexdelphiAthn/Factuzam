@@ -187,9 +187,16 @@ begin
       unqrySol.Connection := ConexionPrincipal;
       unqrySol.SQL.Text := 'SELECT * ' +
         '  FROM vi_ivas ' +
-        ' WHERE IVA_IVAGRP = :IVA_IVAGRP';
+        ' WHERE IVA_IVAGRP = :IVA_IVAGRP' +
+        '   AND CODIGO_IVA <> :CODIGO_PROPIO';
       unqrySol.ParamByName('IVA_IVAGRP').AsString :=
         unqryTablaG.FindField('IVA_IVAGRP').AsString;
+      // Sin el propio registro: al editar se comparaba consigo mismo
+      if DataSet.State = dsEdit then
+        unqrySol.ParamByName('CODIGO_PROPIO').AsString :=
+          VarToStr(unqryTablaG.FindField('CODIGO_IVA').OldValue)
+      else
+        unqrySol.ParamByName('CODIGO_PROPIO').AsString := '';
       unqrySol.Open;
     end;
     if not bError and

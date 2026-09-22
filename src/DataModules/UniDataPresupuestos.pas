@@ -17,7 +17,7 @@ uses
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibUser,
   frxClass, frxDBSet, frCoreClasses,
-  inLibPresupuestosIntf;
+  inLibPresupuestosIntf, inLibCajaVentanasIntf;
 
 type
   TdmPresupuestos = class(TdmBase)
@@ -50,6 +50,9 @@ type
     procedure GuardarDocumento;
     function Convertir(ADestino: TDestinoPresupuesto):
       TResultadoConversionPresupuesto;
+    // Lineas del presupuesto activo como SKU y cantidad (las tallas
+    // del pivote, una por celda) para volcarlas en una venta de caja.
+    function LineasVentaCaja: TLineasVentaCajaExterna;
     procedure DesempaquetarAtributosLineas;
     procedure GetCodigoAutoAlbaran;
     procedure CalcularTotalesAlbaran;
@@ -103,7 +106,8 @@ uses
   UniDataAlmacenesEmpresaRepositorio,
   inLibMsgArticulos, inLibMsgFacturas, inLibMsgVentas,
   inLibDocumento, inLibDocumentoIntf,
-  UniDataPresupuestosConversion, UniDataPresupuestosSql;
+  UniDataPresupuestosConversion, UniDataPresupuestosSql,
+  inLibDocumentosTrabajo, UniDataDocumentosTrabajoCargaOrigenSql;
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
@@ -698,7 +702,8 @@ begin
       '' + 'GRUPO_ZONA_IVA_EMP, MOVIL_EMP, ' +
       '' + 'NIF_EMP, NOMBRE_PAI_EMP, ' +
       '' + 'POBLACION_EMP, PROVINCIA_EMP, ' +
-      '' + 'RAZON_SOCIAL_EMP ' +
+      '' + 'RAZON_SOCIAL_EMP, ESRETENCIONES_EMP, ' +
+      '' + 'ESREGIMENESPECIALAGRICOLA_EMP ' +
                     '  FROM fza_empresas ' +
                     ' WHERE CODIGO_EMP_EMP = :empresa';
       q.ParamByName('empresa').AsString := sCodigo;
@@ -751,7 +756,8 @@ begin
       '' + 'GRUPO_ZONA_IVA_EMP, MOVIL_EMP, ' +
       '' + 'NIF_EMP, NOMBRE_PAI_EMP, ' +
       '' + 'POBLACION_EMP, PROVINCIA_EMP, ' +
-      '' + 'RAZON_SOCIAL_EMP ' +
+      '' + 'RAZON_SOCIAL_EMP, ESRETENCIONES_EMP, ' +
+      '' + 'ESREGIMENESPECIALAGRICOLA_EMP ' +
           '  FROM fza_empresas ' +
           ' WHERE CODIGO_EMP_EMP = :empresa';
         qEmp.ParamByName('empresa').AsString := sEmpresa;
@@ -811,7 +817,8 @@ begin
       '' + 'ESIVA_RECARGO_CLI, MOVIL_CLI, ' +
       '' + 'NIF_CLI, NOMBRE_PAI_CLI, ' +
       '' + 'POBLACION_CLI, PROVINCIA_CLI, ' +
-      '' + 'RAZON_SOCIAL_CLI, TARIFA_ARTICULO_CLI ' +
+      '' + 'RAZON_SOCIAL_CLI, TARIFA_ARTICULO_CLI, ' +
+      '' + 'ESRETENCIONES_CLI, ESREGIMENESPECIALAGRICOLA_CLI ' +
                     '  FROM fza_clientes ' +
                     ' WHERE CODIGO_CLI_CLI = :cliente';
       q.ParamByName('cliente').AsString := sCodigo;
@@ -868,6 +875,11 @@ begin
       DataSet.FindField('CODIGO_PAI_EMP').AsString;
     FindField('GRUPO_ZONA_IVA_EMPRESA_PRE').AsString :=
       DataSet.FindField('GRUPO_ZONA_IVA_EMP').AsString;
+    // El motor fiscal decide la retencion con estos indicadores.
+    FindField('ESRETENCIONES_EMPRESA_PRE').AsString  :=
+      DataSet.FindField('ESRETENCIONES_EMP').AsString;
+    FindField('ESREGIMENESPECIALAGRICOLA_EMPRESA_PRE').AsString :=
+      DataSet.FindField('ESREGIMENESPECIALAGRICOLA_EMP').AsString;
   if FindField('CODIGO_ALM_PRE') <> nil then
   begin
     RefrescarAlmacenes(DataSet.FindField('CODIGO_EMP_EMP').AsString);
@@ -956,6 +968,10 @@ begin
     FindField('ESINTRACOMUNITARIO_CLIENTE_PRE').AsString :=
                             DataSet.FindField(
                               'ESINTRACOMUNITARIO_CLI').AsString;
+    FindField('ESRETENCIONES_CLIENTE_PRE').AsString :=
+      DataSet.FindField('ESRETENCIONES_CLI').AsString;
+    FindField('ESREGIMENESPECIALAGRICOLA_CLIENTE_PRE').AsString :=
+      DataSet.FindField('ESREGIMENESPECIALAGRICOLA_CLI').AsString;
     sTarifa := Trim(DataSet.FindField('TARIFA_ARTICULO_CLI').AsString);
     if sTarifa = '' then
       sTarifa := ParametrosCaja.TarifaDefecto;
@@ -1055,6 +1071,38 @@ begin
       unqryTablaG.FieldByName('NUMERO_PRE').AsString,
       IdentidadSesion.Usuario));
   unqryTablaG.Refresh;
+end;
+
+function TdmPresupuestos.LineasVentaCaja: TLineasVentaCajaExterna;
+var
+  q: TUniQuery;
+  iLinea: Integer;
+begin
+  q := TUniQuery.Create(nil);
+  try
+    q.Connection := unqryTablaG.Connection;
+    q.SQL.Text := SqlPrevisualizarLineasDocumentoOrigen(
+      TIPO_DOCUMENTO_ORIGEN_PRESUPUESTO_VENTA);
+    q.ParamByName('EMPRESA').AsString :=
+      unqryTablaG.FieldByName('CODIGO_EMP_PRE').AsString;
+    q.ParamByName('SERIE').AsString :=
+      unqryTablaG.FieldByName('SERIE_PRE').AsString;
+    q.ParamByName('NUMERO').AsString :=
+      unqryTablaG.FieldByName('NUMERO_PRE').AsString;
+    q.Open;
+    SetLength(Result, q.RecordCount);
+    iLinea := 0;
+    while not q.Eof do
+    begin
+      Result[iLinea].CodigoSku := q.FieldByName('CODIGO_SKU').AsString;
+      Result[iLinea].Cantidad := q.FieldByName('CANTIDAD').AsFloat;
+      Inc(iLinea);
+      q.Next;
+    end;
+    SetLength(Result, iLinea);
+  finally
+    FreeAndNil(q);
+  end;
 end;
 
 initialization

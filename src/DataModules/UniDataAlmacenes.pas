@@ -90,6 +90,9 @@ var
   sValorAnterior: string;
 begin
   inherited;
+  // qryAlmacenesCajas comparte este evento: lo demás es solo del almacén
+  if DataSet <> unqryTablaG then
+    Exit;
   FAlmacenAnteriorWeb := '';
   FCambioSeleccionWeb := DataSet.State = dsInsert;
   if DataSet.State = dsEdit then

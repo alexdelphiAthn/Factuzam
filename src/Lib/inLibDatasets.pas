@@ -361,14 +361,16 @@ function ExistePeriodoUnico(
   ADataSet: TDataSet;
   ACampoFechaInicio: TField;
   ACampoFechaFin: TField): Boolean;
+// ADataSet trae los demas periodos, sin el que se esta grabando.
+// Dos periodos solapan si el otro no termina antes del inicio propio y
+// empieza antes del fin propio; un fin vacio es un periodo abierto.
 var
   bFechasOrdenadas: Boolean;
   bFechaFinNula: Boolean;
   bFechaInicioNula: Boolean;
+  bOtroFinNulo: Boolean;
   dFechaFin: TDateTime;
   dFechaInicio: TDateTime;
-  iComparacionFin: Integer;
-  iComparacionInicio: Integer;
   oCliente: TClientDataSet;
   oProveedor: TDataSetProvider;
   sCampoFechaFin: string;
@@ -377,19 +379,16 @@ begin
   oCliente := nil;
   sCampoFechaInicio := ACampoFechaInicio.FieldName;
   sCampoFechaFin := ACampoFechaFin.FieldName;
-  bFechasOrdenadas := True;
   bFechaFinNula := ACampoFechaFin.IsNull;
   bFechaInicioNula := ACampoFechaInicio.IsNull;
   dFechaInicio := ACampoFechaInicio.AsDateTime;
   dFechaFin := ACampoFechaFin.AsDateTime;
-  if ADataSet.RecordCount > 1 then
+  bFechasOrdenadas := True;
+  if not ADataSet.IsEmpty then
   begin
-    if not bFechaFinNula and
-       (CompareDate(
-         dFechaInicio, dFechaFin) > 0) then
-      bFechasOrdenadas := False;
-    if bFechaInicioNula and
-       bFechasOrdenadas then
+    if bFechaInicioNula or
+       (not bFechaFinNula and
+        (CompareDate(dFechaInicio, dFechaFin) > 0)) then
       bFechasOrdenadas := False;
     try
       if bFechasOrdenadas then
@@ -406,36 +405,17 @@ begin
             not oCliente.Eof and
             bFechasOrdenadas do
       begin
-        if bFechaFinNula then
-        begin
-          if oCliente.FieldByName(
-               sCampoFechaFin).IsNull then
-            bFechasOrdenadas := False;
-          if bFechasOrdenadas then
-          begin
-            iComparacionInicio := CompareDate(
-              oCliente.FieldByName(
-                sCampoFechaFin).AsDateTime,
-              dFechaInicio);
-            if iComparacionInicio > 0 then
-              bFechasOrdenadas := False;
-          end;
-        end;
-        if not bFechaFinNula and
-           bFechasOrdenadas then
-        begin
-          iComparacionInicio := CompareDate(
-            oCliente.FieldByName(
-              sCampoFechaInicio).AsDateTime,
-            dFechaFin);
-          iComparacionFin := CompareDate(
-            oCliente.FieldByName(
-              sCampoFechaFin).AsDateTime,
-            dFechaInicio);
-          if (iComparacionInicio < 0) and
-             (iComparacionFin > 0) then
-            bFechasOrdenadas := False;
-        end;
+        bOtroFinNulo := oCliente.FieldByName(
+          sCampoFechaFin).IsNull;
+        if (bOtroFinNulo or
+            (CompareDate(
+               oCliente.FieldByName(sCampoFechaFin).AsDateTime,
+               dFechaInicio) > 0)) and
+           (bFechaFinNula or
+            (CompareDate(
+               oCliente.FieldByName(sCampoFechaInicio).AsDateTime,
+               dFechaFin) < 0)) then
+          bFechasOrdenadas := False;
         oCliente.Next;
       end;
     finally
@@ -445,10 +425,8 @@ begin
         FreeAndNil(oCliente);
       end;
     end;
-    Result := bFechasOrdenadas;
-  end
-  else
-    Result := True;
+  end;
+  Result := bFechasOrdenadas;
 end;
 
 end.

@@ -896,6 +896,28 @@ begin
   end;
 end;
 
+// Alias de la tabla derivada de la busqueda externa. MariaDB atribuye las
+// columnas de una tabla derivada a su alias; si el alias no coincide con
+// UpdatingTable, UniDAC deja los campos en solo lectura (SetFieldsReadOnly)
+// y la instancia de busqueda (Clientes 1, Proveedores 1...) no se puede
+// editar. Con el nombre de la tabla los metadatos son los del modo normal.
+function AliasBusquedaExterna(const ATabla: string): string;
+var
+  c: Char;
+begin
+  Result := Trim(ATabla);
+  if LastDelimiter('.', Result) > 0 then
+    Result := Copy(Result, LastDelimiter('.', Result) + 1, MaxInt);
+  Result := StringReplace(Result, '`', '', [rfReplaceAll]);
+  for c in Result do
+    if not CharInSet(c, ['A'..'Z', 'a'..'z', '0'..'9', '_', '$']) then
+      Result := '';
+  if Result = '' then
+    Result := 'sub_busqueda'
+  else
+    Result := '`' + Result + '`';
+end;
+
 procedure TdmBase.PrepararBusquedaExterna(
   const ACamposClave, AValoresClave: string);
 var
@@ -935,7 +957,9 @@ begin
         unqryTablaG.UpdatingTable := ExtraerTablaDeSQL(
           FSqlBaseBusquedaExterna);
       unqryTablaG.SQL.Text := 'SELECT * FROM (' + sLineBreak +
-        sBase + sLineBreak + ') sub_busqueda WHERE ' + sWhere;
+        sBase + sLineBreak + ') ' +
+        AliasBusquedaExterna(unqryTablaG.UpdatingTable) +
+        ' WHERE ' + sWhere;
     end;
   end;
 end;

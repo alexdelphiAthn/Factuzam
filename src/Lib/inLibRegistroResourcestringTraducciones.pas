@@ -473,6 +473,10 @@ begin
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SErrorLineaPresupuestoSinArticulo);
   ARegistrar(
+    'inLibMsgPresupuestos.SPreguntaLineaLibrePresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SPreguntaLineaLibrePresupuesto);
+  ARegistrar(
     'inLibMsgPresupuestos.STituloBuscarArticulosLineasPresupuesto',
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.STituloBuscarArticulosLineasPresupuesto);
@@ -545,6 +549,22 @@ begin
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SCaptionPasarPresupuestoPedido);
   ARegistrar(
+    'inLibMsgPresupuestos.SCaptionEnviarPresupuestoCaja',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SCaptionEnviarPresupuestoCaja);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorPresupuestoSinLineasCaja',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorPresupuestoSinLineasCaja);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInfoLineasPresupuestoVolcadasCaja',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInfoLineasPresupuestoVolcadasCaja);
+  ARegistrar(
+    'inLibMsgPresupuestos.SAvisoLineasPresupuestoNoVolcadasCaja',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SAvisoLineasPresupuestoNoVolcadasCaja);
+  ARegistrar(
     'inLibMsgPresupuestos.SErrorSeleccionePresupuesto',
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SErrorSeleccionePresupuesto);
@@ -577,13 +597,41 @@ begin
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SErrorDocumentoImpresionNoExiste);
   ARegistrar(
+    'inLibMsgPresupuestos.SInformeNumeroDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeNumeroDocumento);
+  ARegistrar(
     'inLibMsgPresupuestos.SInformeFechaDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SInformeFechaDocumento);
   ARegistrar(
-    'inLibMsgPresupuestos.SInformeArticuloDocumento',
+    'inLibMsgPresupuestos.SInformeValidezDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
-    @inLibMsgPresupuestos.SInformeArticuloDocumento);
+    @inLibMsgPresupuestos.SInformeValidezDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeEmisorDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeEmisorDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeClienteDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeClienteDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeProveedorDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeProveedorDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeNifDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeNifDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeCodigoDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeCodigoDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeDescripcionDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeDescripcionDocumento);
   ARegistrar(
     'inLibMsgPresupuestos.SInformeCantidadDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
@@ -601,25 +649,57 @@ begin
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SInformeImporteDocumento);
   ARegistrar(
-    'inLibMsgPresupuestos.SInformeBaseDocumento',
+    'inLibMsgPresupuestos.SInformeTipoIvaDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
-    @inLibMsgPresupuestos.SInformeBaseDocumento);
+    @inLibMsgPresupuestos.SInformeTipoIvaDocumento);
   ARegistrar(
-    'inLibMsgPresupuestos.SInformeImpuestosDocumento',
+    'inLibMsgPresupuestos.SInformeBaseImponibleDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
-    @inLibMsgPresupuestos.SInformeImpuestosDocumento);
+    @inLibMsgPresupuestos.SInformeBaseImponibleDocumento);
   ARegistrar(
-    'inLibMsgPresupuestos.SInformeRetencionDocumento',
+    'inLibMsgPresupuestos.SInformePorcentajeIvaDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
-    @inLibMsgPresupuestos.SInformeRetencionDocumento);
+    @inLibMsgPresupuestos.SInformePorcentajeIvaDocumento);
   ARegistrar(
-    'inLibMsgPresupuestos.SInformeTotalDocumento',
+    'inLibMsgPresupuestos.SInformeCuotaIvaDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
-    @inLibMsgPresupuestos.SInformeTotalDocumento);
+    @inLibMsgPresupuestos.SInformeCuotaIvaDocumento);
   ARegistrar(
-    'inLibMsgPresupuestos.SInformeFormaPagoDocumento',
+    'inLibMsgPresupuestos.SInformeIvaNormalDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
-    @inLibMsgPresupuestos.SInformeFormaPagoDocumento);
+    @inLibMsgPresupuestos.SInformeIvaNormalDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeIvaReducidoDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeIvaReducidoDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeIvaSuperreducidoDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeIvaSuperreducidoDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeIvaExentoDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeIvaExentoDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeTotalIvaDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeTotalIvaDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeRetencionIrpfDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeRetencionIrpfDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeTotalLiquidoDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeTotalLiquidoDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeFormaPagoDescDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeFormaPagoDescDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SInformeObservacionesDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SInformeObservacionesDocumento);
   ARegistrar(
     'inLibMsgPresupuestos.SInformePaginaDocumento',
     'src/Lib/inLibMsgPresupuestos.pas',
@@ -13575,6 +13655,12 @@ begin
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.
       SDescripcionTipoOrigenPedidoVentaDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenPresupuestoVentaDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenPresupuestoVentaDocumentoTrabajo);
   ARegistrar(
     'inLibMsgVentas.' +
     'SDescripcionTipoOrigenPedidoCompraDocumentoTrabajo',

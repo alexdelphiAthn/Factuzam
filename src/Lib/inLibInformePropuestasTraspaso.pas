@@ -76,7 +76,7 @@ function UnidadesInformeLineaPropuesta(
   const APropuesta: TPropuestaTraspaso;
   const ALinea: TLineaPropuestaTraspaso): Double;
 begin
-  if APropuesta.EstaTrasladada then
+  if APropuesta.EstaTrasladada or APropuesta.EstaTrasladadaParcial then
     Result := ALinea.CantidadTraspasada
   else
     Result := ALinea.Cantidad;
@@ -89,6 +89,8 @@ begin
     Result := STextoEstadoPropuestaPendiente
   else if APropuesta.EstaTrasladada then
     Result := STextoEstadoPropuestaTrasladada
+  else if APropuesta.EstaTrasladadaParcial then
+    Result := STextoEstadoPropuestaTrasladadaParcial
   else
     Result := STextoEstadoPropuestaNoAceptada;
 end;

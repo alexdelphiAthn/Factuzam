@@ -130,6 +130,7 @@ resourcestring
   SCaptionColResolucionPropuesta = 'Resuelta';
   STextoEstadoPropuestaPendiente = 'Pendiente';
   STextoEstadoPropuestaTrasladada = 'Trasladado';
+  STextoEstadoPropuestaTrasladadaParcial = 'Trasladado parcial';
   STextoEstadoPropuestaNoAceptada = 'No aceptado';
   SFormatoTraspasoPropuesta = '%s %s/%s';
   SInfoSeleccionarPropuesta =
@@ -169,7 +170,20 @@ resourcestring
   SCaptionConfirmarPropuesta = 'Confirmar propuesta';
   SInfoPropuestaCargadaEnTraspaso =
     'Propuesta %d cargada con destino %s. Revise las unidades y grabe el ' +
-    'traspaso para confirmarla.';
+    'traspaso: se le preguntará si la propuesta queda traspasada del todo ' +
+    'o en parte.';
+  SPreguntaEstadoPropuestaTraspasada =
+    'El traspaso lleva %s de las %s unidades que faltaban de la ' +
+    'propuesta %d a %s.'#13#10#13#10 +
+    '¿Cómo queda la propuesta?'#13#10 +
+    '- Traspasado: se da por terminada.'#13#10 +
+    '- Traspasado parcial: lo que falta sigue pendiente y se podrá ' +
+    'volver a cargar.';
+  SCaptionPropuestaTraspasada = 'Traspasado';
+  SCaptionPropuestaTraspasadaParcial = 'Traspasado parcial';
+  SInfoPropuestaParcialCerrada =
+    'La propuesta %d se da por trasladada con lo ya traspasado: lo que ' +
+    'faltaba vuelve a estar por repartir.';
 
   // --- Documento de trabajo y albarán de compra -----------------------------
   STituloDocumentoDistribucionAlbaran = 'Distribución albarán %s/%s';

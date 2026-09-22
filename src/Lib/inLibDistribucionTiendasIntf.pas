@@ -21,6 +21,9 @@ const
   ESTADO_PROPUESTA_TRASPASO_PENDIENTE = 'PENDIENTE';
   // Confirmada: ya es un traspaso real.
   ESTADO_PROPUESTA_TRASPASO_TRASLADADO = 'TRASLADADO';
+  // Se ha traspasado una parte y lo que falta sigue esperando: caja la
+  // puede volver a cargar con lo que queda por traspasar.
+  ESTADO_PROPUESTA_TRASPASO_TRASLADADO_PARCIAL = 'TRASLADADO PARCIAL';
   // Quien debía servirla no la acepta: sus unidades vuelven a estar
   // por repartir y la propuesta queda en el historial.
   ESTADO_PROPUESTA_TRASPASO_NO_ACEPTADO = 'NO ACEPTADO';
@@ -102,6 +105,8 @@ type
     OrdenTalla: Integer;
     Cantidad: Double;
     CantidadTraspasada: Double;
+    // Lo propuesto que aún no se ha traspasado (nunca negativo).
+    function CantidadPorTraspasar: Double;
   end;
   TLineasPropuestaTraspaso = TArray<TLineaPropuestaTraspaso>;
 
@@ -123,9 +128,13 @@ type
     Lineas: TLineasPropuestaTraspaso;
     function EstaPendiente: Boolean;
     function EstaTrasladada: Boolean;
-    // Lo trasladado cuenta por lo realmente traspasado; lo pendiente y lo
-    // no aceptado, por lo que se propuso.
+    function EstaTrasladadaParcial: Boolean;
+    // Pendiente o trasladada en parte: caja aún la puede cargar.
+    function AdmiteTraspaso: Boolean;
+    // Lo trasladado (del todo o en parte) cuenta por lo realmente
+    // traspasado; lo pendiente y lo no aceptado, por lo que se propuso.
     function TotalUnidades: Double;
+    function TotalPorTraspasar: Double;
   end;
   TPropuestasTraspaso = TArray<TPropuestaTraspaso>;
 
@@ -201,6 +210,16 @@ begin
   Result := SameText(Estado, ESTADO_PROPUESTA_TRASPASO_TRASLADADO);
 end;
 
+function TPropuestaTraspaso.EstaTrasladadaParcial: Boolean;
+begin
+  Result := SameText(Estado, ESTADO_PROPUESTA_TRASPASO_TRASLADADO_PARCIAL);
+end;
+
+function TPropuestaTraspaso.AdmiteTraspaso: Boolean;
+begin
+  Result := EstaPendiente or EstaTrasladadaParcial;
+end;
+
 function TPropuestaTraspaso.TotalUnidades: Double;
 var
   i: Integer;
@@ -208,11 +227,27 @@ begin
   Result := 0;
   for i := 0 to High(Lineas) do
   begin
-    if EstaTrasladada then
+    if EstaTrasladada or EstaTrasladadaParcial then
       Result := Result + Lineas[i].CantidadTraspasada
     else
       Result := Result + Lineas[i].Cantidad;
   end;
+end;
+
+function TPropuestaTraspaso.TotalPorTraspasar: Double;
+var
+  i: Integer;
+begin
+  Result := 0;
+  for i := 0 to High(Lineas) do
+    Result := Result + Lineas[i].CantidadPorTraspasar;
+end;
+
+function TLineaPropuestaTraspaso.CantidadPorTraspasar: Double;
+begin
+  Result := Cantidad - CantidadTraspasada;
+  if Result < 0 then
+    Result := 0;
 end;
 
 procedure TServiciosDistribucionTiendas.Validar;

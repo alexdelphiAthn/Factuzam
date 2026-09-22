@@ -568,59 +568,6 @@ begin
     Result := Format(SInfoScriptsActualizacionAplazados, [APendientes]);
 end;
 
-procedure AplicarFaltantesSinInstalacion(
-  const AContexto: TContextoActualizacion;
-  const AInteraccion: TInteraccionActualizacion;
-  const AFaltantes: TArray<TScriptFaltante>;
-  var AEstado: TEstadoActualizacion;
-  var AResultado: TResultadoActualizacion);
-var
-  bCancelado: Boolean;
-  sError: string;
-begin
-  AResultado.Ok := True;
-  bCancelado := False;
-  if AInteraccion.DecidirScripts(AFaltantes, False) = dsaAplazar then
-    AResultado.Mensaje := MensajeScriptsSinAplicar(
-      False,
-      Length(AEstado.Pendientes))
-  else if not AInteraccion.SolicitarCopiaPrevia(AEstado.RutaCopiaPrevia) then
-  begin
-    AResultado.Cancelado := True;
-    AResultado.Mensaje := MensajeScriptsSinAplicar(
-      False,
-      Length(AEstado.Pendientes));
-  end
-  else
-  begin
-    AResultado.Ok := AplicarPendientes(
-      AContexto.Conexion,
-      AInteraccion,
-      AEstado,
-      bCancelado,
-      sError);
-    AResultado.Cancelado := bCancelado;
-    AResultado.Mensaje := sError;
-    // Sin ejecutable nuevo no hace falta salir del programa: lo que ha
-    // cambiado es la base de datos.
-    if AResultado.Ok and (AResultado.Mensaje = '') then
-    begin
-      if bCancelado then
-        AResultado.Mensaje := MensajeScriptsSinAplicar(
-          True,
-          Length(AEstado.Pendientes))
-      else
-        AResultado.Mensaje := SInfoScriptsPendientesAplicados;
-    end;
-  end;
-  if AEstado.HayScriptsPendientes then
-    AEstado.Estado := cEstadoActualizacionPendiente
-  else
-    AEstado.Estado := cEstadoActualizacionCompletada;
-  if not GuardarEstadoActualizacion(AEstado, sError) then
-    AResultado.Mensaje := AResultado.Mensaje + sLineBreak + sError;
-end;
-
 { Baja la comprobación de la versión publicada y mira en la base qué scripts
   faltan. La consulta recorre INFORMATION_SCHEMA entero: en una base grande
   y un equipo modesto son minutos, así que corre en su hilo, con la ventana
@@ -700,6 +647,177 @@ begin
     AResultado.Mensaje := SInfoComprobacionScriptsCancelada
   else
     AResultado.Mensaje := AError;
+end;
+
+// Algún script de AFaltantes que no estuviera en AIntentados.
+function HayScriptsNuevos(
+  const AFaltantes, AIntentados: TArray<TScriptFaltante>): Boolean;
+var
+  bEsta: Boolean;
+  iFaltante: Integer;
+  iIntentado: Integer;
+begin
+  Result := False;
+  for iFaltante := Low(AFaltantes) to High(AFaltantes) do
+  begin
+    bEsta := False;
+    for iIntentado := Low(AIntentados) to High(AIntentados) do
+      bEsta := bEsta or SameText(
+        AFaltantes[iFaltante].Nombre,
+        AIntentados[iIntentado].Nombre);
+    Result := Result or not bEsta;
+  end;
+end;
+
+{ Reaplicar un script antiguo puede reponer procedimientos que ya había
+  cambiado otro posterior, que la comprobación daba por aplicado (570
+  inventarios_retroactivos_pmp quitaba lo que pone 577 prestashop_cola).
+  Tras la tanda se vuelve a mirar la base y se aplica lo que falte, en su
+  orden, si entre ello hay algún script que no se acababa de intentar. Si
+  solo falta lo ya intentado (un script que falla o que su comprobación no
+  reconoce) no se insiste; como mucho, cRepasosScripts pasadas. }
+procedure RepasarScriptsAplicados(
+  const AContexto: TContextoActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
+  const AInteraccion: TInteraccionActualizacion;
+  const AIntentados: TArray<TScriptFaltante>;
+  var AEstado: TEstadoActualizacion;
+  var AOk: Boolean;
+  var ACancelado: Boolean;
+  var AError: string);
+const
+  cRepasosScripts = 3;
+var
+  aFaltantes: TArray<TScriptFaltante>;
+  aUltimos: TArray<TScriptFaltante>;
+  bAplicar: Boolean;
+  bCancelado: Boolean;
+  iRepaso: Integer;
+  sError: string;
+  sRutaComprobacion: string;
+  Ventana: IVentanaEspera;
+begin
+  aUltimos := AIntentados;
+  iRepaso := 0;
+  bAplicar := True;
+  while bAplicar and not ACancelado and (iRepaso < cRepasosScripts) do
+  begin
+    Inc(iRepaso);
+    bAplicar := False;
+    Ventana := AbrirVentanaEspera(
+      AInteraccion,
+      SInfoComprobandoScriptsAplicados);
+    try
+      // Si no se puede volver a mirar, queda lo que dijo la tanda.
+      if ConsultarFaltantes(
+           AContexto,
+           AManifiesto,
+           AInteraccion,
+           Ventana,
+           sRutaComprobacion,
+           aFaltantes,
+           bCancelado,
+           sError) then
+      begin
+        if Length(aFaltantes) = 0 then
+        begin
+          AOk := True;
+          AError := '';
+          AEstado.Pendientes := nil;
+        end
+        else if HayScriptsNuevos(aFaltantes, aUltimos) then
+        begin
+          bAplicar := DescargarScriptsFaltantes(
+            AContexto,
+            AManifiesto,
+            aFaltantes,
+            Ventana,
+            AEstado,
+            sError);
+          if not bAplicar then
+          begin
+            AOk := False;
+            AError := sError;
+          end;
+        end;
+      end;
+    finally
+      CerrarVentanaEspera(Ventana);
+    end;
+    if bAplicar then
+    begin
+      AOk := AplicarPendientes(
+        AContexto.Conexion,
+        AInteraccion,
+        AEstado,
+        ACancelado,
+        AError);
+      aUltimos := aFaltantes;
+    end;
+  end;
+end;
+
+procedure AplicarFaltantesSinInstalacion(
+  const AContexto: TContextoActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
+  const AInteraccion: TInteraccionActualizacion;
+  const AFaltantes: TArray<TScriptFaltante>;
+  var AEstado: TEstadoActualizacion;
+  var AResultado: TResultadoActualizacion);
+var
+  bCancelado: Boolean;
+  sError: string;
+begin
+  AResultado.Ok := True;
+  bCancelado := False;
+  if AInteraccion.DecidirScripts(AFaltantes, False) = dsaAplazar then
+    AResultado.Mensaje := MensajeScriptsSinAplicar(
+      False,
+      Length(AEstado.Pendientes))
+  else if not AInteraccion.SolicitarCopiaPrevia(AEstado.RutaCopiaPrevia) then
+  begin
+    AResultado.Cancelado := True;
+    AResultado.Mensaje := MensajeScriptsSinAplicar(
+      False,
+      Length(AEstado.Pendientes));
+  end
+  else
+  begin
+    AResultado.Ok := AplicarPendientes(
+      AContexto.Conexion,
+      AInteraccion,
+      AEstado,
+      bCancelado,
+      sError);
+    RepasarScriptsAplicados(
+      AContexto,
+      AManifiesto,
+      AInteraccion,
+      AFaltantes,
+      AEstado,
+      AResultado.Ok,
+      bCancelado,
+      sError);
+    AResultado.Cancelado := bCancelado;
+    AResultado.Mensaje := sError;
+    // Sin ejecutable nuevo no hace falta salir del programa: lo que ha
+    // cambiado es la base de datos.
+    if AResultado.Ok and (AResultado.Mensaje = '') then
+    begin
+      if bCancelado then
+        AResultado.Mensaje := MensajeScriptsSinAplicar(
+          True,
+          Length(AEstado.Pendientes))
+      else
+        AResultado.Mensaje := SInfoScriptsPendientesAplicados;
+    end;
+  end;
+  if AEstado.HayScriptsPendientes then
+    AEstado.Estado := cEstadoActualizacionPendiente
+  else
+    AEstado.Estado := cEstadoActualizacionCompletada;
+  if not GuardarEstadoActualizacion(AEstado, sError) then
+    AResultado.Mensaje := AResultado.Mensaje + sLineBreak + sError;
 end;
 
 { No hay versión nueva que instalar, pero la base de datos puede seguir
@@ -783,6 +901,7 @@ begin
     if bDescargados then
       AplicarFaltantesSinInstalacion(
         AContexto,
+        AManifiesto,
         AInteraccion,
         aFaltantes,
         Estado,
@@ -914,6 +1033,15 @@ begin
               AContexto.Conexion,
               AInteraccion,
               Estado,
+              bCancelado,
+              sError);
+            RepasarScriptsAplicados(
+              AContexto,
+              AManifiesto,
+              AInteraccion,
+              aFaltantes,
+              Estado,
+              Result.Ok,
               bCancelado,
               sError);
             Result.Cancelado := bCancelado;

@@ -339,7 +339,7 @@ function CrearDevolucionesCompraInyectada(
 implementation
 
 uses
-  inLibMensajesVcl,
+  inLibMensajesVcl, inLibCorreoTickets,
   System.StrUtils,
   inLibFiltroUsuario,
   inLibGridCantidad,
@@ -1245,6 +1245,8 @@ begin
         form.dmDevc := dmmDevolucionesCompra;
         form.edtSerie.Text := sSerie;
         form.edtNumero.Text := sNumero;
+        form.ConfigurarDocumentoCorreo(
+          tdcDevolucionCompra, sSerie, sNumero);
         form.ShowModal;
       finally
         FreeAndNil(form);
@@ -1282,6 +1284,8 @@ begin
         form.dmDevc := dmmDevolucionesCompra;
         form.edtSerie.Text := sSerie;
         form.edtNumero.Text := sNumero;
+        form.ConfigurarDocumentoCorreo(
+          tdcDevolucionCompra, sSerie, sNumero);
         form.ShowModal;
       finally
         FreeAndNil(form);

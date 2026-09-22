@@ -39,6 +39,12 @@ function MessageDlg_fza(const AMensaje: string; ATipo: TMsgDlgType;
 function MessageDlg_fza(const AMensaje: string; ATipo: TMsgDlgType;
   ABotones: TMsgDlgButtons; AContextoAyuda: Longint;
   ABotonPorDefecto: TMsgDlgBtn): Integer; overload;
+// Como MessageDlg_fza, con otro texto en los botones: ATextos va en el
+// orden de TMsgDlgBtn (el de izquierda a derecha); un texto vacío deja el
+// de la VCL. Los botones se ensanchan lo que pida su texto.
+function MessageDlgTextos_fza(const AMensaje: string; ATipo: TMsgDlgType;
+  ABotones: TMsgDlgButtons; const ATextos: array of string;
+  ABotonPorDefecto: TMsgDlgBtn): Integer;
 // Sustituto de Application.MessageBox: indicadores MB_OK, MB_YESNO,
 // MB_ICONINFORMATION, MB_DEFBUTTON2... y resultados IDOK, IDYES, IDNO...
 function MessageBox_fza(const ATexto, ATitulo: string;
@@ -64,7 +70,8 @@ function ResultadoDeMessageBox(AResultadoModal: Integer;
 implementation
 
 uses
-  System.SysUtils, System.Classes, Vcl.Forms;
+  System.SysUtils, System.Classes, System.Math, Vcl.Forms, Vcl.StdCtrls,
+  Vcl.Menus;
 
 type
   TOrdenBotones = array of TMsgDlgBtn;
@@ -253,6 +260,61 @@ function MessageDlg_fza(const AMensaje: string; ATipo: TMsgDlgType;
 begin
   Result := MostrarDialogo(CrearDialogo(
     AMensaje, ATipo, ABotones, ABotonPorDefecto, AContextoAyuda));
+end;
+
+// CreateMessageDialog crea los botones en el orden de TMsgDlgBtn y los
+// coloca de izquierda a derecha, todos del mismo ancho y centrados.
+procedure PonerTextosBotones(ADialogo: TForm;
+  const ATextos: array of string);
+var
+  Botones: TArray<TButton>;
+  i, iAncho, iSeparacion, iTotal, iX: Integer;
+begin
+  Botones := nil;
+  for i := 0 to ADialogo.ComponentCount - 1 do
+    if ADialogo.Components[i] is TButton then
+      Botones := Botones + [TButton(ADialogo.Components[i])];
+  if Length(Botones) > 0 then
+  begin
+    ADialogo.Canvas.Font := ADialogo.Font;
+    iAncho := Botones[0].Width;
+    for i := 0 to High(Botones) do
+    begin
+      if (i <= High(ATextos)) and (ATextos[i] <> '') then
+        Botones[i].Caption := ATextos[i];
+      iAncho := Max(iAncho,
+        ADialogo.Canvas.TextWidth(StripHotkey(Botones[i].Caption)) +
+        ADialogo.ScaleValue(24));
+    end;
+    iSeparacion := ADialogo.ScaleValue(4);
+    if Length(Botones) > 1 then
+      iSeparacion := Botones[1].Left - Botones[0].Left - Botones[0].Width;
+    iTotal := Length(Botones) * iAncho + High(Botones) * iSeparacion;
+    if iTotal + ADialogo.ScaleValue(16) > ADialogo.ClientWidth then
+      ADialogo.ClientWidth := iTotal + ADialogo.ScaleValue(16);
+    iX := (ADialogo.ClientWidth - iTotal) div 2;
+    for i := 0 to High(Botones) do
+    begin
+      Botones[i].SetBounds(iX, Botones[i].Top, iAncho, Botones[i].Height);
+      Inc(iX, iAncho + iSeparacion);
+    end;
+  end;
+end;
+
+function MessageDlgTextos_fza(const AMensaje: string; ATipo: TMsgDlgType;
+  ABotones: TMsgDlgButtons; const ATextos: array of string;
+  ABotonPorDefecto: TMsgDlgBtn): Integer;
+var
+  oDialogo: TForm;
+begin
+  oDialogo := CrearDialogo(AMensaje, ATipo, ABotones, ABotonPorDefecto, 0);
+  try
+    PonerTextosBotones(oDialogo, ATextos);
+  except
+    oDialogo.Free;
+    raise;
+  end;
+  Result := MostrarDialogo(oDialogo);
 end;
 
 function MessageBox_fza(const ATexto, ATitulo: string;

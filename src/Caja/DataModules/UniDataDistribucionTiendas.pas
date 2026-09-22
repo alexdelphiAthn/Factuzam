@@ -59,8 +59,8 @@ procedure ForceReferenceToClass(C: TClass);
 begin
 end;
 
-// Las unidades de lo trasladado son las realmente traspasadas; las del
-// resto, las propuestas.
+// Las unidades de lo trasladado (del todo o en parte) son las realmente
+// traspasadas; las del resto, las propuestas.
 function SqlHistorialPropuestasTraspaso: string;
 begin
   Result :=
@@ -72,7 +72,8 @@ begin
     '       CONCAT(P.CODIGO_ALM_DESTINO_TRPRO, '' - '', ' +
     '              COALESCE(AD.NOMBRE_ALM_ALM, '''')) AS DESTINO, ' +
     '       (SELECT COALESCE(SUM(' +
-    '                 CASE WHEN P.ESTADO_TRPRO = ''TRASLADADO'' ' +
+    '                 CASE WHEN P.ESTADO_TRPRO IN (''TRASLADADO'', ' +
+    '                                              ''TRASLADADO PARCIAL'') ' +
     '                      THEN L.CANTIDAD_TRASPASADA_TRPROLIN ' +
     '                      ELSE L.CANTIDAD_TRPROLIN END), 0) ' +
     '          FROM fza_traspasos_propuestas_lineas L ' +
@@ -99,7 +100,7 @@ begin
 end;
 
 // Los documentos abiertos y, además, los que aún tienen propuestas
-// pendientes aunque ya se haya trasladado alguna.
+// pendientes (o trasladadas en parte) aunque ya se haya trasladado alguna.
 function SqlDocumentosTrabajoDistribuibles: string;
 begin
   Result :=
@@ -112,7 +113,8 @@ begin
     '    OR EXISTS (SELECT 1 ' +
     '                 FROM fza_traspasos_propuestas P ' +
     '                WHERE P.ID_DTR_TRPRO = DTR.ID_DTR ' +
-    '                  AND P.ESTADO_TRPRO = ''PENDIENTE'') ' +
+    '                  AND P.ESTADO_TRPRO IN (''PENDIENTE'', ' +
+    '                                         ''TRASLADADO PARCIAL'')) ' +
     ' ORDER BY DTR.ID_DTR DESC ' +
     ' LIMIT ' + IntToStr(MAXIMO_DOCUMENTOS_DISTRIBUIBLES);
 end;

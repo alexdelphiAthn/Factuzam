@@ -22,7 +22,19 @@ uses
   inLibUnidadesMedida, inLibPreviewTicket, inLibLogIntf;
 
 type
-  TTipoDocumentoCorreo = (tdcTicket, tdcFactura);
+  // Cada valor tiene su texto en el contrato del servicio web
+  // (tipo_documento de correo/enviar_ticket.php).
+  TTipoDocumentoCorreo = (
+    tdcTicket,
+    tdcFactura,
+    tdcPresupuesto,
+    tdcPedido,
+    tdcAlbaran,
+    tdcPedidoCompra,
+    tdcAlbaranCompra,
+    tdcDevolucionCompra,
+    tdcFacturaCompra
+  );
 
   TDatosCorreoOperacion = record
     Encontrada: Boolean;
@@ -38,6 +50,9 @@ type
 function CorreoTicketsConfigurado(
   const AParametrosApp: IParametrosAplicacion;
   out AMensaje: string): Boolean;
+// Texto del tipo en el contrato del servicio web (ASCII, en minúsculas).
+function TipoDocumentoTexto(
+  ATipoDocumento: TTipoDocumentoCorreo): string;
 function EnviarDocumentosPorCorreo(
   const AParametrosApp: IParametrosAplicacion;
   ATipoDocumento: TTipoDocumentoCorreo;
@@ -53,6 +68,21 @@ function EnviarDocumentosPorCorreo(
   const ARutasPDF: TStrings;
   const ARegistroLog: IRegistroLog;
   out AMensaje: string): Boolean; overload;
+// ANombreDocumento (de fza_tipos_documentos) sustituye en el asunto y el
+// cuerpo del correo al nombre fijo del tipo; vacío conserva el fijo.
+function EnviarDocumentosPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  ATipoDocumento: TTipoDocumentoCorreo;
+  const AReferenciaDocumento, ANombreDocumento, ANombreEmpresa, AEmail,
+    AEmailRespuesta: string;
+  const ARutasPDF: TStrings;
+  const ARegistroLog: IRegistroLog;
+  out AMensaje: string): Boolean; overload;
+// Borra un PDF temporal de correo. False si sigue en disco; el motivo queda
+// como aviso en el log.
+function EliminarDocumentoTemporalSeguro(
+  const ARuta: string;
+  const ARegistroLog: IRegistroLog): Boolean;
 function EnviarDocumentacionOperacion(
   const AParametrosApp: IParametrosAplicacion;
   const APreviewTicket: IPreviewTicket;
@@ -155,6 +185,20 @@ begin
   case ATipoDocumento of
     tdcFactura:
       Result := 'factura';
+    tdcPresupuesto:
+      Result := 'presupuesto';
+    tdcPedido:
+      Result := 'pedido';
+    tdcAlbaran:
+      Result := 'albaran';
+    tdcPedidoCompra:
+      Result := 'pedido_compra';
+    tdcAlbaranCompra:
+      Result := 'albaran_compra';
+    tdcDevolucionCompra:
+      Result := 'devolucion_compra';
+    tdcFacturaCompra:
+      Result := 'factura_compra';
   else
     Result := 'ticket';
   end;
@@ -176,35 +220,39 @@ begin
   end;
 end;
 
-procedure EliminarDocumentoTemporalSeguro(
+function EliminarDocumentoTemporalSeguro(
   const ARuta: string;
-  const ARegistroLog: IRegistroLog);
+  const ARegistroLog: IRegistroLog): Boolean;
 var
-  bEliminado: Boolean;
   iError: Cardinal;
   sDetalle: string;
   sRuta: string;
 begin
+  Result := True;
   sRuta := Trim(ARuta);
   if (sRuta <> '') and FileExists(sRuta) then
   begin
-    bEliminado := False;
     sDetalle := '';
     try
       SetLastError(ERROR_SUCCESS);
-      bEliminado := System.SysUtils.DeleteFile(sRuta);
-      if not bEliminado then
+      Result := System.SysUtils.DeleteFile(sRuta);
+      if not Result then
       begin
         iError := GetLastError;
-        bEliminado := not FileExists(sRuta);
-        if not bEliminado and (iError <> ERROR_SUCCESS) then
+        // Si otro proceso terminó de borrarlo entre FileExists y DeleteFile,
+        // la limpieza también se considera completada.
+        Result := not FileExists(sRuta);
+        if not Result and (iError <> ERROR_SUCCESS) then
           sDetalle := SysErrorMessage(iError);
       end;
     except
       on E: Exception do
+      begin
+        Result := False;
         sDetalle := E.ClassName + ': ' + E.Message;
+      end;
     end;
-    if not bEliminado and Assigned(ARegistroLog) then
+    if not Result and Assigned(ARegistroLog) then
     begin
       try
         if Trim(sDetalle) <> '' then
@@ -359,7 +407,7 @@ begin
 end;
 
 function EnviarAlServicio(const AUrl, AApiKey, AReferencia, AOperacion,
-  AEmpresa, AEmail, AEmailRespuesta: string;
+  ANombreDocumento, AEmpresa, AEmail, AEmailRespuesta: string;
   ATipoDocumento: TTipoDocumentoCorreo;
   const ARutasPDF: TStrings;
   out AMensaje: string): Boolean;
@@ -385,6 +433,8 @@ begin
       TipoDocumentoTexto(ATipoDocumento));
     if AEmailRespuesta <> '' then
       Formulario.AddField('email_respuesta', AEmailRespuesta);
+    if ANombreDocumento <> '' then
+      Formulario.AddField('nombre_documento', ANombreDocumento);
     for i := 0 to ARutasPDF.Count - 1 do
       Formulario.AddFile('documentos[]', Trim(ARutasPDF[i]),
         'application/pdf');
@@ -431,6 +481,28 @@ function EnviarDocumentosPorCorreo(
   const ARutasPDF: TStrings;
   const ARegistroLog: IRegistroLog;
   out AMensaje: string): Boolean;
+begin
+  Result := EnviarDocumentosPorCorreo(
+    AParametrosApp,
+    ATipoDocumento,
+    AReferenciaDocumento,
+    '',
+    ANombreEmpresa,
+    AEmail,
+    AEmailRespuesta,
+    ARutasPDF,
+    ARegistroLog,
+    AMensaje);
+end;
+
+function EnviarDocumentosPorCorreo(
+  const AParametrosApp: IParametrosAplicacion;
+  ATipoDocumento: TTipoDocumentoCorreo;
+  const AReferenciaDocumento, ANombreDocumento, ANombreEmpresa, AEmail,
+    AEmailRespuesta: string;
+  const ARutasPDF: TStrings;
+  const ARegistroLog: IRegistroLog;
+  out AMensaje: string): Boolean;
 var
   sApiKey: string;
   sEmail: string;
@@ -466,6 +538,7 @@ begin
           sApiKey,
           sReferenciaInstalacion,
           Trim(AReferenciaDocumento),
+          Trim(ANombreDocumento),
           ANombreEmpresa,
           sEmail,
           sEmailRespuesta,

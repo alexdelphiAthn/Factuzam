@@ -190,8 +190,7 @@ type
     // "Enviar a...": comprueba documento grabado con lineas y deja los
     // posts hechos; devuelve el ID_DTR o 0 si no procede.
     function PrepararEnvio: Int64;
-    function SeleccionarUbicacionCaja(
-      out AEmpresa, AAlmacen, ACaja: string): Boolean;
+    function CrearLineasVentaCaja: TLineasVentaCajaExterna;
     procedure ConfigurarEnvioNumerado(
       ATipo: TTipoEnvioNumeradoDocumentoTrabajo;
       out ATitulo, ATipoContador, AMensajeError,
@@ -243,7 +242,7 @@ uses
   inLibColumnasSku, inLibColumnasDocumento,
   UniDataModoTallas, UniDataColumnasSkuServicios,
   // Modal de destino (almacen/serie/numero) del "Enviar a...".
-  inMtoModalEnviarDestino, inMtoModalCajDef,
+  inMtoModalEnviarDestino, inMtoEnvioVentaCajaVcl,
   // Reparto del documento entre las tiendas (propuestas de traspaso).
   inMtoModalDistribucionTiendas, UniDataDistribucionTiendasComposicion,
   // Listado del documento con una foto de 150 x 150 por línea.
@@ -1328,119 +1327,54 @@ end;
 
 procedure TfrmMtoDocumentosTrabajo.miEnviarTpvDTRClick(Sender: TObject);
 var
-  idDtr: Int64;
-  ds: TDataSet;
-  Bm: TBookmark;
-  iOk, iMal: Integer;
-  oAnfitrion: IAnfitrionCajaVentanas;
-  oOperacionCaja: IOperacionCaja;
-  oFormularioCaja: TCustomForm;
-  sEmpresa, sAlmacen, sCaja: string;
+  rResultado: TResultadoEnvioVentaCaja;
 begin
-  idDtr := PrepararEnvio;
-  if (idDtr > 0) and
-     SeleccionarUbicacionCaja(sEmpresa, sAlmacen, sCaja) then
+  // La venta TPV aun esta en memoria y el usuario puede cancelarla.
+  // Sin confirmacion persistida no se bloquea el documento como ENVIADO.
+  if (PrepararEnvio > 0) and
+     EnviarLineasVentaCaja(Self, FRepositorioCajasDefecto,
+       CrearLineasVentaCaja, rResultado) then
   begin
-    oOperacionCaja := BuscarOperacionCajaVacia;
-    if oOperacionCaja = nil then
-    begin
-      oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
-      oOperacionCaja :=
-        oAnfitrion.CrearOperacionCaja(Application, Permisos);
-    end;
-    oFormularioCaja := oOperacionCaja.FormularioCaja;
-    try
-      oFormularioCaja.PopupParent := Self;
-      if oFormularioCaja.Tag <= 0 then
-        oFormularioCaja.Tag := 1;
-      oFormularioCaja.Caption := Format(
-        STituloOperacionNCajaReal,
-        [oFormularioCaja.Tag, sCaja]);
-      oOperacionCaja.PrepararValores(
-        sEmpresa, sAlmacen, sCaja, Now);
-      // CargarSkuExterno deja preparada la siguiente linea y le da foco.
-      // La venta debe estar visible antes de empezar a volcar los SKU.
-      oFormularioCaja.Show;
-      if oFormularioCaja.WindowState = wsMinimized then
-        oFormularioCaja.WindowState := wsNormal;
-      oFormularioCaja.BringToFront;
-      ds := dmmDocumentosTrabajo.unqryLineas;
-      iOk := 0;
-      iMal := 0;
-      Bm := ds.GetBookmark;
-      ds.DisableControls;
-      try
-        ds.First;
-        while not ds.Eof do
-        begin
-          if oOperacionCaja.CargarSkuExterno(
-               ds.FieldByName('CODIGO_UNIDAD_DTL').AsString,
-               ds.FieldByName('CANTIDAD_DTL').AsFloat) then
-            Inc(iOk)
-          else
-            Inc(iMal);
-          ds.Next;
-        end;
-        if ds.BookmarkValid(Bm) then
-          ds.GotoBookmark(Bm);
-      finally
-        ds.EnableControls;
-        ds.FreeBookmark(Bm);
-      end;
-      // La venta TPV aun esta en memoria y el usuario puede cancelarla.
-      // Sin confirmacion persistida no se bloquea el documento como ENVIADO.
-      if iMal = 0 then
-        ShowMessage_fza(Format(
-          SInfoLineasDocumentoTrabajoVolcadasTpv,
-          [iOk]))
-      else
-        ShowMessage_fza(Format(
-          SAvisoLineasDocumentoTrabajoNoVolcadasTpv,
-          [iOk, iMal]));
-    except
-      FreeAndNil(oFormularioCaja);
-      raise;
-    end;
+    if rResultado.LineasNoVolcadas = 0 then
+      ShowMessage_fza(Format(
+        SInfoLineasDocumentoTrabajoVolcadasTpv,
+        [rResultado.LineasVolcadas]))
+    else
+      ShowMessage_fza(Format(
+        SAvisoLineasDocumentoTrabajoNoVolcadasTpv,
+        [rResultado.LineasVolcadas, rResultado.LineasNoVolcadas]));
   end;
 end;
 
-function TfrmMtoDocumentosTrabajo.SeleccionarUbicacionCaja(
-  out AEmpresa, AAlmacen, ACaja: string): Boolean;
+function TfrmMtoDocumentosTrabajo.CrearLineasVentaCaja:
+  TLineasVentaCajaExterna;
 var
-  oSelector: TfrmMtoModalCajDef;
+  ds: TDataSet;
+  Bm: TBookmark;
+  iLinea: Integer;
 begin
-  AEmpresa := UbicacionSesion.Empresa;
-  AAlmacen := UbicacionSesion.Almacen;
-  ACaja := UbicacionSesion.Caja;
-  Result := not ParametrosCaja.GetBool(
-    'vgerShowCajaSelection', True);
-  if not Result then
-  begin
-    oSelector := TfrmMtoModalCajDef.Create(
-      Self,
-      FRepositorioCajasDefecto);
-    try
-      oSelector.sEmpresa := AEmpresa;
-      oSelector.sAlmacen := AAlmacen;
-      oSelector.sCaja := ACaja;
-      oSelector.ShowModal;
-      Result := oSelector.sFicha = 'S';
-      if Result then
-      begin
-        AEmpresa := oSelector.EmpresaSeleccionada;
-        AAlmacen := oSelector.AlmacenSeleccionado;
-        ACaja := oSelector.CajaSeleccionada;
-      end;
-    finally
-      FreeAndNil(oSelector);
+  ds := dmmDocumentosTrabajo.unqryLineas;
+  SetLength(Result, ds.RecordCount);
+  iLinea := 0;
+  Bm := ds.GetBookmark;
+  ds.DisableControls;
+  try
+    ds.First;
+    while not ds.Eof do
+    begin
+      Result[iLinea].CodigoSku :=
+        ds.FieldByName('CODIGO_UNIDAD_DTL').AsString;
+      Result[iLinea].Cantidad := ds.FieldByName('CANTIDAD_DTL').AsFloat;
+      Inc(iLinea);
+      ds.Next;
     end;
+    if ds.BookmarkValid(Bm) then
+      ds.GotoBookmark(Bm);
+  finally
+    ds.EnableControls;
+    ds.FreeBookmark(Bm);
   end;
-  if Result and
-     ((AEmpresa = '') or (AAlmacen = '') or (ACaja = '')) then
-  begin
-    ShowMessage_fza(SErrorAsignarUbicacionCaja);
-    Result := False;
-  end;
+  SetLength(Result, iLinea);
 end;
 
 function TfrmMtoDocumentosTrabajo.CrearLineasCargaTraspaso:
@@ -1514,7 +1448,8 @@ var
 begin
   idDtr := PrepararEnvio;
   if (idDtr > 0) and
-     SeleccionarUbicacionCaja(sEmp, sAlm, sCaja) then
+     SeleccionarUbicacionVentaCaja(
+       Self, FRepositorioCajasDefecto, sEmp, sAlm, sCaja) then
   begin
     oAnfitrion := ExigirAnfitrionCaja(Application.MainForm);
     oTraspaso := oAnfitrion.CrearTraspasoCaja(Application, Permisos);

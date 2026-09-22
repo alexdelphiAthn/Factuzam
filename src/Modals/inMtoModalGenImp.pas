@@ -46,7 +46,12 @@ uses
   frxExportBaseImageSettingsDialog, frCoreClasses,
   frLocalization, frxBarcode,
   frLanguageSpanish, frxSmartMemo, inLibImpresionPersistenciaIntf,
-  inLibVentanaEspera;
+  inLibVentanaEspera, cxCheckBox, inLibCorreoTickets,
+  inLibCorreoDocumentoIntf;
+
+const
+  WM_INICIAR_ENVIO_CORREO_DOCUMENTO = WM_APP + $462;
+
 type
   TfrmPrint = class(TfrmBase, IEliminadorFormatoImpresion)
     pnl1: TPanel;
@@ -97,6 +102,16 @@ type
     FVentanaEspera: IVentanaEspera;
     // Página que FastReport está preparando; alimenta el detalle.
     FPaginaInforme: Integer;
+    // Casilla "Enviar por email", creada al mostrar el modal solo si quien
+    // lo abre ha llamado a ConfigurarDocumentoCorreo.
+    FCasillaCorreoDocumento: TcxCheckBox;
+    FCorreoDocumentoConfigurado: Boolean;
+    FTipoCorreoDocumento: TTipoDocumentoCorreo;
+    FSerieCorreoDocumento: string;
+    FNumeroCorreoDocumento: string;
+    FActualizandoCasillaCorreo: Boolean;
+    FEnvioCorreoDocumentoPendiente: Boolean;
+    FProcesandoCorreoDocumento: Boolean;
     function ContextoFormatos: TContextoFormatosImpresion;
     function LeerBlobFormato(const aDescripcion: string;
                              aStream: TStream): Boolean;
@@ -140,6 +155,19 @@ type
     function CargarFormatoGuardado(
       const AFormato: string): Boolean;
     procedure CargarFormatoElegido(const AAccion: string);
+    procedure PrepararCasillaCorreoDocumento;
+    procedure CasillaCorreoDocumentoCambiada(Sender: TObject);
+    procedure DesmarcarCasillaCorreoDocumento;
+    procedure IniciarEnvioCorreoDocumento;
+    procedure EnviarCorreoDocumento(
+      ATipo: TTipoDocumentoCorreo;
+      const ASerie, ANumero: string);
+    procedure EnviarCorreoDocumentoPreparado(
+      ATipo: TTipoDocumentoCorreo;
+      const ASerie, ANumero, ANombreDocumento, AEmail: string;
+      const ADatos: TDatosCorreoDocumento);
+    procedure WMIniciarEnvioCorreoDocumento(
+      var Message: TMessage); message WM_INICIAR_ENVIO_CORREO_DOCUMENTO;
   protected
     function TraducirContenidoInforme: Boolean; virtual;
     procedure PdfExportado(const ARuta: string); virtual;
@@ -153,6 +181,7 @@ type
     // Texto de detalle mientras se preparan las páginas; los
     // descendientes pueden añadir el registro en curso.
     function DetalleProgresoInforme: string; virtual;
+    procedure DoShow; override;
     property FormatoElegido: string read sElegido;
     property UltimaImpresionCorrecta: Boolean
       read FUltimaImpresionCorrecta;
@@ -207,6 +236,11 @@ type
     // Exporta sin diálogo el formato que el usuario acaba de seleccionar.
     function ExportarPdfActual(const ARuta: string): Boolean;
     property UltimaRutaPdf: string read FUltimaRutaPdf;
+    // Documento que la casilla "Enviar por email" manda como PDF por el
+    // servicio web. Sin llamarlo el modal no muestra la casilla.
+    procedure ConfigurarDocumentoCorreo(
+      ATipo: TTipoDocumentoCorreo;
+      const ASerie, ANumero: string);
     // NUEVOS HOOKS PARA SOPORTE DE CLIENTDATASETS:
     function RelacionarClientDataSetConQuery(aCDS: TDataSet): TDataSet; virtual;
     procedure OnGuiasAplicadas; virtual;
@@ -226,13 +260,21 @@ uses
   inLibBuscarImpresora, inLibFotos, inLibVerifactu,
   inMtoModalInformesGuias, inMtoModalWizardEditar,
   inLibInformesGuiasCache, inLibMsgComun, inLibTraduccionesInforme,
-  inLibVentasPantallaIntf,
-  UniDataVentasPantallaComposicion;
+  inLibVentasPantallaIntf, inLibCorreoDocumentoVcl,
+  UniDataVentasPantallaComposicion, UniDataCorreoDocumento;
 
 {$R *.dfm}
 
 resourcestring
   SDescripcionFormatoPredeterminado = 'Predet: %s';
+  SCasillaEnviarDocumentoEmail = 'Enviar por email';
+  SErrorDocumentoNoEnviadoCorreo =
+    'No se pudo enviar el documento (%s) por correo electrónico.';
+  SErrorPdfTemporalCorreoDocumento =
+    'No se pudo generar el PDF del documento (%s) para enviarlo por ' +
+    'correo electrónico.';
+  SErrorDocumentoCorreoNoEncontrado =
+    'No se encuentra el documento %s en la base de datos.';
 
 destructor TfrmPrint.Destroy;
 begin
@@ -245,6 +287,204 @@ begin
     end;
   finally
     inherited Destroy;
+  end;
+end;
+
+procedure TfrmPrint.ConfigurarDocumentoCorreo(
+  ATipo: TTipoDocumentoCorreo;
+  const ASerie, ANumero: string);
+begin
+  FTipoCorreoDocumento := ATipo;
+  FSerieCorreoDocumento := Trim(ASerie);
+  FNumeroCorreoDocumento := Trim(ANumero);
+  FCorreoDocumentoConfigurado := FNumeroCorreoDocumento <> '';
+end;
+
+procedure TfrmPrint.DoShow;
+begin
+  PrepararCasillaCorreoDocumento;
+  inherited;
+end;
+
+procedure TfrmPrint.PrepararCasillaCorreoDocumento;
+begin
+  if (FCasillaCorreoDocumento = nil) and FCorreoDocumentoConfigurado then
+  begin
+    FCasillaCorreoDocumento := TcxCheckBox.Create(Self);
+    FCasillaCorreoDocumento.Parent := Self;
+    FCasillaCorreoDocumento.Caption := SCasillaEnviarDocumentoEmail;
+    FCasillaCorreoDocumento.Transparent := True;
+    // Tras asignar Parent las medidas van en píxeles físicos (125 %).
+    FCasillaCorreoDocumento.Left := ScaleValue(16);
+    FCasillaCorreoDocumento.Width := pnl1.Left - ScaleValue(24);
+    FCasillaCorreoDocumento.Top := ClientHeight -
+      FCasillaCorreoDocumento.Height - ScaleValue(12);
+    FCasillaCorreoDocumento.Anchors := [akLeft, akBottom];
+    FCasillaCorreoDocumento.Properties.OnEditValueChanged :=
+      CasillaCorreoDocumentoCambiada;
+  end;
+end;
+
+procedure TfrmPrint.DesmarcarCasillaCorreoDocumento;
+begin
+  FActualizandoCasillaCorreo := True;
+  try
+    FCasillaCorreoDocumento.Checked := False;
+  finally
+    FActualizandoCasillaCorreo := False;
+  end;
+end;
+
+procedure TfrmPrint.CasillaCorreoDocumentoCambiada(Sender: TObject);
+begin
+  // La casilla inicia el envío, como en facturas. Se difiere con un
+  // mensaje para no abrir modales dentro del cambio de valor del editor.
+  if not FActualizandoCasillaCorreo and
+     FCasillaCorreoDocumento.Checked and
+     not FEnvioCorreoDocumentoPendiente and
+     not FProcesandoCorreoDocumento then
+  begin
+    FEnvioCorreoDocumentoPendiente := True;
+    pnl1.Enabled := False;
+    if not PostMessage(Handle, WM_INICIAR_ENVIO_CORREO_DOCUMENTO, 0, 0) then
+    begin
+      FEnvioCorreoDocumentoPendiente := False;
+      pnl1.Enabled := True;
+      DesmarcarCasillaCorreoDocumento;
+    end;
+  end;
+end;
+
+procedure TfrmPrint.WMIniciarEnvioCorreoDocumento(var Message: TMessage);
+begin
+  FEnvioCorreoDocumentoPendiente := False;
+  if FCasillaCorreoDocumento.Checked then
+    IniciarEnvioCorreoDocumento
+  else
+    pnl1.Enabled := True;
+  Message.Result := 0;
+end;
+
+procedure TfrmPrint.IniciarEnvioCorreoDocumento;
+var
+  sMensaje: string;
+begin
+  FProcesandoCorreoDocumento := True;
+  FCasillaCorreoDocumento.Enabled := False;
+  pnl1.Enabled := False;
+  try
+    try
+      if CorreoTicketsConfigurado(ParametrosApp, sMensaje) then
+        EnviarCorreoDocumento(
+          FTipoCorreoDocumento,
+          FSerieCorreoDocumento,
+          FNumeroCorreoDocumento)
+      else
+        ShowMessage_fza(sMensaje);
+    except
+      on E: Exception do
+        MessageDlg_fza(
+          Format(SErrorDocumentoNoEnviadoCorreo,
+            [FSerieCorreoDocumento + '\' + FNumeroCorreoDocumento]) +
+          sLineBreak + E.ClassName + ': ' + E.Message,
+          mtError,
+          [mbOK],
+          0);
+    end;
+  finally
+    // Tras enviar, cancelar o fallar se desmarca: reintentar es marcarla.
+    DesmarcarCasillaCorreoDocumento;
+    FCasillaCorreoDocumento.Enabled := True;
+    pnl1.Enabled := True;
+    FProcesandoCorreoDocumento := False;
+  end;
+end;
+
+procedure TfrmPrint.EnviarCorreoDocumento(
+  ATipo: TTipoDocumentoCorreo;
+  const ASerie, ANumero: string);
+var
+  oDatos: TDatosCorreoDocumento;
+  sEmail: string;
+  sNombre: string;
+begin
+  oDatos := CrearLectorDatosCorreoDocumento(ConexionPrincipal).Leer(
+    ATipo, ASerie, ANumero);
+  if not oDatos.Encontrado then
+    MessageDlg_fza(
+      Format(SErrorDocumentoCorreoNoEncontrado, [ASerie + '\' + ANumero]),
+      mtError,
+      [mbOK],
+      0)
+  else
+  begin
+    // El nombre sale de fza_tipos_documentos; el fijo solo si falta.
+    sNombre := oDatos.NombreDocumento;
+    if sNombre = '' then
+      sNombre := NombreDocumentoCorreo(ATipo);
+    // Mismo comienzo que el botón PDF: el usuario elige el formato y
+    // después escribe el destinatario (no se toma del cliente).
+    Preparar_consulta;
+    Consultar_Formularios(True);
+    if (sElegido <> '') and
+       SolicitarEmailDocumento(
+         Self,
+         TituloEnvioDocumentoCorreo(sNombre),
+         '',
+         sEmail) then
+      EnviarCorreoDocumentoPreparado(
+        ATipo, ASerie, ANumero, oDatos.NombreDocumento, sEmail, oDatos);
+  end;
+end;
+
+procedure TfrmPrint.EnviarCorreoDocumentoPreparado(
+  ATipo: TTipoDocumentoCorreo;
+  const ASerie, ANumero, ANombreDocumento, AEmail: string;
+  const ADatos: TDatosCorreoDocumento);
+var
+  bEnviado: Boolean;
+  oRutas: TStringList;
+  sMensaje: string;
+  sReferencia: string;
+  sRutaPdf: string;
+begin
+  sReferencia := ASerie + '\' + ANumero;
+  sRutaPdf := CrearRutaPdfTemporalCorreo(ATipo, ASerie, ANumero);
+  oRutas := TStringList.Create;
+  try
+    if not ExportarPdfPreparado(sRutaPdf, False) then
+      MessageDlg_fza(
+        Format(SErrorPdfTemporalCorreoDocumento, [sReferencia]),
+        mtError,
+        [mbOK],
+        0)
+    else
+    begin
+      oRutas.Add(sRutaPdf);
+      bEnviado := EnviarDocumentosPorCorreo(
+        ParametrosApp,
+        ATipo,
+        sReferencia,
+        ANombreDocumento,
+        ADatos.NombreEmpresa,
+        AEmail,
+        ADatos.EmailEmpresa,
+        oRutas,
+        RegistroLog,
+        sMensaje);
+      if bEnviado then
+        MessageDlg_fza(sMensaje, mtInformation, [mbOK], 0)
+      else
+        MessageDlg_fza(
+          Format(SErrorDocumentoNoEnviadoCorreo, [sReferencia]) +
+          sLineBreak + sMensaje,
+          mtError,
+          [mbOK],
+          0);
+    end;
+  finally
+    FreeAndNil(oRutas);
+    EliminarPdfTemporalCorreo(sRutaPdf, RegistroLog);
   end;
 end;
 

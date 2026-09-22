@@ -56,8 +56,6 @@ type
     FRepositorio: TRepositorioSeriesDocumentos;
     FSerieTokenizada: string;
     procedure CargarCajas;
-    function EsSerieTokenizadaValida(
-      const ASerieTokenizada: string): Boolean;
   public
     class function Ejecutar(
       AOwner: TComponent;
@@ -74,7 +72,7 @@ implementation
 
 uses
   inLibMensajesVcl,
-  inLibCadenas, inLibMsgComun;
+  inLibMsgComun, inLibSerieTokenizada;
 
 procedure ForceReferenceToClass(C: TClass);
 begin
@@ -176,25 +174,6 @@ procedure TfrmModalSeriesDocumentos.cbbAlmacenPropertiesEditValueChanged(
   Sender: TObject);
 begin
   CargarCajas;
-end;
-
-function TfrmModalSeriesDocumentos.EsSerieTokenizadaValida(
-  const ASerieTokenizada: string): Boolean;
-var
-  iDias: Integer;
-  iEjercicios: Integer;
-  iMeses: Integer;
-  iTrimestres: Integer;
-begin
-  iEjercicios := ContarOcurrenciasAnsi(ASerieTokenizada, 'yyyy');
-  iTrimestres := ContarOcurrenciasAnsi(ASerieTokenizada, 'q');
-  iMeses := ContarOcurrenciasAnsi(ASerieTokenizada, 'mm');
-  iDias := ContarOcurrenciasAnsi(ASerieTokenizada, 'dd');
-  Result := (iEjercicios <= 1) and
-            (iTrimestres <= 1) and
-            (iMeses <= 1) and
-            (iDias <= 1) and
-            (iEjercicios + iTrimestres + iMeses + iDias > 0);
 end;
 
 procedure TfrmModalSeriesDocumentos.actCancelarExecute(Sender: TObject);

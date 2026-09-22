@@ -202,7 +202,7 @@ begin
     CrearColumna(CAMPO_ID_PROPUESTA, SCaptionColNumeroPropuesta, 90);
     CrearColumna('INSTANTE_PROPUESTA_TRPRO', SCaptionColFechaPropuesta,
       140);
-    CrearColumna(CAMPO_ESTADO, SCaptionColEstadoPropuesta, 120);
+    CrearColumna(CAMPO_ESTADO, SCaptionColEstadoPropuesta, 170);
     CrearColumna(CAMPO_ORIGEN, SCaptionColOrigenPropuesta, 210);
     CrearColumna(CAMPO_DESTINO, SCaptionColDestinoPropuesta, 210);
     CrearColumna(CAMPO_UNIDADES, SCaptionColUnidadesPropuesta, 90);

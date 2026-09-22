@@ -10,9 +10,10 @@
 {  SPDX-License-Identifier: MPL-2.0                                            }
 {  Descripción:                                                                }
 {    Traspasos de caja - Confirmar propuesta: propuestas de traspaso           }
-{    pendientes cuyo origen es el almacén de la caja. La elegida se carga en   }
-{    el traspaso, que al grabarse la deja trasladada; también se puede dar     }
-{    por no aceptada indicando el motivo.                                      }
+{    pendientes (o trasladadas en parte) cuyo origen es el almacén de la       }
+{    caja. La elegida se carga con lo que falta por traspasar y al grabar se   }
+{    pregunta si queda trasladada o trasladada en parte; también se puede      }
+{    dar por no aceptada indicando el motivo.                                  }
 {******************************************************************************}
 unit inMtoModalSeleccionPropuestaTraspaso;
 
@@ -27,7 +28,7 @@ uses
   cxLocalization, cxSplitter, cxStyles, cxCustomData, cxFilter, cxData,
   cxDataStorage, cxNavigator, cxCurrencyEdit, cxGridLevel,
   cxGridCustomView, cxGridCustomTableView, cxGridTableView, cxGrid,
-  dxSkinsCore, dxDateRanges, dxScrollbarAnnotations,
+  Data.DB, dxSkinsCore, dxDateRanges, dxScrollbarAnnotations,
   JvComponentBase, JvEnterTab,
   inMtoModalAceptCancel,
   inLibCajaVentanasIntf,
@@ -81,22 +82,41 @@ type
     function CloseQuery: Boolean; override;
   end;
 
-// Las líneas de una propuesta, como las espera el traspaso de caja. Los
-// atributos salen del propio código de SKU (artículo/color/talla).
+// Las líneas de una propuesta, como las espera el traspaso de caja: lo
+// que falta por traspasar. Los atributos salen del propio código de SKU
+// (artículo/color/talla).
 function LineasCargaDePropuesta(
   const APropuesta: TPropuestaTraspaso): TLineasCargaTraspaso;
+
+// Unidades de ALineas (CODIGO_UNIDAD, CANTIDAD) que cubren lo que faltaba
+// de la propuesta, sin contar lo que exceda en cada SKU, y si lo cubren
+// todo.
+function UnidadesCubiertasPropuesta(
+  const APropuesta: TPropuestaTraspaso;
+  ALineas: TDataSet;
+  out ACubreTodo: Boolean): Double;
+
+// Al grabar el traspaso de una propuesta: ¿queda trasladada o trasladada
+// en parte? Se propone la primera si las líneas cubren todo lo que
+// faltaba. False si se cancela la grabación.
+function PreguntarEstadoPropuestaAlGrabar(
+  const APropuesta: TPropuestaTraspaso;
+  ALineas: TDataSet;
+  out AEstado: string): Boolean;
 
 implementation
 
 {$R *.dfm}
 
 uses
+  System.Math, System.Generics.Collections, System.UITypes,
   inLibMensajesVcl,
   inLibInformePropuestasTraspaso,
   inLibMsgDistribucionTiendas;
 
 const
   FORMATO_UNIDADES = '0.###';
+  TOLERANCIA_UNIDADES = 0.000001;
   MAXIMO_ATRIBUTOS_TRASPASO = 5;
 
 function LineasCargaDePropuesta(
@@ -109,14 +129,14 @@ begin
   iLineas := 0;
   for i := 0 to High(APropuesta.Lineas) do
   begin
-    if APropuesta.Lineas[i].Cantidad > 0 then
+    if APropuesta.Lineas[i].CantidadPorTraspasar > 0 then
     begin
       Result[iLineas] := Default(TLineaCargaTraspaso);
       Result[iLineas].CodigoArticulo := APropuesta.Lineas[i].CodigoArticulo;
       Result[iLineas].CodigoSku := APropuesta.Lineas[i].CodigoSku;
       Result[iLineas].Descripcion :=
         APropuesta.Lineas[i].DescripcionArticulo;
-      Result[iLineas].Cantidad := APropuesta.Lineas[i].Cantidad;
+      Result[iLineas].Cantidad := APropuesta.Lineas[i].CantidadPorTraspasar;
       PartesSku := APropuesta.Lineas[i].CodigoSku.Split(['/']);
       Result[iLineas].NumeroAtributos := Length(PartesSku) - 1;
       if Result[iLineas].NumeroAtributos > MAXIMO_ATRIBUTOS_TRASPASO then
@@ -128,6 +148,98 @@ begin
     end;
   end;
   SetLength(Result, iLineas);
+end;
+
+function UnidadesCubiertasPropuesta(
+  const APropuesta: TPropuestaTraspaso;
+  ALineas: TDataSet;
+  out ACubreTodo: Boolean): Double;
+var
+  Cantidades: TDictionary<string, Double>;
+  Marca: TBookmark;
+  sSku: string;
+  dCantidad, dFalta: Double;
+  i: Integer;
+begin
+  Result := 0;
+  ACubreTodo := True;
+  Cantidades := TDictionary<string, Double>.Create;
+  ALineas.DisableControls;
+  try
+    Marca := ALineas.GetBookmark;
+    try
+      ALineas.First;
+      while not ALineas.Eof do
+      begin
+        sSku := AnsiUpperCase(Trim(
+          ALineas.FieldByName('CODIGO_UNIDAD').AsString));
+        dCantidad := ALineas.FieldByName('CANTIDAD').AsFloat;
+        if (sSku <> '') and (dCantidad > 0) then
+        begin
+          if Cantidades.ContainsKey(sSku) then
+            dCantidad := dCantidad + Cantidades[sSku];
+          Cantidades.AddOrSetValue(sSku, dCantidad);
+        end;
+        ALineas.Next;
+      end;
+      if (Marca <> nil) and ALineas.BookmarkValid(Marca) then
+        ALineas.GotoBookmark(Marca);
+    finally
+      ALineas.FreeBookmark(Marca);
+    end;
+    // Un SKU repetido en la propuesta consume lo traspasado una sola vez.
+    for i := 0 to High(APropuesta.Lineas) do
+    begin
+      dFalta := APropuesta.Lineas[i].CantidadPorTraspasar;
+      if dFalta > 0 then
+      begin
+        sSku := AnsiUpperCase(Trim(APropuesta.Lineas[i].CodigoSku));
+        if not Cantidades.TryGetValue(sSku, dCantidad) then
+          dCantidad := 0;
+        Result := Result + Min(dCantidad, dFalta);
+        if dCantidad + TOLERANCIA_UNIDADES < dFalta then
+          ACubreTodo := False;
+        if Cantidades.ContainsKey(sSku) then
+          Cantidades[sSku] := Max(dCantidad - dFalta, 0);
+      end;
+    end;
+  finally
+    ALineas.EnableControls;
+    FreeAndNil(Cantidades);
+  end;
+end;
+
+function PreguntarEstadoPropuestaAlGrabar(
+  const APropuesta: TPropuestaTraspaso;
+  ALineas: TDataSet;
+  out AEstado: string): Boolean;
+var
+  bCubreTodo: Boolean;
+  dCubiertas: Double;
+  BotonPorDefecto: TMsgDlgBtn;
+begin
+  AEstado := '';
+  dCubiertas := UnidadesCubiertasPropuesta(APropuesta, ALineas, bCubreTodo);
+  if bCubreTodo then
+    BotonPorDefecto := mbYes
+  else
+    BotonPorDefecto := mbNo;
+  case MessageDlgTextos_fza(
+    Format(SPreguntaEstadoPropuestaTraspasada, [
+      FormatFloat(FORMATO_UNIDADES, dCubiertas),
+      FormatFloat(FORMATO_UNIDADES, APropuesta.TotalPorTraspasar),
+      APropuesta.IdPropuesta,
+      TextoAlmacenPropuesta(
+        APropuesta.AlmacenDestino, APropuesta.NombreAlmacenDestino)]),
+    mtConfirmation, [mbYes, mbNo, mbCancel],
+    [SCaptionPropuestaTraspasada, SCaptionPropuestaTraspasadaParcial, ''],
+    BotonPorDefecto) of
+    mrYes:
+      AEstado := ESTADO_PROPUESTA_TRASPASO_TRASLADADO;
+    mrNo:
+      AEstado := ESTADO_PROPUESTA_TRASPASO_TRASLADADO_PARCIAL;
+  end;
+  Result := AEstado <> '';
 end;
 
 class function TfrmModalSeleccionPropuestaTraspaso.Ejecutar(
@@ -213,6 +325,7 @@ begin
   CrearColumna(tvPropuestas, SCaptionColFechaPropuesta, 170, False);
   CrearColumna(tvPropuestas, SCaptionColDestinoPropuesta, 300, False);
   CrearColumna(tvPropuestas, SCaptionColUnidadesPropuesta, 110, True);
+  CrearColumna(tvPropuestas, SCaptionColEstadoPropuesta, 150, False);
   CrearColumna(tvPropuestas, SCaptionColDocumentoPropuesta, 360, False);
   tvLineas.ClearItems;
   CrearColumna(tvLineas, SCaptionColArticuloDistribucion, 150, False);
@@ -241,8 +354,10 @@ begin
         FPropuestas[i].AlmacenDestino,
         FPropuestas[i].NombreAlmacenDestino);
       tvPropuestas.DataController.Values[i, 3] :=
-        FPropuestas[i].TotalUnidades;
-      tvPropuestas.DataController.Values[i, 4] := Format('%d - %s', [
+        FPropuestas[i].TotalPorTraspasar;
+      tvPropuestas.DataController.Values[i, 4] :=
+        TextoEstadoPropuestaTraspaso(FPropuestas[i]);
+      tvPropuestas.DataController.Values[i, 5] := Format('%d - %s', [
         FPropuestas[i].IdDocumento, FPropuestas[i].TituloDocumento]);
     end;
   finally
@@ -280,7 +395,7 @@ begin
       tvLineas.DataController.Values[i, 1] := Lineas[i].DescripcionArticulo;
       tvLineas.DataController.Values[i, 2] := Lineas[i].Color;
       tvLineas.DataController.Values[i, 3] := Lineas[i].Talla;
-      tvLineas.DataController.Values[i, 4] := Lineas[i].Cantidad;
+      tvLineas.DataController.Values[i, 4] := Lineas[i].CantidadPorTraspasar;
     end;
   finally
     tvLineas.EndUpdate;
@@ -318,12 +433,16 @@ begin
         ShowMessage_fza(SErrorMotivoNoAceptarObligatorio)
       else
       begin
-        if FRepositorio.RechazarPropuesta(
+        // En una trasladada en parte, no aceptar lo que falta la cierra
+        // con lo ya traspasado.
+        if not FRepositorio.RechazarPropuesta(
              iIdPropuesta, Trim(sMotivo), FUsuario) then
-          ShowMessage_fza(Format(SInfoPropuestaNoAceptada, [iIdPropuesta]))
-        else
           ShowMessage_fza(Format(
-            SInfoPropuestaYaNoPendiente, [iIdPropuesta]));
+            SInfoPropuestaYaNoPendiente, [iIdPropuesta]))
+        else if FPropuestas[iPropuesta].EstaTrasladadaParcial then
+          ShowMessage_fza(Format(SInfoPropuestaParcialCerrada, [iIdPropuesta]))
+        else
+          ShowMessage_fza(Format(SInfoPropuestaNoAceptada, [iIdPropuesta]));
         CargarPropuestas;
       end;
     end;
