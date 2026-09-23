@@ -306,7 +306,7 @@ type
 implementation
 
 uses
-  dxDPIAwareUtils,
+  cxGeometry, dxDPIAwareUtils,
   inLibMensajesVcl,
   inLibMsgArticulos;
 
@@ -1674,8 +1674,10 @@ end;
 procedure TGridArticulosLineas.AjustarAnchoColumnaAtributo(
   AColumna: TcxGridDBColumn; AConPaleta: Boolean);
 var
+  Escala: TdxScaleFactor;
   iAncho, iMinimo: Integer;
 begin
+  Escala := dxGetScaleFactor(FView.Control);
   iAncho := ANCHO_COL_ATRIBUTO;
   iMinimo := ANCHO_MIN_COL_ATRIBUTO;
   if AConPaleta then
@@ -1683,8 +1685,8 @@ begin
     iAncho := ANCHO_COL_ATRIBUTO_PALETA;
     iMinimo := ANCHO_MIN_COL_ATRIBUTO_PALETA;
   end;
-  AColumna.MinWidth := dxGetScaleFactor(FView.Control).Apply(iMinimo);
-  AColumna.Width := dxGetScaleFactor(FView.Control).Apply(iAncho);
+  AColumna.MinWidth := Escala.Apply(iMinimo);
+  AColumna.Width := Escala.Apply(iAncho);
 end;
 
 // Pinta el swatch de color en la celda de atributo si el valor casa con la
