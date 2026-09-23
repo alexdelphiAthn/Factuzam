@@ -18,9 +18,9 @@ interface
 
 uses
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
-  System.Classes, Vcl.Graphics,
+  System.Classes, System.Generics.Collections, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, inMtoFrmBase, dxSkinsCore,
-  dxSkinsDefaultPainters, cxPC, cxControls,
+  dxSkinsDefaultPainters, cxPC, cxControls, cxScrollBox,
   Vcl.ExtCtrls, cxClasses, cxLocalization, cxGraphics, cxLookAndFeels,
   cxLookAndFeelPainters, cxNavigator, cxDBNavigator, Vcl.StdCtrls, Vcl.Buttons,
   cxContainer, cxEdit, cxLabel, Vcl.Menus, cxButtons,
@@ -180,6 +180,8 @@ type
     FInteraccionFiltros: TInteraccionFiltrosMtoVcl;
     procedure InicializarMantenimiento;
     procedure AjustarBarraLateral;
+    procedure PrepararDesplazamientoVerticalFichas;
+    procedure PrepararPaginaDesplazable(APagina: TcxTabSheet);
     procedure CargarIconoPantalla;
     procedure ConfigurarModoBusqueda;
     function GetConexionTrabajo: TUniConnection;
@@ -1353,10 +1355,117 @@ begin
   msProcesarPerfiles := swTramo.ElapsedMilliseconds;
   ConfigurarModoBusqueda;
   AjustarBarraLateral;
+  PrepararDesplazamientoVerticalFichas;
   CargarIconoPantalla;
   RegistroLog.RegistrarRendimiento(Self.Name + '.FormCreate',
     'ProcesarPerfiles=' + IntToStr(msProcesarPerfiles) + ' ms',
     swTotal.ElapsedMilliseconds);
+end;
+
+// Las fichas se muestran embebidas y, por tanto, adoptan la altura que deja
+// libre la ventana principal. Las paginas formadas solo por controles de
+// posicion fija no pueden reducirse como una rejilla o un panel alClient. En
+// esos casos conservamos el alto de diseño dentro de una zona desplazable.
+procedure TfrmMtoGen.PrepararDesplazamientoVerticalFichas;
+var
+  oPaginas: TList<TcxTabSheet>;
+
+  procedure RecogerPaginas(AContenedor: TWinControl);
+  var
+    iControl: Integer;
+    oControl: TControl;
+  begin
+    if AContenedor is TcxTabSheet then
+      oPaginas.Add(TcxTabSheet(AContenedor));
+    for iControl := 0 to AContenedor.ControlCount - 1 do
+    begin
+      oControl := AContenedor.Controls[iControl];
+      if oControl is TWinControl then
+        RecogerPaginas(TWinControl(oControl));
+    end;
+  end;
+
+var
+  oPagina: TcxTabSheet;
+begin
+  oPaginas := TList<TcxTabSheet>.Create;
+  try
+    RecogerPaginas(tsFicha);
+    for oPagina in oPaginas do
+      PrepararPaginaDesplazable(oPagina);
+  finally
+    oPaginas.Free;
+  end;
+end;
+
+procedure TfrmMtoGen.PrepararPaginaDesplazable(APagina: TcxTabSheet);
+const
+  ALTO_MINIMO_CONTENIDO_96_DPI = 240;
+var
+  aControles: TArray<TControl>;
+  iAltoContenido: Integer;
+  iAltoMinimo: Integer;
+  iAnchoContenido: Integer;
+  iControl: Integer;
+  oContenido: TPanel;
+  oControl: TControl;
+  oDesplazamiento: TcxScrollBox;
+begin
+  SetLength(aControles, APagina.ControlCount);
+  iAltoContenido := 0;
+  iAnchoContenido := 0;
+  for iControl := 0 to APagina.ControlCount - 1 do
+  begin
+    oControl := APagina.Controls[iControl];
+    aControles[iControl] := oControl;
+    if (oControl is TcxScrollBox) and
+       (oControl.Align = alClient) then
+      Exit;
+    if oControl.Align <> alNone then
+      Exit;
+    if oControl.Top + oControl.Height > iAltoContenido then
+      iAltoContenido := oControl.Top + oControl.Height;
+    if oControl.Left + oControl.Width > iAnchoContenido then
+      iAnchoContenido := oControl.Left + oControl.Width;
+  end;
+
+  iAltoMinimo := MulDiv(
+    ALTO_MINIMO_CONTENIDO_96_DPI,
+    CurrentPPI,
+    USER_DEFAULT_SCREEN_DPI);
+  if (Length(aControles) = 0) or
+     (iAltoContenido < iAltoMinimo) then
+    Exit;
+  if APagina.ClientHeight > iAltoContenido then
+    iAltoContenido := APagina.ClientHeight;
+  if APagina.ClientWidth > iAnchoContenido then
+    iAnchoContenido := APagina.ClientWidth;
+
+  oDesplazamiento := TcxScrollBox.Create(APagina);
+  oDesplazamiento.Parent := APagina;
+  oDesplazamiento.Align := alClient;
+  oDesplazamiento.BorderStyle := cxcbsNone;
+  oDesplazamiento.HorzScrollBar.Visible := False;
+  oDesplazamiento.VertScrollBar.Tracking := True;
+  oDesplazamiento.TabOrder := 0;
+
+  oContenido := TPanel.Create(APagina);
+  oContenido.Parent := oDesplazamiento;
+  oContenido.SetBounds(
+    0,
+    0,
+    iAnchoContenido,
+    iAltoContenido);
+  oContenido.BevelOuter := bvNone;
+  oContenido.ParentBackground := True;
+  oContenido.DisableAlign;
+  try
+    for iControl := 0 to High(aControles) do
+      aControles[iControl].Parent := oContenido;
+  finally
+    oContenido.EnableAlign;
+  end;
+  oContenido.Align := alTop;
 end;
 
 procedure TfrmMtoGen.CargarIconoPantalla;

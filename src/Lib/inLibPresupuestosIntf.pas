@@ -16,12 +16,27 @@ uses
 
 type
   TDestinoPresupuesto = (dpPedido, dpAlbaran, dpFactura);
+  TDestinosPresupuesto = set of TDestinoPresupuesto;
+
+  // Datos del documento de destino elegidos en el dialogo de conversion.
+  // NumeroDestino vacio = siguiente numero del contador de la serie.
+  // MueveStock solo se aplica a las facturas.
+  TOpcionesConversionPresupuesto = record
+    Almacen: string;
+    SerieDestino: string;
+    NumeroDestino: string;
+    Fecha: TDateTime;
+    MueveStock: Boolean;
+  end;
 
   TSolicitudConversionPresupuesto = record
     Destino: TDestinoPresupuesto;
     Serie: string;
     Numero: string;
     Usuario: string;
+    // False: presupuesto ya convertido, se abre su documento de destino.
+    ConOpciones: Boolean;
+    Opciones: TOpcionesConversionPresupuesto;
   end;
 
   TResultadoConversionPresupuesto = record
@@ -38,6 +53,13 @@ function CrearSolicitudConversionPresupuesto(
 function TipoDestinoPresupuesto(ADestino: TDestinoPresupuesto):
   TTipoDocumento;
 function PantallaDestinoPresupuesto(ADestino: TDestinoPresupuesto): string;
+function CrearSolicitudConversionPresupuestoOpciones(
+  ADestino: TDestinoPresupuesto;
+  const ASerie, ANumero, AUsuario: string;
+  const AOpciones: TOpcionesConversionPresupuesto):
+  TSolicitudConversionPresupuesto;
+function DestinoPresupuestoMueveStockOpcional(
+  ADestino: TDestinoPresupuesto): Boolean;
 
 implementation
 
@@ -46,6 +68,7 @@ function CrearSolicitudConversionPresupuesto(
   const ASerie, ANumero, AUsuario: string):
   TSolicitudConversionPresupuesto;
 begin
+  Result := Default(TSolicitudConversionPresupuesto);
   Result.Destino := ADestino;
   Result.Serie := ASerie;
   Result.Numero := ANumero;
@@ -67,6 +90,26 @@ const
     ('Pedidos', 'Albaranes', 'Facturas');
 begin
   Result := PANTALLAS[ADestino];
+end;
+
+function CrearSolicitudConversionPresupuestoOpciones(
+  ADestino: TDestinoPresupuesto;
+  const ASerie, ANumero, AUsuario: string;
+  const AOpciones: TOpcionesConversionPresupuesto):
+  TSolicitudConversionPresupuesto;
+begin
+  Result := CrearSolicitudConversionPresupuesto(ADestino, ASerie, ANumero,
+    AUsuario);
+  Result.ConOpciones := True;
+  Result.Opciones := AOpciones;
+end;
+
+// Pedidos y albaranes siempre mueven (o reservan) stock; la factura
+// puede nacer con o sin movimientos.
+function DestinoPresupuestoMueveStockOpcional(
+  ADestino: TDestinoPresupuesto): Boolean;
+begin
+  Result := ADestino = dpFactura;
 end;
 
 end.

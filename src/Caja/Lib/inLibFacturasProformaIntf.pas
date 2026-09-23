@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       inLibFacturasProformaIntf                                     }
 {    Tipo:       Contrato de aplicación                                        }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       11/09/2026                                                    }
+{ Versión:       1.2.0                                                         }
+{   Fecha:       23/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -11,7 +11,8 @@
 {  Descripción:                                                                }
 {    Contratos para generar documentos desde operaciones de caja. Las         }
 {    facturas de traspasos TA se generan con una valoración por línea         }
-{    (precio con margen) que el usuario simula antes de generar.               }
+{    (precio con margen) que el usuario simula antes de generar. La           }
+{    modalidad TV factura sólo lo que la tienda destino ya ha vendido.        }
 {******************************************************************************}
 unit inLibFacturasProformaIntf;
 
@@ -23,7 +24,10 @@ uses
 type
   TModalidadFacturacionCaja = (
     mfcVenta,
-    mfcTraspaso
+    mfcTraspaso,
+    // Traspasados y vendidos: sólo las unidades traspasadas a la tienda
+    // destino que ésta ha vendido dentro del periodo.
+    mfcTraspasoVendido
   );
 
   TSolicitudFacturacionCaja = record
@@ -62,6 +66,12 @@ type
     CosteMovimiento   : Currency;
     PrecioMedioEmpresa: Currency;
     PrecioUltimaCompra: Currency;
+    // Meses desde la última compra del SKU: el margen mínimo exigible baja
+    // por tramos porque el género de temporadas pasadas vale menos.
+    AntiguedadMeses   : Integer;
+    // Precio medio real sin IVA al que la tienda destino lo ha vendido en
+    // el periodo; 0 en la modalidad TA, que no mira ventas.
+    PrecioVentaDestino: Currency;
   end;
 
   TLineasTraspasoPendientes = array of TLineaTraspasoPendiente;
@@ -90,6 +100,18 @@ type
     // Toda línea pendiente debe figurar en la valoración; si alguna falta
     // (p. ej. traspasos nuevos desde la simulación) no se genera nada.
     function GenerarTraspasos(
+      const ASolicitud: TSolicitudFacturacionCaja;
+      const AValoracion: TValoracionTraspasos
+    ): TResultadoFacturacionCaja;
+    // Traspasos TA con unidades vendidas en la tienda destino dentro del
+    // periodo y todavía sin facturar; la cantidad de cada línea son las
+    // unidades vendidas que se le imputan, no las que salieron del almacén.
+    function ObtenerLineasTraspasoVendidoPendientes(
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TLineasTraspasoPendientes;
+    // El reparto se vuelve a calcular al generar: si aparecen traspasos con
+    // unidades vendidas que no figuran en la valoración no se genera nada.
+    function GenerarTraspasosVendidos(
       const ASolicitud: TSolicitudFacturacionCaja;
       const AValoracion: TValoracionTraspasos
     ): TResultadoFacturacionCaja;

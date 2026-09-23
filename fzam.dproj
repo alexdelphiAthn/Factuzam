@@ -1266,6 +1266,9 @@
         <DCCReference Include="src\Modals\inMtoModalSerieFechaFactura.pas">
             <Form>frmModalSerieFechaFactura</Form>
         </DCCReference>
+        <DCCReference Include="src\Modals\inMtoModalConversionPresupuesto.pas">
+            <Form>frmModalConversionPresupuesto</Form>
+        </DCCReference>
         <DCCReference Include="src\Lib\inLibData.pas"/>
         <DCCReference Include="src\Lib\inLibAppParam.pas"/>
         <DCCReference Include="src\Lib\inLibUnidadesMedida.pas"/>
@@ -1766,6 +1769,7 @@
         <DCCReference Include="src\Lib\inLibFacturasPresentadorListado.pas"/>
         <DCCReference Include="src\Lib\inLibInventariosPresentacion.pas"/>
         <DCCReference Include="src\Lib\inLibInventariosPresentacionIntf.pas"/>
+        <DCCReference Include="src\Lib\inLibMargenVinculadas.pas"/>
         <DCCReference Include="src\Lib\inLibInventariosRevalorizacion.pas"/>
         <DCCReference Include="src\Lib\inLibInformeSimulacionValoracion.pas"/>
         <DCCReference Include="src\Lib\inLibInformeSimulacionValoracionExcel.pas"/>
@@ -1837,6 +1841,7 @@
         <DCCReference Include="src\Caja\Lib\inLibFacturasProformaIntf.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibFacturasProforma.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibFacturasProformaValoracion.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibTraspasosVendidos.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataFacturasProformaRepositorio.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataFacturasProforma.pas">
             <Form>dmFacturasProforma</Form>

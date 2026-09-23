@@ -271,6 +271,7 @@ begin
   AddSuf('fza_facturas_lineas',                 'FACLIN');
   AddSuf('fza_facturas_operaciones_caja',       'FACOP');
   AddSuf('fza_facturas_pagos',                  'FACPAG');
+  AddSuf('fza_facturas_traspasos_vendidos',     'FACTV');
   AddSuf('fza_familias_atributos',              'FA');
   AddSuf('fza_familias_atributos_defecto',      'FAD');
   AddSuf('fza_familias_claves_info_defecto',    'FCI');

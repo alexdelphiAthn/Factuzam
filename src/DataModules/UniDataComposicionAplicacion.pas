@@ -59,6 +59,15 @@ uses
   UniDataComposicionAplicacionProcesosSegundoPlano;
 
 type
+  // Marca compartida con una tarea en segundo plano: la composición la
+  // cancela al cerrar y la tarea la consulta, ya en el hilo principal,
+  // antes de tocar la composición.
+  IMarcaCancelacion = interface
+    ['{6F3B2A41-8C1D-4E57-9A0B-3D2C7E4F5A18}']
+    function Cancelada: Boolean;
+    procedure Cancelar;
+  end;
+
   TComposicionAplicacion = class
   private
     FOwner: TComponent;
@@ -91,6 +100,16 @@ type
     FOperaciones: ICasoUsoCopiasSeguridad;
     FProcesosSegundoPlano: TProcesosSegundoPlanoAplicacion;
     FCerrada: Boolean;
+    FCancelacionFiscal: IMarcaCancelacion;
+    FAvisarFalloSif: TProc<string>;
+    FErrorSif: string;
+    FComprobacionFiscalEnCurso: Boolean;
+    FInicioFiscalPendiente: Boolean;
+    FArranqueFiscalFinalizado: Boolean;
+    procedure TerminarComprobacionFiscal(
+      const AErrorSincronizacion, AErrorDeclaracion: string);
+    procedure RegistrarEventoInicioFiscal;
+    procedure AvisarFalloSif;
     function EjecutarCargaWorker(
       ACarga: TProc<TUniConnection>;
       out AError: string): Int64;
@@ -116,13 +135,16 @@ type
     procedure CrearParametros(
       const AResultadoLicencia: TResultadoLicenciaAplicacion);
     procedure CrearServiciosSesion;
-    procedure ComprobarConfiguracionFiscal(const AVersion: string);
+    procedure ComprobarConfiguracionFiscal(
+      const AVersion: string;
+      const AAvisarFalloSif: TProc<string>);
     function CargarDatosArranque: string;
     procedure IniciarProcesosSegundoPlano;
     function PrepararCierrePrestaShop(
       const AConsultarDecision:
         TConsultarDecisionCierrePrestaShop): Boolean;
     procedure RegistrarInicioFiscal;
+    procedure FinalizarArranqueFiscal;
     procedure RegistrarCierreFiscal;
     procedure DetenerProcesosSegundoPlano;
     procedure Cerrar;
@@ -199,6 +221,25 @@ uses
 resourcestring
   SErrorServicioConexionesComposicionNoDisponible =
     'El servicio de conexiones no está disponible.';
+
+type
+  TMarcaCancelacion = class(TInterfacedObject, IMarcaCancelacion)
+  private
+    FCancelada: Boolean;
+  public
+    function Cancelada: Boolean;
+    procedure Cancelar;
+  end;
+
+function TMarcaCancelacion.Cancelada: Boolean;
+begin
+  Result := FCancelada;
+end;
+
+procedure TMarcaCancelacion.Cancelar;
+begin
+  FCancelada := True;
+end;
 
 function EsEventoNoVerifactuArranqueCierre(
   ATipoEvento: Integer): Boolean;
@@ -503,30 +544,131 @@ begin
   FRegistroPantallas.ComprobarRegistradas;
 end;
 
+// La sincronización del número de instalación y la declaración
+// responsable llaman al servicio del productor: con la red cortada (una
+// VPN, por ejemplo) la petición tardaba 45 s en fallar y el arranque
+// esperaba. Van a un hilo con su propia conexión y, si la versión ya
+// está registrada en todas las empresas, ni siquiera se llama al
+// servicio. El fallo se avisa al terminar el arranque.
 procedure TComposicionAplicacion.ComprobarConfiguracionFiscal(
-  const AVersion: string);
+  const AVersion: string;
+  const AAvisarFalloSif: TProc<string>);
+var
+  bSincronizar: Boolean;
+  oCancelacion: IMarcaCancelacion;
+  oConexiones: IServicioConexiones;
+  oParametros: IParametrosAplicacion;
+  oRegistroLog: IRegistroLog;
+  sUsuario: string;
 begin
+  FAvisarFalloSif := AAvisarFalloSif;
+  bSincronizar := True;
   try
-    SincronizarVersionInstalacionesSif(
-      FServiciosParametrosApp.Lectura,
-      FDmConn.conUni,
-      FContextoSesion.Identidad.Usuario);
+    bSincronizar := not InstalacionesSifAlDia(FDmConn.conUni);
   except
     on E: Exception do
       FRegistroLog.RegistrarAviso(
-        'No se pudo sincronizar la versión SIF: ' + E.Message);
+        'No se pudo comprobar la versión SIF de las empresas: ' +
+        E.Message);
   end;
-  try
-    AsegurarDeclaracionResponsableSif(
-      FServiciosParametrosApp.Lectura,
-      AVersion,
-      FRegistroLog);
-  except
-    on E: Exception do
-      FRegistroLog.RegistrarAviso(
-        'No se pudo disponer de la declaración responsable de esta ' +
-        'versión: ' + E.Message);
+  FCancelacionFiscal := TMarcaCancelacion.Create;
+  FComprobacionFiscalEnCurso := bSincronizar;
+  oCancelacion := FCancelacionFiscal;
+  oConexiones := FConexiones;
+  oParametros := FServiciosParametrosApp.Lectura;
+  oRegistroLog := FRegistroLog;
+  sUsuario := FContextoSesion.Identidad.Usuario;
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      oConexion: TUniConnection;
+      sErrorSincronizacion: string;
+      sErrorDeclaracion: string;
+    begin
+      sErrorSincronizacion := '';
+      sErrorDeclaracion := '';
+      if bSincronizar then
+      begin
+        oConexion := nil;
+        try
+          try
+            oConexion := oConexiones.CrearConexion(nil, uctPrecarga);
+            SincronizarVersionInstalacionesSif(
+              oParametros,
+              oConexion,
+              sUsuario);
+          except
+            on E: Exception do
+              sErrorSincronizacion := E.Message;
+          end;
+        finally
+          FreeAndNil(oConexion);
+        end;
+      end;
+      try
+        AsegurarDeclaracionResponsableSif(
+          oParametros,
+          AVersion,
+          oRegistroLog);
+      except
+        on E: Exception do
+          sErrorDeclaracion := E.Message;
+      end;
+      TThread.Queue(nil,
+        procedure
+        begin
+          if not oCancelacion.Cancelada then
+            TerminarComprobacionFiscal(
+              sErrorSincronizacion,
+              sErrorDeclaracion);
+        end);
+    end).Start;
+end;
+
+// Hilo principal. El inicio fiscal (NO VERI*FACTU) valida el número de
+// instalación, así que espera a la sincronización si estaba en curso.
+procedure TComposicionAplicacion.TerminarComprobacionFiscal(
+  const AErrorSincronizacion, AErrorDeclaracion: string);
+begin
+  FComprobacionFiscalEnCurso := False;
+  if AErrorSincronizacion <> '' then
+  begin
+    FRegistroLog.RegistrarAviso(
+      'No se pudo sincronizar la versión SIF: ' + AErrorSincronizacion);
+    FErrorSif := AErrorSincronizacion;
   end;
+  if AErrorDeclaracion <> '' then
+    FRegistroLog.RegistrarAviso(
+      'No se pudo disponer de la declaración responsable de esta ' +
+      'versión: ' + AErrorDeclaracion);
+  if FInicioFiscalPendiente then
+  begin
+    FInicioFiscalPendiente := False;
+    RegistrarEventoInicioFiscal;
+  end;
+  if FArranqueFiscalFinalizado then
+    AvisarFalloSif;
+end;
+
+procedure TComposicionAplicacion.AvisarFalloSif;
+var
+  sError: string;
+begin
+  if (FErrorSif <> '') and Assigned(FAvisarFalloSif) then
+  begin
+    sError := FErrorSif;
+    FErrorSif := '';
+    FAvisarFalloSif(sError);
+  end;
+end;
+
+// Se llama con la ventana principal ya visible y el splash cerrado, para
+// que el aviso de fallo no quede debajo del splash.
+procedure TComposicionAplicacion.FinalizarArranqueFiscal;
+begin
+  FArranqueFiscalFinalizado := True;
+  if not FComprobacionFiscalEnCurso then
+    AvisarFalloSif;
 end;
 
 function TComposicionAplicacion.EjecutarCargaWorker(
@@ -746,6 +888,18 @@ end;
 procedure TComposicionAplicacion.RegistrarInicioFiscal;
 begin
   FRegistroLog.RegistrarInformacion('Arranque del sistema');
+  if FComprobacionFiscalEnCurso then
+  begin
+    FInicioFiscalPendiente := True;
+    FRegistroLog.RegistrarInformacion(
+      'Inicio fiscal diferido hasta sincronizar la versión SIF');
+  end
+  else
+    RegistrarEventoInicioFiscal;
+end;
+
+procedure TComposicionAplicacion.RegistrarEventoInicioFiscal;
+begin
   if PuedeRegistrarEventoFiscalSeguro(
        FServiciosParametrosApp.Lectura,
        FRegistroLog,
@@ -812,6 +966,11 @@ begin
   if not FCerrada then
   begin
     FCerrada := True;
+    // El hilo de la comprobación fiscal no se espera: puede seguir
+    // colgado del servicio. Su resultado se descarta.
+    if Assigned(FCancelacionFiscal) then
+      FCancelacionFiscal.Cancelar;
+    FAvisarFalloSif := nil;
     DetenerProcesosSegundoPlano;
     FreeAndNil(FProcesosSegundoPlano);
     FreeAndNil(FRegistroPantallas);

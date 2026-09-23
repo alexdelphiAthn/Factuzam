@@ -17,7 +17,7 @@ interface
 
 const
   oAppName = 'Fzam';
-  oVersion = '1.0.15.202609191810.beta';
+  oVersion = '1.0.15.202609221728.beta';
   oAll = 'Todos';
 
 implementation

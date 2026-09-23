@@ -77,10 +77,11 @@ begin
       if oPadre is TfrxDataBand then
       begin
         oBanda := TfrxDataBand(oPadre);
+        // GetDataSet y no DataSet: enlazado por DataSource, FastReport
+        // deja la propiedad DataSet a nil
         if Assigned(oBanda.DataSet) and
-           (oBanda.DataSet is TfrxDBDataset) and
-           Assigned(TfrxDBDataset(oBanda.DataSet).DataSet) then
-          Result := TfrxDBDataset(oBanda.DataSet).DataSet;
+           (oBanda.DataSet is TfrxDBDataset) then
+          Result := TfrxDBDataset(oBanda.DataSet).GetDataSet;
       end;
       if Result = nil then
         oPadre := oPadre.Parent;
@@ -93,11 +94,9 @@ begin
       while (iDataSet < oReport.Datasets.Count) and
             (Result = nil) do
       begin
-        if (oReport.Datasets[iDataSet].DataSet is TfrxDBDataset) and
-           Assigned(TfrxDBDataset(
-             oReport.Datasets[iDataSet].DataSet).DataSet) then
+        if oReport.Datasets[iDataSet].DataSet is TfrxDBDataset then
           Result := TfrxDBDataset(
-            oReport.Datasets[iDataSet].DataSet).DataSet;
+            oReport.Datasets[iDataSet].DataSet).GetDataSet;
         Inc(iDataSet);
       end;
     end;

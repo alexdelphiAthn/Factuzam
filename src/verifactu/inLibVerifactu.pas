@@ -99,6 +99,11 @@ function ConstruirUrlQR(
                         const ANif, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
+// El QR de una factura emitida depende de su fase y de la URL registrada,
+// no del modo fiscal seleccionado para las nuevas facturas.
+function ObtenerUrlQRFactura(
+  const AParametrosApp: IParametrosAplicacion;
+  ADataSet: TDataSet): string;
 // PNG del QR tributario (ISO/IEC 18004:2015, corrección M) como bytes.
 // Sin canvas ni handles GDI compartidos: usable desde el hilo de envío.
 function GenerarQRPngVerifactu(const AUrl: string;
@@ -146,10 +151,9 @@ procedure AplicarVerifactuEnReportDirecto(
                                           ADataSet: TDataSet);
 // FastReport (impresión de factura): fuerza, sea cual sea el formato
 // cargado (base del .dfm o copia guardada en el diseñador), que el QR
-// 'qrverifactu' viva en la banda de datos MasterData (visible) y lo
-// rellena ahí. Un TfrxPictureView en una banda estática (cabecera de
-// página) no se dibuja aunque se rellene; en banda de datos sí (igual
-// que las fotos). Ajusta también el título por tipo.
+// salga: lo rellena donde lo haya puesto el formato ('qrverifactu' o
+// 'qr', en la cabecera en el original) o, si no hay, lo crea arriba a
+// la derecha de la banda del título. Ajusta también el título por tipo.
 procedure PrepararImpresionFacturaVerifactu(
                                             const AParametrosApp:
                                             IParametrosAplicacion;
@@ -531,7 +535,7 @@ begin
         if (Result = nil) and
            (oReport.Datasets[i].DataSet is TfrxDBDataset) then
         begin
-          oDs := TfrxDBDataset(oReport.Datasets[i].DataSet).DataSet;
+          oDs := TfrxDBDataset(oReport.Datasets[i].DataSet).GetDataSet;
           if TieneCamposFactura(oDs) then
             Result := oDs;
         end;
@@ -744,6 +748,22 @@ begin
   end;
 end;
 
+function ConstruirUrlQRConBase(const ABase, ANif, ASerie,
+  ANumero: string; AFecha: TDateTime;
+  AImporteTotal: Currency): string;
+begin
+  // Formato fijado por la AEAT (documento técnico del QR tributario):
+  // nif, numserie, fecha dd-mm-aaaa e importe total con punto decimal
+  Result := ABase +
+    '?nif='      + CodificarParametroURL(NormalizarNifVerifactu(ANif)) +
+    '&numserie=' + CodificarParametroURL(
+                     ComponerNumSerieFactura(ASerie, ANumero)) +
+    '&fecha='    + CodificarParametroURL(
+                     FormatDateTime('dd-mm-yyyy', AFecha)) +
+    '&importe='  + CodificarParametroURL(
+                     FormatearImporteVerifactu(AImporteTotal));
+end;
+
 function ConstruirUrlQR(
                         const AParametrosApp: IParametrosAplicacion;
                         const ANif, ASerie, ANumero: string;
@@ -756,30 +776,61 @@ begin
   begin
     if NoVerifactuActivo(AParametrosApp) then
       sBase := AParametrosApp.GetString('appNoVerifactuUrlQRPro',
-                                    cNoVerifactuUrlQRPro)
+        cNoVerifactuUrlQRPro)
     else
       sBase := AParametrosApp.GetString('appVerifactuUrlQRPro',
-                                    cVerifactuUrlQRPro);
+        cVerifactuUrlQRPro);
   end
+  else if NoVerifactuActivo(AParametrosApp) then
+    sBase := AParametrosApp.GetString('appNoVerifactuUrlQRPre',
+      cNoVerifactuUrlQRPre)
   else
+    sBase := AParametrosApp.GetString('appVerifactuUrlQRPre',
+      cVerifactuUrlQRPre);
+  Result := ConstruirUrlQRConBase(sBase, ANif, ASerie, ANumero,
+    AFecha, AImporteTotal);
+end;
+
+function ObtenerUrlQRFactura(
+  const AParametrosApp: IParametrosAplicacion;
+  ADataSet: TDataSet): string;
+var
+  sBase: string;
+  sFase: string;
+  oCampoUrl: TField;
+begin
+  Result := '';
+  if TieneCamposFactura(ADataSet) and ADataSet.Active and
+     (ADataSet.FindField('FASE_FAC') <> nil) then
   begin
-    if NoVerifactuActivo(AParametrosApp) then
-      sBase := AParametrosApp.GetString('appNoVerifactuUrlQRPre',
-                                    cNoVerifactuUrlQRPre)
-    else
-      sBase := AParametrosApp.GetString('appVerifactuUrlQRPre',
-                                    cVerifactuUrlQRPre);
+    sFase := UpperCase(Trim(ADataSet.FieldByName('FASE_FAC').AsString));
+    if (sFase = cFaseFacturaVerifactuPendiente) or
+       (sFase = cFaseFacturaVerifactuOk) or
+       (sFase = cFaseFacturaVerifactuError) then
+    begin
+      oCampoUrl := ADataSet.FindField('VERIFACTU_URL_FACCON');
+      if oCampoUrl <> nil then
+        Result := Trim(oCampoUrl.AsString);
+      if (Result = '') and
+         (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') and
+         not ADataSet.FieldByName('FECHA_FAC').IsNull then
+      begin
+        if VerifactuEntorno(AParametrosApp) = 'PRO' then
+          sBase := AParametrosApp.GetString('appVerifactuUrlQRPro',
+            cVerifactuUrlQRPro)
+        else
+          sBase := AParametrosApp.GetString('appVerifactuUrlQRPre',
+            cVerifactuUrlQRPre);
+        Result := ConstruirUrlQRConBase(sBase,
+          ADataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
+          ADataSet.FieldByName('SERIE_FAC').AsString,
+          ADataSet.FieldByName('NUMERO_FAC').AsString,
+          ADataSet.FieldByName('FECHA_FAC').AsDateTime,
+          ADataSet.FieldByName('TOTAL_BASES_FAC').AsCurrency +
+          ADataSet.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency);
+      end;
+    end;
   end;
-  // Formato fijado por la AEAT (documento técnico del QR tributario):
-  // nif, numserie, fecha dd-mm-aaaa e importe total con punto decimal
-  Result := sBase +
-    '?nif='      + CodificarParametroURL(NormalizarNifVerifactu(ANif)) +
-    '&numserie=' + CodificarParametroURL(
-                     ComponerNumSerieFactura(ASerie, ANumero)) +
-    '&fecha='    + CodificarParametroURL(
-                     FormatDateTime('dd-mm-yyyy', AFecha)) +
-    '&importe='  + CodificarParametroURL(
-                     FormatearImporteVerifactu(AImporteTotal));
 end;
 
 function GenerarQRPngVerifactu(const AUrl: string;
@@ -842,8 +893,19 @@ begin
   end;
 end;
 
+const
+  TAG_QR_FACTURA_AJUSTADO = 20260923;
+
+function EsPictureQRFactura(APic: TfrxPictureView): Boolean;
+begin
+  Result := SameText(APic.Name, 'qrverifactu') or
+    SameText(APic.DataField, 'QRCODE_PNG_FACCON') or
+    (SameText(APic.Name, 'qr') and
+     (APic.Tag = TAG_QR_FACTURA_AJUSTADO));
+end;
+
 // Rellena un TfrxPictureView con el QR tributario de la factura del
-// dataset dado (vacío en modo SIN o si faltan datos)
+// dataset dado. Desvincula la imagen para que FastReport no la reponga.
 procedure RellenarQRPicture(
   const AParametrosApp: IParametrosAplicacion;
   APic: TfrxPictureView;
@@ -854,18 +916,11 @@ var
   oStream: TBytesStream;
   sUrl:    string;
 begin
-  sUrl := '';
-  if (not SinVerifactuActivo(AParametrosApp)) and
-     TieneCamposFactura(ADataSet) and
-     (Trim(ADataSet.FieldByName('NUMERO_FAC').AsString) <> '') then
-    sUrl := ConstruirUrlQR(
-              AParametrosApp,
-              ADataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
-              ADataSet.FieldByName('SERIE_FAC').AsString,
-              ADataSet.FieldByName('NUMERO_FAC').AsString,
-              ADataSet.FieldByName('FECHA_FAC').AsDateTime,
-              ADataSet.FieldByName('TOTAL_BASES_FAC').AsCurrency +
-              ADataSet.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency);
+  sUrl := ObtenerUrlQRFactura(AParametrosApp, ADataSet);
+  APic.Tag := TAG_QR_FACTURA_AJUSTADO;
+  APic.DataField := '';
+  APic.DataSet := nil;
+  APic.Visible := sUrl <> '';
   if sUrl = '' then
     APic.Picture.Assign(nil)
   else
@@ -948,7 +1003,7 @@ procedure SustituirQRVerifactuEnReport(
   Component: TfrxReportComponent);
 begin
   if (Component is TfrxPictureView) and
-     SameText(Component.Name, 'qrverifactu') then
+     EsPictureQRFactura(TfrxPictureView(Component)) then
     RellenarQRPicture(AParametrosApp, TfrxPictureView(Component),
                       DataSetFacturaDeReport(Component));
 end;
@@ -1086,20 +1141,8 @@ begin
     if AComp is TfrxPictureView then
     begin
       oPic := TfrxPictureView(AComp);
-      if SameText(oPic.Name, 'qrverifactu') then
+      if EsPictureQRFactura(oPic) then
         RellenarQRPicture(AParametrosApp, oPic, ADataSet);
-      // Los formatos antiguos enlazan el QR almacenado directamente al
-      // campo QRCODE_PNG_FACCON. Al reimprimir, FastReport vuelve a cargar
-      // ese PNG aunque el SIF esté desactivado. Se elimina también el enlace
-      // para que la preparación posterior del informe no lo reponga.
-      if SinVerifactuActivo(AParametrosApp) and
-         SameText(oPic.DataField, 'QRCODE_PNG_FACCON') then
-      begin
-        oPic.Visible := False;
-        oPic.DataField := '';
-        oPic.DataSet := nil;
-        oPic.Picture.Assign(nil);
-      end;
     end;
     if AComp is TfrxMemoView then
       AjustarTituloMemo(
@@ -1169,6 +1212,27 @@ begin
   end;
 end;
 
+function BuscarPictureQRFactura(AComp: TfrxComponent): TfrxPictureView;
+var
+  i: Integer;
+begin
+  Result := nil;
+  if AComp is TfrxPictureView then
+  begin
+    if EsPictureQRFactura(TfrxPictureView(AComp)) then
+      Result := TfrxPictureView(AComp);
+  end;
+  if (Result = nil) and (AComp <> nil) then
+  begin
+    for i := 0 to AComp.Objects.Count - 1 do
+    begin
+      if Result = nil then
+        Result := BuscarPictureQRFactura(
+          TfrxComponent(AComp.Objects[i]));
+    end;
+  end;
+end;
+
 procedure PrepararImpresionFacturaVerifactu(
                                             const AParametrosApp:
                                             IParametrosAplicacion;
@@ -1182,41 +1246,63 @@ var
   i:      Integer;
   dLado:  Extended;
   bProforma: Boolean;
+  sUrl: string;
 begin
   if (AReport <> nil) and TieneCamposFactura(ADataSet) then
   begin
     bProforma := not SinVerifactuActivo(AParametrosApp) and
       EsFacturaPendienteConsolidar(ADataSet);
+    sUrl := ObtenerUrlQRFactura(AParametrosApp, ADataSet);
     oPage := nil;
     for i := 0 to AReport.PagesCount - 1 do
     begin
       if (oPage = nil) and (AReport.Pages[i] is TfrxReportPage) then
         oPage := TfrxReportPage(AReport.Pages[i]);
     end;
-    if oPage <> nil then
+    if (oPage <> nil) and (sUrl <> '') then
     begin
-      // Banda de DATOS donde el picture sí se dibuja (MasterData =
-      // una sola salida por factura). La hacemos visible por si el
-      // formato la trae oculta (caso del .dfm original).
-      oBanda := PrimeraBanda(oPage, TfrxMasterData);
-      dLado  := 30 * fr01cm;
-      if oBanda <> nil then
+      // El QR va donde lo puso el formato (el original lo trae como
+      // 'qr' en la cabecera, arriba a la derecha). El OnBeforePrint lo
+      // vuelve a rellenar con el dataset 'Facturas' vía GetDataSet.
+      oComp := AReport.FindObject('qrverifactu');
+      if not (oComp is TfrxPictureView) then
+        oComp := AReport.FindObject('qr');
+      if oComp is TfrxPictureView then
+        oQr := TfrxPictureView(oComp)
+      else
+        oQr := BuscarPictureQRFactura(oPage);
+      if oQr = nil then
       begin
-        oBanda.Visible := True;
-        if oBanda.Height < dLado then
-          oBanda.Height := dLado;
-        // El QR puede venir en otra banda (cabecera) si se cargó una
-        // copia guardada: lo reubicamos a la banda de datos.
-        oComp := AReport.FindObject('qrverifactu');
-        if oComp is TfrxPictureView then
-          oQr := TfrxPictureView(oComp)
-        else
+        // Formato sin QR: se crea arriba a la derecha de la banda del
+        // título 'FACTURA' (o de la cabecera, o la de datos)
+        oBanda := nil;
+        oComp := BuscarMemoTitulo(oPage);
+        if oComp <> nil then
+          oComp := oComp.Parent;
+        while (oComp <> nil) and not (oComp is TfrxBand) do
+          oComp := oComp.Parent;
+        if oComp is TfrxBand then
+          oBanda := TfrxBand(oComp);
+        if oBanda = nil then
+          oBanda := PrimeraBanda(oPage, TfrxPageHeader);
+        if oBanda = nil then
+          oBanda := PrimeraBanda(oPage, TfrxReportTitle);
+        if oBanda = nil then
+          oBanda := PrimeraBanda(oPage, TfrxMasterData);
+        if oBanda <> nil then
         begin
+          dLado := 30 * fr01cm;
+          if oBanda.Height < dLado then
+            oBanda.Height := dLado;
           oQr := TfrxPictureView.Create(oBanda);
           oQr.Name := 'qrverifactu';
+          oQr.Parent := oBanda;
+          oQr.SetBounds(oBanda.Width - dLado, 0, dLado, dLado);
+          oQr.KeepAspectRatio := True;
         end;
-        oQr.Parent := oBanda;
-        oQr.SetBounds(oBanda.Width - dLado, 0, dLado, dLado);
+      end;
+      if oQr <> nil then
+      begin
         oQr.Stretched := True;
         RellenarQRPicture(AParametrosApp, oQr, ADataSet);
       end;

@@ -150,6 +150,7 @@ var
   Propiedades: TcxSpinEditProperties;
 begin
   inherited;
+  Caption := 'Recuento de efectivo en Caja';
   KeyPreview := True;
   Position := poScreenCenter;
   Propiedades := tvDesgloseUnidades.Properties as TcxSpinEditProperties;

@@ -328,6 +328,7 @@ type
       const AResultadoLicencia: TResultadoLicenciaAplicacion);
     procedure CrearServiciosSesion;
     procedure ComprobarConfiguracionFiscal;
+    procedure AvisarFalloSincronizacionSif(AMensaje: string);
     procedure CargarDatosArranque;
     procedure RegistrarFabricasPantallas;
     procedure IniciarProcesosSegundoPlano;
@@ -436,6 +437,7 @@ uses
   inLibActualizacionEstado,
   inLibActualizacionInstalacion,
   inLibMsgIntegraciones,
+  inLibMsgVerifactu,
   inMtoModalActualizacion,
   inLibProgramadorTareasWindows,
   inLibServiciosOffLine,
@@ -711,7 +713,16 @@ end;
 
 procedure TfrmMtoPrincipal.ComprobarConfiguracionFiscal;
 begin
-  FComposicion.ComprobarConfiguracionFiscal(oVersion);
+  FComposicion.ComprobarConfiguracionFiscal(
+    oVersion,
+    AvisarFalloSincronizacionSif);
+end;
+
+procedure TfrmMtoPrincipal.AvisarFalloSincronizacionSif(AMensaje: string);
+begin
+  MessageDlg_fza(
+    Format(SAvisoSincronizacionInstalacionSifFallida, [oVersion, AMensaje]),
+    mtWarning, [mbOK], 0);
 end;
 
 procedure TfrmMtoPrincipal.CargarDatosArranque;
@@ -834,6 +845,7 @@ begin
   MostrarAvisoCaducidadCertificados(ConexionPrincipal, RegistroLog);
   ComprobarIntegridadEjecutables;
   OfrecerScriptsPendientesActualizacion;
+  FComposicion.FinalizarArranqueFiscal;
 end;
 
 procedure TfrmMtoPrincipal.FormResize(Sender: TObject);

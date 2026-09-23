@@ -50,6 +50,9 @@ type
     procedure GuardarDocumento;
     function Convertir(ADestino: TDestinoPresupuesto):
       TResultadoConversionPresupuesto;
+    function ConvertirConOpciones(ADestino: TDestinoPresupuesto;
+      const AOpciones: TOpcionesConversionPresupuesto):
+      TResultadoConversionPresupuesto;
     // Lineas del presupuesto activo como SKU y cantidad (las tallas
     // del pivote, una por celda) para volcarlas en una venta de caja.
     function LineasVentaCaja: TLineasVentaCajaExterna;
@@ -1070,6 +1073,20 @@ begin
       unqryTablaG.FieldByName('SERIE_PRE').AsString,
       unqryTablaG.FieldByName('NUMERO_PRE').AsString,
       IdentidadSesion.Usuario));
+  unqryTablaG.Refresh;
+end;
+
+function TdmPresupuestos.ConvertirConOpciones(
+  ADestino: TDestinoPresupuesto;
+  const AOpciones: TOpcionesConversionPresupuesto):
+  TResultadoConversionPresupuesto;
+begin
+  GuardarDocumento;
+  Result := ConvertirPresupuestoUniDAC(Self, ConexionEscritura,
+    CrearSolicitudConversionPresupuestoOpciones(ADestino,
+      unqryTablaG.FieldByName('SERIE_PRE').AsString,
+      unqryTablaG.FieldByName('NUMERO_PRE').AsString,
+      IdentidadSesion.Usuario, AOpciones));
   unqryTablaG.Refresh;
 end;
 

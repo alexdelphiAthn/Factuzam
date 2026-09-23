@@ -278,6 +278,14 @@ resourcestring
     'El número de instalación SIF de la empresa %s fue generado para la ' +
     'versión %s y la versión actual es %s. Genéralo de nuevo desde ' +
     'Archivo > Empresas.';
+  SAvisoSincronizacionInstalacionSifFallida =
+    'No se pudo registrar la versión %s en el número de instalación SIF ' +
+    'de las empresas.' + sLineBreak + sLineBreak +
+    '%s' + sLineBreak + sLineBreak +
+    'Mientras no se registre, las facturas con VERI*FACTU darán error al ' +
+    'emitirse. Comprueba la conexión a Internet (una VPN o un cortafuegos ' +
+    'pueden impedirla) y vuelve a abrir el programa, o genéralo desde ' +
+    'Archivo > Empresas.';
   SInfoExportacionNoVerifactuGenerada =
     'Exportacion NO VERI*FACTU generada:' + sLineBreak +
     '%s' + sLineBreak +

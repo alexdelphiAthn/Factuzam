@@ -1631,7 +1631,7 @@ inherited frmPrintFac: TfrmPrintFac
           AllowVectorExport = True
           Left = 17.779530000000000000
           Top = 366.614410000000000000
-          Width = 79.370130000000000000
+          Width = 180.000000000000000000
           Height = 18.897650000000000000
           Font.Charset = DEFAULT_CHARSET
           Font.Color = clBlack

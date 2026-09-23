@@ -1,6 +1,6 @@
 ﻿inherited frmModalDesgloseEfectivo: TfrmModalDesgloseEfectivo
   BorderStyle = bsDialog
-  Caption = 'Recuento de billetes y monedas'
+  Caption = 'Recuento de efectivo en Caja'
   ClientHeight = 560
   ClientWidth = 740
   Position = poScreenCenter

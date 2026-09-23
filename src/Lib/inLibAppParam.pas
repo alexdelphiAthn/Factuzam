@@ -394,6 +394,12 @@ begin
   // --- Valores por defecto ---
   // NOTA: la tarifa por defecto ya NO se define aquí. La única definición
   // es el parámetro de caja 'vgerDefTarifa', accesible por IParametrosCaja.
+  // Margen minimo que se propone al facturar traspasos entre empresas
+  // vinculadas (art. 18 LIS: el precio debe ser el de mercado, no el
+  // coste). Se teclea al facturar; esto solo fija lo que sale propuesto.
+  RegistrarParametro('Valores por defecto', 'appMargenMinimoTraspasos',
+    'Margen mínimo (%) al facturar traspasos a empresas vinculadas',
+    tpString, '0');
   RegistrarParametro('Valores por defecto', 'appTemporadaDefecto',
     'Temporada por defecto (ID de fza_propiedades_valores)',
     tpString, '');

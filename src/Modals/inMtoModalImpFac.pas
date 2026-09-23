@@ -472,6 +472,10 @@ end;
 procedure TfrmPrintFac.AfterReportLoaded;
 var
   oGrupoOperacion: TfrxComponent;
+  oObjetoQR: TfrxComponent;
+  oBandaQR: TfrxComponent;
+  sFaseQR: string;
+  sEstadoQR: string;
 begin
   inherited;
   if dmFac <> nil then
@@ -494,14 +498,36 @@ begin
     end;
   end;
   AplicarSkuDescripcionReport(frxrprt1);
-  // Solo ajusta el título por tipo (FACTURA / FACTURA SIMPLIFICADA /
-  // FACTURA RECTIFICATIVA). NO se inyecta ni se mueve ninguna banda:
-  // el A4 conserva su layout original. El QR del A4 se replanteará en
-  // limpio; el QR del Excel (que sí funciona) no se toca.
+  // El QR debe estar en la banda de datos para aparecer en la página
+  // preparada por FastReport, incluso con un formato guardado antiguo.
   if (dmFac <> nil) and dmFac.unqryFacPrint.Active and
      (not dmFac.unqryFacPrint.IsEmpty) then
-    AplicarVerifactuEnReportDirecto(ParametrosApp, frxrprt1,
+  begin
+    PrepararImpresionFacturaVerifactu(ParametrosApp, frxrprt1,
       dmFac.unqryFacPrint);
+    sFaseQR := '(sin campo)';
+    if dmFac.unqryFacPrint.FindField('FASE_FAC') <> nil then
+      sFaseQR := dmFac.unqryFacPrint.FieldByName('FASE_FAC').AsString;
+    oObjetoQR := frxrprt1.FindObject('qrverifactu');
+    if not (oObjetoQR is TfrxPictureView) then
+      oObjetoQR := frxrprt1.FindObject('qr');
+    oBandaQR := frxrprt1.FindObject('MasterData1');
+    sEstadoQR := 'ausente';
+    if oObjetoQR is TfrxPictureView then
+    begin
+      sEstadoQR := 'presente, padre=' + oObjetoQR.Parent.ClassName +
+        ', visible=' + BoolToStr(oObjetoQR.Visible, True) +
+        ', imagen=' + BoolToStr(
+          TfrxPictureView(oObjetoQR).Picture.Graphic <> nil, True);
+    end;
+    RegistroLog.RegistrarInformacion(
+      'FacturaQR/plantilla: fase=' + sFaseQR +
+      ', longitud URL=' + IntToStr(Length(
+        ObtenerUrlQRFactura(ParametrosApp, dmFac.unqryFacPrint))) +
+      ', QR=' + sEstadoQR +
+      ', banda=' + BoolToStr(
+        (oBandaQR <> nil) and oBandaQR.Visible, True));
+  end;
   frxrprt1.OnBeforePrint := ReportBeforePrintFactura;
 end;
 
@@ -511,6 +537,10 @@ var
   oCampo: TField;
 begin
   ReportBeforePrintConQR(Component);
+  if (Component is TfrxMasterData) and
+     SameText(Component.Name, 'MasterData1') then
+    RegistroLog.RegistrarInformacion(
+      'FacturaQR/impresión: banda MasterData1 procesada');
   if (Component <> nil) and
      SameText(Component.Name, 'GroupHeaderOperacionCaja') then
   begin

@@ -2,14 +2,15 @@
 {                                                                              }
 {  Módulo:       UniDataFacturasProformaRepositorio                            }
 {    Tipo:       Adaptador UniDAC                                              }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       04/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Materializa proformas VE y facturas fiscales por traspasos TA.           }
+{    Materializa proformas VE, facturas fiscales por traspasos TA y facturas  }
+{    TV por lo que la tienda destino ha vendido de lo traspasado.              }
 {******************************************************************************}
 unit UniDataFacturasProformaRepositorio;
 
@@ -18,7 +19,8 @@ interface
 uses
   Uni,
   inLibParametrosIntf,
-  inLibFacturasProformaIntf;
+  inLibFacturasProformaIntf,
+  inLibTraspasosVendidos;
 
 type
   TRepositorioFacturasProformaUniDAC = class(
@@ -65,6 +67,20 @@ type
     function GenerarTraspasosValorados(
       const ASolicitud: TSolicitudFacturacionCaja
     ): TResultadoFacturacionCaja;
+    function ObtenerTraspasosVendibles(
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TTraspasosVendiblesPendientes;
+    function ObtenerVentasDestino(
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TVentasDestinoPendientes;
+    function ObtenerFacturacionesPrevias(
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TFacturacionesTraspasoPrevias;
+    function RepartirVentasEntreTraspasos(
+      const ASolicitud: TSolicitudFacturacionCaja;
+      out ATraspasos: TTraspasosVendiblesPendientes;
+      out APrevias: TFacturacionesTraspasoPrevias
+    ): TAsignacionesTraspasoVendido;
     function ObtenerIdentidad: Int64;
     function ObtenerNumeroDocumento(
       const ASerie: string;
@@ -84,6 +100,23 @@ type
       const AAlmacenOrigen: string;
       const ASerie: string;
       const ANumero: string);
+    function GenerarFacturaTraspasoVendido(
+      const ASolicitud: TSolicitudFacturacionCaja;
+      AIdPeriodo: Int64;
+      const AEmpresaOrigen: string;
+      const AAlmacenOrigen: string;
+      const AFilas: TFilasTraspasoVendido;
+      var AAjustes: Integer): Integer;
+    procedure InsertarFilasTraspasoVendido(
+      AConsulta: TUniQuery;
+      AIdPeriodo: Int64;
+      const ASolicitud: TSolicitudFacturacionCaja;
+      const ASerie: string;
+      const ANumero: string;
+      const AFilas: TFilasTraspasoVendido);
+    function ContarLineasFacturaTraspasoVendido(
+      const ASerie: string;
+      const ANumero: string): Integer;
     function ReservarOperacionesTraspaso(
       AConsulta: TUniQuery;
       const ASolicitud: TSolicitudFacturacionCaja;
@@ -111,13 +144,22 @@ type
       const ASolicitud: TSolicitudFacturacionCaja;
       const AValoracion: TValoracionTraspasos
     ): TResultadoFacturacionCaja;
+    function ObtenerLineasTraspasoVendidoPendientes(
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TLineasTraspasoPendientes;
+    function GenerarTraspasosVendidos(
+      const ASolicitud: TSolicitudFacturacionCaja;
+      const AValoracion: TValoracionTraspasos
+    ): TResultadoFacturacionCaja;
   end;
 
 implementation
 
 uses
   System.SysUtils,
+  System.Generics.Collections,
   Data.DB,
+  inLibFacturasProformaValoracion,
   inLibVerifactu;
 
 resourcestring
@@ -145,18 +187,36 @@ resourcestring
     'Hay %d líneas de traspasos pendientes sin valorar (traspasos nuevos o ' +
     'modificados desde la simulación). Vuelve a pulsar Generar para ' +
     'valorarlas con las cifras actuales.';
+  SErrorLineasTvSinValorar =
+    'Hay %d traspasos con unidades vendidas sin valorar (ventas o traspasos ' +
+    'nuevos desde la simulación). Vuelve a pulsar Generar para valorarlos ' +
+    'con las cifras actuales.';
+  SComentarioFacturaTraspaso =
+    'Factura interna TA. Periodo %s a %s';
+  SComentarioFacturaTraspasoVendido =
+    'Factura interna TV: traspasado y vendido en destino. Periodo %s a %s';
+  SPrefijoDevolucionFacturaTraspasoVendido =
+    'DEVOLUCIÓN: ';
+  SDescripcionFacturasTraspasoVendidoGeneradas =
+    '%d borradores de facturas TV con %d operaciones de traspaso y %d ' +
+    'ajustes por devolución.';
 
 const
+  // Una operación de traspaso la factura TA entera o TV a trozos, nunca las
+  // dos: el libro mayor TV la deja fuera del circuito TA.
+  SQL_EXCLUIR_OPERACION_FACTURADA_TV =
+    ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_traspasos_vendidos TV ' +
+    ' WHERE TV.ID_OPCAJA_TA_FACTV = O.ID_OPCAJA) ';
   SQL_REVISAR_PERIODO =
     'SELECT COALESCE(SUM(CASE WHEN FECHA_DESDE_FACPER = :DESDE ' +
     'AND FECHA_HASTA_FACPER = :HASTA THEN 1 ELSE 0 END), 0) ' +
     'AS DUPLICADOS, COUNT(*) AS SOLAPADOS ' +
     'FROM fza_facturacion_caja_periodos FP ' +
     'WHERE FP.MODALIDAD_FACPER = :MODALIDAD ' +
-    'AND (:MODALIDAD <> ''TA'' ' +
+    'AND (:MODALIDAD NOT IN (''TA'', ''TV'') ' +
     ' OR FP.CODIGO_EMP_DESTINO_FACPER = :EMPRESA_DESTINO) ' +
     'AND (FP.CODIGO_EMP_ORIGEN_FACPER = :EMPRESA_ORIGEN ' +
-    ' OR (:MODALIDAD = ''TA'' ' +
+    ' OR (:MODALIDAD IN (''TA'', ''TV'') ' +
     ' AND FP.CODIGO_EMP_ORIGEN_FACPER IS NULL ' +
     ' AND (EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
     ' WHERE X.ID_FACPER_FACOP = FP.ID_FACPER ' +
@@ -407,6 +467,7 @@ const
     ' AND M.CODIGO_ALM_DOC_MOV = O.CODIGO_ALM_OPCAJA ' +
     ' AND M.CODIGO_CAJA_DOC_MOV = O.CODIGO_CAJA_OPCAJA ' +
     ' AND M.NUMERO_OPERACION_DOC_MOV = O.NUMERO_OPERACION_OPCAJA) ' +
+    SQL_EXCLUIR_OPERACION_FACTURADA_TV +
     'GROUP BY O.CODIGO_EMP_OPCAJA, O.CODIGO_ALM_OPCAJA ' +
     'ORDER BY O.CODIGO_EMP_OPCAJA, O.CODIGO_ALM_OPCAJA';
   SQL_CONTAR_LINEAS_TRASPASO =
@@ -426,7 +487,8 @@ const
     ' AND M.TIPO_DOC_MOV = ''TA'' AND M.TIPO_MOV = ''S'' ' +
     ' AND M.ESACTIVO_MOV = ''S'' ' +
     ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
-    ' WHERE X.ID_OPCAJA_FACOP = O.ID_OPCAJA)';
+    ' WHERE X.ID_OPCAJA_FACOP = O.ID_OPCAJA) ' +
+    SQL_EXCLUIR_OPERACION_FACTURADA_TV;
   SQL_CONTAR_LINEAS_FACTURA_TA =
     'SELECT COUNT(*) AS CANTIDAD ' +
     'FROM fza_facturas_operaciones_caja X ' +
@@ -488,18 +550,12 @@ const
     ' AND M.TIPO_DOC_MOV = ''TA'' AND M.TIPO_MOV = ''S'' ' +
     ' AND M.ESACTIVO_MOV = ''S'' ' +
     ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
-    ' WHERE X.ID_OPCAJA_FACOP = O.ID_OPCAJA) ';
+    ' WHERE X.ID_OPCAJA_FACOP = O.ID_OPCAJA) ' +
+    SQL_EXCLUIR_OPERACION_FACTURADA_TV;
   // PMP de la empresa emisora: media ponderada del stock de todos sus
   // almacenes (igual que TdmTraspaso.ObtenerCosteMedio, pero por empresa).
   // Última compra: coste del SKU y, si no consta, el del proveedor principal.
-  SQL_LINEAS_TRASPASO_PENDIENTES =
-    'SELECT M.NUMERO_MOV, O.NUMERO_OPERACION_OPCAJA, ' +
-    'COALESCE(O.FECHA_OP_DIA_OPCAJA, DATE(O.FECHA_OPERACION_OPCAJA)) ' +
-    'AS FECHA_OPERACION, M.LINEA_MOV, M.CODIGO_ART_MOV, ' +
-    'M.CODIGO_UNIDAD_MOV, ' +
-    'LEFT(COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART, ''''), ' +
-    '100) AS DESCRIPCION, M.CANTIDAD_MOV, ' +
-    'COALESCE(M.PRECIO_COSTE_UNITARIO_MOV, 0) AS COSTE_MOVIMIENTO, ' +
+  SQL_PRECIOS_REFERENCIA_TRASPASO =
     'COALESCE((SELECT CASE WHEN SUM(S.CANTIDAD_STK) > 0 ' +
     ' THEN SUM(S.PRECIO_MEDIO_STK * S.CANTIDAD_STK) / SUM(S.CANTIDAD_STK) ' +
     ' ELSE MAX(S.PRECIO_MEDIO_STK) END ' +
@@ -515,7 +571,20 @@ const
     ' FROM fza_articulos_proveedores AP ' +
     ' WHERE AP.CODIGO_ART_AP = M.CODIGO_ART_MOV ' +
     ' AND AP.ESPROVEEDORPRINCIPAL_AP = ''S''), 0) ' +
-    'AS PRECIO_ULTIMA_COMPRA ' +
+    'AS PRECIO_ULTIMA_COMPRA, ' +
+    'COALESCE(TIMESTAMPDIFF(MONTH, (SELECT C2.FECHA_ULT_COMPRA_SKUC ' +
+    ' FROM fza_articulos_skus_costes C2 ' +
+    ' WHERE C2.CODIGO_UNIDAD_SKU_SKUC = M.CODIGO_UNIDAD_MOV), ' +
+    ':HASTA), 0) AS ANTIGUEDAD_MESES ';
+  SQL_LINEAS_TRASPASO_PENDIENTES =
+    'SELECT M.NUMERO_MOV, O.NUMERO_OPERACION_OPCAJA, ' +
+    'COALESCE(O.FECHA_OP_DIA_OPCAJA, DATE(O.FECHA_OPERACION_OPCAJA)) ' +
+    'AS FECHA_OPERACION, M.LINEA_MOV, M.CODIGO_ART_MOV, ' +
+    'M.CODIGO_UNIDAD_MOV, ' +
+    'LEFT(COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART, ''''), ' +
+    '100) AS DESCRIPCION, M.CANTIDAD_MOV, ' +
+    'COALESCE(M.PRECIO_COSTE_UNITARIO_MOV, 0) AS COSTE_MOVIMIENTO, ' +
+    SQL_PRECIOS_REFERENCIA_TRASPASO +
     SQL_ORIGEN_TRASPASOS_PENDIENTES +
     SQL_FILTRO_TRASPASOS_PENDIENTES +
     'ORDER BY O.CODIGO_EMP_OPCAJA, O.CODIGO_ALM_OPCAJA, ' +
@@ -594,7 +663,7 @@ const
     'I.PORCENTAJE_SUPERREDUCIDO_RE_IVA, I.PORCENTAJE_EXENTO_IVA, ' +
     'I.PORCENTAJE_EXENTO_RE_IVA, ''CONTADO'', ' +
     'E.TEXTO_LEGAL_FACTURA_EMP, ' +
-    'CONCAT(''Factura interna TA. Periodo '', :DESDE, '' a '', :HASTA), ' +
+    ':COMENTARIO, ' +
     '''0000'', ''N'', ''S'', ''N'', NOW(), NOW(), :USUARIO, :USUARIO ' +
     'FROM fza_empresas E JOIN fza_empresas D ' +
     ' ON D.CODIGO_EMP_EMP = :EMPRESA_DESTINO ' +
@@ -705,7 +774,8 @@ const
     ' AND M.CODIGO_EMP_MOV = O.CODIGO_EMP_OPCAJA ' +
     ' AND M.CODIGO_ALM_DOC_MOV = O.CODIGO_ALM_OPCAJA ' +
     ' AND M.CODIGO_CAJA_DOC_MOV = O.CODIGO_CAJA_OPCAJA ' +
-    ' AND M.NUMERO_OPERACION_DOC_MOV = O.NUMERO_OPERACION_OPCAJA)';
+    ' AND M.NUMERO_OPERACION_DOC_MOV = O.NUMERO_OPERACION_OPCAJA) ' +
+    SQL_EXCLUIR_OPERACION_FACTURADA_TV;
   SQL_RECALCULAR_FACTURA =
     'CALL PRC_CALCULAR_FACTURA_NETOS(:SERIE, :NUMERO)';
   SQL_CONTAR_OPERACIONES_FACTURA =
@@ -714,6 +784,185 @@ const
   SQL_ACTUALIZAR_CONTADOR_LINEAS_FACTURA =
     'UPDATE fza_facturas SET CONTADOR_LINEAS_FAC = LPAD(:LINEAS, 4, ''0'') ' +
     'WHERE SERIE_FAC = :SERIE AND NUMERO_FAC = :NUMERO';
+
+  // --- Traspasado y vendido (TV) ------------------------------------------
+  // Traspasos TA que pueden cubrir ventas del periodo: sin fecha inicial,
+  // porque lo vendido ahora consume traspasos por antiguos que sean.
+  SQL_ORIGEN_TRASPASOS_VENDIBLES =
+    'FROM fza_caja_operaciones O ' +
+    'JOIN fza_movimientos_almacen M ' +
+    ' ON M.CODIGO_EMP_MOV = O.CODIGO_EMP_OPCAJA ' +
+    ' AND M.CODIGO_ALM_DOC_MOV = O.CODIGO_ALM_OPCAJA ' +
+    ' AND M.CODIGO_CAJA_DOC_MOV = O.CODIGO_CAJA_OPCAJA ' +
+    ' AND M.NUMERO_OPERACION_DOC_MOV = O.NUMERO_OPERACION_OPCAJA ' +
+    'LEFT JOIN fza_articulos A ON A.CODIGO_ART_ART = M.CODIGO_ART_MOV ';
+  SQL_FILTRO_TRASPASOS_VENDIBLES =
+    'WHERE O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
+    ' AND O.ESTRASPASO_OPCAJA = ''S'' ' +
+    ' AND O.CODIGO_EMP_OPCAJA = :EMPRESA_ORIGEN ' +
+    ' AND O.CODIGO_EMP_CONTRA_OPCAJA = :EMPRESA_DESTINO ' +
+    ' AND COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
+    ' DATE(O.FECHA_OPERACION_OPCAJA)) <= :HASTA ' +
+    ' AND M.TIPO_DOC_MOV = ''TA'' AND M.TIPO_MOV = ''S'' ' +
+    ' AND M.ESACTIVO_MOV = ''S'' ' +
+    ' AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja X ' +
+    ' WHERE X.ID_OPCAJA_FACOP = O.ID_OPCAJA) ';
+  SQL_TRASPASOS_VENDIBLES =
+    'SELECT M.NUMERO_MOV, O.ID_OPCAJA, O.NUMERO_OPERACION_OPCAJA, ' +
+    'M.LINEA_MOV, COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
+    'DATE(O.FECHA_OPERACION_OPCAJA)) AS FECHA_OPERACION, ' +
+    'O.CODIGO_ALM_OPCAJA AS ALMACEN_ORIGEN, ' +
+    'COALESCE(NULLIF(M.CODIGO_ALM_CONTRA_MOV, ''''), ' +
+    'O.CODIGO_ALM_CONTRA_OPCAJA, '''') AS ALMACEN_DESTINO, ' +
+    'M.CODIGO_ART_MOV, M.CODIGO_UNIDAD_MOV, ' +
+    'LEFT(COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART, ''''), ' +
+    '100) AS DESCRIPCION, M.CANTIDAD_MOV, ' +
+    'COALESCE((SELECT SUM(V.CANTIDAD_FACTV) ' +
+    ' FROM fza_facturas_traspasos_vendidos V ' +
+    ' WHERE V.NUMERO_MOV_TA_FACTV = M.NUMERO_MOV), 0) ' +
+    'AS CANTIDAD_FACTURADA, ' +
+    'COALESCE(M.PRECIO_COSTE_UNITARIO_MOV, 0) AS COSTE_MOVIMIENTO, ' +
+    SQL_PRECIOS_REFERENCIA_TRASPASO +
+    ', COALESCE((SELECT SUM(L.TOTAL_FAC_SIVA_FACLIN) / ' +
+    ' NULLIF(SUM(L.CANTIDAD_FACLIN), 0) ' +
+    ' FROM fza_movimientos_almacen VM ' +
+    ' JOIN fza_facturas_lineas L ON L.NUMERO_MOV_FACLIN = VM.NUMERO_MOV ' +
+    ' WHERE VM.TIPO_DOC_MOV = ''VE'' AND VM.TIPO_MOV = ''S'' ' +
+    ' AND VM.ESACTIVO_MOV = ''S'' ' +
+    ' AND VM.CODIGO_ALM_MOV = COALESCE(' +
+    ' NULLIF(M.CODIGO_ALM_CONTRA_MOV, ''''), ' +
+    ' O.CODIGO_ALM_CONTRA_OPCAJA) ' +
+    ' AND VM.CODIGO_UNIDAD_MOV = M.CODIGO_UNIDAD_MOV ' +
+    ' AND DATE(VM.FECHA_MOV) BETWEEN :DESDE AND :HASTA), 0) ' +
+    'AS PRECIO_VENTA_DESTINO ' +
+    SQL_ORIGEN_TRASPASOS_VENDIBLES +
+    SQL_FILTRO_TRASPASOS_VENDIBLES +
+    'ORDER BY COALESCE(O.FECHA_OP_DIA_OPCAJA, ' +
+    'DATE(O.FECHA_OPERACION_OPCAJA)), O.ID_OPCAJA, M.LINEA_MOV';
+  // Ventas y devoluciones de la tienda destino dentro del periodo, sólo de
+  // SKU que alguna vez le llegaron por traspaso desde la empresa emisora.
+  SQL_VENTAS_DESTINO =
+    'SELECT M.NUMERO_MOV, M.FECHA_MOV, M.CODIGO_ALM_MOV, ' +
+    'M.CODIGO_UNIDAD_MOV, M.CANTIDAD_MOV, M.TIPO_MOV, ' +
+    'COALESCE((SELECT SUM(ABS(V.CANTIDAD_FACTV)) ' +
+    ' FROM fza_facturas_traspasos_vendidos V ' +
+    ' WHERE V.NUMERO_MOV_VE_FACTV = M.NUMERO_MOV), 0) ' +
+    'AS CANTIDAD_ASIGNADA, ' +
+    'COALESCE((SELECT L.TOTAL_FAC_SIVA_FACLIN / ' +
+    ' NULLIF(L.CANTIDAD_FACLIN, 0) FROM fza_facturas_lineas L ' +
+    ' WHERE L.NUMERO_MOV_FACLIN = M.NUMERO_MOV LIMIT 1), 0) ' +
+    'AS PRECIO_VENTA ' +
+    'FROM fza_movimientos_almacen M ' +
+    'JOIN fza_almacenes AL ON AL.CODIGO_ALM_ALM = M.CODIGO_ALM_MOV ' +
+    ' AND AL.CODIGO_EMP_ALM = :EMPRESA_DESTINO ' +
+    'WHERE M.TIPO_DOC_MOV = ''VE'' AND M.ESACTIVO_MOV = ''S'' ' +
+    ' AND DATE(M.FECHA_MOV) BETWEEN :DESDE AND :HASTA ' +
+    ' AND M.CANTIDAD_MOV > 0 ' +
+    ' AND EXISTS (SELECT 1 FROM fza_movimientos_almacen T ' +
+    ' WHERE T.TIPO_DOC_MOV = ''TA'' AND T.TIPO_MOV = ''S'' ' +
+    ' AND T.ESACTIVO_MOV = ''S'' ' +
+    ' AND T.CODIGO_EMP_MOV = :EMPRESA_ORIGEN ' +
+    ' AND T.CODIGO_ALM_CONTRA_MOV = M.CODIGO_ALM_MOV ' +
+    ' AND T.CODIGO_UNIDAD_MOV = M.CODIGO_UNIDAD_MOV) ' +
+    'ORDER BY M.FECHA_MOV, M.NUMERO_MOV';
+  // Lo ya facturado por traspaso y precio: es lo que una devolución puede
+  // deshacer, y al precio al que se cobró.
+  SQL_FACTURACIONES_TRASPASO_PREVIAS =
+    'SELECT V.NUMERO_MOV_TA_FACTV, ' +
+    'MIN(V.ID_OPCAJA_TA_FACTV) AS ID_OPCAJA, ' +
+    'V.CODIGO_ALM_ORIGEN_FACTV, V.CODIGO_ALM_DESTINO_FACTV, ' +
+    'MAX(V.CODIGO_ART_FACTV) AS CODIGO_ART, V.CODIGO_UNIDAD_FACTV, ' +
+    'LEFT(COALESCE(MAX(M.DESCRIPCION_ARTICULO_MOV), ' +
+    'MAX(A.DESCRIPCION_ART), ''''), 100) AS DESCRIPCION, ' +
+    'V.PRECIO_FACTV, SUM(V.CANTIDAD_FACTV) AS CANTIDAD, ' +
+    'MAX(V.FECHA_VENTA_FACTV) AS FECHA_VENTA, ' +
+    'MIN(V.FECHA_TRASPASO_FACTV) AS FECHA_TRASPASO ' +
+    'FROM fza_facturas_traspasos_vendidos V ' +
+    'LEFT JOIN fza_movimientos_almacen M ' +
+    ' ON M.NUMERO_MOV = V.NUMERO_MOV_TA_FACTV ' +
+    'LEFT JOIN fza_articulos A ' +
+    ' ON A.CODIGO_ART_ART = V.CODIGO_ART_FACTV ' +
+    'WHERE V.CODIGO_EMP_ORIGEN_FACTV = :EMPRESA_ORIGEN ' +
+    ' AND V.CODIGO_EMP_DESTINO_FACTV = :EMPRESA_DESTINO ' +
+    'GROUP BY V.NUMERO_MOV_TA_FACTV, V.CODIGO_ALM_ORIGEN_FACTV, ' +
+    ' V.CODIGO_ALM_DESTINO_FACTV, V.CODIGO_UNIDAD_FACTV, V.PRECIO_FACTV ' +
+    'HAVING SUM(V.CANTIDAD_FACTV) > 0 ' +
+    'ORDER BY MAX(V.FECHA_VENTA_FACTV), V.NUMERO_MOV_TA_FACTV';
+  SQL_INSERTAR_TRASPASO_VENDIDO =
+    'INSERT INTO fza_facturas_traspasos_vendidos (' +
+    'ID_FACPER_FACTV, SERIE_FAC_FACTV, NUMERO_FAC_FACTV, ' +
+    'NUMERO_MOV_TA_FACTV, NUMERO_MOV_VE_FACTV, ID_OPCAJA_TA_FACTV, ' +
+    'TIPO_FACTV, CODIGO_EMP_ORIGEN_FACTV, CODIGO_EMP_DESTINO_FACTV, ' +
+    'CODIGO_ALM_ORIGEN_FACTV, CODIGO_ALM_DESTINO_FACTV, ' +
+    'CODIGO_ART_FACTV, CODIGO_UNIDAD_FACTV, CANTIDAD_FACTV, ' +
+    'PRECIO_FACTV, FECHA_VENTA_FACTV, FECHA_TRASPASO_FACTV, ' +
+    'INSTANTE_ALTA, INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF) ' +
+    'VALUES (:ID_PERIODO, :SERIE, :NUMERO, :NUMERO_MOV_TA, ' +
+    ':NUMERO_MOV_VE, :ID_OPCAJA, :TIPO, :EMPRESA_ORIGEN, ' +
+    ':EMPRESA_DESTINO, :ALMACEN_ORIGEN, :ALMACEN_DESTINO, ' +
+    ':ARTICULO, :UNIDAD, :CANTIDAD, :PRECIO, :FECHA_VENTA, ' +
+    ':FECHA_TRASPASO, NOW(), NOW(), :USUARIO, :USUARIO)';
+  // Una línea de factura por traspaso y precio; lo vendido y devuelto en la
+  // misma pasada se compensa y no llega a imprimirse.
+  SQL_LINEAS_TRASPASO_VENDIDO_FACTURA =
+    'SELECT V.NUMERO_MOV_TA_FACTV AS NUMERO_MOV, ' +
+    ' V.PRECIO_FACTV AS PRECIO, SUM(V.CANTIDAD_FACTV) AS CANTIDAD ' +
+    ' FROM fza_facturas_traspasos_vendidos V ' +
+    ' WHERE V.SERIE_FAC_FACTV = :SERIE ' +
+    ' AND V.NUMERO_FAC_FACTV = :NUMERO ' +
+    ' GROUP BY V.NUMERO_MOV_TA_FACTV, V.PRECIO_FACTV ' +
+    ' HAVING SUM(V.CANTIDAD_FACTV) <> 0';
+  SQL_CONTAR_LINEAS_FACTURA_TV =
+    'SELECT COUNT(*) AS CANTIDAD FROM (' +
+    SQL_LINEAS_TRASPASO_VENDIDO_FACTURA + ') X';
+  SQL_INICIAR_LINEA_FACTURA_TV = 'SET @linea_factura_tv := 0';
+  SQL_PORCENTAJE_IVA_ARTICULO =
+    'CASE COALESCE(A.TIPO_IVA_ART, ''N'') ' +
+    ' WHEN ''R'' THEN I.PORCENTAJE_REDUCIDO_IVA ' +
+    ' WHEN ''S'' THEN I.PORCENTAJE_SUPERREDUCIDO_IVA ' +
+    ' WHEN ''E'' THEN I.PORCENTAJE_EXENTO_IVA ' +
+    ' ELSE I.PORCENTAJE_NORMAL_IVA END';
+  SQL_INSERTAR_LINEAS_TV =
+    'INSERT INTO fza_facturas_lineas (' +
+    'NUMERO_FAC_FACLIN, SERIE_FAC_FACLIN, CODIGO_EMP_FACLIN, ' +
+    'LINEA_FACLIN, CODIGO_ART_FACLIN, CODIGO_UNIDAD_FACLIN, ' +
+    'CODIGO_FAM_FACLIN, TIPO_ARTICULO_FACLIN, ' +
+    'TIPO_CANTIDAD_ARTICULO_FACLIN, CANTIDAD_FACLIN, ' +
+    'DESCRIPCION_ARTICULO_FACLIN, ESIMP_INCL_TARIFA_FACLIN, ' +
+    'PRECIO_VENTA_SIVA_ARTICULO_FACLIN, TIPO_IVA_ARTICULO_FACLIN, ' +
+    'PORCENTAJE_IVA_FACLIN, PRECIO_VENTA_CIVA_ARTICULO_FACLIN, ' +
+    'TOTAL_FACLIN, TOTAL_FAC_SIVA_FACLIN, INSTANTE_ALTA, ' +
+    'INSTANTE_MODIF, USUARIO_ALTA, USUARIO_MODIF, CODIGO_ALM_FACLIN, ' +
+    'CODIGO_CAJA_FACLIN, NUMERO_OPERACION_FACLIN, NUMERO_MOV_FACLIN) ' +
+    'SELECT :NUMERO, :SERIE, :ORIGEN, ' +
+    'LPAD((@linea_factura_tv := @linea_factura_tv + 1), 4, ''0''), ' +
+    'M.CODIGO_ART_MOV, M.CODIGO_UNIDAD_MOV, A.CODIGO_FAM_ART, ' +
+    'COALESCE(A.TIPO_ART, ''ESTANDAR''), ' +
+    'COALESCE(A.TIPO_CANTIDAD_ART, ''Uds''), T.CANTIDAD, ' +
+    'LEFT(CASE WHEN T.CANTIDAD < 0 THEN CONCAT(:PREFIJO_DEVOLUCION, ' +
+    'COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART, '''')) ' +
+    'ELSE COALESCE(M.DESCRIPCION_ARTICULO_MOV, A.DESCRIPCION_ART, '''') ' +
+    'END, 100), ''N'', T.PRECIO, COALESCE(A.TIPO_IVA_ART, ''N''), ' +
+    SQL_PORCENTAJE_IVA_ARTICULO + ', ' +
+    'T.PRECIO * (1 + (' + SQL_PORCENTAJE_IVA_ARTICULO + ') / 100), ' +
+    'T.CANTIDAD * T.PRECIO * ' +
+    '(1 + (' + SQL_PORCENTAJE_IVA_ARTICULO + ') / 100), ' +
+    'T.CANTIDAD * T.PRECIO, NOW(), NOW(), :USUARIO, :USUARIO, ' +
+    'O.CODIGO_ALM_OPCAJA, O.CODIGO_CAJA_OPCAJA, ' +
+    'O.NUMERO_OPERACION_OPCAJA, M.NUMERO_MOV ' +
+    'FROM (' + SQL_LINEAS_TRASPASO_VENDIDO_FACTURA + ') T ' +
+    'JOIN fza_movimientos_almacen M ON M.NUMERO_MOV = T.NUMERO_MOV ' +
+    'JOIN fza_caja_operaciones O ' +
+    ' ON O.CODIGO_EMP_OPCAJA = M.CODIGO_EMP_MOV ' +
+    ' AND O.CODIGO_ALM_OPCAJA = M.CODIGO_ALM_DOC_MOV ' +
+    ' AND O.CODIGO_CAJA_OPCAJA = M.CODIGO_CAJA_DOC_MOV ' +
+    ' AND O.NUMERO_OPERACION_OPCAJA = M.NUMERO_OPERACION_DOC_MOV ' +
+    ' AND O.TIPO_OPERACION_OPCAJA = ''TA'' ' +
+    'LEFT JOIN fza_articulos A ON A.CODIGO_ART_ART = M.CODIGO_ART_MOV ' +
+    'JOIN fza_facturas F ON F.SERIE_FAC = :SERIE ' +
+    ' AND F.NUMERO_FAC = :NUMERO ' +
+    'JOIN fza_ivas I ON I.CODIGO_IVA = F.CODIGO_IVA_FAC ' +
+    'ORDER BY M.FECHA_MOV, M.NUMERO_MOV, T.PRECIO';
 
 type
   TGrupoTraspaso = record
@@ -846,12 +1095,12 @@ var
   oConsulta: TUniQuery;
 begin
   Result := Default(TRevisionPeriodoFacturacionCaja);
-  if AModalidad = mfcVenta then
-  begin
-    sModalidad := 'VE';
-  end
+  case AModalidad of
+    mfcVenta:
+      sModalidad := 'VE';
+    mfcTraspasoVendido:
+      sModalidad := 'TV';
   else
-  begin
     sModalidad := 'TA';
   end;
   oConsulta := TUniQuery.Create(nil);
@@ -1207,6 +1456,10 @@ begin
       oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
       oConsulta.ParamByName('SERIE').AsString := ASerie;
       oConsulta.ParamByName('NUMERO').AsString := ANumero;
+      oConsulta.ParamByName('COMENTARIO').AsString := Format(
+        SComentarioFacturaTraspaso,
+        [FormatDateTime('dd/mm/yyyy', ASolicitud.FechaDesde),
+         FormatDateTime('dd/mm/yyyy', ASolicitud.FechaHasta)]);
       oConsulta.Execute;
       if oConsulta.RowsAffected = 0 then
       begin
@@ -1327,6 +1580,8 @@ begin
         oConsulta.FieldByName('PRECIO_MEDIO_EMPRESA').AsCurrency;
       Result[iLinea].PrecioUltimaCompra :=
         oConsulta.FieldByName('PRECIO_ULTIMA_COMPRA').AsCurrency;
+      Result[iLinea].AntiguedadMeses :=
+        oConsulta.FieldByName('ANTIGUEDAD_MESES').AsInteger;
       Inc(iLinea);
       oConsulta.Next;
     end;
@@ -1469,6 +1724,432 @@ begin
     begin
       Result.Descripcion := Format(SDescripcionBorradoresFacturasTaGenerados,
         [Result.CantidadDocumentos, Result.CantidadOperaciones]);
+      ActualizarPeriodo(
+        iIdPeriodo,
+        'CERRADO',
+        Result,
+        ASolicitud.Usuario);
+    end
+    else
+    begin
+      ActualizarPeriodo(
+        iIdPeriodo,
+        'SIN_DOCUMENTOS',
+        Result,
+        ASolicitud.Usuario);
+    end;
+  except
+    ActualizarPeriodo(
+      iIdPeriodo,
+      'ERROR',
+      Result,
+      ASolicitud.Usuario);
+    raise;
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.ObtenerTraspasosVendibles(
+  const ASolicitud: TSolicitudFacturacionCaja
+): TTraspasosVendiblesPendientes;
+var
+  oConsulta: TUniQuery;
+  iLinea   : Integer;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_TRASPASOS_VENDIBLES;
+    AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.Open;
+    iLinea := 0;
+    while not oConsulta.Eof do
+    begin
+      SetLength(Result, iLinea + 1);
+      Result[iLinea] := Default(TTraspasoVendiblePendiente);
+      Result[iLinea].NumeroMovimiento :=
+        oConsulta.FieldByName('NUMERO_MOV').AsString;
+      Result[iLinea].IdOperacion :=
+        oConsulta.FieldByName('ID_OPCAJA').AsLargeInt;
+      Result[iLinea].NumeroOperacion :=
+        oConsulta.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+      Result[iLinea].Linea :=
+        oConsulta.FieldByName('LINEA_MOV').AsString;
+      Result[iLinea].Fecha :=
+        oConsulta.FieldByName('FECHA_OPERACION').AsDateTime;
+      Result[iLinea].AlmacenOrigen :=
+        oConsulta.FieldByName('ALMACEN_ORIGEN').AsString;
+      Result[iLinea].AlmacenDestino :=
+        oConsulta.FieldByName('ALMACEN_DESTINO').AsString;
+      Result[iLinea].CodigoArticulo :=
+        oConsulta.FieldByName('CODIGO_ART_MOV').AsString;
+      Result[iLinea].CodigoUnidad :=
+        oConsulta.FieldByName('CODIGO_UNIDAD_MOV').AsString;
+      Result[iLinea].Descripcion :=
+        oConsulta.FieldByName('DESCRIPCION').AsString;
+      Result[iLinea].Cantidad :=
+        oConsulta.FieldByName('CANTIDAD_MOV').AsCurrency;
+      Result[iLinea].CantidadFacturada :=
+        oConsulta.FieldByName('CANTIDAD_FACTURADA').AsCurrency;
+      Result[iLinea].CosteMovimiento :=
+        oConsulta.FieldByName('COSTE_MOVIMIENTO').AsCurrency;
+      Result[iLinea].PrecioMedioEmpresa :=
+        oConsulta.FieldByName('PRECIO_MEDIO_EMPRESA').AsCurrency;
+      Result[iLinea].PrecioUltimaCompra :=
+        oConsulta.FieldByName('PRECIO_ULTIMA_COMPRA').AsCurrency;
+      Result[iLinea].AntiguedadMeses :=
+        oConsulta.FieldByName('ANTIGUEDAD_MESES').AsInteger;
+      Result[iLinea].PrecioVentaDestino :=
+        oConsulta.FieldByName('PRECIO_VENTA_DESTINO').AsCurrency;
+      Inc(iLinea);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.ObtenerVentasDestino(
+  const ASolicitud: TSolicitudFacturacionCaja
+): TVentasDestinoPendientes;
+var
+  oConsulta: TUniQuery;
+  iLinea   : Integer;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_VENTAS_DESTINO;
+    AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.Open;
+    iLinea := 0;
+    while not oConsulta.Eof do
+    begin
+      SetLength(Result, iLinea + 1);
+      Result[iLinea] := Default(TVentaDestinoPendiente);
+      Result[iLinea].NumeroMovimiento :=
+        oConsulta.FieldByName('NUMERO_MOV').AsString;
+      Result[iLinea].Fecha :=
+        oConsulta.FieldByName('FECHA_MOV').AsDateTime;
+      Result[iLinea].Almacen :=
+        oConsulta.FieldByName('CODIGO_ALM_MOV').AsString;
+      Result[iLinea].CodigoUnidad :=
+        oConsulta.FieldByName('CODIGO_UNIDAD_MOV').AsString;
+      Result[iLinea].Cantidad :=
+        oConsulta.FieldByName('CANTIDAD_MOV').AsCurrency;
+      Result[iLinea].CantidadAsignada :=
+        oConsulta.FieldByName('CANTIDAD_ASIGNADA').AsCurrency;
+      Result[iLinea].EsDevolucion := SameText(
+        Trim(oConsulta.FieldByName('TIPO_MOV').AsString), 'E');
+      Result[iLinea].PrecioVenta :=
+        oConsulta.FieldByName('PRECIO_VENTA').AsCurrency;
+      Inc(iLinea);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.ObtenerFacturacionesPrevias(
+  const ASolicitud: TSolicitudFacturacionCaja
+): TFacturacionesTraspasoPrevias;
+var
+  oConsulta: TUniQuery;
+  iLinea   : Integer;
+begin
+  SetLength(Result, 0);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_FACTURACIONES_TRASPASO_PREVIAS;
+    AsignarSolicitud(oConsulta, ASolicitud);
+    oConsulta.Open;
+    iLinea := 0;
+    while not oConsulta.Eof do
+    begin
+      SetLength(Result, iLinea + 1);
+      Result[iLinea] := Default(TFacturacionTraspasoPrevia);
+      Result[iLinea].NumeroMovimientoTraspaso :=
+        oConsulta.FieldByName('NUMERO_MOV_TA_FACTV').AsString;
+      Result[iLinea].IdOperacion :=
+        oConsulta.FieldByName('ID_OPCAJA').AsLargeInt;
+      Result[iLinea].AlmacenOrigen :=
+        oConsulta.FieldByName('CODIGO_ALM_ORIGEN_FACTV').AsString;
+      Result[iLinea].AlmacenDestino :=
+        oConsulta.FieldByName('CODIGO_ALM_DESTINO_FACTV').AsString;
+      Result[iLinea].CodigoArticulo :=
+        oConsulta.FieldByName('CODIGO_ART').AsString;
+      Result[iLinea].CodigoUnidad :=
+        oConsulta.FieldByName('CODIGO_UNIDAD_FACTV').AsString;
+      Result[iLinea].Descripcion :=
+        oConsulta.FieldByName('DESCRIPCION').AsString;
+      Result[iLinea].Precio :=
+        oConsulta.FieldByName('PRECIO_FACTV').AsCurrency;
+      Result[iLinea].Cantidad :=
+        oConsulta.FieldByName('CANTIDAD').AsCurrency;
+      Result[iLinea].Fecha :=
+        oConsulta.FieldByName('FECHA_VENTA').AsDateTime;
+      Result[iLinea].FechaTraspaso :=
+        oConsulta.FieldByName('FECHA_TRASPASO').AsDateTime;
+      Inc(iLinea);
+      oConsulta.Next;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.RepartirVentasEntreTraspasos(
+  const ASolicitud: TSolicitudFacturacionCaja;
+  out ATraspasos: TTraspasosVendiblesPendientes;
+  out APrevias: TFacturacionesTraspasoPrevias
+): TAsignacionesTraspasoVendido;
+begin
+  ATraspasos := ObtenerTraspasosVendibles(ASolicitud);
+  APrevias := ObtenerFacturacionesPrevias(ASolicitud);
+  Result := AsignarVentasATraspasos(
+    ATraspasos, ObtenerVentasDestino(ASolicitud), APrevias);
+end;
+
+function TRepositorioFacturasProformaUniDAC.
+  ObtenerLineasTraspasoVendidoPendientes(
+  const ASolicitud: TSolicitudFacturacionCaja
+): TLineasTraspasoPendientes;
+var
+  aTraspasos   : TTraspasosVendiblesPendientes;
+  aPrevias     : TFacturacionesTraspasoPrevias;
+  aAsignaciones: TAsignacionesTraspasoVendido;
+begin
+  aAsignaciones := RepartirVentasEntreTraspasos(
+    ASolicitud, aTraspasos, aPrevias);
+  Result := ResumirTraspasosVendidos(aTraspasos, aAsignaciones);
+end;
+
+procedure TRepositorioFacturasProformaUniDAC.InsertarFilasTraspasoVendido(
+  AConsulta: TUniQuery;
+  AIdPeriodo: Int64;
+  const ASolicitud: TSolicitudFacturacionCaja;
+  const ASerie: string;
+  const ANumero: string;
+  const AFilas: TFilasTraspasoVendido);
+var
+  iFila: Integer;
+begin
+  AConsulta.SQL.Text := SQL_INSERTAR_TRASPASO_VENDIDO;
+  AConsulta.Prepare;
+  AsignarSolicitud(AConsulta, ASolicitud);
+  for iFila := 0 to High(AFilas) do
+  begin
+    AConsulta.ParamByName('ID_PERIODO').AsLargeInt := AIdPeriodo;
+    AConsulta.ParamByName('SERIE').AsString := ASerie;
+    AConsulta.ParamByName('NUMERO').AsString := ANumero;
+    AConsulta.ParamByName('NUMERO_MOV_TA').AsString :=
+      AFilas[iFila].NumeroMovimientoTraspaso;
+    AConsulta.ParamByName('NUMERO_MOV_VE').AsString :=
+      AFilas[iFila].NumeroMovimientoVenta;
+    AConsulta.ParamByName('ID_OPCAJA').AsLargeInt :=
+      AFilas[iFila].IdOperacion;
+    if AFilas[iFila].EsDevolucion then
+      AConsulta.ParamByName('TIPO').AsString := 'DEVOLUCION'
+    else
+      AConsulta.ParamByName('TIPO').AsString := 'VENTA';
+    AConsulta.ParamByName('ALMACEN_ORIGEN').AsString :=
+      AFilas[iFila].AlmacenOrigen;
+    AConsulta.ParamByName('ALMACEN_DESTINO').AsString :=
+      AFilas[iFila].AlmacenDestino;
+    AConsulta.ParamByName('ARTICULO').AsString :=
+      AFilas[iFila].CodigoArticulo;
+    AConsulta.ParamByName('UNIDAD').AsString := AFilas[iFila].CodigoUnidad;
+    AConsulta.ParamByName('CANTIDAD').AsCurrency := AFilas[iFila].Cantidad;
+    AConsulta.ParamByName('PRECIO').AsCurrency := AFilas[iFila].Precio;
+    AConsulta.ParamByName('FECHA_VENTA').AsDate :=
+      Trunc(AFilas[iFila].FechaVenta);
+    if AFilas[iFila].FechaTraspaso > 0 then
+      AConsulta.ParamByName('FECHA_TRASPASO').AsDate :=
+        Trunc(AFilas[iFila].FechaTraspaso)
+    else
+      AConsulta.ParamByName('FECHA_TRASPASO').Clear;
+    AConsulta.Execute;
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.
+  ContarLineasFacturaTraspasoVendido(
+  const ASerie: string;
+  const ANumero: string): Integer;
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text := SQL_CONTAR_LINEAS_FACTURA_TV;
+    oConsulta.ParamByName('SERIE').AsString := ASerie;
+    oConsulta.ParamByName('NUMERO').AsString := ANumero;
+    oConsulta.Open;
+    Result := oConsulta.FieldByName('CANTIDAD').AsInteger;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.GenerarFacturaTraspasoVendido(
+  const ASolicitud: TSolicitudFacturacionCaja;
+  AIdPeriodo: Int64;
+  const AEmpresaOrigen: string;
+  const AAlmacenOrigen: string;
+  const AFilas: TFilasTraspasoVendido;
+  var AAjustes: Integer): Integer;
+var
+  oConsulta: TUniQuery;
+  iLineas  : Integer;
+  sNumero  : string;
+  sSerie   : string;
+begin
+  Result := 0;
+  sSerie := ObtenerSerieFactura(
+    AEmpresaOrigen, AAlmacenOrigen, ASolicitud.FechaHasta);
+  sNumero := ObtenerNumeroDocumento(
+    sSerie, 'FC', AEmpresaOrigen, ASolicitud.Usuario);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    FConexion.StartTransaction;
+    try
+      oConsulta.SQL.Text := SQL_INSERTAR_FACTURA_TA;
+      AsignarSolicitud(oConsulta, ASolicitud);
+      oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
+      oConsulta.ParamByName('SERIE').AsString := sSerie;
+      oConsulta.ParamByName('NUMERO').AsString := sNumero;
+      oConsulta.ParamByName('COMENTARIO').AsString := Format(
+        SComentarioFacturaTraspasoVendido,
+        [FormatDateTime('dd/mm/yyyy', ASolicitud.FechaDesde),
+         FormatDateTime('dd/mm/yyyy', ASolicitud.FechaHasta)]);
+      oConsulta.Execute;
+      if oConsulta.RowsAffected = 0 then
+      begin
+        raise Exception.CreateFmt(
+          SErrorFacturaTaNoCreada,
+          [AEmpresaOrigen]);
+      end;
+      InsertarFilasTraspasoVendido(
+        oConsulta, AIdPeriodo, ASolicitud, sSerie, sNumero, AFilas);
+      iLineas := ContarLineasFacturaTraspasoVendido(sSerie, sNumero);
+      if iLineas > 9999 then
+      begin
+        raise Exception.CreateFmt(
+          SErrorFacturaTaDemasiadasLineas,
+          [AEmpresaOrigen, AAlmacenOrigen, iLineas]);
+      end;
+      if iLineas = 0 then
+      begin
+        FConexion.Rollback;
+      end
+      else
+      begin
+        oConsulta.SQL.Text := SQL_INICIAR_LINEA_FACTURA_TV;
+        oConsulta.Execute;
+        oConsulta.SQL.Text := SQL_INSERTAR_LINEAS_TV;
+        AsignarSolicitud(oConsulta, ASolicitud);
+        oConsulta.ParamByName('ORIGEN').AsString := AEmpresaOrigen;
+        oConsulta.ParamByName('SERIE').AsString := sSerie;
+        oConsulta.ParamByName('NUMERO').AsString := sNumero;
+        oConsulta.ParamByName('PREFIJO_DEVOLUCION').AsString :=
+          SPrefijoDevolucionFacturaTraspasoVendido;
+        oConsulta.Execute;
+        if oConsulta.RowsAffected <> iLineas then
+        begin
+          raise Exception.CreateFmt(
+            SErrorCantidadLineasTaNoCoincide,
+            [iLineas, oConsulta.RowsAffected]);
+        end;
+        oConsulta.SQL.Text := SQL_ACTUALIZAR_CONTADOR_LINEAS_FACTURA;
+        oConsulta.ParamByName('LINEAS').AsInteger := iLineas;
+        oConsulta.ParamByName('SERIE').AsString := sSerie;
+        oConsulta.ParamByName('NUMERO').AsString := sNumero;
+        oConsulta.Execute;
+        oConsulta.SQL.Text := SQL_RECALCULAR_FACTURA;
+        oConsulta.ParamByName('SERIE').AsString := sSerie;
+        oConsulta.ParamByName('NUMERO').AsString := sNumero;
+        oConsulta.Execute;
+        ValidarRequisitosFiscalesEmision(
+          FParametrosApp,
+          FConexion,
+          sSerie,
+          sNumero);
+        FConexion.Commit;
+        Result := ContarOperacionesTraspasoVendido(AFilas);
+        AAjustes := AAjustes + ContarDevolucionesTraspasoVendido(AFilas);
+      end;
+    except
+      if FConexion.InTransaction then
+      begin
+        FConexion.Rollback;
+      end;
+      raise;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TRepositorioFacturasProformaUniDAC.GenerarTraspasosVendidos(
+  const ASolicitud: TSolicitudFacturacionCaja;
+  const AValoracion: TValoracionTraspasos
+): TResultadoFacturacionCaja;
+var
+  aTraspasos   : TTraspasosVendiblesPendientes;
+  aPrevias     : TFacturacionesTraspasoPrevias;
+  aAsignaciones: TAsignacionesTraspasoVendido;
+  aFilas       : TFilasTraspasoVendido;
+  aAlmacenes   : TArray<string>;
+  aGrupo       : TFilasTraspasoVendido;
+  iIdPeriodo   : Int64;
+  iSinValorar  : Integer;
+  iIndice      : Integer;
+  iOperaciones : Integer;
+begin
+  Result := Default(TResultadoFacturacionCaja);
+  aAsignaciones := RepartirVentasEntreTraspasos(
+    ASolicitud, aTraspasos, aPrevias);
+  iSinValorar := ContarTraspasosVendidosSinValorar(
+    aTraspasos, aAsignaciones, AValoracion);
+  if iSinValorar > 0 then
+  begin
+    raise Exception.CreateFmt(SErrorLineasTvSinValorar, [iSinValorar]);
+  end;
+  aFilas := ConstruirFilasTraspasoVendido(
+    aTraspasos, aPrevias, aAsignaciones, AValoracion);
+  iIdPeriodo := CrearPeriodo('TV', ASolicitud);
+  try
+    aAlmacenes := AlmacenesOrigenTraspasoVendido(aFilas);
+    for iIndice := 0 to High(aAlmacenes) do
+    begin
+      aGrupo := FilasTraspasoVendidoDeAlmacen(aFilas, aAlmacenes[iIndice]);
+      if HayImporteFacturableTraspasoVendido(aGrupo) then
+      begin
+        iOperaciones := GenerarFacturaTraspasoVendido(
+          ASolicitud,
+          iIdPeriodo,
+          ASolicitud.CodigoEmpresaOrigen,
+          aAlmacenes[iIndice],
+          aGrupo,
+          Result.CantidadAjustes);
+        if iOperaciones > 0 then
+        begin
+          Inc(Result.CantidadDocumentos);
+          Inc(Result.CantidadOperaciones, iOperaciones);
+        end;
+      end;
+    end;
+    if Result.CantidadDocumentos > 0 then
+    begin
+      Result.Descripcion := Format(
+        SDescripcionFacturasTraspasoVendidoGeneradas,
+        [Result.CantidadDocumentos, Result.CantidadOperaciones,
+         Result.CantidadAjustes]);
       ActualizarPeriodo(
         iIdPeriodo,
         'CERRADO',

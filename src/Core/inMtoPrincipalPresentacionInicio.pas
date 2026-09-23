@@ -34,6 +34,7 @@ type
   private
     FOwner: TComponent;
     FPagina: TcxPageControl;
+    FFondoDegradado: TCustomControl;
     FImagenFondo: TImage;
     FLookAndFeel: TcxLookAndFeelController;
     FSkin: TdxSkinController;
@@ -81,10 +82,49 @@ uses
   System.SysUtils,
   Vcl.Graphics,
   Vcl.Imaging.pngimage,
+  cxGraphics,
   inLibDir,
   inLibMsgComun,
   inLibWin,
   inMtoSplash;
+
+type
+  TFondoDegradadoPrincipal = class(TCustomControl)
+  private
+    procedure WMEraseBkgnd(var AMensaje: TWMEraseBkgnd);
+      message WM_ERASEBKGND;
+  protected
+    procedure Paint; override;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
+constructor TFondoDegradadoPrincipal.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  ControlStyle := ControlStyle + [csAcceptsControls, csOpaque];
+  DoubleBuffered := True;
+  ParentColor := False;
+  TabStop := False;
+end;
+
+procedure TFondoDegradadoPrincipal.WMEraseBkgnd(
+  var AMensaje: TWMEraseBkgnd);
+begin
+  AMensaje.Result := 1;
+end;
+
+procedure TFondoDegradadoPrincipal.Paint;
+var
+  cSuperior: TColor;
+  cInferior: TColor;
+begin
+  // Variaciones leves del tema: mantienen su matiz en claro y oscuro.
+  cSuperior := dxGetMiddleRGB(clWhite, Color, 6);
+  cInferior := dxGetMiddleRGB(clBlack, Color, 4);
+  FillGradientRect(Canvas.Handle, ClientRect,
+    cSuperior, cInferior, False);
+end;
 
 constructor TPresentacionInicioPrincipal.Create(
   AOwner: TComponent;
@@ -101,6 +141,11 @@ begin
   FLookAndFeel := ALookAndFeel;
   FSkin := ASkin;
   FRegistroLog := ARegistroLog;
+  FFondoDegradado := TFondoDegradadoPrincipal.Create(FOwner);
+  FFondoDegradado.Visible := False;
+  FFondoDegradado.Parent := FPagina;
+  FFondoDegradado.Align := alClient;
+  FFondoDegradado.SendToBack;
   // La página cambia de alto sin que cambie el formulario (barra de
   // progreso de pnlPPBottom, monitor SQL): el logo y las etiquetas se
   // recolocan con su WM_SIZE, no solo con el OnResize del formulario.
@@ -115,6 +160,10 @@ begin
   FreeAndNil(FSplash);
   FreeAndNil(FNombre);
   FreeAndNil(FVersion);
+  if Assigned(FImagenFondo) and
+     (FImagenFondo.Parent = FFondoDegradado) then
+    FImagenFondo.Parent := FPagina;
+  FreeAndNil(FFondoDegradado);
   FRegistroLog := nil;
   inherited;
 end;
@@ -182,7 +231,7 @@ procedure TPresentacionInicioPrincipal.Configurar(
 begin
   AplicarTema(AParametros);
   CargarFondo;
-  FImagenFondo.Parent := FPagina;
+  FImagenFondo.Parent := FFondoDegradado;
   FImagenFondo.Anchors := [akLeft, akTop];
   FImagenFondo.Proportional := True;
   FImagenFondo.Stretch := True;
@@ -199,7 +248,7 @@ begin
   FreeAndNil(FNombre);
   FreeAndNil(FVersion);
   FNombre := TcxLabel.Create(FOwner);
-  FNombre.Parent := FPagina;
+  FNombre.Parent := FFondoDegradado;
   FNombre.Caption := 'Alejandro Laorden Hidalgo';
   FNombre.AutoSize := False;
   FNombre.Style.Font.Name := 'Source Sans 3';
@@ -208,7 +257,7 @@ begin
   FNombre.Properties.Alignment.Horz := taCenter;
   FNombre.Transparent := True;
   FVersion := TcxLabel.Create(FOwner);
-  FVersion.Parent := FPagina;
+  FVersion.Parent := FFondoDegradado;
   FVersion.Caption := Format(SCaptionVersion, [AVersion]);
   FVersion.AutoSize := False;
   FVersion.Style.Font.Name := 'Source Sans 3';
@@ -228,8 +277,8 @@ var
 begin
   if Assigned(FImagenFondo) then
   begin
-    iAnchoCliente := FPagina.ClientWidth;
-    iAltoCliente := FPagina.ClientHeight;
+    iAnchoCliente := FFondoDegradado.ClientWidth;
+    iAltoCliente := FFondoDegradado.ClientHeight;
     iAncho := iAnchoCliente div 3;
     if iAncho > 380 then
       iAncho := 380;
@@ -255,6 +304,13 @@ procedure TPresentacionInicioPrincipal.ActualizarFondo;
 var
   bDebeVerse: Boolean;
 begin
+  TFondoDegradadoPrincipal(FFondoDegradado).Color :=
+    FPagina.LookAndFeel.Painter.DefaultControlColor;
+  if FFondoDegradado.Visible <> (FPagina.PageCount = 0) then
+  begin
+    FFondoDegradado.Visible := FPagina.PageCount = 0;
+    CentrarFondo;
+  end;
   bDebeVerse :=
     (FPagina.PageCount = 0) and
     Assigned(FImagenFondo.Picture.Graphic);

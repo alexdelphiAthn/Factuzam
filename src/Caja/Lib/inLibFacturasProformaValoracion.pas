@@ -44,7 +44,8 @@ implementation
 
 uses
   System.SysUtils,
-  System.Generics.Collections;
+  System.Generics.Collections,
+  inLibMargenVinculadas;
 
 function PrecioBaseTraspaso(
   APrecioMedioEmpresa: Currency;
@@ -95,6 +96,9 @@ begin
     Result[iLinea].EsPrecioMedioCorregido := False;
     Result[iLinea].PrecioUltimaCompra :=
       ALineas[iLinea].PrecioUltimaCompra;
+    Result[iLinea].AntiguedadMeses := ALineas[iLinea].AntiguedadMeses;
+    Result[iLinea].PrecioVentaDestino :=
+      ALineas[iLinea].PrecioVentaDestino;
   end;
 end;
 
@@ -124,6 +128,13 @@ begin
            ASimulacion.Lineas[iLinea].Base.Clave, iIndice) then
         Result[iIndice].Precio :=
           ASimulacion.Lineas[iLinea].PrecioMedioNuevo;
+    end;
+    // Ni las simuladas ni las que se quedan a precio base pueden salir
+    // por encima de lo que la tienda cobró por ellas.
+    for iLinea := 0 to High(ALineas) do
+    begin
+      Result[iLinea].Precio := PrecioConTopeVenta(
+        Result[iLinea].Precio, ALineas[iLinea].PrecioVentaDestino);
     end;
   finally
     FreeAndNil(Indices);

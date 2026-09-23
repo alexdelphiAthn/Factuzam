@@ -91,6 +91,48 @@ begin
   end;
 end;
 
+// Conversion con los datos del dialogo: almacen, serie, numero (vacio =
+// contador), fecha y, en facturas, si genera movimientos de stock.
+procedure CopiarPresupuestoConOpciones(AConexion: TUniConnection;
+  const ASolicitud: TSolicitudConversionPresupuesto;
+  var AResultado: TResultadoConversionPresupuesto);
+const
+  SI_NO: array[Boolean] of string = ('N', 'S');
+var
+  oConsulta: TUniQuery;
+begin
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'CALL PRC_PRE_CONVERTIR_OPCIONES(:SERIE, :NUMERO, :TIPO, ' +
+      ':DESTINO, :NUMERO_MANUAL, :FECHA, :ALMACEN, :MUEVE, ' +
+      ':USUARIO, @PRE_NUMERO_DESTINO)';
+    oConsulta.ParamByName('SERIE').AsString := ASolicitud.Serie;
+    oConsulta.ParamByName('NUMERO').AsString := ASolicitud.Numero;
+    oConsulta.ParamByName('TIPO').AsString := CrearConfiguracionDocumento(
+      AResultado.TipoDocumento, sdVenta).TipoContador;
+    oConsulta.ParamByName('DESTINO').AsString := AResultado.Serie;
+    oConsulta.ParamByName('NUMERO_MANUAL').AsString :=
+      Trim(ASolicitud.Opciones.NumeroDestino);
+    oConsulta.ParamByName('FECHA').AsDate :=
+      Trunc(ASolicitud.Opciones.Fecha);
+    oConsulta.ParamByName('ALMACEN').AsString :=
+      Trim(ASolicitud.Opciones.Almacen);
+    oConsulta.ParamByName('MUEVE').AsString :=
+      SI_NO[ASolicitud.Opciones.MueveStock];
+    oConsulta.ParamByName('USUARIO').AsString := ASolicitud.Usuario;
+    oConsulta.Execute;
+    oConsulta.SQL.Text := 'SELECT @PRE_NUMERO_DESTINO AS NUMERO';
+    oConsulta.Open;
+    AResultado.Numero := oConsulta.FieldByName('NUMERO').AsString;
+    if AResultado.Numero = '' then
+      raise Exception.Create(SErrorDestinoPresupuestoNoCreado);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
 procedure SincronizarAlbaran(AOwner: TComponent;
   const AResultado: TResultadoConversionPresupuesto);
 var
@@ -125,8 +167,16 @@ begin
   Result.Pantalla := PantallaDestinoPresupuesto(ASolicitud.Destino);
   AConexion.StartTransaction;
   try
-    Result.Serie := ResolverSerieDestino(AConexion, ASolicitud);
-    CopiarPresupuesto(AConexion, ASolicitud, Result);
+    if ASolicitud.ConOpciones then
+    begin
+      Result.Serie := Trim(ASolicitud.Opciones.SerieDestino);
+      CopiarPresupuestoConOpciones(AConexion, ASolicitud, Result);
+    end
+    else
+    begin
+      Result.Serie := ResolverSerieDestino(AConexion, ASolicitud);
+      CopiarPresupuesto(AConexion, ASolicitud, Result);
+    end;
     if ASolicitud.Destino = dpAlbaran then
       SincronizarAlbaran(AOwner, Result);
     AConexion.Commit;

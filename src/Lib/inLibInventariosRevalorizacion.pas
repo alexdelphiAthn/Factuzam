@@ -44,6 +44,12 @@ type
     Clave: string;
     // Precio de la última compra del SKU o del artículo; 0 si no consta.
     PrecioUltimaCompra: Currency;
+    // Meses desde la última compra del SKU: la moda pierde valor con la
+    // temporada y el margen mínimo exigible baja por tramos.
+    AntiguedadMeses: Integer;
+    // Precio real sin IVA al que la tienda destino lo ha vendido; 0 si no
+    // consta o si la modalidad no factura ventas.
+    PrecioVentaDestino: Currency;
   end;
 
   TLineasBaseRevalorizacionInventario =
@@ -106,7 +112,11 @@ function SimularRevalorizacionInventario(
   APorcentaje: Currency;
   ABase: TBaseRevalorizacionInventario):
   TSimulacionRevalorizacionInventario; overload;
-
+// Rehace el resumen a partir de las líneas; hace falta cuando alguien
+// ajusta un precio simulado después de calcular la simulación.
+function ResumirLineasSimulacion(
+  const ALineas: TLineasSimulacionRevalorizacionInventario):
+  TResumenSimulacionRevalorizacionInventario;
 implementation
 
 uses
@@ -201,6 +211,19 @@ begin
     Inc(AResumen.LineasConPrecioCorregido);
   if ALinea.SinUltimaCompra then
     Inc(AResumen.LineasSinUltimaCompra);
+end;
+
+function ResumirLineasSimulacion(
+  const ALineas: TLineasSimulacionRevalorizacionInventario):
+  TResumenSimulacionRevalorizacionInventario;
+var
+  iLinea: Integer;
+begin
+  Result := Default(TResumenSimulacionRevalorizacionInventario);
+  for iLinea := 0 to High(ALineas) do
+  begin
+    AcumularLineaEnResumen(ALineas[iLinea], Result);
+  end;
 end;
 
 function SimularRevalorizacionInventario(

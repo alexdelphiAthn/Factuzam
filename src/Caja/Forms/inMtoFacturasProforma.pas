@@ -2,14 +2,15 @@
 {                                                                              }
 {  Módulo:       inMtoFacturasProforma                                         }
 {    Tipo:       Formulario (Mto)                                              }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       04/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Generación por periodo de proformas VE y facturas fiscales TA.           }
+{    Generación por periodo de proformas VE, facturas fiscales TA y           }
+{    facturas TV de lo traspasado que la tienda destino ya ha vendido.         }
 {******************************************************************************}
 unit inMtoFacturasProforma;
 
@@ -30,7 +31,8 @@ uses
   cxMaskEdit, cxDropDownEdit, cxCalendar, cxLookupEdit, cxDBLookupEdit,
   cxDBLookupComboBox, cxButtons, cxRadioGroup, cxPC, dxSkinsCore,
   dxSkinscxPCPainter, dxScrollbarAnnotations, dxDateRanges, dxCore,
-  UniDataFacturasProforma, inLibFacturasProformaIntf, inMtoGen;
+  UniDataFacturasProforma, inLibFacturasProformaIntf,
+  inLibMargenVinculadas, inMtoGen;
 
 type
   TfrmMtoFacturasProforma = class(TfrmMtoGen)
@@ -55,6 +57,7 @@ type
     procedure ActualizarEstadoEmpresaDestino;
     function CrearColumna(const ACampo, ATitulo: string;
       AAncho: Integer): TcxGridDBColumn;
+    function EscalaMargenMinimoTraspasos: TEscalaMargenMinimo;
     function ObtenerModalidad: TModalidadFacturacionCaja;
     function PrepararSolicitud: TSolicitudFacturacionCaja;
     function ConfirmarGeneracion(
@@ -68,6 +71,7 @@ type
       const ASolicitud: TSolicitudFacturacionCaja
     ): TRevisionPeriodoFacturacionCaja;
     function ValorarTraspasos(
+      AModalidad: TModalidadFacturacionCaja;
       const ASolicitud: TSolicitudFacturacionCaja;
       out AValoracion: TValoracionTraspasos): Boolean;
     procedure EjecutarGeneracion(
@@ -93,6 +97,10 @@ resourcestring
     'Se generarán borradores de facturas normales por los traspasos TA. ' +
     'El IVA y VeriFactu se declararán al consolidarlos en Venta mayor. ' +
     '¿Desea continuar?';
+  SPreguntaGenerarFacturaTraspasoVendido =
+    'Se generarán borradores de facturas normales sólo por las unidades ' +
+    'traspasadas que la tienda destino ya ha vendido dentro del periodo. ' +
+    'Lo devuelto en la tienda se resta de lo facturado. ¿Desea continuar?';
   SInfoSinOperacionesFacturacionCaja =
     'No hay operaciones ni ajustes pendientes para el periodo indicado.';
   SInfoResultadoFacturacionCaja =
@@ -133,6 +141,22 @@ resourcestring
     'Traspasos de %s a %s del %s al %s';
   SInfoValoracionTraspasosCancelada =
     'Generación cancelada: no se ha facturado ningún traspaso.';
+  STituloValoracionTraspasosVendidos =
+    'Valoración de lo traspasado y vendido';
+  STextoValoracionTraspasosVendidos =
+    'Cada línea son las unidades que la tienda destino ha vendido de un ' +
+    'traspaso y que todavía no se le han facturado. Elige la base (PMP de ' +
+    'la empresa emisora o precio de última compra), indica el porcentaje y ' +
+    'simula: las líneas marcadas se facturarán al precio simulado y el ' +
+    'resto a su precio base. Si cancelas no se genera ninguna factura.';
+  SCaptionUnidadesValoracionTraspasosVendidos = 'Uds. vendidas';
+  STituloInformeValoracionTraspasosVendidos =
+    'Valoración simulada de lo traspasado y vendido';
+  SFormatoIdentificacionValoracionTraspasosVendidos =
+    'Traspasado y vendido de %s en %s del %s al %s';
+
+const
+  cParamMargenMinimoTraspasos = 'appMargenMinimoTraspasos';
 
 implementation
 
@@ -174,7 +198,7 @@ begin
     pnlFacturacion := TPanel.Create(Self);
     pnlFacturacion.Parent := tsLista;
     pnlFacturacion.Align := alTop;
-    pnlFacturacion.Height := EscalarDpi(170);
+    pnlFacturacion.Height := EscalarDpi(212);
     pnlFacturacion.BevelOuter := bvNone;
     pnlFacturacion.ParentBackground := False;
     pnlFacturacion.Color := clWhite;
@@ -213,13 +237,15 @@ begin
     rgModalidad.Left := EscalarDpi(12);
     rgModalidad.Top := EscalarDpi(85);
     rgModalidad.Width := EscalarDpi(824);
-    rgModalidad.Height := EscalarDpi(48);
+    rgModalidad.Height := EscalarDpi(78);
     rgModalidad.Caption := ' Modalidad ';
     rgModalidad.Properties.Columns := 2;
     rgModalidad.Properties.Items.Add.Caption :=
       'Ventas (VE): proforma interna no fiscal';
     rgModalidad.Properties.Items.Add.Caption :=
       'Traspasos (TA): borrador fiscal de Venta mayor';
+    rgModalidad.Properties.Items.Add.Caption :=
+      'Traspasados y vendidos (TV): sólo lo vendido en destino';
     rgModalidad.Properties.OnEditValueChanged :=
       rgModalidadPropertiesEditValueChanged;
     rgModalidad.ItemIndex := 0;
@@ -250,10 +276,15 @@ begin
     lblExplicacion := TcxLabel.Create(Self);
     lblExplicacion.Parent := pnlFacturacion;
     lblExplicacion.Left := EscalarDpi(12);
-    lblExplicacion.Top := EscalarDpi(140);
+    lblExplicacion.Top := EscalarDpi(170);
+    lblExplicacion.AutoSize := False;
+    lblExplicacion.Width := EscalarDpi(824);
+    lblExplicacion.Height := EscalarDpi(36);
+    lblExplicacion.Properties.WordWrap := True;
     lblExplicacion.Caption :=
       'Cada operación conserva su fecha e identificador. Las ventas ' +
-      'rectificadas se incorporan como ajustes posteriores.';
+      'rectificadas se incorporan como ajustes posteriores; en TV el ' +
+      'periodo acota las ventas de la tienda, no los traspasos.';
     lblExplicacion.Transparent := True;
     dHoy := Date;
     dteDesde.Date := EncodeDate(
@@ -320,7 +351,8 @@ end;
 
 procedure TfrmMtoFacturasProforma.ActualizarEstadoEmpresaDestino;
 begin
-  cbbEmpresaDestino.Enabled := ObtenerModalidad = mfcTraspaso;
+  cbbEmpresaDestino.Enabled :=
+    ObtenerModalidad in [mfcTraspaso, mfcTraspasoVendido];
   if not cbbEmpresaDestino.Enabled then
     cbbEmpresaDestino.EditValue := Null;
 end;
@@ -347,12 +379,25 @@ begin
   CrearColumnas;
 end;
 
+// Margen mínimo exigible al facturar a una empresa vinculada. El
+// parámetro admite un porcentaje único ('25') o tramos por meses de
+// antigüedad del género ('0:25;6:15;12:5'), porque la moda de temporadas
+// pasadas vale menos también entre mayoristas.
+function TfrmMtoFacturasProforma.EscalaMargenMinimoTraspasos:
+  TEscalaMargenMinimo;
+begin
+  Result := AnalizarEscalaMargenMinimo(
+    ParametrosApp.GetString(cParamMargenMinimoTraspasos, ''));
+end;
+
 function TfrmMtoFacturasProforma.ObtenerModalidad:
   TModalidadFacturacionCaja;
 begin
   Result := mfcVenta;
   if rgModalidad.ItemIndex = 1 then
-    Result := mfcTraspaso;
+    Result := mfcTraspaso
+  else if rgModalidad.ItemIndex = 2 then
+    Result := mfcTraspasoVendido;
 end;
 
 function TfrmMtoFacturasProforma.PrepararSolicitud:
@@ -380,7 +425,9 @@ var
 begin
   sPregunta := SPreguntaGenerarProformaVenta;
   if AModalidad = mfcTraspaso then
-    sPregunta := SPreguntaGenerarFacturaTraspaso;
+    sPregunta := SPreguntaGenerarFacturaTraspaso
+  else if AModalidad = mfcTraspasoVendido then
+    sPregunta := SPreguntaGenerarFacturaTraspasoVendido;
   Result := MessageDlg_fza(
     sPregunta, mtConfirmation, [mbYes, mbNo], 0) = mrYes;
 end;
@@ -448,6 +495,7 @@ begin
 end;
 
 function TfrmMtoFacturasProforma.ValorarTraspasos(
+  AModalidad: TModalidadFacturacionCaja;
   const ASolicitud: TSolicitudFacturacionCaja;
   out AValoracion: TValoracionTraspasos): Boolean;
 var
@@ -455,6 +503,7 @@ var
   oOpciones : TOpcionesRevalorizacionInventario;
   oResultado: TResultadoRevalorizacionInventario;
   oServicio : TFacturadorOperacionesCaja;
+  sFormato  : string;
 begin
   AValoracion := nil;
   oServicio := TFacturadorOperacionesCaja.Create(
@@ -462,7 +511,7 @@ begin
   try
     Screen.Cursor := crHourGlass;
     try
-      oLineas := oServicio.ObtenerLineasTraspasoPendientes(ASolicitud);
+      oLineas := oServicio.ObtenerLineasAValorar(AModalidad, ASolicitud);
     finally
       Screen.Cursor := crDefault;
     end;
@@ -487,10 +536,22 @@ begin
       SCaptionColPrecioMedioEmpresaInformeValoracion;
     oOpciones.OcultarUnidadesFinales := True;
     oOpciones.PreseleccionarTodas := True;
+    oOpciones.MostrarMargenMinimo := True;
+    oOpciones.EscalaMargenMinimo := EscalaMargenMinimoTraspasos;
+    sFormato := SFormatoIdentificacionValoracionTraspasos;
+    if AModalidad = mfcTraspasoVendido then
+    begin
+      oOpciones.Titulo := STituloValoracionTraspasosVendidos;
+      oOpciones.Explicacion := STextoValoracionTraspasosVendidos;
+      oOpciones.CaptionUnidades :=
+        SCaptionUnidadesValoracionTraspasosVendidos;
+      oOpciones.TituloInforme := STituloInformeValoracionTraspasosVendidos;
+      sFormato := SFormatoIdentificacionValoracionTraspasosVendidos;
+    end;
     oResultado := TfrmModalRevalorizacionInventario.Ejecutar(
       Self,
       ConvertirLineasTraspasoARevalorizacion(oLineas),
-      Format(SFormatoIdentificacionValoracionTraspasos,
+      Format(sFormato,
         [ASolicitud.CodigoEmpresaOrigen,
          ASolicitud.CodigoEmpresaDestino,
          FormatDateTime('dd/mm/yyyy', ASolicitud.FechaDesde),
@@ -542,9 +603,10 @@ begin
       begin
         oValoracion := nil;
         // Los traspasos se valoran (margen sobre PMP o última compra) en el
-        // mismo modal que inventarios antes de facturarlos.
-        if (eModalidad <> mfcTraspaso) or
-           ValorarTraspasos(oSolicitud, oValoracion) then
+        // mismo modal que inventarios antes de facturarlos; en TV lo que se
+        // valora son las unidades ya vendidas en la tienda destino.
+        if not (eModalidad in [mfcTraspaso, mfcTraspasoVendido]) or
+           ValorarTraspasos(eModalidad, oSolicitud, oValoracion) then
           EjecutarGeneracion(eModalidad, oSolicitud, oValoracion);
       end;
     except

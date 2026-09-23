@@ -408,10 +408,10 @@
                   Left = 18
                   Top = 0
                   TabStop = True
-                  Anchors = [akLeft, akTop, akRight]
+                  Anchors = [akLeft, akTop]
                   TabOrder = 0
                   Height = 265
-                  Width = 638
+                  Width = 620
                   object lblDireccion1Texto: TcxLabel
                     Left = 47
                     Top = 25
@@ -596,14 +596,14 @@
                   end
                 end
                 object cxgrpbxTratamientoFiscal: TcxGroupBox
-                  Left = 18
-                  Top = 263
+                  Left = 646
+                  Top = 0
                   TabStop = True
-                  Anchors = [akLeft, akTop, akRight]
+                  Anchors = [akTop, akRight]
                   Caption = 'Tratamiento Fiscal'
                   TabOrder = 1
-                  Height = 85
-                  Width = 903
+                  Height = 265
+                  Width = 321
                   object chkREGIMENAGRICOLA: TcxDBCheckBox
                     Left = 6
                     Top = 24
@@ -621,7 +621,7 @@
                   end
                   object chkINTRACOMUNITARIO: TcxDBCheckBox
                     Left = 6
-                    Top = 53
+                    Top = 66
                     Caption = 'Es Intracomunitario'
                     DataBinding.DataField = 'ESINTRACOMUNITARIO_CLI'
                     DataBinding.DataSource = dsTablaG
@@ -634,8 +634,8 @@
                     Transparent = True
                   end
                   object chkIVAEXENTO: TcxDBCheckBox
-                    Left = 277
-                    Top = 53
+                    Left = 6
+                    Top = 108
                     Caption = 'IVA Exento'
                     DataBinding.DataField = 'ESIVA_EXENTO_CLI'
                     DataBinding.DataSource = dsTablaG
@@ -648,8 +648,8 @@
                     Transparent = True
                   end
                   object chkRECARGO_EQUIV: TcxDBCheckBox
-                    Left = 411
-                    Top = 24
+                    Left = 6
+                    Top = 150
                     Caption = 'Borrador con Recargo de Equivalencia'
                     DataBinding.DataField = 'ESIVA_RECARGO_CLI'
                     DataBinding.DataSource = dsTablaG
@@ -662,8 +662,8 @@
                     Transparent = True
                   end
                   object chkRETENCIONES: TcxDBCheckBox
-                    Left = 411
-                    Top = 53
+                    Left = 6
+                    Top = 192
                     Caption = 'Aplicar Retenciones (Es profesional)'
                     DataBinding.DataField = 'ESRETENCIONES_CLI'
                     DataBinding.DataSource = dsTablaG
@@ -699,7 +699,7 @@
                   TabStop = True
                   Anchors = [akLeft, akTop, akRight]
                   TabOrder = 0
-                  Height = 412
+                  Height = 265
                   Width = 882
                   object lblContacto: TcxLabel
                     Left = 94
@@ -727,7 +727,7 @@
                     Width = 199
                   end
                   object lblTelefonoContacto: TcxLabel
-                    Left = 382
+                    Left = 450
                     Top = 23
                     Margins.Left = 4
                     Margins.Top = 4
@@ -738,7 +738,7 @@
                     Transparent = True
                   end
                   object txtTELEFONO_CONTACTO_CLIENTE: TcxDBTextEdit
-                    Left = 548
+                    Left = 570
                     Top = 19
                     Margins.Left = 4
                     Margins.Top = 4
@@ -747,7 +747,7 @@
                     DataBinding.DataField = 'TELEFONO_CONTACTO_CLI'
                     DataBinding.DataSource = dsTablaG
                     TabOrder = 3
-                    Width = 159
+                    Width = 237
                   end
                   object lblReferencia: TcxLabel
                     Left = 81
@@ -772,7 +772,7 @@
                     DataBinding.DataField = 'REFERENCIA_CLI'
                     DataBinding.DataSource = dsTablaG
                     TabOrder = 5
-                    Width = 537
+                    Width = 263
                   end
                   object lblObservaciones: TcxLabel
                     Left = 52
@@ -794,11 +794,11 @@
                     DataBinding.DataSource = dsTablaG
                     TabOrder = 7
                     Height = 68
-                    Width = 537
+                    Width = 263
                   end
                   object lblFormadePago: TcxLabel
-                    Left = 34
-                    Top = 187
+                    Left = 450
+                    Top = 66
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -808,8 +808,8 @@
                     Transparent = True
                   end
                   object cbbFORMAPAGO: TcxDBLookupComboBox
-                    Left = 170
-                    Top = 183
+                    Left = 570
+                    Top = 62
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -824,18 +824,18 @@
                     Properties.ListOptions.ShowHeader = False
                     Properties.ListSource = dmClientes.dsFormasPago
                     TabOrder = 9
-                    Width = 263
+                    Width = 237
                   end
                   object lblBancoCobroCli: TcxLabel
                     Left = 450
-                    Top = 187
+                    Top = 105
                     Caption = 'Banco cobro'
                     TabOrder = 21
                     Transparent = True
                   end
                   object cbbBancoCobroCli: TcxDBLookupComboBox
-                    Left = 552
-                    Top = 183
+                    Left = 570
+                    Top = 101
                     DataBinding.DataField = 'CODIGO_EMPBAN_CLI'
                     DataBinding.DataSource = dsTablaG
                     Properties.KeyFieldNames = 'CODIGO_EMPBAN'
@@ -852,11 +852,11 @@
                       end>
                     Properties.ListSource = dmClientes.dsEmpresasBancos
                     TabOrder = 22
-                    Width = 155
+                    Width = 237
                   end
                   object lblNroCuenta: TcxLabel
-                    Left = 53
-                    Top = 228
+                    Left = 450
+                    Top = 146
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -865,11 +865,11 @@
                     Properties.Alignment.Horz = taRightJustify
                     TabOrder = 10
                     Transparent = True
-                    AnchorX = 163
+                    AnchorX = 551
                   end
                   object lblTextoLegalAlt: TcxLabel
-                    Left = 8
-                    Top = 268
+                    Left = 34
+                    Top = 187
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -880,7 +880,7 @@
                   end
                   object cbbTARIFA: TcxDBLookupComboBox
                     Left = 170
-                    Top = 264
+                    Top = 183
                     DataBinding.DataField = 'TARIFA_ARTICULO_CLI'
                     DataBinding.DataSource = dsTablaG
                     Properties.KeyFieldNames = 'CODIGO_TAR_ARTTAR'
@@ -895,7 +895,7 @@
                   end
                   object txtTARIFA_ARTICULO_CLIENTE: TcxDBTextEdit
                     Left = 308
-                    Top = 266
+                    Top = 185
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -907,27 +907,27 @@
                     Width = 33
                   end
                   object txtIBAN_CLIENTE: TcxDBMaskEdit
-                    Left = 170
-                    Top = 224
+                    Left = 570
+                    Top = 142
                     DataBinding.DataField = 'IBAN_CLI'
                     DataBinding.DataSource = dsTablaG
                     Properties.IgnoreMaskBlank = True
                     Properties.EditMask = 'aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa aaaa'
                     TabOrder = 14
-                    Width = 369
+                    Width = 151
                   end
                   object btnValidar: TcxButton
-                    Left = 545
-                    Top = 224
-                    Width = 98
+                    Left = 727
+                    Top = 142
+                    Width = 80
                     Height = 27
                     Caption = 'Vali&dar'
                     TabOrder = 15
                     OnClick = btnValidarClick
                   end
                   object lblExtra1: TcxLabel
-                    Left = 415
-                    Top = 316
+                    Left = 53
+                    Top = 228
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -936,19 +936,19 @@
                     Properties.Alignment.Horz = taRightJustify
                     TabOrder = 16
                     Transparent = True
-                    AnchorX = 515
+                    AnchorX = 153
                   end
                   object curTOTAL_LIMITE_CREDITO_CLI: TcxDBCurrencyEdit
-                    Left = 522
-                    Top = 312
+                    Left = 170
+                    Top = 224
                     DataBinding.DataField = 'TOTAL_LIMITE_CREDITO_CLI'
                     DataBinding.DataSource = dsTablaG
                     TabOrder = 17
                     Width = 121
                   end
                   object chkESPERMITE_DEUDA_CLI: TcxDBCheckBox
-                    Left = 170
-                    Top = 311
+                    Left = 570
+                    Top = 183
                     Caption = 'Permite deuda en Caja'
                     DataBinding.DataField = 'ESPERMITE_DEUDA_CLI'
                     DataBinding.DataSource = dsTablaG
@@ -961,16 +961,16 @@
                     Transparent = True
                   end
                   object curTOTAL_DEUDA_CLI: TcxDBCurrencyEdit
-                    Left = 523
-                    Top = 347
+                    Left = 570
+                    Top = 224
                     DataBinding.DataField = 'TOTAL_DEUDA_CLI'
                     DataBinding.DataSource = dsTablaG
                     TabOrder = 19
                     Width = 121
                   end
                   object lblExtra2: TcxLabel
-                    Left = 415
-                    Top = 351
+                    Left = 450
+                    Top = 228
                     Margins.Left = 4
                     Margins.Top = 4
                     Margins.Right = 4
@@ -979,7 +979,7 @@
                     Properties.Alignment.Horz = taRightJustify
                     TabOrder = 20
                     Transparent = True
-                    AnchorX = 516
+                    AnchorX = 551
                   end
                 end
               end

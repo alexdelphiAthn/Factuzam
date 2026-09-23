@@ -140,20 +140,7 @@ end;
 
 function TExportadorFacturaDevExpress.PuedeIncrustarQR: Boolean;
 begin
-  Result := not SinVerifactuActivo(FParametrosApp);
-  if Result then
-    Result := FMaster.FindField('NIF_EMPRESA_FAC') <> nil;
-  if Result then
-    Result := FMaster.FindField('SERIE_FAC') <> nil;
-  if Result then
-    Result := FMaster.FindField('NUMERO_FAC') <> nil;
-  if Result then
-    Result := FMaster.FindField('FECHA_FAC') <> nil;
-  if Result then
-    Result := (FMaster.FindField('TOTAL_BASES_FAC') <> nil) and
-      (FMaster.FindField('TOTAL_IMPUESTOS_FAC') <> nil);
-  if Result then
-    Result := Trim(CampoTexto('NUMERO_FAC')) <> '';
+  Result := ObtenerUrlQRFactura(FParametrosApp, FMaster) <> '';
 end;
 
 function TExportadorFacturaDevExpress.Rango(
@@ -223,13 +210,7 @@ var
 begin
   if PuedeIncrustarQR then
   begin
-    sUrl := ConstruirUrlQR(FParametrosApp,
-      CampoTexto('NIF_EMPRESA_FAC'),
-      CampoTexto('SERIE_FAC'),
-      CampoTexto('NUMERO_FAC'),
-      FMaster.FieldByName('FECHA_FAC').AsDateTime,
-      FMaster.FieldByName('TOTAL_BASES_FAC').AsCurrency +
-      FMaster.FieldByName('TOTAL_IMPUESTOS_FAC').AsCurrency);
+    sUrl := ObtenerUrlQRFactura(FParametrosApp, FMaster);
     aPng := GenerarQRPngVerifactu(sUrl);
     if Length(aPng) > 0 then
     begin

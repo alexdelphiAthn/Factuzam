@@ -187,9 +187,7 @@ type
     procedure cxgrdLineasAlbaranEnter(Sender: TObject);
   private
     dmmPresupuestos: TdmPresupuestos;
-    btnCrearPedido: TcxButton;
-    btnCrearAlbaran: TcxButton;
-    btnCrearFactura: TcxButton;
+    btnPasarDocumento: TcxButton;
     btnEnviarCaja: TcxButton;
     FBuscandoDatosCabecera: Boolean;
     FAplicandoArticulo: Boolean;
@@ -258,10 +256,17 @@ type
     procedure dsLineasDataChangeHook(Sender: TObject; Field: TField);
     procedure DesactivarEnterAsTabEnCombo(AComp: TcxDBLookupComboBox);
     procedure CrearAccionesPresupuesto;
-    procedure ConvertirPresupuesto(ADestino: TDestinoPresupuesto);
-    procedure CrearPedidoClick(Sender: TObject);
-    procedure CrearAlbaranClick(Sender: TObject);
-    procedure CrearFacturaClick(Sender: TObject);
+    procedure PasarPresupuestoDocumento;
+    function DestinosPermitidosPresupuesto: TDestinosPresupuesto;
+    function DestinoConvertidoPresupuesto(
+      out ADestino: TDestinoPresupuesto): Boolean;
+    function SolicitarOpcionesConversion(
+      APermitidos: TDestinosPresupuesto;
+      out ADestino: TDestinoPresupuesto;
+      out AOpciones: TOpcionesConversionPresupuesto): Boolean;
+    procedure MostrarResultadoConversion(
+      const AResultado: TResultadoConversionPresupuesto);
+    procedure PasarDocumentoClick(Sender: TObject);
     procedure EnviarCajaClick(Sender: TObject);
     procedure EnviarPresupuestoCaja;
   protected
@@ -280,7 +285,7 @@ uses
   inLibArticulosResolverIntf, inLibArticulosValidadorIntf,
   inLibVentasImpuestos, UniDataImpuestosRepositorio,
   inLibValoresAutomaticos, UniDataValoresAutomaticosRepositorio,
-  inMtoModalImpDocumento,
+  inMtoModalImpDocumento, inMtoModalConversionPresupuesto,
   inLibUser,
   inLibColumnasSku,
   inLibColumnasDocumento, UniDataColumnasDocumentoRepositorio,
@@ -1579,63 +1584,129 @@ procedure TfrmMtoPresupuestos.CrearAccionesPresupuesto;
     Result.OnClick := AEvento;
   end;
 begin
-  if btnCrearPedido = nil then
+  if btnPasarDocumento = nil then
   begin
-    btnCrearFactura := CrearBoton(SCaptionPasarPresupuestoFactura,
-      CrearFacturaClick);
-    btnCrearAlbaran := CrearBoton(SCaptionPasarPresupuestoAlbaran,
-      CrearAlbaranClick);
-    btnCrearAlbaran.Top := 274;
-    btnCrearPedido := CrearBoton(SCaptionPasarPresupuestoPedido,
-      CrearPedidoClick);
-    btnCrearPedido.Top := 306;
+    btnPasarDocumento := CrearBoton(SCaptionPasarPresupuestoDocumento,
+      PasarDocumentoClick);
     btnEnviarCaja := CrearBoton(SCaptionEnviarPresupuestoCaja,
       EnviarCajaClick);
     btnEnviarCaja.Top := 210;
   end;
 end;
 
-procedure TfrmMtoPresupuestos.ConvertirPresupuesto(
-  ADestino: TDestinoPresupuesto);
+// Presupuesto abierto: dialogo con el tipo de documento (solo los que el
+// usuario puede crear) y sus datos. Ya convertido: abre su documento.
+procedure TfrmMtoPresupuestos.PasarPresupuestoDocumento;
 var
   oResultado: TResultadoConversionPresupuesto;
+  rOpciones: TOpcionesConversionPresupuesto;
+  eDestino: TDestinoPresupuesto;
+  sPermitidos: TDestinosPresupuesto;
 begin
-  if PuedeAccionMto(apmModificar) and
-     Permisos.TienePermiso(CodigoPermisoMto(
-       PantallaDestinoPresupuesto(ADestino), apmInsertar), paPermitir) then
+  if PuedeAccionMto(apmModificar) then
   begin
     dmmPresupuestos.GuardarDocumento;
-    if dmmPresupuestos.unqryTablaG.FieldByName(
-      'NUMERO_DESTINO_PRE').AsString = '' then
+    if DestinoConvertidoPresupuesto(eDestino) then
     begin
-      FModoEntradaSel := mcsSku;
-      ConstruirModoEntrada;
+      oResultado := dmmPresupuestos.Convertir(eDestino);
+      MostrarResultadoConversion(oResultado);
+    end
+    else
+    begin
+      sPermitidos := DestinosPermitidosPresupuesto;
+      if sPermitidos = [] then
+        ShowMessage_fza(SErrorSinPermisoConversionPresupuesto)
+      else if SolicitarOpcionesConversion(sPermitidos, eDestino,
+        rOpciones) then
+      begin
+        FModoEntradaSel := mcsSku;
+        ConstruirModoEntrada;
+        dmmPresupuestos.GuardarDocumento;
+        oResultado := dmmPresupuestos.ConvertirConOpciones(eDestino,
+          rOpciones);
+        MostrarResultadoConversion(oResultado);
+      end;
     end;
-    dmmPresupuestos.GuardarDocumento;
-    oResultado := dmmPresupuestos.Convertir(ADestino);
-    ShowMto(Self.Owner, oResultado.Pantalla,
-      oResultado.Serie + ',' + oResultado.Numero);
-    if PuedeImprimir and Permisos.TienePermiso(
-      CodigoPermisoMto(oResultado.Pantalla, apmImprimir), paPermitir) then
-      TfrmPrintDocumento.EjecutarReferencia(Self,
-        oResultado.TipoDocumento, sdVenta,
-        oResultado.Serie, oResultado.Numero);
   end;
 end;
 
-procedure TfrmMtoPresupuestos.CrearPedidoClick(Sender: TObject);
+function TfrmMtoPresupuestos.DestinosPermitidosPresupuesto:
+  TDestinosPresupuesto;
+var
+  eDestino: TDestinoPresupuesto;
 begin
-  ConvertirPresupuesto(dpPedido);
+  Result := [];
+  for eDestino := Low(TDestinoPresupuesto) to High(TDestinoPresupuesto) do
+    if Permisos.TienePermiso(CodigoPermisoMto(
+      PantallaDestinoPresupuesto(eDestino), apmInsertar), paPermitir) then
+      Include(Result, eDestino);
 end;
 
-procedure TfrmMtoPresupuestos.CrearAlbaranClick(Sender: TObject);
+// Tipo del documento ya creado desde el presupuesto (TIPO_DESTINO_PRE
+// guarda el tipo de contador: PE, AV o FC).
+function TfrmMtoPresupuestos.DestinoConvertidoPresupuesto(
+  out ADestino: TDestinoPresupuesto): Boolean;
+var
+  eDestino: TDestinoPresupuesto;
+  sTipo: string;
 begin
-  ConvertirPresupuesto(dpAlbaran);
+  Result := False;
+  ADestino := dpPedido;
+  if dmmPresupuestos.unqryTablaG.FieldByName(
+    'NUMERO_DESTINO_PRE').AsString <> '' then
+  begin
+    sTipo := dmmPresupuestos.unqryTablaG.FieldByName(
+      'TIPO_DESTINO_PRE').AsString;
+    for eDestino := Low(TDestinoPresupuesto) to High(TDestinoPresupuesto) do
+      if SameText(sTipo, CrearConfiguracionDocumento(
+        TipoDestinoPresupuesto(eDestino), sdVenta).TipoContador) then
+      begin
+        ADestino := eDestino;
+        Result := True;
+      end;
+  end;
 end;
 
-procedure TfrmMtoPresupuestos.CrearFacturaClick(Sender: TObject);
+// Propone el almacen del presupuesto; el dialogo propone la serie del
+// almacen para el tipo elegido.
+function TfrmMtoPresupuestos.SolicitarOpcionesConversion(
+  APermitidos: TDestinosPresupuesto;
+  out ADestino: TDestinoPresupuesto;
+  out AOpciones: TOpcionesConversionPresupuesto): Boolean;
+var
+  rDefectos: TDefectosConversionPresupuesto;
+  eDestino: TDestinoPresupuesto;
 begin
-  ConvertirPresupuesto(dpFactura);
+  rDefectos := Default(TDefectosConversionPresupuesto);
+  rDefectos.Permitidos := APermitidos;
+  rDefectos.Destino := dpFactura;
+  for eDestino := High(TDestinoPresupuesto) downto Low(TDestinoPresupuesto) do
+    if eDestino in APermitidos then
+      rDefectos.Destino := eDestino;
+  rDefectos.Empresa := dmmPresupuestos.unqryTablaG.FieldByName(
+    'CODIGO_EMP_PRE').AsString;
+  rDefectos.Almacen := dmmPresupuestos.unqryTablaG.FieldByName(
+    'CODIGO_ALM_PRE').AsString;
+  dmmPresupuestos.RefrescarAlmacenes(rDefectos.Empresa);
+  Result := TfrmModalConversionPresupuesto.Solicitar(Self,
+    dmmPresupuestos.dsAlmacenesAlb, rDefectos, ADestino, AOpciones);
+end;
+
+procedure TfrmMtoPresupuestos.MostrarResultadoConversion(
+  const AResultado: TResultadoConversionPresupuesto);
+begin
+  ShowMto(Self.Owner, AResultado.Pantalla,
+    AResultado.Serie + ',' + AResultado.Numero);
+  if PuedeImprimir and Permisos.TienePermiso(
+    CodigoPermisoMto(AResultado.Pantalla, apmImprimir), paPermitir) then
+    TfrmPrintDocumento.EjecutarReferencia(Self,
+      AResultado.TipoDocumento, sdVenta,
+      AResultado.Serie, AResultado.Numero);
+end;
+
+procedure TfrmMtoPresupuestos.PasarDocumentoClick(Sender: TObject);
+begin
+  PasarPresupuestoDocumento;
 end;
 
 procedure TfrmMtoPresupuestos.EnviarCajaClick(Sender: TObject);

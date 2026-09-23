@@ -652,6 +652,35 @@ resourcestring
   SAvisoPmpCorregidosRevalorizacionInventario =
     '%d líneas ya tenían un PMP corregido manualmente; se sustituirá por ' +
     'el PMP de esta simulación.';
+  SCaptionMargenMinimoRevalorizacion = 'Margen mínimo';
+  SHintMargenMinimoRevalorizacion =
+    'A 0 se exige el mínimo que corresponde a la antigüedad de cada ' +
+    'línea (meses desde la última compra): %s.' + sLineBreak +
+    'Con un valor mayor que cero, ese porcentaje manda sobre los tramos.';
+  SHintMargenMinimoSinTramos =
+    'Porcentaje mínimo de margen sobre el coste exigido a todas las ' +
+    'líneas. A 0 no se comprueba nada.';
+  SCaptionCosteYaDevaluadoRevalorizacion =
+    'El coste ya está devaluado en inventario';
+  SHintCosteYaDevaluadoRevalorizacion =
+    'Marca esto cuando el PMP venga de una apreciación o depreciación de ' +
+    'inventario: la rebaja por temporada ya está en el coste y no debe ' +
+    'restarse otra vez con los tramos de antigüedad.';
+  SCaptionColAntiguedadRevalorizacion = 'Antig. (meses)';
+  SCaptionColMargenMinimoRevalorizacion = 'Margen mín.';
+  SCaptionColPrecioVentaDestinoRevalorizacion = 'Vendido a';
+  SAvisoLineasLimitadasPorVenta =
+    '%d líneas se han limitado al precio sin IVA al que la tienda las ' +
+    'vendió: el traspaso no puede facturarse por encima de eso.';
+  SAvisoLineasBajoMargenMinimoRevalorizacion =
+    '%d líneas quedarían por debajo de su margen mínimo sobre el coste ' +
+    '(%s). Las líneas que no marcas se facturan a su precio base, es ' +
+    'decir, sin margen. Entre empresas vinculadas el precio debe ser el ' +
+    'de mercado, y el de un mayorista para género de esa antigüedad.' +
+    sLineBreak + sLineBreak +
+    '¿Deseas continuar de todos modos?';
+  STextoMargenMinimoUnico = '%s %% para todas las líneas';
+  STextoMargenMinimoPorTramos = 'por tramos de antigüedad: %s';
   SErrorPorcentajeRevalorizacionInventario =
     'Indica un porcentaje mayor que cero. En una depreciación no puede ' +
     'superar el 100 %.';

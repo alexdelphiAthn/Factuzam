@@ -112,8 +112,11 @@ const
   cNombreEstadoActualizacion = 'estado.json';
 
 // El programa suele estar en C:\Program Files\Factuzam, donde no se
-// puede escribir sin elevar: el estado y las descargas viven en
-// ProgramData, que es comun a todos los usuarios del equipo.
+// puede escribir sin elevar: el estado y las descargas viven en la
+// carpeta local del usuario. Antes estaban en ProgramData, comun a todo
+// el equipo, pero alli cada fichero solo lo puede reescribir quien lo
+// creo: con varias cuentas en la maquina, la segunda se encontraba un
+// «Acceso denegado» sobre lo que habia dejado la primera.
 function CarpetaActualizaciones: string;
 var
   sDatos: string;
@@ -122,12 +125,30 @@ begin
   sDatos := Trim(GetEnvironmentVariable(cVariableCarpetaActualizaciones));
   if sDatos <> '' then
     Exit(sDatos);
-  sDatos := GetEnvironmentVariable('ProgramData');
+  sDatos := GetEnvironmentVariable('LOCALAPPDATA');
   if Trim(sDatos) = '' then
     sDatos := ExtractFilePath(ExpandFileName(ParamStr(0)))
   else
     sDatos := TPath.Combine(sDatos, 'Factuzam');
   Result := TPath.Combine(sDatos, cNombreCarpetaActualizaciones);
+end;
+
+// Donde vivia el estado hasta ahora. Se sigue mirando, solo para leer
+// -lo unico que Windows garantiza sobre lo que dejo otra cuenta-, para
+// no perder con que revertir lo que ya se aplico. Vacio si la carpeta
+// esta fijada a mano: entonces no hay herencia que valga.
+function CarpetaActualizacionesHeredada: string;
+var
+  sDatos: string;
+begin
+  Result := '';
+  if Trim(GetEnvironmentVariable(cVariableCarpetaActualizaciones)) <> '' then
+    Exit;
+  sDatos := Trim(GetEnvironmentVariable('ProgramData'));
+  if sDatos <> '' then
+    Result := TPath.Combine(
+      TPath.Combine(sDatos, 'Factuzam'),
+      cNombreCarpetaActualizaciones);
 end;
 
 function CarpetaDescargasActualizacion(const AVersion: string): string;
@@ -254,15 +275,15 @@ begin
   end;
 end;
 
-function LeerEstadoActualizacion: TEstadoActualizacion;
+function LeerEstadoDesde(const ARuta: string): TEstadoActualizacion;
 var
   oJson: TJSONValue;
   oObjeto: TJSONObject;
   sRuta: string;
 begin
   Result := Default(TEstadoActualizacion);
-  sRuta := RutaEstadoActualizacion;
-  if TFile.Exists(sRuta) then
+  sRuta := ARuta;
+  if (Trim(sRuta) <> '') and TFile.Exists(sRuta) then
   begin
     try
       oJson := TJSONObject.ParseJSONValue(
@@ -292,6 +313,23 @@ begin
       on E: Exception do
         Result := Default(TEstadoActualizacion);
     end;
+  end;
+end;
+
+function LeerEstadoActualizacion: TEstadoActualizacion;
+var
+  sCarpeta: string;
+begin
+  Result := LeerEstadoDesde(RutaEstadoActualizacion);
+  if not Result.Existe then
+  begin
+    // Nada en la carpeta del usuario: puede ser una instalacion que
+    // venia guardandolo en ProgramData. Se lee de alli y lo primero que
+    // se guarde ya cae en la carpeta nueva.
+    sCarpeta := CarpetaActualizacionesHeredada;
+    if sCarpeta <> '' then
+      Result := LeerEstadoDesde(
+        TPath.Combine(sCarpeta, cNombreEstadoActualizacion));
   end;
 end;
 

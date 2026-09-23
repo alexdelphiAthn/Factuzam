@@ -13,6 +13,9 @@ procedure EnumerarResourcestringsTraduccion(
 implementation
 
 uses
+  inLibMsgSubsanacionCaja,
+  inLibMsgPersistenciaSubsanacionCaja,
+  inLibMsgDistribucionTiendas,
   inLibMsgPresupuestos,
   inLibInformeSimulacionValoracion,
   inLibMsgArticulos,
@@ -576,6 +579,42 @@ begin
     'inLibMsgPresupuestos.SErrorSerieDestinoPresupuesto',
     'src/Lib/inLibMsgPresupuestos.pas',
     @inLibMsgPresupuestos.SErrorSerieDestinoPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorAlmacenConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorAlmacenConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorSerieConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorSerieConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorNumeroConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorNumeroConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorFechaConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorFechaConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SCaptionPasarPresupuestoDocumento',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SCaptionPasarPresupuestoDocumento);
+  ARegistrar(
+    'inLibMsgPresupuestos.SCaptionTipoDocumentoConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SCaptionTipoDocumentoConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorSinPermisoConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorSinPermisoConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SErrorTipoDocumentoConversionPresupuesto',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SErrorTipoDocumentoConversionPresupuesto);
+  ARegistrar(
+    'inLibMsgPresupuestos.SNombreFacturaVenta',
+    'src/Lib/inLibMsgPresupuestos.pas',
+    @inLibMsgPresupuestos.SNombreFacturaVenta);
   ARegistrar(
     'inLibMsgPresupuestos.SErrorDestinoPresupuestoNoCreado',
     'src/Lib/inLibMsgPresupuestos.pas',
@@ -19621,6 +19660,1206 @@ begin
     'src/Lib/inLibMsgServiciosOffLine.pas',
     @inLibMsgServiciosOffLine.
       SDescripcionTareaPreciosServiciosOffLine);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionAyudaWebAtras',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionAyudaWebAtras);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionAyudaWebAdelante',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionAyudaWebAdelante);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SCaptionAyudaWebRecargar',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SCaptionAyudaWebRecargar);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SInfoAyudaWebCargando',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SInfoAyudaWebCargando);
+  ARegistrar(
+    'inLibMsgComun.' +
+    'SErrorAyudaWebIniciar',
+    'src/Lib/inLibMsgComun.pas',
+    @inLibMsgComun.
+      SErrorAyudaWebIniciar);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SDescripcionTipoOrigenPropuestaTraspasoDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SDescripcionTipoOrigenPropuestaTraspasoDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SErrorAlmacenOrigenYVentaDocumentoTrabajoAddBlock',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorAlmacenOrigenYVentaDocumentoTrabajoAddBlock);
+  ARegistrar(
+    'inLibMsgCompras.' +
+    'SComprasDejarDescripcionBlanco',
+    'src/Lib/inLibMsgCompras.pas',
+    @inLibMsgCompras.
+      SComprasDejarDescripcionBlanco);
+  ARegistrar(
+    'inLibMsgIntegraciones.' +
+    'SErrorEnvioFactuzamApiCancelado',
+    'src/Lib/inLibMsgIntegraciones.pas',
+    @inLibMsgIntegraciones.
+      SErrorEnvioFactuzamApiCancelado);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorSubsanacionTransaccion',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorSubsanacionTransaccion);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SInfoSubsanacionNoVerifactuRegistrada',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SInfoSubsanacionNoVerifactuRegistrada);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SInfoSubsanacionNoVerifactuMotivo',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SInfoSubsanacionNoVerifactuMotivo);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorSubsanacionRegistroNoVigente',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorSubsanacionRegistroNoVigente);
+  ARegistrar(
+    'inLibMsgVerifactu.' +
+    'SErrorSubsanacionColaActiva',
+    'src/Lib/inLibMsgVerifactu.pas',
+    @inLibMsgVerifactu.
+      SErrorSubsanacionColaActiva);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionSinPermiso',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionSinPermiso);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionIdentidadInvalida',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionIdentidadInvalida);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionFacturaNoVigente',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionFacturaNoVigente);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionRegistroNoAceptado',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionRegistroNoAceptado);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionOperacionCompleja',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionOperacionCompleja);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionPagoUnico',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionPagoUnico);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionValesFijos',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionValesFijos);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionLineaFija',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionLineaFija);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionPrendaBajoAnticipo',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionPrendaBajoAnticipo);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionPagosInvalidos',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionPagosInvalidos);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionObservacionPago',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionObservacionPago);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionDescuadreOriginal',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionDescuadreOriginal);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionArqueoCerrado',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionArqueoCerrado);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionDatosFiscales',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionDatosFiscales);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionRegistrada',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionRegistrada);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionConflicto',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionConflicto);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionMotivoObligatorio',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionMotivoObligatorio);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionMedioInvalido',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionMedioInvalido);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionReferenciaInvalida',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionReferenciaInvalida);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionSinCambios',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionSinCambios);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionTotalInvalido',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionTotalInvalido);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionTransaccionActiva',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionTransaccionActiva);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionEsquemaPendiente',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionEsquemaPendiente);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionCalculoInvalido',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionCalculoInvalido);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionTotalFiscalDistinto',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionTotalFiscalDistinto);
+  ARegistrar(
+    'inLibMsgPersistenciaSubsanacionCaja.' +
+    'SSubsanacionLineaIntactaDistinta',
+    'src/Caja/Lib/inLibMsgPersistenciaSubsanacionCaja.pas',
+    @inLibMsgPersistenciaSubsanacionCaja.
+      SSubsanacionLineaIntactaDistinta);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionDescartar',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionDescartar);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionEtiqueta',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionEtiqueta);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionEtiquetaGuardada',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionEtiquetaGuardada);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionModo',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionModo);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionTituloCobro',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionTituloCobro);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionCobroExacto',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionCobroExacto);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionSinLineasEditables',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionSinLineasEditables);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionMotivo',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionMotivo);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionLineasFijas',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionLineasFijas);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionMotivoObligatorio',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionMotivoObligatorio);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionBoton',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionBoton);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionBotonSinTicket',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionBotonSinTicket);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionNoPermitida',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionNoPermitida);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionNoPermitidaVerifactu',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionNoPermitidaVerifactu);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionNoPermitidaNoVerifactu',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionNoPermitidaNoVerifactu);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionNoPermitidaSinVerifactu',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionNoPermitidaSinVerifactu);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionGuardada',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionGuardada);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionGuardadaLocal',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionGuardadaLocal);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionGuardadaNoVerifactu',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionGuardadaNoVerifactu);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionTituloOperacion',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionTituloOperacion);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionTituloFecha',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionTituloFecha);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionReimprimir',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionReimprimir);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionSinLineas',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionSinLineas);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionCantidadInvalida',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionCantidadInvalida);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionDecimalesLinea',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionDecimalesLinea);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionDecimalesTotal',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionDecimalesTotal);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionCantidadCero',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionCantidadCero);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionSignoLinea',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionSignoLinea);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionPrecisionLinea',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionPrecisionLinea);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionTotalInicialCero',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionTotalInicialCero);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionSignoTotal',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionSignoTotal);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionDatosNoDisponibles',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionDatosNoDisponibles);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionEdicionPendiente',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionEdicionPendiente);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionIdentificadorLinea',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionIdentificadorLinea);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionLineasDistintas',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionLineasDistintas);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionLineaModificada',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionLineaModificada);
+  ARegistrar(
+    'inLibMsgSubsanacionCaja.' +
+    'SSubsanacionPrecisionCantidad',
+    'src/Caja/Lib/inLibMsgSubsanacionCaja.pas',
+    @inLibMsgSubsanacionCaja.
+      SSubsanacionPrecisionCantidad);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorDocumentoDistribucionNoExiste',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorDocumentoDistribucionNoExiste);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorPropuestaTraspasoNoExiste',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorPropuestaTraspasoNoExiste);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorDistribucionTiendasDesactualizada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorDistribucionTiendasDesactualizada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorSkuDistribucionFueraDocumento',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorSkuDistribucionFueraDocumento);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorPropuestaTraspasoNoPendiente',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorPropuestaTraspasoNoPendiente);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorPropuestaTraspasoSinCaja',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorPropuestaTraspasoSinCaja);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorPropuestaTraspasoSinLineas',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorPropuestaTraspasoSinLineas);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloDistribucionTiendas',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloDistribucionTiendas);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloDistribucionTiendasDocumento',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloDistribucionTiendasDocumento);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionOrigenAutomaticoDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionOrigenAutomaticoDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoAlmacenDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoAlmacenDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColArticuloDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColArticuloDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColDescripcionDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColDescripcionDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColColorDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColColorDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColUnidadesDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColUnidadesDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColRepartidasDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColRepartidasDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColPorRepartirDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColPorRepartirDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColAlmacenDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColAlmacenDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColNombreAlmacenDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColNombreAlmacenDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColTotalDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColTotalDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColSinTallaDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColSinTallaDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColTallaDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColTallaDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionGuardarCerrarDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionGuardarCerrarDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionCerrarDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionCerrarDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoFilaPorRepartirDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoFilaPorRepartirDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionSinUnidades',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionSinUnidades);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionSinExistencias',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionSinExistencias);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoExistenciasOrigenDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoExistenciasOrigenDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionRecortada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionRecortada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionNadaQueArrastrar',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionNadaQueArrastrar);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionArrastreNoValido',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionArrastreNoValido);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoDistribucionArrastrado',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoDistribucionArrastrado);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionSueloConfirmado',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionSueloConfirmado);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionEsOrigen',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionEsOrigen);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoDistribucionSinLineas',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoDistribucionSinLineas);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoDistribucionGuardada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoDistribucionGuardada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoRepartoAutomaticoHecho',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoRepartoAutomaticoHecho);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoRepartoAutomaticoNada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoRepartoAutomaticoNada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaGuardarDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaGuardarDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaVaciarDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaVaciarDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColPrioridadDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColPrioridadDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoOrigenCuadranteDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoOrigenCuadranteDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionNoRecibeTraspasos',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionNoRecibeTraspasos);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAvisoDistribucionStockRefrescado',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAvisoDistribucionStockRefrescado);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaDistribucionSinDestinos',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaDistribucionSinDestinos);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloPrioridadesDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloPrioridadesDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoAyudaPrioridadesDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoAyudaPrioridadesDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPrioridadesDistribucionSinAlmacenes',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPrioridadesDistribucionSinAlmacenes);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoDestinoRepartoAutomatico',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoDestinoRepartoAutomatico);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColNumeroPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColNumeroPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColFechaPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColFechaPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColDocumentoPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColDocumentoPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColOrigenPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColOrigenPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColDestinoPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColDestinoPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColUnidadesPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColUnidadesPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColEstadoPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColEstadoPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColTraspasoPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColTraspasoPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColOperacionPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColOperacionPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColMotivoPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColMotivoPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColResolucionPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColResolucionPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoEstadoPropuestaPendiente',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoEstadoPropuestaPendiente);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoEstadoPropuestaTrasladada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoEstadoPropuestaTrasladada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoEstadoPropuestaTrasladadaParcial',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoEstadoPropuestaTrasladadaParcial);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoEstadoPropuestaNoAceptada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoEstadoPropuestaNoAceptada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoTraspasoPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoTraspasoPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoSeleccionarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoSeleccionarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPropuestaYaNoPendiente',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPropuestaYaNoPendiente);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaConfirmarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaConfirmarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaConfirmarTodasPropuestas',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaConfirmarTodasPropuestas);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPropuestaConfirmada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPropuestaConfirmada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPropuestasConfirmadas',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPropuestasConfirmadas);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorPropuestaNoConfirmada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorPropuestaNoConfirmada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaEliminarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaEliminarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloNoAceptarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloNoAceptarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaMotivoNoAceptarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaMotivoNoAceptarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPropuestaNoAceptada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPropuestaNoAceptada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionNoAceptarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionNoAceptarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionCargarPropuestaEnTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionCargarPropuestaEnTraspaso);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionSalirSeleccionPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionSalirSeleccionPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoNoHayPropuestasPendientes',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoNoHayPropuestasPendientes);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoNoHayPropuestasPendientesOrigen',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoNoHayPropuestasPendientesOrigen);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloSeleccionPropuestaTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloSeleccionPropuestaTraspaso);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionConfirmarPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionConfirmarPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPropuestaCargadaEnTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPropuestaCargadaEnTraspaso);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaEstadoPropuestaTraspasada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaEstadoPropuestaTraspasada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionPropuestaTraspasada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionPropuestaTraspasada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionPropuestaTraspasadaParcial',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionPropuestaTraspasadaParcial);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoPropuestaParcialCerrada',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoPropuestaParcialCerrada);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloDocumentoDistribucionAlbaran',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloDocumentoDistribucionAlbaran);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorAlbaranCompraSinGrabarDistribuir',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorAlbaranCompraSinGrabarDistribuir);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorAlbaranCompraSinLineasDistribuir',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorAlbaranCompraSinLineasDistribuir);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionDistribuirAlbaranCompra',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionDistribuirAlbaranCompra);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SPreguntaAlbaranCompraYaDistribuido',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SPreguntaAlbaranCompraYaDistribuido);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloElegirDocumentoDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloElegirDocumentoDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloHistorialDistribucionTiendas',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloHistorialDistribucionTiendas);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionDocumentoDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionDocumentoDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionDistribuirDocumento',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionDistribuirDocumento);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionAbrirDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionAbrirDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionImprimirPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionImprimirPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionPrioridadesDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionPrioridadesDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionRefrescarHistorialDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionRefrescarHistorialDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColUsuarioPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColUsuarioPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColUsuarioResolucionPropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColUsuarioResolucionPropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoAyudaHistorialDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoAyudaHistorialDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SInfoElegirDocumentoDistribucion',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SInfoElegirDocumentoDistribucion);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorMotivoNoAceptarObligatorio',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorMotivoNoAceptarObligatorio);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloRepartoAutomatico',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloRepartoAutomatico);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SErrorRepartoAutomaticoSinDestinos',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SErrorRepartoAutomaticoSinDestinos);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionCriterioOrdenAlmacen',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionCriterioOrdenAlmacen);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionCriterioMenorStock',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionCriterioMenorStock);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SAyudaRepartoAutomatico',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SAyudaRepartoAutomatico);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloInformePropuestaTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloInformePropuestaTraspaso);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STituloImprimirPropuestasTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STituloImprimirPropuestasTraspaso);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'STextoImprimirPropuestasTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      STextoImprimirPropuestasTraspaso);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoNumeroInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoNumeroInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoOrigenInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoOrigenInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoDestinoInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoDestinoInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoDocumentoInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoDocumentoInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoEstadoInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoEstadoInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionColTallasInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionColTallasInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SCaptionTotalInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SCaptionTotalInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SFormatoTallaInformePropuesta',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SFormatoTallaInformePropuesta);
+  ARegistrar(
+    'inLibMsgDistribucionTiendas.' +
+    'SNombreArchivoPropuestasTraspaso',
+    'src/Lib/inLibMsgDistribucionTiendas.pas',
+    @inLibMsgDistribucionTiendas.
+      SNombreArchivoPropuestasTraspaso);
 end;
 {$WARN SYMBOL_DEPRECATED ON}
 

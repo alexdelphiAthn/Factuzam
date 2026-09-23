@@ -2,16 +2,17 @@
 {                                                                              }
 {  Módulo:       inLibFacturasProforma                                         }
 {    Tipo:       Servicio de aplicación                                        }
-{ Versión:       1.1.0                                                         }
-{   Fecha:       11/09/2026                                                    }
+{ Versión:       1.2.0                                                         }
+{   Fecha:       23/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
 {                                                                              }
 {  Descripción:                                                                }
-{    Valida y dirige la generación VE o TA al repositorio correspondiente.    }
-{    Los traspasos TA se generan con la valoración por línea simulada por el   }
-{    usuario; el repositorio rechaza líneas pendientes que no figuren en ella. }
+{    Valida y dirige la generación VE, TA o TV al repositorio                 }
+{    correspondiente. Los traspasos se generan con la valoración por línea     }
+{    simulada por el usuario; el repositorio rechaza líneas pendientes que no  }
+{    figuren en ella. TV factura sólo lo vendido en la tienda destino.        }
 {******************************************************************************}
 unit inLibFacturasProforma;
 
@@ -47,6 +48,12 @@ type
     function ObtenerLineasTraspasoPendientes(
       const ASolicitud: TSolicitudFacturacionCaja
     ): TLineasTraspasoPendientes;
+    // Líneas a valorar según la modalidad: el traspaso entero en TA y sólo
+    // lo vendido en la tienda destino en TV.
+    function ObtenerLineasAValorar(
+      AModalidad: TModalidadFacturacionCaja;
+      const ASolicitud: TSolicitudFacturacionCaja
+    ): TLineasTraspasoPendientes;
     function RevisarPeriodo(
       AModalidad: TModalidadFacturacionCaja;
       const ASolicitud: TSolicitudFacturacionCaja
@@ -71,7 +78,16 @@ resourcestring
   SErrorModalidadFacturacionCajaInvalida =
     'La modalidad de facturación de caja no es válida.';
 
+function EsModalidadTraspaso(
+  AModalidad: TModalidadFacturacionCaja): Boolean;
+
 implementation
+
+function EsModalidadTraspaso(
+  AModalidad: TModalidadFacturacionCaja): Boolean;
+begin
+  Result := AModalidad in [mfcTraspaso, mfcTraspasoVendido];
+end;
 
 constructor TFacturadorOperacionesCaja.Create(
   const ARepositorio: IRepositorioFacturasProforma);
@@ -97,11 +113,11 @@ begin
   if Trim(ASolicitud.CodigoEmpresaOrigen) = '' then
     raise EArgumentException.Create(
       SErrorEmpresaOrigenFacturacionCajaObligatoria);
-  if (AModalidad = mfcTraspaso) and
+  if EsModalidadTraspaso(AModalidad) and
      (Trim(ASolicitud.CodigoEmpresaDestino) = '') then
     raise EArgumentException.Create(
       SErrorEmpresaDestinoFacturacionCajaObligatoria);
-  if (AModalidad = mfcTraspaso) and
+  if EsModalidadTraspaso(AModalidad) and
      SameText(
        Trim(ASolicitud.CodigoEmpresaOrigen),
        Trim(ASolicitud.CodigoEmpresaDestino)) then
@@ -115,7 +131,8 @@ end;
 procedure TFacturadorOperacionesCaja.ValidarModalidad(
   AModalidad: TModalidadFacturacionCaja);
 begin
-  if not (AModalidad in [mfcVenta, mfcTraspaso]) then
+  if not (AModalidad in
+       [mfcVenta, mfcTraspaso, mfcTraspasoVendido]) then
     raise EArgumentOutOfRangeException.Create(
       SErrorModalidadFacturacionCajaInvalida);
 end;
@@ -142,6 +159,9 @@ begin
     mfcTraspaso:
       Result := FRepositorio.GenerarTraspasos(
         ASolicitud, AValoracionTraspasos);
+    mfcTraspasoVendido:
+      Result := FRepositorio.GenerarTraspasosVendidos(
+        ASolicitud, AValoracionTraspasos);
   end;
 end;
 
@@ -151,6 +171,23 @@ function TFacturadorOperacionesCaja.ObtenerLineasTraspasoPendientes(
 begin
   ValidarSolicitud(mfcTraspaso, ASolicitud);
   Result := FRepositorio.ObtenerLineasTraspasoPendientes(ASolicitud);
+end;
+
+function TFacturadorOperacionesCaja.ObtenerLineasAValorar(
+  AModalidad: TModalidadFacturacionCaja;
+  const ASolicitud: TSolicitudFacturacionCaja
+): TLineasTraspasoPendientes;
+begin
+  ValidarModalidad(AModalidad);
+  ValidarSolicitud(AModalidad, ASolicitud);
+  SetLength(Result, 0);
+  case AModalidad of
+    mfcTraspaso:
+      Result := FRepositorio.ObtenerLineasTraspasoPendientes(ASolicitud);
+    mfcTraspasoVendido:
+      Result :=
+        FRepositorio.ObtenerLineasTraspasoVendidoPendientes(ASolicitud);
+  end;
 end;
 
 function TFacturadorOperacionesCaja.RevisarPeriodo(

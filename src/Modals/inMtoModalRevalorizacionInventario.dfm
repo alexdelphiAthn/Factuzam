@@ -90,6 +90,33 @@
       TabOrder = 2
       Width = 110
     end
+    object lblMargenMinimo: TcxLabel
+      Left = 600
+      Top = 150
+      Caption = ''
+      Transparent = True
+      Visible = False
+    end
+    object curMargenMinimo: TcxCurrencyEdit
+      Left = 740
+      Top = 146
+      Properties.DecimalPlaces = 2
+      Properties.DisplayFormat = '0.00 %'
+      Properties.OnChange = ConfiguracionPropertiesChange
+      TabOrder = 3
+      Visible = False
+      Width = 110
+    end
+    object chkCosteYaDevaluado: TcxCheckBox
+      Left = 880
+      Top = 146
+      Caption = ''
+      Properties.OnChange = ConfiguracionPropertiesChange
+      TabOrder = 4
+      Transparent = True
+      Visible = False
+      Width = 260
+    end
     object btnSimular: TcxButton
       Left = 16
       Top = 141

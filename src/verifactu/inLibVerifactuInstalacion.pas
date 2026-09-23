@@ -54,6 +54,7 @@ procedure SincronizarVersionInstalacionesSif(
                                              IParametrosAplicacion;
                                              AConn: TUniConnection;
                                              const AUsuario: string);
+function InstalacionesSifAlDia(AConn: TUniConnection): Boolean;
 function ObtenerDeclaracionResponsableSif(
   const AParametrosApp: IParametrosAplicacion;
   const AVersion: string;
@@ -717,6 +718,36 @@ begin
       FreeAndNil(Qry);
     end;
     ObtenerEmpresaInstalacionSif(AConn, Result.CodigoEmpresa, Result);
+  end;
+end;
+
+// True si ninguna empresa necesita pasar por
+// SincronizarVersionInstalacionesSif: todas con número, con la versión y
+// el SIF actuales y con el mismo número. Sólo consulta la BBDD, para
+// no llamar al servicio en cada arranque.
+function InstalacionesSifAlDia(AConn: TUniConnection): Boolean;
+var
+  Qry: TUniQuery;
+begin
+  Qry := TUniQuery.Create(nil);
+  try
+    Qry.Connection := AConn;
+    Qry.SQL.Text :=
+      ' SELECT COALESCE(SUM( ' +
+      '          COALESCE(NUMERO_INSTALACION_EMP, '''') = '''' ' +
+      '       OR COALESCE(VERSION_INSTALACION_EMP, '''') <> :VERSION ' +
+      '       OR COALESCE(CODIGO_SIF_INSTALACION_EMP, '''') ' +
+      '            <> :CODIGO_SIF), 0) AS PENDIENTES, ' +
+      '        COUNT(DISTINCT COALESCE(NUMERO_INSTALACION_EMP, '''')) ' +
+      '          AS NUMEROS ' +
+      ' FROM fza_empresas';
+    Qry.ParamByName('VERSION').AsString := oVersion;
+    Qry.ParamByName('CODIGO_SIF').AsString := cCodigoSifFactuzam;
+    Qry.Open;
+    Result := (Qry.FieldByName('PENDIENTES').AsInteger = 0) and
+              (Qry.FieldByName('NUMEROS').AsInteger <= 1);
+  finally
+    FreeAndNil(Qry);
   end;
 end;
 

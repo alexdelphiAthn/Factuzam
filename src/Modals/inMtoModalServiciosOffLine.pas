@@ -34,6 +34,7 @@ uses
   cxLookAndFeelPainters,
   cxLookAndFeels,
   cxMaskEdit,
+  cxPC,
   cxTextEdit,
   cxTimeEdit,
   inMtoFrmBase,
@@ -44,12 +45,15 @@ type
   TfrmModalServiciosOffLine = class(TfrmBase)
     pnlPrincipal: TPanel;
     lblIntroduccion: TcxLabel;
+    pcServicios: TcxPageControl;
+    tsCuenta: TcxTabSheet;
+    tsCopia: TcxTabSheet;
+    tsPrecios: TcxTabSheet;
     gbCuenta: TcxGroupBox;
     lblUsuarioCuenta: TcxLabel;
     edtUsuarioCuenta: TcxTextEdit;
     lblContrasena: TcxLabel;
     edtContrasena: TcxTextEdit;
-    gbCopia: TcxGroupBox;
     chkCopia: TcxCheckBox;
     lblCarpetaCopia: TcxLabel;
     edtCarpetaCopia: TcxButtonEdit;
@@ -59,7 +63,6 @@ type
     lblHoraCopia: TcxLabel;
     edtHoraCopia: TcxTimeEdit;
     lblEstadoCopia: TcxLabel;
-    gbPrecios: TcxGroupBox;
     chkPrecios: TcxCheckBox;
     lblExplicacionPrecios: TcxLabel;
     lblHoraPrecios: TcxLabel;

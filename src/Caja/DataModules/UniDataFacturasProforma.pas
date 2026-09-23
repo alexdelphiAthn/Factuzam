@@ -2,8 +2,8 @@
 {                                                                              }
 {  Módulo:       UniDataFacturasProforma                                       }
 {    Tipo:       Data Module                                                   }
-{ Versión:       1.0.0                                                         }
-{   Fecha:       04/08/2026                                                    }
+{ Versión:       1.1.0                                                         }
+{   Fecha:       23/09/2026                                                    }
 {   Autor:       Alejandro Laorden Hidalgo                                     }
 {                                                                              }
 {  Copyright (c) Alejandro Laorden Hidalgo. Todos los derechos reservados.     }
@@ -29,6 +29,7 @@ type
   private
     function ConstruirSqlProformasCaja: string;
     function ConstruirSqlFacturasTraspaso: string;
+    function ConstruirSqlFacturasTraspasoVendido: string;
     function ConstruirSqlPeriodosPendientes: string;
     procedure ConfigurarConsultas;
   public
@@ -84,6 +85,7 @@ begin
   unqryTablaG.SQL.Text :=
     ConstruirSqlProformasCaja +
     ConstruirSqlFacturasTraspaso +
+    ConstruirSqlFacturasTraspasoVendido +
     ConstruirSqlPeriodosPendientes +
     ' ORDER BY FECHA_DOCUMENTO DESC, TIPO_DOCUMENTO, ' +
     '          SERIE_DOCUMENTO, NUMERO_DOCUMENTO DESC';
@@ -184,6 +186,56 @@ begin
     '          F.TOTAL_IMPUESTOS_FAC, F.TOTAL_LIQUIDO_FAC ';
 end;
 
+// Facturas TV: no tienen fila en fza_facturas_operaciones_caja (una misma
+// operación de traspaso se factura en varias), sino en el libro mayor.
+function TdmFacturasProforma.ConstruirSqlFacturasTraspasoVendido: string;
+begin
+  Result :=
+    'UNION ALL ' +
+    'SELECT CONCAT(''TV-'', MIN(V.ID_FACTV)) AS CLAVE_DOCUMENTO, ' +
+    '       ''TV'' AS TIPO_DOCUMENTO, ' +
+    '       V.SERIE_FAC_FACTV AS SERIE_DOCUMENTO, ' +
+    '       MIN(V.ID_FACPER_FACTV) AS ID_PERIODO, ' +
+    '       MIN(FP.ESTADO_FACPER) AS ESTADO_PERIODO, ' +
+    '       V.NUMERO_FAC_FACTV AS NUMERO_DOCUMENTO, ' +
+    '       F.FECHA_FAC AS FECHA_DOCUMENTO, ' +
+    '       COALESCE(MIN(FP.FECHA_DESDE_FACPER), ' +
+    '                MIN(V.FECHA_VENTA_FACTV)) AS FECHA_DESDE, ' +
+    '       COALESCE(MAX(FP.FECHA_HASTA_FACPER), ' +
+    '                MAX(V.FECHA_VENTA_FACTV)) AS FECHA_HASTA, ' +
+    '       V.CODIGO_EMP_ORIGEN_FACTV AS CODIGO_EMPRESA_ORIGEN, ' +
+    '       COALESCE(NULLIF(F.RAZON_SOCIAL_EMPRESA_FAC, ''''), ' +
+    '                EO.RAZON_SOCIAL_EMP) AS EMPRESA_ORIGEN, ' +
+    '       V.CODIGO_EMP_DESTINO_FACTV AS CODIGO_EMPRESA_DESTINO, ' +
+    '       COALESCE(NULLIF(F.RAZON_SOCIAL_CLIENTE_FAC, ''''), ' +
+    '                ED.RAZON_SOCIAL_EMP) AS EMPRESA_DESTINO, ' +
+    '       F.FASE_FAC AS ESTADO_DOCUMENTO, ' +
+    '       F.TOTAL_BASES_FAC AS TOTAL_BASE, ' +
+    '       F.TOTAL_IMPUESTOS_FAC AS TOTAL_IMPUESTOS, ' +
+    '       F.TOTAL_LIQUIDO_FAC AS TOTAL_DOCUMENTO, ' +
+    '       COUNT(DISTINCT V.ID_OPCAJA_TA_FACTV) ' +
+    '         AS CANTIDAD_OPERACIONES, ' +
+    '       COUNT(DISTINCT CASE WHEN V.TIPO_FACTV = ''DEVOLUCION'' ' +
+    '                           THEN V.ID_FACTV END) AS CANTIDAD_AJUSTES ' +
+    '  FROM fza_facturas_traspasos_vendidos V ' +
+    '  JOIN fza_facturas F ' +
+    '    ON F.SERIE_FAC = V.SERIE_FAC_FACTV ' +
+    '   AND F.NUMERO_FAC = V.NUMERO_FAC_FACTV ' +
+    '  LEFT JOIN fza_empresas EO ' +
+    '    ON EO.CODIGO_EMP_EMP = V.CODIGO_EMP_ORIGEN_FACTV ' +
+    '  LEFT JOIN fza_empresas ED ' +
+    '    ON ED.CODIGO_EMP_EMP = V.CODIGO_EMP_DESTINO_FACTV ' +
+    '  LEFT JOIN fza_facturacion_caja_periodos FP ' +
+    '    ON FP.ID_FACPER = V.ID_FACPER_FACTV ' +
+    ' GROUP BY V.SERIE_FAC_FACTV, V.NUMERO_FAC_FACTV, F.FECHA_FAC, ' +
+    '          V.CODIGO_EMP_ORIGEN_FACTV, ' +
+    '          F.RAZON_SOCIAL_EMPRESA_FAC, EO.RAZON_SOCIAL_EMP, ' +
+    '          V.CODIGO_EMP_DESTINO_FACTV, ' +
+    '          F.RAZON_SOCIAL_CLIENTE_FAC, ED.RAZON_SOCIAL_EMP, ' +
+    '          F.FASE_FAC, F.TOTAL_BASES_FAC, ' +
+    '          F.TOTAL_IMPUESTOS_FAC, F.TOTAL_LIQUIDO_FAC ';
+end;
+
 function TdmFacturasProforma.ConstruirSqlPeriodosPendientes: string;
 begin
   Result :=
@@ -218,7 +270,10 @@ begin
     ' WHERE NOT EXISTS (SELECT 1 FROM fza_proformas_caja P ' +
     '                    WHERE P.ID_FACPER_PROCAJ = FP.ID_FACPER) ' +
     '   AND NOT EXISTS (SELECT 1 FROM fza_facturas_operaciones_caja M ' +
-    '                    WHERE M.ID_FACPER_FACOP = FP.ID_FACPER) ';
+    '                    WHERE M.ID_FACPER_FACOP = FP.ID_FACPER) ' +
+    '   AND NOT EXISTS (SELECT 1 ' +
+    '                     FROM fza_facturas_traspasos_vendidos V ' +
+    '                    WHERE V.ID_FACPER_FACTV = FP.ID_FACPER) ';
 end;
 
 procedure TdmFacturasProforma.AbrirDetalles;

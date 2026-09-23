@@ -82,6 +82,14 @@ resourcestring
     'Pasar a albarán';
   SCaptionPasarPresupuestoPedido =
     'Pasar a pedido';
+  SCaptionPasarPresupuestoDocumento =
+    'Pasar a documento';
+  SCaptionTipoDocumentoConversionPresupuesto =
+    'Documento:';
+  SErrorSinPermisoConversionPresupuesto =
+    'No tiene permiso para crear pedidos, albaranes ni facturas.';
+  SErrorTipoDocumentoConversionPresupuesto =
+    'Seleccione el tipo de documento.';
   SCaptionEnviarPresupuestoCaja =
     'Enviar a caja';
   SErrorPresupuestoSinLineasCaja =
@@ -103,6 +111,14 @@ resourcestring
     'Termine la operación pendiente antes de convertir.';
   SErrorConsultaPresupuestoNoDisponible =
     'Falta la consulta %s.';
+  SErrorAlmacenConversionPresupuesto =
+    'Seleccione el almacén del documento.';
+  SErrorSerieConversionPresupuesto =
+    'Seleccione la serie del documento.';
+  SErrorNumeroConversionPresupuesto =
+    'Indique el número del documento o marque Automático.';
+  SErrorFechaConversionPresupuesto =
+    'Indique la fecha del documento.';
   SErrorPresupuestoConvertidoSoloLectura =
     'El presupuesto convertido se conserva como documento de origen.';
   SErrorDocumentoImpresionNoExiste =
@@ -175,6 +191,8 @@ resourcestring
     'Albarán de venta';
   SNombreAlbaranCompra =
     'Albarán de compra';
+  SNombreFacturaVenta =
+    'Factura de venta';
 
 implementation
 

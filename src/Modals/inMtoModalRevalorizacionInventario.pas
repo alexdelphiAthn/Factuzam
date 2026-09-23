@@ -40,6 +40,7 @@ uses
   cxLabel,
   cxRadioGroup,
   inLibInventariosRevalorizacion,
+  inLibMargenVinculadas,
   inLibInformeSimulacionValoracion,
   inMtoFrmBase;
 
@@ -64,6 +65,13 @@ type
     CaptionPrecioMedioInforme: string;
     OcultarUnidadesFinales: Boolean;
     PreseleccionarTodas: Boolean;
+    // Margen minimo exigible sobre el coste al facturar a una empresa
+    // vinculada: se teclea aqui, al facturar, y solo avisa.
+    MostrarMargenMinimo: Boolean;
+    // Porcentaje que se propone en el campo del modal: a 0 manda la escala
+    // por antigüedad.
+    MargenMinimo: Currency;
+    EscalaMargenMinimo: TEscalaMargenMinimo;
   end;
 
   TfrmModalRevalorizacionInventario = class(TfrmBase)
@@ -73,6 +81,9 @@ type
     rgTipo: TcxRadioGroup;
     lblPorcentaje: TcxLabel;
     curPorcentaje: TcxCurrencyEdit;
+    lblMargenMinimo: TcxLabel;
+    curMargenMinimo: TcxCurrencyEdit;
+    chkCosteYaDevaluado: TcxCheckBox;
     rgBase: TcxRadioGroup;
     btnSimular: TcxButton;
     btnSeleccionarTodo: TcxButton;
@@ -106,9 +117,13 @@ type
     procedure cdsSimulacionAfterPost(DataSet: TDataSet);
   private
     FActualizando: Boolean;
+    FLineasLimitadasPorVenta: Integer;
     FColumnaIndiceBase: TcxGridDBColumn;
     FColumnaUnidadesAnteriores: TcxGridDBColumn;
     FColumnaUnidadesFinales: TcxGridDBColumn;
+    FColumnaAntiguedad: TcxGridDBColumn;
+    FColumnaMargenMinimo: TcxGridDBColumn;
+    FColumnaPrecioVenta: TcxGridDBColumn;
     FColumnaPrecioAnterior: TcxGridDBColumn;
     FColumnaPrecioSimulado: TcxGridDBColumn;
     FOpciones: TOpcionesRevalorizacionInventario;
@@ -135,6 +150,12 @@ type
     function CalcularSimulacion: Boolean;
     procedure MostrarSimulacion(
       const ASimulacion: TSimulacionRevalorizacionInventario);
+    function HayPreciosDeVenta: Boolean;
+    function CosteYaDevaluado: Boolean;
+    function MargenMinimoExigido: Currency;
+    function TextoMargenMinimo: string;
+    procedure ActualizarMargenesMinimos;
+    function ConfirmarMargenMinimo: Boolean;
     procedure MostrarResumen(
       const AResumen: TResumenSimulacionRevalorizacionInventario);
   public
@@ -180,6 +201,9 @@ const
   CAMPO_DESCRIPCION = 'DESCRIPCION';
   CAMPO_CANTIDAD_TEORICA = 'CANTIDAD_TEORICA';
   CAMPO_CANTIDAD_FISICA = 'CANTIDAD_FISICA';
+  CAMPO_ANTIGUEDAD = 'ANTIGUEDAD';
+  CAMPO_MARGEN_MINIMO = 'MARGEN_MINIMO';
+  CAMPO_PRECIO_VENTA = 'PRECIO_VENTA';
   CAMPO_PMP_ANTERIOR = 'PMP_ANTERIOR';
   CAMPO_PMP_SIMULADO = 'PMP_SIMULADO';
   CAMPO_VALOR_ANTERIOR = 'VALOR_ANTERIOR';
@@ -279,6 +303,9 @@ begin
   cdsSimulacion.FieldDefs.Add(CAMPO_DESCRIPCION, ftWideString, 250);
   cdsSimulacion.FieldDefs.Add(CAMPO_CANTIDAD_TEORICA, ftCurrency);
   cdsSimulacion.FieldDefs.Add(CAMPO_CANTIDAD_FISICA, ftCurrency);
+  cdsSimulacion.FieldDefs.Add(CAMPO_ANTIGUEDAD, ftInteger);
+  cdsSimulacion.FieldDefs.Add(CAMPO_MARGEN_MINIMO, ftCurrency);
+  cdsSimulacion.FieldDefs.Add(CAMPO_PRECIO_VENTA, ftCurrency);
   cdsSimulacion.FieldDefs.Add(CAMPO_PMP_ANTERIOR, ftCurrency);
   cdsSimulacion.FieldDefs.Add(CAMPO_PMP_SIMULADO, ftCurrency);
   cdsSimulacion.FieldDefs.Add(CAMPO_VALOR_ANTERIOR, ftCurrency);
@@ -375,6 +402,12 @@ begin
     False);
   ConfigurarColumnaMonetaria(Columna, '#,##0.####');
   FColumnaUnidadesFinales := Columna;
+  FColumnaAntiguedad := CrearColumna(
+    tvSimulacion,
+    CAMPO_ANTIGUEDAD,
+    SCaptionColAntiguedadRevalorizacion,
+    95,
+    False);
   Columna := CrearColumna(
     tvSimulacion,
     CAMPO_PMP_ANTERIOR,
@@ -383,6 +416,22 @@ begin
     False);
   ConfigurarColumnaMonetaria(Columna, '#,##0.0000');
   FColumnaPrecioAnterior := Columna;
+  Columna := CrearColumna(
+    tvSimulacion,
+    CAMPO_MARGEN_MINIMO,
+    SCaptionColMargenMinimoRevalorizacion,
+    90,
+    False);
+  ConfigurarColumnaMonetaria(Columna, '#,##0.## %');
+  FColumnaMargenMinimo := Columna;
+  Columna := CrearColumna(
+    tvSimulacion,
+    CAMPO_PRECIO_VENTA,
+    SCaptionColPrecioVentaDestinoRevalorizacion,
+    100,
+    False);
+  ConfigurarColumnaMonetaria(Columna, '#,##0.0000');
+  FColumnaPrecioVenta := Columna;
   Columna := CrearColumna(
     tvSimulacion,
     CAMPO_PMP_SIMULADO,
@@ -440,6 +489,16 @@ begin
         FLineasBase[iLinea].CantidadTeorica;
       cdsSimulacion.FieldByName(CAMPO_CANTIDAD_FISICA).AsCurrency :=
         FLineasBase[iLinea].CantidadFisica;
+      cdsSimulacion.FieldByName(CAMPO_ANTIGUEDAD).AsInteger :=
+        FLineasBase[iLinea].AntiguedadMeses;
+      cdsSimulacion.FieldByName(CAMPO_MARGEN_MINIMO).AsCurrency :=
+        MargenMinimoLinea(
+          FOpciones.EscalaMargenMinimo,
+          AntiguedadAplicable(
+            FLineasBase[iLinea].AntiguedadMeses, CosteYaDevaluado),
+          FOpciones.MargenMinimo);
+      cdsSimulacion.FieldByName(CAMPO_PRECIO_VENTA).AsCurrency :=
+        FLineasBase[iLinea].PrecioVentaDestino;
       cdsSimulacion.FieldByName(CAMPO_PMP_ANTERIOR).AsCurrency :=
         FLineasBase[iLinea].PrecioMedioActual;
       cdsSimulacion.Post;
@@ -643,6 +702,15 @@ begin
         Tipo,
         Porcentaje,
         BaseSeleccionada);
+      FLineasLimitadasPorVenta := 0;
+      if FOpciones.MostrarMargenMinimo then
+      begin
+        // El recuento se hace antes de ajustar: despues ya no hay ninguna
+        // por encima de su precio de venta.
+        FLineasLimitadasPorVenta :=
+          ContarLineasLimitadasPorVenta(FUltimaSimulacion);
+        FUltimaSimulacion := AplicarTopeVentaSimulacion(FUltimaSimulacion);
+      end;
       MostrarSimulacion(FUltimaSimulacion);
       btnPreparar.Enabled := True;
       btnImprimir.Enabled := True;
@@ -717,6 +785,10 @@ begin
       Avisos.Add(Format(
         SAvisoSinUltimaCompraRevalorizacionInventario,
         [AResumen.LineasSinUltimaCompra]));
+    if FLineasLimitadasPorVenta > 0 then
+      Avisos.Add(Format(
+        SAvisoLineasLimitadasPorVenta,
+        [FLineasLimitadasPorVenta]));
     lblAvisos.Style.Font.Color := clMaroon;
     lblAvisos.Caption := Trim(Avisos.Text);
   finally
@@ -752,7 +824,7 @@ end;
 procedure TfrmModalRevalorizacionInventario.btnPrepararClick(
   Sender: TObject);
 begin
-  if CalcularSimulacion then
+  if CalcularSimulacion and ConfirmarMargenMinimo then
   begin
     FResultado.Aceptado := True;
     FResultado.Simulacion := FUltimaSimulacion;
@@ -763,6 +835,8 @@ end;
 procedure TfrmModalRevalorizacionInventario.ConfiguracionPropertiesChange(
   Sender: TObject);
 begin
+  if (Sender = curMargenMinimo) or (Sender = chkCosteYaDevaluado) then
+    ActualizarMargenesMinimos;
   InvalidarSimulacion;
 end;
 
@@ -781,6 +855,117 @@ begin
   if FOpciones.CaptionPrecioSimulado <> '' then
     FColumnaPrecioSimulado.Caption := FOpciones.CaptionPrecioSimulado;
   FColumnaUnidadesFinales.Visible := not FOpciones.OcultarUnidadesFinales;
+  lblMargenMinimo.Visible := FOpciones.MostrarMargenMinimo;
+  curMargenMinimo.Visible := FOpciones.MostrarMargenMinimo;
+  chkCosteYaDevaluado.Visible := FOpciones.MostrarMargenMinimo;
+  chkCosteYaDevaluado.Caption := SCaptionCosteYaDevaluadoRevalorizacion;
+  chkCosteYaDevaluado.Hint := SHintCosteYaDevaluadoRevalorizacion;
+  chkCosteYaDevaluado.ShowHint := True;
+  FColumnaAntiguedad.Visible := FOpciones.MostrarMargenMinimo;
+  FColumnaMargenMinimo.Visible := FOpciones.MostrarMargenMinimo;
+  FColumnaPrecioVenta.Visible := HayPreciosDeVenta;
+  if FOpciones.MostrarMargenMinimo then
+  begin
+    lblMargenMinimo.Caption := SCaptionMargenMinimoRevalorizacion;
+    curMargenMinimo.Value := FOpciones.MargenMinimo;
+    curMargenMinimo.ShowHint := True;
+    if Length(FOpciones.EscalaMargenMinimo) > 0 then
+      curMargenMinimo.Hint := Format(SHintMargenMinimoRevalorizacion,
+        [TextoEscalaMargenMinimo(FOpciones.EscalaMargenMinimo)])
+    else
+      curMargenMinimo.Hint := SHintMargenMinimoSinTramos;
+  end;
+end;
+
+function TfrmModalRevalorizacionInventario.HayPreciosDeVenta: Boolean;
+var
+  iLinea: Integer;
+begin
+  Result := False;
+  for iLinea := 0 to High(FLineasBase) do
+  begin
+    if FLineasBase[iLinea].PrecioVentaDestino > 0 then
+      Result := True;
+  end;
+end;
+
+// Los mínimos de cada línea cambian si se teclea un porcentaje que manda
+// sobre los tramos.
+procedure TfrmModalRevalorizacionInventario.ActualizarMargenesMinimos;
+var
+  cMargen: Currency;
+  iIndice: Integer;
+begin
+  if FOpciones.MostrarMargenMinimo and cdsSimulacion.Active then
+  begin
+    cMargen := MargenMinimoExigido;
+    FActualizando := True;
+    cdsSimulacion.DisableControls;
+    try
+      cdsSimulacion.First;
+      while not cdsSimulacion.Eof do
+      begin
+        iIndice := cdsSimulacion.FieldByName(CAMPO_INDICE_BASE).AsInteger;
+        cdsSimulacion.Edit;
+        cdsSimulacion.FieldByName(CAMPO_MARGEN_MINIMO).AsCurrency :=
+          MargenMinimoLinea(
+            FOpciones.EscalaMargenMinimo,
+            AntiguedadAplicable(
+              FLineasBase[iIndice].AntiguedadMeses, CosteYaDevaluado),
+            cMargen);
+        cdsSimulacion.Post;
+        cdsSimulacion.Next;
+      end;
+      cdsSimulacion.First;
+    finally
+      cdsSimulacion.EnableControls;
+      FActualizando := False;
+    end;
+  end;
+end;
+
+function TfrmModalRevalorizacionInventario.CosteYaDevaluado: Boolean;
+begin
+  Result := FOpciones.MostrarMargenMinimo and
+    chkCosteYaDevaluado.Checked;
+end;
+
+function TfrmModalRevalorizacionInventario.MargenMinimoExigido: Currency;
+begin
+  Result := 0;
+  if FOpciones.MostrarMargenMinimo then
+    Result := curMargenMinimo.Value;
+end;
+
+function TfrmModalRevalorizacionInventario.TextoMargenMinimo: string;
+var
+  cMargen: Currency;
+begin
+  cMargen := MargenMinimoExigido;
+  if cMargen > 0 then
+    Result := Format(STextoMargenMinimoUnico,
+      [FormatFloat('0.##', cMargen)])
+  else
+    Result := Format(STextoMargenMinimoPorTramos,
+      [TextoEscalaMargenMinimo(FOpciones.EscalaMargenMinimo)]);
+end;
+
+function TfrmModalRevalorizacionInventario.ConfirmarMargenMinimo: Boolean;
+var
+  iLineas: Integer;
+begin
+  Result := True;
+  iLineas := ContarLineasBajoMargenMinimo(
+    FLineasBase,
+    FUltimaSimulacion,
+    FOpciones.EscalaMargenMinimo,
+    MargenMinimoExigido,
+    CosteYaDevaluado);
+  if iLineas > 0 then
+    Result := MessageDlg_fza(
+      Format(SAvisoLineasBajoMargenMinimoRevalorizacion,
+        [iLineas, TextoMargenMinimo]),
+      mtWarning, [mbYes, mbNo], 0) = mrYes;
 end;
 
 function TfrmModalRevalorizacionInventario.BaseSeleccionada:
