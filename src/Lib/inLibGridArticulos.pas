@@ -168,6 +168,8 @@ type
     procedure CrearColumnaArticulo;
     procedure CrearColumnaNumeroAtributos;
     procedure CrearColumnasAtributo;
+    procedure AjustarAnchoColumnaAtributo(AColumna: TcxGridDBColumn;
+      AConPaleta: Boolean);
     procedure RefrescarVisibilidadAtributos(
       AMinimoAtributos: Integer = 0);
     procedure ArmarRefrescoVisibilidad;
@@ -304,8 +306,18 @@ type
 implementation
 
 uses
+  dxDPIAwareUtils,
   inLibMensajesVcl,
   inLibMsgArticulos;
+
+const
+  // Anchos a 96 ppp de las columnas de atributo. La de paleta (color) lleva
+  // el cuadradito delante del texto y valores largos (AZUL_CIELO); el minimo
+  // impide que ColumnAutoWidth la estreche al repartir el ancho del grid.
+  ANCHO_COL_ATRIBUTO = 90;
+  ANCHO_MIN_COL_ATRIBUTO = 20;
+  ANCHO_COL_ATRIBUTO_PALETA = 130;
+  ANCHO_MIN_COL_ATRIBUTO_PALETA = 110;
 
 type
   // Acceso al OnExit protegido del sitio y de los editores del cxGrid.
@@ -1613,7 +1625,7 @@ begin
     Col.DataBinding.FieldName := FCampos.AttrValor[i];
     Col.Caption := '-';
     Col.Visible := False;
-    Col.Width := 90;
+    AjustarAnchoColumnaAtributo(Col, False);
     if FUsarCombosAtributos then
     begin
       Col.PropertiesClass := TcxComboBoxProperties;
@@ -1655,6 +1667,24 @@ begin
     Col.OnCustomDrawCell := AtributoCustomDrawCell;
     FColAtributo[i] := Col;
   end;
+end;
+
+// El grid ya esta escalado a su PPI: el ancho asignado en codigo no lo escala
+// DevExpress, asi que se convierte desde 96 ppp.
+procedure TGridArticulosLineas.AjustarAnchoColumnaAtributo(
+  AColumna: TcxGridDBColumn; AConPaleta: Boolean);
+var
+  iAncho, iMinimo: Integer;
+begin
+  iAncho := ANCHO_COL_ATRIBUTO;
+  iMinimo := ANCHO_MIN_COL_ATRIBUTO;
+  if AConPaleta then
+  begin
+    iAncho := ANCHO_COL_ATRIBUTO_PALETA;
+    iMinimo := ANCHO_MIN_COL_ATRIBUTO_PALETA;
+  end;
+  AColumna.MinWidth := dxGetScaleFactor(FView.Control).Apply(iMinimo);
+  AColumna.Width := dxGetScaleFactor(FView.Control).Apply(iAncho);
 end;
 
 // Pinta el swatch de color en la celda de atributo si el valor casa con la
@@ -1728,6 +1758,12 @@ begin
         begin
           if FUsarCombosAtributos then
             CargarOpcionesCombo(i, ACodArt);
+          // Solo al cambiar el atributo de la columna: respeta el ancho que
+          // el usuario haya dado despues.
+          if Col.Caption <> Atribs[i - 1].NombreAtributo then
+            AjustarAnchoColumnaAtributo(
+              Col,
+              EsAtributoConPaleta(FConn, Atribs[i - 1].NombreAtributo));
           Col.Caption := Atribs[i - 1].NombreAtributo;
           if FUsarCombosAtributos then
             FGlifoSwatch.MostrarBoton(

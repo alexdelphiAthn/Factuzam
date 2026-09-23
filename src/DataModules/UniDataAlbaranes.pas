@@ -323,11 +323,8 @@ begin
   unqryTablaG.SQLInsert.Text             := SqlInsertAlbaran;
   unqryTablaG.SQLUpdate.Text             := SqlUpdateAlbaran;
   unqryTablaG.SQLRefresh.Text            :=
-    'SELECT V.*, A.INSTANTE_MOVIMIENTO_ALB ' +
+    'SELECT V.* ' +
     '  FROM vi_albaranes V ' +
-    '  JOIN fza_albaranes A ' +
-    '    ON A.NUMERO_ALB = V.NUMERO_ALB ' +
-    '   AND A.SERIE_ALB = V.SERIE_ALB ' +
     ' WHERE V.NUMERO_ALB = :NUMERO_ALB ' +
     '   AND V.SERIE_ALB = :SERIE_ALB';
   unqryAlbaranesLineas.Connection        := ConexionPrincipal;

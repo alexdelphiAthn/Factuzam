@@ -822,15 +822,6 @@
           Width = 240
           ExplicitWidth = 240
         end
-        object btnListadoSolicitudes: TcxButton
-          Left = 920
-          Top = 3
-          Width = 190
-          Height = 30
-          Caption = 'Listado solicitudes'
-          TabOrder = 6
-          OnClick = btnListadoSolicitudesClick
-        end
       end
     end
   end
@@ -843,6 +834,16 @@
       Action = actImprimirDuplicadoSolicitud
       TabOrder = 2
       WordWrap = True
+    end
+    object btnListadoSolicitudes: TcxButton
+      Left = 1
+      Top = 172
+      Width = 138
+      Height = 48
+      Caption = 'Listado solicitudes'
+      TabOrder = 3
+      WordWrap = True
+      OnClick = btnListadoSolicitudesClick
     end
   end
   object alSolicitudesTraspasoHist: TActionList

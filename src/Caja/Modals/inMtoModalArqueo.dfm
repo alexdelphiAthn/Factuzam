@@ -1055,7 +1055,7 @@
             Transparent = True
           end
           object txtVendedorCodigo: TcxButtonEdit
-            Left = 370
+            Left = 450
             Top = 158
             Properties.Buttons = <
               item
@@ -1069,7 +1069,7 @@
             Width = 130
           end
           object lblVendedorNombre: TcxLabel
-            Left = 506
+            Left = 586
             Top = 160
             AutoSize = False
             Style.TextColor = clGray
