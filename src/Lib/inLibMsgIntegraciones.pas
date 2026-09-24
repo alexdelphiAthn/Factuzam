@@ -211,6 +211,47 @@ resourcestring
     'Scripts de la base de datos';
   SFaseAplicandoScriptsActualizacion =
     'Aplicando los scripts que faltan en la base de datos...';
+  SPreguntaModoActualizacionBBDD =
+    'Faltan %d scripts por aplicar en la base de datos. Hay dos formas ' +
+    'de ponerla al día:' + sLineBreak + sLineBreak +
+    '- Por scripts: se aplican los que faltan, uno detrás de otro, ' +
+    'respetando lo que cada uno necesita que esté antes.' + sLineBreak +
+    '- Por comparación: DBComparer compara la base con el modelo de la ' +
+    'versión %s y genera un único script con los cambios de tablas, ' +
+    'vistas y procedimientos, en el dialecto de este servidor. Después ' +
+    'se aplican los scripts que sigan faltando (los de datos).' +
+    sLineBreak + sLineBreak +
+    'Las dos pueden llevar bastante tiempo.%s';
+  SAvisoSalirTrasScripts =
+    ' Al terminar hay que salir del programa y volver a abrirlo con la ' +
+    'versión nueva.';
+  SBotonActualizarPorScripts = 'Por scripts';
+  SBotonActualizarPorComparacion = 'Por comparación';
+  SBotonActualizarMasTarde = 'Más tarde';
+  SFaseDescargandoComparacion =
+    'Descargando el modelo de la versión y el comparador...';
+  SFaseGenerandoComparacion =
+    'Comparando la base de datos con el modelo de la versión...';
+  SErrorComparacionNoPublicada =
+    'La versión %s no trae modelo para actualizar por comparación.';
+  SErrorComparadorActualizacion =
+    'DBComparer no ha podido generar el script (código %d).' +
+    sLineBreak + sLineBreak + '%s';
+  SErrorComparadorActualizacionNoArranca =
+    'No se ha podido ejecutar el comparador %s: %s';
+  SDetalleScriptComparacion =
+    'Script generado por comparación con el modelo de la versión %s.' +
+    sLineBreak + sLineBreak + '%s' + sLineBreak + sLineBreak +
+    '----------------------------------------' + sLineBreak + '%s';
+  SPreguntaAplicarScriptComparacion =
+    '¿Aplicar a la base de datos el script generado por comparación?';
+  SPreguntaAplicarScriptComparacionConAvisos =
+    'DBComparer ha dejado avisos: hay construcciones sin equivalente en ' +
+    'este servidor y conviene revisarlas.' + sLineBreak + sLineBreak +
+    '¿Aplicar el script igualmente?';
+  SInfoComparacionNoAplicada =
+    'No se ha aplicado el script de comparación. Los scripts que faltan ' +
+    'siguen pendientes.';
   SAvisoTextoScriptRecortado =
     '[...] El script sigue: aquí solo se ve el principio.';
   SFaseDescargandoVersionActualizacion =

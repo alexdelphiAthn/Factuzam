@@ -40,9 +40,16 @@ type
     CodigoCliente: string;
     NombreCliente: string;
     PermiteDeuda: Boolean;
+    EsClienteVarios: Boolean;
     LimiteCredito: Currency;
     DeudaActual: Currency;
     procedure Clear;
+  end;
+
+  // Quién aparta prendas a nombre del cliente de Varios.
+  TContactoApartado = record
+    Nombre: string;
+    Telefono: string;
   end;
 
   TFormaPagoInfo = record
@@ -122,6 +129,8 @@ type
     FImporteValesFijos: Currency;
     FHayCliente: Boolean;
     FPermiteDeuda: Boolean;
+    FEsClienteVarios: Boolean;
+    FContactoApartado: TContactoApartado;
     FCalculandoTotales: Boolean;
     FOnRecalculado: TNotifyEvent;
     FOnRequiereReferencia: TFunc<TFormaPagoInfo, TDatosReferencia, Boolean>;
@@ -133,6 +142,8 @@ type
       var AEntrada: TEntradaTotalesCobro);
     procedure InicializarTotalesPorDefecto;
     function ValidarDeuda: TResultadoValidacion;
+    function ValidarApartado(
+      AImporteCuenta: Currency): TResultadoValidacion;
     function ValidarVale: TResultadoValidacion;
     function ImporteEfectivoEuros: Currency;
     function ValidarLimiteEfectivo: TResultadoValidacion;
@@ -149,9 +160,11 @@ type
     destructor Destroy; override;
     procedure CargarDatosFactura(ATotales: TFacturaTotales);
     procedure EstablecerCliente(const ACodigo, ANombre: string;
-                                APermiteDeuda: Boolean;
+                                APermiteDeuda, AEsClienteVarios: Boolean;
                                 ALimiteCredito, ADeudaActual: Currency);
     procedure QuitarCliente;
+    procedure EstablecerContactoApartado(const AContacto: TContactoApartado);
+    function EsApartado: Boolean;
 // procedure CargarFormasPagoDisponibles(AFormasPago: TArray<TFormaPagoInfo>);
     function ActualizarImportePago(ALineaPago: Integer; AImporte: Currency;
                                    ADatosRef: TDatosReferencia): Boolean;
@@ -192,6 +205,9 @@ type
                                       write FCodigoValeEmitido;
     property HayCliente: Boolean read FHayCliente;
     property PermiteDeuda: Boolean read FPermiteDeuda;
+    // Cliente genérico: lo que deja en cuenta es un apartado sin deuda.
+    property EsClienteVarios: Boolean read FEsClienteVarios;
+    property ContactoApartado: TContactoApartado read FContactoApartado;
     property ImporteDevolucionPendiente: Currency read FImportePendiente;
     property OnRecalculado: TNotifyEvent read FOnRecalculado
                                          write FOnRecalculado;
@@ -232,6 +248,10 @@ resourcestring
   SErrorDevolucionIncompleta =
     'Devolución incompleta. Falta por devolver al cliente: %m';
   SErrorPagoNoIndicado = 'No se ha indicado ningún pago.';
+  SErrorApartadoSinEntregaCuenta =
+    'Para apartar prendas el cliente tiene que dejar algo a cuenta.';
+  SErrorApartadoSinContacto =
+    'Indique el nombre de quien aparta las prendas.';
   SAdvertenciaCobroIncompleto =
     'Cobro incompleto. Pendiente: %m' + sLineBreak +
     '¿Desea dejarlo en cuenta?';
@@ -256,6 +276,7 @@ begin
   CodigoCliente := '';
   NombreCliente := '';
   PermiteDeuda := False;
+  EsClienteVarios := False;
   LimiteCredito := 0;
   DeudaActual := 0;
 end;
@@ -350,18 +371,34 @@ begin
 end;
 
 procedure TDatosFaseCobro.EstablecerCliente(const ACodigo, ANombre: string;
-  APermiteDeuda: Boolean; ALimiteCredito, ADeudaActual: Currency);
+  APermiteDeuda, AEsClienteVarios: Boolean;
+  ALimiteCredito, ADeudaActual: Currency);
 begin
   FDatosCliente.CodigoCliente := Trim(ACodigo);
   FDatosCliente.NombreCliente := Trim(ANombre);
   FDatosCliente.PermiteDeuda := APermiteDeuda;
+  FDatosCliente.EsClienteVarios := AEsClienteVarios;
   FDatosCliente.LimiteCredito := ALimiteCredito;
   FDatosCliente.DeudaActual := ADeudaActual;
   FHayCliente := (Trim(FDatosCliente.CodigoCliente) <> '');
   FPermiteDeuda := FHayCliente and APermiteDeuda;
-  if not FPermiteDeuda then
+  FEsClienteVarios := FHayCliente and AEsClienteVarios;
+  FContactoApartado := Default(TContactoApartado);
+  if not PuedeDejarEnCuenta then
     FImporteDejarCuenta := 0;
   Recalcular;
+end;
+
+procedure TDatosFaseCobro.EstablecerContactoApartado(
+  const AContacto: TContactoApartado);
+begin
+  FContactoApartado.Nombre := Trim(AContacto.Nombre);
+  FContactoApartado.Telefono := Trim(AContacto.Telefono);
+end;
+
+function TDatosFaseCobro.EsApartado: Boolean;
+begin
+  Result := FEsClienteVarios and (FImporteDejarCuenta > 0);
 end;
 
 procedure TDatosFaseCobro.QuitarCliente;
@@ -369,6 +406,8 @@ begin
   FDatosCliente.Clear;
   FHayCliente := False;
   FPermiteDeuda := False;
+  FEsClienteVarios := False;
+  FContactoApartado := Default(TContactoApartado);
   if FImporteDejarCuenta > 0 then
   begin
     FImporteDejarCuenta := 0;
@@ -475,7 +514,7 @@ end;
 
 function TDatosFaseCobro.PuedeDejarEnCuenta: Boolean;
 begin
-  Result := FHayCliente and FPermiteDeuda;
+  Result := FHayCliente and (FPermiteDeuda or FEsClienteVarios);
 end;
 
 function TDatosFaseCobro.EstablecerDejarEnCuenta(
@@ -486,8 +525,10 @@ begin
   Result := TResultadoValidacion.OK;
   if not FHayCliente then
     Result := TResultadoValidacion.Error(SErrorDejarCuentaSinClienteAsignado)
-  else if not FPermiteDeuda then
+  else if not PuedeDejarEnCuenta then
     Result := TResultadoValidacion.Error(SErrorClienteNoPermiteDejarCuenta)
+  else if FEsClienteVarios then
+    Result := ValidarApartado(AImporte)
   else if FDatosCliente.LimiteCredito > 0 then
   begin
     NuevaDeuda := FDatosCliente.DeudaActual + AImporte;
@@ -765,10 +806,25 @@ begin
     if not FHayCliente then
       Result := TResultadoValidacion.Error(
         SErrorDejarImporteCuentaSinCliente)
-    else if not FPermiteDeuda then
+    else if not PuedeDejarEnCuenta then
       Result := TResultadoValidacion.Error(
-        SErrorClienteNoPermiteImporteCuenta);
+        SErrorClienteNoPermiteImporteCuenta)
+    else if FEsClienteVarios then
+      Result := ValidarApartado(FImporteDejarCuenta);
   end;
+end;
+
+function TDatosFaseCobro.ValidarApartado(
+  AImporteCuenta: Currency): TResultadoValidacion;
+begin
+  // El apartado no genera deuda: sin entrega a cuenta no habría ticket
+  // con el que completar la venta desde F4.
+  if AImporteCuenta >= FImporteTotalPagar then
+    Result := TResultadoValidacion.Error(SErrorApartadoSinEntregaCuenta)
+  else if FContactoApartado.Nombre = '' then
+    Result := TResultadoValidacion.Error(SErrorApartadoSinContacto)
+  else
+    Result := TResultadoValidacion.OK;
 end;
 
 function TDatosFaseCobro.ValidarVale: TResultadoValidacion;

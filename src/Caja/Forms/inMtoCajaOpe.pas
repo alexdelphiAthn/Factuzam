@@ -42,7 +42,8 @@ uses
   inLibCajaPantallaInyeccion, inMtoCajaEditorLineasBusqueda,
   inMtoCajaEditorLineasInteraccion, inMtoCajaEditorLineasRender,
   inMtoCajaEditorAtributosVcl, inMtoCajaOpeVentanaVcl,
-  inMtoCajaSubsanacionVcl, inLibCajaSubsanacionIntf;
+  inMtoCajaSubsanacionVcl, inLibCajaSubsanacionIntf,
+  inMtoCajaCierreVentaVcl;
 
 const
   WM_CANCELAR_LINEA = WM_APP + 100;
@@ -483,10 +484,22 @@ type
     function ConfirmarSubsanacion(out AImprimirTicket: Boolean): Boolean;
     procedure ReimprimirSubsanacion;
     procedure CargarDevolucionPorTicket;
+    procedure CargarDevolucionTicket(
+      const ASeleccion: TOrigenDevolucionCajaVcl);
+    function PreguntarCompletarApartado(
+      const ASeleccion: TOrigenDevolucionCajaVcl;
+      const AApartado: TApartadoTicketCaja): Integer;
+    procedure CargarApartadoTicket(
+      const ASeleccion: TOrigenDevolucionCajaVcl;
+      const AApartado: TApartadoTicketCaja);
+    function AsignarClienteApartado(const ACodigoCliente: string): Boolean;
     procedure WMPreguntarVentaOrigen(var Msg: TMessage);
                                        message WM_PREGUNTAR_VENTA_ORIGEN;
     function PedirMotivoDevolucionSiProcede: Boolean;
     procedure CargarDepositosF2;
+    procedure CancelarEdicionLineas;
+    procedure MostrarLineasCuentaCliente;
+    function EsClienteVariosVenta(const ACodigoCliente: string): Boolean;
     procedure WMCancelarLinea(var Msg: TMessage); message WM_CANCELAR_LINEA;
     procedure ActualizarLabelTotal(Sender: TObject; NuevoTotal: Currency);
     procedure ProcesarResultadoCierre(
@@ -583,7 +596,6 @@ uses
   inLibCajaVentaCliente,
   inLibCajaVentaOperacion,
   inLibCajaOpePresentacion,
-  inMtoCajaCierreVentaVcl,
   inMtoCajaOperacionVclInyeccion,
   inMtoCajaOpeEntradaVcl,
   inMtoCajaOpeBusquedaVcl,
@@ -2554,52 +2566,142 @@ end;
 procedure TfrmMtoOpeCaja.CargarDevolucionPorTicket;
 var
   Seleccion: TOrigenDevolucionCajaVcl;
+  Apartado: TApartadoTicketCaja;
 begin
   // F4: localizar el ticket de origen (escaneo del EAN-13, operación o
-  // documento) y cargar sus artículos en negativo. El usuario borra las
-  // líneas que no se devuelvan.
+  // documento). Si el ticket cobró a cuenta un apartado del cliente de
+  // Varios se ofrece completarlo; si no, se carga la devolución.
   if not OperacionVentaVacia(DatosCaja.cdsLineas) then
     ShowMessage_fza(SErrorDevolucionTicketOperacionEnCurso)
+  else if SeleccionarTicketDevolucionCajaVcl(
+            Self,
+            FDependencias.RepositorioConsultas,
+            FCodigoEmpresa,
+            FCodigoAlmacen,
+            FCodigoCaja,
+            Seleccion) then
+  begin
+    Apartado := DatosCaja.BuscarApartadoTicket(
+      Seleccion.Serie,
+      Seleccion.Numero);
+    if not Apartado.Encontrado then
+      CargarDevolucionTicket(Seleccion)
+    else
+      case PreguntarCompletarApartado(Seleccion, Apartado) of
+        mrYes:
+          CargarApartadoTicket(Seleccion, Apartado);
+        mrNo:
+          CargarDevolucionTicket(Seleccion);
+      end;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.CargarDevolucionTicket(
+  const ASeleccion: TOrigenDevolucionCajaVcl);
+begin
+  // Carga los artículos del ticket en negativo; el usuario borra las
+  // líneas que no se devuelvan.
+  FSerieOrigenDev := ASeleccion.Serie;
+  FNumeroOrigenDev := ASeleccion.Numero;
+  FEmpresaOrigenDev := ASeleccion.Empresa;
+  FAlmacenOrigenDev := ASeleccion.Almacen;
+  if SameText(ASeleccion.Empresa, FCodigoEmpresa) then
+  begin
+    CargarRectificacion(
+      ASeleccion.Serie,
+      ASeleccion.Numero,
+      trcDiferencias,
+      tmrMantenerOriginales);
+    GridRecalc(
+      ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
+      tvLineasOpe,
+      DatosCaja.cdsLineas,
+      DatosCaja.cdsCabecera,
+      ActualizarLabelTotal);
+    FEditorLineas.AsegurarLineaNueva;
+  end
   else
   begin
-    if SeleccionarTicketDevolucionCajaVcl(
-         Self,
-         FDependencias.RepositorioConsultas,
-         FCodigoEmpresa,
-         FCodigoAlmacen,
-         FCodigoCaja,
-         Seleccion) then
-    begin
-      FSerieOrigenDev := Seleccion.Serie;
-      FNumeroOrigenDev := Seleccion.Numero;
-      FEmpresaOrigenDev := Seleccion.Empresa;
-      FAlmacenOrigenDev := Seleccion.Almacen;
-      if SameText(Seleccion.Empresa, FCodigoEmpresa) then
-      begin
-        CargarRectificacion(
-          Seleccion.Serie,
-          Seleccion.Numero,
-          trcDiferencias,
-          tmrMantenerOriginales);
-        GridRecalc(
-          ConexionPrincipal, FLecturas.RepositorioFacturas, nil,
-          tvLineasOpe,
-          DatosCaja.cdsLineas,
-          DatosCaja.cdsCabecera,
-          ActualizarLabelTotal);
-        FEditorLineas.AsegurarLineaNueva;
-      end
-      else
-      begin
-        ShowMessage_fza(SAvisoDevolucionTicketOtraEmpresa);
-        CargarDevolucion(
-          Seleccion.Serie,
-          Seleccion.Numero,
-          Seleccion.Empresa,
-          Seleccion.Almacen);
-      end;
-    end;
+    ShowMessage_fza(SAvisoDevolucionTicketOtraEmpresa);
+    CargarDevolucion(
+      ASeleccion.Serie,
+      ASeleccion.Numero,
+      ASeleccion.Empresa,
+      ASeleccion.Almacen);
   end;
+end;
+
+function TfrmMtoOpeCaja.PreguntarCompletarApartado(
+  const ASeleccion: TOrigenDevolucionCajaVcl;
+  const AApartado: TApartadoTicketCaja): Integer;
+begin
+  Result := MessageDlg_fza(
+    Format(
+      SPreguntaCompletarApartadoCaja,
+      [ASeleccion.Serie,
+       ASeleccion.Numero,
+       AApartado.Prendas,
+       AApartado.NombreContacto]),
+    mtConfirmation,
+    [mbYes, mbNo, mbCancel],
+    0);
+end;
+
+procedure TfrmMtoOpeCaja.CargarApartadoTicket(
+  const ASeleccion: TOrigenDevolucionCajaVcl;
+  const AApartado: TApartadoTicketCaja);
+begin
+  // El cierre del depósito se hace en la caja donde se creó, como en F2.
+  if not (SameText(AApartado.Empresa, FCodigoEmpresa) and
+          SameText(AApartado.Almacen, FCodigoAlmacen) and
+          SameText(AApartado.Caja, FCodigoCaja)) then
+    ShowMessage_fza(
+      Format(
+        SErrorApartadoCajaOtraCaja,
+        [AApartado.Almacen, AApartado.Caja]))
+  else if AsignarClienteApartado(AApartado.CodigoCliente) then
+  begin
+    CancelarEdicionLineas;
+    DatosCaja.cdsLineas.DisableControls;
+    tvLineasOpe.BeginUpdate;
+    FEditorLineas.ActualizandoDepositos := True;
+    try
+      DatosCaja.CargarApartadoTicket(ASeleccion.Serie, ASeleccion.Numero);
+    finally
+      DatosCaja.cdsLineas.EnableControls;
+      tvLineasOpe.EndUpdate;
+      FEditorLineas.ActualizandoDepositos := False;
+    end;
+    MostrarLineasCuentaCliente;
+    if FCaptionPrevio = '' then
+      FCaptionPrevio := Caption;
+    Caption := FCaptionPrevio + Format(
+      SCaptionApartadoTicketDe,
+      [ASeleccion.Serie, ASeleccion.Numero, AApartado.NombreContacto]);
+  end;
+end;
+
+function TfrmMtoOpeCaja.AsignarClienteApartado(
+  const ACodigoCliente: string): Boolean;
+var
+  Cliente: TClienteCaja;
+begin
+  // La venta que completa el apartado es del cliente de Varios. El editor
+  // queda sin marcar como modificado para que al salir de él no se valide
+  // de nuevo y limpie las líneas del depósito.
+  Result := FDependencias.RepositorioConsultas.ObtenerCliente(
+    ACodigoCliente,
+    Cliente);
+  if Result then
+  begin
+    EscribirCabeceraClienteVenta(DatosCaja.cdsCabecera, Cliente);
+    btnCodigoCliente.Text := ACodigoCliente;
+    btnCodigoCliente.EditModified := False;
+    lblNombreCliente.Caption := Cliente.RazonSocial;
+    lblTarifa.Caption := Cliente.TarifaArticulo;
+  end
+  else
+    ShowMessage_fza(SErrorCodigoClienteCajaNoExiste);
 end;
 
 procedure TfrmMtoOpeCaja.CargarDevolucion(
@@ -2912,7 +3014,10 @@ begin
             Cliente.TarifaArticulo;
           // Cliente con depositos: solo se cargan solos con el
           // parametro de autocarga activo.
-          if DebeCargarDepositosCliente(
+          // El cliente de Varios no tiene cuenta: sus apartados se
+          // completan por F4 con el ticket.
+          if (Cliente.EsClienteVarios <> 'S') and
+             DebeCargarDepositosCliente(
                Cliente.EsPermiteDeuda,
                ParametrosCaja.GetBool(
                  'vgerAutoLoadDepositos',
@@ -3403,60 +3508,66 @@ end;
 procedure TfrmMtoOpeCaja.CargarDepositosF2;
 var
   sCodigoCliente: string;
-  Totales: TFacturaTotales;
 begin
   sCodigoCliente :=
     DatosCaja.cdsCabecera.FieldByName('CODIGO_CLI_FAC').AsString;
   if (Trim(sCodigoCliente) = '') or (Trim(sCodigoCliente) = '0') then
-  begin
-    ShowMessage_fza(SErrorClienteDepositosCajaNoSeleccionado);
-  end
+    ShowMessage_fza(SErrorClienteDepositosCajaNoSeleccionado)
+  else if EsClienteVariosVenta(sCodigoCliente) then
+    ShowMessage_fza(SErrorApartadoCajaSinCuenta)
   else
   begin
-  // 1. Matar la edición activa limpiamente (Evita el error de
-  // Artículo no encontrado en la línea en blanco)
+    CancelarEdicionLineas;
+    // Limpieza y carga de depósitos de forma silenciosa
+    DatosCaja.cdsLineas.DisableControls;
+    tvLineasOpe.BeginUpdate;
+    FEditorLineas.ActualizandoDepositos := True;
+    try
+      DatosCaja.cdsLineas.First;
+      while not DatosCaja.cdsLineas.Eof do
+      begin
+        if (DatosCaja.cdsLineas.FieldByName(
+              'VIENE_DE_DEPOSITO').AsString = 'S') or
+           (DatosCaja.cdsLineas.FieldByName(
+              'VIENE_DE_DEPOSITO').AsString = 'A') then
+          DatosCaja.cdsLineas.Delete
+        else
+          DatosCaja.cdsLineas.Next;
+      end;
+      DatosCaja.CargarDepositosCliente(sCodigoCliente);
+    finally
+      DatosCaja.cdsLineas.EnableControls;
+      tvLineasOpe.EndUpdate;
+      FEditorLineas.ActualizandoDepositos := False;
+    end;
+    MostrarLineasCuentaCliente;
+  end;
+end;
+
+procedure TfrmMtoOpeCaja.CancelarEdicionLineas;
+begin
+  // Cierra el editor sin validar (evita "Artículo no encontrado" en la
+  // línea en blanco) y descarta la línea a medias antes de tocar el dataset.
   if (tvLineasOpe.Controller.EditingController <> nil) and
      tvLineasOpe.Controller.EditingController.IsEditing then
-  begin
     tvLineasOpe.Controller.EditingController.HideEdit(False);
-  end;
-  // 2. Cancelar línea a medias si la hubiera
   if DatosCaja.cdsLineas.State in [dsInsert, dsEdit] then
     DatosCaja.cdsLineas.Cancel;
-  // 3. Limpieza y carga de depósitos de forma silenciosa
-  DatosCaja.cdsLineas.DisableControls;
-  tvLineasOpe.BeginUpdate;
-  FEditorLineas.ActualizandoDepositos := True;
-  try
-    DatosCaja.cdsLineas.First;
-    while not DatosCaja.cdsLineas.Eof do
-    begin
-      if (DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S')
-                                                                              or
-         (DatosCaja.cdsLineas.FieldByName(
-                                       'VIENE_DE_DEPOSITO').AsString = 'A') then
-        DatosCaja.cdsLineas.Delete
-      else
-        DatosCaja.cdsLineas.Next;
-    end;
-    DatosCaja.CargarDepositosCliente(sCodigoCliente);
-  finally
-    DatosCaja.cdsLineas.EnableControls;
-    tvLineasOpe.EndUpdate;
-    FEditorLineas.ActualizandoDepositos := False;
-  end;
+end;
+
+procedure TfrmMtoOpeCaja.MostrarLineasCuentaCliente;
+var
+  Totales: TFacturaTotales;
+begin
   tvLineasOpe.DataController.UpdateItems(False);
-  // Modo cuenta de cliente (F2): rellenamos Color/Talla de cada prenda y
-  // ajustamos las columnas (fecha de la operacion visible; % y Menos ocultas)
-  // antes de añadir la linea en blanco de escaneo.
+  // Modo cuenta de cliente (F2 o apartado por F4): Color/Talla de cada
+  // prenda y columnas de depósito (fecha visible; % y Menos ocultas) antes
+  // de añadir la línea en blanco de escaneo.
   FEditorLineas.PoblarAtributosLineasDeposito;
   tvFechaOperacion.Visible := True;
   FEditorLineas.MostrarColumnasCuentaCliente(True);
-  // 5. Preparamos la línea en blanco para seguir escaneando (ahora ya no rompe
-  // la caché)
   FEditorLineas.AsegurarLineaNueva;
-  // 6. Calculamos el total SIEMPRE AL FINAL, forzando la lectura de memoria
-  // interna
+  // El total se calcula al final, leyendo la memoria interna.
   Totales := TFacturaTotales.Create(
     ConexionPrincipal,
     FLecturas.RepositorioFacturas,
@@ -3470,8 +3581,17 @@ begin
       ActualizarLabelTotal(nil, Totales.Totales.TotalLiquido);
   finally
     FreeAndNil(Totales);
-    end;
   end;
+end;
+
+function TfrmMtoOpeCaja.EsClienteVariosVenta(
+  const ACodigoCliente: string): Boolean;
+var
+  Cliente: TClienteCaja;
+begin
+  Result := FDependencias.RepositorioConsultas.ObtenerCliente(
+    ACodigoCliente,
+    Cliente) and (Cliente.EsClienteVarios = 'S');
 end;
 
 procedure TfrmMtoOpeCaja.btnF2Click(Sender: TObject);

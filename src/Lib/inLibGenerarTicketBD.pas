@@ -20,6 +20,8 @@ uses
   inLibUnidadesMedida, inLibDir, inLibParametrosIntf,
   inLibTicketsCajaIntf, inLibPreviewTicket;
 
+// Con un apartado del cliente de Varios saca dos copias: una para el
+// cliente y otra para pegar en la prenda.
 procedure ImprimirResguardoDeposito(
   const APreview: IPreviewTicket;
   const ARepositorio: IRepositorioResguardosCaja;
@@ -27,7 +29,8 @@ procedure ImprimirResguardoDeposito(
   AOperacion: string;
   const ANombreImpresora: string = 'DEBUG';
   ARutasPDF: TStrings = nil;
-  ASoloPDF: Boolean = False);
+  ASoloPDF: Boolean = False;
+  AImprimirCodigoBarras: Boolean = False);
 procedure ImprimirTicketDesdeBD(
   const AParametrosApp: IParametrosAplicacion;
   const APreview: IPreviewTicket;
@@ -113,7 +116,13 @@ type
     FTotalEntregas: Currency;
     FTotalDevoluciones: Currency;
     FTotalDevueltos: Currency;
+    FApartado: TApartadoResguardoTicketCaja;
+    FImprimirCodigoBarras: Boolean;
+    FSufijoFichero: string;
     procedure CargarCabecera;
+    procedure ReiniciarTicket(const ASufijoFichero: string);
+    procedure GenerarCopia(const AEtiquetaCopia, ASufijoFichero: string);
+    procedure EscribirApartado(const AEtiquetaCopia: string);
     procedure EscribirTituloSeccion(const ATitulo: string);
     procedure EscribirCabecera;
     procedure EscribirDepositos(
@@ -137,6 +146,8 @@ type
       ASoloPDF: Boolean);
     destructor Destroy; override;
     procedure Ejecutar;
+    property ImprimirCodigoBarras: Boolean
+      read FImprimirCodigoBarras write FImprimirCodigoBarras;
   end;
   TConfiguracionTicketVenta = record
     ParametrosApp: IParametrosAplicacion;
@@ -429,7 +440,7 @@ begin
   sComandosEsc := FTicket.ObtenerComandos;
   sRutaFicheroPdf :=
     GetUserFolderTickets + 'ResguardoDep_' +
-    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + '.pdf';
+    FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now) + FSufijoFichero + '.pdf';
   ImprimirOPrevisualizarTicket(
     FPreview,
     FTicket,
@@ -442,13 +453,71 @@ begin
 end;
 
 procedure TGeneradorResguardoDeposito.Ejecutar;
+begin
+  CargarCabecera;
+  FApartado := FRepositorio.ObtenerApartadoResguardo(FContexto);
+  if FApartado.Encontrado then
+  begin
+    GenerarCopia(STicketCopiaClienteApartado, '_cliente');
+    GenerarCopia(STicketCopiaPrendaApartado, '_prenda');
+  end
+  else
+    GenerarCopia('', '');
+end;
+
+procedure TGeneradorResguardoDeposito.ReiniciarTicket(
+  const ASufijoFichero: string);
+begin
+  FreeAndNil(FTicket);
+  FTicket := TTicketTermico.Create(FNombreImpresora);
+  FSufijoFichero := ASufijoFichero;
+  FTotalNuevos := 0;
+  FTotalEntregas := 0;
+  FTotalDevoluciones := 0;
+  FTotalDevueltos := 0;
+end;
+
+procedure TGeneradorResguardoDeposito.EscribirApartado(
+  const AEtiquetaCopia: string);
+begin
+  if FApartado.Encontrado then
+  begin
+    FTicket.Alinear(alCentro);
+    FTicket.Negrita(True);
+    FTicket.EscribirLinea(AEtiquetaCopia);
+    FTicket.Negrita(False);
+    FTicket.Alinear(alIzquierda);
+    FTicket.TextoColumnas(
+      STicketEtiquetaApartadoPor,
+      Copy(FApartado.NombreContacto, 1, 28));
+    if FApartado.TelefonoContacto <> '' then
+      FTicket.TextoColumnas(
+        STicketEtiquetaTelefonoApartado,
+        FApartado.TelefonoContacto);
+    if FApartado.NumeroFactura <> '' then
+      FTicket.TextoColumnas(
+        STicketEtiquetaTicketApartado,
+        FApartado.SerieFactura + '\' + FApartado.NumeroFactura);
+    if FImprimirCodigoBarras and (FApartado.CodigoBarras <> '') then
+    begin
+      FTicket.Alinear(alCentro);
+      FTicket.ImprimirEAN13Nativo(FApartado.CodigoBarras);
+      FTicket.Alinear(alIzquierda);
+    end;
+    FTicket.SaltarLineas(1);
+  end;
+end;
+
+procedure TGeneradorResguardoDeposito.GenerarCopia(
+  const AEtiquetaCopia, ASufijoFichero: string);
 var
   oDepositosDevueltos: TArray<TDepositoResguardoTicketCaja>;
 begin
-  CargarCabecera;
+  ReiniciarTicket(ASufijoFichero);
   FNuevosDepositos :=
     FRepositorio.ListarNuevosDepositosResguardo(FContexto);
   EscribirCabecera;
+  EscribirApartado(AEtiquetaCopia);
   EscribirDepositos(
     STicketMovimientoDepositosPrestamos,
     False,
@@ -640,7 +709,7 @@ begin
     dTotalCambio := dTotalCambio + oPagos[i].ImporteCambio;
     if oPagos[i].ImporteEntregado <> 0 then
       FTicket.TextoColumnas(
-        UpperCase(oPagos[i].CodigoFormaPago),
+        oPagos[i].DescripcionFormaPago,
         FormatFloat('#,##0.00', oPagos[i].ImporteEntregado) + ' €');
   end;
   if dTotalCambio > 0 then
@@ -789,7 +858,8 @@ procedure ImprimirResguardoDeposito(
   AOperacion: string;
   const ANombreImpresora: string;
   ARutasPDF: TStrings;
-  ASoloPDF: Boolean);
+  ASoloPDF: Boolean;
+  AImprimirCodigoBarras: Boolean);
 var
   oGenerador: TGeneradorResguardoDeposito;
 begin
@@ -806,6 +876,7 @@ begin
       ARutasPDF,
       ASoloPDF);
     try
+      oGenerador.ImprimirCodigoBarras := AImprimirCodigoBarras;
       oGenerador.Ejecutar;
     finally
       FreeAndNil(oGenerador);

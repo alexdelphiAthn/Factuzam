@@ -59,6 +59,9 @@ type
       TArray<TDepositoResguardoTicketCaja>;
     function ObtenerTotalPagadoResguardo(
       const AContexto: TContextoOperacionTicketCaja): Currency;
+    function ObtenerApartadoResguardo(
+      const AContexto: TContextoOperacionTicketCaja):
+      TApartadoResguardoTicketCaja;
     function ObtenerCabeceraTicket(
       const AContexto: TContextoOperacionTicketCaja):
       TCabeceraTicketCaja;
@@ -162,6 +165,19 @@ const
     'AND CODIGO_ALM_PAGO = :ALM ' +
     'AND CODIGO_CAJA_PAGO = :CAJA ' +
     'AND NUMERO_OPERACION_PAGO = :OP';
+  SQL_APARTADO_RESGUARDO =
+    'SELECT d.NOMBRE_CONTACTO_DEP, d.TELEFONO_CONTACTO_DEP, ' +
+    'o.SERIE_FAC_OPCAJA, o.NUMERO_FAC_OPCAJA ' +
+    'FROM fza_caja_operaciones o ' +
+    'INNER JOIN fza_depositos_cliente d ' +
+    'ON d.ID_DEPOSITO_DEP = o.ID_DEPOSITO_OPCAJA ' +
+    'WHERE o.CODIGO_EMP_OPCAJA = :EMP ' +
+    'AND o.CODIGO_ALM_OPCAJA = :ALM ' +
+    'AND o.CODIGO_CAJA_OPCAJA = :CAJA ' +
+    'AND o.NUMERO_OPERACION_OPCAJA = :OP ' +
+    'AND d.ESAPARTADO_DEP = ''S'' ' +
+    'ORDER BY o.ID_OPCAJA ' +
+    'LIMIT 1';
   SQL_CABECERA_TICKET =
     'SELECT o.TIPO_OPERACION_OPCAJA, o.FECHA_OPERACION_OPCAJA, ' +
     'o.INSTANTE_ALTA AS INSTANTE_ALTA_OPCAJA, ' +
@@ -201,14 +217,18 @@ const
     'AND NUMERO_FAC_FACLIN = :NRO ' +
     'ORDER BY LINEA_FACLIN';
   SQL_PAGOS_TICKET =
-    'SELECT CODIGO_FP_CFP, IMPORTE_ENTREGADO_PAGO, ' +
-    'IMPORTE_CAMBIO_PAGO ' +
-    'FROM fza_caja_pagos ' +
-    'WHERE CODIGO_EMP_PAGO = :EMP ' +
-    'AND CODIGO_ALM_PAGO = :ALM ' +
-    'AND CODIGO_CAJA_PAGO = :CAJA ' +
-    'AND NUMERO_OPERACION_PAGO = :OP ' +
-    'ORDER BY NUMERO_LINEA_PAGO';
+    'SELECT p.CODIGO_FP_CFP, ' +
+    'COALESCE(NULLIF(TRIM(fp.DESCRIPCION_FORMA_PAGO_CFP), ''''), ' +
+    'p.CODIGO_FP_CFP) AS DESCRIPCION_FORMA_PAGO_CFP, ' +
+    'p.IMPORTE_ENTREGADO_PAGO, p.IMPORTE_CAMBIO_PAGO ' +
+    'FROM fza_caja_pagos p ' +
+    'LEFT JOIN fza_caja_formas_pago fp ' +
+    'ON fp.CODIGO_FP_CFP = p.CODIGO_FP_CFP ' +
+    'WHERE p.CODIGO_EMP_PAGO = :EMP ' +
+    'AND p.CODIGO_ALM_PAGO = :ALM ' +
+    'AND p.CODIGO_CAJA_PAGO = :CAJA ' +
+    'AND p.NUMERO_OPERACION_PAGO = :OP ' +
+    'ORDER BY p.NUMERO_LINEA_PAGO';
   SQL_VALES_TICKET =
     'SELECT CODIGO_VL, IMPORTE_NOMINAL_VL ' +
     'FROM fza_caja_vales ' +
@@ -282,7 +302,7 @@ class function TRepositorioTicketsCaja.DefinicionesSql:
 const
   PARAMETROS_OPERACION = 'EMP,ALM,CAJA,OP';
 begin
-  SetLength(Result, 16);
+  SetLength(Result, 17);
   Result[0] := DefinicionSql(
     'ObtenerEmpresaResguardo',
     SQL_EMPRESA_RESGUARDO,
@@ -344,7 +364,8 @@ begin
     'ListarPagosTicket',
     SQL_PAGOS_TICKET,
     PARAMETROS_OPERACION,
-    'CODIGO_FP_CFP,IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO');
+    'CODIGO_FP_CFP,DESCRIPCION_FORMA_PAGO_CFP,' +
+    'IMPORTE_ENTREGADO_PAGO,IMPORTE_CAMBIO_PAGO');
   Result[10] := DefinicionSql(
     'ListarValesTicket',
     SQL_VALES_TICKET,
@@ -382,6 +403,12 @@ begin
     'EMP',
     'TEXTO_PIE_TICKET_CAJA_1_EMP,TEXTO_PIE_TICKET_CAJA_2_EMP,' +
     'TEXTO_PIE_TICKET_CAJA_3_EMP,TEXTO_PIE_TICKET_CAJA_4_EMP');
+  Result[16] := DefinicionSql(
+    'ObtenerApartadoResguardo',
+    SQL_APARTADO_RESGUARDO,
+    PARAMETROS_OPERACION,
+    'NOMBRE_CONTACTO_DEP,TELEFONO_CONTACTO_DEP,' +
+    'SERIE_FAC_OPCAJA,NUMERO_FAC_OPCAJA');
 end;
 
 function CrearRepositoriosTicketsCaja(
@@ -840,6 +867,8 @@ begin
       begin
         oPago.CodigoFormaPago :=
           oQuery.FieldByName('CODIGO_FP_CFP').AsString;
+        oPago.DescripcionFormaPago :=
+          oQuery.FieldByName('DESCRIPCION_FORMA_PAGO_CFP').AsString;
         oPago.ImporteEntregado :=
           oQuery.FieldByName('IMPORTE_ENTREGADO_PAGO').AsCurrency;
         oPago.ImporteCambio :=
@@ -1081,6 +1110,45 @@ begin
   finally
     FreeAndNil(oQuery);
   end;
+end;
+
+function TRepositorioTicketsCaja.ObtenerApartadoResguardo(
+  const AContexto: TContextoOperacionTicketCaja):
+  TApartadoResguardoTicketCaja;
+var
+  oContexto: TContextoOperacionTicketCaja;
+  oQuery: TUniQuery;
+begin
+  Result := Default(TApartadoResguardoTicketCaja);
+  oContexto := AContexto;
+  oQuery := AbrirConsulta(
+    16,
+    procedure(AConsulta: TUniQuery)
+    begin
+      ConfigurarOperacion(AConsulta, oContexto);
+    end);
+  try
+    Result.Encontrado := not oQuery.IsEmpty;
+    if Result.Encontrado then
+    begin
+      Result.NombreContacto :=
+        oQuery.FieldByName('NOMBRE_CONTACTO_DEP').AsString;
+      Result.TelefonoContacto :=
+        oQuery.FieldByName('TELEFONO_CONTACTO_DEP').AsString;
+      Result.SerieFactura :=
+        oQuery.FieldByName('SERIE_FAC_OPCAJA').AsString;
+      Result.NumeroFactura :=
+        oQuery.FieldByName('NUMERO_FAC_OPCAJA').AsString;
+    end;
+  finally
+    FreeAndNil(oQuery);
+  end;
+  // Sin factura (número '0') no hay ticket que buscar ni código que leer.
+  if Result.NumeroFactura = '0' then
+    Result.NumeroFactura := '';
+  Result.CodigoBarras := ObtenerCodigoBarrasTicket(
+    Result.SerieFactura,
+    Result.NumeroFactura);
 end;
 
 function TRepositorioTicketsCaja.ObtenerCodigoBarrasTicket(

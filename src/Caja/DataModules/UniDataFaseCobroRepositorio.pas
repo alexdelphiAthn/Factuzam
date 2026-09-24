@@ -195,7 +195,8 @@ begin
     oConsulta.Connection := FConexion;
     oConsulta.SQL.Text :=
       'SELECT RAZON_SOCIAL_CLI, EMAIL_CLI, ' +
-      '       ESPERMITE_DEUDA_CLI, TOTAL_LIMITE_CREDITO_CLI, ' +
+      '       ESPERMITE_DEUDA_CLI, ESVARIOS_CLI, ' +
+      '       TOTAL_LIMITE_CREDITO_CLI, ' +
       '       TOTAL_DEUDA_CLI ' +
       '  FROM fza_clientes ' +
       ' WHERE CODIGO_CLI_CLI = :CODIGO ' +
@@ -210,6 +211,8 @@ begin
       ACliente.Email := oConsulta.FieldByName('EMAIL_CLI').AsString;
       ACliente.PermiteDeuda :=
         oConsulta.FieldByName('ESPERMITE_DEUDA_CLI').AsString = 'S';
+      ACliente.EsClienteVarios :=
+        oConsulta.FieldByName('ESVARIOS_CLI').AsString = 'S';
       ACliente.LimiteCredito :=
         oConsulta.FieldByName('TOTAL_LIMITE_CREDITO_CLI').AsCurrency;
       ACliente.DeudaActual :=

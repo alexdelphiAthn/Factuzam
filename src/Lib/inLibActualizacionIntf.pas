@@ -23,6 +23,8 @@ const
   cTipoActualizacionComprobacion = 'comprobacion';
   cTipoActualizacionScript = 'script';
   cTipoActualizacionRollback = 'rollback';
+  cTipoActualizacionModelo = 'modelo';
+  cTipoActualizacionComparador = 'comparador';
 
 type
   // Un fichero publicado. El contenido lógico (Nombre, Tamano, Sha256) es
@@ -44,6 +46,9 @@ type
     Entrada: TEntradaActualizacion;
     Orden: Integer;
     Rollback: TEntradaActualizacion;
+    // Scripts que tienen que aplicarse antes que este (la línea
+    // «-- @requiere:» de su cabecera). Mandan sobre Orden.
+    Requiere: TArray<string>;
   end;
 
   TManifiestoActualizacion = record
@@ -59,9 +64,14 @@ type
     Auxiliares: TArray<TEntradaActualizacion>;
     Comprobacion: TEntradaActualizacion;
     Scripts: TArray<TScriptActualizacion>;
+    // Actualización por comparación: el modelo de la versión (volcado de
+    // Factuzam) y DBComparer.exe. Opcionales: una versión puede no traerlos.
+    Modelo: TEntradaActualizacion;
+    Comparador: TEntradaActualizacion;
     function BuscarScript(
       const ANombre: string;
       out AScript: TScriptActualizacion): Boolean;
+    function ComparacionDisponible: Boolean;
   end;
 
   TProgresoActualizacion = reference to procedure(
@@ -112,6 +122,11 @@ begin
 end;
 
 { TManifiestoActualizacion }
+
+function TManifiestoActualizacion.ComparacionDisponible: Boolean;
+begin
+  Result := Modelo.Declarada and Comparador.Declarada;
+end;
 
 function TManifiestoActualizacion.BuscarScript(
   const ANombre: string;

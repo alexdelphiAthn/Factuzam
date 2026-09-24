@@ -968,6 +968,23 @@
                     TabOrder = 19
                     Width = 121
                   end
+                  object chkESVARIOS_CLI: TcxDBCheckBox
+                    Left = 710
+                    Top = 226
+                    Hint = 'Cliente genérico: sus préstamos son apartados sin deuda que se completan con F4'
+                    Caption = 'Es cliente de Varios'
+                    DataBinding.DataField = 'ESVARIOS_CLI'
+                    DataBinding.DataSource = dsTablaG
+                    ParentShowHint = False
+                    Properties.DisplayChecked = 'S'
+                    Properties.DisplayUnchecked = 'N'
+                    Properties.ValueChecked = 'S'
+                    Properties.ValueUnchecked = 'N'
+                    ShowHint = True
+                    Style.TransparentBorder = False
+                    TabOrder = 23
+                    Transparent = True
+                  end
                   object lblExtra2: TcxLabel
                     Left = 450
                     Top = 228

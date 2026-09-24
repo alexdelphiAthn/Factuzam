@@ -520,6 +520,8 @@
         <DCCReference Include="src\Lib\inLibActualizacionInstalacion.pas"/>
         <DCCReference Include="src\Lib\inLibActualizacionEstado.pas"/>
         <DCCReference Include="src\Lib\inLibActualizacionScriptsLectura.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionPrecedencia.pas"/>
+        <DCCReference Include="src\Lib\inLibActualizacionComparacion.pas"/>
         <DCCReference Include="src\Lib\inLibActualizacionScripts.pas"/>
         <DCCReference Include="src\Lib\inLibActualizacionServicio.pas"/>
         <DCCReference Include="src\Lib\inLibActualizacionProceso.pas"/>

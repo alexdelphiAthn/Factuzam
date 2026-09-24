@@ -64,6 +64,11 @@ resourcestring
   STicketTotalPagadoDepositos =
     'TOTAL PAGADO (TICKET + DEPÓSITOS): %s €';
   STicketConformeCliente = 'Conforme, el cliente';
+  STicketCopiaClienteApartado = '*** COPIA PARA EL CLIENTE ***';
+  STicketCopiaPrendaApartado = '*** COPIA PARA LA PRENDA ***';
+  STicketEtiquetaApartadoPor = 'APARTADO POR:';
+  STicketEtiquetaTelefonoApartado = 'TELÉFONO:';
+  STicketEtiquetaTicketApartado = 'TICKET:';
   STicketMovimientoDepositosPrestamos =
     'MOVIMIENTO DE DEPÓSITOS/PRÉSTAMOS';
   STicketDevolucionArticulos = 'DEVOLUCIÓN DE ARTÍCULOS';

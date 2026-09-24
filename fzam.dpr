@@ -272,6 +272,8 @@ uses
   inLibActualizacionInstalacion in 'src\Lib\inLibActualizacionInstalacion.pas',
   inLibActualizacionEstado in 'src\Lib\inLibActualizacionEstado.pas',
   inLibActualizacionScriptsLectura in 'src\Lib\inLibActualizacionScriptsLectura.pas',
+  inLibActualizacionPrecedencia in 'src\Lib\inLibActualizacionPrecedencia.pas',
+  inLibActualizacionComparacion in 'src\Lib\inLibActualizacionComparacion.pas',
   inLibActualizacionScripts in 'src\Lib\inLibActualizacionScripts.pas',
   inLibActualizacionServicio in 'src\Lib\inLibActualizacionServicio.pas',
   inLibActualizacionProceso in 'src\Lib\inLibActualizacionProceso.pas',

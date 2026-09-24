@@ -67,6 +67,13 @@ type
       const AFaltantes: TArray<TScriptFaltante>;
       AHayVersionNueva: Boolean):
       TDecisionScriptsActualizacion;
+    function DecidirModo(
+      const AFaltantes: TArray<TScriptFaltante>;
+      AHayVersionNueva: Boolean;
+      const AVersion: string): TDecisionScriptsActualizacion;
+    function ConfirmarScriptComparacion(
+      const AVersion, ARutaScript, ASalida: string;
+      AConAvisos: Boolean): Boolean;
     function CrearVentanaProceso(const ATitulo: string): IVentanaEspera;
     function CrearVentanaEsperaPantalla: IVentanaEspera;
     function SolicitarCopiaPrevia(out ARutaCopia: string): Boolean;
@@ -215,6 +222,61 @@ begin
     Result := dsaAplazar;
 end;
 
+// La versión trae modelo: además de por scripts, se puede poner al día por
+// comparación. Sí = scripts, No = comparación, Cancelar = más tarde.
+function TfrmModalActualizacion.DecidirModo(
+  const AFaltantes: TArray<TScriptFaltante>;
+  AHayVersionNueva: Boolean;
+  const AVersion: string): TDecisionScriptsActualizacion;
+var
+  sSalir: string;
+begin
+  TfrmModalMensajeTexto.Mostrar(Self, TextoScriptsFaltantes(AFaltantes));
+  sSalir := '';
+  if AHayVersionNueva then
+    sSalir := SAvisoSalirTrasScripts;
+  case MessageDlgTextos_fza(
+         Format(
+           SPreguntaModoActualizacionBBDD,
+           [Length(AFaltantes), AVersion, sSalir]),
+         mtWarning,
+         [mbYes, mbNo, mbCancel],
+         [SBotonActualizarPorScripts,
+          SBotonActualizarPorComparacion,
+          SBotonActualizarMasTarde],
+         mbYes) of
+    mrYes:
+      Result := dsaAhora;
+    mrNo:
+      Result := dsaComparacion;
+  else
+    Result := dsaAplazar;
+  end;
+end;
+
+// Antes de tocar la base se enseña lo que ha salido de la comparación,
+// con lo que DBComparer ha dicho (destino detectado y avisos).
+function TfrmModalActualizacion.ConfirmarScriptComparacion(
+  const AVersion, ARutaScript, ASalida: string;
+  AConAvisos: Boolean): Boolean;
+var
+  sPregunta: string;
+begin
+  TfrmModalMensajeTexto.Mostrar(
+    Self,
+    Format(
+      SDetalleScriptComparacion,
+      [AVersion,
+       ASalida,
+       TextoScriptParaVentana(LeerTextoScriptSql(ARutaScript))]));
+  if AConAvisos then
+    sPregunta := SPreguntaAplicarScriptComparacionConAvisos
+  else
+    sPregunta := SPreguntaAplicarScriptComparacion;
+  Result := MessageDlg_fza(sPregunta, mtConfirmation, [mbYes, mbNo], 0) =
+    mrYes;
+end;
+
 // La misma ventana que el generador de procesos: cronómetro, se puede
 // apartar y enseña el script que se está ejecutando.
 function TfrmModalActualizacion.CrearVentanaProceso(
@@ -327,6 +389,8 @@ begin
   Result.ConsultarRestaurarCopia := ConsultarRestaurarCopia;
   Result.CrearVentanaProceso := CrearVentanaProceso;
   Result.CrearVentanaEspera := CrearVentanaEsperaPantalla;
+  Result.DecidirModo := DecidirModo;
+  Result.ConfirmarScriptComparacion := ConfirmarScriptComparacion;
 end;
 
 procedure TfrmModalActualizacion.EjecutarProceso;

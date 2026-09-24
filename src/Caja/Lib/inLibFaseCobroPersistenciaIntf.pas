@@ -39,6 +39,7 @@ type
     Nombre: string;
     Email: string;
     PermiteDeuda: Boolean;
+    EsClienteVarios: Boolean;
     LimiteCredito: Currency;
     DeudaActual: Currency;
   end;

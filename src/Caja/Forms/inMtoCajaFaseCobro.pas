@@ -214,6 +214,7 @@ type
     FPagosFijosSubsanacion: TPagosSubsanacionCaja;
     procedure PrepararModoSubsanacion;
     function ValidarCobroSubsanacion: Boolean;
+    function PedirContactoApartado: Boolean;
     function ValidaryConfirmar:boolean;
     function PuedeEmitir(const ASerie: string; AFecha: TDateTime): Boolean;
     function SerieAdmiteFecha(const ASerie: string;
@@ -398,6 +399,34 @@ begin
     FMemTablePagos.First;
   finally
     FMemTablePagos.EnableControls;
+  end;
+end;
+
+function TfrmMtoCajaFaseCobro.PedirContactoApartado: Boolean;
+var
+  oValores: array of string;
+  oContacto: TContactoApartado;
+begin
+  // El cliente de Varios no identifica a nadie: el apartado guarda quién
+  // se lleva las prendas para localizarle y para la copia de la prenda.
+  SetLength(oValores, 2);
+  oValores[0] := FDatosCobro.ContactoApartado.Nombre;
+  oValores[1] := FDatosCobro.ContactoApartado.Telefono;
+  Result := InputQuery_fza(
+    STituloApartadoCaja,
+    [SNombreContactoApartadoCaja, STelefonoContactoApartadoCaja],
+    oValores,
+    function(const AValores: array of string): Boolean
+    begin
+      Result := Trim(AValores[0]) <> '';
+      if not Result then
+        ShowMessage_fza(SErrorNombreContactoApartadoCaja);
+    end);
+  if Result then
+  begin
+    oContacto.Nombre := oValores[0];
+    oContacto.Telefono := oValores[1];
+    FDatosCobro.EstablecerContactoApartado(oContacto);
   end;
 end;
 
@@ -1357,7 +1386,6 @@ begin
     ConfigurarModoCobroNormal;
   var PermiteCredito :=
     ParametrosCaja.GetBool('vgerVentasCredito', True) and
-                     FDatosCobro.HayCliente and FDatosCobro.PermiteDeuda and
                      FDatosCobro.PuedeDejarEnCuenta;
   if Assigned(btnDeposito) then
     btnDeposito.Enabled := PermiteCredito;
@@ -1467,6 +1495,12 @@ begin
   begin
     ShowMessage_fza(SErrorImporteCreditoCajaNoPendiente);
   end
+  else if FDatosCobro.EsClienteVarios and
+          (FDatosCobro.ImporteEntregado <= 0) then
+    ShowMessage_fza(SErrorApartadoCajaSinEntrega)
+  else if FDatosCobro.EsClienteVarios and
+          (not PedirContactoApartado) then
+    ActualizarInterfaz
   else
   begin
     Res := FDatosCobro.EstablecerDejarEnCuenta(
@@ -1549,6 +1583,7 @@ begin
         FCodigoCliente,
         Cliente.Nombre,
         Cliente.PermiteDeuda,
+        Cliente.EsClienteVarios,
         Cliente.LimiteCredito,
         0);
     end;

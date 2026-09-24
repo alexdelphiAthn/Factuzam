@@ -70,6 +70,8 @@ type
     CodigoFormaPago: string;
     TarifaArticulo: string;
     EsPermiteDeuda: string;
+    // 'S' = cliente genérico de Varios: aparta prendas sin cuenta propia.
+    EsClienteVarios: string;
   end;
   IRepositorioConsultasCaja = interface
     ['{16818A0B-0B01-4D6B-A8CD-9C94923930EA}']

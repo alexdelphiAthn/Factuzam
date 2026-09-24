@@ -52,6 +52,7 @@ type
     procedure unqryTablaGAfterPost(DataSet: TDataSet);
   private
     procedure GuardarParametrosEDocCliente(ADataSet: TDataSet);
+    procedure GuardarClienteVarios(ADataSet: TDataSet);
   public
     procedure GetCodigoAutoCliente;
     procedure CrearDataSetEtiquetas(iNroEspaciosBlanco: Integer;
@@ -319,10 +320,42 @@ begin
   end;
 end;
 
+procedure TdmClientes.GuardarClienteVarios(ADataSet: TDataSet);
+var
+  Qry: TUniQuery;
+  sCliente: string;
+  sEsVarios: string;
+begin
+  // ESVARIOS_CLI no está en el SQL de actualización del dataset: como los
+  // campos eDoc, solo se graba si la BBDD ya tiene la columna
+  // (20260924_apartados_cliente_varios.sql).
+  sCliente := Trim(ADataSet.FieldByName('CODIGO_CLI_CLI').AsString);
+  if (ADataSet.FindField('ESVARIOS_CLI') <> nil) and (sCliente <> '') then
+  begin
+    sEsVarios := 'N';
+    if ADataSet.FieldByName('ESVARIOS_CLI').AsString = 'S' then
+      sEsVarios := 'S';
+    Qry := TUniQuery.Create(nil);
+    try
+      Qry.Connection := ConexionPrincipal;
+      Qry.SQL.Text :=
+        ' UPDATE fza_clientes ' +
+        ' SET ESVARIOS_CLI = :ESVARIOS ' +
+        ' WHERE CODIGO_CLI_CLI = :CLIENTE ';
+      Qry.ParamByName('ESVARIOS').AsString := sEsVarios;
+      Qry.ParamByName('CLIENTE').AsString := sCliente;
+      Qry.ExecSQL;
+    finally
+      FreeAndNil(Qry);
+    end;
+  end;
+end;
+
 procedure TdmClientes.unqryTablaGAfterPost(DataSet: TDataSet);
 begin
   inherited;
   GuardarParametrosEDocCliente(DataSet);
+  GuardarClienteVarios(DataSet);
 end;
 
 procedure TdmClientes.unqryTablaGBeforeDelete(DataSet: TDataSet);

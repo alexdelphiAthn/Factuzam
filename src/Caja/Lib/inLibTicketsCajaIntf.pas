@@ -44,6 +44,16 @@ type
     TotalPvp: Currency;
   end;
 
+  // Apartado del cliente de Varios: quién aparta y el ticket con el que se
+  // completa la venta desde F4.
+  TApartadoResguardoTicketCaja = record
+    Encontrado: Boolean;
+    NombreContacto: string;
+    TelefonoContacto: string;
+    SerieFactura: string;
+    NumeroFactura: string;
+    CodigoBarras: string;
+  end;
   TEntregaResguardoTicketCaja = record
     TipoOperacion: string;
     Importe: Currency;
@@ -97,6 +107,7 @@ type
 
   TPagoTicketCaja = record
     CodigoFormaPago: string;
+    DescripcionFormaPago: string;
     ImporteEntregado: Currency;
     ImporteCambio: Currency;
   end;
@@ -157,6 +168,9 @@ type
       TArray<TDepositoResguardoTicketCaja>;
     function ObtenerTotalPagadoResguardo(
       const AContexto: TContextoOperacionTicketCaja): Currency;
+    function ObtenerApartadoResguardo(
+      const AContexto: TContextoOperacionTicketCaja):
+      TApartadoResguardoTicketCaja;
     function ListarPieTicket(
       const AEmpresa: string): TArray<string>;
   end;

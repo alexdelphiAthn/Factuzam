@@ -71,6 +71,17 @@ type
     AnticipoPrevio:      Currency;
   end;
 
+  // Apartados pendientes (cliente de Varios) que cuelgan de un ticket.
+  TApartadoTicketCaja = record
+    Encontrado: Boolean;
+    CodigoCliente: string;
+    Empresa: string;
+    Almacen: string;
+    Caja: string;
+    NombreContacto: string;
+    Prendas: Integer;
+  end;
+
 type
   TRellenarArticuloEvent  = function(ACodigo: string): Boolean of object;
   TRellenarAtributosEvent = procedure(ASku: string) of object;
@@ -170,6 +181,8 @@ type
                                         AEsImpIncl: string;
                                         const ACaja, ANumOperacion: string;
                                         AFechaOperacion: TDateTime;
+                                        AEsApartado: Boolean;
+                                        const AContacto: TContactoApartado;
                                         out IdGenerado: string;
                                         out ANumerosMovimiento:
                                           TArray<string>);
@@ -207,6 +220,9 @@ type
       const ARepositorio: TRepositoriosTicketsCaja);
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
     procedure CargarDepositosCliente(const ACodigoCliente: string);
+    function BuscarApartadoTicket(
+      const ASerie, ANumero: string): TApartadoTicketCaja;
+    procedure CargarApartadoTicket(const ASerie, ANumero: string);
     function GenerarSkuFinal(ArticuloBase: string): string;
     function BuscarYMostrarNombre(TipoEntidad, Codigo: string;
                                   var LabelDestino: String):Boolean;
@@ -297,6 +313,24 @@ uses UniDataValoresAutomaticosRepositorio,
 {$R *.dfm}
 
 type
+  TNuevoDepositoCaja = record
+    Id: string;
+    Empresa: string;
+    Almacen: string;
+    Cliente: string;
+    Articulo: string;
+    Sku: string;
+    Precio: Currency;
+    Cantidad: Double;
+    Anticipo: Currency;
+    TipoIva: string;
+    PorcentajeIva: Currency;
+    EsImpIncl: string;
+    Caja: string;
+    NumeroOperacion: string;
+    Usuario: string;
+    Contacto: TContactoApartado;
+  end;
   TLineaTraspasoDevolucion = record
     Sku: string;
     Articulo: string;
@@ -513,14 +547,8 @@ end;
 // =============================================================================
 // MÓDULO: GESTIÓN DE CUENTAS Y DEPÓSITOS DE CLIENTES
 // =============================================================================
-procedure ConfigurarConsultaDepositosCliente(
-  AConsulta: TUniQuery;
-  AConexion: TUniConnection;
-  const ACodigoCliente: string;
-  const AUbicacion: TUbicacionSesion);
-begin
-  AConsulta.Connection := AConexion;
-  AConsulta.SQL.Text :=
+const
+  SQL_DEPOSITOS_PENDIENTES_CAJA =
     'SELECT d.ID_DEPOSITO_DEP, ' +
     '       d.CODIGO_ART_DEP, ' +
     '       d.CODIGO_UNIDAD_DEP, ' +
@@ -534,7 +562,27 @@ begin
     '       a.DESCRIPCION_ART ' +
     '  FROM fza_depositos_cliente d ' +
     '  LEFT JOIN fza_articulos a ' +
-    '    ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ' +
+    '    ON a.CODIGO_ART_ART = d.CODIGO_ART_DEP ';
+  // Los apartados se localizan por cualquier ticket que les haya cobrado
+  // algo: el de la entrega inicial (DE) o el de un abono posterior (CB).
+  SQL_FILTRO_APARTADO_TICKET =
+    ' d.ESAPARTADO_DEP = ''S'' ' +
+    '   AND d.ESTADO_DEP = ''PENDIENTE'' ' +
+    '   AND EXISTS (SELECT 1 ' +
+    '                 FROM fza_caja_operaciones o ' +
+    '                WHERE o.ID_DEPOSITO_OPCAJA = d.ID_DEPOSITO_DEP ' +
+    '                  AND o.SERIE_FAC_OPCAJA = :SERIE ' +
+    '                  AND o.NUMERO_FAC_OPCAJA = :NUMERO) ';
+
+procedure ConfigurarConsultaDepositosCliente(
+  AConsulta: TUniQuery;
+  AConexion: TUniConnection;
+  const ACodigoCliente: string;
+  const AUbicacion: TUbicacionSesion);
+begin
+  AConsulta.Connection := AConexion;
+  AConsulta.SQL.Text :=
+    SQL_DEPOSITOS_PENDIENTES_CAJA +
     ' WHERE d.CODIGO_CLI_DEP = :CLI ' +
     '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
     '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
@@ -708,6 +756,190 @@ begin
   end;
 end;
 
+function TdmCajaOpe.BuscarApartadoTicket(
+  const ASerie, ANumero: string): TApartadoTicketCaja;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := Default(TApartadoTicketCaja);
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text :=
+      'SELECT d.CODIGO_CLI_DEP, ' +
+      '       d.CODIGO_EMP_DEP, ' +
+      '       d.CODIGO_ALM_DEP, ' +
+      '       d.CODIGO_CAJA_DEP, ' +
+      '       MAX(d.NOMBRE_CONTACTO_DEP) AS NOMBRE_CONTACTO_DEP, ' +
+      '       COUNT(*) AS PRENDAS ' +
+      '  FROM fza_depositos_cliente d ' +
+      ' WHERE ' + SQL_FILTRO_APARTADO_TICKET +
+      ' GROUP BY d.CODIGO_CLI_DEP, d.CODIGO_EMP_DEP, ' +
+      '          d.CODIGO_ALM_DEP, d.CODIGO_CAJA_DEP ' +
+      ' ORDER BY PRENDAS DESC ' +
+      ' LIMIT 1';
+    oConsulta.ParamByName('SERIE').AsString := ASerie;
+    oConsulta.ParamByName('NUMERO').AsString := ANumero;
+    oConsulta.Open;
+    Result.Encontrado := not oConsulta.IsEmpty;
+    if Result.Encontrado then
+    begin
+      Result.CodigoCliente :=
+        oConsulta.FieldByName('CODIGO_CLI_DEP').AsString;
+      Result.Empresa := oConsulta.FieldByName('CODIGO_EMP_DEP').AsString;
+      Result.Almacen := oConsulta.FieldByName('CODIGO_ALM_DEP').AsString;
+      Result.Caja := oConsulta.FieldByName('CODIGO_CAJA_DEP').AsString;
+      Result.NombreContacto :=
+        oConsulta.FieldByName('NOMBRE_CONTACTO_DEP').AsString;
+      Result.Prendas := oConsulta.FieldByName('PRENDAS').AsInteger;
+    end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure TdmCajaOpe.CargarApartadoTicket(const ASerie, ANumero: string);
+var
+  oConsulta: TUniQuery;
+  oUbicacion: TUbicacionSesion;
+begin
+  if not Assigned(FContextoSesion) then
+    raise Exception.Create(SErrorContextoSesionCajaNoConfigurado);
+  oUbicacion := FContextoSesion.Ubicacion;
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    // Mismas líneas que la cuenta del cliente (F2): prenda a precio
+    // completo y lo entregado a cuenta en negativo; el total es el resto.
+    oConsulta.SQL.Text :=
+      SQL_DEPOSITOS_PENDIENTES_CAJA +
+      ' WHERE ' + SQL_FILTRO_APARTADO_TICKET +
+      '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
+      '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
+      '   AND d.CODIGO_CAJA_DEP = :CAJA ' +
+      ' ORDER BY d.FECHA_CREACION_DEP';
+    oConsulta.ParamByName('SERIE').AsString := ASerie;
+    oConsulta.ParamByName('NUMERO').AsString := ANumero;
+    oConsulta.ParamByName('EMPRESA').AsString := oUbicacion.Empresa;
+    oConsulta.ParamByName('ALMACEN').AsString := oUbicacion.Almacen;
+    oConsulta.ParamByName('CAJA').AsString := oUbicacion.Caja;
+    oConsulta.Open;
+    if not oConsulta.IsEmpty then
+      IncorporarDepositosPendientes(
+        oConsulta,
+        cdsLineas,
+        FOnRecalcularLineas);
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure InsertarDepositoPrestamo(
+  AConexion: TUniConnection;
+  const ADeposito: TNuevoDepositoCaja);
+var
+  oProcedimiento: TUniStoredProc;
+begin
+  // El préstamo suma su pendiente a TOTAL_DEUDA_CLI dentro del SP.
+  oProcedimiento := TUniStoredProc.Create(nil);
+  try
+    oProcedimiento.Connection := AConexion;
+    oProcedimiento.StoredProcName := 'PRC_FZA_DEPOSITOS_INSERT';
+    oProcedimiento.Prepare;
+    oProcedimiento.ParamByName('p_ID_DEP').AsString := ADeposito.Id;
+    oProcedimiento.ParamByName('p_EMP').AsString := ADeposito.Empresa;
+    oProcedimiento.ParamByName('p_ALM_DEP').AsString := ADeposito.Almacen;
+    oProcedimiento.ParamByName('p_CLI').AsString := ADeposito.Cliente;
+    oProcedimiento.ParamByName('p_ART').AsString := ADeposito.Articulo;
+    oProcedimiento.ParamByName('p_SKU').AsString := ADeposito.Sku;
+    oProcedimiento.ParamByName('p_PRECIO').AsCurrency := ADeposito.Precio;
+    oProcedimiento.ParamByName('p_CANTIDAD').AsFloat := ADeposito.Cantidad;
+    oProcedimiento.ParamByName('p_ANTICIPO').AsCurrency :=
+      ADeposito.Anticipo;
+    oProcedimiento.ParamByName('p_TIPOIVA').AsString := ADeposito.TipoIva;
+    oProcedimiento.ParamByName('p_PORCIVA').AsCurrency :=
+      ADeposito.PorcentajeIva;
+    oProcedimiento.ParamByName('p_IMPINCL').AsString := ADeposito.EsImpIncl;
+    oProcedimiento.ParamByName('p_CAJA').AsString := ADeposito.Caja;
+    oProcedimiento.ParamByName('p_NUMOP').AsString :=
+      ADeposito.NumeroOperacion;
+    oProcedimiento.ParamByName('p_USUARIO').AsString := ADeposito.Usuario;
+    oProcedimiento.Execute;
+  finally
+    FreeAndNil(oProcedimiento);
+  end;
+end;
+
+procedure InsertarDepositoApartado(
+  AConexion: TUniConnection;
+  const ADeposito: TNuevoDepositoCaja);
+var
+  oConsulta: TUniQuery;
+begin
+  // El apartado del cliente de Varios no genera deuda y se inserta dentro
+  // de la transacción de la venta (el SP de préstamos hace su COMMIT).
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := AConexion;
+    oConsulta.SQL.Text :=
+      'INSERT INTO fza_depositos_cliente ( ' +
+      '  ID_DEPOSITO_DEP, CODIGO_EMP_DEP, CODIGO_ALM_DEP, ' +
+      '  CODIGO_CLI_DEP, CODIGO_ART_DEP, CODIGO_UNIDAD_DEP, ' +
+      '  ESTADO_DEP, ESAPARTADO_DEP, NOMBRE_CONTACTO_DEP, ' +
+      '  TELEFONO_CONTACTO_DEP, PRECIO_VENTA_DEP, ' +
+      '  CANTIDAD_PENDIENTE_DEP, IMPORTE_ANTICIPO_DEP, ' +
+      '  TIPO_IVA_DEP, PORCENTAJE_IVA_DEP, ESIMP_INCL_DEP, ' +
+      '  CODIGO_CAJA_DEP, NUMERO_OPERACION_DEP, ' +
+      '  INSTANTE_ALTA, USUARIO_ALTA, INSTANTE_MODIF, USUARIO_MODIF) ' +
+      'VALUES ( ' +
+      '  :ID, :EMPRESA, :ALMACEN, :CLIENTE, :ARTICULO, :SKU, ' +
+      '  ''PENDIENTE'', ''S'', :NOMBRE, :TELEFONO, :PRECIO, ' +
+      '  :CANTIDAD, :ANTICIPO, :TIPOIVA, :PORCIVA, :IMPINCL, ' +
+      '  :CAJA, :NUMOP, NOW(), :USUARIO, NOW(), :USUARIO)';
+    oConsulta.ParamByName('ID').AsString := ADeposito.Id;
+    oConsulta.ParamByName('EMPRESA').AsString := ADeposito.Empresa;
+    oConsulta.ParamByName('ALMACEN').AsString := ADeposito.Almacen;
+    oConsulta.ParamByName('CLIENTE').AsString := ADeposito.Cliente;
+    oConsulta.ParamByName('ARTICULO').AsString := ADeposito.Articulo;
+    oConsulta.ParamByName('SKU').AsString := ADeposito.Sku;
+    oConsulta.ParamByName('NOMBRE').AsString :=
+      Copy(ADeposito.Contacto.Nombre, 1, 100);
+    oConsulta.ParamByName('TELEFONO').AsString :=
+      Copy(ADeposito.Contacto.Telefono, 1, 30);
+    oConsulta.ParamByName('PRECIO').AsCurrency := ADeposito.Precio;
+    oConsulta.ParamByName('CANTIDAD').AsFloat := ADeposito.Cantidad;
+    oConsulta.ParamByName('ANTICIPO').AsCurrency := ADeposito.Anticipo;
+    oConsulta.ParamByName('TIPOIVA').AsString := ADeposito.TipoIva;
+    oConsulta.ParamByName('PORCIVA').AsCurrency := ADeposito.PorcentajeIva;
+    oConsulta.ParamByName('IMPINCL').AsString := ADeposito.EsImpIncl;
+    oConsulta.ParamByName('CAJA').AsString := ADeposito.Caja;
+    oConsulta.ParamByName('NUMOP').AsString := ADeposito.NumeroOperacion;
+    oConsulta.ParamByName('USUARIO').AsString := ADeposito.Usuario;
+    oConsulta.Execute;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+procedure DescontarDeudaDeposito(
+  AConsulta: TUniQuery;
+  const ACliente: string;
+  AImporte: Currency;
+  AEsApartado: Boolean);
+begin
+  // Los apartados del cliente de Varios nunca sumaron deuda.
+  if not AEsApartado then
+  begin
+    AConsulta.SQL.Text :=
+      'UPDATE fza_clientes ' +
+      'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :IMPORTE ' +
+      'WHERE CODIGO_CLI_CLI = :CLIENTE';
+    AConsulta.ParamByName('IMPORTE').AsCurrency := AImporte;
+    AConsulta.ParamByName('CLIENTE').AsString := ACliente;
+    AConsulta.Execute;
+  end;
+end;
+
 procedure TdmCajaOpe.CerrarDepositoCliente(QryTrx: TUniQuery;
                                            const AIdDeposito,
                                                  AEmpresa,
@@ -718,12 +950,13 @@ var
   Consulta: TUniQuery;
   Cliente: string;
   DeudaAnterior: Currency;
+  EsApartado: Boolean;
 begin
   Consulta := TUniQuery.Create(nil);
   try
     Consulta.Connection := QryTrx.Connection;
     Consulta.SQL.Text :=
-      'SELECT CODIGO_CLI_DEP, ' +
+      'SELECT CODIGO_CLI_DEP, ESAPARTADO_DEP, ' +
       '       (PRECIO_VENTA_DEP * ' +
       '        COALESCE(CANTIDAD_PENDIENTE_DEP, 1)) - ' +
       '       COALESCE(IMPORTE_ANTICIPO_DEP, 0) AS DEUDA_ANTERIOR ' +
@@ -744,6 +977,7 @@ begin
       Cliente := Consulta.FieldByName('CODIGO_CLI_DEP').AsString;
       DeudaAnterior :=
         Consulta.FieldByName('DEUDA_ANTERIOR').AsCurrency;
+      EsApartado := Consulta.FieldByName('ESAPARTADO_DEP').AsString = 'S';
       Consulta.Close;
       Consulta.SQL.Text :=
         'UPDATE fza_depositos_cliente ' +
@@ -760,13 +994,7 @@ begin
       Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
       Consulta.ParamByName('CAJA').AsString := ACaja;
       Consulta.Execute;
-      Consulta.SQL.Text :=
-        'UPDATE fza_clientes ' +
-        'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :DEUDA ' +
-        'WHERE CODIGO_CLI_CLI = :CLIENTE';
-      Consulta.ParamByName('DEUDA').AsCurrency := DeudaAnterior;
-      Consulta.ParamByName('CLIENTE').AsString := Cliente;
-      Consulta.Execute;
+      DescontarDeudaDeposito(Consulta, Cliente, DeudaAnterior, EsApartado);
     end
     else
       raise Exception.Create(SErrorOperacionCajaNoEncontrada);
@@ -972,6 +1200,7 @@ procedure TdmCajaOpe.AumentarAnticipoDeposito(QryTrx: TUniQuery;
 var
   Consulta: TUniQuery;
   Cliente: string;
+  EsApartado: Boolean;
 begin
   if ANuevoAbono > 0 then
   begin
@@ -979,7 +1208,7 @@ begin
     try
       Consulta.Connection := QryTrx.Connection;
       Consulta.SQL.Text :=
-        'SELECT CODIGO_CLI_DEP ' +
+        'SELECT CODIGO_CLI_DEP, ESAPARTADO_DEP ' +
         'FROM fza_depositos_cliente ' +
         'WHERE ID_DEPOSITO_DEP = :ID ' +
         'AND CODIGO_EMP_DEP = :EMPRESA ' +
@@ -995,6 +1224,8 @@ begin
       if not Consulta.IsEmpty then
       begin
         Cliente := Consulta.FieldByName('CODIGO_CLI_DEP').AsString;
+        EsApartado :=
+          Consulta.FieldByName('ESAPARTADO_DEP').AsString = 'S';
         Consulta.Close;
         Consulta.SQL.Text :=
           'UPDATE fza_depositos_cliente ' +
@@ -1013,13 +1244,8 @@ begin
         Consulta.ParamByName('ALMACEN').AsString := AAlmacen;
         Consulta.ParamByName('CAJA').AsString := ACaja;
         Consulta.Execute;
-        Consulta.SQL.Text :=
-          'UPDATE fza_clientes ' +
-          'SET TOTAL_DEUDA_CLI = COALESCE(TOTAL_DEUDA_CLI, 0) - :ABONO ' +
-          'WHERE CODIGO_CLI_CLI = :CLIENTE';
-        Consulta.ParamByName('ABONO').AsCurrency := ANuevoAbono;
-        Consulta.ParamByName('CLIENTE').AsString := Cliente;
-        Consulta.Execute;
+        DescontarDeudaDeposito(
+          Consulta, Cliente, ANuevoAbono, EsApartado);
       end
       else
         raise Exception.Create(SErrorOperacionCajaNoEncontrada);
@@ -1046,13 +1272,16 @@ procedure TdmCajaOpe.CrearNuevoDepositoCliente(QryTrx: TUniQuery;
                                                const ACaja,
                                                ANumOperacion: string;
                                                AFechaOperacion: TDateTime;
+                                               AEsApartado: Boolean;
+                                               const AContacto:
+                                                 TContactoApartado;
                                                out IdGenerado: string;
                                                out ANumerosMovimiento:
                                                  TArray<string>);
 var
   NuevoIdDep: string;
   SolicitudMovimiento: TSolicitudMovimientoAlmacenCaja;
-  uspDep: TUniStoredProc;
+  Deposito: TNuevoDepositoCaja;
 begin
   SetLength(ANumerosMovimiento, 2);
   SolicitudMovimiento := Default(TSolicitudMovimientoAlmacenCaja);
@@ -1097,32 +1326,27 @@ begin
                 RightStr(ASku, 3);  // máx 20 chars
   NuevoIdDep := Copy(NuevoIdDep, 1, 20); // Aseguramos longitud máxima
   IdGenerado := NuevoIdDep;
-  uspDep := TUniStoredProc.Create(nil);
-  try
-    // Enganchamos el SP a la misma conexión/transacción que traemos
-    uspDep.Connection := QryTrx.Connection;
-    uspDep.StoredProcName := 'PRC_FZA_DEPOSITOS_INSERT';
-    uspDep.Prepare; // Descarga la estructura de parámetros del servidor
-    // Asignamos los parámetros (OJO: Nombres idénticos a los del SP en MySQL)
-    uspDep.ParamByName('p_ID_DEP').AsString     := NuevoIdDep;
-    uspDep.ParamByName('p_EMP').AsString        := AEmpresa;
-    uspDep.ParamByName('p_ALM_DEP').AsString    := AAlmacenOrigen;
-    uspDep.ParamByName('p_CLI').AsString        := ACliente;
-    uspDep.ParamByName('p_ART').AsString        := AArticulo;
-    uspDep.ParamByName('p_SKU').AsString        := ASku;
-    uspDep.ParamByName('p_PRECIO').AsCurrency   := APrecioVenta;
-    uspDep.ParamByName('p_CANTIDAD').AsFloat    := ACantidad;
-    uspDep.ParamByName('p_ANTICIPO').AsCurrency := AAnticipo;
-    uspDep.ParamByName('p_TIPOIVA').AsString    := ATipoIVA;
-    uspDep.ParamByName('p_PORCIVA').AsCurrency  := APorcIVA;
-    uspDep.ParamByName('p_IMPINCL').AsString    := AEsImpIncl;
-    uspDep.ParamByName('p_CAJA').AsString       := ACaja;
-    uspDep.ParamByName('p_NUMOP').AsString      := ANumOperacion;
-    uspDep.ParamByName('p_USUARIO').AsString    := AUsuario;
-    uspDep.Execute;
-  finally
-    FreeAndNil(uspDep);
-  end;
+  Deposito := Default(TNuevoDepositoCaja);
+  Deposito.Id := NuevoIdDep;
+  Deposito.Empresa := AEmpresa;
+  Deposito.Almacen := AAlmacenOrigen;
+  Deposito.Cliente := ACliente;
+  Deposito.Articulo := AArticulo;
+  Deposito.Sku := ASku;
+  Deposito.Precio := APrecioVenta;
+  Deposito.Cantidad := ACantidad;
+  Deposito.Anticipo := AAnticipo;
+  Deposito.TipoIva := ATipoIVA;
+  Deposito.PorcentajeIva := APorcIVA;
+  Deposito.EsImpIncl := AEsImpIncl;
+  Deposito.Caja := ACaja;
+  Deposito.NumeroOperacion := ANumOperacion;
+  Deposito.Usuario := AUsuario;
+  Deposito.Contacto := AContacto;
+  if AEsApartado then
+    InsertarDepositoApartado(QryTrx.Connection, Deposito)
+  else
+    InsertarDepositoPrestamo(QryTrx.Connection, Deposito);
 end;
 
 class function TdmCajaOpe.FechaUltimoTicketSerie(
@@ -1292,12 +1516,15 @@ end;
 
 procedure TGrabacionFacturaCaja.AtenderOperacionSinNovedad;
 begin
-  ImprimirRecordatorio(
-    FDataModule.FPreviewTicket,
-    FDataModule.FRepositorioTicketsCaja.Recordatorios,
-    FDataModule.FContextoSesion.Ubicacion.Empresa,
-    FCabecera.CodigoCliente,
-    FDataModule.FParametrosCaja.ImpresoraCaja);
+  // El recordatorio del cliente de Varios mezclaría los apartados de
+  // todos los que han apartado algo con ese cliente.
+  if not FDatosCobro.EsClienteVarios then
+    ImprimirRecordatorio(
+      FDataModule.FPreviewTicket,
+      FDataModule.FRepositorioTicketsCaja.Recordatorios,
+      FDataModule.FContextoSesion.Ubicacion.Empresa,
+      FCabecera.CodigoCliente,
+      FDataModule.FParametrosCaja.ImpresoraCaja);
 end;
 
 procedure TGrabacionFacturaCaja.DeterminarSiRequiereFactura;
@@ -1539,7 +1766,8 @@ begin
       ALinea.PrecioOriginalDep, ALinea.TotalCIva,
       FAlmacen, FAlmacenDeposito, ALinea.Cantidad,
       ALinea.TipoIva, ALinea.PorcIva, ALinea.EsImpIncl,
-      FCaja, FNumeroOperacion, FFechaOperacion, sIdDeposito,
+      FCaja, FNumeroOperacion, FFechaOperacion,
+      FDatosCobro.EsApartado, FDatosCobro.ContactoApartado, sIdDeposito,
       NumerosMovimiento);
     for iIndice := Low(NumerosMovimiento) to High(NumerosMovimiento) do
       RegistrarMovimientoCreado(NumerosMovimiento[iIndice]);
@@ -2000,13 +2228,18 @@ begin
       FAlmacen,
       FCaja,
       FNumeroOperacion,
-      FDataModule.FParametrosCaja.ImpresoraCaja);
-    ImprimirRecordatorio(
-      FDataModule.FPreviewTicket,
-      FDataModule.FRepositorioTicketsCaja.Recordatorios,
-      FDataModule.FContextoSesion.Ubicacion.Empresa,
-      FCabecera.CodigoCliente,
-      FDataModule.FParametrosCaja.ImpresoraCaja);
+      FDataModule.FParametrosCaja.ImpresoraCaja,
+      nil,
+      False,
+      FDataModule.FParametrosCaja.GetBool(
+        'vgerImprimirCodBarrasTicket', False));
+    if not FDatosCobro.EsClienteVarios then
+      ImprimirRecordatorio(
+        FDataModule.FPreviewTicket,
+        FDataModule.FRepositorioTicketsCaja.Recordatorios,
+        FDataModule.FContextoSesion.Ubicacion.Empresa,
+        FCabecera.CodigoCliente,
+        FDataModule.FParametrosCaja.ImpresoraCaja);
   end;
 end;
 

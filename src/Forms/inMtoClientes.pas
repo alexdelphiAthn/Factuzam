@@ -298,6 +298,7 @@ type
     curTOTAL_LIMITE_CREDITO_CLI: TcxDBCurrencyEdit;
     chkESPERMITE_DEUDA_CLI: TcxDBCheckBox;
     curTOTAL_DEUDA_CLI: TcxDBCurrencyEdit;
+    chkESVARIOS_CLI: TcxDBCheckBox;
     lblExtra2: TcxLabel;
     cxgrpbxParametrosEDoc: TcxGroupBox;
     lblCodigoOficinaContable: TcxLabel;

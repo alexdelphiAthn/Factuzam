@@ -154,6 +154,41 @@ begin
   end;
 end;
 
+function LeerListaTextos(AJson: TJSONValue): TArray<string>;
+var
+  iIndice: Integer;
+  oLista: TJSONArray;
+begin
+  Result := nil;
+  if AJson is TJSONArray then
+  begin
+    oLista := TJSONArray(AJson);
+    for iIndice := 0 to oLista.Count - 1 do
+    begin
+      if oLista.Items[iIndice] is TJSONString then
+        Result := Result + [Trim(oLista.Items[iIndice].Value)];
+    end;
+  end;
+end;
+
+procedure LeerComparacion(
+  AJson: TJSONObject;
+  var AManifiesto: TManifiestoActualizacion);
+var
+  oValor: TJSONValue;
+begin
+  AManifiesto.Modelo := Default(TEntradaActualizacion);
+  AManifiesto.Comparador := Default(TEntradaActualizacion);
+  oValor := AJson.GetValue('comparacion');
+  if oValor is TJSONObject then
+  begin
+    AManifiesto.Modelo := LeerEntrada(
+      TJSONObject(oValor).GetValue('modelo'));
+    AManifiesto.Comparador := LeerEntrada(
+      TJSONObject(oValor).GetValue('comparador'));
+  end;
+end;
+
 procedure LeerScripts(
   AJson: TJSONObject;
   var AManifiesto: TManifiestoActualizacion);
@@ -179,6 +214,8 @@ begin
         AManifiesto.Scripts[iIndice].Orden := EnteroJson(oScript, 'orden');
         AManifiesto.Scripts[iIndice].Rollback := LeerEntrada(
           oScript.GetValue('rollback'));
+        AManifiesto.Scripts[iIndice].Requiere := LeerListaTextos(
+          oScript.GetValue('requiere'));
       end;
     end;
   end;
@@ -207,6 +244,7 @@ begin
     AManifiesto.Comprobacion := LeerEntrada(oDatos.GetValue('comprobacion'));
     LeerAuxiliares(oDatos, AManifiesto);
     LeerScripts(oDatos, AManifiesto);
+    LeerComparacion(oDatos, AManifiesto);
     AManifiesto.Ok := True;
   end;
 end;

@@ -33,7 +33,10 @@ type
 
   TDecisionScriptsActualizacion = (
     dsaAplazar,
-    dsaAhora);
+    dsaAhora,
+    // Generar con DBComparer un script contra el modelo de la versión y
+    // aplicarlo; después, los scripts que sigan faltando.
+    dsaComparacion);
 
   TContextoActualizacion = record
     Servicio: IServicioActualizaciones;
@@ -64,6 +67,18 @@ type
   // a la base (minutos en una grande) y las descargas.
   TCrearVentanaEsperaActualizacion = reference to function: IVentanaEspera;
 
+  // Como TDecidirScriptsActualizacion, pero con la comparación entre las
+  // respuestas. Solo se pregunta así si la versión trae modelo.
+  TDecidirModoActualizacion = reference to function(
+    const AFaltantes: TArray<TScriptFaltante>;
+    AHayVersionNueva: Boolean;
+    const AVersion: string): TDecisionScriptsActualizacion;
+
+  // Enseña el script que ha generado DBComparer y pregunta si se aplica.
+  TConfirmarScriptComparacion = reference to function(
+    const AVersion, ARutaScript, ASalida: string;
+    AConAvisos: Boolean): Boolean;
+
   TSolicitarCopiaPreviaActualizacion = reference to function(
     out ARutaCopia: string): Boolean;
 
@@ -88,6 +103,10 @@ type
     // Opcionales: sin pantalla (las pruebas) no hay ventanas que abrir.
     CrearVentanaProceso: TCrearVentanaProcesoActualizacion;
     CrearVentanaEspera: TCrearVentanaEsperaActualizacion;
+    // Opcionales: sin ellos no se ofrece la comparación y, si se pide, el
+    // script generado se aplica sin enseñarlo.
+    DecidirModo: TDecidirModoActualizacion;
+    ConfirmarScriptComparacion: TConfirmarScriptComparacion;
     function Completa: Boolean;
   end;
 
@@ -119,7 +138,9 @@ uses
   System.IOUtils,
   System.SysUtils,
   System.Threading,
+  inLibActualizacionComparacion,
   inLibActualizacionInstalacion,
+  inLibActualizacionPrecedencia,
   inLibActualizacionVersion,
   inLibMsgIntegraciones;
 
@@ -628,7 +649,9 @@ begin
     if Assigned(Ventana) then
       Ventana.PermitirCancelar(False);
     ACancelado := Consulta.Cancelada;
-    AFaltantes := aLeidos;
+    // Lo que declara cada script en «-- @requiere:» manda sobre el
+    // orden_aplicacion de la comprobación.
+    AFaltantes := OrdenarScriptsPorPrecedencia(aLeidos, AManifiesto);
     AError := sError;
     Result := bOk and not ACancelado;
   end;
@@ -757,6 +780,158 @@ begin
   end;
 end;
 
+// Por comparación solo si la versión trae modelo y la pantalla sabe
+// ofrecerlo; si no, la pregunta de siempre.
+function DecidirAplicacion(
+  const AInteraccion: TInteraccionActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
+  const AFaltantes: TArray<TScriptFaltante>;
+  AHayVersionNueva: Boolean): TDecisionScriptsActualizacion;
+begin
+  if AManifiesto.ComparacionDisponible and
+     Assigned(AInteraccion.DecidirModo) then
+    Result := AInteraccion.DecidirModo(
+      AFaltantes,
+      AHayVersionNueva,
+      AManifiesto.Version)
+  else
+    Result := AInteraccion.DecidirScripts(AFaltantes, AHayVersionNueva);
+end;
+
+{ Baja el modelo y DBComparer de la versión y genera el script. Todo con
+  la ventana de espera: la comparación carga el modelo en un esquema
+  temporal del servidor y puede tardar. }
+function PrepararScriptComparacion(
+  const AContexto: TContextoActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
+  const AInteraccion: TInteraccionActualizacion;
+  out AComparacion: TResultadoComparacionActualizacion;
+  out AError: string): Boolean;
+var
+  Comparacion: TResultadoComparacionActualizacion;
+  Conexion: TUniConnection;
+  sComparador: string;
+  sModelo: string;
+  sScript: string;
+  Ventana: IVentanaEspera;
+begin
+  AComparacion := Default(TResultadoComparacionActualizacion);
+  AError := '';
+  Result := AManifiesto.ComparacionDisponible;
+  if not Result then
+    AError := Format(SErrorComparacionNoPublicada, [AManifiesto.Version])
+  else
+  begin
+    TDirectory.CreateDirectory(
+      CarpetaDescargasActualizacion(AManifiesto.Version));
+    sModelo := RutaDescarga(AManifiesto.Version, AManifiesto.Modelo.Nombre);
+    sComparador := RutaDescarga(
+      AManifiesto.Version,
+      AManifiesto.Comparador.Nombre);
+    sScript := RutaDescarga(
+      AManifiesto.Version,
+      NombreScriptComparacion(AManifiesto.Version));
+    Ventana := AbrirVentanaEspera(AInteraccion, SFaseDescargandoComparacion);
+    try
+      Result := DescargarEnSuHilo(AContexto, Ventana, AManifiesto.Version,
+        cTipoActualizacionModelo, AManifiesto.Modelo, sModelo, AError);
+      if Result then
+        Result := DescargarEnSuHilo(AContexto, Ventana, AManifiesto.Version,
+          cTipoActualizacionComparador, AManifiesto.Comparador, sComparador,
+          AError);
+      if Result then
+      begin
+        AInteraccion.Progreso(SFaseGenerandoComparacion, -1);
+        if Assigned(Ventana) then
+          Ventana.Mostrar(SFaseGenerandoComparacion);
+        Conexion := AContexto.Conexion;
+        EsperarEnSuHilo(
+          procedure
+          begin
+            Comparacion := GenerarScriptComparacion(
+              Conexion,
+              sComparador,
+              sModelo,
+              sScript);
+          end,
+          nil);
+        AComparacion := Comparacion;
+        Result := Comparacion.Ok;
+        AError := Comparacion.Error;
+      end;
+    finally
+      CerrarVentanaEspera(Ventana);
+    end;
+  end;
+end;
+
+{ Actualización por comparación: el script que genera DBComparer pone
+  tablas, vistas y procedimientos al nivel del modelo; lo que la
+  comprobación siga echando en falta (los scripts de datos) se aplica
+  después por el camino de siempre. Mientras el script generado no se
+  aplique, lo pendiente siguen siendo los scripts: un script de
+  comparación no se guarda para otro día, se genera de nuevo. }
+procedure AplicarPorComparacion(
+  const AContexto: TContextoActualizacion;
+  const AManifiesto: TManifiestoActualizacion;
+  const AInteraccion: TInteraccionActualizacion;
+  var AEstado: TEstadoActualizacion;
+  var AOk: Boolean;
+  var ACancelado: Boolean;
+  var AError: string);
+var
+  aScripts: TArray<TScriptPendienteActualizacion>;
+  bAplicada: Boolean;
+  Comparacion: TResultadoComparacionActualizacion;
+  Pendiente: TScriptPendienteActualizacion;
+begin
+  ACancelado := False;
+  bAplicada := False;
+  aScripts := AEstado.Pendientes;
+  AOk := PrepararScriptComparacion(
+    AContexto,
+    AManifiesto,
+    AInteraccion,
+    Comparacion,
+    AError);
+  if AOk and Assigned(AInteraccion.ConfirmarScriptComparacion) and
+     not AInteraccion.ConfirmarScriptComparacion(
+       AManifiesto.Version,
+       Comparacion.RutaScript,
+       Comparacion.Salida,
+       Comparacion.ConAvisos) then
+  begin
+    ACancelado := True;
+    AError := SInfoComparacionNoAplicada;
+  end
+  else if AOk then
+  begin
+    Pendiente := Default(TScriptPendienteActualizacion);
+    Pendiente.Nombre := NombreScriptComparacion(AManifiesto.Version);
+    Pendiente.Ruta := Comparacion.RutaScript;
+    AEstado.Pendientes := [Pendiente];
+    AOk := AplicarPendientes(
+      AContexto.Conexion,
+      AInteraccion,
+      AEstado,
+      ACancelado,
+      AError);
+    bAplicada := AOk and not ACancelado;
+    if bAplicada then
+      RepasarScriptsAplicados(
+        AContexto,
+        AManifiesto,
+        AInteraccion,
+        nil,
+        AEstado,
+        AOk,
+        ACancelado,
+        AError);
+  end;
+  if not bAplicada then
+    AEstado.Pendientes := aScripts;
+end;
+
 procedure AplicarFaltantesSinInstalacion(
   const AContexto: TContextoActualizacion;
   const AManifiesto: TManifiestoActualizacion;
@@ -766,11 +941,13 @@ procedure AplicarFaltantesSinInstalacion(
   var AResultado: TResultadoActualizacion);
 var
   bCancelado: Boolean;
+  Decision: TDecisionScriptsActualizacion;
   sError: string;
 begin
   AResultado.Ok := True;
   bCancelado := False;
-  if AInteraccion.DecidirScripts(AFaltantes, False) = dsaAplazar then
+  Decision := DecidirAplicacion(AInteraccion, AManifiesto, AFaltantes, False);
+  if Decision = dsaAplazar then
     AResultado.Mensaje := MensajeScriptsSinAplicar(
       False,
       Length(AEstado.Pendientes))
@@ -783,21 +960,33 @@ begin
   end
   else
   begin
-    AResultado.Ok := AplicarPendientes(
-      AContexto.Conexion,
-      AInteraccion,
-      AEstado,
-      bCancelado,
-      sError);
-    RepasarScriptsAplicados(
-      AContexto,
-      AManifiesto,
-      AInteraccion,
-      AFaltantes,
-      AEstado,
-      AResultado.Ok,
-      bCancelado,
-      sError);
+    if Decision = dsaComparacion then
+      AplicarPorComparacion(
+        AContexto,
+        AManifiesto,
+        AInteraccion,
+        AEstado,
+        AResultado.Ok,
+        bCancelado,
+        sError)
+    else
+    begin
+      AResultado.Ok := AplicarPendientes(
+        AContexto.Conexion,
+        AInteraccion,
+        AEstado,
+        bCancelado,
+        sError);
+      RepasarScriptsAplicados(
+        AContexto,
+        AManifiesto,
+        AInteraccion,
+        AFaltantes,
+        AEstado,
+        AResultado.Ok,
+        bCancelado,
+        sError);
+    end;
     AResultado.Cancelado := bCancelado;
     AResultado.Mensaje := sError;
     // Sin ejecutable nuevo no hace falta salir del programa: lo que ha
@@ -1024,26 +1213,42 @@ begin
         Estado.Estado := cEstadoActualizacionCompletada;
         if Estado.HayScriptsPendientes then
         begin
-          Decision := AInteraccion.DecidirScripts(aFaltantes, True);
-          if (Decision = dsaAhora) and
+          Decision := DecidirAplicacion(
+            AInteraccion,
+            AManifiesto,
+            aFaltantes,
+            True);
+          if (Decision <> dsaAplazar) and
              AInteraccion.SolicitarCopiaPrevia(
                Estado.RutaCopiaPrevia) then
           begin
-            Result.Ok := AplicarPendientes(
-              AContexto.Conexion,
-              AInteraccion,
-              Estado,
-              bCancelado,
-              sError);
-            RepasarScriptsAplicados(
-              AContexto,
-              AManifiesto,
-              AInteraccion,
-              aFaltantes,
-              Estado,
-              Result.Ok,
-              bCancelado,
-              sError);
+            if Decision = dsaComparacion then
+              AplicarPorComparacion(
+                AContexto,
+                AManifiesto,
+                AInteraccion,
+                Estado,
+                Result.Ok,
+                bCancelado,
+                sError)
+            else
+            begin
+              Result.Ok := AplicarPendientes(
+                AContexto.Conexion,
+                AInteraccion,
+                Estado,
+                bCancelado,
+                sError);
+              RepasarScriptsAplicados(
+                AContexto,
+                AManifiesto,
+                AInteraccion,
+                aFaltantes,
+                Estado,
+                Result.Ok,
+                bCancelado,
+                sError);
+            end;
             Result.Cancelado := bCancelado;
             Result.Mensaje := sError;
             Result.RequiereSalir := True;

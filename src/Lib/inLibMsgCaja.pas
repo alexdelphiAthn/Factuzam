@@ -434,6 +434,28 @@ resourcestring
     'rectificativa fiscal.';
   SCaptionDevolucionTicketDe =
     '  —  DEVOLUCIÓN de %s\%s (Tienda %s)';
+  // Apartados de prendas con el cliente de Varios
+  STituloApartadoCaja = 'Apartar prendas';
+  SNombreContactoApartadoCaja = 'Nombre de quien aparta';
+  STelefonoContactoApartadoCaja = 'Teléfono';
+  SErrorNombreContactoApartadoCaja =
+    'Indique el nombre de quien aparta las prendas.';
+  SErrorApartadoCajaSinEntrega =
+    'Para apartar prendas el cliente tiene que dejar algo a cuenta: ' +
+    'anote el pago y vuelva a pulsar Préstamo.';
+  SPreguntaCompletarApartadoCaja =
+    'El ticket %s\%s tiene %d prenda(s) apartada(s) por %s.' +
+    sLineBreak + sLineBreak +
+    '¿Cargar el apartado para cobrar el resto?' + sLineBreak +
+    '(No = hacer una devolución del ticket)';
+  SErrorApartadoCajaOtraCaja =
+    'El apartado se hizo en el almacén %s, caja %s. ' +
+    'Complételo desde esa caja.';
+  SErrorApartadoCajaSinCuenta =
+    'El cliente de Varios no tiene cuenta propia: los apartados se ' +
+    'completan con F4 (Buscar ticket) y el número del ticket.';
+  SCaptionApartadoTicketDe =
+    '  —  APARTADO de %s\%s (%s)';
   SErrorEncolarCierreVentasWs =
     'No se pudo encolar el cierre de caja %s para su publicación web.';
   SErrorRepositorioVentasWsNoAsignado =
