@@ -61,6 +61,10 @@ type
   private
     { Private declarations }
   public
+    // Enlaza los detalles con el dsTablaG de SU ventana. Antes el DFM los
+    // colgaba de "frmMtoProveedores.dsTablaG": con dos ventanas de
+    // Proveedores abiertas, los kits de la segunda seguian a la primera.
+    procedure AsignarMaestroCabecera(ADataSource: TDataSource); override;
     procedure GetCodigoAutoProveedor;
     procedure ActualizarIvaExentoIntracomunitarioPorPais(
       const APais: string);
@@ -111,6 +115,15 @@ begin
   unqryFormaPago.Connection := ConexionPrincipal;
   unqryEmpresasBancos.Connection := ConexionPrincipal;
   unqryPaises.Connection := ConexionPrincipal;
+end;
+
+procedure TdmProveedores.AsignarMaestroCabecera(
+  ADataSource: TDataSource);
+begin
+  inherited;
+  unqryArticulos.MasterSource := ADataSource;
+  unqryLinFacturasArticulos.MasterSource := ADataSource;
+  unqryKits.MasterSource := ADataSource;
 end;
 
 procedure TdmProveedores.AbrirDetalles;

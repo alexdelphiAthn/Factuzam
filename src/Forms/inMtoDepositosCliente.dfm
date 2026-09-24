@@ -168,7 +168,27 @@
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    object btnReimprimirResguardo: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 48
+      Action = actReimprimirResguardo
+      TabOrder = 2
+      WordWrap = True
+    end
+  end
   inherited dsTablaG: TDataSource
     DataSet = dmDepositosCliente.unqryTablaG
+  end
+  object alDepositos: TActionList
+    Left = 744
+    Top = 448
+    object actReimprimirResguardo: TAction
+      Caption = 'Reimprimir resguardo'
+      OnExecute = actReimprimirResguardoExecute
+      OnUpdate = actReimprimirResguardoUpdate
+    end
   end
 end

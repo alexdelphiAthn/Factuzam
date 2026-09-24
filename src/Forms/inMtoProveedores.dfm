@@ -1363,7 +1363,24 @@
                   Align = alClient
                   TabOrder = 1
                   object tvKits: TcxGridDBTableView
-                    Navigator.Visible = False
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Buttons.First.Hint = 'Va al primer registro'
+                    Navigator.Buttons.PriorPage.Visible = False
+                    Navigator.Buttons.Prior.Hint = 'Va al registro anterior'
+                    Navigator.Buttons.Next.Hint = 'Va al siguiente registro'
+                    Navigator.Buttons.NextPage.Visible = False
+                    Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
+                    Navigator.Buttons.Insert.Hint = 'Inserta un nuevo registro'
+                    Navigator.Buttons.Append.Visible = False
+                    Navigator.Buttons.Delete.Hint = 'Borra el registro activo'
+                    Navigator.Buttons.Edit.Visible = False
+                    Navigator.Buttons.Post.Hint = 'Guarda los datos introducidos'
+                    Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
+                    Navigator.Buttons.Refresh.Visible = False
+                    Navigator.Buttons.SaveBookmark.Visible = False
+                    Navigator.Buttons.GotoBookmark.Visible = False
+                    Navigator.Buttons.Filter.Visible = False
+                    Navigator.Visible = True
                     OptionsView.GroupByBox = False
                     object dbcKitCodigo: TcxGridDBColumn
                       Caption = 'C'#243'digo'
@@ -1406,7 +1423,24 @@
                   Align = alRight
                   TabOrder = 2
                   object tvKitsDet: TcxGridDBTableView
-                    Navigator.Visible = False
+                    Navigator.Buttons.ConfirmDelete = True
+                    Navigator.Buttons.First.Hint = 'Va al primer registro'
+                    Navigator.Buttons.PriorPage.Visible = False
+                    Navigator.Buttons.Prior.Hint = 'Va al registro anterior'
+                    Navigator.Buttons.Next.Hint = 'Va al siguiente registro'
+                    Navigator.Buttons.NextPage.Visible = False
+                    Navigator.Buttons.Last.Hint = 'Va al '#250'ltimo registro'
+                    Navigator.Buttons.Insert.Hint = 'Inserta un nuevo registro'
+                    Navigator.Buttons.Append.Visible = False
+                    Navigator.Buttons.Delete.Hint = 'Borra el registro activo'
+                    Navigator.Buttons.Edit.Visible = False
+                    Navigator.Buttons.Post.Hint = 'Guarda los datos introducidos'
+                    Navigator.Buttons.Cancel.Hint = 'Cancela la edici'#243'n actual'
+                    Navigator.Buttons.Refresh.Visible = False
+                    Navigator.Buttons.SaveBookmark.Visible = False
+                    Navigator.Buttons.GotoBookmark.Visible = False
+                    Navigator.Buttons.Filter.Visible = False
+                    Navigator.Visible = True
                     OptionsView.GroupByBox = False
                     object dbcKitDetValor: TcxGridDBColumn
                       Caption = 'Talla'

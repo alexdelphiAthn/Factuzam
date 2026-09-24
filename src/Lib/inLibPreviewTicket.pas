@@ -17,9 +17,17 @@ unit inLibPreviewTicket;
 interface
 
 uses
-  inLibFTicket;
+  System.Classes, System.SysUtils, inLibFTicket;
 
 type
+  // Envio por correo del ticket que se esta previsualizando. AExportarPdf
+  // escribe el PDF del ticket en la ruta que recibe; la referencia da
+  // nombre al adjunto. False si no se envio (cancelado o error ya avisado).
+  IEnvioCorreoTicket = interface
+    ['{5C0B7C8E-2F4A-4E0B-9E53-6B1F0D8A7C21}']
+    function Enviar(AOwner: TComponent; const AReferencia: string;
+      const AExportarPdf: TProc<string>): Boolean;
+  end;
   IPreviewTicket = interface
     ['{29DD4A66-34B6-4AA5-92D3-F2593146D3BE}']
     procedure Ejecutar(ATicket: TTicketTermico;

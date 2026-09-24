@@ -43,7 +43,8 @@ uses
   inLibCajaPantallaDetalleHistorico,
   inLibCajaFotosOperacionGridVcl,
   inLibFotosMiniaturasGridVcl,
-  inLibPermisosIntf, inLibCajaPantallaInyeccion;
+  inLibPermisosIntf, inLibCajaPantallaInyeccion,
+  inLibReimpresionOperacionCaja;
 
 type
   TfrmMtoCajaOperacionesHist = class(TfrmMtoGen)
@@ -72,7 +73,11 @@ type
     btnGuardarPrecargaCaja: TcxButton;
     alOperaciones: TActionList;
     actIrFacturaSimplif: TAction;
+    btnImprimirDuplicado: TcxButton;
+    actImprimirDuplicado: TAction;
     procedure btnImprimirInformeClick(Sender: TObject);
+    procedure actImprimirDuplicadoExecute(Sender: TObject);
+    procedure actImprimirDuplicadoUpdate(Sender: TObject);
     procedure chkVerMiniaturasPropertiesChange(Sender: TObject);
     procedure btnToggleFiltrosCajaClick(Sender: TObject);
     procedure ccbFiltroAnyoPropertiesCloseUp(Sender: TObject);
@@ -130,6 +135,7 @@ type
     FArticulosOperacion: IConsultaArticulosOperacionCaja;
     FGrabadorPerfiles: IGrabadorPerfilesHistoricoCaja;
     FDependenciasInyeccion: TDependenciasOperacionesHistoricasCaja;
+    function PuedeImprimirDuplicado: Boolean;
     procedure CargarAnyosFiltro;
     procedure CargarAlmacenesFiltro;
     procedure LeerFiltrosPerfil;
@@ -247,7 +253,7 @@ uses
   inLibWin, inLibUser, inLibShowMto,
   inMtoModalGenImpSave, inMtoModalImpOperaciones, inMtoPreviewExcel,
   inLibDevExcel, inLibFotos, inLibFiltroUsuario,
-  dxSpreadSheetGraphics, inLibMsgCaja, inLibMsgComun;
+  dxSpreadSheetGraphics, inLibMsgCaja, inLibMsgComun, inLibMsgFacturas;
 
 {$R *.dfm}
 
@@ -301,17 +307,79 @@ var
   frm: TfrmPrintOperaciones;
 begin
   inherited;
-  if not PuedeImprimir then
+  if not (PuedeImprimir or PuedeExportar) then
     Abort;
-  // Informe A4 horizontal (FastReport) de las operaciones de caja. El
-  // usuario filtra empresa / almacen / caja y rango de fechas en el modal.
+  // Informe A4 horizontal (FastReport) y listado Excel nativo de las
+  // operaciones de caja. El usuario filtra empresa / almacen / caja y rango
+  // de fechas en el modal.
   frm := TfrmPrintOperaciones.Create(
     Application,
-    FDependenciasInyeccion.Informe);
+    FDependenciasInyeccion.Informe,
+    PuedeImprimir,
+    PuedeExportar);
   try
     frm.ShowModal;
   finally
     FreeAndNil(frm);
+  end;
+end;
+
+function TfrmMtoCajaOperacionesHist.PuedeImprimirDuplicado: Boolean;
+begin
+  Result := PuedeImprimir and Assigned(FdmConsulta) and
+    Assigned(dmmCajaOperacionesHist) and
+    Assigned(dmmCajaOperacionesHist.unqryTablaG) and
+    dmmCajaOperacionesHist.unqryTablaG.Active and
+    (not dmmCajaOperacionesHist.unqryTablaG.IsEmpty);
+end;
+
+procedure TfrmMtoCajaOperacionesHist.actImprimirDuplicadoUpdate(
+  Sender: TObject);
+begin
+  TAction(Sender).Enabled := PuedeImprimirDuplicado;
+end;
+
+// Duplicado del ticket de la operacion enfocada, siempre en vista previa
+// (impresora 'DEBUG'): desde el visor se puede mandar a la impresora.
+// Mismos tickets que Previsualizar de Buscar/Modificar operaciones.
+procedure TfrmMtoCajaOperacionesHist.actImprimirDuplicadoExecute(
+  Sender: TObject);
+var
+  ds: TDataSet;
+  Entorno: TEntornoReimpresionCaja;
+  Operacion: TOperacionReimpresionCaja;
+begin
+  if PuedeImprimirDuplicado then
+  begin
+    Screen.Cursor := crHourGlass;
+    try
+      // Factura y depositos salen del detalle de la operacion.
+      RefrescarFichaOperacion;
+      ds := dmmCajaOperacionesHist.unqryTablaG;
+      Operacion := Default(TOperacionReimpresionCaja);
+      Operacion.Empresa := ds.FieldByName('CODIGO_EMP_OPCAJA').AsString;
+      Operacion.Almacen := ds.FieldByName('CODIGO_ALM_OPCAJA').AsString;
+      Operacion.Caja := ds.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
+      Operacion.NumeroOperacion :=
+        ds.FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
+      Operacion.Tipos := ds.FieldByName('TIPOS_OP').AsString;
+      Operacion.Cliente := ds.FieldByName('CLIENTE').AsString;
+      Operacion.TieneFactura := FdmConsulta.TieneFactura;
+      Operacion.TieneDepositos := FdmConsulta.TieneDepositos;
+      Entorno := Default(TEntornoReimpresionCaja);
+      Entorno.ParametrosApp := ParametrosApp;
+      Entorno.Preview := PreviewTicket;
+      Entorno.Unidades := UnidadesMedida;
+      Entorno.EmpresaSesion := UbicacionSesion.Empresa;
+      if not ReimprimirOperacionCaja(
+        Entorno,
+        FDependenciasInyeccion.Reimpresion,
+        Operacion,
+        'DEBUG') then
+        ShowMessage_fza(SErrorOperacionSinTicket);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 
@@ -383,6 +451,7 @@ begin
   pkFieldName := 'CODIGO_EMP_OPCAJA;CODIGO_ALM_OPCAJA;' +
                  'CODIGO_CAJA_OPCAJA;NUMERO_OPERACION_OPCAJA';
   tsFicha.TabVisible := True;
+  actImprimirDuplicado.Visible := PuedeImprimir;
   cxGrdDBTabPrin.OptionsData.Editing := False;
   cxGrdDBTabPrin.OptionsData.Inserting := False;
   cxGrdDBTabPrin.OptionsData.Deleting := False;

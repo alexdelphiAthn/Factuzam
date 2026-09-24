@@ -31,6 +31,7 @@ type
     btnPNG: TButton;
     SaveDialog1: TSaveDialog;
     btnImprimirTicket: TButton;
+    btnEnviarCorreo: TButton;
     procedure FormCreate(Sender: TObject);
     procedure btnCerrarClick(Sender: TObject);
     procedure btnImprimirClick(Sender: TObject);
@@ -40,8 +41,10 @@ type
     procedure FormKeyDown(Sender: TObject; var Key: Word;
       Shift: TShiftState);
     procedure btnImprimirTicketClick(Sender: TObject);
+    procedure btnEnviarCorreoClick(Sender: TObject);
   private
     FCanvas: TCanvas;
+    FEnvioCorreo: IEnvioCorreoTicket;
     FCurrentY: Integer;
     FFuenteActual: Integer; // 0=A(12x24), 1=B(9x17), 2=C(7x14)
     FNegrita: Boolean;
@@ -61,6 +64,9 @@ type
     procedure AsegurarAltoPapel(AAltoNecesario: Integer);
     procedure RecortarPapel(AAltoFinal: Integer);
     procedure AjustarVentanaAContenido;
+    procedure ColocarBotones;
+    function AnchoClienteNecesario: Integer;
+    function ReferenciaCorreo: string;
     procedure ProcesarComandosESCPOS(const Comandos: string);
     function LeerByteComando(const AComandos: string;
       var AIndice: Integer): Byte;
@@ -94,14 +100,19 @@ type
     procedure CargarYMostrar(const Comandos: string);
     procedure GuardarPNG(const ARuta: string);
     procedure ImprimirEnImpresora;
+    // Sin servicio de correo el boton de email no se muestra.
+    procedure AsignarEnvioCorreo(const AEnvioCorreo: IEnvioCorreoTicket);
   end;
 
 procedure VisualizarTicket(const Comandos: string);
 procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
                                        const AComandos, ARutaPDF,
                                              ANombreImpresora: string;
-                                       ASoloPDF: Boolean = False);
-function CrearPreviewTicketMto: IPreviewTicket;
+                                       ASoloPDF: Boolean = False;
+                                       const AEnvioCorreo:
+                                         IEnvioCorreoTicket = nil);
+function CrearPreviewTicketMto(
+  const AEnvioCorreo: IEnvioCorreoTicket = nil): IPreviewTicket;
 
 implementation
 
@@ -110,7 +121,7 @@ implementation
 uses
   inLibMensajesVcl,
   SynPdf, inLibDir, Vcl.Imaging.PngImage, Vcl.Printers, System.IOUtils,
-  System.UITypes, inLibMsgComun,
+  System.UITypes, System.StrUtils, inLibMsgComun,
   inLibMsgFacturas, inLibTraducciones;
 
 resourcestring
@@ -123,7 +134,10 @@ resourcestring
 
 type
   TPreviewTicketMto = class(TInterfacedObject, IPreviewTicket)
+  private
+    FEnvioCorreo: IEnvioCorreoTicket;
   public
+    constructor Create(const AEnvioCorreo: IEnvioCorreoTicket);
     procedure Ejecutar(ATicket: TTicketTermico;
                        const AComandos, ARutaPDF,
                              ANombreImpresora: string;
@@ -147,10 +161,19 @@ const
   MARGEN_PAPEL_FINAL = 50;
   MARGEN_CRECIMIENTO_PAPEL = 500;
   ALTO_MINIMO_PREVIEW = 320;
+  SEPARACION_BOTONES = 6;
 
-function CrearPreviewTicketMto: IPreviewTicket;
+function CrearPreviewTicketMto(
+  const AEnvioCorreo: IEnvioCorreoTicket): IPreviewTicket;
 begin
-  Result := TPreviewTicketMto.Create;
+  Result := TPreviewTicketMto.Create(AEnvioCorreo);
+end;
+
+constructor TPreviewTicketMto.Create(
+  const AEnvioCorreo: IEnvioCorreoTicket);
+begin
+  inherited Create;
+  FEnvioCorreo := AEnvioCorreo;
 end;
 
 procedure TPreviewTicketMto.Ejecutar(
@@ -158,7 +181,8 @@ procedure TPreviewTicketMto.Ejecutar(
   ANombreImpresora: string; ASoloPDF: Boolean);
 begin
   ImprimirOPrevisualizarTicket(
-    ATicket, AComandos, ARutaPDF, ANombreImpresora, ASoloPDF);
+    ATicket, AComandos, ARutaPDF, ANombreImpresora, ASoloPDF,
+    FEnvioCorreo);
 end;
 
 procedure TFormVisualizador.ReiniciarEstadoTicket;
@@ -261,9 +285,75 @@ begin
   if iAltoDeseado < ALTO_MINIMO_PREVIEW + Panel1.Height then
     iAltoDeseado := ALTO_MINIMO_PREVIEW + Panel1.Height;
   ClientHeight := iAltoDeseado;
-  ClientWidth := ANCHO_PAPEL_PIXELS + 30;
+  ClientWidth := AnchoClienteNecesario;
   Left := Screen.WorkAreaLeft + (Screen.WorkAreaWidth - Width) div 2;
   Top := Screen.WorkAreaTop + (Screen.WorkAreaHeight - Height) div 2;
+end;
+
+// Los botones van seguidos y la ventana se ensancha hasta que caben todos;
+// el papel necesita ademas la barra de desplazamiento vertical.
+procedure TFormVisualizador.ColocarBotones;
+var
+  i: Integer;
+  iLeft: Integer;
+  aBotones: TArray<TButton>;
+begin
+  aBotones := [btnImprimir, btnPDF, btnPNG, btnImprimirTicket,
+    btnEnviarCorreo, btnCerrar];
+  iLeft := ScaleValue(SEPARACION_BOTONES);
+  for i := 0 to High(aBotones) do
+    if aBotones[i].Visible then
+    begin
+      aBotones[i].Left := iLeft;
+      iLeft := iLeft + aBotones[i].Width + ScaleValue(SEPARACION_BOTONES);
+    end;
+end;
+
+function TFormVisualizador.AnchoClienteNecesario: Integer;
+begin
+  ColocarBotones;
+  Result := Max(
+    btnCerrar.Left + btnCerrar.Width + ScaleValue(SEPARACION_BOTONES),
+    Image1.Left * 2 + ANCHO_PAPEL_PIXELS +
+      GetSystemMetrics(SM_CXVSCROLL) + ScrollBox1.Width -
+      ScrollBox1.ClientWidth);
+end;
+
+procedure TFormVisualizador.AsignarEnvioCorreo(
+  const AEnvioCorreo: IEnvioCorreoTicket);
+begin
+  FEnvioCorreo := AEnvioCorreo;
+  btnEnviarCorreo.Visible := Assigned(FEnvioCorreo);
+  ClientWidth := AnchoClienteNecesario;
+end;
+
+// Nombre del adjunto: el del PDF del ticket si lo hay (sin el prefijo
+// "Ticket_", que el correo ya pone), si no la fecha y hora.
+function TFormVisualizador.ReferenciaCorreo: string;
+const
+  PREFIJO_TICKET = 'Ticket_';
+begin
+  Result := ChangeFileExt(ExtractFileName(FRutaPDFReal), '');
+  if StartsText(PREFIJO_TICKET, Result) then
+    Delete(Result, 1, Length(PREFIJO_TICKET));
+  if Trim(Result) = '' then
+    Result := FormatDateTime('yyyy_mm_dd_hh_nn_ss', Now);
+end;
+
+procedure TFormVisualizador.btnEnviarCorreoClick(Sender: TObject);
+begin
+  if not Assigned(FEnvioCorreo) then
+    Exit;
+  if FComandos = '' then
+    ShowMessage_fza(SAvisoSinComandosESCPOSPDF)
+  else
+    FEnvioCorreo.Enviar(
+      Self,
+      ReferenciaCorreo,
+      procedure(ARuta: string)
+      begin
+        ExportarAPDF(FComandos, ARuta);
+      end);
 end;
 
 procedure TFormVisualizador.ExportarAPDF(const Comandos: string;
@@ -326,7 +416,9 @@ end;
 procedure ImprimirOPrevisualizarTicket(ATicket: TTicketTermico;
                                        const AComandos, ARutaPDF,
                                              ANombreImpresora: string;
-                                       ASoloPDF: Boolean);
+                                       ASoloPDF: Boolean;
+                                       const AEnvioCorreo:
+                                         IEnvioCorreoTicket);
 var
   oPreview: TFormVisualizador;
   sErrorImpresion: string;
@@ -351,6 +443,7 @@ begin
   oPreview := TFormVisualizador.Create(nil);
   try
     oPreview.Hide;
+    oPreview.AsignarEnvioCorreo(AEnvioCorreo);
     oPreview.FRutaPDFReal := ARutaPDF;
     oPreview.CargarYMostrar(AComandos);
     oPreview.ExportarAPDF(AComandos, ARutaPDF);
@@ -590,7 +683,8 @@ end;
 procedure TFormVisualizador.FormCreate(Sender: TObject);
 begin
   KeyPreview := True;
-  Self.ClientWidth := ANCHO_PAPEL_PIXELS + 30;
+  btnEnviarCorreo.Visible := False;
+  Self.ClientWidth := AnchoClienteNecesario;
   FRenderMetafile := False;
   InicializarPapel(ALTO_PAPEL_INICIAL);
   ReiniciarEstadoTicket;
@@ -1038,6 +1132,11 @@ begin
       btnPDFClick(nil);
     VK_F8:
       btnImprimirClick(nil);
+    VK_F5:
+      btnImprimirTicketClick(nil);
+    VK_F4:
+      if btnEnviarCorreo.Visible then
+        btnEnviarCorreoClick(nil);
   end;
   Key := 0;
 end;

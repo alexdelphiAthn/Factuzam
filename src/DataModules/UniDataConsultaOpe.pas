@@ -138,7 +138,7 @@ implementation
 
 {%CLASSGROUP 'Vcl.Controls.TControl'}
 
-uses inLibMsgComun, UniDataRectificativasSql;
+uses inLibMsgComun, UniDataRectificativasSql, inLibReimpresionOperacionCaja;
 
 const
   // Cliente de mostrador con el que se emiten las ventas anonimas.
@@ -882,7 +882,7 @@ begin
   if not qryMaestro.IsEmpty then
   begin
     sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
-    Result := (Pos('EC', sTipos) > 0) or (Pos('GC', sTipos) > 0);
+    Result := EsTiposOperacionCaja(sTipos);
   end;
 end;
 
@@ -894,7 +894,7 @@ begin
   if not qryMaestro.IsEmpty then
   begin
     sTipos := qryMaestro.FieldByName('TIPOS_OP').AsString;
-    Result := (Pos('TR', sTipos) > 0) or (Pos('TA', sTipos) > 0);
+    Result := EsTiposTraspasoCaja(sTipos);
   end;
 end;
 

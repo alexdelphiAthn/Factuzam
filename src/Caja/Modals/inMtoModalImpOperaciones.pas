@@ -57,11 +57,14 @@ type
       AButtonIndex: Integer);
     procedure bedCajaPropertiesButtonClick(Sender: TObject;
       AButtonIndex: Integer);
+    procedure btnExcelNativoClick(Sender: TObject);
   private
     // Fija los valores por defecto (rango de fechas y empresa/almacen/caja
     // del usuario) una sola vez al abrir; evita pisarlos en el ciclo
     // Hide/Show que hacen los botones del padre (Imprimir / PDF / etc.).
     FInicializado: Boolean;
+    FPuedeImprimir: Boolean;
+    FPuedeExportar: Boolean;
     FRepositorioPersistencia: IRepositorioInformesCaja;
     FRepositorioCajasDefecto: IRepositorioCajasDefecto;
     FResultado: IResultadoInformeCaja;
@@ -76,7 +79,8 @@ type
   public
     constructor Create(
       AOwner: TComponent;
-      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      const ADependencias: TDependenciasInformeCaja;
+      APuedeImprimir, APuedeExportar: Boolean); reintroduce;
       overload;
     procedure preparar_consulta; override;
   end;
@@ -86,18 +90,71 @@ implementation
 {$R *.dfm}
 
 uses
-  inMtoModalCajDef;
+  inMtoModalCajDef, inMtoPreviewExcel, inLibOperacionesCajaExcel;
+
+resourcestring
+  SFormatoNombreArchivoOperacionesCaja = 'Operaciones_caja_%s_%s_%s_%s';
 
 { TfrmPrintOperaciones }
 
 constructor TfrmPrintOperaciones.Create(
   AOwner: TComponent;
-  const ADependencias: TDependenciasInformeCaja);
+  const ADependencias: TDependenciasInformeCaja;
+  APuedeImprimir, APuedeExportar: Boolean);
 begin
   ADependencias.Validar;
   FRepositorioPersistencia := ADependencias.Repositorio;
   FRepositorioCajasDefecto := ADependencias.CajasDefecto;
+  FPuedeImprimir := APuedeImprimir;
+  FPuedeExportar := APuedeExportar;
   inherited Create(AOwner);
+end;
+
+// Excel nativo DevExpress en lugar de la exportacion XLSX de FastReport:
+// una fila por operacion con fechas e importes tipados y el total.
+procedure TfrmPrintOperaciones.btnExcelNativoClick(Sender: TObject);
+var
+  oPreview: TfrmMtoPreviewExcel;
+  rCabecera: TCabeceraListadoOperacionesCaja;
+begin
+  if FPuedeExportar then
+  begin
+    preparar_consulta;
+    rCabecera.Empresa := edtEmpresa.Text;
+    rCabecera.Almacen := bedAlmacen.Text;
+    rCabecera.Caja := bedCaja.Text;
+    rCabecera.FechaDesde := Trunc(dteDesde.Date);
+    rCabecera.FechaHasta := Trunc(dteHasta.Date);
+    Self.Hide;
+    try
+      oPreview := TfrmMtoPreviewExcel.Create(Self);
+      try
+        oPreview.PopupParent := Self;
+        oPreview.DialogoGuardar.InitialDir :=
+          ParametrosApp.GetPath('appDirExcel');
+        oPreview.DialogoGuardar.FileName := Format(
+          SFormatoNombreArchivoOperacionesCaja,
+          [rCabecera.Empresa,
+           rCabecera.Almacen,
+           rCabecera.Caja,
+           FormatDateTime('yyyymmdd_hhnnss', Now)]);
+        Screen.Cursor := crHourGlass;
+        try
+          ExportarOperacionesCajaExcel(
+            oPreview.dxSpreadSheet1,
+            FResultado.DataSet,
+            rCabecera);
+        finally
+          Screen.Cursor := crDefault;
+        end;
+        oPreview.ShowModal;
+      finally
+        FreeAndNil(oPreview);
+      end;
+    finally
+      Self.Show;
+    end;
+  end;
 end;
 
 procedure TfrmPrintOperaciones.DoShow;
@@ -114,6 +171,11 @@ begin
     edtEmpresa.Text := UbicacionSesion.Empresa;
     bedAlmacen.Text := UbicacionSesion.Almacen;
     bedCaja.Text    := UbicacionSesion.Caja;
+    btnVistaPreliminar.Visible := FPuedeImprimir;
+    btnPDF.Visible := FPuedeImprimir;
+    btnEditar.Visible := FPuedeImprimir;
+    btnImprimir.Visible := FPuedeImprimir;
+    btnExcel.Visible := FPuedeExportar;
     FInicializado   := True;
   end;
 end;

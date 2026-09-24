@@ -11,7 +11,7 @@
 {  Descripción:                                                                }
 {    Histórico de arqueos de caja.                                             }
 {    Consulta de los arqueos grabados (cierres Z) con detalle de recuento,     }
-{    posibilidad de imprimir informe y exportar a Excel.                       }
+{    posibilidad de imprimir informe (y exportarlo a Excel desde el modal).   }
 {******************************************************************************}
 unit inMtoCajaArqueosHist;
 
@@ -54,9 +54,7 @@ type
     cxGrdDBTabPrinOBSERVACIONES_ARQ: TcxGridDBColumn;
     cxGrdDBTabPrinINSTANTE_ALTA: TcxGridDBColumn;
     cxGrdDBTabPrinUSUARIO_ALTA: TcxGridDBColumn;
-    btnExportarExcel: TcxButton;
     btnImprimirInforme: TcxButton;
-    dlgGuardar: TFileSaveDialog;
     cxgrdRecuento: TcxGrid;
     tvRecuento: TcxGridDBTableView;
     tvRecuentoCodigo: TcxGridDBColumn;
@@ -66,7 +64,6 @@ type
     tvRecuentoImporte: TcxGridDBColumn;
     tvRecuentoDiferencia: TcxGridDBColumn;
     lvRecuento: TcxGridLevel;
-    procedure btnExportarExcelClick(Sender: TObject);
     procedure btnImprimirInformeClick(Sender: TObject);
   private
     dmmCajaArqueosHist: TdmCajaArqueosHist;
@@ -89,10 +86,6 @@ uses
   inLibWin, inMtoModalImpArqueos, inLibFiltroUsuario;
 
 {$R *.dfm}
-
-resourcestring
-  SFormatoNombreArchivoArqueosCaja =
-    'Arqueos_%s.xlsx';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -129,19 +122,6 @@ end;
 procedure TfrmMtoCajaArqueosHist.ResetForm;
 begin
   inherited;
-end;
-
-procedure TfrmMtoCajaArqueosHist.btnExportarExcelClick(Sender: TObject);
-begin
-  inherited;
-  if not PuedeExportar then
-    Abort;
-  dlgGuardar.DefaultExtension := 'xlsx';
-  dlgGuardar.FileName := Format(
-    SFormatoNombreArchivoArqueosCaja,
-    [FormatDateTime('yyyymmdd', Now)]);
-  if dlgGuardar.Execute then
-    ExportGridToXLSX(dlgGuardar.FileName, cxGrdPrincipal);
 end;
 
 procedure TfrmMtoCajaArqueosHist.btnImprimirInformeClick(Sender: TObject);

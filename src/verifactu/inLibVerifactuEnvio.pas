@@ -128,6 +128,9 @@ type
   // Datos de la factura y de su emisor para componer el registro
   TDatosFacturaRegistro = record
     CodigoEmpresa:    string;
+    // Formato de documento de la empresa: separa serie y número en el
+    // NumSerieFactura igual que en la factura impresa
+    FormatoDocumento: string;
     NifEmisor:       string;
     NombreEmisor:    string;
     NumeroInstalacion:string;
@@ -336,7 +339,8 @@ begin
     '        vo.CALIFICACION_VFO, vo.OPERACION_EXENTA_VFO, ' +
     '        vo.ESREPERCUTE_IVA_VFO, e.CODIGO_CERTIFICADO_EMP, ' +
     '        e.TITULAR_CERTIFICADO_EMP, e.NUMERO_INSTALACION_EMP, ' +
-    '        e.VERSION_INSTALACION_EMP, e.CODIGO_SIF_INSTALACION_EMP ' +
+    '        e.VERSION_INSTALACION_EMP, e.CODIGO_SIF_INSTALACION_EMP, ' +
+    '        e.FORMATO_DOCUMENTO_EMP ' +
     ' FROM fza_facturas f ' +
     ' LEFT JOIN fza_empresas e ' +
     '        ON e.CODIGO_EMP_EMP = f.CODIGO_EMP_FAC ' +
@@ -369,6 +373,8 @@ procedure CargarIdentificacionFactura(
 begin
   ADatos.CodigoEmpresa :=
     Trim(AQry.FieldByName('CODIGO_EMP_FAC').AsString);
+  ADatos.FormatoDocumento :=
+    AQry.FieldByName('FORMATO_DOCUMENTO_EMP').AsString;
   ADatos.NifEmisor := NormalizarNifVerifactu(
     AQry.FieldByName('NIF_EMPRESA_FAC').AsString);
   ADatos.NombreEmisor :=
@@ -673,7 +679,7 @@ end;
 //   Composición del XML del registro
 // ===========================================================================
 
-function ConstruirEncadenamiento(const ANif: string;
+function ConstruirEncadenamiento(const ANif, AFormato: string;
                                  const ACadena: TCadenaAnterior): string;
 begin
   if ACadena.Huella = '' then
@@ -685,7 +691,8 @@ begin
       '<sum1:IDEmisorFactura>' + EscaparXml(ANif) +
       '</sum1:IDEmisorFactura>' +
       '<sum1:NumSerieFactura>' +
-      EscaparXml(ComponerNumSerieFactura(ACadena.Serie, ACadena.Numero)) +
+      EscaparXml(ComponerNumSerieFactura(AFormato, ACadena.Serie,
+        ACadena.Numero)) +
       '</sum1:NumSerieFactura>' +
       '<sum1:FechaExpedicionFactura>' + ACadena.Fecha +
       '</sum1:FechaExpedicionFactura>' +
@@ -800,7 +807,8 @@ begin
   oEntrada := Default(TEntradaConstruccionRegistroAlta);
   oEntrada.Serie := ASerie;
   oEntrada.Numero := ANumero;
-  oEntrada.NumSerieFactura := ComponerNumSerieFactura(ASerie, ANumero);
+  oEntrada.NumSerieFactura := ComponerNumSerieFactura(
+    ADatos.FormatoDocumento, ASerie, ANumero);
   oEntrada.NifEmisor := ADatos.NifEmisor;
   oEntrada.NombreEmisor := ADatos.NombreEmisor;
   oEntrada.FechaExpedicion := ADatos.FechaExpedicion;
@@ -808,7 +816,7 @@ begin
   oEntrada.TipoRectificativa := ADatos.TipoRectificativa;
   oEntrada.RectNumero := ADatos.RectNumero;
   oEntrada.RectNumSerieFactura := ComponerNumSerieFactura(
-    ADatos.RectSerie, ADatos.RectNumero);
+    ADatos.FormatoDocumento, ADatos.RectSerie, ADatos.RectNumero);
   oEntrada.RectFecha := ADatos.RectFecha;
   oEntrada.RectBase := FormatearImporteVerifactu(ADatos.RectBase);
   oEntrada.RectCuota := FormatearImporteVerifactu(ADatos.RectCuota);
@@ -825,7 +833,7 @@ begin
   oEntrada.ImporteTotal := FormatearImporteVerifactu(
     ADatos.ImporteTotal);
   oEntrada.CadenaNumSerieFactura := ComponerNumSerieFactura(
-    ACadena.Serie, ACadena.Numero);
+    ADatos.FormatoDocumento, ACadena.Serie, ACadena.Numero);
   oEntrada.CadenaFecha := ACadena.Fecha;
   oEntrada.HuellaAnterior := ACadena.Huella;
   oEntrada.FechaHoraHuso := AFhGen;
@@ -847,7 +855,8 @@ function ConstruirRegistroAnulacion(const ADatos: TDatosFacturaRegistro;
 var
   sNumSerie: string;
 begin
-  sNumSerie := ComponerNumSerieFactura(ASerie, ANumero);
+  sNumSerie := ComponerNumSerieFactura(ADatos.FormatoDocumento, ASerie,
+    ANumero);
   // Huella del registro de anulación según especificación AEAT
   AHuella := UpperCase(THashSHA2.GetHashString(
     'IDEmisorFacturaAnulada=' + ADatos.NifEmisor +
@@ -866,7 +875,8 @@ begin
     '<sum1:FechaExpedicionFacturaAnulada>' + ADatos.FechaExpedicion +
     '</sum1:FechaExpedicionFacturaAnulada>' +
     '</sum1:IDFactura>' +
-    ConstruirEncadenamiento(ADatos.NifEmisor, ACadena) +
+    ConstruirEncadenamiento(ADatos.NifEmisor, ADatos.FormatoDocumento,
+      ACadena) +
     ASif +
     '<sum1:FechaHoraHusoGenRegistro>' + AFhGen +
     '</sum1:FechaHoraHusoGenRegistro>' +
@@ -1131,8 +1141,10 @@ begin
     if ATipoOperacion <> 'ANULACION' then
     begin
       Result.VerifactuUrl := ConstruirUrlQR(AParametrosApp,
-                                            oDatos.NifEmisor, ASerie,
-                                            ANumero, oDatos.FechaFac,
+                                            oDatos.NifEmisor,
+                                            oDatos.FormatoDocumento,
+                                            ASerie, ANumero,
+                                            oDatos.FechaFac,
                                             oDatos.ImporteTotal);
       try
         Result.QRCodePng := GenerarQRPngVerifactu(Result.VerifactuUrl);
@@ -1189,7 +1201,8 @@ var
   oB64: TBase64Encoding;
 begin
   AResultado.VerifactuUrl := ConstruirUrlQR(AParametrosApp,
-    ADatos.NifEmisor, ASerie, ANumero, ADatos.FechaFac,
+    ADatos.NifEmisor, ADatos.FormatoDocumento, ASerie, ANumero,
+    ADatos.FechaFac,
     ADatos.ImporteTotal);
   try
     AResultado.QRCodePng := GenerarQRPngVerifactu(

@@ -516,6 +516,7 @@ begin
     FTextoQr := ConstruirUrlQR(
       FConfiguracion.ParametrosApp,
       FCabecera.NifEmpresaFactura,
+      FCabecera.FormatoDocumento,
       FCabecera.SerieFactura,
       FCabecera.NumeroFactura,
       FCabecera.FechaFactura,

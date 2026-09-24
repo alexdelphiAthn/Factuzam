@@ -19,7 +19,6 @@
     Connection = dmConn.conUni
     SQL.Strings = (
       'select * from vi_proveedores_articulos')
-    MasterSource = frmMtoProveedores.dsTablaG
     MasterFields = 'CODIGO_PRV_PRV'
     DetailFields = 'CODIGO_PRV_PRV'
     Left = 184
@@ -96,7 +95,6 @@
       
         'AND vi_fac_lin_busquedas.SERIE_FAC_FACLIN = vi_fac_busquedas.SER' +
         'IE_FAC')
-    MasterSource = frmMtoProveedores.dsTablaG
     MasterFields = 'CODIGO_PRV_PRV'
     DetailFields = 'CODIGO_PRV_PRV'
     Left = 297
@@ -136,7 +134,6 @@
       'SELECT * FROM fza_proveedores_kits'
       'WHERE CODIGO_PRV_PRVKIT = :CODIGO_PRV_PRV'
       'ORDER BY ORDEN_PRVKIT, CODIGO_PRVKIT')
-    MasterSource = frmMtoProveedores.dsTablaG
     MasterFields = 'CODIGO_PRV_PRV'
     DetailFields = 'CODIGO_PRV_PRVKIT'
     BeforeInsert = unqryKitsBeforeInsert

@@ -193,7 +193,55 @@
       end
     end
   end
+  inherited pButtonRightBar: TPanel
+    object btnIrOperacionOrigen: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 48
+      Action = actIrOperacionOrigen
+      TabOrder = 2
+      WordWrap = True
+    end
+    object btnIrOperacionRedencion: TcxButton
+      Left = 1
+      Top = 172
+      Width = 138
+      Height = 48
+      Action = actIrOperacionRedencion
+      TabOrder = 3
+      WordWrap = True
+    end
+    object btnReimprimirVale: TcxButton
+      Left = 1
+      Top = 224
+      Width = 138
+      Height = 48
+      Action = actReimprimirVale
+      TabOrder = 4
+      WordWrap = True
+    end
+  end
   inherited dsTablaG: TDataSource
     DataSet = dmCajaValesHist.unqryTablaG
+  end
+  object alValesHist: TActionList
+    Left = 744
+    Top = 448
+    object actIrOperacionOrigen: TAction
+      Caption = 'Ir a la operaci'#243'n origen'
+      OnExecute = actIrOperacionOrigenExecute
+      OnUpdate = actIrOperacionOrigenUpdate
+    end
+    object actIrOperacionRedencion: TAction
+      Caption = 'Ir a la operaci'#243'n de redenci'#243'n'
+      OnExecute = actIrOperacionRedencionExecute
+      OnUpdate = actIrOperacionRedencionUpdate
+    end
+    object actReimprimirVale: TAction
+      Caption = 'Reimprimir vale'
+      OnExecute = actReimprimirValeExecute
+      OnUpdate = actReimprimirValeUpdate
+    end
   end
 end

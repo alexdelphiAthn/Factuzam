@@ -94,6 +94,12 @@
     TabOrder = 5
     Width = 172
   end
+  inherited pnl1: TPanel
+    inherited btnExcel: TcxButton
+      Caption = 'E&xcel (nativo)'
+      OnClick = btnExcelNativoClick
+    end
+  end
   inherited frxrprt1: TfrxReport
     Datasets = <
       item

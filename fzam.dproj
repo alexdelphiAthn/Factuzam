@@ -854,6 +854,7 @@
         <DCCReference Include="src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoTicket.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibTraspasoSolicitudesExcel.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibOperacionesCajaExcel.pas"/>
         <DCCReference Include="src\Lib\inLibGridArticulos.pas"/>
         <DCCReference Include="src\Lib\inLibColumnasSkuIntf.pas"/>
         <DCCReference Include="src\Lib\inLibLineaSku.pas"/>
@@ -956,6 +957,7 @@
         <DCCReference Include="src\Caja\Lib\inLibArqueoPersistencia.pas"/>
         <DCCReference Include="src\Caja\DataModules\UniDataArqueoPersistencia.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibGenerarTicketCaja.pas"/>
+        <DCCReference Include="src\Caja\Lib\inLibReimpresionOperacionCaja.pas"/>
         <DCCReference Include="src\Caja\Lib\inLibTiraCajaTicket.pas"/>
         <DCCReference Include="src\Caja\Modals\inMtoModalArqueo.pas">
             <Form>frmModalArqueo</Form>
@@ -1158,6 +1160,7 @@
         <DCCReference Include="src\Lib\inLibCorreoTickets.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoDocumentoIntf.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoDocumentoVcl.pas"/>
+        <DCCReference Include="src\Lib\inLibCorreoTicketPreviewVcl.pas"/>
         <DCCReference Include="src\DataModules\UniDataCorreoDocumento.pas"/>
         <DCCReference Include="src\Lib\inLibCorreoValidacion.pas"/>
         <DCCReference Include="src\Lib\inLibFactuzamApi.pas"/>

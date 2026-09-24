@@ -23,6 +23,8 @@ type
     ['{DBB61239-E68F-4EAC-9617-BB3E48DCCBCA}']
     function CargarDatosOperacion(const AEmpresa, AAlmacen, ACaja,
       ANumeroOperacion: string): TDatosCorreoOperacion;
+    // Razon social de la empresa; vacio si no existe.
+    function NombreEmpresa(const AEmpresa: string): string;
   end;
 
 implementation

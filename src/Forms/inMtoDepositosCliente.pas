@@ -31,7 +31,8 @@ uses
   cxCheckBox, cxSpinEdit, cxBlobEdit, dxScrollbarAnnotations, dxCore,
   cxRadioGroup, Vcl.AppEvnts, JvComponentBase, JvEnterTab,
   dxShellDialogs, cxSplitter, inLibFotos,
-  inLibPermisosIntf, inLibCajaPantallaInyeccion;
+  inLibPermisosIntf, inLibCajaPantallaInyeccion,
+  inLibReimpresionOperacionCaja, System.Actions, Vcl.ActnList;
 
 type
   TfrmMtoDepositosCliente = class(TfrmMtoGen)
@@ -57,18 +58,26 @@ type
     pnlFotoDep: TPanel;
     imgFotoDep: TImage;
     btnImprimirInforme: TcxButton;
+    btnReimprimirResguardo: TcxButton;
+    alDepositos: TActionList;
+    actReimprimirResguardo: TAction;
     procedure FormCreate(Sender: TObject);
     procedure FormDestroy(Sender: TObject);
     procedure btnImprimirInformeClick(Sender: TObject);
+    procedure actReimprimirResguardoExecute(Sender: TObject);
+    procedure actReimprimirResguardoUpdate(Sender: TObject);
   private
     dmmDepositosCliente: TdmDepositosCliente;
     FFotoEmb: TFotoEmbebida;
     FDependenciasInforme: TDependenciasInformeCaja;
+    FDependenciasReimpresion: TDependenciasReimpresionCaja;
+    function PuedeReimprimirResguardo: Boolean;
   public
     constructor Create(
       AOwner: TComponent;
       const AContexto: TContextoAutorizacionPantalla;
-      const ADependencias: TDependenciasInformeCaja); reintroduce;
+      const ADependencias: TDependenciasInformeCaja;
+      const AReimpresion: TDependenciasReimpresionCaja); reintroduce;
       overload;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
@@ -77,7 +86,7 @@ type
 implementation
 
 uses
-  inLibWin, inMtoModalImpDepositos;
+  inLibWin, inMtoModalImpDepositos, inLibMensajesVcl, inLibMsgFacturas;
 
 {$R *.dfm}
 
@@ -88,10 +97,13 @@ procedure ForceReferenceToClass(C: TClass); begin end;
 constructor TfrmMtoDepositosCliente.Create(
   AOwner: TComponent;
   const AContexto: TContextoAutorizacionPantalla;
-  const ADependencias: TDependenciasInformeCaja);
+  const ADependencias: TDependenciasInformeCaja;
+  const AReimpresion: TDependenciasReimpresionCaja);
 begin
   ADependencias.Validar;
+  ValidarDependenciasReimpresionCaja(AReimpresion);
   FDependenciasInforme := ADependencias;
+  FDependenciasReimpresion := AReimpresion;
   inherited Create(AOwner, AContexto);
 end;
 
@@ -114,6 +126,7 @@ begin
   inherited;
   dmmDepositosCliente := tdmDataModule as TdmDepositosCliente;
   pkFieldName := 'ID_DEPOSITO_DEP';
+  actReimprimirResguardo.Visible := PuedeImprimir;
 end;
 
 procedure TfrmMtoDepositosCliente.ResetForm;
@@ -137,6 +150,60 @@ begin
     frm.ShowModal;
   finally
     FreeAndNil(frm);
+  end;
+end;
+
+// Resguardo de la operacion de caja que creo el deposito, en vista
+// previa (impresora 'DEBUG'): desde el visor se puede mandar a imprimir.
+function TfrmMtoDepositosCliente.PuedeReimprimirResguardo: Boolean;
+var
+  oDeposito: TDataSet;
+begin
+  oDeposito := dsTablaG.DataSet;
+  Result := PuedeImprimir and Assigned(oDeposito) and oDeposito.Active and
+    (not oDeposito.IsEmpty) and
+    (Trim(oDeposito.FieldByName('NUMERO_OPERACION_DEP').AsString) <> '');
+end;
+
+procedure TfrmMtoDepositosCliente.actReimprimirResguardoUpdate(
+  Sender: TObject);
+begin
+  TAction(Sender).Enabled := PuedeReimprimirResguardo;
+end;
+
+procedure TfrmMtoDepositosCliente.actReimprimirResguardoExecute(
+  Sender: TObject);
+var
+  oDeposito: TDataSet;
+  Entorno: TEntornoReimpresionCaja;
+  Operacion: TOperacionReimpresionCaja;
+begin
+  if PuedeReimprimirResguardo then
+  begin
+    oDeposito := dsTablaG.DataSet;
+    Operacion := Default(TOperacionReimpresionCaja);
+    Operacion.Empresa := oDeposito.FieldByName('CODIGO_EMP_DEP').AsString;
+    Operacion.Almacen := oDeposito.FieldByName('CODIGO_ALM_DEP').AsString;
+    Operacion.Caja := oDeposito.FieldByName('CODIGO_CAJA_DEP').AsString;
+    Operacion.NumeroOperacion :=
+      oDeposito.FieldByName('NUMERO_OPERACION_DEP').AsString;
+    Operacion.TieneDepositos := True;
+    Entorno := Default(TEntornoReimpresionCaja);
+    Entorno.ParametrosApp := ParametrosApp;
+    Entorno.Preview := PreviewTicket;
+    Entorno.Unidades := UnidadesMedida;
+    Entorno.EmpresaSesion := UbicacionSesion.Empresa;
+    Screen.Cursor := crHourGlass;
+    try
+      if not ReimprimirOperacionCaja(
+        Entorno,
+        FDependenciasReimpresion,
+        Operacion,
+        'DEBUG') then
+        ShowMessage_fza(SErrorOperacionSinTicket);
+    finally
+      Screen.Cursor := crDefault;
+    end;
   end;
 end;
 

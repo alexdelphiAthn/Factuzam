@@ -45,7 +45,8 @@ uses
   inLibArqueoIntf,
   inLibArqueoTicketIntf,
   inLibTiraCajaTicketIntf,
-  inLibAppParamPersistenciaIntf;
+  inLibAppParamPersistenciaIntf,
+  inLibReimpresionOperacionCaja;
 
 type
   TCrearOperacionesHistoricasCaja = reference to function(
@@ -126,6 +127,8 @@ type
     // Fotos de la rejilla principal: puede venir sin asignar (el
     // parametro de caja las apaga) y entonces no hay columna.
     ArticulosOperacion: IConsultaArticulosOperacionCaja;
+    // Imprimir duplicado del ticket de la operacion.
+    Reimpresion: TDependenciasReimpresionCaja;
     procedure Validar;
   end;
 
@@ -174,6 +177,8 @@ procedure ValidarDependenciaCaja(
   const ANombre: string);
 procedure ValidarRepositoriosTicketsCaja(
   const ARepositorios: TRepositoriosTicketsCaja);
+procedure ValidarDependenciasReimpresionCaja(
+  const ADependencias: TDependenciasReimpresionCaja);
 
 implementation
 
@@ -203,6 +208,16 @@ begin
     'recordatorios de tickets');
   ValidarDependenciaCaja(ARepositorios.Tickets, 'lectura de tickets');
   ValidarDependenciaCaja(ARepositorios.Resguardos, 'resguardos de tickets');
+end;
+
+procedure ValidarDependenciasReimpresionCaja(
+  const ADependencias: TDependenciasReimpresionCaja);
+begin
+  ValidarDependenciaCaja(ADependencias.TraspasoTicket, 'traspaso de tickets');
+  ValidarRepositoriosTicketsCaja(ADependencias.Tickets);
+  ValidarDependenciaCaja(
+    ADependencias.LecturasTicket,
+    'impresión de tickets');
 end;
 
 procedure TDependenciasInformeCaja.Validar;
@@ -277,6 +292,7 @@ begin
       SErrorDependenciaCajaAusente,
       ['creación de perfiles del histórico de operaciones']);
   Informe.Validar;
+  ValidarDependenciasReimpresionCaja(Reimpresion);
 end;
 
 procedure TDependenciasPagosHistoricosCaja.Validar;

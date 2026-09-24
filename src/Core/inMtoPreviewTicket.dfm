@@ -70,6 +70,15 @@
       TabOrder = 4
       OnClick = btnImprimirTicketClick
     end
+    object btnEnviarCorreo: TButton
+      Left = 430
+      Top = 6
+      Width = 130
+      Height = 30
+      Caption = 'F4 Enviar email'
+      TabOrder = 5
+      OnClick = btnEnviarCorreoClick
+    end
   end
   object ScrollBox1: TScrollBox
     Left = 0

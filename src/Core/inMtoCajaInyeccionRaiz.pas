@@ -25,6 +25,7 @@ uses
   inLibCajaPagosHistPersistenciaIntf,
   inLibCajaPantallaHistoricosIntf,
   inLibPerfilesUsuarioIntf,
+  inLibReimpresionOperacionCaja,
   UniDataComposicionAplicacion,
   UniDataCajaPantallaComposicion;
 
@@ -41,6 +42,9 @@ type
     function CrearDependenciasTraspaso(
       const ACaja: TComposicionCajaPantalla
     ): TDependenciasTraspasoCaja;
+    function CrearDependenciasReimpresion(
+      const ACaja: TComposicionCajaPantalla
+    ): TDependenciasReimpresionCaja;
     function CrearServicioSubsanacion(
       const APermisos: IPermisosAplicacion): IServicioSubsanacionCaja;
   public
@@ -89,6 +93,7 @@ uses
   inMtoCajaArqueosHist,
   inMtoTraspasoSolicitudesHist,
   inMtoDepositosCliente,
+  inMtoCajaValesHist,
   inMtoUsuarios,
   inMtoModalImpOperacionesVenta,
   UniDataCajaSubsanacionRepositorio,
@@ -148,6 +153,17 @@ begin
   Result.Repositorio := ACaja.Informes.CrearRepositorioInformesCaja;
   Result.CajasDefecto := ACaja.Operaciones.CrearRepositorioCajasDefecto;
   Result.Validar;
+end;
+
+function TInyeccionCajaRaiz.CrearDependenciasReimpresion(
+  const ACaja: TComposicionCajaPantalla): TDependenciasReimpresionCaja;
+begin
+  Result := Default(TDependenciasReimpresionCaja);
+  Result.TraspasoTicket := ACaja.Tickets.CrearRepositorioTraspasoTicket;
+  Result.Tickets := ACaja.Tickets.CrearRepositorioTicketsCaja;
+  Result.LecturasTicket :=
+    ACaja.Tickets.CrearLecturasImpresionTicketCaja;
+  ValidarDependenciasReimpresionCaja(Result);
 end;
 
 function TInyeccionCajaRaiz.CrearDependenciasTraspaso(
@@ -445,7 +461,31 @@ begin
       Formulario := TfrmMtoDepositosCliente.Create(
         OwnerCreacion,
         TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
-        CrearDependenciasInforme(Caja));
+        CrearDependenciasInforme(Caja),
+        CrearDependenciasReimpresion(Caja));
+      ReparentarCajaSiProcede(Formulario, ReparentarAplicacion);
+      Result := Formulario;
+    end);
+
+  RegistrarFabricaPantalla(
+    TfrmMtoCajaValesHist,
+    function(AOwner: TComponent): TForm
+    var
+      Caja: TComposicionCajaPantalla;
+      Formulario: TfrmMtoCajaValesHist;
+      OwnerCreacion: TComponent;
+      ReparentarAplicacion: Boolean;
+    begin
+      NormalizarOwnerPantallaCaja(
+        AOwner,
+        FOwnerRaiz,
+        OwnerCreacion,
+        ReparentarAplicacion);
+      Caja := Componer('frmMtoCajaValesHist');
+      Formulario := TfrmMtoCajaValesHist.Create(
+        OwnerCreacion,
+        TContextoAutorizacionPantalla.Crear(FComposicion.Permisos),
+        CrearDependenciasReimpresion(Caja));
       ReparentarCajaSiProcede(Formulario, ReparentarAplicacion);
       Result := Formulario;
     end);
@@ -509,6 +549,7 @@ begin
       Dependencias.Informe := CrearDependenciasInforme(Caja);
       Dependencias.ArticulosOperacion :=
         Caja.Consultas.CrearConsultaArticulosOperacion;
+      Dependencias.Reimpresion := CrearDependenciasReimpresion(Caja);
       Dependencias.Validar;
       Formulario := TfrmMtoCajaOperacionesHist.Create(
         OwnerCreacion,
@@ -567,6 +608,7 @@ begin
   RetirarFabricaPantalla(TfrmMtoCajaPagosHist);
   RetirarFabricaPantalla(TfrmMtoCajaOperacionesHist);
   RetirarFabricaPantalla(TfrmMtoUsuarios);
+  RetirarFabricaPantalla(TfrmMtoCajaValesHist);
   RetirarFabricaPantalla(TfrmMtoDepositosCliente);
   RetirarFabricaPantalla(TfrmMtoCajaArqueosHist);
 end;

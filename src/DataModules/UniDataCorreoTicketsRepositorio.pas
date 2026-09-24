@@ -36,6 +36,7 @@ type
     constructor Create(AConexion: TUniConnection);
     function CargarDatosOperacion(const AEmpresa, AAlmacen, ACaja,
       ANumeroOperacion: string): TDatosCorreoOperacion;
+    function NombreEmpresa(const AEmpresa: string): string;
   end;
 
 function CrearCorreoTicketsLecturas(
@@ -128,6 +129,27 @@ begin
       Result.EsTraspaso := (Pos(',TR,', sTipos) > 0) or
         (Pos(',TA,', sTipos) > 0);
     end;
+  finally
+    FreeAndNil(oConsulta);
+  end;
+end;
+
+function TCorreoTicketsLecturas.NombreEmpresa(
+  const AEmpresa: string): string;
+var
+  oConsulta: TUniQuery;
+begin
+  Result := '';
+  oConsulta := TUniQuery.Create(nil);
+  try
+    oConsulta.Connection := FConexion;
+    oConsulta.SQL.Text :=
+      'SELECT RAZON_SOCIAL_EMP FROM fza_empresas' +
+      ' WHERE CODIGO_EMP_EMP = :EMP';
+    oConsulta.ParamByName('EMP').AsString := AEmpresa;
+    oConsulta.Open;
+    if not oConsulta.Eof then
+      Result := Trim(oConsulta.FieldByName('RAZON_SOCIAL_EMP').AsString);
   finally
     FreeAndNil(oConsulta);
   end;

@@ -85,9 +85,11 @@ procedure ValidarRequisitosFiscalesEmision(
 // 'PRE' (pruebas) o 'PRO' (producción) según appVerifactuEntorno
 function VerifactuEntorno(
   const AParametrosApp: IParametrosAplicacion): string;
-// Identificador serie+número que se comunica a la AEAT. DEBE coincidir
-// con el NumSerieFactura del registro de facturación que se envíe.
-function ComponerNumSerieFactura(const ASerie, ANumero: string): string;
+// Identificador serie+número que se comunica a la AEAT, con el formato de
+// documento de la empresa (FORMATO_DOCUMENTO_EMP), el mismo que se imprime
+// en la factura. DEBE coincidir en el QR y en el registro que se envíe.
+function ComponerNumSerieFactura(
+  const AFormato, ASerie, ANumero: string): string;
 // Importe con 2 decimales y punto como separador (formato QR y registro)
 function FormatearImporteVerifactu(AImporte: Currency): string;
 // NIF normalizado para Verifactu: solo letras y dígitos, en mayúsculas.
@@ -96,7 +98,7 @@ function NormalizarNifVerifactu(const AValor: string): string;
 // URL completa de cotejo para el QR tributario del ticket / factura
 function ConstruirUrlQR(
                         const AParametrosApp: IParametrosAplicacion;
-                        const ANif, ASerie, ANumero: string;
+                        const ANif, AFormato, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
 // El QR de una factura emitida depende de su fase y de la URL registrada,
@@ -179,7 +181,7 @@ uses
   System.Classes, System.Hash, System.StrUtils,
   Vcl.Imaging.pngimage,
   DelphiZXIngQRCode, frxDBSet,
-  inLibGlobalVar, inLibFotos, inLibXades,
+  inLibGlobalVar, inLibFotos, inLibXades, inLibFormatoDocumento,
   inLibMsgFacturas, inLibMsgVerifactu,
   inLibRelojFiscal, inLibVerifactuInstalacion,
   inLibVerifactuRegistroEventos;
@@ -689,12 +691,13 @@ begin
     Result := 'PRE';
 end;
 
-function ComponerNumSerieFactura(const ASerie, ANumero: string): string;
+function ComponerNumSerieFactura(
+  const AFormato, ASerie, ANumero: string): string;
 begin
-  // Concatenación simple serie+número. Si OdaVeriFactu compone distinto
-  // el identificador, ajustar SOLO aquí: el QR y el registro enviado a
-  // la AEAT deben llevar exactamente el mismo valor.
-  Result := Trim(ASerie) + Trim(ANumero);
+  // El número de la factura es el que figura en ella: serie y número
+  // unidos con el separador del formato de la empresa. Ajustar SOLO aquí:
+  // el QR y el registro enviado a la AEAT deben llevar el mismo valor.
+  Result := FormatearDocumento(AFormato, ASerie, ANumero);
 end;
 
 function FormatearImporteVerifactu(AImporte: Currency): string;
@@ -748,7 +751,7 @@ begin
   end;
 end;
 
-function ConstruirUrlQRConBase(const ABase, ANif, ASerie,
+function ConstruirUrlQRConBase(const ABase, ANif, AFormato, ASerie,
   ANumero: string; AFecha: TDateTime;
   AImporteTotal: Currency): string;
 begin
@@ -757,7 +760,7 @@ begin
   Result := ABase +
     '?nif='      + CodificarParametroURL(NormalizarNifVerifactu(ANif)) +
     '&numserie=' + CodificarParametroURL(
-                     ComponerNumSerieFactura(ASerie, ANumero)) +
+                     ComponerNumSerieFactura(AFormato, ASerie, ANumero)) +
     '&fecha='    + CodificarParametroURL(
                      FormatDateTime('dd-mm-yyyy', AFecha)) +
     '&importe='  + CodificarParametroURL(
@@ -766,7 +769,7 @@ end;
 
 function ConstruirUrlQR(
                         const AParametrosApp: IParametrosAplicacion;
-                        const ANif, ASerie, ANumero: string;
+                        const ANif, AFormato, ASerie, ANumero: string;
                         AFecha: TDateTime;
                         AImporteTotal: Currency): string;
 var
@@ -787,7 +790,7 @@ begin
   else
     sBase := AParametrosApp.GetString('appVerifactuUrlQRPre',
       cVerifactuUrlQRPre);
-  Result := ConstruirUrlQRConBase(sBase, ANif, ASerie, ANumero,
+  Result := ConstruirUrlQRConBase(sBase, ANif, AFormato, ASerie, ANumero,
     AFecha, AImporteTotal);
 end;
 
@@ -797,7 +800,9 @@ function ObtenerUrlQRFactura(
 var
   sBase: string;
   sFase: string;
+  sFormato: string;
   oCampoUrl: TField;
+  oCampoFormato: TField;
 begin
   Result := '';
   if TieneCamposFactura(ADataSet) and ADataSet.Active and
@@ -821,8 +826,13 @@ begin
         else
           sBase := AParametrosApp.GetString('appVerifactuUrlQRPre',
             cVerifactuUrlQRPre);
+        sFormato := '';
+        oCampoFormato := ADataSet.FindField('FORMATO_DOCUMENTO_EMP');
+        if oCampoFormato <> nil then
+          sFormato := oCampoFormato.AsString;
         Result := ConstruirUrlQRConBase(sBase,
           ADataSet.FieldByName('NIF_EMPRESA_FAC').AsString,
+          sFormato,
           ADataSet.FieldByName('SERIE_FAC').AsString,
           ADataSet.FieldByName('NUMERO_FAC').AsString,
           ADataSet.FieldByName('FECHA_FAC').AsDateTime,

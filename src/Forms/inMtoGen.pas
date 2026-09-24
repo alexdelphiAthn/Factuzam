@@ -793,8 +793,13 @@ end;
 procedure TfrmMtoGen.AplicarLayoutInstanciaBusqueda;
 begin
   // Lista: la instancia de busqueda llega directa a la Ficha del registro
-  // localizado, no se navega por el grid.
-  tsLista.TabVisible := False;
+  // localizado, no se navega por el grid. Las pantallas sin ficha (p. ej.
+  // el historico de vales) se quedan en la lista, ya filtrada por la clave:
+  // ocultarla dejaba el control de pestanas sin ninguna visible, en blanco.
+  if tsFicha.TabVisible then
+    tsLista.TabVisible := False
+  else
+    pcPantalla.ActivePage := tsLista;
   // Busqueda global: el filtro ya viene impuesto por PrepararBusquedaExterna.
   edtBusqGlobal.Visible    := False;
   lblTextoaBuscar.Visible  := False;

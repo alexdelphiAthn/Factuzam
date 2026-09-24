@@ -203,7 +203,7 @@
           ExplicitWidth = 240
         end
         object chkVerMiniaturas: TcxCheckBox
-          Left = 1024
+          Left = 930
           Top = 7
           Hint = 'Muestra la columna Fotos con las miniaturas de los art'#237'culos de cada operaci'#243'n'
           Caption = 'Ver miniaturas en grid'
@@ -213,15 +213,6 @@
           TabOrder = 6
           Transparent = True
           Width = 190
-        end
-        object btnImprimirInforme: TcxButton
-          Left = 848
-          Top = 2
-          Width = 165
-          Height = 30
-          Caption = 'Imprimir Informe A4'
-          TabOrder = 5
-          OnClick = btnImprimirInformeClick
         end
       end
     end
@@ -240,6 +231,25 @@
         StyleElements = [seFont, seClient, seBorder]
       end
     end
+    object btnImprimirDuplicado: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 48
+      Action = actImprimirDuplicado
+      TabOrder = 2
+      WordWrap = True
+    end
+    object btnImprimirInforme: TcxButton
+      Left = 1
+      Top = 172
+      Width = 138
+      Height = 48
+      Caption = 'Imprimir Informe A4'
+      TabOrder = 3
+      WordWrap = True
+      OnClick = btnImprimirInformeClick
+    end
   end
   inherited dsTablaG: TDataSource
     DataSet = dmCajaOperacionesHist.unqryTablaG
@@ -251,6 +261,11 @@
       Caption = 'Ir a Borrador Simplificado'
       ShortCut = 24646
       OnExecute = actIrFacturaSimplifExecute
+    end
+    object actImprimirDuplicado: TAction
+      Caption = 'Imprimir duplicado'
+      OnExecute = actImprimirDuplicadoExecute
+      OnUpdate = actImprimirDuplicadoUpdate
     end
   end
 end

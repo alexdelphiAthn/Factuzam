@@ -215,13 +215,22 @@ begin
 end;
 
 function TImpresorTicketVenta.ConstruirQRTributario: string;
+var
+  oCampoFormato: TField;
+  sFormato: string;
 begin
   Result := '';
+  sFormato := '';
+  oCampoFormato := FDatosCobro.TotalesFactura.Cabecera.FindField(
+    'FORMATO_DOCUMENTO_EMP');
+  if oCampoFormato <> nil then
+    sFormato := oCampoFormato.AsString;
   if (not SinVerifactuActivo(FParametrosApp)) and
      (not FSinPrecios) then
     Result := ConstruirUrlQR(
       FParametrosApp,
       FCabecera.NifEmp,
+      sFormato,
       FDatosCobro.TotalesFactura.Cabecera.FieldByName(
         'SERIE_FAC').AsString,
       FDatosCobro.TotalesFactura.Cabecera.FieldByName(

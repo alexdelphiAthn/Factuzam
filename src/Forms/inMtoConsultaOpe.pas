@@ -217,7 +217,7 @@ uses
   inLibMensajesVcl,
   inLibGenerarTicketBD, inLibGenerarTicketCaja,
      inLibFotos, inMtoFotoArticulo,
-     inLibTraspasoTicket, inLibShowMto,
+     inLibTraspasoTicket, inLibShowMto, inLibReimpresionOperacionCaja,
      inLibVerifactu, inLibVerifactuTipos, inMtoModalFacturarTicket,
   inLibCorreoTickets, UniDataCorreoTicketsRepositorio,
   inLibAtributosPaleta, inLibMsgComun,
@@ -1367,69 +1367,42 @@ end;
 procedure TfrmConsultaOpe.ReimprimirOperacion(
   const ANombreImpresora: string);
 var
-  sEmp, sAlm, sCaja, sNumOp, sCliente: string;
+  Entorno: TEntornoReimpresionCaja;
+  Dependencias: TDependenciasReimpresionCaja;
+  Operacion: TOperacionReimpresionCaja;
 begin
   if not FdmConsulta.qryMaestro.IsEmpty then
   begin
-    sEmp :=
+    Operacion := Default(TOperacionReimpresionCaja);
+    Operacion.Empresa :=
       FdmConsulta.qryMaestro.FieldByName('CODIGO_EMP_OPCAJA').AsString;
-    sAlm :=
+    Operacion.Almacen :=
       FdmConsulta.qryMaestro.FieldByName('CODIGO_ALM_OPCAJA').AsString;
-    sCaja :=
+    Operacion.Caja :=
       FdmConsulta.qryMaestro.FieldByName('CODIGO_CAJA_OPCAJA').AsString;
-    sNumOp := FdmConsulta.qryMaestro.
+    Operacion.NumeroOperacion := FdmConsulta.qryMaestro.
       FieldByName('NUMERO_OPERACION_OPCAJA').AsString;
-    sCliente := FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
-    // Los traspasos usan su ticket específico con stock origen/destino.
-    if FdmConsulta.EsTraspaso then
-      TTraspasoTicket.ImprimirTraspasoDesdeBD(
-        PreviewTicket,
-        FRepositorioTraspasoTicket,
-        sEmp,
-        sAlm, sCaja, sNumOp,
-        ANombreImpresora)
-    else
-    begin
-      if FdmConsulta.TieneFactura then
-        ImprimirTicketDesdeBD(
-          ParametrosApp,
-          PreviewTicket,
-          UnidadesMedida,
-          FRepositoriosTicketsCaja.Tickets,
-          sEmp,
-          sAlm,
-          sCaja,
-          sNumOp,
-          ANombreImpresora);
-      if FdmConsulta.TieneDepositos then
-        ImprimirResguardoDeposito(
-          PreviewTicket,
-          FRepositoriosTicketsCaja.Resguardos,
-          sEmp,
-          sAlm,
-          sCaja,
-          sNumOp,
-          ANombreImpresora);
-      if FdmConsulta.EsOperacionCaja then
-        ImprimirTicketOperacionCaja(
-                                    PreviewTicket,
-                                    ConexionPrincipal,
-                                    FLecturasImpresionTicket,
-                                    sEmp, sAlm, sCaja,
-                                    sNumOp,
-                                    ANombreImpresora);
-      if (not FdmConsulta.TieneFactura)
-         and (not FdmConsulta.TieneDepositos)
-         and (not FdmConsulta.EsOperacionCaja) then
-        ShowMessage_fza(SErrorOperacionSinTicket)
-      else if Trim(sCliente) <> '' then
-        ImprimirRecordatorio(
-          PreviewTicket,
-          FRepositoriosTicketsCaja.Recordatorios,
-          UbicacionSesion.Empresa,
-          sCliente,
-          ANombreImpresora);
-    end;
+    Operacion.Tipos :=
+      FdmConsulta.qryMaestro.FieldByName('TIPOS_OP').AsString;
+    Operacion.Cliente :=
+      FdmConsulta.qryMaestro.FieldByName('CLIENTE').AsString;
+    Operacion.TieneFactura := FdmConsulta.TieneFactura;
+    Operacion.TieneDepositos := FdmConsulta.TieneDepositos;
+    Entorno := Default(TEntornoReimpresionCaja);
+    Entorno.ParametrosApp := ParametrosApp;
+    Entorno.Preview := PreviewTicket;
+    Entorno.Unidades := UnidadesMedida;
+    Entorno.EmpresaSesion := UbicacionSesion.Empresa;
+    Dependencias := Default(TDependenciasReimpresionCaja);
+    Dependencias.TraspasoTicket := FRepositorioTraspasoTicket;
+    Dependencias.Tickets := FRepositoriosTicketsCaja;
+    Dependencias.LecturasTicket := FLecturasImpresionTicket;
+    if not ReimprimirOperacionCaja(
+      Entorno,
+      Dependencias,
+      Operacion,
+      ANombreImpresora) then
+      ShowMessage_fza(SErrorOperacionSinTicket);
   end;
 end;
 

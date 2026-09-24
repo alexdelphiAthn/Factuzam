@@ -446,7 +446,8 @@ begin
   if AImprimirQR and (not SinVerifactuActivo(AParametrosApp))
      and (Trim(sSerie) <> '') and (Trim(sNumFac) <> '') then
   begin
-    sQR := ConstruirUrlQR(AParametrosApp, sNif, sSerie, sNumFac,
+    sQR := ConstruirUrlQR(AParametrosApp, sNif,
+      AOperacion.FormatoDocumento, sSerie, sNumFac,
       dFechaFac, AOperacion.ImporteVerifactu);
     if sQR <> '' then
     begin

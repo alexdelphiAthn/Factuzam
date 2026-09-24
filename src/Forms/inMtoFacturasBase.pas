@@ -636,7 +636,7 @@ uses
   inLibColumnasSku, inLibColumnasDocumento,
   UniDataArticulosValidadorRepositorio,
   UniDataGen,
-  inLibPresentacionDocumento, Winapi.ShellAPI;
+  inLibPresentacionDocumento, inMtoModalAyudaWeb;
 
 resourcestring
   STituloBuscarClientesBorradoresFactura =
@@ -2055,11 +2055,12 @@ begin
     sUrl := Trim(
       oConsolidacion.FieldByName('VERIFACTU_URL_FACCON').AsString);
   end;
-  // Solo se abre una direccion web. El valor viene de la BBDD y
-  // ShellExecute lanzaria cualquier otra cosa que se le pusiera.
+  // Se abre en una ventana interna (WebView2): muchos puestos no
+  // tienen permitido el navegador. Solo direcciones web.
   if (sUrl <> '') and
      (StartsText('http://', sUrl) or StartsText('https://', sUrl)) then
-    ShellExecute(Handle, 'open', PChar(sUrl), nil, nil, SW_SHOWNORMAL)
+    TfrmModalAyudaWeb.Ejecutar(Self,
+      StripHotKey(btnIrAVerifactu.Caption), sUrl)
   else
     MessageDlg_fza(
       SInfoVerifactuUrlNoDisponible, mtInformation, [mbOk], 0);

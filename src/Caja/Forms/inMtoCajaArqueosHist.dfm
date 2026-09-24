@@ -205,39 +205,22 @@
           Width = 240
           ExplicitWidth = 240
         end
-        object btnExportarExcel: TcxButton
-          Left = 700
-          Top = 2
-          Width = 140
-          Height = 30
-          Caption = 'Exportar Excel'
-          TabOrder = 5
-          OnClick = btnExportarExcelClick
-        end
-        object btnImprimirInforme: TcxButton
-          Left = 848
-          Top = 2
-          Width = 165
-          Height = 30
-          Caption = 'Imprimir Informe A4'
-          TabOrder = 6
-          OnClick = btnImprimirInformeClick
-        end
       end
+    end
+  end
+  inherited pButtonRightBar: TPanel
+    object btnImprimirInforme: TcxButton
+      Left = 1
+      Top = 120
+      Width = 138
+      Height = 48
+      Caption = 'Imprimir Informe A4'
+      TabOrder = 2
+      WordWrap = True
+      OnClick = btnImprimirInformeClick
     end
   end
   inherited dsTablaG: TDataSource
     DataSet = dmCajaArqueosHist.unqryTablaG
-  end
-  object dlgGuardar: TFileSaveDialog
-    DefaultExtension = 'xlsx'
-    FileTypes = <
-      item
-        DisplayName = 'Excel (*.xlsx)'
-        FileMask = '*.xlsx'
-      end>
-    Options = [fdoOverWritePrompt, fdoPathMustExist]
-    Left = 800
-    Top = 500
   end
 end

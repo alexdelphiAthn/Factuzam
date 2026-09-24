@@ -447,6 +447,7 @@ uses
   UniDataTraspasoTicketRepositorio in 'src\Caja\DataModules\UniDataTraspasoTicketRepositorio.pas',
   inLibTraspasoTicket in 'src\Caja\Lib\inLibTraspasoTicket.pas',
   inLibTraspasoSolicitudesExcel in 'src\Caja\Lib\inLibTraspasoSolicitudesExcel.pas',
+  inLibOperacionesCajaExcel in 'src\Caja\Lib\inLibOperacionesCajaExcel.pas',
   inLibGridArticulos in 'src\Lib\inLibGridArticulos.pas',
   inLibColumnasSkuIntf in 'src\Lib\inLibColumnasSkuIntf.pas',
   inLibLineaSku in 'src\Lib\inLibLineaSku.pas',
@@ -527,6 +528,7 @@ uses
   inLibArqueoPersistencia in 'src\Caja\Lib\inLibArqueoPersistencia.pas',
   UniDataArqueoPersistencia in 'src\Caja\DataModules\UniDataArqueoPersistencia.pas',
   inLibGenerarTicketCaja in 'src\Caja\Lib\inLibGenerarTicketCaja.pas',
+  inLibReimpresionOperacionCaja in 'src\Caja\Lib\inLibReimpresionOperacionCaja.pas',
   inLibTiraCajaTicket in 'src\Caja\Lib\inLibTiraCajaTicket.pas',
   inMtoModalArqueo in 'src\Caja\Modals\inMtoModalArqueo.pas' {frmModalArqueo},
   inLibModalArqueoPersistenciaIntf in 'src\Caja\Lib\inLibModalArqueoPersistenciaIntf.pas',
@@ -694,6 +696,7 @@ uses
   inLibCorreoTickets in 'src\Lib\inLibCorreoTickets.pas',
   inLibCorreoDocumentoIntf in 'src\Lib\inLibCorreoDocumentoIntf.pas',
   inLibCorreoDocumentoVcl in 'src\Lib\inLibCorreoDocumentoVcl.pas',
+  inLibCorreoTicketPreviewVcl in 'src\Lib\inLibCorreoTicketPreviewVcl.pas',
   UniDataCorreoDocumento in 'src\DataModules\UniDataCorreoDocumento.pas',
   inLibCorreoValidacion in 'src\Lib\inLibCorreoValidacion.pas',
   inLibFactuzamApi in 'src\Lib\inLibFactuzamApi.pas',
@@ -1385,7 +1388,14 @@ begin
       CrearDistribuidorTallasVisualMto(
         Principal.CrearRepositorioDistribuidorVisual),
       CrearSolicitudPermisoLayoutMto,
-      CrearPreviewTicketMto,
+      CrearPreviewTicketMto(
+        CrearEnvioCorreoTicket(
+          Principal,
+          function(const AEmpresa: string): string
+          begin
+            Result := CrearCorreoTicketsLecturas(
+              Principal.ConexionPrincipal).NombreEmpresa(AEmpresa);
+          end)),
       CrearProveedorPreviewExcelMto);
     if EsModoComandoImprimirFacturas then
     begin
