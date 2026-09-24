@@ -168,6 +168,7 @@ type
     procedure CrearColumnaArticulo;
     procedure CrearColumnaNumeroAtributos;
     procedure CrearColumnasAtributo;
+    function EscalarAncho(AAncho: Integer): Integer;
     procedure AjustarAnchoColumnaAtributo(AColumna: TcxGridDBColumn;
       AConPaleta: Boolean);
     procedure RefrescarVisibilidadAtributos(
@@ -875,6 +876,8 @@ end;
 
 procedure TGridArticulosLineas.RefrescarVisibilidadAtributos(
   AMinimoAtributos: Integer);
+var
+  i: Integer;
 begin
   SincronizarVisibilidadAtributosGrid(
     FView,
@@ -882,6 +885,11 @@ begin
     FColAtributo,
     AMinimoAtributos,
     FMaximoAtributosVisibles);
+  for i := 1 to 5 do
+    if FColAtributo[i] <> nil then
+      AjustarAnchoColumnaAtributo(
+        FColAtributo[i],
+        EsAtributoConPaleta(FConn, FColAtributo[i].Caption));
 end;
 
 procedure TGridArticulosLineas.SetMaximoAtributosVisibles(
@@ -1625,7 +1633,8 @@ begin
     Col.DataBinding.FieldName := FCampos.AttrValor[i];
     Col.Caption := '-';
     Col.Visible := False;
-    AjustarAnchoColumnaAtributo(Col, False);
+    Col.MinWidth := EscalarAncho(ANCHO_MIN_COL_ATRIBUTO);
+    Col.Width := EscalarAncho(ANCHO_COL_ATRIBUTO);
     if FUsarCombosAtributos then
     begin
       Col.PropertiesClass := TcxComboBoxProperties;
@@ -1671,22 +1680,35 @@ end;
 
 // El grid ya esta escalado a su PPI: el ancho asignado en codigo no lo escala
 // DevExpress, asi que se convierte desde 96 ppp.
+function TGridArticulosLineas.EscalarAncho(AAncho: Integer): Integer;
+var
+  Escala: TdxScaleFactor;
+begin
+  Escala := dxGetScaleFactor(FView.Control);
+  Result := Escala.Apply(AAncho);
+end;
+
+// El host (facturas, pedidos...) pone el nombre del atributo en la cabecera
+// por su cuenta, asi que se decide por la cabecera actual. El minimo hace de
+// marca: solo se toca el ancho cuando la columna cambia de tipo, y se respeta
+// el que el usuario le haya dado despues.
 procedure TGridArticulosLineas.AjustarAnchoColumnaAtributo(
   AColumna: TcxGridDBColumn; AConPaleta: Boolean);
 var
-  Escala: TdxScaleFactor;
   iAncho, iMinimo: Integer;
 begin
-  Escala := dxGetScaleFactor(FView.Control);
-  iAncho := ANCHO_COL_ATRIBUTO;
-  iMinimo := ANCHO_MIN_COL_ATRIBUTO;
+  iAncho := EscalarAncho(ANCHO_COL_ATRIBUTO);
+  iMinimo := EscalarAncho(ANCHO_MIN_COL_ATRIBUTO);
   if AConPaleta then
   begin
-    iAncho := ANCHO_COL_ATRIBUTO_PALETA;
-    iMinimo := ANCHO_MIN_COL_ATRIBUTO_PALETA;
+    iAncho := EscalarAncho(ANCHO_COL_ATRIBUTO_PALETA);
+    iMinimo := EscalarAncho(ANCHO_MIN_COL_ATRIBUTO_PALETA);
   end;
-  AColumna.MinWidth := Escala.Apply(iMinimo);
-  AColumna.Width := Escala.Apply(iAncho);
+  if AColumna.MinWidth <> iMinimo then
+  begin
+    AColumna.MinWidth := iMinimo;
+    AColumna.Width := iAncho;
+  end;
 end;
 
 // Pinta el swatch de color en la celda de atributo si el valor casa con la
@@ -1760,12 +1782,6 @@ begin
         begin
           if FUsarCombosAtributos then
             CargarOpcionesCombo(i, ACodArt);
-          // Solo al cambiar el atributo de la columna: respeta el ancho que
-          // el usuario haya dado despues.
-          if Col.Caption <> Atribs[i - 1].NombreAtributo then
-            AjustarAnchoColumnaAtributo(
-              Col,
-              EsAtributoConPaleta(FConn, Atribs[i - 1].NombreAtributo));
           Col.Caption := Atribs[i - 1].NombreAtributo;
           if FUsarCombosAtributos then
             FGlifoSwatch.MostrarBoton(

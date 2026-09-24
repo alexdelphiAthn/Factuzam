@@ -1743,6 +1743,10 @@ begin
     FieldByName('FASE_FAC').AsString := 'BORRADOR';
     // Tipo de factura segun el formulario (NORMAL / SIMPLIFICADA)
     FieldByName('TIPO_FAC').AsString := FTipoFacturaDefecto;
+    // La columna tiene DEFAULT 'S' en la tabla; una simplificada nace sin
+    // descripciones ampliadas.
+    if SameText(FTipoFacturaDefecto, 'SIMPLIFICADA') then
+      FieldByName('ESDESCRIPCIONES_AMP_FAC').AsString := 'N';
     // Una factura normal insertada a mano es venta directa y mueve stock.
     // Los flujos que parten de otro documento deben negarlo expresamente.
     if FindField('ESMUEVE_STOCK_FAC') <> nil then
