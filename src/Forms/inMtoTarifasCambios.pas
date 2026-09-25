@@ -81,6 +81,8 @@ type
     function  CrearColumna(AView: TcxGridDBTableView;
                            const ACampo, ATitulo: string;
                            AAncho: Integer): TcxGridDBColumn;
+    procedure FormatoImporte(AColumna: TcxGridDBColumn;
+                             const AFormato: string);
     procedure ConfigurarCombos;
     procedure VincularDatos;
     procedure DesvincularDatos;
@@ -116,6 +118,10 @@ uses
   inMtoModalCargarSesionTarifa, inLibMsgArticulos;
 
 {$R *.dfm}
+
+const
+  FMT_EUROS = ',0.00 ' + #8364 + ';-,0.00 ' + #8364;
+  FMT_PORCENTAJE = '0.00 %';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -525,18 +531,22 @@ begin
     CrearColumna(tvLineas, 'DESCRIPCION_ART', 'Descripcion', 240);
     CrearColumna(tvLineas, 'NOMBRE_FAM_FAM', 'Familia', 160);
     CrearColumna(tvLineas, 'RAZON_SOCIAL_PRV', 'Proveedor', 180);
-    CrearColumna(tvLineas, 'PRECIO_ORIGEN_TARCLIN', 'P. origen', 90);
-    CrearColumna(tvLineas, 'PRECIO_COSTE_TARCLIN', 'Coste', 90);
-    CrearColumna(tvLineas, 'PRECIO_SALIDA_ACTUAL_TARCLIN',
-                 'Salida actual', 100);
-    CrearColumna(tvLineas, 'PRECIO_FINAL_ACTUAL_TARCLIN',
-                 'Final actual', 100);
-    CrearColumna(tvLineas, 'PRECIO_NUEVO_TARCLIN', 'Salida nueva', 100);
-    CrearColumna(tvLineas, 'PRECIO_DTO_NUEVO_TARCLIN', 'Dto nuevo', 90);
-    CrearColumna(tvLineas, 'PORCENTAJE_DTO_NUEVO_TARCLIN',
-                 '% dto nuevo', 90);
-    CrearColumna(tvLineas, 'PRECIO_FINAL_NUEVO_TARCLIN',
-                 'Final nuevo', 100);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_ORIGEN_TARCLIN',
+                   'P. origen', 90), FMT_EUROS);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_COSTE_TARCLIN',
+                   'Coste', 90), FMT_EUROS);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_SALIDA_ACTUAL_TARCLIN',
+                   'Salida actual', 100), FMT_EUROS);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_FINAL_ACTUAL_TARCLIN',
+                   'Final actual', 100), FMT_EUROS);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_NUEVO_TARCLIN',
+                   'Salida nueva', 100), FMT_EUROS);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_DTO_NUEVO_TARCLIN',
+                   'Dto nuevo', 90), FMT_EUROS);
+    FormatoImporte(CrearColumna(tvLineas, 'PORCENTAJE_DTO_NUEVO_TARCLIN',
+                   '% dto nuevo', 90), FMT_PORCENTAJE);
+    FormatoImporte(CrearColumna(tvLineas, 'PRECIO_FINAL_NUEVO_TARCLIN',
+                   'Final nuevo', 100), FMT_EUROS);
     CrearColumna(tvLineas, 'MENSAJE_TARCLIN', 'Mensaje', 180);
   end;
 end;
@@ -561,6 +571,20 @@ begin
   Result.DataBinding.FieldName := ACampo;
   Result.Caption := ATitulo;
   Result.Width := AAncho;
+end;
+
+// Importes con dos decimales, alineados a la derecha, tambien al editar.
+procedure TfrmMtoTarifasCambios.FormatoImporte(AColumna: TcxGridDBColumn;
+  const AFormato: string);
+var
+  Propiedades: TcxCurrencyEditProperties;
+begin
+  AColumna.PropertiesClass := TcxCurrencyEditProperties;
+  Propiedades := AColumna.Properties as TcxCurrencyEditProperties;
+  Propiedades.DisplayFormat := AFormato;
+  Propiedades.EditFormat := '0.00';
+  Propiedades.DecimalPlaces := 2;
+  Propiedades.Alignment.Horz := taRightJustify;
 end;
 
 function TfrmMtoTarifasCambios.GrabarCabeceraSiNecesario: Boolean;
@@ -607,27 +631,23 @@ begin
   end;
 end;
 
-// Aplica lo que se ve en la rejilla; recalcular con la formula es opcional
-// para no perder los descuentos puestos por articulo o en lote.
+// Aplica lo que se ve en la rejilla, sin recalcular: asi no se pierden los
+// descuentos puestos por articulo, en lote o desde Excel. La formula de la
+// cabecera solo se aplica con "Calcular lineas".
 procedure TfrmMtoTarifasCambios.btnAplicarClick(Sender: TObject);
 var
   sMensaje        : string;
   iLineas         : Integer;
   iLineasAplicadas: Integer;
-  iRespuesta      : Integer;
+  iSinPrecio      : Integer;
 begin
-  iRespuesta := mrCancel;
-  if GrabarCabeceraSiNecesario then
-    iRespuesta := MessageDlg_fza(SPreguntaRecalcularAntesAplicarSesionTarifa,
-      mtConfirmation, [mbYes, mbNo, mbCancel], 0);
-  if iRespuesta <> mrCancel then
+  if Assigned(dmmTarifasCambios) and GrabarCabeceraSiNecesario then
   begin
-    sMensaje := '';
     iLineas := dmmTarifasCambios.unqryLineas.RecordCount;
-    if iRespuesta = mrYes then
-      iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
-    if sMensaje <> '' then
-      ShowMessage_fza(Format(SErrorCalcularSesionTarifa, [sMensaje]))
+    iSinPrecio := dmmTarifasCambios.LineasSinPrecioNuevo;
+    if iSinPrecio > 0 then
+      ShowMessage_fza(Format(SErrorLineasSinPrecioNuevoSesionTarifa,
+        [iSinPrecio]))
     else if MessageDlg_fza(Format(SPreguntaAplicarSesionTarifa,
                               [iLineas]),
                        mtConfirmation, [mbYes, mbNo], 0) = mrYes then

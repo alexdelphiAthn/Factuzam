@@ -18,7 +18,7 @@ interface
 
 uses
   inLibRegistroPantallas,
-  System.SysUtils, System.Classes, System.Math,
+  System.SysUtils, System.Classes, System.Math, System.Generics.Collections,
   Data.DB, MemDS, DBAccess, Uni,
   UniDataGen, inLibTarifasCambiosExcel;
 
@@ -55,6 +55,12 @@ type
       const ALinea: TLineaSesionTarifaExcel);
     procedure unqryLineasAfterOpen(DataSet: TDataSet);
     procedure CampoPrecioNuevoChange(Sender: TField);
+    function  RedondearConCabecera(AImporte: Double): Double;
+    function  SalidaParaDescuento: Double;
+    procedure CalcularDescuento(ASalida, APorcentaje: Double;
+      out AFinal, ADto, APorcentajeReal: Double);
+    procedure GrabarDescuentos(const APorLinea: TDictionary<Integer, Double>);
+    procedure AplicarPorcentajesExcel(const ALineas: TLineasSesionTarifaExcel);
   public
     unqryLineas  : TUniQuery;
     dsLineas     : TDataSource;
@@ -66,6 +72,7 @@ type
     procedure AbrirDetalles; override;
     procedure AplicarDescuentoLote(const AIdsLinea: TArray<Integer>;
       APorcentaje: Double);
+    function  LineasSinPrecioNuevo: Integer;
     function  RecalcularSesionActual(out AMensaje: string): Integer;
     function  AplicarSesionActual(out AMensaje: string): Integer;
   end;
@@ -113,19 +120,8 @@ const
   SQL_BASE_SALIDA_NUEVA =
     'COALESCE(NULLIF(PRECIO_NUEVO_TARCLIN, 0), ' +
     'NULLIF(PRECIO_SALIDA_ACTUAL_TARCLIN, 0), PRECIO_ORIGEN_TARCLIN)';
-  // Descuento por porcentaje sobre la salida nueva. En un UPDATE de una
-  // tabla las asignaciones usan los valores ya asignados a su izquierda.
-  SQL_DESCUENTO_PORCENTAJE =
-    'UPDATE fza_tarifas_cambios_lineas SET ' +
-    'PRECIO_NUEVO_TARCLIN = ' + SQL_BASE_SALIDA_NUEVA + ', ' +
-    'PORCENTAJE_DTO_NUEVO_TARCLIN = :PORC, ' +
-    'PRECIO_FINAL_NUEVO_TARCLIN = ' +
-    '  ROUND(PRECIO_NUEVO_TARCLIN * (1 - :PORC / 100), 2), ' +
-    'PRECIO_DTO_NUEVO_TARCLIN = ' +
-    '  PRECIO_NUEVO_TARCLIN - PRECIO_FINAL_NUEVO_TARCLIN, ' +
-    'ESTADO_TARCLIN = ''PENDIENTE'', MENSAJE_TARCLIN = NULL, ' +
-    'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() WHERE %s';
-  // Descuento a partir del precio final ya grabado en la linea.
+  // Descuento a partir del precio final ya grabado en la linea. En un
+  // UPDATE de una tabla las asignaciones usan los valores ya asignados.
   SQL_DESCUENTO_FINAL =
     'UPDATE fza_tarifas_cambios_lineas SET ' +
     'PRECIO_NUEVO_TARCLIN = ' + SQL_BASE_SALIDA_NUEVA + ', ' +
@@ -136,7 +132,6 @@ const
     '  ELSE 0 END, ' +
     'ESTADO_TARCLIN = ''PENDIENTE'', MENSAJE_TARCLIN = NULL, ' +
     'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() WHERE %s';
-  SQL_FILTRO_ID_LINEA = 'ID_TARCLIN = :ID';
   SQL_FILTRO_ARTICULO_LINEA =
     'CODIGO_TARC_TARCLIN = :TARC AND CODIGO_ART_TARCLIN = :ART ' +
     'AND CODIGO_UNIDAD_SKU_TARCLIN = :SKU';
@@ -254,8 +249,11 @@ begin
     CampoPrecioNuevoChange;
 end;
 
-// Edicion a mano de una linea: salida, final, descuento y % se mantienen
-// coherentes. Si cambia la salida se conserva el % de descuento.
+// Edicion a mano de una linea, con el criterio comun:
+// - % escrito o salida cambiada: el final sale del % con el redondeo de la
+//   cabecera (como la formula y el descuento en lote);
+// - final o importe de descuento escritos: se respetan tal cual.
+// El % que queda es siempre el real (descuento / salida).
 procedure TdmTarifasCambios.CampoPrecioNuevoChange(Sender: TField);
 var
   dDto: Double;
@@ -269,27 +267,19 @@ begin
     FAjustandoPrecios := True;
     try
       Lineas := Sender.DataSet;
-      dSalida := LeerFloatLinea('PRECIO_NUEVO_TARCLIN');
-      if dSalida <= 0 then
-      begin
-        dSalida := LeerFloatLinea('PRECIO_SALIDA_ACTUAL_TARCLIN');
-        if dSalida <= 0 then
-          dSalida := LeerFloatLinea('PRECIO_ORIGEN_TARCLIN');
-        if (dSalida > 0) and (Sender.FieldName <> 'PRECIO_NUEVO_TARCLIN') then
-          Lineas.FieldByName('PRECIO_NUEVO_TARCLIN').AsFloat := dSalida;
-      end;
+      dSalida := SalidaParaDescuento;
+      if (dSalida > 0) and
+         (LeerFloatLinea('PRECIO_NUEVO_TARCLIN') <= 0) then
+        Lineas.FieldByName('PRECIO_NUEVO_TARCLIN').AsFloat := dSalida;
       dFinal := LeerFloatLinea('PRECIO_FINAL_NUEVO_TARCLIN');
       dDto := LeerFloatLinea('PRECIO_DTO_NUEVO_TARCLIN');
-      dPorc := LeerFloatLinea('PORCENTAJE_DTO_NUEVO_TARCLIN');
-      if Sender.FieldName = 'PRECIO_FINAL_NUEVO_TARCLIN' then
-        dDto := Max(dSalida - dFinal, 0)
-      else if Sender.FieldName = 'PRECIO_DTO_NUEVO_TARCLIN' then
+      if Sender.FieldName = 'PRECIO_DTO_NUEVO_TARCLIN' then
         dFinal := Max(dSalida - dDto, 0)
-      else
-      begin
-        dFinal := Round(dSalida * (1 - dPorc / 100) * 100) / 100;
-        dDto := dSalida - dFinal;
-      end;
+      else if Sender.FieldName <> 'PRECIO_FINAL_NUEVO_TARCLIN' then
+        CalcularDescuento(dSalida,
+          LeerFloatLinea('PORCENTAJE_DTO_NUEVO_TARCLIN'),
+          dFinal, dDto, dPorc);
+      dDto := Max(dSalida - dFinal, 0);
       dPorc := 0;
       if dSalida > 0 then
         dPorc := Round(dDto / dSalida * 100 * 100) / 100;
@@ -297,8 +287,7 @@ begin
         Lineas.FieldByName('PRECIO_FINAL_NUEVO_TARCLIN').AsFloat := dFinal;
       if Sender.FieldName <> 'PRECIO_DTO_NUEVO_TARCLIN' then
         Lineas.FieldByName('PRECIO_DTO_NUEVO_TARCLIN').AsFloat := dDto;
-      if Sender.FieldName <> 'PORCENTAJE_DTO_NUEVO_TARCLIN' then
-        Lineas.FieldByName('PORCENTAJE_DTO_NUEVO_TARCLIN').AsFloat := dPorc;
+      Lineas.FieldByName('PORCENTAJE_DTO_NUEVO_TARCLIN').AsFloat := dPorc;
       Lineas.FieldByName('ESTADO_TARCLIN').AsString := 'PENDIENTE';
     finally
       FAjustandoPrecios := False;
@@ -309,39 +298,46 @@ end;
 procedure TdmTarifasCambios.AplicarDescuentoLote(
   const AIdsLinea: TArray<Integer>; APorcentaje: Double);
 var
-  EsTransaccionPropia: Boolean;
   iLinea: Integer;
-  oConexion: TUniConnection;
-  qry: TUniQuery;
+  PorLinea: TDictionary<Integer, Double>;
 begin
   GrabarLineaPendiente;
-  oConexion := unqryTablaG.Connection as TUniConnection;
-  qry := TUniQuery.Create(nil);
+  PorLinea := TDictionary<Integer, Double>.Create;
   try
-    qry.Connection := oConexion;
-    qry.SQL.Text := Format(SQL_DESCUENTO_PORCENTAJE, [SQL_FILTRO_ID_LINEA]);
-    EsTransaccionPropia := not oConexion.InTransaction;
-    if EsTransaccionPropia then
-      oConexion.StartTransaction;
-    try
-      for iLinea := 0 to High(AIdsLinea) do
-      begin
-        qry.ParamByName('PORC').AsFloat := APorcentaje;
-        qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-        qry.ParamByName('ID').AsInteger := AIdsLinea[iLinea];
-        qry.Execute;
-      end;
-      if EsTransaccionPropia then
-        oConexion.Commit;
-    except
-      if EsTransaccionPropia and oConexion.InTransaction then
-        oConexion.Rollback;
-      raise;
-    end;
+    for iLinea := 0 to High(AIdsLinea) do
+      PorLinea.AddOrSetValue(AIdsLinea[iLinea], APorcentaje);
+    GrabarDescuentos(PorLinea);
   finally
-    FreeAndNil(qry);
+    FreeAndNil(PorLinea);
   end;
-  unqryLineas.Refresh;
+end;
+
+// Lineas a aplicar que aun no tienen salida o final nuevo: aplicarlas
+// dejaria el articulo a precio 0 en la tarifa destino.
+function TdmTarifasCambios.LineasSinPrecioNuevo: Integer;
+var
+  qry: TUniQuery;
+begin
+  Result := 0;
+  GrabarLineaPendiente;
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) then
+  begin
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'SELECT COUNT(*) AS CANTIDAD FROM fza_tarifas_cambios_lineas ' +
+        'WHERE CODIGO_TARC_TARCLIN = :CODIGO AND ESAPLICAR_TARCLIN = ''S'' ' +
+        'AND (COALESCE(PRECIO_NUEVO_TARCLIN, 0) <= 0 ' +
+        '  OR COALESCE(PRECIO_FINAL_NUEVO_TARCLIN, 0) <= 0)';
+      qry.ParamByName('CODIGO').AsInteger :=
+        unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+      qry.Open;
+      Result := qry.FieldByName('CANTIDAD').AsInteger;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
 end;
 
 procedure TdmTarifasCambios.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -420,12 +416,123 @@ function TdmTarifasCambios.RedondearImporte(AImporte: Double;
   EsRedondearArriba: Boolean): Double;
 begin
   Result := AImporte;
-  if EsRedondearArriba and (AValorRedondeo > 0) then
-    Result := Ceil(Result / AValorRedondeo) * AValorRedondeo;
+  if AValorRedondeo > 0 then
+  begin
+    if EsRedondearArriba then
+      Result := Ceil(Result / AValorRedondeo) * AValorRedondeo
+    else
+      Result := Round(Result / AValorRedondeo) * AValorRedondeo;
+  end;
   Result := Result - AValorMenos;
   if Result < 0 then
     Result := 0;
   Result := Round(Result * 100) / 100;
+end;
+
+// Criterio unico: todo precio que sale de un porcentaje (formula, descuento
+// en lote, % del Excel o % escrito en la rejilla) se redondea igual.
+function TdmTarifasCambios.RedondearConCabecera(AImporte: Double): Double;
+begin
+  Result := RedondearImporte(AImporte,
+    CampoCabecera('VALOR_REDONDEO_TARC').AsFloat,
+    CampoCabecera('VALOR_MENOS_AJUSTE_TARC').AsFloat,
+    SameText(CampoCabecera('ESREDONDEAR_ARRIBA_TARC').AsString, 'S'));
+end;
+
+// Salida de partida de la linea actual: la nueva ya calculada; si no hay,
+// la actual de la tarifa destino y, si tampoco, la de la tarifa origen.
+function TdmTarifasCambios.SalidaParaDescuento: Double;
+begin
+  Result := LeerFloatLinea('PRECIO_NUEVO_TARCLIN');
+  if Result <= 0 then
+    Result := LeerFloatLinea('PRECIO_SALIDA_ACTUAL_TARCLIN');
+  if Result <= 0 then
+    Result := LeerFloatLinea('PRECIO_ORIGEN_TARCLIN');
+end;
+
+procedure TdmTarifasCambios.CalcularDescuento(ASalida, APorcentaje: Double;
+  out AFinal, ADto, APorcentajeReal: Double);
+begin
+  AFinal := ASalida;
+  if APorcentaje > 0 then
+    AFinal := RedondearConCabecera(ASalida * (1 - APorcentaje / 100));
+  ADto := Max(ASalida - AFinal, 0);
+  APorcentajeReal := 0;
+  if ASalida > 0 then
+    APorcentajeReal := Round(ADto / ASalida * 100 * 100) / 100;
+end;
+
+// Graba el descuento de las lineas indicadas (ID -> % pedido). La salida no
+// cambia; el % grabado es el real tras redondear.
+procedure TdmTarifasCambios.GrabarDescuentos(
+  const APorLinea: TDictionary<Integer, Double>);
+var
+  dDto: Double;
+  dFinal: Double;
+  dPorcentaje: Double;
+  dPorcentajeReal: Double;
+  dSalida: Double;
+  EsTransaccionPropia: Boolean;
+  oConexion: TUniConnection;
+  qry: TUniQuery;
+begin
+  if APorLinea.Count > 0 then
+  begin
+    oConexion := unqryTablaG.Connection as TUniConnection;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := oConexion;
+      qry.SQL.Text :=
+        'UPDATE fza_tarifas_cambios_lineas SET ' +
+        'PRECIO_NUEVO_TARCLIN = :SALIDA, ' +
+        'PRECIO_FINAL_NUEVO_TARCLIN = :FINAL, ' +
+        'PRECIO_DTO_NUEVO_TARCLIN = :DTO, ' +
+        'PORCENTAJE_DTO_NUEVO_TARCLIN = :PORC, ' +
+        'ESTADO_TARCLIN = ''PENDIENTE'', MENSAJE_TARCLIN = NULL, ' +
+        'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+        'WHERE ID_TARCLIN = :ID';
+      EsTransaccionPropia := not oConexion.InTransaction;
+      if EsTransaccionPropia then
+        oConexion.StartTransaction;
+      unqryLineas.DisableControls;
+      try
+        try
+          unqryLineas.First;
+          while not unqryLineas.Eof do
+          begin
+            if APorLinea.TryGetValue(
+                 unqryLineas.FieldByName('ID_TARCLIN').AsInteger,
+                 dPorcentaje) then
+            begin
+              dSalida := SalidaParaDescuento;
+              CalcularDescuento(dSalida, dPorcentaje, dFinal, dDto,
+                dPorcentajeReal);
+              qry.ParamByName('SALIDA').AsFloat := dSalida;
+              qry.ParamByName('FINAL').AsFloat := dFinal;
+              qry.ParamByName('DTO').AsFloat := dDto;
+              qry.ParamByName('PORC').AsFloat := dPorcentajeReal;
+              qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+              qry.ParamByName('ID').AsInteger :=
+                unqryLineas.FieldByName('ID_TARCLIN').AsInteger;
+              qry.Execute;
+            end;
+            unqryLineas.Next;
+          end;
+          if EsTransaccionPropia then
+            oConexion.Commit;
+        except
+          if EsTransaccionPropia and oConexion.InTransaction then
+            oConexion.Rollback;
+          raise;
+        end;
+      finally
+        unqryLineas.EnableControls;
+      end;
+    finally
+      FreeAndNil(qry);
+    end;
+    unqryLineas.Refresh;
+  end;
 end;
 
 procedure TdmTarifasCambios.GrabarLineaPendiente;
@@ -577,31 +684,31 @@ begin
   end;
 end;
 
-// Si el Excel trae solo el % de descuento se calculan final e importe; si
-// trae solo el final, el importe y el %. Con ambos, o ninguno, no se toca.
+function EsDescuentoPorPorcentajeExcel(
+  const ALinea: TLineaSesionTarifaExcel): Boolean;
+begin
+  Result := ALinea.TieneImporte[istPorcDtoNuevo] and
+    (not ALinea.TieneImporte[istFinalNueva]);
+end;
+
+function ClaveArticuloSku(const AArticulo, ASku: string): string;
+begin
+  Result := AArticulo + #9 + ASku;
+end;
+
+// Si el Excel trae solo el final se calculan el importe y el % sin
+// redondear: el final lo ha fijado el usuario. Si trae solo el %, se trata
+// despues con el criterio comun (GrabarDescuentos) una vez cargadas las
+// lineas y sus precios de partida.
 procedure TdmTarifasCambios.CompletarDescuentoLineaExcel(AConsulta: TUniQuery;
   const ALinea: TLineaSesionTarifaExcel);
-var
-  EsPorPorcentaje: Boolean;
-  EsPorFinal: Boolean;
 begin
-  EsPorPorcentaje := ALinea.TieneImporte[istPorcDtoNuevo] and
-    (not ALinea.TieneImporte[istFinalNueva]);
-  EsPorFinal := ALinea.TieneImporte[istFinalNueva] and
-    (not ALinea.TieneImporte[istPorcDtoNuevo]) and
-    (not ALinea.TieneImporte[istDtoNuevo]);
-  if EsPorPorcentaje or EsPorFinal then
+  if ALinea.TieneImporte[istFinalNueva] and
+     (not ALinea.TieneImporte[istPorcDtoNuevo]) and
+     (not ALinea.TieneImporte[istDtoNuevo]) then
   begin
-    if EsPorPorcentaje then
-    begin
-      AConsulta.SQL.Text :=
-        Format(SQL_DESCUENTO_PORCENTAJE, [SQL_FILTRO_ARTICULO_LINEA]);
-      AConsulta.ParamByName('PORC').AsFloat :=
-        ALinea.Importes[istPorcDtoNuevo];
-    end
-    else
-      AConsulta.SQL.Text :=
-        Format(SQL_DESCUENTO_FINAL, [SQL_FILTRO_ARTICULO_LINEA]);
+    AConsulta.SQL.Text :=
+      Format(SQL_DESCUENTO_FINAL, [SQL_FILTRO_ARTICULO_LINEA]);
     AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
     AConsulta.ParamByName('TARC').AsInteger :=
       unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
@@ -679,6 +786,51 @@ begin
     FreeAndNil(qryActualizar);
   end;
   RellenarPreciosPartida;
+  AplicarPorcentajesExcel(ALineas);
+end;
+
+// Filas del Excel con solo "% dto nuevo": se calculan con el criterio comun
+// de redondeo sobre la salida de cada linea ya cargada.
+procedure TdmTarifasCambios.AplicarPorcentajesExcel(
+  const ALineas: TLineasSesionTarifaExcel);
+var
+  dPorcentaje: Double;
+  iLinea: Integer;
+  PorClave: TDictionary<string, Double>;
+  PorLinea: TDictionary<Integer, Double>;
+begin
+  PorClave := TDictionary<string, Double>.Create;
+  PorLinea := TDictionary<Integer, Double>.Create;
+  try
+    for iLinea := 0 to High(ALineas) do
+      if EsDescuentoPorPorcentajeExcel(ALineas[iLinea]) then
+        PorClave.AddOrSetValue(
+          ClaveArticuloSku(ALineas[iLinea].Articulo, ALineas[iLinea].Sku),
+          ALineas[iLinea].Importes[istPorcDtoNuevo]);
+    if PorClave.Count > 0 then
+    begin
+      unqryLineas.DisableControls;
+      try
+        unqryLineas.First;
+        while not unqryLineas.Eof do
+        begin
+          if PorClave.TryGetValue(ClaveArticuloSku(
+               unqryLineas.FieldByName('CODIGO_ART_TARCLIN').AsString,
+               unqryLineas.FieldByName('CODIGO_UNIDAD_SKU_TARCLIN').AsString),
+               dPorcentaje) then
+            PorLinea.AddOrSetValue(
+              unqryLineas.FieldByName('ID_TARCLIN').AsInteger, dPorcentaje);
+          unqryLineas.Next;
+        end;
+      finally
+        unqryLineas.EnableControls;
+      end;
+      GrabarDescuentos(PorLinea);
+    end;
+  finally
+    FreeAndNil(PorLinea);
+    FreeAndNil(PorClave);
+  end;
 end;
 
 function TdmTarifasCambios.RecalcularSesionActual(

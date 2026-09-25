@@ -775,8 +775,8 @@ resourcestring
   SErrorCalcularSesionTarifa =
     'No se pudo calcular la sesion: %s';
   SPreguntaAplicarSesionTarifa =
-    '%d lineas recalculadas. Aplicar las lineas marcadas a la tarifa ' +
-    'destino?';
+    'Se aplicaran a la tarifa destino los precios de la rejilla ' +
+    '(%d lineas, solo las marcadas con Aplicar = S). ¿Continuar?';
   SErrorAplicarSesionTarifa =
     'No se pudo aplicar la sesion: %s';
   SInfoLineasSesionTarifaAplicadas =
@@ -1007,12 +1007,9 @@ resourcestring
   SPreguntaDescuentoLoteSesionTarifa =
     'Se aplicara un %s %% de descuento a %d lineas. ' +
     'El precio de salida no cambia. ¿Continuar?';
-  SPreguntaRecalcularAntesAplicarSesionTarifa =
-    '¿Recalcular las lineas con la formula de la cabecera antes de ' +
-    'aplicar?' + sLineBreak + sLineBreak +
-    'Si: recalcula todas las lineas (se pierden los retoques a mano).' +
-    sLineBreak +
-    'No: aplica los precios tal como estan en la rejilla.';
+  SErrorLineasSinPrecioNuevoSesionTarifa =
+    'Hay %d lineas marcadas para aplicar sin precio nuevo.' + sLineBreak +
+    'Pulse "Calcular lineas" o ponga el descuento antes de aplicar.';
   // R09 - Modales de artículos, bloques y filtros
   SCaptionCeroArticulos = '0 articulos';
   SCaptionNumSeleccionados = '(%d sel.)';
