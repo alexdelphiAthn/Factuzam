@@ -20,7 +20,7 @@ uses
   inLibRegistroPantallas,
   System.SysUtils, System.Classes, System.Math,
   Data.DB, MemDS, DBAccess, Uni,
-  UniDataGen;
+  UniDataGen, inLibTarifasCambiosExcel;
 
 type
   TdmTarifasCambios = class(TdmBase)
@@ -29,6 +29,7 @@ type
     procedure unqryTablaGAfterInsert(DataSet: TDataSet);
     procedure unqryTablaGBeforePost(DataSet: TDataSet);
   private
+    FAjustandoPrecios: Boolean;
     function  CampoCabecera(const ACampo: string): TField;
     function  LeerFloatLinea(const ACampo: string): Double;
     function  PrecioBaseLinea(const ACampoOrigen: string): Double;
@@ -45,15 +46,26 @@ type
       AConsultaBusca, AConsultaExec, AConsultaMarca,
       AConsultaUnico: TUniQuery;
       out AEncoloPrestaShop: Boolean): Boolean;
-    function AplicarVentanaDescuento(AConsulta: TUniQuery): Boolean;
     procedure MarcarSesionAplicada(AConsulta: TUniQuery);
     procedure ConfigurarQueries;
+    procedure GrabarLineaPendiente;
+    procedure AsignarParametrosLineaExcel(AConsulta: TUniQuery;
+      const ALinea: TLineaSesionTarifaExcel);
+    procedure CompletarDescuentoLineaExcel(AConsulta: TUniQuery;
+      const ALinea: TLineaSesionTarifaExcel);
+    procedure unqryLineasAfterOpen(DataSet: TDataSet);
+    procedure CampoPrecioNuevoChange(Sender: TField);
   public
     unqryLineas  : TUniQuery;
     dsLineas     : TDataSource;
     unqryTarifas : TUniQuery;
     dsTarifas    : TDataSource;
+    procedure RellenarPreciosPartida;
+    procedure ImportarLineasExcel(const ALineas: TLineasSesionTarifaExcel;
+      out ANuevas, AActualizadas: Integer);
     procedure AbrirDetalles; override;
+    procedure AplicarDescuentoLote(const AIdsLinea: TArray<Integer>;
+      APorcentaje: Double);
     function  RecalcularSesionActual(out AMensaje: string): Integer;
     function  AplicarSesionActual(out AMensaje: string): Integer;
   end;
@@ -75,6 +87,59 @@ resourcestring
     'La sesion no tiene lineas.';
   SErrorTarifasCambiosSesionAplicada =
     'La sesion ya esta aplicada.';
+
+const
+  // Precio vigente de una tarifa para el articulo/SKU de la linea L.
+  SQL_PRECIO_TARIFA_LINEA =
+    '(SELECT T.%s FROM fza_articulos_tarifas T ' +
+    'WHERE T.CODIGO_ART_ARTTAR = L.CODIGO_ART_TARCLIN ' +
+    'AND COALESCE(T.CODIGO_UNIDAD_ARTTAR, '''') = ' +
+    'L.CODIGO_UNIDAD_SKU_TARCLIN ' +
+    'AND T.CODIGO_TAR_ARTTAR = :%s AND T.ESACTIVO_ARTTAR = ''S'' ' +
+    'ORDER BY T.FECHA_DESDE_ARTTAR DESC, T.CODIGO_UNICO_ARTTAR DESC ' +
+    'LIMIT 1)';
+  // Tarifa de la linea distinta de la de la cabecera.
+  SQL_CAMBIO_TARIFA_ORIGEN =
+    'NOT (L.CODIGO_TAR_ORIGEN_TARCLIN <=> :TAR_ORIG)';
+  SQL_CAMBIO_TARIFA_DESTINO =
+    'NOT (L.CODIGO_TAR_DESTINO_TARCLIN <=> :TAR_DEST)';
+  // Ultimo precio de compra: proveedor principal o, si no hay, cualquiera.
+  SQL_COSTE_LINEA =
+    '(SELECT AP.PRECIO_ULT_COMPRA_AP FROM fza_articulos_proveedores AP ' +
+    'WHERE AP.CODIGO_ART_AP = L.CODIGO_ART_TARCLIN ' +
+    'ORDER BY AP.ESPROVEEDORPRINCIPAL_AP = ''S'' DESC LIMIT 1)';
+  // Salida nueva de partida para un descuento: la calculada, si no la
+  // actual de la tarifa destino y, si tampoco, la de origen.
+  SQL_BASE_SALIDA_NUEVA =
+    'COALESCE(NULLIF(PRECIO_NUEVO_TARCLIN, 0), ' +
+    'NULLIF(PRECIO_SALIDA_ACTUAL_TARCLIN, 0), PRECIO_ORIGEN_TARCLIN)';
+  // Descuento por porcentaje sobre la salida nueva. En un UPDATE de una
+  // tabla las asignaciones usan los valores ya asignados a su izquierda.
+  SQL_DESCUENTO_PORCENTAJE =
+    'UPDATE fza_tarifas_cambios_lineas SET ' +
+    'PRECIO_NUEVO_TARCLIN = ' + SQL_BASE_SALIDA_NUEVA + ', ' +
+    'PORCENTAJE_DTO_NUEVO_TARCLIN = :PORC, ' +
+    'PRECIO_FINAL_NUEVO_TARCLIN = ' +
+    '  ROUND(PRECIO_NUEVO_TARCLIN * (1 - :PORC / 100), 2), ' +
+    'PRECIO_DTO_NUEVO_TARCLIN = ' +
+    '  PRECIO_NUEVO_TARCLIN - PRECIO_FINAL_NUEVO_TARCLIN, ' +
+    'ESTADO_TARCLIN = ''PENDIENTE'', MENSAJE_TARCLIN = NULL, ' +
+    'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() WHERE %s';
+  // Descuento a partir del precio final ya grabado en la linea.
+  SQL_DESCUENTO_FINAL =
+    'UPDATE fza_tarifas_cambios_lineas SET ' +
+    'PRECIO_NUEVO_TARCLIN = ' + SQL_BASE_SALIDA_NUEVA + ', ' +
+    'PRECIO_DTO_NUEVO_TARCLIN = GREATEST(PRECIO_NUEVO_TARCLIN - ' +
+    '  PRECIO_FINAL_NUEVO_TARCLIN, 0), ' +
+    'PORCENTAJE_DTO_NUEVO_TARCLIN = CASE WHEN PRECIO_NUEVO_TARCLIN > 0 ' +
+    '  THEN ROUND(PRECIO_DTO_NUEVO_TARCLIN / PRECIO_NUEVO_TARCLIN * 100, 2) ' +
+    '  ELSE 0 END, ' +
+    'ESTADO_TARCLIN = ''PENDIENTE'', MENSAJE_TARCLIN = NULL, ' +
+    'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() WHERE %s';
+  SQL_FILTRO_ID_LINEA = 'ID_TARCLIN = :ID';
+  SQL_FILTRO_ARTICULO_LINEA =
+    'CODIGO_TARC_TARCLIN = :TARC AND CODIGO_ART_TARCLIN = :ART ' +
+    'AND CODIGO_UNIDAD_SKU_TARCLIN = :SKU';
 
 procedure ForceReferenceToClass(C: TClass); begin end;
 
@@ -137,9 +202,20 @@ begin
     '    ON P.CODIGO_PRV_PRV = AP.CODIGO_PRV_AP ' +
     ' ORDER BY L.ID_TARCLIN';
   unqryLineas.KeyFields := 'ID_TARCLIN';
+  unqryLineas.AfterOpen := unqryLineasAfterOpen;
   unqryLineas.SQLUpdate.Text :=
     'UPDATE fza_tarifas_cambios_lineas SET ' +
+    '  CODIGO_ART_TARCLIN = :CODIGO_ART_TARCLIN, ' +
+    '  CODIGO_UNIDAD_SKU_TARCLIN = :CODIGO_UNIDAD_SKU_TARCLIN, ' +
+    '  CODIGO_TAR_ORIGEN_TARCLIN = :CODIGO_TAR_ORIGEN_TARCLIN, ' +
+    '  CODIGO_TAR_DESTINO_TARCLIN = :CODIGO_TAR_DESTINO_TARCLIN, ' +
     '  ESAPLICAR_TARCLIN = :ESAPLICAR_TARCLIN, ' +
+    '  PRECIO_ORIGEN_TARCLIN = :PRECIO_ORIGEN_TARCLIN, ' +
+    '  PRECIO_COSTE_TARCLIN = :PRECIO_COSTE_TARCLIN, ' +
+    '  PRECIO_SALIDA_ACTUAL_TARCLIN = :PRECIO_SALIDA_ACTUAL_TARCLIN, ' +
+    '  PRECIO_FINAL_ACTUAL_TARCLIN = :PRECIO_FINAL_ACTUAL_TARCLIN, ' +
+    '  PRECIO_DTO_ACTUAL_TARCLIN = :PRECIO_DTO_ACTUAL_TARCLIN, ' +
+    '  PORCENTAJE_DTO_ACTUAL_TARCLIN = :PORCENTAJE_DTO_ACTUAL_TARCLIN, ' +
     '  PRECIO_NUEVO_TARCLIN = :PRECIO_NUEVO_TARCLIN, ' +
     '  PRECIO_FINAL_NUEVO_TARCLIN = :PRECIO_FINAL_NUEVO_TARCLIN, ' +
     '  PRECIO_DTO_NUEVO_TARCLIN = :PRECIO_DTO_NUEVO_TARCLIN, ' +
@@ -163,6 +239,109 @@ begin
     unqryTarifas.Open;
   if not unqryLineas.Active then
     unqryLineas.Open;
+end;
+
+// Los campos son dinamicos: se recrean en cada apertura del detalle.
+procedure TdmTarifasCambios.unqryLineasAfterOpen(DataSet: TDataSet);
+begin
+  DataSet.FieldByName('PRECIO_NUEVO_TARCLIN').OnChange :=
+    CampoPrecioNuevoChange;
+  DataSet.FieldByName('PRECIO_FINAL_NUEVO_TARCLIN').OnChange :=
+    CampoPrecioNuevoChange;
+  DataSet.FieldByName('PRECIO_DTO_NUEVO_TARCLIN').OnChange :=
+    CampoPrecioNuevoChange;
+  DataSet.FieldByName('PORCENTAJE_DTO_NUEVO_TARCLIN').OnChange :=
+    CampoPrecioNuevoChange;
+end;
+
+// Edicion a mano de una linea: salida, final, descuento y % se mantienen
+// coherentes. Si cambia la salida se conserva el % de descuento.
+procedure TdmTarifasCambios.CampoPrecioNuevoChange(Sender: TField);
+var
+  dDto: Double;
+  dFinal: Double;
+  dPorc: Double;
+  dSalida: Double;
+  Lineas: TDataSet;
+begin
+  if not FAjustandoPrecios then
+  begin
+    FAjustandoPrecios := True;
+    try
+      Lineas := Sender.DataSet;
+      dSalida := LeerFloatLinea('PRECIO_NUEVO_TARCLIN');
+      if dSalida <= 0 then
+      begin
+        dSalida := LeerFloatLinea('PRECIO_SALIDA_ACTUAL_TARCLIN');
+        if dSalida <= 0 then
+          dSalida := LeerFloatLinea('PRECIO_ORIGEN_TARCLIN');
+        if (dSalida > 0) and (Sender.FieldName <> 'PRECIO_NUEVO_TARCLIN') then
+          Lineas.FieldByName('PRECIO_NUEVO_TARCLIN').AsFloat := dSalida;
+      end;
+      dFinal := LeerFloatLinea('PRECIO_FINAL_NUEVO_TARCLIN');
+      dDto := LeerFloatLinea('PRECIO_DTO_NUEVO_TARCLIN');
+      dPorc := LeerFloatLinea('PORCENTAJE_DTO_NUEVO_TARCLIN');
+      if Sender.FieldName = 'PRECIO_FINAL_NUEVO_TARCLIN' then
+        dDto := Max(dSalida - dFinal, 0)
+      else if Sender.FieldName = 'PRECIO_DTO_NUEVO_TARCLIN' then
+        dFinal := Max(dSalida - dDto, 0)
+      else
+      begin
+        dFinal := Round(dSalida * (1 - dPorc / 100) * 100) / 100;
+        dDto := dSalida - dFinal;
+      end;
+      dPorc := 0;
+      if dSalida > 0 then
+        dPorc := Round(dDto / dSalida * 100 * 100) / 100;
+      if Sender.FieldName <> 'PRECIO_FINAL_NUEVO_TARCLIN' then
+        Lineas.FieldByName('PRECIO_FINAL_NUEVO_TARCLIN').AsFloat := dFinal;
+      if Sender.FieldName <> 'PRECIO_DTO_NUEVO_TARCLIN' then
+        Lineas.FieldByName('PRECIO_DTO_NUEVO_TARCLIN').AsFloat := dDto;
+      if Sender.FieldName <> 'PORCENTAJE_DTO_NUEVO_TARCLIN' then
+        Lineas.FieldByName('PORCENTAJE_DTO_NUEVO_TARCLIN').AsFloat := dPorc;
+      Lineas.FieldByName('ESTADO_TARCLIN').AsString := 'PENDIENTE';
+    finally
+      FAjustandoPrecios := False;
+    end;
+  end;
+end;
+
+procedure TdmTarifasCambios.AplicarDescuentoLote(
+  const AIdsLinea: TArray<Integer>; APorcentaje: Double);
+var
+  EsTransaccionPropia: Boolean;
+  iLinea: Integer;
+  oConexion: TUniConnection;
+  qry: TUniQuery;
+begin
+  GrabarLineaPendiente;
+  oConexion := unqryTablaG.Connection as TUniConnection;
+  qry := TUniQuery.Create(nil);
+  try
+    qry.Connection := oConexion;
+    qry.SQL.Text := Format(SQL_DESCUENTO_PORCENTAJE, [SQL_FILTRO_ID_LINEA]);
+    EsTransaccionPropia := not oConexion.InTransaction;
+    if EsTransaccionPropia then
+      oConexion.StartTransaction;
+    try
+      for iLinea := 0 to High(AIdsLinea) do
+      begin
+        qry.ParamByName('PORC').AsFloat := APorcentaje;
+        qry.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+        qry.ParamByName('ID').AsInteger := AIdsLinea[iLinea];
+        qry.Execute;
+      end;
+      if EsTransaccionPropia then
+        oConexion.Commit;
+    except
+      if EsTransaccionPropia and oConexion.InTransaction then
+        oConexion.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(qry);
+  end;
+  unqryLineas.Refresh;
 end;
 
 procedure TdmTarifasCambios.unqryTablaGAfterInsert(DataSet: TDataSet);
@@ -249,6 +428,259 @@ begin
   Result := Round(Result * 100) / 100;
 end;
 
+procedure TdmTarifasCambios.GrabarLineaPendiente;
+begin
+  if unqryLineas.Active and (unqryLineas.State in dsEditModes) then
+    unqryLineas.Post;
+end;
+
+// Completa los precios de partida de las lineas de la sesion activa, vengan
+// de la carga de articulos, de un documento de trabajo o de un Excel:
+// - lo que este vacio se lee de la tarifa o del proveedor;
+// - si la cabecera cambio de tarifa origen/destino, se releen los precios
+//   que dependen de ella y la linea pasa a esa tarifa;
+// - el coste escrito a mano no se pisa.
+// En un UPDATE de una sola tabla MySQL evalua las asignaciones en orden: los
+// codigos de tarifa de la linea se actualizan al final, tras comparar. Por
+// eso no hay JOIN con la cabecera: sus tarifas llegan como parametros.
+procedure TdmTarifasCambios.RellenarPreciosPartida;
+var
+  qry: TUniQuery;
+begin
+  if unqryTablaG.Active and (not unqryTablaG.IsEmpty) and
+     (not SameText(unqryTablaG.FieldByName('ESTADO_TARC').AsString,
+                   'APLICADA')) then
+  begin
+    GrabarLineaPendiente;
+    qry := TUniQuery.Create(nil);
+    try
+      qry.Connection := unqryTablaG.Connection;
+      qry.SQL.Text :=
+        'UPDATE fza_tarifas_cambios_lineas L SET ' +
+        'L.PRECIO_ORIGEN_TARCLIN = CASE WHEN ' +
+        '  L.PRECIO_ORIGEN_TARCLIN IS NULL OR ' +
+        SQL_CAMBIO_TARIFA_ORIGEN + ' THEN ' +
+        Format(SQL_PRECIO_TARIFA_LINEA,
+          ['PRECIO_SALIDA_ARTTAR', 'TAR_ORIG']) +
+        '  ELSE L.PRECIO_ORIGEN_TARCLIN END, ' +
+        'L.PRECIO_SALIDA_ACTUAL_TARCLIN = CASE WHEN ' +
+        '  L.PRECIO_SALIDA_ACTUAL_TARCLIN IS NULL OR ' +
+        SQL_CAMBIO_TARIFA_DESTINO + ' THEN ' +
+        Format(SQL_PRECIO_TARIFA_LINEA,
+          ['PRECIO_SALIDA_ARTTAR', 'TAR_DEST']) +
+        '  ELSE L.PRECIO_SALIDA_ACTUAL_TARCLIN END, ' +
+        'L.PRECIO_FINAL_ACTUAL_TARCLIN = CASE WHEN ' +
+        '  L.PRECIO_FINAL_ACTUAL_TARCLIN IS NULL OR ' +
+        SQL_CAMBIO_TARIFA_DESTINO + ' THEN ' +
+        Format(SQL_PRECIO_TARIFA_LINEA,
+          ['PRECIO_FINAL_ARTTAR', 'TAR_DEST']) +
+        '  ELSE L.PRECIO_FINAL_ACTUAL_TARCLIN END, ' +
+        'L.PRECIO_DTO_ACTUAL_TARCLIN = CASE WHEN ' +
+        '  L.PRECIO_DTO_ACTUAL_TARCLIN IS NULL OR ' +
+        SQL_CAMBIO_TARIFA_DESTINO + ' THEN ' +
+        Format(SQL_PRECIO_TARIFA_LINEA,
+          ['PRECIO_DTO_ARTTAR', 'TAR_DEST']) +
+        '  ELSE L.PRECIO_DTO_ACTUAL_TARCLIN END, ' +
+        'L.PORCENTAJE_DTO_ACTUAL_TARCLIN = CASE WHEN ' +
+        '  L.PORCENTAJE_DTO_ACTUAL_TARCLIN IS NULL OR ' +
+        SQL_CAMBIO_TARIFA_DESTINO + ' THEN ' +
+        Format(SQL_PRECIO_TARIFA_LINEA,
+          ['PORCENTAJE_DTO_ARTTAR', 'TAR_DEST']) +
+        '  ELSE L.PORCENTAJE_DTO_ACTUAL_TARCLIN END, ' +
+        'L.PRECIO_COSTE_TARCLIN = COALESCE(L.PRECIO_COSTE_TARCLIN, ' +
+        SQL_COSTE_LINEA + '), ' +
+        'L.CODIGO_TAR_ORIGEN_TARCLIN = :TAR_ORIG, ' +
+        'L.CODIGO_TAR_DESTINO_TARCLIN = :TAR_DEST ' +
+        'WHERE L.CODIGO_TARC_TARCLIN = :CODIGO';
+      qry.ParamByName('CODIGO').AsInteger :=
+        unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+      qry.ParamByName('TAR_ORIG').AsString :=
+        unqryTablaG.FieldByName('CODIGO_TAR_ORIGEN_TARC').AsString;
+      qry.ParamByName('TAR_DEST').AsString :=
+        unqryTablaG.FieldByName('CODIGO_TAR_DESTINO_TARC').AsString;
+      qry.Execute;
+      if unqryLineas.Active then
+        unqryLineas.Refresh;
+    finally
+      FreeAndNil(qry);
+    end;
+  end;
+end;
+
+const
+  // Una celda vacia del Excel llega como NULL y conserva el valor actual.
+  SQL_ACTUALIZAR_LINEA_EXCEL =
+    'UPDATE fza_tarifas_cambios_lineas SET ' +
+    'ESAPLICAR_TARCLIN = COALESCE(:APLICAR, ESAPLICAR_TARCLIN), ' +
+    'PRECIO_ORIGEN_TARCLIN = COALESCE(:P0, PRECIO_ORIGEN_TARCLIN), ' +
+    'PRECIO_COSTE_TARCLIN = COALESCE(:P1, PRECIO_COSTE_TARCLIN), ' +
+    'PRECIO_SALIDA_ACTUAL_TARCLIN = ' +
+    '  COALESCE(:P2, PRECIO_SALIDA_ACTUAL_TARCLIN), ' +
+    'PRECIO_FINAL_ACTUAL_TARCLIN = ' +
+    '  COALESCE(:P3, PRECIO_FINAL_ACTUAL_TARCLIN), ' +
+    'PRECIO_DTO_ACTUAL_TARCLIN = COALESCE(:P4, PRECIO_DTO_ACTUAL_TARCLIN), ' +
+    'PORCENTAJE_DTO_ACTUAL_TARCLIN = ' +
+    '  COALESCE(:P5, PORCENTAJE_DTO_ACTUAL_TARCLIN), ' +
+    'PRECIO_NUEVO_TARCLIN = COALESCE(:P6, PRECIO_NUEVO_TARCLIN), ' +
+    'PRECIO_FINAL_NUEVO_TARCLIN = ' +
+    '  COALESCE(:P7, PRECIO_FINAL_NUEVO_TARCLIN), ' +
+    'PRECIO_DTO_NUEVO_TARCLIN = COALESCE(:P8, PRECIO_DTO_NUEVO_TARCLIN), ' +
+    'PORCENTAJE_DTO_NUEVO_TARCLIN = ' +
+    '  COALESCE(:P9, PORCENTAJE_DTO_NUEVO_TARCLIN), ' +
+    'USUARIO_MODIF = :USUARIO, INSTANTE_MODIF = NOW() ' +
+    'WHERE CODIGO_TARC_TARCLIN = :TARC AND CODIGO_ART_TARCLIN = :ART ' +
+    'AND CODIGO_UNIDAD_SKU_TARCLIN = :SKU';
+  SQL_INSERTAR_LINEA_EXCEL =
+    'INSERT INTO fza_tarifas_cambios_lineas (CODIGO_TARC_TARCLIN, ' +
+    'CODIGO_ART_TARCLIN, CODIGO_UNIDAD_SKU_TARCLIN, ' +
+    'CODIGO_TAR_ORIGEN_TARCLIN, CODIGO_TAR_DESTINO_TARCLIN, ' +
+    'ESAPLICAR_TARCLIN, ESTADO_TARCLIN, PRECIO_ORIGEN_TARCLIN, ' +
+    'PRECIO_COSTE_TARCLIN, PRECIO_SALIDA_ACTUAL_TARCLIN, ' +
+    'PRECIO_FINAL_ACTUAL_TARCLIN, PRECIO_DTO_ACTUAL_TARCLIN, ' +
+    'PORCENTAJE_DTO_ACTUAL_TARCLIN, PRECIO_NUEVO_TARCLIN, ' +
+    'PRECIO_FINAL_NUEVO_TARCLIN, PRECIO_DTO_NUEVO_TARCLIN, ' +
+    'PORCENTAJE_DTO_NUEVO_TARCLIN, INSTANTE_ALTA, USUARIO_ALTA) ' +
+    'SELECT C.CODIGO_TARC, :ART, :SKU, C.CODIGO_TAR_ORIGEN_TARC, ' +
+    'C.CODIGO_TAR_DESTINO_TARC, COALESCE(:APLICAR, ''S''), ''PENDIENTE'', ' +
+    ':P0, :P1, :P2, :P3, :P4, :P5, :P6, :P7, :P8, :P9, NOW(), :USUARIO ' +
+    'FROM fza_tarifas_cambios C WHERE C.CODIGO_TARC = :TARC';
+  SQL_EXISTE_LINEA_EXCEL =
+    'SELECT COUNT(*) AS CANTIDAD FROM fza_tarifas_cambios_lineas ' +
+    'WHERE CODIGO_TARC_TARCLIN = :TARC AND CODIGO_ART_TARCLIN = :ART ' +
+    'AND CODIGO_UNIDAD_SKU_TARCLIN = :SKU';
+
+procedure TdmTarifasCambios.AsignarParametrosLineaExcel(AConsulta: TUniQuery;
+  const ALinea: TLineaSesionTarifaExcel);
+var
+  Importe: TImporteSesionTarifa;
+  Parametro: TUniParam;
+begin
+  AConsulta.ParamByName('TARC').AsInteger :=
+    unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+  AConsulta.ParamByName('ART').AsString := ALinea.Articulo;
+  AConsulta.ParamByName('SKU').AsString := ALinea.Sku;
+  AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+  Parametro := AConsulta.ParamByName('APLICAR');
+  Parametro.DataType := ftString;
+  if ALinea.Aplicar = '' then
+    Parametro.Clear
+  else
+    Parametro.AsString := ALinea.Aplicar;
+  for Importe := Low(TImporteSesionTarifa) to High(TImporteSesionTarifa) do
+  begin
+    Parametro := AConsulta.ParamByName('P' + IntToStr(Ord(Importe)));
+    Parametro.DataType := ftFloat;
+    if ALinea.TieneImporte[Importe] then
+      Parametro.AsFloat := ALinea.Importes[Importe]
+    else
+      Parametro.Clear;
+  end;
+end;
+
+// Si el Excel trae solo el % de descuento se calculan final e importe; si
+// trae solo el final, el importe y el %. Con ambos, o ninguno, no se toca.
+procedure TdmTarifasCambios.CompletarDescuentoLineaExcel(AConsulta: TUniQuery;
+  const ALinea: TLineaSesionTarifaExcel);
+var
+  EsPorPorcentaje: Boolean;
+  EsPorFinal: Boolean;
+begin
+  EsPorPorcentaje := ALinea.TieneImporte[istPorcDtoNuevo] and
+    (not ALinea.TieneImporte[istFinalNueva]);
+  EsPorFinal := ALinea.TieneImporte[istFinalNueva] and
+    (not ALinea.TieneImporte[istPorcDtoNuevo]) and
+    (not ALinea.TieneImporte[istDtoNuevo]);
+  if EsPorPorcentaje or EsPorFinal then
+  begin
+    if EsPorPorcentaje then
+    begin
+      AConsulta.SQL.Text :=
+        Format(SQL_DESCUENTO_PORCENTAJE, [SQL_FILTRO_ARTICULO_LINEA]);
+      AConsulta.ParamByName('PORC').AsFloat :=
+        ALinea.Importes[istPorcDtoNuevo];
+    end
+    else
+      AConsulta.SQL.Text :=
+        Format(SQL_DESCUENTO_FINAL, [SQL_FILTRO_ARTICULO_LINEA]);
+    AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
+    AConsulta.ParamByName('TARC').AsInteger :=
+      unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+    AConsulta.ParamByName('ART').AsString := ALinea.Articulo;
+    AConsulta.ParamByName('SKU').AsString := ALinea.Sku;
+    AConsulta.Execute;
+  end;
+end;
+
+procedure TdmTarifasCambios.ImportarLineasExcel(
+  const ALineas: TLineasSesionTarifaExcel;
+  out ANuevas, AActualizadas: Integer);
+var
+  EsTransaccionPropia: Boolean;
+  iLinea: Integer;
+  oConexion: TUniConnection;
+  qryActualizar: TUniQuery;
+  qryDescuento: TUniQuery;
+  qryExiste: TUniQuery;
+  qryInsertar: TUniQuery;
+begin
+  ANuevas := 0;
+  AActualizadas := 0;
+  GrabarLineaPendiente;
+  oConexion := unqryTablaG.Connection as TUniConnection;
+  qryActualizar := TUniQuery.Create(nil);
+  qryDescuento := TUniQuery.Create(nil);
+  qryExiste := TUniQuery.Create(nil);
+  qryInsertar := TUniQuery.Create(nil);
+  try
+    qryDescuento.Connection := oConexion;
+    qryExiste.Connection := oConexion;
+    qryExiste.SQL.Text := SQL_EXISTE_LINEA_EXCEL;
+    qryActualizar.Connection := oConexion;
+    qryActualizar.SQL.Text := SQL_ACTUALIZAR_LINEA_EXCEL;
+    qryInsertar.Connection := oConexion;
+    qryInsertar.SQL.Text := SQL_INSERTAR_LINEA_EXCEL;
+    EsTransaccionPropia := not oConexion.InTransaction;
+    if EsTransaccionPropia then
+      oConexion.StartTransaction;
+    try
+      for iLinea := 0 to High(ALineas) do
+      begin
+        qryExiste.Close;
+        qryExiste.ParamByName('TARC').AsInteger :=
+          unqryTablaG.FieldByName('CODIGO_TARC').AsInteger;
+        qryExiste.ParamByName('ART').AsString := ALineas[iLinea].Articulo;
+        qryExiste.ParamByName('SKU').AsString := ALineas[iLinea].Sku;
+        qryExiste.Open;
+        if qryExiste.FieldByName('CANTIDAD').AsInteger > 0 then
+        begin
+          AsignarParametrosLineaExcel(qryActualizar, ALineas[iLinea]);
+          qryActualizar.Execute;
+          Inc(AActualizadas);
+        end
+        else
+        begin
+          AsignarParametrosLineaExcel(qryInsertar, ALineas[iLinea]);
+          qryInsertar.Execute;
+          Inc(ANuevas);
+        end;
+        CompletarDescuentoLineaExcel(qryDescuento, ALineas[iLinea]);
+      end;
+      if EsTransaccionPropia then
+        oConexion.Commit;
+    except
+      if EsTransaccionPropia and oConexion.InTransaction then
+        oConexion.Rollback;
+      raise;
+    end;
+  finally
+    FreeAndNil(qryInsertar);
+    FreeAndNil(qryExiste);
+    FreeAndNil(qryDescuento);
+    FreeAndNil(qryActualizar);
+  end;
+  RellenarPreciosPartida;
+end;
+
 function TdmTarifasCambios.RecalcularSesionActual(
   out AMensaje: string): Integer;
 var
@@ -275,6 +707,7 @@ begin
     AMensaje := SErrorTarifasCambiosSesionSinLineas
   else
   begin
+    RellenarPreciosPartida;
     sCampoOrigen := CampoCabecera('CAMPO_ORIGEN_TARC').AsString;
     sCampoDestino := CampoCabecera('CAMPO_DESTINO_TARC').AsString;
     sTipoAplicacion := CampoCabecera('TIPO_APLICACION_TARC').AsString;
@@ -313,7 +746,10 @@ begin
           dPorcDto := 0;
           if SameText(sCampoDestino, 'PRECIO_FINAL') then
           begin
+            // Tarifa destino sin precio: la salida es la de origen.
             dSalida := LeerFloatLinea('PRECIO_SALIDA_ACTUAL_TARCLIN');
+            if dSalida <= 0 then
+              dSalida := LeerFloatLinea('PRECIO_ORIGEN_TARCLIN');
             if dSalida <= 0 then
               dSalida := dNuevo;
             dFinal := dNuevo;
@@ -495,52 +931,6 @@ begin
   end;
 end;
 
-function TdmTarifasCambios.AplicarVentanaDescuento(
-  AConsulta: TUniQuery): Boolean;
-var
-  fDesde: TField;
-  fHasta: TField;
-  sTarifa: string;
-begin
-  Result := False;
-  fDesde := unqryTablaG.FindField('FECHA_DESDE_DTO_TARC');
-  fHasta := unqryTablaG.FindField('FECHA_HASTA_DTO_TARC');
-  if Assigned(fDesde) and Assigned(fHasta) and
-    ((not fDesde.IsNull) or (not fHasta.IsNull)) then
-  begin
-    AConsulta.SQL.Text :=
-      'UPDATE fza_tarifas SET FECHA_DESDE_DTO_TAR = :DESDE_DTO, ' +
-      'FECHA_HASTA_DTO_TAR = :HASTA_DTO, USUARIO_MODIF = :USUARIO, ' +
-      'INSTANTE_MODIF = NOW() WHERE CODIGO_TAR_ARTTAR = :TAR';
-    if fDesde.IsNull then
-      AConsulta.ParamByName('DESDE_DTO').Clear
-    else
-      AConsulta.ParamByName('DESDE_DTO').AsDateTime := fDesde.AsDateTime;
-    if fHasta.IsNull then
-      AConsulta.ParamByName('HASTA_DTO').Clear
-    else
-      AConsulta.ParamByName('HASTA_DTO').AsDateTime := fHasta.AsDateTime;
-    AConsulta.ParamByName('USUARIO').AsString := IdentidadSesion.Usuario;
-    sTarifa := unqryTablaG.FieldByName(
-      'CODIGO_TAR_DESTINO_TARC').AsString;
-    AConsulta.ParamByName('TAR').AsString := sTarifa;
-    AConsulta.Execute;
-    if SameText(
-      Trim(sTarifa),
-      LeerCodigoTarifaPrestaShop(
-        AConsulta.Connection,
-        IdentidadSesion.Usuario)) then
-    begin
-      EncolarTodosWebPrestaShop(
-        AConsulta.Connection,
-        True,
-        False,
-        IdentidadSesion.Usuario);
-      Result := True;
-    end;
-  end;
-end;
-
 procedure TdmTarifasCambios.MarcarSesionAplicada(
   AConsulta: TUniQuery);
 begin
@@ -616,8 +1006,6 @@ begin
         finally
           unqryLineas.EnableControls;
         end;
-        HayEncoladoPrestaShop :=
-          AplicarVentanaDescuento(qryExec) or HayEncoladoPrestaShop;
         MarcarSesionAplicada(qryExec);
         if EsTransaccionPropia then
         begin

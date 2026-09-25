@@ -966,6 +966,53 @@ resourcestring
   SCaptionAplicarTarifa = 'Aplicar tarifa';
   SCaptionRefrescar = 'Refrescar';
   SCaptionTabLineasTarifa = 'Lineas';
+  SCaptionExportarExcelSesionTarifa = 'Exportar Excel';
+  SCaptionCargarExcelSesionTarifa = 'Cargar Excel';
+  SFiltroExcelSesionTarifa = 'Libro de Excel (*.xlsx;*.xls)|*.xlsx;*.xls';
+  SNombreArchivoSesionTarifa = 'SesionTarifa_%d.xlsx';
+  SNombreHojaExcelSesionTarifa = 'Sesion tarifa';
+  STituloExcelSesionTarifa = 'SESION DE CAMBIO DE TARIFA';
+  SCaptionSesionExcelSesionTarifa = 'Sesion:';
+  SCaptionTarifaOrigenExcelSesionTarifa = 'Tarifa origen:';
+  SCaptionTarifaDestinoExcelSesionTarifa = 'Tarifa destino:';
+  SCaptionEstadoExcelSesionTarifa = 'Estado:';
+  SErrorHojaSesionTarifaSinArticulo =
+    'No se encuentra la columna "Articulo" en las primeras filas de la hoja.';
+  SErrorHojaSesionTarifaVacia =
+    'La hoja no tiene lineas con articulo.';
+  SIncidenciaImporteSesionTarifaExcel =
+    'Fila %d, articulo %s: el valor "%s" de la columna %s no es un ' +
+    'importe valido.';
+  SIncidenciaAplicarSesionTarifaExcel =
+    'Fila %d, articulo %s: la columna Aplicar solo admite S o N ' +
+    '(valor "%s").';
+  SErrorCargarExcelSesionTarifa =
+    'No se ha cargado nada. Revise estos valores del Excel:' + sLineBreak +
+    '%s';
+  SPreguntaCargarExcelSesionTarifa =
+    'Se van a cargar %d lineas del Excel en la sesion. Las celdas vacias ' +
+    'no modifican la linea. ¿Continuar?';
+  SInfoExcelSesionTarifaCargado =
+    'Excel cargado: %d lineas nuevas y %d actualizadas.';
+  SErrorSesionTarifaAplicadaNoEditable =
+    'La sesion ya esta aplicada; no se puede cargar un Excel en ella.';
+  SErrorTarifasCambiosSesionAplicadaLote =
+    'La sesion ya esta aplicada; no se pueden cambiar sus descuentos.';
+  SCaptionDescuentoLoteSesionTarifa = 'Descuento en lote';
+  STituloDescuentoLoteSesionTarifa = 'Descuento en lote';
+  SPreguntaPorcentajeDescuentoLoteSesionTarifa =
+    '% de descuento sobre la salida nueva (0 quita el descuento):';
+  SErrorPorcentajeDescuentoLoteSesionTarifa =
+    'Escriba un porcentaje entre 0 y 100.';
+  SPreguntaDescuentoLoteSesionTarifa =
+    'Se aplicara un %s %% de descuento a %d lineas. ' +
+    'El precio de salida no cambia. ¿Continuar?';
+  SPreguntaRecalcularAntesAplicarSesionTarifa =
+    '¿Recalcular las lineas con la formula de la cabecera antes de ' +
+    'aplicar?' + sLineBreak + sLineBreak +
+    'Si: recalcula todas las lineas (se pierden los retoques a mano).' +
+    sLineBreak +
+    'No: aplica los precios tal como estan en la rejilla.';
   // R09 - Modales de artículos, bloques y filtros
   SCaptionCeroArticulos = '0 articulos';
   SCaptionNumSeleccionados = '(%d sel.)';

@@ -1027,6 +1027,7 @@
         <DCCReference Include="src\Lib\inLibComprasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibVentasImpuestos.pas"/>
         <DCCReference Include="src\Lib\inLibInventarioExcel.pas"/>
+        <DCCReference Include="src\Lib\inLibTarifasCambiosExcel.pas"/>
         <DCCReference Include="src\Lib\inLibDocumentosTrabajoExcel.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceExcelComun.pas"/>
         <DCCReference Include="src\Lib\inLibBalanceTallasExcel.pas"/>

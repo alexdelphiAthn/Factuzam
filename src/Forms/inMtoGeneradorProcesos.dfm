@@ -253,7 +253,6 @@
                   Gutter.Font.Style = []
                   Gutter.Font.Quality = fqClearTypeNatural
                   Gutter.ShowLineNumbers = True
-                  Gutter.Width = 0
                   Gutter.Bands = <
                     item
                       Kind = gbkMarks
@@ -363,7 +362,6 @@
                         Gutter.Font.Style = []
                         Gutter.Font.Quality = fqClearTypeNatural
                         Gutter.ShowLineNumbers = True
-                        Gutter.Width = 0
                         Gutter.Bands = <
                           item
                             Kind = gbkMarks

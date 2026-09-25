@@ -19,7 +19,8 @@ uses
   inLibRegistroPantallas,
   Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants,
   System.Classes, System.UITypes, Vcl.Graphics, Vcl.Controls, Vcl.Forms,
-  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Menus, Data.DB,
+  Vcl.Dialogs, Vcl.ExtCtrls, Vcl.Menus, System.Actions, Vcl.ActnList,
+  Data.DB,
   cxClasses, cxGraphics, cxControls, cxLookAndFeels, cxLookAndFeelPainters,
   cxStyles, cxCustomData, cxFilter, cxData, cxDataStorage, cxEdit,
   cxNavigator, cxDBData, cxGridLevel, cxGridCustomView,
@@ -29,7 +30,7 @@ uses
   cxDBLookupEdit, cxDBLookupComboBox, cxCheckBox, cxPC,
   dxSkinsCore, dxSkinBlue, dxSkinsDefaultPainters, dxSkinscxPCPainter,
   dxScrollbarAnnotations, dxDateRanges, dxCore,
-  UniDataTarifasCambios, inMtoGen;
+  UniDataTarifasCambios, inLibTarifasCambiosExcel, inMtoGen;
 
 type
   TfrmMtoTarifasCambios = class(TfrmMtoGen)
@@ -58,13 +59,16 @@ type
     chkRedondear      : TcxDBCheckBox;
     dteDesde          : TcxDBDateEdit;
     dteHasta          : TcxDBDateEdit;
-    dteDtoDesde       : TcxDBDateEdit;
-    dteDtoHasta       : TcxDBDateEdit;
     btnCargar         : TcxButton;
     btnCalcular       : TcxButton;
     btnAplicar        : TcxButton;
     btnRefrescar      : TcxButton;
+    btnExportarExcel  : TcxButton;
+    btnCargarExcel    : TcxButton;
+    btnDescuentoLote  : TcxButton;
+    actIrArticulo     : TAction;
     procedure CrearControlesDinamicos;
+    procedure CrearAtajos;
     procedure CrearCabecera;
     procedure CrearParametros;
     procedure CrearAcciones;
@@ -88,17 +92,27 @@ type
     procedure btnCalcularClick(Sender: TObject);
     procedure btnAplicarClick(Sender: TObject);
     procedure btnRefrescarClick(Sender: TObject);
+    procedure btnExportarExcelClick(Sender: TObject);
+    procedure btnCargarExcelClick(Sender: TObject);
+    procedure btnDescuentoLoteClick(Sender: TObject);
+    function IdsLineasDescuentoLote: TArray<Integer>;
+    function LeerExcelSesion(const AArchivo: string;
+      out ALineas: TLineasSesionTarifaExcel): Boolean;
+    procedure actIrArticuloExecute(Sender: TObject);
   public
     dmmTarifasCambios: TdmTarifasCambios;
     destructor Destroy; override;
     procedure CrearTablaPrincipal; override;
     procedure ResetForm; override;
+    procedure ResolverArtSkuActivo(out ACodArt, ACodSku: string); override;
+    function DataSourcesParaFoto: TArray<TDataSource>; override;
   end;
 
 implementation
 
 uses
-  inLibMensajesVcl,
+  dxSpreadSheet,
+  inLibMensajesVcl, inLibShowMto, inLibHojaCalculoDevEx, inMtoPreviewExcel,
   inMtoModalCargarSesionTarifa, inLibMsgArticulos;
 
 {$R *.dfm}
@@ -126,8 +140,20 @@ begin
     CrearAcciones;
     CrearGridLineas;
     ConfigurarCombos;
+    CrearAtajos;
     FControlesCreados := True;
   end;
+end;
+
+// Ctrl+A -> ficha del articulo de la linea en foco. Va en alMtoGen, la
+// lista que el principal consulta para la pestana activa (como Ctrl+F).
+procedure TfrmMtoTarifasCambios.CrearAtajos;
+begin
+  actIrArticulo := TAction.Create(Self);
+  actIrArticulo.Caption := 'Ir a articulo';
+  actIrArticulo.ShortCut := ShortCut(Ord('A'), [ssCtrl]);
+  actIrArticulo.OnExecute := actIrArticuloExecute;
+  actIrArticulo.ActionList := alMtoGen;
 end;
 
 procedure TfrmMtoTarifasCambios.CrearCabecera;
@@ -135,7 +161,7 @@ begin
   pnlCabecera := TPanel.Create(Self);
   pnlCabecera.Parent := tsFicha;
   pnlCabecera.Align := alTop;
-  pnlCabecera.Height := 128;
+  pnlCabecera.Height := 88;
   pnlCabecera.BevelOuter := bvNone;
   pnlCabecera.ParentBackground := False;
   pnlCabecera.Color := clWhite;
@@ -181,19 +207,6 @@ begin
   dteHasta.Left := 928;
   dteHasta.Top := 46;
   dteHasta.Width := 110;
-  // Ventana de aplicacion del descuento que se fijara en la tarifa destino.
-  CrearEtiqueta(pnlCabecera, 'Dto. desde', 12, 90);
-  dteDtoDesde := TcxDBDateEdit.Create(Self);
-  dteDtoDesde.Parent := pnlCabecera;
-  dteDtoDesde.Left := 110;
-  dteDtoDesde.Top := 86;
-  dteDtoDesde.Width := 120;
-  CrearEtiqueta(pnlCabecera, 'Dto. hasta', 250, 90);
-  dteDtoHasta := TcxDBDateEdit.Create(Self);
-  dteDtoHasta.Parent := pnlCabecera;
-  dteDtoHasta.Left := 340;
-  dteDtoHasta.Top := 86;
-  dteDtoHasta.Width := 120;
 end;
 
 procedure TfrmMtoTarifasCambios.CrearParametros;
@@ -289,6 +302,27 @@ begin
   btnRefrescar.Width := 92;
   btnRefrescar.Caption := SCaptionRefrescar;
   btnRefrescar.OnClick := btnRefrescarClick;
+  btnExportarExcel := TcxButton.Create(Self);
+  btnExportarExcel.Parent := pnlAcciones;
+  btnExportarExcel.Left := 530;
+  btnExportarExcel.Top := 6;
+  btnExportarExcel.Width := 116;
+  btnExportarExcel.Caption := SCaptionExportarExcelSesionTarifa;
+  btnExportarExcel.OnClick := btnExportarExcelClick;
+  btnCargarExcel := TcxButton.Create(Self);
+  btnCargarExcel.Parent := pnlAcciones;
+  btnCargarExcel.Left := 658;
+  btnCargarExcel.Top := 6;
+  btnCargarExcel.Width := 116;
+  btnCargarExcel.Caption := SCaptionCargarExcelSesionTarifa;
+  btnCargarExcel.OnClick := btnCargarExcelClick;
+  btnDescuentoLote := TcxButton.Create(Self);
+  btnDescuentoLote.Parent := pnlAcciones;
+  btnDescuentoLote.Left := 798;
+  btnDescuentoLote.Top := 6;
+  btnDescuentoLote.Width := 130;
+  btnDescuentoLote.Caption := SCaptionDescuentoLoteSesionTarifa;
+  btnDescuentoLote.OnClick := btnDescuentoLoteClick;
 end;
 
 procedure TfrmMtoTarifasCambios.CrearGridLineas;
@@ -307,6 +341,9 @@ begin
   glLineas.GridView := tvLineas;
   tvLineas.OptionsData.Deleting := False;
   tvLineas.OptionsView.GroupByBox := False;
+  // Seleccion multiple para el descuento en lote.
+  tvLineas.OptionsSelection.MultiSelect := True;
+  tvLineas.DataController.KeyFieldNames := 'ID_TARCLIN';
 end;
 
 procedure TfrmMtoTarifasCambios.ConfigurarCombos;
@@ -362,10 +399,6 @@ begin
   dteDesde.DataBinding.DataField := 'FECHA_DESDE_TARC';
   dteHasta.DataBinding.DataSource := dsTablaG;
   dteHasta.DataBinding.DataField := 'FECHA_HASTA_TARC';
-  dteDtoDesde.DataBinding.DataSource := dsTablaG;
-  dteDtoDesde.DataBinding.DataField := 'FECHA_DESDE_DTO_TARC';
-  dteDtoHasta.DataBinding.DataSource := dsTablaG;
-  dteDtoHasta.DataBinding.DataField := 'FECHA_HASTA_DTO_TARC';
   dsTablaG.OnDataChange := dsTablaGDataChange;
   ActualizarFormatoValor;
 end;
@@ -499,11 +532,11 @@ begin
     CrearColumna(tvLineas, 'PRECIO_FINAL_ACTUAL_TARCLIN',
                  'Final actual', 100);
     CrearColumna(tvLineas, 'PRECIO_NUEVO_TARCLIN', 'Salida nueva', 100);
-    CrearColumna(tvLineas, 'PRECIO_FINAL_NUEVO_TARCLIN',
-                 'Final nuevo', 100);
     CrearColumna(tvLineas, 'PRECIO_DTO_NUEVO_TARCLIN', 'Dto nuevo', 90);
     CrearColumna(tvLineas, 'PORCENTAJE_DTO_NUEVO_TARCLIN',
                  '% dto nuevo', 90);
+    CrearColumna(tvLineas, 'PRECIO_FINAL_NUEVO_TARCLIN',
+                 'Final nuevo', 100);
     CrearColumna(tvLineas, 'MENSAJE_TARCLIN', 'Mensaje', 180);
   end;
 end;
@@ -574,15 +607,25 @@ begin
   end;
 end;
 
+// Aplica lo que se ve en la rejilla; recalcular con la formula es opcional
+// para no perder los descuentos puestos por articulo o en lote.
 procedure TfrmMtoTarifasCambios.btnAplicarClick(Sender: TObject);
 var
   sMensaje        : string;
   iLineas         : Integer;
   iLineasAplicadas: Integer;
+  iRespuesta      : Integer;
 begin
+  iRespuesta := mrCancel;
   if GrabarCabeceraSiNecesario then
+    iRespuesta := MessageDlg_fza(SPreguntaRecalcularAntesAplicarSesionTarifa,
+      mtConfirmation, [mbYes, mbNo, mbCancel], 0);
+  if iRespuesta <> mrCancel then
   begin
-    iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
+    sMensaje := '';
+    iLineas := dmmTarifasCambios.unqryLineas.RecordCount;
+    if iRespuesta = mrYes then
+      iLineas := dmmTarifasCambios.RecalcularSesionActual(sMensaje);
     if sMensaje <> '' then
       ShowMessage_fza(Format(SErrorCalcularSesionTarifa, [sMensaje]))
     else if MessageDlg_fza(Format(SPreguntaAplicarSesionTarifa,
@@ -601,17 +644,224 @@ end;
 
 procedure TfrmMtoTarifasCambios.btnRefrescarClick(Sender: TObject);
 begin
-  if Assigned(dmmTarifasCambios) then
+  if Assigned(dmmTarifasCambios) and GrabarCabeceraSiNecesario then
   begin
     dmmTarifasCambios.unqryTablaG.Refresh;
+    dmmTarifasCambios.RellenarPreciosPartida;
     dmmTarifasCambios.unqryLineas.Refresh;
   end;
+end;
+
+procedure TfrmMtoTarifasCambios.btnExportarExcelClick(Sender: TObject);
+var
+  fPreview: TfrmMtoPreviewExcel;
+begin
+  if PuedeExportar and Assigned(dmmTarifasCambios) and
+     GrabarCabeceraSiNecesario then
+  begin
+    Screen.Cursor := crHourGlass;
+    fPreview := TfrmMtoPreviewExcel.Create(Self);
+    try
+      fPreview.PopupParent := Self;
+      fPreview.DialogoGuardar.InitialDir :=
+        ParametrosApp.GetPath('appDirExcel');
+      fPreview.DialogoGuardar.FileName := Format(SNombreArchivoSesionTarifa,
+        [dsTablaG.DataSet.FieldByName('CODIGO_TARC').AsInteger]);
+      ExportarSesionTarifaExcel(fPreview.dxSpreadSheet1,
+        dsTablaG.DataSet, dmmTarifasCambios.unqryLineas);
+      Screen.Cursor := crDefault;
+      fPreview.ShowModal;
+    finally
+      Screen.Cursor := crDefault;
+      FreeAndNil(fPreview);
+    end;
+  end;
+end;
+
+function TfrmMtoTarifasCambios.LeerExcelSesion(const AArchivo: string;
+  out ALineas: TLineasSesionTarifaExcel): Boolean;
+var
+  Hoja: TdxSpreadSheet;
+  Incidencias: TStringList;
+  sMensaje: string;
+begin
+  Incidencias := TStringList.Create;
+  Hoja := TdxSpreadSheet.Create(nil);
+  try
+    Hoja.LoadFromFile(AArchivo);
+    ImportarSesionTarifaDesdeSheet(CrearLectorDevEx(Hoja), ALineas,
+      Incidencias, sMensaje);
+    if Incidencias.Count > 0 then
+      ShowMessage_fza(Format(SErrorCargarExcelSesionTarifa,
+        [Incidencias.Text]))
+    else if sMensaje <> '' then
+      ShowMessage_fza(sMensaje);
+    Result := Length(ALineas) > 0;
+  finally
+    FreeAndNil(Hoja);
+    FreeAndNil(Incidencias);
+  end;
+end;
+
+procedure TfrmMtoTarifasCambios.btnCargarExcelClick(Sender: TObject);
+var
+  dlgAbrir: TOpenDialog;
+  iActualizadas: Integer;
+  iNuevas: Integer;
+  Lineas: TLineasSesionTarifaExcel;
+begin
+  if Assigned(dmmTarifasCambios) and GrabarCabeceraSiNecesario then
+  begin
+    if SameText(dsTablaG.DataSet.FieldByName('ESTADO_TARC').AsString,
+                'APLICADA') then
+      ShowMessage_fza(SErrorSesionTarifaAplicadaNoEditable)
+    else
+    begin
+      dlgAbrir := TOpenDialog.Create(Self);
+      try
+        dlgAbrir.Filter := SFiltroExcelSesionTarifa;
+        dlgAbrir.InitialDir := ParametrosApp.GetPath('appDirExcel');
+        dlgAbrir.Options := dlgAbrir.Options + [ofFileMustExist];
+        if dlgAbrir.Execute and
+           LeerExcelSesion(dlgAbrir.FileName, Lineas) and
+           (MessageDlg_fza(Format(SPreguntaCargarExcelSesionTarifa,
+              [Length(Lineas)]), mtConfirmation, [mbYes, mbNo], 0) =
+            mrYes) then
+        begin
+          Screen.Cursor := crHourGlass;
+          try
+            dmmTarifasCambios.ImportarLineasExcel(Lineas, iNuevas,
+              iActualizadas);
+          finally
+            Screen.Cursor := crDefault;
+          end;
+          ShowMessage_fza(Format(SInfoExcelSesionTarifaCargado,
+            [iNuevas, iActualizadas]));
+        end;
+      finally
+        FreeAndNil(dlgAbrir);
+      end;
+    end;
+  end;
+end;
+
+// Varias lineas seleccionadas: solo esas. Si no, todas las de la sesion.
+function TfrmMtoTarifasCambios.IdsLineasDescuentoLote: TArray<Integer>;
+var
+  iFila: Integer;
+  Lineas: TDataSet;
+  Registro: TcxCustomGridRecord;
+begin
+  SetLength(Result, 0);
+  if tvLineas.Controller.SelectedRecordCount > 1 then
+    for iFila := 0 to tvLineas.Controller.SelectedRecordCount - 1 do
+    begin
+      Registro := tvLineas.Controller.SelectedRecords[iFila];
+      if Registro.IsData then
+        Result := Result + [Integer(
+          tvLineas.DataController.GetRecordId(Registro.RecordIndex))];
+    end
+  else
+  begin
+    Lineas := dmmTarifasCambios.unqryLineas;
+    Lineas.DisableControls;
+    try
+      Lineas.First;
+      while not Lineas.Eof do
+      begin
+        Result := Result + [Lineas.FieldByName('ID_TARCLIN').AsInteger];
+        Lineas.Next;
+      end;
+    finally
+      Lineas.EnableControls;
+    end;
+  end;
+end;
+
+procedure TfrmMtoTarifasCambios.btnDescuentoLoteClick(Sender: TObject);
+var
+  dPorcentaje: Double;
+  Ids: TArray<Integer>;
+  sPorcentaje: string;
+begin
+  if Assigned(dmmTarifasCambios) and GrabarCabeceraSiNecesario then
+  begin
+    if SameText(dsTablaG.DataSet.FieldByName('ESTADO_TARC').AsString,
+                'APLICADA') then
+      ShowMessage_fza(SErrorTarifasCambiosSesionAplicadaLote)
+    else
+    begin
+      Ids := IdsLineasDescuentoLote;
+      sPorcentaje := '';
+      if (Length(Ids) > 0) and
+         InputQuery_fza(STituloDescuentoLoteSesionTarifa,
+           SPreguntaPorcentajeDescuentoLoteSesionTarifa, sPorcentaje) then
+      begin
+        sPorcentaje := Trim(StringReplace(sPorcentaje, '%', '',
+          [rfReplaceAll]));
+        sPorcentaje := StringReplace(sPorcentaje, '.',
+          FormatSettings.DecimalSeparator, [rfReplaceAll]);
+        sPorcentaje := StringReplace(sPorcentaje, ',',
+          FormatSettings.DecimalSeparator, [rfReplaceAll]);
+        if (not TryStrToFloat(sPorcentaje, dPorcentaje)) or
+           (dPorcentaje < 0) or (dPorcentaje > 100) then
+          ShowMessage_fza(SErrorPorcentajeDescuentoLoteSesionTarifa)
+        else if MessageDlg_fza(Format(SPreguntaDescuentoLoteSesionTarifa,
+                  [FormatFloat('0.##', dPorcentaje), Length(Ids)]),
+                  mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+        begin
+          Screen.Cursor := crHourGlass;
+          try
+            dmmTarifasCambios.AplicarDescuentoLote(Ids, dPorcentaje);
+          finally
+            Screen.Cursor := crDefault;
+          end;
+        end;
+      end;
+    end;
+  end;
+end;
+
+procedure TfrmMtoTarifasCambios.actIrArticuloExecute(Sender: TObject);
+begin
+  if Assigned(dmmTarifasCambios) then
+    ShowMtoCodigoDataSet(Self.Owner, 'Articulos',
+      dmmTarifasCambios.unqryLineas, 'CODIGO_ART_TARCLIN');
 end;
 
 procedure TfrmMtoTarifasCambios.ResetForm;
 begin
   inherited;
   pcPantalla.ActivePage := tsFicha;
+end;
+
+// Ctrl+F: la foto sigue al articulo de la linea en foco.
+procedure TfrmMtoTarifasCambios.ResolverArtSkuActivo(out ACodArt,
+  ACodSku: string);
+var
+  Lineas: TDataSet;
+begin
+  ACodArt := '';
+  ACodSku := '';
+  Lineas := nil;
+  if Assigned(dmmTarifasCambios) then
+    Lineas := dmmTarifasCambios.unqryLineas;
+  if Assigned(Lineas) and Lineas.Active and (not Lineas.IsEmpty) then
+  begin
+    ACodArt := Lineas.FieldByName('CODIGO_ART_TARCLIN').AsString;
+    ACodSku := Lineas.FieldByName('CODIGO_UNIDAD_SKU_TARCLIN').AsString;
+  end;
+  if ACodArt = '' then
+    inherited ResolverArtSkuActivo(ACodArt, ACodSku);
+end;
+
+function TfrmMtoTarifasCambios.DataSourcesParaFoto: TArray<TDataSource>;
+begin
+  if Assigned(dmmTarifasCambios) and
+     Assigned(dmmTarifasCambios.dsLineas) then
+    Result := [dsTablaG, dmmTarifasCambios.dsLineas]
+  else
+    Result := inherited DataSourcesParaFoto;
 end;
 
 initialization

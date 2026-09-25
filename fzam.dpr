@@ -566,6 +566,7 @@ uses
   inLibComprasImpuestos in 'src\Lib\inLibComprasImpuestos.pas',
   inLibVentasImpuestos in 'src\Lib\inLibVentasImpuestos.pas',
   inLibInventarioExcel in 'src\Lib\inLibInventarioExcel.pas',
+  inLibTarifasCambiosExcel in 'src\Lib\inLibTarifasCambiosExcel.pas',
   inLibDocumentosTrabajoExcel in 'src\Lib\inLibDocumentosTrabajoExcel.pas',
   inLibBalanceExcelComun in 'src\Lib\inLibBalanceExcelComun.pas',
   inLibBalanceTallasExcel in 'src\Lib\inLibBalanceTallasExcel.pas',
