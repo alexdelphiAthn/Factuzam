@@ -66,7 +66,7 @@
       '  FROM vi_articulos '
       '')
     Active = False
-    BeforeInsert = nil
+    BeforeInsert = unqryTablaGBeforeInsert
     AfterInsert = unqryTablaGAfterInsert
     AfterPost = unqryTablaGAfterPost
     BeforeDelete = unqryTablaGBeforeDelete

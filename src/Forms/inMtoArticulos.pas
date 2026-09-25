@@ -825,6 +825,14 @@ begin
   end;
   if (CodArticulo <> '') and (TipoVariacion <> '') then
   begin
+    // El tallaje elegido en General no es DB-aware: solo se grababa con
+    // Grabar. Se persiste antes para que el modal lo lea como conjunto por
+    // defecto y el CargarVariaciones posterior no lo borre de pantalla.
+    if Assigned(FGestorVar) then
+    begin
+      FGestorVar.AsignarCodigoArticulo(CodArticulo);
+      FGestorVar.GuardarVariaciones;
+    end;
     dmmArticulos.RecargarSkusGenerados(
       TfrmMtoModalGenerarSKUs.Ejecutar(
         Self,
@@ -1145,7 +1153,7 @@ begin
   dmmArticulos.unqryTablaG.Insert;
   pcPantalla.Properties.ActivePage := tsFicha;
   tsFicha.SetFocus;
-  txtDESCRIPCION_ARTICULO.SetFocus;
+  txtCODIGO_ARTICULO.SetFocus;
 end;
 
 procedure TfrmMtoArticulos.btnStockExportarExcelClick(Sender: TObject);
@@ -1982,7 +1990,15 @@ procedure TfrmMtoArticulos.dsTablaGStateChange(Sender: TObject);
 begin
   inherited;
   if (dsTablaG.state = dsInsert) then
-    txtCODIGO_ARTICULO.Properties.ReadOnly := False
+  begin
+    txtCODIGO_ARTICULO.Properties.ReadOnly := False;
+    // Alta desde la lista o el navegador: el BeforeInsert ya ha llevado a
+    // la Ficha y tsFichaShow enfoca el primer control; aquí se corrige al
+    // Código, que es lo primero que se teclea en un artículo nuevo.
+    if (pcPantalla.ActivePage = tsFicha) and
+       txtCODIGO_ARTICULO.CanFocus then
+      txtCODIGO_ARTICULO.SetFocus;
+  end
   else
   begin
     txtCODIGO_ARTICULO.Properties.ReadOnly := True;

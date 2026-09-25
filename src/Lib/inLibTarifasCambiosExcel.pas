@@ -62,7 +62,7 @@ uses
 
 const
   FMT_EUR = '#,##0.00" '#$20AC'"';
-  FMT_PORC = '0.00';
+  FMT_PORC = '0.00" %"';
   MAX_FILA_CABECERA = 20;
   COL_APLICAR = 0;
   COL_ARTICULO = 1;
@@ -90,9 +90,14 @@ const
 //   EXPORTAR
 // =============================================================================
 
+const
+  // Posicion de cada importe en la hoja: mismo orden que la rejilla.
+  POSICION_IMPORTE: array[TImporteSesionTarifa] of Integer = (
+    0, 1, 2, 3, 4, 5, 6, 9, 7, 8);
+
 function ColumnaImporte(AImporte: TImporteSesionTarifa): Integer;
 begin
-  Result := COL_PRIMER_IMPORTE + Ord(AImporte);
+  Result := COL_PRIMER_IMPORTE + POSICION_IMPORTE[AImporte];
 end;
 
 procedure EscribirCabeceraSesion(
@@ -135,7 +140,7 @@ begin
   for Importe := Low(TImporteSesionTarifa) to High(TImporteSesionTarifa) do
     W(AHoja, AFila, ColumnaImporte(Importe), TITULOS_IMPORTE[Importe],
       True, ssahRight);
-  for iColumna := 0 to ColumnaImporte(High(TImporteSesionTarifa)) do
+  for iColumna := 0 to COL_PRIMER_IMPORTE + Ord(High(TImporteSesionTarifa)) do
   begin
     AHoja.Cells[AFila, iColumna].Style.Font.Color := clWhite;
     AHoja.Cells[AFila, iColumna].Style.Brush.BackgroundColor := $00666666;
@@ -148,6 +153,7 @@ procedure EscribirLineaSesion(
   AFila: Integer);
 var
   Campo: TField;
+  Celda: TdxSpreadSheetCell;
   Importe: TImporteSesionTarifa;
   iColumna: Integer;
 begin
@@ -160,18 +166,20 @@ begin
   Campo := ALineas.FindField('DESCRIPCION_ART');
   if Assigned(Campo) then
     W(AHoja, AFila, COL_DESCRIPCION, Campo.AsString);
+  // El formato se pone tambien en las celdas vacias: es donde se escriben
+  // los precios o descuentos que despues se cargan.
   for Importe := Low(TImporteSesionTarifa) to High(TImporteSesionTarifa) do
   begin
     Campo := ALineas.FieldByName(CAMPOS_IMPORTE[Importe]);
+    iColumna := ColumnaImporte(Importe);
     if not Campo.IsNull then
-    begin
-      iColumna := ColumnaImporte(Importe);
       W(AHoja, AFila, iColumna, Campo.AsFloat, False, ssahRight);
-      if ES_PORCENTAJE[Importe] then
-        AHoja.Cells[AFila, iColumna].Style.DataFormat.FormatCode := FMT_PORC
-      else
-        AHoja.Cells[AFila, iColumna].Style.DataFormat.FormatCode := FMT_EUR;
-    end;
+    Celda := AHoja.CreateCell(AFila, iColumna);
+    Celda.Style.AlignHorz := ssahRight;
+    if ES_PORCENTAJE[Importe] then
+      Celda.Style.DataFormat.FormatCode := FMT_PORC
+    else
+      Celda.Style.DataFormat.FormatCode := FMT_EUR;
   end;
 end;
 
