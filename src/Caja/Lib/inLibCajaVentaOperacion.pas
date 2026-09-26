@@ -88,6 +88,29 @@ function HayLineasNegativasVenta(ALineas: TDataSet): Boolean;
 // La venta arrastra alguna linea de deposito (prenda apartada o abono).
 function HayLineasDepositoVenta(ALineas: TDataSet): Boolean;
 
+// Cuenta del cliente (F2): alguna prenda de deposito esta marcada en la
+// columna de seleccion (ESMARCADA_DEP = 'S') para cobrarla ahora.
+function HayDepositosMarcadosVenta(ALineas: TDataSet): Boolean;
+
+// Prepara la venta para el cobro y copia lo retirado en AApartadas para
+// poder devolverlo. Siempre retira el historico (depositos cerrados,
+// VIENE_DE_DEPOSITO = 'H'). Si hay prendas marcadas, retira ademas las
+// prendas de deposito sin marcar y su abono a cuenta; las cancelaciones
+// (ACCION_DEPOSITO = 'CANCELAR') se quedan. Devuelve las lineas apartadas.
+function ApartarDepositosNoMarcadosVenta(
+  ALineas: TDataSet;
+  AApartadas: TClientDataSet): Integer;
+
+// Quita de la venta las lineas del historico (depositos cerrados), que
+// solo se muestran mientras la cuenta del cliente esta abierta.
+procedure QuitarLineasHistoricoVenta(ALineas: TDataSet);
+
+// Devuelve a la venta las lineas que aparto
+// ApartarDepositosNoMarcadosVenta y vacia AApartadas.
+procedure RestaurarDepositosApartadosVenta(
+  ALineas: TDataSet;
+  AApartadas: TClientDataSet);
+
 // La operacion esta vacia; una insercion o edicion pendiente se
 // cancela antes de mirar.
 function OperacionVentaVacia(ALineas: TDataSet): Boolean;
@@ -136,7 +159,7 @@ function PrepararArticuloLineaVenta(
 implementation
 
 uses
-  System.SysUtils,
+  System.SysUtils, System.Classes,
   inLibCajaVentaCliente;
 
 procedure EscribirDatosBaseArticulo(
@@ -397,6 +420,213 @@ begin
       ALineas.GotoBookmark(Bkm);
     ALineas.FreeBookmark(Bkm);
     ALineas.EnableControls;
+  end;
+end;
+
+function EsDepositoMarcado(ALineas: TDataSet): Boolean;
+begin
+  Result :=
+    (Trim(ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString) = 'S') and
+    (ALineas.FieldByName('ESMARCADA_DEP').AsString = 'S');
+end;
+
+// Prenda de deposito que se queda pendiente: sin marcar y sin cancelar.
+function EsDepositoQueSeAparta(ALineas: TDataSet): Boolean;
+begin
+  Result :=
+    (Trim(ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString) = 'S') and
+    (ALineas.FieldByName('ESMARCADA_DEP').AsString <> 'S') and
+    (Trim(ALineas.FieldByName('ACCION_DEPOSITO').AsString) <>
+      'CANCELAR');
+end;
+
+function HayDepositosMarcadosVenta(ALineas: TDataSet): Boolean;
+var
+  Bkm: TBookmark;
+begin
+  Result := False;
+  if Assigned(ALineas) and ALineas.Active and
+     Assigned(ALineas.FindField('ESMARCADA_DEP')) then
+  begin
+    ALineas.DisableControls;
+    Bkm := ALineas.GetBookmark;
+    try
+      ALineas.First;
+      while (not ALineas.Eof) and (not Result) do
+      begin
+        if EsDepositoMarcado(ALineas) then
+          Result := True
+        else
+          ALineas.Next;
+      end;
+    finally
+      if ALineas.BookmarkValid(Bkm) then
+        ALineas.GotoBookmark(Bkm);
+      ALineas.FreeBookmark(Bkm);
+      ALineas.EnableControls;
+    end;
+  end;
+end;
+
+procedure CopiarRegistroVenta(AOrigen, ADestino: TDataSet);
+var
+  i: Integer;
+  Destino: TField;
+begin
+  ADestino.Append;
+  for i := 0 to AOrigen.FieldCount - 1 do
+  begin
+    Destino := ADestino.FindField(AOrigen.Fields[i].FieldName);
+    if Assigned(Destino) and
+       (AOrigen.Fields[i].FieldKind = fkData) then
+      Destino.Value := AOrigen.Fields[i].Value;
+  end;
+  ADestino.Post;
+end;
+
+procedure RecogerDepositosQueSeApartan(
+  ALineas: TDataSet;
+  AIdsDeposito: TStringList);
+begin
+  ALineas.First;
+  while not ALineas.Eof do
+  begin
+    if EsDepositoQueSeAparta(ALineas) then
+      AIdsDeposito.Add(
+        ALineas.FieldByName('ID_DEPOSITO_DEP').AsString);
+    ALineas.Next;
+  end;
+end;
+
+function HayLineasHistoricoVenta(ALineas: TDataSet): Boolean;
+begin
+  Result := False;
+  if Assigned(ALineas) and ALineas.Active then
+  begin
+    ALineas.DisableControls;
+    try
+      ALineas.First;
+      while (not ALineas.Eof) and (not Result) do
+      begin
+        if EsLineaHistoricoDeposito(
+             ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString) then
+          Result := True
+        else
+          ALineas.Next;
+      end;
+    finally
+      ALineas.EnableControls;
+    end;
+  end;
+end;
+
+// El historico (depositos cerrados) nunca pasa al cobro. Las prendas sin
+// marcar y su abono, solo cuando hay alguna marcada.
+function DebeApartarseLineaVenta(
+  ALineas: TDataSet;
+  AIdsDeposito: TStringList;
+  AHayMarcadas: Boolean): Boolean;
+var
+  sVieneDeDep: string;
+begin
+  sVieneDeDep := Trim(ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString);
+  Result :=
+    EsLineaHistoricoDeposito(sVieneDeDep) or
+    (AHayMarcadas and
+     (EsDepositoQueSeAparta(ALineas) or
+      ((sVieneDeDep = 'A') and
+       (AIdsDeposito.IndexOf(
+          ALineas.FieldByName('ID_DEPOSITO_DEP').AsString) >= 0))));
+end;
+
+function ApartarDepositosNoMarcadosVenta(
+  ALineas: TDataSet;
+  AApartadas: TClientDataSet): Integer;
+var
+  IdsDeposito: TStringList;
+  bHayMarcadas: Boolean;
+begin
+  Result := 0;
+  CerrarLineaPendiente(ALineas);
+  bHayMarcadas := HayDepositosMarcadosVenta(ALineas);
+  if bHayMarcadas or HayLineasHistoricoVenta(ALineas) then
+  begin
+    if not AApartadas.Active then
+    begin
+      AApartadas.FieldDefs.Assign(ALineas.FieldDefs);
+      AApartadas.CreateDataSet;
+    end;
+    IdsDeposito := TStringList.Create;
+    ALineas.DisableControls;
+    try
+      IdsDeposito.Sorted := True;
+      IdsDeposito.Duplicates := dupIgnore;
+      if bHayMarcadas then
+        RecogerDepositosQueSeApartan(ALineas, IdsDeposito);
+      ALineas.First;
+      while not ALineas.Eof do
+      begin
+        if DebeApartarseLineaVenta(
+             ALineas, IdsDeposito, bHayMarcadas) then
+        begin
+          CopiarRegistroVenta(ALineas, AApartadas);
+          // Delete deja el cursor en la linea siguiente.
+          ALineas.Delete;
+          Inc(Result);
+        end
+        else
+          ALineas.Next;
+      end;
+      ALineas.First;
+    finally
+      ALineas.EnableControls;
+      FreeAndNil(IdsDeposito);
+    end;
+  end;
+end;
+
+procedure QuitarLineasHistoricoVenta(ALineas: TDataSet);
+begin
+  if Assigned(ALineas) and ALineas.Active then
+  begin
+    CerrarLineaPendiente(ALineas);
+    ALineas.DisableControls;
+    try
+      ALineas.First;
+      while not ALineas.Eof do
+      begin
+        if EsLineaHistoricoDeposito(
+             ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString) then
+          ALineas.Delete
+        else
+          ALineas.Next;
+      end;
+    finally
+      ALineas.EnableControls;
+    end;
+  end;
+end;
+
+procedure RestaurarDepositosApartadosVenta(
+  ALineas: TDataSet;
+  AApartadas: TClientDataSet);
+begin
+  if AApartadas.Active and (not AApartadas.IsEmpty) then
+  begin
+    CerrarLineaPendiente(ALineas);
+    ALineas.DisableControls;
+    try
+      AApartadas.First;
+      while not AApartadas.Eof do
+      begin
+        CopiarRegistroVenta(AApartadas, ALineas);
+        AApartadas.Next;
+      end;
+      AApartadas.EmptyDataSet;
+      ALineas.First;
+    finally
+      ALineas.EnableControls;
+    end;
   end;
 end;
 

@@ -340,6 +340,8 @@ resourcestring
   STituloOperacionNCajaReal = 'Operación %d - (Caja Real %s)';
   STituloTraspasosAlmacenCaja = 'Traspasos - (Almacén %s · Caja %s)';
   SCaptionVentaContado = 'VENTA CONTADO';
+  SCaptionVerHistoricoCaja = 'Ver histórico';
+  SCaptionOcultarHistoricoCaja = 'Ocultar histórico';
   SCaptionTotalCero = 'Total 0,00 €';
   SCaptionTotalImporte = 'Total %m';
   SCaptionRectificativaTipo = 'RECTIFICATIVA' + sLineBreak + '%s';

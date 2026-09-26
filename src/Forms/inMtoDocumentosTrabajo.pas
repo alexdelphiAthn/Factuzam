@@ -126,6 +126,11 @@ type
     miCargarFiltrosDTR: TMenuItem;
     miCargarDocumentoDTR: TMenuItem;
     btnArchivarDTR: TcxButton;
+    btnCambiarEstadoDTR: TcxButton;
+    pmEstadoDTR: TPopupMenu;
+    miEstadoCreadoDTR: TMenuItem;
+    miEstadoEnviadoDTR: TMenuItem;
+    miEstadoArchivadoDTR: TMenuItem;
     pnlLateralDTR: TPanel;
     pnlFotoArticuloActivoDTR: TPanel;
     lblFotoArticuloActivoDTR: TcxLabel;
@@ -149,6 +154,11 @@ type
     procedure btnCompartirDTRClick(Sender: TObject);
     procedure btnImprimirEtiquetasDTRClick(Sender: TObject);
     procedure btnArchivarDTRClick(Sender: TObject);
+    procedure btnCambiarEstadoDTRClick(Sender: TObject);
+    procedure pmEstadoDTRPopup(Sender: TObject);
+    procedure miEstadoCreadoDTRClick(Sender: TObject);
+    procedure miEstadoEnviadoDTRClick(Sender: TObject);
+    procedure miEstadoArchivadoDTRClick(Sender: TObject);
     procedure pcAmbitoDTRChange(Sender: TObject);
     procedure dsTablaGDataChangeDTR(Sender: TObject; Field: TField);
     procedure dsTablaGStateChangeDTR(Sender: TObject);
@@ -203,6 +213,14 @@ type
     function CrearLineasCargaTraspaso: TLineasCargaTraspaso;
     procedure AbrirTraspasoCaja(AModo: TModoVentanaTraspaso);
     procedure MarcarDocumentoActualEnviado;
+    // Tras un "Enviar a..." con exito abre (o activa si ya esta abierta)
+    // la pantalla destino situada en el documento creado.
+    procedure AbrirDocumentoDestino(const ACall, AClave: string);
+    procedure AbrirDocumentoNumeradoDestino(
+      ATipo: TTipoEnvioNumeradoDocumentoTrabajo;
+      const ASerie, ANumero: string);
+    function PuedeMarcarEnviadoManual: Boolean;
+    procedure MostrarDocumentoReabierto(AIdDtr: Int64);
     function PrepararCargaDocumentoTrabajo(
       out ADestino: TDestinoCargaDocumentoTrabajo): Boolean;
     procedure RefrescarLineasTrasCarga;
@@ -247,6 +265,9 @@ uses
   inMtoModalDistribucionTiendas, UniDataDistribucionTiendasComposicion,
   // Listado del documento con una foto de 150 x 150 por línea.
   inMtoPreviewExcel, inLibDocumentosTrabajoExcel, inLibWin,
+  // Apertura del documento destino tras el "Enviar a...".
+  inLibShowMto, UniDataDestinoFacturaRepositorio,
+  inLibDocumentosTrabajoEstados,
   inLibMsgArticulos, inLibMsgCaja, inLibMsgComun, inLibMsgVentas;
 
 {$R *.dfm}
@@ -669,6 +690,7 @@ end;
 procedure TfrmMtoDocumentosTrabajo.AplicarEstadoAmbito;
 var
   bArchivariable: Boolean;
+  bCambiarEstado: Boolean;
   bDocumentoCreado: Boolean;
   bEditarCabecera: Boolean;
   bEditarExistente: Boolean;
@@ -680,6 +702,7 @@ var
   bPropios: Boolean;
 begin
   bArchivariable := False;
+  bCambiarEstado := False;
   bEditarCabecera := False;
   bEditarExistente := False;
   bInsertando := Assigned(dsTablaG.DataSet) and
@@ -703,6 +726,9 @@ begin
     bArchivariable :=
       dmmDocumentosTrabajo.PuedeArchivarDocumentoActual and
       bPuedeModificar;
+    bCambiarEstado := bPuedeModificar and
+      (bArchivariable or
+       dmmDocumentosTrabajo.PuedeReabrirDocumentoActual);
   end;
   cxGrdDBTabPrin.OptionsData.Editing := bEditarCabecera;
   cxGrdDBTabPrin.OptionsData.Inserting :=
@@ -719,6 +745,7 @@ begin
   btnCargarDTR.Enabled := bEditarExistente;
   btnCompartirDTR.Enabled := bEditarExistente;
   btnArchivarDTR.Enabled := bArchivariable;
+  btnCambiarEstadoDTR.Enabled := bCambiarEstado;
   actInsertarRegistro.Enabled :=
     bPropios and bPuedeInsertar;
   actEditarRegistro.Enabled := bEditarExistente;
@@ -817,6 +844,140 @@ begin
       AplicarEstadoAmbito;
       ShowMessage_fza(SInfoDocumentoTrabajoArchivado);
     end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.btnCambiarEstadoDTRClick(
+  Sender: TObject);
+var
+  pt: TPoint;
+begin
+  // El area principal del boton tambien despliega el menu.
+  pt := btnCambiarEstadoDTR.ClientToScreen(
+    Point(0, btnCambiarEstadoDTR.Height));
+  pmEstadoDTR.Popup(pt.X, pt.Y);
+end;
+
+function TfrmMtoDocumentosTrabajo.PuedeMarcarEnviadoManual: Boolean;
+begin
+  Result :=
+    (dmmDocumentosTrabajo <> nil) and
+    PuedeAccionMto(apmModificar) and
+    dmmDocumentosTrabajo.PuedeEditarDocumentoActual and
+    (dsTablaG.State = dsBrowse) and
+    (not dmmDocumentosTrabajo.unqryTablaG.FieldByName('ID_DTR').IsNull);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.pmEstadoDTRPopup(Sender: TObject);
+var
+  bModificar: Boolean;
+  sEstado: string;
+begin
+  sEstado := '';
+  bModificar := PuedeAccionMto(apmModificar);
+  if (dmmDocumentosTrabajo <> nil) and
+     dmmDocumentosTrabajo.unqryTablaG.Active and
+     (not dmmDocumentosTrabajo.unqryTablaG.IsEmpty) then
+    sEstado := dmmDocumentosTrabajo.unqryTablaG.FieldByName(
+      'ESTADO_DTR').AsString;
+  miEstadoCreadoDTR.Checked := (sEstado <> '') and
+    EsDocumentoTrabajoCreado(sEstado);
+  miEstadoEnviadoDTR.Checked := EsDocumentoTrabajoEnviado(sEstado);
+  miEstadoArchivadoDTR.Checked := EsDocumentoTrabajoArchivado(sEstado);
+  miEstadoCreadoDTR.Enabled := bModificar and
+    (dmmDocumentosTrabajo <> nil) and
+    dmmDocumentosTrabajo.PuedeReabrirDocumentoActual;
+  miEstadoEnviadoDTR.Enabled := PuedeMarcarEnviadoManual;
+  miEstadoArchivadoDTR.Enabled := bModificar and
+    (dmmDocumentosTrabajo <> nil) and
+    dmmDocumentosTrabajo.PuedeArchivarDocumentoActual;
+end;
+
+// Tras reabrir desde Archivados el documento vuelve a Propios: se cambia
+// de pestanya y se deja seleccionado para seguir trabajando con el.
+procedure TfrmMtoDocumentosTrabajo.MostrarDocumentoReabierto(
+  AIdDtr: Int64);
+begin
+  if pcAmbitoDTR.ActivePage <> tsAmbitoPropiosDTR then
+  begin
+    pcAmbitoDTR.ActivePage := tsAmbitoPropiosDTR;
+    dmmDocumentosTrabajo.CambiarAmbito(dtaPropios);
+  end;
+  if dmmDocumentosTrabajo.unqryTablaG.Active then
+    dmmDocumentosTrabajo.unqryTablaG.Locate('ID_DTR', AIdDtr, []);
+  AplicarEstadoAmbito;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEstadoCreadoDTRClick(Sender: TObject);
+var
+  idDtr: Int64;
+begin
+  if (dmmDocumentosTrabajo = nil) or
+     (not PuedeAccionMto(apmModificar)) or
+     (not dmmDocumentosTrabajo.PuedeReabrirDocumentoActual) then
+  begin
+    ShowMessage_fza(SErrorReabrirDocumentoTrabajoNoPermitido);
+  end
+  else if MessageDlg_fza(SPreguntaReabrirDocumentoTrabajo,
+                         mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    idDtr := dmmDocumentosTrabajo.unqryTablaG.FieldByName(
+      'ID_DTR').AsLargeInt;
+    if dmmDocumentosTrabajo.ReabrirDocumentoActual then
+    begin
+      MostrarDocumentoReabierto(idDtr);
+      ShowMessage_fza(SInfoDocumentoTrabajoReabierto);
+    end;
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEstadoEnviadoDTRClick(Sender: TObject);
+begin
+  if not PuedeMarcarEnviadoManual then
+  begin
+    ShowMessage_fza(SErrorEnviarDocumentoTrabajoNoPermitido);
+  end
+  else if MessageDlg_fza(SPreguntaMarcarEnviadoDocumentoTrabajo,
+                         mtConfirmation, [mbYes, mbNo], 0) = mrYes then
+  begin
+    MarcarDocumentoActualEnviado;
+    ShowMessage_fza(SInfoDocumentoTrabajoMarcadoEnviado);
+  end;
+end;
+
+procedure TfrmMtoDocumentosTrabajo.miEstadoArchivadoDTRClick(
+  Sender: TObject);
+begin
+  btnArchivarDTRClick(Sender);
+end;
+
+procedure TfrmMtoDocumentosTrabajo.AbrirDocumentoDestino(
+  const ACall, AClave: string);
+begin
+  if (ACall <> '') and (AClave <> '') then
+    ShowMto(Application.MainForm, ACall, AClave);
+end;
+
+// Claves de localizacion de cada pantalla (pkFieldName): facturas de
+// venta NUMERO;SERIE, el resto de documentos SERIE;NUMERO.
+procedure TfrmMtoDocumentosTrabajo.AbrirDocumentoNumeradoDestino(
+  ATipo: TTipoEnvioNumeradoDocumentoTrabajo;
+  const ASerie, ANumero: string);
+begin
+  case ATipo of
+    tenFacturaVenta:
+      AbrirDocumentoDestino(
+        ResolverCallFactura(
+          CrearResolutorDestinoFacturaUniDAC(
+            dmmDocumentosTrabajo.unqryTablaG.Connection),
+          ANumero, ASerie),
+        ANumero + ',' + ASerie);
+    tenPedidoCompra:
+      AbrirDocumentoDestino('PedidosCompra', ASerie + ',' + ANumero);
+    tenAlbaranCompra:
+      AbrirDocumentoDestino('AlbaranesCompra', ASerie + ',' + ANumero);
+    tenDevolucionCompra:
+      AbrirDocumentoDestino('DevolucionesCompra', ASerie + ',' + ANumero);
   end;
 end;
 
@@ -1184,6 +1345,8 @@ begin
         MarcarDocumentoActualEnviado;
       ShowMessage_fza(Format(SInfoAlbaranDocumentoTrabajoCreado,
         [sSerie, sNumero, iLineas]));
+      if iLineas > 0 then
+        AbrirDocumentoDestino('Albaranes', sSerie + ',' + sNumero);
     end;
   end;
 end;
@@ -1314,6 +1477,8 @@ begin
         ShowMessage_fza(Format(
           sMensajeCreado,
           [sSerie, sNumero, iLineas]));
+        if iLineas > 0 then
+          AbrirDocumentoNumeradoDestino(ATipo, sSerie, sNumero);
       end;
     end;
   end;
@@ -1575,6 +1740,8 @@ begin
         MarcarDocumentoActualEnviado;
       ShowMessage_fza(Format(SInfoInventarioDocumentoTrabajoCreado,
         [sSerie, sNumero, sAlm, iLineas]));
+      if iLineas > 0 then
+        AbrirDocumentoDestino('Inventarios', sSerie + ',' + sNumero);
     end;
   end;
 end;
@@ -1594,6 +1761,8 @@ begin
       MarcarDocumentoActualEnviado;
     ShowMessage_fza(Format(SInfoCambioTarifasDocumentoTrabajoCreado,
       [idTarc]));
+    if idTarc > 0 then
+      AbrirDocumentoDestino('TarifasCambios', IntToStr(idTarc));
   end;
 end;
 

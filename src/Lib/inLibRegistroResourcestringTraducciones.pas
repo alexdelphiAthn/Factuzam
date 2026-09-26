@@ -13270,6 +13270,36 @@ begin
       SInfoDocumentoTrabajoArchivado);
   ARegistrar(
     'inLibMsgVentas.' +
+    'SErrorReabrirDocumentoTrabajoNoPermitido',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SErrorReabrirDocumentoTrabajoNoPermitido);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SPreguntaReabrirDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SPreguntaReabrirDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoDocumentoTrabajoReabierto',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoDocumentoTrabajoReabierto);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SPreguntaMarcarEnviadoDocumentoTrabajo',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SPreguntaMarcarEnviadoDocumentoTrabajo);
+  ARegistrar(
+    'inLibMsgVentas.' +
+    'SInfoDocumentoTrabajoMarcadoEnviado',
+    'src/Lib/inLibMsgVentas.pas',
+    @inLibMsgVentas.
+      SInfoDocumentoTrabajoMarcadoEnviado);
+  ARegistrar(
+    'inLibMsgVentas.' +
     'SErrorBorrarLineasDocumentoTrabajoSoloPropietario',
     'src/Lib/inLibMsgVentas.pas',
     @inLibMsgVentas.

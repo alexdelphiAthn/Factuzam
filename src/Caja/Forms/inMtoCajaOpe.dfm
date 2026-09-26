@@ -207,6 +207,23 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
       AnchorX = 1223
       AnchorY = 45
     end
+    object btnVerHistorico: TcxButton
+      Left = 554
+      Top = 2
+      Width = 200
+      Height = 26
+      Caption = 'Ver hist'#243'rico'
+      Font.Charset = ANSI_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -14
+      Font.Name = 'Source Sans 3'
+      Font.Style = []
+      ParentFont = False
+      TabOrder = 10
+      TabStop = False
+      Visible = False
+      OnClick = btnVerHistoricoClick
+    end
   end
   object pnlCli: TPanel [1]
     Left = 0
@@ -633,6 +650,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             PropertiesClassName = 'TcxTextEditProperties'
             Properties.OnEditValueChanged = tvUdsPropertiesEditValueChanged
             Properties.OnValidate = tvUdsPropertiesValidate
+            OnGetDisplayText = tvUdsGetDisplayText
             BestFitMaxWidth = 50
             HeaderAlignmentHorz = taRightJustify
           end
@@ -648,6 +666,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             DataBinding.FieldName = 'PRECIO_SALIDA_FACLIN'
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.OnEditValueChanged = tvPrecioUniPropertiesEditValueChanged
+            OnGetDisplayText = tvPrecioUniGetDisplayText
             Width = 91
           end
           object tvDescuento: TcxGridDBColumn
@@ -676,6 +695,7 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             PropertiesClassName = 'TcxCurrencyEditProperties'
             Properties.ReadOnly = False
             Properties.OnEditValueChanged = tvTotalPropertiesEditValueChanged
+            OnGetDisplayText = tvTotalGetDisplayText
             HeaderAlignmentHorz = taRightJustify
             Width = 137
           end
@@ -687,6 +707,34 @@ inherited frmMtoOpeCaja: TfrmMtoOpeCaja
             Visible = False
             Options.Editing = False
             Width = 120
+          end
+          object tvMarcaDeposito: TcxGridDBColumn
+            Caption = 'Cobrar'
+            DataBinding.FieldName = 'ESMARCADA_DEP'
+            PropertiesClassName = 'TcxCheckBoxProperties'
+            Properties.Alignment = taCenter
+            Properties.ImmediatePost = True
+            Properties.NullStyle = nssUnchecked
+            Properties.ValueChecked = 'S'
+            Properties.ValueUnchecked = 'N'
+            Visible = False
+            HeaderAlignmentHorz = taCenter
+            Width = 70
+          end
+          object tvOrigenDeposito: TcxGridDBColumn
+            DataBinding.FieldName = 'VIENE_DE_DEPOSITO'
+            Visible = False
+            VisibleForCustomization = False
+          end
+          object tvCantidadHistorico: TcxGridDBColumn
+            DataBinding.FieldName = 'CANTIDAD_HISTORICO_DEP'
+            Visible = False
+            VisibleForCustomization = False
+          end
+          object tvPrecioOriginalDeposito: TcxGridDBColumn
+            DataBinding.FieldName = 'PRECIO_ORIGINAL_DEP'
+            Visible = False
+            VisibleForCustomization = False
           end
         end
         object cxgrdlvlLineasOpe: TcxGridLevel

@@ -77,8 +77,10 @@ type
       AFormulario: TfrmMtoCajaFaseCobro
     ): TSolicitudCierreVenta; static;
   public
-    class procedure Ejecutar(
-      const AContexto: TContextoCierreVentaCajaVcl); static;
+    // True si el usuario confirmo el cobro (se haya grabado o no ticket);
+    // False si lo cancelo o no habia nada que cobrar.
+    class function Ejecutar(
+      const AContexto: TContextoCierreVentaCajaVcl): Boolean; static;
     // Pantalla de Cobro en modo subsanación: devuelve el descuento global
     // y los cobros nuevos sin grabar nada. AImprimirTicket es False cuando
     // el usuario subsana con F11 (sin ticket). AHayLineasFijas (abonos a
@@ -116,7 +118,7 @@ function SeleccionarVentaOrigenCajaVcl(
 implementation
 
 uses
-  System.SysUtils, System.UITypes,
+  System.SysUtils, System.UITypes, Datasnap.DBClient,
   inLibCajaVentaOperacion, inLibCajaDescuentos,
   inMtoModalMotivoDevolucion, inMtoModalDevolucionTicket,
   inMtoModalSeleccionVentaOrigen;
@@ -357,30 +359,47 @@ begin
   end;
 end;
 
-class procedure TCoordinadorCierreVentaCajaVcl.Ejecutar(
-  const AContexto: TContextoCierreVentaCajaVcl);
+class function TCoordinadorCierreVentaCajaVcl.Ejecutar(
+  const AContexto: TContextoCierreVentaCajaVcl): Boolean;
 var
   frmFaseCobro: TfrmMtoCajaFaseCobro;
   oResultado: TResultadoCierreVenta;
   oSolicitud: TSolicitudCierreVenta;
   oTotales: TFacturaTotales;
+  oApartadas: TClientDataSet;
+  bGrabada: Boolean;
 begin
+  Result := False;
   frmFaseCobro := nil;
   oTotales := nil;
+  bGrabada := False;
+  // Cuenta del cliente con prendas marcadas: solo esas (y lo que no sea
+  // de deposito) pasan al cobro; las demas siguen pendientes. Si no se
+  // graba, vuelven a la rejilla tal como estaban.
+  oApartadas := TClientDataSet.Create(nil);
   try
-    if PrepararFaseCobro(
+    // Si solo habia historico no queda nada que cobrar.
+    if ((ApartarDepositosNoMarcadosVenta(
+           AContexto.Lineas, oApartadas) = 0) or
+        (not OperacionVentaVacia(AContexto.Lineas))) and
+       PrepararFaseCobro(
       AContexto, frmFaseCobro, oTotales) then
     begin
+      Result := True;
       AplicarDescuento(AContexto, frmFaseCobro, oTotales);
       oSolicitud := ConstruirSolicitud(AContexto, frmFaseCobro);
       oResultado := AContexto.CasoUso.Ejecutar(oSolicitud);
-      if oResultado.Grabada then
+      bGrabada := oResultado.Grabada;
+      if bGrabada then
         AContexto.PresentarResultado(
           oResultado,
           frmFaseCobro.EnviarEmail,
           frmFaseCobro.EmailEnvio);
     end;
   finally
+    if not bGrabada then
+      RestaurarDepositosApartadosVenta(AContexto.Lineas, oApartadas);
+    FreeAndNil(oApartadas);
     FreeAndNil(frmFaseCobro);
     FreeAndNil(oTotales);
   end;

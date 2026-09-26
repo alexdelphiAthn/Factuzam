@@ -219,7 +219,11 @@ type
     procedure AsignarRepositorioTicketsCaja(
       const ARepositorio: TRepositoriosTicketsCaja);
     property IdentidadSesion: TIdentidadSesion read GetIdentidadSesion;
-    procedure CargarDepositosCliente(const ACodigoCliente: string);
+    // Cuenta del cliente por fecha de operacion (lo mas antiguo arriba).
+    // AIncluirCerrados anade el historico: depositos ya cerrados, solo
+    // para consulta (VIENE_DE_DEPOSITO = 'H', no suman ni se cobran).
+    procedure CargarDepositosCliente(const ACodigoCliente: string;
+      AIncluirCerrados: Boolean = False);
     function BuscarApartadoTicket(
       const ASerie, ANumero: string): TApartadoTicketCaja;
     procedure CargarApartadoTicket(const ASerie, ANumero: string);
@@ -559,6 +563,7 @@ const
     '       d.PORCENTAJE_IVA_DEP, ' +
     '       d.ESIMP_INCL_DEP, ' +
     '       d.FECHA_CREACION_DEP, ' +
+    '       d.ESTADO_DEP, ' +
     '       a.DESCRIPCION_ART ' +
     '  FROM fza_depositos_cliente d ' +
     '  LEFT JOIN fza_articulos a ' +
@@ -574,12 +579,21 @@ const
     '                  AND o.SERIE_FAC_OPCAJA = :SERIE ' +
     '                  AND o.NUMERO_FAC_OPCAJA = :NUMERO) ';
 
+// Cuenta del cliente en orden cronologico de operacion (lo mas antiguo
+// arriba). Con AIncluirCerrados entran tambien los depositos cerrados
+// (historico), intercalados por fecha con los pendientes.
 procedure ConfigurarConsultaDepositosCliente(
   AConsulta: TUniQuery;
   AConexion: TUniConnection;
   const ACodigoCliente: string;
-  const AUbicacion: TUbicacionSesion);
+  const AUbicacion: TUbicacionSesion;
+  AIncluirCerrados: Boolean);
+var
+  sFiltroEstado: string;
 begin
+  sFiltroEstado := '   AND d.ESTADO_DEP = ''PENDIENTE'' ';
+  if AIncluirCerrados then
+    sFiltroEstado := '';
   AConsulta.Connection := AConexion;
   AConsulta.SQL.Text :=
     SQL_DEPOSITOS_PENDIENTES_CAJA +
@@ -587,7 +601,8 @@ begin
     '   AND d.CODIGO_EMP_DEP = :EMPRESA ' +
     '   AND d.CODIGO_ALM_DEP = :ALMACEN ' +
     '   AND d.CODIGO_CAJA_DEP = :CAJA ' +
-    '   AND d.ESTADO_DEP = ''PENDIENTE''';
+    sFiltroEstado +
+    ' ORDER BY d.FECHA_CREACION_DEP, d.ID_DEPOSITO_DEP';
   AConsulta.ParamByName('CLI').AsString := ACodigoCliente;
   AConsulta.ParamByName('EMPRESA').AsString := AUbicacion.Empresa;
   AConsulta.ParamByName('ALMACEN').AsString := AUbicacion.Almacen;
@@ -629,6 +644,7 @@ begin
       'dd/mm/yyyy hh:nn',
       AConsulta.FieldByName('FECHA_CREACION_DEP').AsDateTime);
   ALineas.FieldByName('ACCION_DEPOSITO').AsString := 'COBRAR';
+  ALineas.FieldByName('ESMARCADA_DEP').AsString := 'N';
   ALineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString :=
     AConsulta.FieldByName('TIPO_IVA_DEP').AsString;
   ALineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency :=
@@ -702,16 +718,68 @@ begin
   ALineas.Post;
 end;
 
-procedure IncorporarDepositoPendiente(
+// La prenda cerrada entra con cantidad e importes a 0: el calculo de
+// totales recorre todas las lineas y asi no suma. El precio y la cantidad
+// reales quedan en PRECIO_ORIGINAL_DEP y CANTIDAD_HISTORICO_DEP.
+procedure IncorporarPrendaCerrada(
   AConsulta: TUniQuery;
   ALineas: TClientDataSet);
 begin
-  IncorporarPrendaDeposito(AConsulta, ALineas);
-  if AConsulta.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency > 0 then
-    IncorporarAnticipoDeposito(AConsulta, ALineas);
+  ALineas.Append;
+  ALineas.FieldByName('ID_DEPOSITO_DEP').AsString :=
+    AConsulta.FieldByName('ID_DEPOSITO_DEP').AsString;
+  ALineas.FieldByName('CODIGO_ART_FACLIN').AsString :=
+    AConsulta.FieldByName('CODIGO_ART_DEP').AsString;
+  ALineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString :=
+    AConsulta.FieldByName('CODIGO_UNIDAD_DEP').AsString;
+  ALineas.FieldByName('DESCRIPCION_ARTICULO_FACLIN').AsString :=
+    AConsulta.FieldByName('DESCRIPCION_ART').AsString;
+  ALineas.FieldByName('VIENE_DE_DEPOSITO').AsString := 'H';
+  ALineas.FieldByName('ESMARCADA_DEP').AsString := 'N';
+  ALineas.FieldByName('FECHA_DEPOSITO_DEP').AsString :=
+    FormatDateTime(
+      'dd/mm/yyyy hh:nn',
+      AConsulta.FieldByName('FECHA_CREACION_DEP').AsDateTime);
+  ALineas.FieldByName('TIPO_IVA_ARTICULO_FACLIN').AsString :=
+    AConsulta.FieldByName('TIPO_IVA_DEP').AsString;
+  ALineas.FieldByName('PORCENTAJE_IVA_FACLIN').AsCurrency :=
+    AConsulta.FieldByName('PORCENTAJE_IVA_DEP').AsCurrency;
+  ALineas.FieldByName('ESIMP_INCL_TARIFA_FACLIN').AsString :=
+    AConsulta.FieldByName('ESIMP_INCL_DEP').AsString;
+  ALineas.FieldByName('CANTIDAD_FACLIN').AsFloat := 0;
+  ALineas.FieldByName('CANTIDAD_HISTORICO_DEP').AsFloat :=
+    AConsulta.FieldByName('CANTIDAD_PENDIENTE_DEP').AsFloat;
+  ALineas.FieldByName('PRECIO_ORIGINAL_DEP').AsCurrency :=
+    AConsulta.FieldByName('PRECIO_VENTA_DEP').AsCurrency;
+  ALineas.FieldByName('PRECIO_SALIDA_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_CIVA_ARTICULO_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName(
+    'PRECIO_VENTA_SIVA_ARTICULO_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName('PORCENTAJE_DTO_FACLIN').AsFloat := 0;
+  ALineas.FieldByName('PRECIO_DTO_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName('TOTAL_FACLIN').AsCurrency := 0;
+  ALineas.FieldByName('TOTAL_FAC_SIVA_FACLIN').AsCurrency := 0;
+  ALineas.Post;
 end;
 
-procedure IncorporarDepositosPendientes(
+// Cada fila entra en el orden de la consulta: el deposito pendiente como
+// prenda (y su abono a cuenta justo debajo); el cerrado, como historico.
+procedure IncorporarDepositoCliente(
+  AConsulta: TUniQuery;
+  ALineas: TClientDataSet);
+begin
+  if Trim(AConsulta.FieldByName('ESTADO_DEP').AsString) <> 'PENDIENTE' then
+    IncorporarPrendaCerrada(AConsulta, ALineas)
+  else
+  begin
+    IncorporarPrendaDeposito(AConsulta, ALineas);
+    if AConsulta.FieldByName('IMPORTE_ANTICIPO_DEP').AsCurrency > 0 then
+      IncorporarAnticipoDeposito(AConsulta, ALineas);
+  end;
+end;
+
+procedure IncorporarDepositosCliente(
   AConsulta: TUniQuery;
   ALineas: TClientDataSet;
   const ARecalcularLineas: TRecalcularLineasEvent);
@@ -720,7 +788,7 @@ begin
   try
     while not AConsulta.Eof do
     begin
-      IncorporarDepositoPendiente(AConsulta, ALineas);
+      IncorporarDepositoCliente(AConsulta, ALineas);
       AConsulta.Next;
     end;
   finally
@@ -730,7 +798,9 @@ begin
     ARecalcularLineas;
 end;
 
-procedure TdmCajaOpe.CargarDepositosCliente(const ACodigoCliente: string);
+procedure TdmCajaOpe.CargarDepositosCliente(
+  const ACodigoCliente: string;
+  AIncluirCerrados: Boolean);
 var
   oConsulta: TUniQuery;
   oUbicacion: TUbicacionSesion;
@@ -744,10 +814,11 @@ begin
       oConsulta,
       FConexion,
       ACodigoCliente,
-      oUbicacion);
+      oUbicacion,
+      AIncluirCerrados);
     oConsulta.Open;
     if not oConsulta.IsEmpty then
-      IncorporarDepositosPendientes(
+      IncorporarDepositosCliente(
         oConsulta,
         cdsLineas,
         FOnRecalcularLineas);
@@ -825,7 +896,7 @@ begin
     oConsulta.ParamByName('CAJA').AsString := oUbicacion.Caja;
     oConsulta.Open;
     if not oConsulta.IsEmpty then
-      IncorporarDepositosPendientes(
+      IncorporarDepositosCliente(
         oConsulta,
         cdsLineas,
         FOnRecalcularLineas);
@@ -3002,6 +3073,12 @@ begin
     // Fecha y hora de la operacion del deposito (F2 cuenta cliente), ya
     // formateada para mostrarse tal cual en el grid.
     Add('FECHA_DEPOSITO_DEP', ftString, 20);
+    // Seleccion de la prenda en la cuenta del cliente (F2): 'S' la cobra
+    // ahora; si hay alguna marcada, las demas siguen en deposito.
+    Add('ESMARCADA_DEP', ftString, 1);
+    // Historico (F2 + Ver historico): la linea cerrada lleva cantidad 0
+    // para no sumar; aqui se guarda la real, solo para mostrarla.
+    Add('CANTIDAD_HISTORICO_DEP', ftFloat);
     // -- CLAVES DE ENLACE CON CABECERA (Foreign Keys) --
     Add('SERIE_FAC_FACLIN', ftString, 20, True);
     Add('NUMERO_FAC_FACLIN', ftString, 20, True);

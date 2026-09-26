@@ -28,7 +28,7 @@ uses
   cxGridTableView, cxGridDBTableView, cxGridLevel, cxGridCustomView, cxGrid,
   Vcl.StdCtrls, cxButtons, Datasnap.DBClient, Datasnap.Provider, UniDataCaja,
   JvComponentBase, JvEnterTab, cxDropDownEdit, cxFontNameComboBox, Uni,
-  cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox,
+  cxCurrencyEdit, cxSpinEdit, cxSplitter, cxDBLookupComboBox, cxCheckBox,
   cxDBExtLookupComboBox, MemDS, DBAccess, cxEditRepositoryItems, system.UITypes,
   System.Actions, Vcl.ActnList, Vcl.Imaging.PngImage, inLibFotos,
   cxLocalization,
@@ -194,6 +194,7 @@ type
     procedure RefrescarFotoStock;
     function ObtenerColumnaPorTag(
       ANumeroColumna: Integer): TcxGridDBColumn;
+    function EsColumnaMarcaDeposito(AItem: TcxCustomGridTableItem): Boolean;
     property Formulario: TCustomForm read GetFormulario;
     property tvLineasOpe: TcxGridDBTableView read GetVistaLineas;
     property tvArticulo: TcxGridDBColumn read GetColumnaArticulo;
@@ -315,6 +316,11 @@ type
     tvDescuentoMenos: TcxGridDBColumn;
     tvTotal: TcxGridDBColumn;
     tvFechaOperacion: TcxGridDBColumn;
+    tvMarcaDeposito: TcxGridDBColumn;
+    tvOrigenDeposito: TcxGridDBColumn;
+    tvCantidadHistorico: TcxGridDBColumn;
+    tvPrecioOriginalDeposito: TcxGridDBColumn;
+    btnVerHistorico: TcxButton;
     lblTotal: TcxLabel;
     btnF8: TcxButton;
     lblEliminar: TcxLabel;
@@ -445,6 +451,13 @@ type
       ACanvas: TcxCanvas; AViewInfo: TcxGridTableDataCellViewInfo;
       var ADone: Boolean);
     procedure FormDestroy(Sender: TObject);
+    procedure btnVerHistoricoClick(Sender: TObject);
+    procedure tvUdsGetDisplayText(Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord; var AText: string);
+    procedure tvPrecioUniGetDisplayText(Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord; var AText: string);
+    procedure tvTotalGetDisplayText(Sender: TcxCustomGridTableItem;
+      ARecord: TcxCustomGridRecord; var AText: string);
   private
     // Modo rectificación: ticket original que se rectifica (lo carga
     // CargarRectificacion desde Buscar operaciones)
@@ -474,7 +487,14 @@ type
     FSubsanacion: TModoSubsanacionCajaVcl;
     FOperacionSubsanacion: TOperacionSubsanacionCaja;
     FServicioSubsanacion: IServicioSubsanacionCaja;
+    // Cuenta del cliente (F2): se muestran tambien los depositos cerrados.
+    FVerHistorico: Boolean;
     procedure AplicarEstiloCaja;
+    procedure MostrarModoCuentaCliente(AActivar: Boolean);
+    procedure SalirModoCuentaCliente;
+    function EsRegistroHistorico(ARecord: TcxCustomGridRecord): Boolean;
+    function ValorRegistroFloat(ARecord: TcxCustomGridRecord;
+      AColumna: TcxGridDBColumn): Double;
     procedure ColocarTarjetaTotal;
     procedure ConfigurarModoSubsanacion;
     procedure MostrarAvisoSubsanacion(const ARotulo, ADetalle: string);
@@ -585,6 +605,7 @@ implementation
 {$R *.dfm}
 
 uses
+  Vcl.Graphics,
   inLibMensajesVcl,
   inLibGridCantidad,
   inLibFormatoMonetario,
@@ -1180,8 +1201,26 @@ procedure TfrmMtoOpeCaja.tvLineasOpeCustomDrawCell(
   Sender: TcxCustomGridTableView; ACanvas: TcxCanvas;
   AViewInfo: TcxGridTableDataCellViewInfo; var ADone: Boolean);
 begin
-  FEditorLineas.DibujarCeldaLinea(
-    Sender, ACanvas, AViewInfo, ADone);
+  // La marca de cobro solo se pinta en las prendas pendientes ('S').
+  if (AViewInfo.Item = tvMarcaDeposito) and
+     Assigned(AViewInfo.GridRecord) and
+     (VarToStr(AViewInfo.GridRecord.Values[tvOrigenDeposito.Index]) <>
+       'S') then
+  begin
+    ACanvas.FillRect(AViewInfo.Bounds);
+    ADone := True;
+  end
+  else
+  begin
+    // Historico: deposito cerrado, tachado y en gris.
+    if EsRegistroHistorico(AViewInfo.GridRecord) then
+    begin
+      ACanvas.Font.Style := ACanvas.Font.Style + [fsStrikeOut];
+      ACanvas.Font.Color := clGrayText;
+    end;
+    FEditorLineas.DibujarCeldaLinea(
+      Sender, ACanvas, AViewInfo, ADone);
+  end;
 end;
 
 procedure TfrmMtoOpeCaja.dbtvStockCustomDrawCell(
@@ -1493,9 +1532,9 @@ begin
     tvLineasOpe.DataController.Refresh;
     // Nueva operacion: ocultamos la fecha de deposito y volvemos a la vista
     // normal de columnas (% y Menos visibles, atributos ocultos) hasta que se
-    // vuelva a cargar la cuenta del cliente con F2.
-    tvFechaOperacion.Visible := False;
-    FEditorLineas.MostrarColumnasCuentaCliente(False);
+    // vuelva a cargar la cuenta del cliente con F2 (sin historico).
+    FVerHistorico := False;
+    MostrarModoCuentaCliente(False);
     lblNombreCliente.Caption := '';
     btnCodigoCliente.Text := '';
     // 3. Aplicar valores base.
@@ -2115,10 +2154,11 @@ begin
       begin
         VieneDeDep := Clon.FieldByName('VIENE_DE_DEPOSITO').AsString;
         // Solo consolidamos líneas de venta normal.
-        // Las líneas de depósito ('S' = prenda apartada, 'A' = abono)
-        // NO se consolidan: representan operaciones distintas aunque
-        // compartan SKU con un artículo que el cliente se lleva ahora.
-        if (VieneDeDep <> 'S') and (VieneDeDep <> 'A') and
+        // Las líneas de depósito ('S' = prenda apartada, 'A' = abono,
+        // 'H' = histórico cerrado) NO se consolidan: representan
+        // operaciones distintas aunque compartan SKU con un artículo que
+        // el cliente se lleva ahora.
+        if (not EsLineaDeposito(VieneDeDep)) and
            (Clon.FieldByName('CODIGO_UNIDAD_FACLIN').AsString = ASku)
            and (Clon.RecNo <> DatosCaja.cdsLineas.RecNo) then
         begin
@@ -2214,9 +2254,12 @@ begin
     DatosCaja.cdsLineas.First;
     while not DatosCaja.cdsLineas.Eof do
     begin
-      // Solo las prendas ('S'); el abono ('A') no tiene Color/Talla.
-      if DatosCaja.cdsLineas.FieldByName(
-                                     'VIENE_DE_DEPOSITO').AsString = 'S' then
+      // Solo las prendas ('S' y las cerradas del historico 'H'); el abono
+      // ('A') no tiene Color/Talla.
+      if (DatosCaja.cdsLineas.FieldByName(
+            'VIENE_DE_DEPOSITO').AsString = 'S') or
+         EsLineaHistoricoDeposito(DatosCaja.cdsLineas.FieldByName(
+            'VIENE_DE_DEPOSITO').AsString) then
       begin
         art := DatosCaja.cdsLineas.FieldByName('CODIGO_ART_FACLIN').AsString;
         sku := DatosCaja.cdsLineas.FieldByName('CODIGO_UNIDAD_FACLIN').AsString;
@@ -2275,7 +2318,9 @@ begin
             Clon.First;
             while (Nombre = '') and not Clon.Eof do
             begin
-              if Clon.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
+              if (Clon.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S') or
+                 EsLineaHistoricoDeposito(
+                   Clon.FieldByName('VIENE_DE_DEPOSITO').AsString) then
                 Nombre := Clon.FieldByName(
                   'ATTR' + IntToStr(i) + '_NOMBRE').AsString;
               Clon.Next;
@@ -2354,6 +2399,13 @@ begin
   end;
 end;
 
+function TEditorLineasCajaVcl.EsColumnaMarcaDeposito(
+  AItem: TcxCustomGridTableItem): Boolean;
+begin
+  Result := (AItem is TcxGridDBColumn) and
+    SameText(TcxGridDBColumn(AItem).DataBinding.FieldName, 'ESMARCADA_DEP');
+end;
+
 procedure TEditorLineasCajaVcl.ComprobarEdicion(
   Sender: TcxCustomGridTableView; AItem: TcxCustomGridTableItem;
   var AAllow: Boolean);
@@ -2365,10 +2417,17 @@ begin
     // Si la línea es la prenda base del depósito
     if DatosCaja.cdsLineas.FieldByName('VIENE_DE_DEPOSITO').AsString = 'S' then
     begin
-      // Solo permitimos editar la columna de Cantidad/Unidades
-      if AItem <> tvUds then
+      // Solo permitimos editar Cantidad/Unidades y la marca de cobro
+      if (AItem <> tvUds) and not EsColumnaMarcaDeposito(AItem) then
         AAllow := False;
     end
+    // La marca de cobro solo tiene sentido en la prenda pendiente
+    else if EsColumnaMarcaDeposito(AItem) then
+      AAllow := False
+    // Histórico: depósito ya cerrado, solo consulta
+    else if EsLineaHistoricoDeposito(DatosCaja.cdsLineas.FieldByName(
+      'VIENE_DE_DEPOSITO').AsString) then
+      AAllow := False
     // Si la línea es el abono (anticipo de dinero, marcado con 'A' según tu
     //UniDataCaja)
     else if DatosCaja.cdsLineas.FieldByName(
@@ -2413,7 +2472,7 @@ begin
     begin
       VieneDeDep := DatosCaja.cdsLineas.FieldByName(
         'VIENE_DE_DEPOSITO').AsString;
-      EsDeposito := (VieneDeDep = 'S') or (VieneDeDep = 'A');
+      EsDeposito := EsLineaDeposito(VieneDeDep);
       btnF3.Enabled := not EsDeposito;
       btnF8.Enabled := not EsDeposito;
       sCodPadre := DatosCaja.cdsLineas.FieldByName(
@@ -2990,6 +3049,9 @@ begin
       //    las escrituras de cabecera viven en inLibCajaVentaCliente;
       //    aqui quedan el grid, las etiquetas y el recalculo.
       LimpiarLineasDeposito(DatosCaja.cdsLineas);
+      // La cuenta del cliente anterior (F2) se cierra: sin boton Ver
+      // historico ni marca de cobro hasta volver a pulsar F2.
+      SalirModoCuentaCliente;
       // 2. Busqueda y asignacion del nuevo cliente.
       sCodigo := VarToStr(DisplayValue);
       if Trim(sCodigo) = '' then
@@ -3276,9 +3338,9 @@ procedure TfrmMtoOpeCaja.btnF12Click(Sender: TObject);
 begin
   if Assigned(FSubsanacion) then
     GuardarSubsanacion
-  else
-    TCoordinadorCierreVentaCajaVcl.Ejecutar(
-      CrearContextoCierreVentaCajaVcl(Self));
+  else if TCoordinadorCierreVentaCajaVcl.Ejecutar(
+            CrearContextoCierreVentaCajaVcl(Self)) then
+    SalirModoCuentaCliente;
 end;
 
 function TfrmMtoOpeCaja.OperacionVacia: Boolean;
@@ -3526,15 +3588,15 @@ begin
       DatosCaja.cdsLineas.First;
       while not DatosCaja.cdsLineas.Eof do
       begin
-        if (DatosCaja.cdsLineas.FieldByName(
-              'VIENE_DE_DEPOSITO').AsString = 'S') or
-           (DatosCaja.cdsLineas.FieldByName(
-              'VIENE_DE_DEPOSITO').AsString = 'A') then
+        if EsLineaDeposito(DatosCaja.cdsLineas.FieldByName(
+             'VIENE_DE_DEPOSITO').AsString) then
           DatosCaja.cdsLineas.Delete
         else
           DatosCaja.cdsLineas.Next;
       end;
-      DatosCaja.CargarDepositosCliente(sCodigoCliente);
+      // Pendientes y, con Ver historico, cerrados: todos por fecha de
+      // operacion, lo mas antiguo arriba.
+      DatosCaja.CargarDepositosCliente(sCodigoCliente, FVerHistorico);
     finally
       DatosCaja.cdsLineas.EnableControls;
       tvLineasOpe.EndUpdate;
@@ -3564,8 +3626,7 @@ begin
   // prenda y columnas de depósito (fecha visible; % y Menos ocultas) antes
   // de añadir la línea en blanco de escaneo.
   FEditorLineas.PoblarAtributosLineasDeposito;
-  tvFechaOperacion.Visible := True;
-  FEditorLineas.MostrarColumnasCuentaCliente(True);
+  MostrarModoCuentaCliente(True);
   FEditorLineas.AsegurarLineaNueva;
   // El total se calcula al final, leyendo la memoria interna.
   Totales := TFacturaTotales.Create(
@@ -3597,6 +3658,101 @@ end;
 procedure TfrmMtoOpeCaja.btnF2Click(Sender: TObject);
 begin
   CargarDepositosF2;
+end;
+
+procedure TfrmMtoOpeCaja.MostrarModoCuentaCliente(AActivar: Boolean);
+begin
+  // Columnas y boton propios de la cuenta del cliente (F2): fecha del
+  // deposito, marca de cobro parcial y Ver historico.
+  tvFechaOperacion.Visible := AActivar;
+  tvMarcaDeposito.Visible := AActivar;
+  btnVerHistorico.Visible := AActivar;
+  if FVerHistorico then
+    btnVerHistorico.Caption := SCaptionOcultarHistoricoCaja
+  else
+    btnVerHistorico.Caption := SCaptionVerHistoricoCaja;
+  FEditorLineas.MostrarColumnasCuentaCliente(AActivar);
+end;
+
+// Tras cobrar o cambiar de cliente: fuera Ver historico, la marca de cobro
+// y las lineas cerradas, hasta que se vuelva a pulsar F2.
+procedure TfrmMtoOpeCaja.SalirModoCuentaCliente;
+begin
+  FVerHistorico := False;
+  QuitarLineasHistoricoVenta(DatosCaja.cdsLineas);
+  MostrarModoCuentaCliente(False);
+end;
+
+procedure TfrmMtoOpeCaja.btnVerHistoricoClick(Sender: TObject);
+begin
+  // Recarga la cuenta: los pendientes y, si se activa, los cerrados
+  // tachados. Las marcas de cobro se pierden con la recarga.
+  FVerHistorico := not FVerHistorico;
+  CargarDepositosF2;
+end;
+
+function TfrmMtoOpeCaja.EsRegistroHistorico(
+  ARecord: TcxCustomGridRecord): Boolean;
+begin
+  Result := Assigned(ARecord) and ARecord.IsData and
+    EsLineaHistoricoDeposito(
+      VarToStr(ARecord.Values[tvOrigenDeposito.Index]));
+end;
+
+function TfrmMtoOpeCaja.ValorRegistroFloat(ARecord: TcxCustomGridRecord;
+  AColumna: TcxGridDBColumn): Double;
+var
+  vValor: Variant;
+begin
+  vValor := ARecord.Values[AColumna.Index];
+  if VarIsNull(vValor) or VarIsEmpty(vValor) then
+    Result := 0
+  else
+    Result := vValor;
+end;
+
+// Mismo formato que el resto de importes de la columna.
+function TextoImporteColumna(AColumna: TcxGridDBColumn;
+  AImporte: Double): string;
+var
+  sFormato: string;
+begin
+  sFormato := FORMATO_MONEDA_EURO;
+  if (AColumna.Properties is TcxCurrencyEditProperties) and
+     (TcxCurrencyEditProperties(AColumna.Properties).DisplayFormat <> '') then
+    sFormato :=
+      TcxCurrencyEditProperties(AColumna.Properties).DisplayFormat;
+  Result := FormatFloat(sFormato, AImporte);
+end;
+
+// Historico: la linea cerrada lleva cantidad e importes a 0 para no sumar;
+// la rejilla muestra los valores reales del deposito.
+procedure TfrmMtoOpeCaja.tvUdsGetDisplayText(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AText: string);
+begin
+  if EsRegistroHistorico(ARecord) then
+    AText := FormatFloat('0.##',
+      ValorRegistroFloat(ARecord, tvCantidadHistorico));
+end;
+
+procedure TfrmMtoOpeCaja.tvPrecioUniGetDisplayText(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AText: string);
+begin
+  if EsRegistroHistorico(ARecord) then
+    AText := TextoImporteColumna(tvPrecioUni,
+      ValorRegistroFloat(ARecord, tvPrecioOriginalDeposito));
+end;
+
+procedure TfrmMtoOpeCaja.tvTotalGetDisplayText(
+  Sender: TcxCustomGridTableItem; ARecord: TcxCustomGridRecord;
+  var AText: string);
+begin
+  if EsRegistroHistorico(ARecord) then
+    AText := TextoImporteColumna(tvTotal,
+      ValorRegistroFloat(ARecord, tvPrecioOriginalDeposito) *
+      ValorRegistroFloat(ARecord, tvCantidadHistorico));
 end;
 
 function TfrmMtoOpeCaja.CrearOperacionCajaHermana: TfrmMtoOpeCaja;

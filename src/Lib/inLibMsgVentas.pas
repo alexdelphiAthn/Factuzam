@@ -67,6 +67,20 @@ resourcestring
     '¿Archivar el Documento de Trabajo seleccionado?';
   SInfoDocumentoTrabajoArchivado =
     'Documento de Trabajo archivado.';
+  SErrorReabrirDocumentoTrabajoNoPermitido =
+    'Solo se pueden reabrir documentos propios en estado ENVIADO o ' +
+    'ARCHIVADO.';
+  SPreguntaReabrirDocumentoTrabajo =
+    '¿Devolver el Documento de Trabajo seleccionado al estado CREADO?' +
+    #13#10 + 'Podrá modificarlo y volver a enviarlo.';
+  SInfoDocumentoTrabajoReabierto =
+    'Documento de Trabajo en estado CREADO: ya puede modificarlo y ' +
+    'volver a enviarlo.';
+  SPreguntaMarcarEnviadoDocumentoTrabajo =
+    '¿Marcar como ENVIADO el Documento de Trabajo seleccionado?' +
+    #13#10 + 'Quedará bloqueado para edición.';
+  SInfoDocumentoTrabajoMarcadoEnviado =
+    'Documento de Trabajo marcado como ENVIADO.';
   SErrorBorrarLineasDocumentoTrabajoSoloPropietario =
     'Solo el propietario puede borrar lineas del Documento de Trabajo.';
   SErrorEditarLineasDocumentoTrabajoSoloPropietario =

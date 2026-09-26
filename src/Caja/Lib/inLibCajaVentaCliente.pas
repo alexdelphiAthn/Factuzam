@@ -28,9 +28,14 @@ uses
   Data.DB,
   inLibCajaVentaIntf;
 
-// Una linea vino de deposito cuando VIENE_DE_DEPOSITO es 'S' o 'A'.
-// La misma regla protege el borrado por atajo en la ventana de caja.
+// Una linea vino de deposito cuando VIENE_DE_DEPOSITO es 'S', 'A' o 'H'
+// (historico). La misma regla protege el borrado por atajo en la ventana
+// de caja.
 function EsLineaDeposito(const AVieneDeDeposito: string): Boolean;
+
+// Deposito ya cerrado cargado solo para consulta (Ver historico en F2):
+// no se edita, no suma y no pasa al cobro.
+function EsLineaHistoricoDeposito(const AVieneDeDeposito: string): Boolean;
 
 // Cierra la linea pendiente (cancela la vacia, graba la que tiene
 // articulo) y borra las lineas de deposito del cliente anterior.
@@ -61,7 +66,13 @@ uses
 
 function EsLineaDeposito(const AVieneDeDeposito: string): Boolean;
 begin
-  Result := (AVieneDeDeposito = 'S') or (AVieneDeDeposito = 'A');
+  Result := (AVieneDeDeposito = 'S') or (AVieneDeDeposito = 'A') or
+    EsLineaHistoricoDeposito(AVieneDeDeposito);
+end;
+
+function EsLineaHistoricoDeposito(const AVieneDeDeposito: string): Boolean;
+begin
+  Result := Trim(AVieneDeDeposito) = 'H';
 end;
 
 procedure LimpiarLineasDeposito(ALineas: TDataSet);

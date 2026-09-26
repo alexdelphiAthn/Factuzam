@@ -74,8 +74,12 @@ type
     function PuedeEditarDocumentoActual: Boolean;
     function PuedeEnviarDocumentoActual: Boolean;
     function PuedeArchivarDocumentoActual: Boolean;
+    // ENVIADO o ARCHIVADO -> CREADO: el documento vuelve a ser editable
+    // y enviable para reutilizarlo.
+    function PuedeReabrirDocumentoActual: Boolean;
     function MarcarDocumentoActualEnviado: Boolean;
     function ArchivarDocumentoActual: Boolean;
+    function ReabrirDocumentoActual: Boolean;
     procedure CargarAlmacenesEtiquetasDoc(AIdDtr: Int64; ALV: TcxListView);
     function CompartirDocumentoActual(const ADestino, ATipo: string): Boolean;
     procedure CrearDataSetEtiquetasDoc(ADmArt: TObject; AIdDtr: Int64;
@@ -979,6 +983,22 @@ begin
   end;
 end;
 
+function TdmDocumentosTrabajo.PuedeReabrirDocumentoActual: Boolean;
+var
+  sEstado: string;
+begin
+  Result := False;
+  if (FAmbito in [dtaPropios, dtaArchivados]) and
+     EsPropietarioDocumentoActual and
+     (unqryTablaG.State = dsBrowse) and
+     (not unqryTablaG.FieldByName('ID_DTR').IsNull) then
+  begin
+    sEstado := unqryTablaG.FieldByName('ESTADO_DTR').AsString;
+    Result := EsDocumentoTrabajoEnviado(sEstado) or
+              EsDocumentoTrabajoArchivado(sEstado);
+  end;
+end;
+
 function TdmDocumentosTrabajo.ActualizarEstadoDocumentoActual(
   const AEstado: string): Boolean;
 var
@@ -1027,6 +1047,17 @@ begin
         CondicionSqlDocumentoTrabajoCreado('ESTADO_DTR') + ' OR ' +
         CondicionSqlDocumentoTrabajoEnviado('ESTADO_DTR') + ')';
     end
+    else if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_CREADO then
+    begin
+      if not (EsDocumentoTrabajoEnviado(sEstadoActual) or
+              EsDocumentoTrabajoArchivado(sEstadoActual)) then
+      begin
+        raise ERangeError.Create(SErrorReabrirDocumentoTrabajoNoPermitido);
+      end;
+      sCondicion := '(' +
+        CondicionSqlDocumentoTrabajoEnviado('ESTADO_DTR') + ' OR ' +
+        CondicionSqlDocumentoTrabajoArchivado('ESTADO_DTR') + ')';
+    end
     else
     begin
       raise ERangeError.Create(SErrorEstadoDocumentoTrabajoNoValido);
@@ -1067,7 +1098,9 @@ begin
       FreeAndNil(q);
     end;
 
-    if sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO then
+    // Archivar o desarchivar saca el documento de la lista actual.
+    if (sEstadoNuevo = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO) or
+       (sEstadoActual = ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO) then
     begin
       RecargarAmbitoActual;
     end
@@ -1112,6 +1145,16 @@ begin
   end;
   Result := ActualizarEstadoDocumentoActual(
     ESTADO_DOCUMENTO_TRABAJO_ARCHIVADO);
+end;
+
+function TdmDocumentosTrabajo.ReabrirDocumentoActual: Boolean;
+begin
+  if not PuedeReabrirDocumentoActual then
+  begin
+    raise ERangeError.Create(SErrorReabrirDocumentoTrabajoNoPermitido);
+  end;
+  Result := ActualizarEstadoDocumentoActual(
+    ESTADO_DOCUMENTO_TRABAJO_CREADO);
 end;
 
 procedure TdmDocumentosTrabajo.unqryTablaGBeforeInsertDTR(

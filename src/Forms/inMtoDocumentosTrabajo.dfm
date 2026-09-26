@@ -356,14 +356,26 @@
         Height = 34
         Align = alBottom
         Caption = '&Archivar'
-        TabOrder = 1
+        TabOrder = 2
         OnClick = btnArchivarDTRClick
+      end
+      object btnCambiarEstadoDTR: TcxButton
+        Left = 0
+        Top = 182
+        Width = 140
+        Height = 34
+        Align = alBottom
+        Caption = 'Cambiar estado'
+        DropDownMenu = pmEstadoDTR
+        Kind = cxbkDropDownButton
+        TabOrder = 1
+        OnClick = btnCambiarEstadoDTRClick
       end
       object pnlFotoArticuloActivoDTR: TPanel
         Left = 0
         Top = 0
         Width = 140
-        Height = 216
+        Height = 182
         Align = alClient
         BevelOuter = bvLowered
         TabOrder = 0
@@ -384,7 +396,7 @@
           Left = 1
           Top = 25
           Width = 138
-          Height = 190
+          Height = 156
           Hint = 'Foto del art'#237'culo / SKU seleccionado'
           Align = alClient
           Center = True
@@ -453,6 +465,29 @@
     object miCargarDocumentoDTR: TMenuItem
       Caption = 'Desde documento...'
       OnClick = miCargarDocumentoDTRClick
+    end
+  end
+  object pmEstadoDTR: TPopupMenu
+    OnPopup = pmEstadoDTRPopup
+    Left = 240
+    Top = 200
+    object miEstadoCreadoDTR: TMenuItem
+      Caption = 'Creado (reabrir para reutilizar)'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = miEstadoCreadoDTRClick
+    end
+    object miEstadoEnviadoDTR: TMenuItem
+      Caption = 'Enviado'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = miEstadoEnviadoDTRClick
+    end
+    object miEstadoArchivadoDTR: TMenuItem
+      Caption = 'Archivado'
+      GroupIndex = 1
+      RadioItem = True
+      OnClick = miEstadoArchivadoDTRClick
     end
   end
 end
